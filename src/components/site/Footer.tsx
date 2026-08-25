@@ -157,7 +157,17 @@ export function Footer() {
 
           <div className="lk-foot-bottom">
             <p>© 2026 Leenkey. Tous droits réservés.</p>
-            <p>Fait en France · Données hébergées en France</p>
+            <p>
+              Fait en France · Données hébergées en France · Conçu par{" "}
+              <a
+                href="https://meykeet.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "rgba(248,250,252,.65)", textDecoration: "underline" }}
+              >
+                Meykeet
+              </a>
+            </p>
           </div>
         </div>
       </footer>
