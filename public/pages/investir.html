@@ -355,10 +355,7 @@ h4,.h4 { font-weight:600; font-size:var(--type-h4-size); line-height:var(--type-
 .faq-q { width:100%; display:flex; align-items:center; justify-content:space-between; gap:18px; background:none; border:none; font-family:inherit; text-align:left; cursor:pointer; padding:22px 24px; font-size:16px; font-weight:600; color:var(--color-navy); }
 .faq-q .faq-chev { flex-shrink:0; color:var(--color-blue); transition:transform var(--duration-base) var(--ease-out); }
 .faq-item.open .faq-chev { transform:rotate(180deg); }
-.faq-a { max-height: none !important; overflow: visible !important; }
-.faq-a-inner { padding: 0 24px 24px !important; display: block !important; }
-.faq-q .faq-chev { display: none !important; }
-.faq-q { cursor: default !important; }
+.faq-a { max-height:0; overflow:hidden; transition:max-height var(--duration-slow) var(--ease-out); }
 .faq-a-inner { padding:0 24px 24px; color:var(--fg-2); font-size:14.5px; line-height:1.7; }
 
 /* ---------- CTA final ---------- */
@@ -1203,6 +1200,38 @@ Nous cherchons des partenaires qui croient, comme nous, que ce marché mérite m
 
 <script src="2e1b250f-77dc-4c06-aceb-9f90ace354c5"></script>
 <script src="fedc4065-d414-48fb-99fe-01f00713267e"></script>
+
+<!-- Accordéon FAQ : leenkey.js n'est pas chargé sur cette page, or leenkey.css
+     (injecté globalement par le SPA) replie les réponses. Sans ce script,
+     cliquer une question ne faisait rien. -->
+<script>
+(function () {
+  var faq = document.getElementById('faq');
+  if (!faq || faq.dataset.accordionReady) return;
+  faq.dataset.accordionReady = '1';
+  faq.addEventListener('click', function (e) {
+    var btn = e.target.closest('.faq-q');
+    if (!btn) return;
+    var item = btn.parentElement;
+    var wasOpen = item.classList.contains('open');
+    faq.querySelectorAll('.faq-item.open').forEach(function (it) {
+      it.classList.remove('open');
+      var a = it.querySelector('.faq-a');
+      if (a) a.style.maxHeight = '0px';
+      var q = it.querySelector('.faq-q');
+      if (q) q.setAttribute('aria-expanded', 'false');
+    });
+    if (!wasOpen) {
+      item.classList.add('open');
+      var ans = item.querySelector('.faq-a');
+      if (ans && ans.firstElementChild) {
+        ans.style.maxHeight = ans.firstElementChild.offsetHeight + 'px';
+      }
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+})();
+</script>
 
 
 
