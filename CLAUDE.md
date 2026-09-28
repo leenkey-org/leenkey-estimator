@@ -12,6 +12,13 @@ Plateforme PropTech française de vente immobilière sans agence, développée p
 - **Emails** : Resend, expéditeur `noreply@leenkey.fr` (domaine vérifié ; les DNS Resend vivent sur le compte IONOS de Cédric). Destinataire admin : `contact.leenkey@gmail.com`
 - **Analytics** : GA4 `G-27N3E3WP2D` + GTM `GTM-MTRM36P4` + Vercel Analytics (`<Analytics/>` dans `src/main.tsx`)
 
+## Branches
+
+- `main` = **production** (leenkey.fr). Ne recevoir que du code validé.
+- `v2` = **préprod** de la V2 : chaque push déploie automatiquement sur
+  https://leenkey-estimator-main-git-v2-nebula-creativ.vercel.app (URL stable, publique).
+  Travailler la V2 sur cette branche ; merger `v2` → `main` quand une évolution est validée.
+
 ## Déploiement
 
 - **Vercel** : projet `leenkey-estimator-main`, team `nebula-creativ`. Auto-deploy actif : un push sur `main` déploie la prod en ~30 s. En secours seulement : `npx vercel deploy --prod --scope nebula-creativ --yes`
