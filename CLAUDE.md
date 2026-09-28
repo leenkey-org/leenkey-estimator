@@ -15,9 +15,10 @@ Plateforme PropTech française de vente immobilière sans agence, développée p
 ## Branches
 
 - `main` = **production** (leenkey.fr). Ne recevoir que du code validé.
-- `v2` = **préprod** de la V2 : chaque push déploie automatiquement sur
-  https://leenkey-estimator-main-git-v2-nebula-creativ.vercel.app (URL stable, publique).
-  Travailler la V2 sur cette branche ; merger `v2` → `main` quand une évolution est validée.
+- `v2` = **la V2, projet Vercel indépendant** (`leenkey-v2`) : chaque push sur `v2`
+  déploie sa propre « production » sur **https://leenkey-v2.vercel.app** (publique).
+  Totalement séparée de leenkey.fr — env vars, domaines et réglages distincts.
+  Travailler la V2 sur cette branche ; merger `v2` → `main` quand la V2 remplace la V1.
 
 ## Déploiement
 
