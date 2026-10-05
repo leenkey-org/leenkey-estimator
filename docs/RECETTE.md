@@ -1,13 +1,13 @@
 # RECETTE
 
-Recette de Cédric sur la préprod (`preprod.leenkey.fr`) à chaque fin de lot. Claude Code complète ce fichier avec `/recette <lot>`.
+Recette de Cédric sur la préprod (`leenkey-v2.vercel.app`) à chaque fin de lot. Claude Code complète ce fichier avec `/recette <lot>`.
 
 ## Accès
 
 | | |
 |---|---|
-| URL | https://preprod.leenkey.fr |
-| Mot de passe Vercel de la préprod | transmis séparément par Younes |
+| URL | https://leenkey-v2.vercel.app |
+| Identifiant et mot de passe de la préprod (`PREPROD_USER` / `PREPROD_PASSWORD`) | transmis séparément par Younes |
 | Comptes de test | `seller_a@test.leenkey.fr`, `seller_b@test.leenkey.fr`, `buyer_c@test.leenkey.fr`, `buyer_d@test.leenkey.fr`, `admin@test.leenkey.fr` |
 | Mot de passe des comptes | transmis séparément (`SEED_PASSWORD`) |
 | Carte bancaire de test Stripe | 4242 4242 4242 4242, date future, CVC quelconque |

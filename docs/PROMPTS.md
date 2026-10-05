@@ -71,7 +71,7 @@ L'écran <route> est fonctionnel. Applique la direction « Plan d'architecte » 
 
 ```
 On prépare la mise en production. Suis docs/SPEC-V2.md section 23, tâches P-01 à P-06, et docs/SECURITE.md.
-Commence par une répétition complète sur staging : liste les étapes exactes que tu vas jouer, les commandes, les variables à basculer, et le plan de retour arrière. Rien n'est fait en prod sans mon go étape par étape.
+Commence par une répétition complète sur la préprod (`v2`, projet Vercel `leenkey-v2`) : liste les étapes exactes que tu vas jouer, les commandes, les variables à basculer, et le plan de retour arrière. Rien n'est fait en prod sans mon go étape par étape.
 ```
 
 ---

@@ -33,6 +33,24 @@ Journal des décisions client. Format : date · question · décision · qui. Le
 | 2026-10-05 | Données personnelles de l'acquéreur | Avant acceptation, le vendeur voit nom, prénom et ville ; date de naissance, adresse, téléphone et e-mail après acceptation. | Cédric |
 | 2026-10-05 | Acquisition via SCI | Dénomination, SCI constituée ou en cours de constitution, SIREN (obligatoire seulement si constituée), adresse du siège social, représentant. | Cédric |
 | 2026-10-05 | Libellé du contrôle du justificatif | « Contrôlé par Leenkey le JJ/MM/AAAA » (badge « Justificatif vérifié » inchangé). | Cédric |
+| 2026-10-05 | Stack | Nouveau projet Next.js 15 dans le repo existant. La V1 (Vite + TanStack Router) n'est pas en Next.js, contrairement au cahier des charges §5 ; la reprise de l'estimateur, des 4 endpoints (en route handlers, mêmes chemins), de GA4, GTM, Vercel Analytics, des redirections et des pages marketing fait partie de L1-01, précédée de tests de non-régression sur `estimation.ts` (≥ 20 cas réels). | Younes |
+| 2026-10-05 | Branches et préprod | `v2` sert de staging (une branche par tâche, PR vers `v2`). Préprod sur `leenkey-v2.vercel.app` : `noindex`, bandeau « Environnement de test », mot de passe dans le middleware (`PREPROD_USER`, `PREPROD_PASSWORD`), pas l'option payante de Vercel. Tests manuels sur la préprod après fusion, pas sur les previews. `main` reste le site en ligne. | Younes |
+| 2026-10-05 | Ordre de priorité des documents | Fonctionnel : DECISIONS > SPEC-V2 > CLAUDE. Technique et sécurité : CLAUDE l'emporte. Cahier des charges et plan de mise en œuvre : vérification du périmètre contractuel uniquement. Garantie : le contrat fait foi (60 jours bugs majeurs, 30 jours anomalies mineures). | Younes |
+| 2026-10-05 | Périmètre conservé | Co-acquéreurs et SCI, `listing_revisions` simplifié (historique des champs prix, titre, description), export RGPD (L2-10), déclencheurs de montée en gamme (L2-09). | Younes |
+| 2026-10-05 | Périmètre simplifié | Conversation conseiller = `kind = 'advisor'` sur la messagerie existante, en fin de lot 1 (L1-34). Visites : créneaux ponctuels seulement. | Younes |
+| 2026-10-05 | Reporté en V3 | Pages SEO par ville (ex-L1-20), bouton « Expliquer cette offre », séries de créneaux (`BACKLOG-V3.md`). | Younes |
+| 2026-10-05 | Statut `suspended` | Ajouté à `listing_status`. Posé et levé uniquement par l'admin (`listing_suspend` / `listing_unsuspend`, motif obligatoire) ; le vendeur ne peut pas en sortir. Conforme au cahier (« publiée → suspendue / vendue »). | Younes |
+| 2026-10-05 | `create_case` | Fonction SQL `security definer`, jamais la clé service role. | Younes |
+| 2026-10-05 | Rôles | `profiles.roles user_role[]` ; admin = `'admin' = any(roles)` (fonction `is_admin()`). | Younes |
+| 2026-10-05 | Enums et crons | Liste de référence des enums : SPEC §4. Crons : SPEC §19. CLAUDE.md renvoie à ces sections. | Younes |
+| 2026-10-05 | Justificatifs de financement | Table `financing_documents` créée en L2-02 ; `offers.financing_document_id` et `buyer_profiles.current_financing_document_id` y font référence. | Younes |
+| 2026-10-05 | PDF d'offre | Bucket privé `offers`. | Younes |
+| 2026-10-05 | Quotas IA | Dans `core/ai/quotas.ts`, par rôle (acquéreur 20, vendeur 30, vendeur avec au moins un bien sous formule payante 100, admin illimité ; valeurs provisoires). `plans.ai_daily_quota` supprimé. | Younes |
+| 2026-10-05 | Outil `propose_visit_slot` | Ajouté à SPEC §12 (lot 3, L3-02), exigé par le cahier des charges. | Younes |
+| 2026-10-05 | Comptes de seed | Cinq comptes partout : `seller_a`, `seller_b`, `buyer_c`, `buyer_d`, `admin`. | Younes |
+| 2026-10-05 | Modèles IA | Vérifiés sur platform.claude.com : `MODELS.smart = 'claude-sonnet-5-5'` (et non `claude-sonnet-5`, legacy), `MODELS.fast = 'claude-haiku-4-5-20251001'` (voir Q17). | Younes |
+| 2026-10-05 | Règles éditoriales | Celles du site actuel s'appliquent à toute la V2 (CLAUDE.md §16) : « nous », « analyse de valeur » plutôt qu'« estimation » seul, lien de navigation « Valoriser mon bien », aucun pixel publicitaire, aucune mention « Prix ferme » (remplacée par « Sans commission d'agence » dans `PriceBlock` et la maquette AnnonceDesktop). | Younes |
+| 2026-10-05 | Planning | Lot 1 rééquilibré sans toucher aux dates contractuelles. 18 décembre = livraison de la préprod validée ; bascule en production le lundi 4 janvier 2027 (à confirmer avec Cédric, Q19). | Younes |
 
 ## Questions ouvertes (valeur provisoire utilisée en attendant)
 
@@ -43,9 +61,15 @@ Journal des décisions client. Format : date · question · décision · qui. Le
 | Q3 | Taux indicatif des frais d'acquisition dans le neuf | 2,5 % |
 | Q4 | Limite de 3 mois : tous les justificatifs ou seulement les simulations ? | Avertissement pour tous les types |
 | Q5 | Le vendeur voit-il le justificatif lui-même ou seulement son statut ? | Statut seulement |
-| Q6 | Modifier une offre envoyée = retrait puis nouvelle offre ? | Tranché le 2026-10-05 : nouvelle version, l'ancienne passe en « remplacée » |
 | Q7 | Qui saisit la date de départ du délai de rétractation ? | Saisie possible par le vendeur et par l'admin |
 | Q8 | Bilan de vente avec économie estimée face à une agence : V2 ou plus tard ? Taux de référence ? | Bilan sans économie estimée ; `sold_price_cents` stocké |
 | Q9 | Les textes du modèle d'offre (encadré « Avant d'envoyer », mise en garde sur les conditions, écran d'acceptation) ont-ils été relus par la notaire ? | Textes de Cédric utilisés tels quels |
 | Q10 | Textes légaux, adresse légale, biens de test | Pages « en cours de rédaction » en staging, `[ADRESSE LEENKEY]`, biens fictifs |
 | Q15 | Offre sans visite préalable : autorisée sans restriction ? | Oui, mentionnée dans l'offre (prévu par le modèle de Cédric) |
+| Q16 | Reformulations à la voix « nous » des phrases de Cédric (règle éditoriale du site). **Non appliquées** en attendant son accord : « Vous vendez. On vous accompagne à chaque étape. » → « Vous vendez. Nous vous accompagnons à chaque étape. » ; « On pilote avec vous jusqu'à la signature. » → « Nous pilotons avec vous jusqu'à la signature. » ; « C'est en ligne. On vous prévient au premier contact. » → « C'est en ligne. Nous vous prévenons au premier contact. » | Phrases d'origine conservées (SPEC §1, §6, §11 bis) |
+| Q17 | Modèle IA rapide : Claude Haiku 4.5 est annoncé avec un retrait « pas avant le 15 octobre 2026 ». Le garder (moins cher) ou passer d'emblée sur `claude-sonnet-5-5` (2 fois plus cher en entrée et en sortie) ? | Haiku 4.5, surchargeable par `AI_MODEL_FAST` ; vérification des dépréciations avant la bascule (P-05) |
+| Q18 | Point technique à trancher en L1-04 : la vue `public_listings` est déclarée `security_invoker = true`, donc soumise à la RLS de l'appelant. Un visiteur anonyme n'a aucun droit sur `properties` ni `profiles` : la vue ne lui renverrait rien. Options : vue sans `security_invoker` (droits du propriétaire, filtrage par statut dans la vue) ou fonction `security definer`. | Proposer la correction dans la PR L1-04, avec test anonyme |
+| Q19 | Date de bascule en production : lundi 4 janvier 2027 au lieu du 18 décembre 2026 (préprod validée le 18). À confirmer avec Cédric ; le contrat lie le dernier paiement de 20 % à la « mise en production ». | 4 janvier 2027 |
+| Q20 | Date de démarrage réelle : `PLANNING.md` reste calé sur le lundi 12 octobre 2026, seule date compatible avec les livraisons contractuelles (13 nov., 27 nov., 11 déc., 18 déc.). Tout démarrage plus tardif décale ces dates et demande un avenant. | 12 octobre 2026 |
+| Q21 | Cahier des charges, lot 2 : « financement validé / en cours / non renseigné ». Contredit la décision du 2026-10-01 (« jamais validé »). Corriger le document contractuel (avenant ou annexe) ? | Décision du 2026-10-01 appliquée |
+

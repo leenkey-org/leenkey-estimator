@@ -96,7 +96,7 @@ La V2 **conserve** l'estimateur (moteur inchangé, sous tests de non-régression
 
 | Lot | Semaines | Contenu |
 |---|---|---|
-| Lot 1 : socle | S1 à S5 | Comptes, fiche du bien, annonce, recherche, messagerie (acquéreurs et conseiller), dashboard vendeur avec moteur d'étapes, formules et droits, déclencheurs de montée en gamme, Stripe, assistant IA (vendeur + admin), back office |
+| Lot 1 : socle | S1 à S5 | Reprise de l'existant en Next.js, comptes, fiche du bien, annonce, recherche, messagerie (acquéreurs, puis conseiller en fin de lot), dashboard vendeur avec moteur d'étapes, formules et droits, Stripe, assistant IA (vendeur + admin), back office. Les déclencheurs de montée en gamme (L2-09) et l'export RGPD (L2-10) sont livrés avec le lot 2 |
 | Lot 2 : qualification | S6 à S7 | Offre d'achat structurée (co-acquéreurs et SCI compris) avec synthèse automatique par gabarits, qualification acquéreur, assistant IA acquéreur |
 | Lot 3 : accompagnement | S8 à S9 | Visites sur invitation (créneaux ponctuels), dossier de vente et partage de documents, analyse IA des documents, alertes acheteur |
 | Mise en production | S10 | Recette, durcissement, livraison de la préprod validée le 18 décembre ; bascule en production le 4 janvier 2027 (à confirmer avec Cédric) |
@@ -2120,7 +2120,8 @@ Rééquilibrage du 2026-10-05 : L1-20 (pages villes) part en V3 ; L1-27 avance e
 | P-02 | Performance et accessibilité finales | Objectifs section 20 atteints |
 | P-03 | Sauvegarde GitHub Action + restauration testée sur un projet vide | Restauration réussie documentée |
 | P-04 | Guide back office (`docs/GUIDE-BACK-OFFICE.md` + PDF) | Relu par Younes |
-| P-05 | S10 : répétition complète de la mise en prod sur staging et livraison de la préprod validée (18 décembre). Bascule le lundi 4 janvier 2027 (à confirmer avec Cédric) : migrations prod, seed des `plans` et `sale_steps` uniquement, Stripe live, domaine `leenkey.fr` vers le nouveau déploiement, Resend vérifié, vérification de l'identifiant du modèle IA rapide (dépréciations) | Site en ligne, parcours 1 et 3 testés en prod avec un vrai paiement remboursé ; retour arrière vers la V1 possible en un « Promote » |
+| P-05 | Répétition complète de la mise en prod sur staging ; livraison de la préprod validée par Cédric (18 décembre) | Procédure jouée de bout en bout sur staging, retour arrière documenté |
+| P-05b | Bascule le lundi 4 janvier 2027 (à confirmer avec Cédric) : migrations prod, seed des `plans` et `sale_steps` uniquement, Stripe live, domaine `leenkey.fr` vers le nouveau déploiement, Resend vérifié, vérification de l'identifiant du modèle IA rapide (dépréciations) | Site en ligne, parcours 1 et 3 testés en prod avec un vrai paiement remboursé ; retour arrière vers la V1 possible en un « Promote » |
 | P-06 | Tag `v2.0.0`, `CHANGELOG.md` complet | — |
 
 ---

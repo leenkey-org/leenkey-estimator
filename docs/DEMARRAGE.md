@@ -28,28 +28,20 @@ Guide pour Younes. Claude Code ne lit pas ce fichier en priorité : il lit `CLAU
 - [ ] Node 20+, Git, Supabase CLI (`npm i -g supabase`), Stripe CLI, Claude Code à jour
 - [ ] Docker Desktop lancé (Supabase en local)
 - [ ] Supabase : projets `leenkey-dev` et `leenkey-staging` créés, région Europe (Paris ou Francfort)
-- [ ] Vercel Pro : projet relié au repo, branche `staging` → `preprod.leenkey.fr`, protection par mot de passe, `main` → `leenkey.fr` (ne pas basculer le domaine avant S10)
-- [ ] DNS : enregistrement `preprod` chez le registrar de Cédric
+- [ ] Vercel : projet `leenkey-v2` (branche `v2` → `leenkey-v2.vercel.app`, déjà en place) ; variables de préprod dans son onglet « Production », dont `NEXT_PUBLIC_ENV=staging`, `PREPROD_USER`, `PREPROD_PASSWORD`. `main` → `leenkey.fr` sur le projet `leenkey-estimator-main` (ne pas basculer le domaine avant le 4 janvier)
 - [ ] Stripe (mode test) : produits Accompagné 990 €, Sérénité 1 500 €, surclassement 510 €, codes promo autorisés
 - [ ] Resend : compte créé, `EMAIL_TEST_INBOX` = ta boîte de test
 - [ ] Clé Anthropic avec plafond de dépenses mensuel
-- [ ] Clé Mapbox restreinte à `localhost` et `preprod.leenkey.fr`
+- [ ] Clé Mapbox restreinte à `localhost` et `leenkey-v2.vercel.app`
 - [ ] `.env.local` rempli à partir de `.env.example`, variables staging saisies dans Vercel
 
 ## 3. Installer le pack dans le repo
 
 Le développement se fait dans le repo existant de Leenkey (celui de l'estimateur), sans casser le site actuel.
 
-```bash
-git checkout main && git pull
-git checkout -b staging && git push -u origin staging
-# copier le contenu du pack à la racine du repo (CLAUDE.md, .claude/, .env.example, docs/, supabase/)
-git add CLAUDE.md .claude .env.example docs supabase
-git commit -m "docs: pack de démarrage V2"
-git push
-```
+Fait le 5 octobre 2026 par la PR `docs/session-0` vers `v2` (pack fusionné avec le CLAUDE.md de la V1).
 
-`main` reste le site en ligne jusqu'à la semaine 10. Tout le travail V2 arrive sur `staging` par PR.
+`main` reste le site en ligne jusqu'à la bascule (4 janvier 2027, à confirmer). Tout le travail V2 arrive sur `v2` par PR, une branche par tâche.
 
 ## 4. Première session Claude Code
 
@@ -58,7 +50,7 @@ Ouvre Claude Code à la racine du repo et colle le message « Session 0 » de `d
 ## 5. Routine de travail
 
 - **Une tâche = une session = une branche = une PR.** `/tache L1-03`, tu lis son plan, tu dis « go ».
-- **Avant de fusionner** : `/revue`, puis tu testes toi-même en préprod la liste qu'il t'a donnée, puis tu fusionnes dans `staging`.
+- **Avant de fusionner** : `/revue`, puis tu fusionnes dans `v2`, puis tu testes toi-même en préprod (`leenkey-v2.vercel.app`) la liste qu'il t'a donnée.
 - **Contexte saturé ou session qui dérive** : `/clear` ou nouvelle session, et tu relances la tâche. Ne pas « rattraper » une session partie dans le mauvais sens.
 - **Bug** : `/bug <description>`.
 - **Vendredi** : `/vendredi`, tu relis et tu envoies le message à Cédric.
@@ -67,7 +59,7 @@ Ouvre Claude Code à la racine du repo et colle le message « Session 0 » de `d
 ## 6. Points de vigilance
 
 1. **Sécurité des données** : une table sans RLS testée ne se fusionne pas. C'est le risque n° 1 du projet.
-2. **Migrations** : jamais modifier une migration déjà appliquée en staging ; en écrire une nouvelle. Toute migration passe 24 h en staging avant prod.
+2. **Migrations** : jamais modifier une migration déjà appliquée en staging (préprod) ; en écrire une nouvelle. Toute migration passe 24 h en staging avant prod.
 3. **Textes de Cédric** : repris mot pour mot, centralisés dans `lib/i18n/fr.ts`.
 4. **Mots interdits** : « financement validé », « peut financer ». Un test le vérifie.
 5. **Coûts** : surveille la console Anthropic chaque semaine. Les tests E2E tournent avec `AI_MOCK=1`.
@@ -81,4 +73,4 @@ Ouvre Claude Code à la racine du repo et colle le message « Session 0 » de `d
 | Adresse légale | S9 | En attente |
 | Biens de test réels (facultatif) | S8 | En attente |
 | Compte Supabase prod (sur son compte) | S10 | À créer avec lui |
-| Accès DNS de `leenkey.fr` | S1 (préprod) et S10 (prod) | À demander |
+| Accès DNS de `leenkey.fr` (IONOS) | Bascule du 4 janvier (la préprod n'en a pas besoin) | À demander |

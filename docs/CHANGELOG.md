@@ -1,6 +1,6 @@
 # CHANGELOG
 
-Format : une entrée par PR fusionnée dans `staging`, la plus récente en haut. Les versions taguées regroupent les entrées d'un lot.
+Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les versions taguées regroupent les entrées d'un lot.
 
 ## [Non publié]
 
@@ -11,6 +11,10 @@ Format : une entrée par PR fusionnée dans `staging`, la plus récente en haut.
 - Corrigé : …
 - Migration : 20261012_profiles.sql
 -->
+
+### 2026-10-05 · Session 0 · docs/session-0
+- Ajouté : pack de démarrage V2 (CLAUDE.md fusionné avec le contexte V1, SPEC, DECISIONS, PLANNING, RECETTE, SECURITE, maquettes, FAQ de Cédric, commandes Claude Code).
+- Modifié : corrections de cadrage de la session 0 (branche `v2` comme staging, hiérarchie des documents, statut `suspended`, `financing_documents`, bucket `offers`, quotas IA, outils, règles éditoriales, planning rééquilibré).
 
 ## v2.0.0-lot1 · à venir
 ## v2.0.0-lot2 · à venir
