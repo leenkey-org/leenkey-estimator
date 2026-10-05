@@ -1,0 +1,51 @@
+# DECISIONS
+
+Journal des décisions client. Format : date · question · décision · qui. Les questions ouvertes sont en bas.
+
+## Décisions reçues
+
+| Date | Sujet | Décision | Qui |
+|---|---|---|---|
+| 2026-10-01 | Rattachement de la formule | Par bien, pas par compte. Garder la possibilité technique d'une remise multi-biens ou d'une formule investisseur (`plans.scope`, `subscriptions.discount_cents`, codes promo Stripe, droits via `plan_entitlements`). | Cédric |
+| 2026-10-01 | Modification d'une annonce publiée | Elle reste en ligne. Historique des modifications importantes, notamment du prix (`listing_revisions`), contrôle a posteriori par l'admin. | Cédric |
+| 2026-10-01 | Contre-offre | Négociation par la messagerie en V2. Historique complet des offres conservé dans le dossier du bien. | Cédric |
+| 2026-10-01 | Délai de relecture des annonces | 24 h, même non ouvrées. | Cédric |
+| 2026-10-01 | Délai de contact après achat d'une formule | 24 h, même non ouvrées. | Cédric |
+| 2026-10-01 | Financement des acquéreurs | Jamais « validé ». Statuts : non renseigné → informations déclarées → justificatif fourni → justificatif vérifié. Justificatifs : accord de principe, attestation de courtier, simulation ou offre bancaire nominative de moins de 3 mois environ, preuve de fonds propres. Vérification manuelle par l'admin. Mention obligatoire : Leenkey vérifie la présence et la cohérence apparente des justificatifs, sans garantir le financement ni la solvabilité. | Cédric |
+| 2026-10-01 | Validité d'une offre | 5 jours par défaut, de 2 à 10 jours. | Cédric |
+| 2026-10-01 | Frais d'acquisition | Estimation indicative (environ 7,5 % dans l'ancien, logique différente pour le neuf), utilisée pour un budget global estimé, jamais pour déclarer que l'acquéreur « peut financer ». | Cédric |
+| 2026-10-01 | Zone de lancement | Rayon d'environ 10 km autour d'Épinay-sur-Orge, zones 1 et 2 (SPEC-V2 section 20). | Cédric |
+| 2026-10-01 | Emails | Utilisateurs : bonjour@leenkey.fr. Notifications internes : admin@leenkey.fr. | Cédric |
+| 2026-10-01 | Formules | Nouvelle structure Autonomie / Accompagné / Sérénité, règle freemium, déclencheurs de montée en gamme contextuels, upgrade Accompagné → Sérénité à 510 € (SPEC-V2 section 11 bis). | Cédric |
+| 2026-10-01 | Étapes de vente | Six étapes avec contenu par formule (SPEC-V2 section 9). | Cédric |
+| 2026-10-01 | FAQ et règles de l'assistant | FAQ V2 (`supabase/seed/knowledge/faq-cedric-v2.md`) et règles impératives (SPEC-V2 section 12). | Cédric |
+| 2026-10-01 | Retrait d'une offre | Trois états : envoyée (retrait possible, horodaté), acceptée (pas de bouton, orientation vers vendeur et notaire), avant-contrat signé (délai légal à partir de la date juridiquement pertinente uniquement) (SPEC-V2 section 13). | Cédric |
+| 2026-10-01 | Conversation conseiller | Ajout d'une conversation vendeur ↔ équipe Leenkey dans la messagerie pour Accompagné et Sérénité (SPEC-V2 sections 4 et 8.6). | Younes |
+| 2026-10-05 | Modèle d'offre d'achat | Modèle complet en 7 sections (acquéreur et co-acquéreurs, bien prérempli, prix en chiffres et en lettres, financement déclaré et situation, conditions par cases + précisions, validité, déclarations obligatoires), relecture puis envoi, textes repris mot pour mot (SPEC-V2 section 13). | Cédric |
+| 2026-10-05 | Offre et qualification séparées | L'offre est un document, la qualification une analyse Leenkey. Le PDF ne contient jamais de statut de qualification ni l'écart au prix ; le tableau de bord vendeur les affiche. | Cédric |
+| 2026-10-05 | Réception par le vendeur | Carte « Nouvelle offre reçue » dans le tableau de bord plutôt qu'un PDF. Actions : accepter, refuser, discuter (messagerie). Contre-offre structurée en V3. | Cédric |
+| 2026-10-05 | Acceptation | Écran intermédiaire avec récapitulatif, mise en garde et case obligatoire avant « Confirmer mon acceptation ». | Cédric |
+| 2026-10-05 | Traçabilité | Offre figée après envoi, jamais modifiée rétroactivement ; correction = nouvelle version. Gel garanti en base par trigger. | Cédric (gel en base : Younes) |
+| 2026-10-05 | Statuts | Brouillon → Envoyée → Consultée → Acceptée / Refusée / Expirée / Retirée. Contre-offre en V3. | Cédric |
+| 2026-10-05 | Analyse Leenkey de l'offre | Produite par gabarits en code, sans IA. Explication IA disponible à la demande (« Expliquer cette offre »). | Younes |
+| 2026-10-05 | Mode de financement | Deux choix seulement : avec ou sans recours à un prêt immobilier. Si prêt : apport et montant prévisionnel du prêt. Pas de « financement mixte ». | Cédric |
+| 2026-10-05 | Conditions de l'offre | La mention avec ou sans prêt est reprise automatiquement de la section financement. | Cédric |
+| 2026-10-05 | Données personnelles de l'acquéreur | Avant acceptation, le vendeur voit nom, prénom et ville ; date de naissance, adresse, téléphone et e-mail après acceptation. | Cédric |
+| 2026-10-05 | Acquisition via SCI | Dénomination, SCI constituée ou en cours de constitution, SIREN (obligatoire seulement si constituée), adresse du siège social, représentant. | Cédric |
+| 2026-10-05 | Libellé du contrôle du justificatif | « Contrôlé par Leenkey le JJ/MM/AAAA » (badge « Justificatif vérifié » inchangé). | Cédric |
+
+## Questions ouvertes (valeur provisoire utilisée en attendant)
+
+| # | Question | Valeur provisoire |
+|---|---|---|
+| Q1 | Résumé IA des documents : pour toutes les formules, ou réservé à Sérénité ? | Ouvert à tous ; Sérénité ajoute la revue humaine |
+| Q2 | Seuils des déclencheurs de montée en gamme | < 3 contacts en 14 jours ; 5 contacts sans visite après 21 jours ; 3 visites sans offre ; ≥ 3 pièces manquantes après 30 jours |
+| Q3 | Taux indicatif des frais d'acquisition dans le neuf | 2,5 % |
+| Q4 | Limite de 3 mois : tous les justificatifs ou seulement les simulations ? | Avertissement pour tous les types |
+| Q5 | Le vendeur voit-il le justificatif lui-même ou seulement son statut ? | Statut seulement |
+| Q6 | Modifier une offre envoyée = retrait puis nouvelle offre ? | Tranché le 2026-10-05 : nouvelle version, l'ancienne passe en « remplacée » |
+| Q7 | Qui saisit la date de départ du délai de rétractation ? | Saisie possible par le vendeur et par l'admin |
+| Q8 | Bilan de vente avec économie estimée face à une agence : V2 ou plus tard ? Taux de référence ? | Bilan sans économie estimée ; `sold_price_cents` stocké |
+| Q9 | Les textes du modèle d'offre (encadré « Avant d'envoyer », mise en garde sur les conditions, écran d'acceptation) ont-ils été relus par la notaire ? | Textes de Cédric utilisés tels quels |
+| Q10 | Textes légaux, adresse légale, biens de test | Pages « en cours de rédaction » en staging, `[ADRESSE LEENKEY]`, biens fictifs |
+| Q15 | Offre sans visite préalable : autorisée sans restriction ? | Oui, mentionnée dans l'offre (prévu par le modèle de Cédric) |

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Recherche</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Poppins',system-ui,sans-serif;background:#F8FAFF;color:#1E293B}
+a{color:#1156FC}a:hover{color:#0D47E0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F8FAFF; font-family: 'Poppins', system-ui, sans-serif; color: #1E293B">
+  <div style="padding: 18px 20px 12px; background: #FFFFFF; border-bottom: 1px solid #E2E8F0; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <label for="r-q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Rechercher une ville</label>
+      <div style="flex-grow: 1; height: 48px; padding: 0 14px; border: 1.5px solid #E2E8F0; border-radius: 12px; background: #FFFFFF; display: flex; align-items: center; gap: 10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="r-q" value="Épinay-sur-Orge · 10 km" style="border: 0; outline: none; flex-grow: 1; font: 500 14px 'Poppins', sans-serif; color: #1E293B"></div>
+      <button aria-label="Filtres" style="width: 48px; height: 48px; border: 0; border-radius: 12px; background: #1156FC; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span style="position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; border-radius: 100px; background: #0F1E35; color: #FFFFFF; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; border: 2px solid #FFFFFF">3</span></button>
+    </div>
+    <div style="display: flex; gap: 8px; overflow: hidden">
+      <button style="height: 36px; padding: 0 12px; border: 1.5px solid #1156FC; border-radius: 100px; background: #EEF4FF; color: #1156FC; font: 500 12px 'Poppins', sans-serif; cursor: pointer; white-space: nowrap">Appartement</button>
+      <button style="height: 36px; padding: 0 12px; border: 1.5px solid #1156FC; border-radius: 100px; background: #EEF4FF; color: #1156FC; font: 500 12px 'Poppins', sans-serif; cursor: pointer; white-space: nowrap">≤ 400 k€</button>
+      <button style="height: 36px; padding: 0 12px; border: 1.5px solid #1156FC; border-radius: 100px; background: #EEF4FF; color: #1156FC; font: 500 12px 'Poppins', sans-serif; cursor: pointer; white-space: nowrap">3 pièces +</button>
+      <button style="height: 36px; padding: 0 12px; border: 1.5px solid #E2E8F0; border-radius: 100px; background: #FFFFFF; color: #1E293B; font: 500 12px 'Poppins', sans-serif; cursor: pointer; white-space: nowrap">Extérieur</button>
+      <button style="height: 36px; padding: 0 12px; border: 1.5px solid #E2E8F0; border-radius: 100px; background: #FFFFFF; color: #1E293B; font: 500 12px 'Poppins', sans-serif; cursor: pointer; white-space: nowrap">DPE</button>
+    </div>
+  </div>
+
+  <div style="position: relative; height: 200px; background: #EEF4FF; border-bottom: 1px solid #DBEAFE; display: flex; align-items: center; justify-content: center; color: #1A2B4A; font-size: 12px; font-weight: 500">
+    Carte · zone de lancement
+    <div style="position: absolute; left: 90px; top: 70px; padding: 6px 10px; border-radius: 100px; background: #1156FC; color: #FFFFFF; font-size: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(17,86,252,0.3)">350 k€</div>
+    <div style="position: absolute; left: 200px; top: 110px; padding: 6px 10px; border-radius: 100px; background: #FFFFFF; color: #0F1E35; font-size: 12px; font-weight: 600; border: 1.5px solid #E2E8F0">289 k€</div>
+    <div style="position: absolute; left: 260px; top: 50px; padding: 6px 10px; border-radius: 100px; background: #FFFFFF; color: #0F1E35; font-size: 12px; font-weight: 600; border: 1.5px solid #E2E8F0">412 k€</div>
+    <div style="position: absolute; left: 140px; top: 140px; padding: 6px 10px; border-radius: 100px; background: #FFFFFF; color: #0F1E35; font-size: 12px; font-weight: 600; border: 1.5px solid #E2E8F0">365 k€</div>
+  </div>
+
+  <div style="padding: 14px 20px 8px; display: flex; justify-content: space-between; align-items: center">
+    <div style="font-size: 13px; font-weight: 600">12 biens</div>
+    <button style="height: 36px; padding: 0 10px; border: 0; background: transparent; color: #1156FC; font: 600 13px 'Poppins', sans-serif; cursor: pointer; display: flex; align-items: center; gap: 6px">Prix croissant <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1156FC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  </div>
+
+  <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 12px; flex-grow: 1; overflow: hidden">
+    <a href="Annonce.dc.html" style="display: flex; gap: 12px; padding: 10px; border: 1px solid #E2E8F0; border-radius: 16px; background: #FFFFFF; text-decoration: none; color: #1E293B; box-shadow: 0 4px 24px rgba(17,86,252,0.06)">
+      <div style="width: 110px; height: 96px; border-radius: 12px; background: #DBEAFE; flex: none; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #1A2B4A">Photo</div>
+      <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-width: 0">
+        <div style="display: flex; justify-content: space-between; align-items: center"><div style="font-size: 17px; font-weight: 700; color: #0F1E35">350 000 €</div><span style="padding: 3px 8px; border-radius: 100px; background: #D1FAE5; color: #065F46; font-size: 11px; font-weight: 600">C</span></div>
+        <div style="font-size: 13px; font-weight: 600">Appartement 3 p · 68 m²</div>
+        <div style="font-size: 12px; color: #6B7280">Savigny-sur-Orge · centre</div>
+        <div style="font-size: 11px; color: #0E9F6E; font-weight: 600; margin-top: 2px">Dossier complet</div>
+      </div>
+    </a>
+    <a href="Annonce.dc.html" style="display: flex; gap: 12px; padding: 10px; border: 1px solid #E2E8F0; border-radius: 16px; background: #FFFFFF; text-decoration: none; color: #1E293B">
+      <div style="width: 110px; height: 96px; border-radius: 12px; background: #DBEAFE; flex: none; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #1A2B4A">Photo</div>
+      <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-width: 0">
+        <div style="display: flex; justify-content: space-between; align-items: center"><div style="font-size: 17px; font-weight: 700; color: #0F1E35">289 000 €</div><span style="padding: 3px 8px; border-radius: 100px; background: #FEF3C7; color: #92400E; font-size: 11px; font-weight: 600">D</span></div>
+        <div style="font-size: 13px; font-weight: 600">Appartement 3 p · 61 m²</div>
+        <div style="font-size: 12px; color: #6B7280">Épinay-sur-Orge</div>
+        <div style="font-size: 11px; color: #6B7280; margin-top: 2px">Publié il y a 2 jours</div>
+      </div>
+    </a>
+    <a href="Annonce.dc.html" style="display: flex; gap: 12px; padding: 10px; border: 1px solid #E2E8F0; border-radius: 16px; background: #FFFFFF; text-decoration: none; color: #1E293B">
+      <div style="width: 110px; height: 96px; border-radius: 12px; background: #DBEAFE; flex: none; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #1A2B4A">Photo</div>
+      <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-width: 0">
+        <div style="display: flex; justify-content: space-between; align-items: center"><div style="font-size: 17px; font-weight: 700; color: #0F1E35">365 000 €</div><span style="padding: 3px 8px; border-radius: 100px; background: #D1FAE5; color: #065F46; font-size: 11px; font-weight: 600">B</span></div>
+        <div style="font-size: 13px; font-weight: 600">Appartement 4 p · 82 m²</div>
+        <div style="font-size: 12px; color: #6B7280">Morsang-sur-Orge</div>
+      </div>
+    </a>
+  </div>
+
+  <div style="padding: 10px 20px 22px; background: #FFFFFF; border-top: 1px solid #E2E8F0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr))">
+    <a href="Recherche.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #1156FC; font-size: 11px; font-weight: 600"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1156FC" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Chercher</a>
+    <a href="#favoris" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #6B7280; font-size: 11px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>Favoris</a>
+    <a href="Messagerie.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #6B7280; font-size: 11px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messages</a>
+    <a href="Dashboard.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #6B7280; font-size: 11px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Compte</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

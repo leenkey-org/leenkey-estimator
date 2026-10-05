@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Recherche desktop</title>
+
+</head>
+<body>
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Poppins',system-ui,sans-serif;background:#F8FAFF;color:#1E293B}
+a{color:#1156FC}a:hover{color:#0D47E0}
+</style>
+
+<div style="width: 1280px; height: 820px; box-sizing: border-box; display: flex; flex-direction: column; background: #F8FAFF; font-family: 'Poppins', system-ui, sans-serif; color: #1E293B">
+  <div style="height: 72px; padding: 0 40px; background: #FFFFFF; border-bottom: 1px solid #E2E8F0; display: flex; align-items: center; gap: 32px">
+    <div style="font-size: 20px; font-weight: 700; color: #0F1E35; letter-spacing: -0.3px">Leenkey</div>
+    <nav style="display: flex; gap: 24px; font-size: 14px; font-weight: 500">
+      <a href="RechercheDesktop.html" style="text-decoration: none; color: #1156FC">Acheter</a>
+      <a href="#vendre" style="text-decoration: none; color: #1E293B">Vendre</a>
+      <a href="#estimer" style="text-decoration: none; color: #1E293B">Estimer mon bien</a>
+    </nav>
+    <div style="margin-left: auto; display: flex; gap: 10px; align-items: center">
+      <a href="#favoris" style="height: 40px; padding: 0 14px; border-radius: 10px; text-decoration: none; color: #1E293B; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E293B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>Favoris</a>
+      <a href="#compte" style="height: 40px; padding: 0 16px; border-radius: 10px; background: #EEF4FF; text-decoration: none; color: #1156FC; font-size: 14px; font-weight: 600; display: flex; align-items: center">Mon compte</a>
+    </div>
+  </div>
+
+  <div style="padding: 16px 40px; background: #FFFFFF; border-bottom: 1px solid #E2E8F0; display: flex; align-items: center; gap: 12px">
+    <label for="rd-q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Où cherchez-vous ?</label>
+    <div style="width: 300px; height: 44px; padding: 0 14px; border: 1.5px solid #E2E8F0; border-radius: 12px; background: #FFFFFF; display: flex; align-items: center; gap: 10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="rd-q" value="Épinay-sur-Orge · 10 km" style="border: 0; outline: none; flex-grow: 1; font: 500 14px 'Poppins', sans-serif; color: #1E293B"></div>
+    <select aria-label="Type de bien" style="height: 44px; padding: 0 12px; border: 1.5px solid #1156FC; border-radius: 12px; background: #EEF4FF; color: #1156FC; font: 500 13px 'Poppins', sans-serif"><option>Appartement</option><option>Maison</option></select>
+    <select aria-label="Budget" style="height: 44px; padding: 0 12px; border: 1.5px solid #1156FC; border-radius: 12px; background: #EEF4FF; color: #1156FC; font: 500 13px 'Poppins', sans-serif"><option>Jusqu'à 400 000 €</option></select>
+    <select aria-label="Pièces" style="height: 44px; padding: 0 12px; border: 1.5px solid #1156FC; border-radius: 12px; background: #EEF4FF; color: #1156FC; font: 500 13px 'Poppins', sans-serif"><option>3 pièces et +</option></select>
+    <select aria-label="Surface" style="height: 44px; padding: 0 12px; border: 1.5px solid #E2E8F0; border-radius: 12px; background: #FFFFFF; color: #1E293B; font: 500 13px 'Poppins', sans-serif"><option>Surface</option></select>
+    <select aria-label="DPE" style="height: 44px; padding: 0 12px; border: 1.5px solid #E2E8F0; border-radius: 12px; background: #FFFFFF; color: #1E293B; font: 500 13px 'Poppins', sans-serif"><option>DPE</option></select>
+    <button style="height: 44px; padding: 0 14px; border: 1.5px solid #E2E8F0; border-radius: 12px; background: #FFFFFF; color: #1E293B; font: 500 13px 'Poppins', sans-serif; cursor: pointer">Plus de filtres</button>
+    <button style="margin-left: auto; height: 44px; padding: 0 16px; border: 1.5px solid #DBEAFE; border-radius: 12px; background: #FFFFFF; color: #1156FC; font: 600 13px 'Poppins', sans-serif; cursor: pointer; display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1156FC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Créer une alerte</button>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 620px minmax(0, 1fr); flex-grow: 1; min-height: 0">
+    <div style="padding: 20px 24px 20px 40px; display: flex; flex-direction: column; gap: 14px; overflow: hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center"><div style="font-size: 14px; font-weight: 600">12 biens autour d'Épinay-sur-Orge</div><button style="height: 36px; padding: 0 10px; border: 0; background: transparent; color: #1156FC; font: 600 13px 'Poppins', sans-serif; cursor: pointer; display: flex; align-items: center; gap: 6px">Prix croissant <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1156FC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></div>
+
+      <a href="AnnonceDesktop.html" style="display: flex; gap: 16px; padding: 12px; border: 1px solid #E2E8F0; border-radius: 16px; background: #FFFFFF; text-decoration: none; color: #1E293B; box-shadow: 0 4px 24px rgba(17,86,252,0.06)">
+        <div style="width: 200px; height: 140px; border-radius: 12px; background: #DBEAFE; flex: none; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #1A2B4A">Photo</div>
+        <div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1; min-width: 0">
+          <div style="display: flex; justify-content: space-between; align-items: center"><div style="font-size: 22px; font-weight: 700; color: #0F1E35">350 000 €</div><span style="padding: 4px 10px; border-radius: 100px; background: #D1FAE5; color: #065F46; font-size: 11px; font-weight: 600">DPE C</span></div>
+          <div style="font-size: 15px; font-weight: 600">Appartement 3 pièces · 68 m²</div>
+          <div style="font-size: 13px; color: #6B7280">Savigny-sur-Orge · centre · 3e étage avec ascenseur</div>
+          <div style="display: flex; gap: 6px; margin-top: 4px"><span style="padding: 4px 8px; border-radius: 8px; background: #F5F7FB; font-size: 11px; color: #4B5563">2 chambres</span><span style="padding: 4px 8px; border-radius: 8px; background: #F5F7FB; font-size: 11px; color: #4B5563">Balcon sud</span><span style="padding: 4px 8px; border-radius: 8px; background: #F5F7FB; font-size: 11px; color: #4B5563">Cave</span></div>
+          <div style="margin-top: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #0E9F6E; font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0E9F6E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Dossier complet · diagnostics et charges consultables</div>
+        </div>
+      </a>
+
+      <a href="AnnonceDesktop.html" style="display: flex; gap: 16px; padding: 12px; border: 1px solid #E2E8F0; border-radius: 16px; background: #FFFFFF; text-decoration: none; color: #1E293B">
+        <div style="width: 200px; height: 140px; border-radius: 12px; background: #DBEAFE; flex: none; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #1A2B4A">Photo</div>
+        <div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1; min-width: 0">
+          <div style="display: flex; justify-content: space-between; align-items: center"><div style="font-size: 22px; font-weight: 700; color: #0F1E35">289 000 €</div><span style="padding: 4px 10px; border-radius: 100px; background: #FEF3C7; color: #92400E; font-size: 11px; font-weight: 600">DPE D</span></div>
+          <div style="font-size: 15px; font-weight: 600">Appartement 3 pièces · 61 m²</div>
+          <div style="font-size: 13px; color: #6B7280">Épinay-sur-Orge · 1er étage</div>
+          <div style="display: flex; gap: 6px; margin-top: 4px"><span style="padding: 4px 8px; border-radius: 8px; background: #F5F7FB; font-size: 11px; color: #4B5563">2 chambres</span><span style="padding: 4px 8px; border-radius: 8px; background: #F5F7FB; font-size: 11px; color: #4B5563">Parking</span></div>
+          <div style="margin-top: auto; font-size: 12px; color: #6B7280">Publié il y a 2 jours</div>
+        </div>
+      </a>
+
+      <a href="AnnonceDesktop.html" style="display: flex; gap: 16px; padding: 12px; border: 1px solid #E2E8F0; border-radius: 16px; background: #FFFFFF; text-decoration: none; color: #1E293B">
+        <div style="width: 200px; height: 140px; border-radius: 12px; background: #DBEAFE; flex: none; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #1A2B4A">Photo</div>
+        <div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1; min-width: 0">
+          <div style="display: flex; justify-content: space-between; align-items: center"><div style="font-size: 22px; font-weight: 700; color: #0F1E35">365 000 €</div><span style="padding: 4px 10px; border-radius: 100px; background: #D1FAE5; color: #065F46; font-size: 11px; font-weight: 600">DPE B</span></div>
+          <div style="font-size: 15px; font-weight: 600">Appartement 4 pièces · 82 m²</div>
+          <div style="font-size: 13px; color: #6B7280">Morsang-sur-Orge · 5e étage</div>
+          <div style="display: flex; gap: 6px; margin-top: 4px"><span style="padding: 4px 8px; border-radius: 8px; background: #F5F7FB; font-size: 11px; color: #4B5563">3 chambres</span><span style="padding: 4px 8px; border-radius: 8px; background: #F5F7FB; font-size: 11px; color: #4B5563">Terrasse</span></div>
+        </div>
+      </a>
+    </div>
+
+    <div style="position: relative; background: #EEF4FF; border-left: 1px solid #DBEAFE; display: flex; align-items: center; justify-content: center; color: #1A2B4A; font-size: 13px; font-weight: 500">
+      Carte · zone de lancement
+      <div style="position: absolute; left: 180px; top: 160px; padding: 8px 12px; border-radius: 100px; background: #1156FC; color: #FFFFFF; font-size: 13px; font-weight: 600; box-shadow: 0 4px 12px rgba(17,86,252,0.3)">350 k€</div>
+      <div style="position: absolute; left: 340px; top: 240px; padding: 8px 12px; border-radius: 100px; background: #FFFFFF; color: #0F1E35; font-size: 13px; font-weight: 600; border: 1.5px solid #E2E8F0">289 k€</div>
+      <div style="position: absolute; left: 420px; top: 120px; padding: 8px 12px; border-radius: 100px; background: #FFFFFF; color: #0F1E35; font-size: 13px; font-weight: 600; border: 1.5px solid #E2E8F0">412 k€</div>
+      <div style="position: absolute; left: 260px; top: 330px; padding: 8px 12px; border-radius: 100px; background: #FFFFFF; color: #0F1E35; font-size: 13px; font-weight: 600; border: 1.5px solid #E2E8F0">365 k€</div>
+      <div style="position: absolute; left: 120px; top: 380px; padding: 8px 12px; border-radius: 100px; background: #FFFFFF; color: #0F1E35; font-size: 13px; font-weight: 600; border: 1.5px solid #E2E8F0">298 k€</div>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>

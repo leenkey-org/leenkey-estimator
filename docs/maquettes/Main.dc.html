@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Design system Leenkey</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Poppins',system-ui,sans-serif;background:#F8FAFF;color:#1E293B}
+a{color:#1156FC}a:hover{color:#0D47E0}
+</style>
+</helmet>
+<div style="width: 1280px; height: 980px; box-sizing: border-box; padding: 48px 56px; display: flex; flex-direction: column; gap: 32px; background: #FFFFFF; font-family: 'Poppins', system-ui, sans-serif; color: #1E293B">
+
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 1px solid #E2E8F0; padding-bottom: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div style="font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #1156FC">Leenkey V2</div>
+      <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #0F1E35">Design system</h1>
+    </div>
+    <div style="font-size: 13px; color: #6B7280">Repris des tokens de leenkey.fr · Poppins · radius 8 à 24 px</div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px">
+
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #6B7280">Couleurs</div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 64px; border-radius: 12px; background: #1156FC"></div><div style="font-size: 12px; font-weight: 600">Bleu primaire</div><div style="font-size: 11px; color: #6B7280">#1156FC</div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 64px; border-radius: 12px; background: #0D47E0"></div><div style="font-size: 12px; font-weight: 600">Bleu hover</div><div style="font-size: 11px; color: #6B7280">#0D47E0</div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 64px; border-radius: 12px; background: #1A2B4A"></div><div style="font-size: 12px; font-weight: 600">Navy</div><div style="font-size: 11px; color: #6B7280">#1A2B4A</div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 64px; border-radius: 12px; background: #0F1E35"></div><div style="font-size: 12px; font-weight: 600">Navy profond</div><div style="font-size: 11px; color: #6B7280">#0F1E35</div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 64px; border-radius: 12px; background: #EEF4FF; border: 1px solid #E2E8F0"></div><div style="font-size: 12px; font-weight: 600">Teinte</div><div style="font-size: 11px; color: #6B7280">#EEF4FF</div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 64px; border-radius: 12px; background: #DBEAFE"></div><div style="font-size: 12px; font-weight: 600">Bordure forte</div><div style="font-size: 11px; color: #6B7280">#DBEAFE</div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 64px; border-radius: 12px; background: #F5F7FB; border: 1px solid #E2E8F0"></div><div style="font-size: 12px; font-weight: 600">Surface alt</div><div style="font-size: 11px; color: #6B7280">#F5F7FB</div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 64px; border-radius: 12px; background: #E2E8F0"></div><div style="font-size: 12px; font-weight: 600">Bordure</div><div style="font-size: 11px; color: #6B7280">#E2E8F0</div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 64px; border-radius: 12px; background: #1E293B"></div><div style="font-size: 12px; font-weight: 600">Texte</div><div style="font-size: 11px; color: #6B7280">#1E293B</div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 64px; border-radius: 12px; background: #6B7280"></div><div style="font-size: 12px; font-weight: 600">Texte secondaire</div><div style="font-size: 11px; color: #6B7280">#6B7280</div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 64px; border-radius: 12px; background: #0E9F6E"></div><div style="font-size: 12px; font-weight: 600">Succès</div><div style="font-size: 11px; color: #6B7280">#0E9F6E</div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 64px; border-radius: 12px; background: #D97706"></div><div style="font-size: 12px; font-weight: 600">Attention</div><div style="font-size: 11px; color: #6B7280">#D97706</div></div>
+      </div>
+
+      <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #6B7280; margin-top: 12px">Typographie</div>
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; border: 1px solid #E2E8F0; border-radius: 16px">
+        <div style="font-size: 32px; font-weight: 700; color: #0F1E35; line-height: 1.15">Titre H1 · 32 / 700</div>
+        <div style="font-size: 22px; font-weight: 600; color: #0F1E35; line-height: 1.2">Titre H2 · 22 / 600</div>
+        <div style="font-size: 17px; font-weight: 600; color: #1E293B">Titre H3 · 17 / 600</div>
+        <div style="font-size: 15px; font-weight: 400; color: #1E293B; line-height: 1.55">Corps · 15 / 400. Vendez votre bien, accompagné à chaque étape. Le texte courant reste à 15 px sur mobile et 16 px sur desktop.</div>
+        <div style="font-size: 13px; color: #6B7280">Secondaire · 13 / 400 · #6B7280</div>
+        <div style="font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #1156FC">Étiquette · 12 / 600 / majuscules</div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #6B7280">Boutons</div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center">
+        <button style="height: 48px; padding: 0 22px; border: 0; border-radius: 12px; background: #1156FC; color: #FFFFFF; font: 600 15px 'Poppins', sans-serif; cursor: pointer">Publier mon bien</button>
+        <button style="height: 48px; padding: 0 22px; border: 1.5px solid #DBEAFE; border-radius: 12px; background: #FFFFFF; color: #1156FC; font: 600 15px 'Poppins', sans-serif; cursor: pointer">Secondaire</button>
+        <button style="height: 48px; padding: 0 18px; border: 0; border-radius: 12px; background: transparent; color: #1E293B; font: 500 15px 'Poppins', sans-serif; cursor: pointer">Discret</button>
+        <button style="height: 48px; padding: 0 22px; border: 0; border-radius: 12px; background: #1A2B4A; color: #FFFFFF; font: 600 15px 'Poppins', sans-serif; cursor: pointer">Sur fond sombre</button>
+        <button style="height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: #EEF4FF; color: #1156FC; font: 600 13px 'Poppins', sans-serif; cursor: pointer">Petit</button>
+      </div>
+
+      <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #6B7280; margin-top: 8px">Champs</div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 6px"><label for="ds-adresse" style="font-size: 13px; font-weight: 500">Adresse du bien</label><input id="ds-adresse" value="12 rue des Lilas, Savigny-sur-Orge" style="height: 48px; padding: 0 14px; border: 1.5px solid #E2E8F0; border-radius: 12px; font: 400 15px 'Poppins', sans-serif; color: #1E293B; background: #FFFFFF"></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><label for="ds-prix" style="font-size: 13px; font-weight: 500">Prix affiché</label><input id="ds-prix" value="350 000 €" style="height: 48px; padding: 0 14px; border: 1.5px solid #1156FC; border-radius: 12px; font: 400 15px 'Poppins', sans-serif; color: #1E293B; background: #FFFFFF; box-shadow: 0 0 0 3px #DBEAFE"></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><label for="ds-dpe" style="font-size: 13px; font-weight: 500">DPE</label><select id="ds-dpe" style="height: 48px; padding: 0 14px; border: 1.5px solid #E2E8F0; border-radius: 12px; font: 400 15px 'Poppins', sans-serif; color: #1E293B; background: #FFFFFF"><option>C</option><option>D</option></select></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><label for="ds-err" style="font-size: 13px; font-weight: 500">Surface</label><input id="ds-err" value="" placeholder="en m²" style="height: 48px; padding: 0 14px; border: 1.5px solid #DC2626; border-radius: 12px; font: 400 15px 'Poppins', sans-serif; color: #1E293B; background: #FFFFFF"><div style="font-size: 12px; color: #DC2626">La surface est obligatoire.</div></div>
+      </div>
+
+      <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #6B7280; margin-top: 8px">Statuts</div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <span style="padding: 6px 12px; border-radius: 100px; background: #F5F7FB; color: #4B5563; font-size: 12px; font-weight: 600">Brouillon</span>
+        <span style="padding: 6px 12px; border-radius: 100px; background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 600">En attente</span>
+        <span style="padding: 6px 12px; border-radius: 100px; background: #D1FAE5; color: #065F46; font-size: 12px; font-weight: 600">Publiée</span>
+        <span style="padding: 6px 12px; border-radius: 100px; background: #EEF4FF; color: #1156FC; font-size: 12px; font-weight: 600">En pause</span>
+        <span style="padding: 6px 12px; border-radius: 100px; background: #1A2B4A; color: #FFFFFF; font-size: 12px; font-weight: 600">Vendu</span>
+        <span style="padding: 6px 12px; border-radius: 100px; background: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 600">Refusée</span>
+        <span style="padding: 6px 12px; border-radius: 100px; background: #D1FAE5; color: #065F46; font-size: 12px; font-weight: 600">Justificatif vérifié</span>
+        <span style="padding: 6px 12px; border-radius: 100px; background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 600">Informations déclarées</span>
+      </div>
+
+      <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #6B7280; margin-top: 8px">Carte de bien</div>
+      <div style="display: flex; gap: 14px; padding: 12px; border: 1px solid #E2E8F0; border-radius: 16px; background: #FFFFFF; box-shadow: 0 4px 24px rgba(17,86,252,0.08); max-width: 520px">
+        <div style="width: 132px; height: 100px; border-radius: 12px; background: #DBEAFE; display: flex; align-items: center; justify-content: center; color: #1A2B4A; font-size: 12px; font-weight: 500; flex: none">Photo</div>
+        <div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1; min-width: 0">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><div style="font-size: 18px; font-weight: 700; color: #0F1E35">350 000 €</div><span style="padding: 4px 10px; border-radius: 100px; background: #D1FAE5; color: #065F46; font-size: 11px; font-weight: 600">DPE C</span></div>
+          <div style="font-size: 14px; font-weight: 600">Appartement 3 pièces · 68 m²</div>
+          <div style="font-size: 13px; color: #6B7280">Savigny-sur-Orge · centre</div>
+          <div style="display: flex; gap: 6px; margin-top: 2px"><span style="padding: 3px 8px; border-radius: 8px; background: #F5F7FB; font-size: 11px; color: #4B5563">2 chambres</span><span style="padding: 3px 8px; border-radius: 8px; background: #F5F7FB; font-size: 11px; color: #4B5563">Balcon</span><span style="padding: 3px 8px; border-radius: 8px; background: #F5F7FB; font-size: 11px; color: #4B5563">3e étage</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

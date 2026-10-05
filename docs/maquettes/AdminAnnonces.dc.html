@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Back office mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Poppins',system-ui,sans-serif;background:#F8FAFF;color:#1E293B}
+a{color:#1156FC}a:hover{color:#0D47E0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F8FAFF; font-family: 'Poppins', system-ui, sans-serif; color: #1E293B">
+  <div style="padding: 20px 20px 16px; background: #0F1E35; color: #FFFFFF; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <div style="display: flex; flex-direction: column; gap: 2px"><div style="font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.6)">Back office</div><div style="font-size: 20px; font-weight: 700">Aujourd'hui</div></div>
+      <div style="width: 40px; height: 40px; border-radius: 100px; background: #1156FC; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">CD</div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <a href="AdminAnnonces.dc.html" style="padding: 12px 10px; border-radius: 12px; background: #1156FC; text-decoration: none; color: #FFFFFF; display: flex; flex-direction: column; gap: 2px"><div style="font-size: 22px; font-weight: 700">3</div><div style="font-size: 11px; color: rgba(255,255,255,0.8)">à valider</div></a>
+      <a href="#dossiers" style="padding: 12px 10px; border-radius: 12px; background: rgba(255,255,255,0.1); text-decoration: none; color: #FFFFFF; display: flex; flex-direction: column; gap: 2px"><div style="font-size: 22px; font-weight: 700">5</div><div style="font-size: 11px; color: rgba(255,255,255,0.7)">dossiers ouverts</div></a>
+      <a href="#offres" style="padding: 12px 10px; border-radius: 12px; background: rgba(255,255,255,0.1); text-decoration: none; color: #FFFFFF; display: flex; flex-direction: column; gap: 2px"><div style="font-size: 22px; font-weight: 700">2</div><div style="font-size: 11px; color: rgba(255,255,255,0.7)">offres reçues</div></a>
+    </div>
+  </div>
+
+  <div style="padding: 16px 20px 0; display: flex; gap: 8px">
+    <button style="height: 36px; padding: 0 14px; border: 0; border-radius: 100px; background: #1A2B4A; color: #FFFFFF; font: 600 12px 'Poppins', sans-serif; cursor: pointer">En attente · 3</button>
+    <button style="height: 36px; padding: 0 14px; border: 1.5px solid #E2E8F0; border-radius: 100px; background: #FFFFFF; color: #1E293B; font: 500 12px 'Poppins', sans-serif; cursor: pointer">Publiées · 12</button>
+    <button style="height: 36px; padding: 0 14px; border: 1.5px solid #E2E8F0; border-radius: 100px; background: #FFFFFF; color: #1E293B; font: 500 12px 'Poppins', sans-serif; cursor: pointer">Toutes</button>
+  </div>
+
+  <div style="padding: 14px 20px; display: flex; flex-direction: column; gap: 12px; flex-grow: 1; overflow: hidden">
+    <div style="padding: 14px; border-radius: 16px; background: #FFFFFF; border: 1px solid #E2E8F0; box-shadow: 0 4px 24px rgba(17,86,252,0.06); display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; gap: 12px">
+        <div style="width: 72px; height: 64px; border-radius: 10px; background: #DBEAFE; flex: none"></div>
+        <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1; min-width: 0">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><div style="font-size: 15px; font-weight: 700; color: #0F1E35">350 000 €</div><span style="padding: 4px 8px; border-radius: 100px; background: #FEF3C7; color: #92400E; font-size: 11px; font-weight: 600">En attente</span></div>
+          <div style="font-size: 13px; font-weight: 600">Appartement 3 p · 68 m² · Savigny-sur-Orge</div>
+          <div style="font-size: 12px; color: #6B7280">Camille M. · Sérénité · reçu il y a 2 h</div>
+        </div>
+      </div>
+      <div style="padding: 10px 12px; border-radius: 10px; background: #EEF4FF; display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: #1A2B4A; line-height: 1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1156FC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 2px"><path d="M12 2l2.4 5.3L20 8l-4 4 1 5.7L12 15l-5 2.7 1-5.7-4-4 5.6-.7z"/></svg>Pré-analyse : annonce complète, prix cohérent avec l'estimation (+2 %), 12 photos, DPE renseigné.</div>
+      <div style="display: flex; gap: 8px">
+        <button style="flex: 1; height: 44px; border: 0; border-radius: 12px; background: #0E9F6E; color: #FFFFFF; font: 600 13px 'Poppins', sans-serif; cursor: pointer">Valider</button>
+        <button style="flex: 1; height: 44px; border: 1.5px solid #E2E8F0; border-radius: 12px; background: #FFFFFF; color: #1E293B; font: 600 13px 'Poppins', sans-serif; cursor: pointer">Refuser</button>
+        <button aria-label="Aperçu" style="width: 44px; height: 44px; border: 1.5px solid #E2E8F0; border-radius: 12px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E293B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+
+    <div style="padding: 14px; border-radius: 16px; background: #FFFFFF; border: 1px solid #E2E8F0; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; gap: 12px">
+        <div style="width: 72px; height: 64px; border-radius: 10px; background: #DBEAFE; flex: none"></div>
+        <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1; min-width: 0">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><div style="font-size: 15px; font-weight: 700; color: #0F1E35">520 000 €</div><span style="padding: 4px 8px; border-radius: 100px; background: #FEF3C7; color: #92400E; font-size: 11px; font-weight: 600">En attente</span></div>
+          <div style="font-size: 13px; font-weight: 600">Maison 5 p · 120 m² · Longjumeau</div>
+          <div style="font-size: 12px; color: #6B7280">Julien R. · Autonomie · reçu hier</div>
+        </div>
+      </div>
+      <div style="padding: 10px 12px; border-radius: 10px; background: #FEF3C7; display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: #92400E; line-height: 1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 2px"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Prix 14 % au-dessus de l'estimation, 3 photos seulement, DPE manquant.</div>
+      <div style="display: flex; gap: 8px">
+        <button style="flex: 1; height: 44px; border: 0; border-radius: 12px; background: #0E9F6E; color: #FFFFFF; font: 600 13px 'Poppins', sans-serif; cursor: pointer">Valider</button>
+        <button style="flex: 1; height: 44px; border: 1.5px solid #E2E8F0; border-radius: 12px; background: #FFFFFF; color: #1E293B; font: 600 13px 'Poppins', sans-serif; cursor: pointer">Refuser</button>
+        <button aria-label="Aperçu" style="width: 44px; height: 44px; border: 1.5px solid #E2E8F0; border-radius: 12px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E293B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 10px 20px 22px; background: #FFFFFF; border-top: 1px solid #E2E8F0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr))">
+    <a href="AdminAnnonces.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #1156FC; font-size: 11px; font-weight: 600"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1156FC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>Annonces</a>
+    <a href="#dossiers" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #6B7280; font-size: 11px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Dossiers</a>
+    <a href="#users" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #6B7280; font-size: 11px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>Utilisateurs</a>
+    <a href="#assistant" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #6B7280; font-size: 11px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 5.3L20 8l-4 4 1 5.7L12 15l-5 2.7 1-5.7-4-4 5.6-.7z"/></svg>Assistant</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
