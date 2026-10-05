@@ -17,12 +17,13 @@ Trois publics :
 
 Un même compte peut être vendeur et acquéreur. L'admin est un rôle distinct.
 
-Trois lots contractuels. Le périmètre est figé : tout ce qui n'est pas dans `docs/cahier-des-charges.md` va dans `docs/BACKLOG-V3.md`, jamais dans le code.
+Trois lots contractuels. **Le périmètre à construire est celui de `docs/SPEC-V2.md` tel qu'amendé par `docs/DECISIONS.md`** (arbitrage de Younes du 2026-10-05). Toute demande qui n'y figure pas va dans `docs/BACKLOG-V3.md`, jamais dans le code. `docs/cahier-des-charges.md` et `docs/plan-de-mise-en-oeuvre.md` servent uniquement à vérifier le périmètre contractuel (voir section 15, ordre de priorité).
 
-- **Lot 1 (S1 à S5)** : comptes, bien, annonce, recherche, messagerie, dashboard vendeur avec moteur d'étapes, Stripe, assistant IA vendeur + admin, back office.
-- **Lot 2 (S6 à S7)** : offre d'achat structurée (modèle client, SPEC-V2 section 13) avec synthèse automatique et explication IA à la demande, qualification acquéreur, assistant IA acquéreur.
-- **Lot 3 (S8 à S9)** : agenda et visites sur invitation, dossier de vente et partage sélectif, analyse IA des documents, alertes acheteur.
-- **S10** : recette globale, mise en production.
+- **Lot 1 (S1 à S5)** : reprise de l'existant en Next.js (estimateur, pages marketing, endpoints), comptes, bien, annonce, recherche, messagerie, dashboard vendeur avec moteur d'étapes, Stripe, assistant IA vendeur + admin, back office. La conversation conseiller (`kind = 'advisor'`) est placée en fin de lot 1.
+- **Lot 2 (S6 à S7)** : offre d'achat structurée (modèle client, SPEC-V2 section 13) avec synthèse automatique par gabarits, co-acquéreurs et SCI, qualification acquéreur, assistant IA acquéreur.
+- **Lot 3 (S8 à S9)** : visites sur invitation (créneaux ponctuels uniquement), dossier de vente et partage sélectif, analyse IA des documents, alertes acheteur.
+- **S10** : recette globale ; le 18 décembre 2026 = livraison de la préprod validée. Bascule en production prévue le lundi 4 janvier 2027 (à confirmer avec Cédric).
+- **Garantie** : c'est le contrat qui fait foi : 60 jours pour les bugs majeurs, 30 jours pour les anomalies mineures, à compter de la mise en production.
 
 ---
 
@@ -40,7 +41,7 @@ Trois lots contractuels. Le périmètre est figé : tout ce qui n'est pas dans `
 | Cartes et géocodage | Mapbox GL JS + Mapbox Geocoding | Clé publique côté client restreinte par domaine |
 | Images | `sharp` côté serveur | Redimensionnement à l'upload, jamais d'image brute servie |
 | Validation | Zod | Tout input utilisateur passe par un schéma Zod, côté serveur |
-| Hébergement | Vercel Pro (compte Nebula Creativ) | Preview par PR, preprod sur branche `staging`, prod sur `main` |
+| Hébergement | Vercel Pro (compte Nebula Creativ) | Preview par PR (build seulement), préprod sur la branche `v2` (projet `leenkey-v2`), prod sur `main` (projet `leenkey-estimator-main`) |
 | Tests | Vitest (unitaires), Playwright (parcours critiques) | Voir section 10 |
 | Lint / format | ESLint + Prettier, config du repo | `npm run lint` doit passer avant tout commit |
 
@@ -63,7 +64,7 @@ leenkey/
 │   ├── BACKLOG-V3.md          ← toute demande hors périmètre, datée
 │   └── CHANGELOG.md           ← une ligne par PR fusionnée
 ├── app/
-│   ├── (public)/              ← pages publiques : accueil, recherche, annonce, estimateur, légal
+│   ├── (public)/              ← pages publiques : accueil, recherche, annonce, estimateur (wizard V1 porté), légal
 │   ├── (auth)/                ← inscription, connexion, mot de passe
 │   ├── (app)/                 ← espace connecté vendeur et acquéreur
 │   │   ├── vendeur/
@@ -84,6 +85,7 @@ leenkey/
 │   ├── scheduling/            ← créneaux, réservations
 │   └── notifications/         ← file de notifications in-app et email
 ├── leenkey/                   ← MÉTIER immobilier
+│   ├── estimator/             ← moteur d'estimation repris de la V1 (estimation.ts), sous tests de non-régression
 │   ├── properties/            ← bien, photos, DPE
 │   ├── listings/              ← annonce, statuts, validation
 │   ├── search/                ← filtres, carte, tri
@@ -121,16 +123,16 @@ Trois environnements, strictement séparés. Aucun secret d'un environnement ne 
 
 | | Local (dev) | Preprod (staging) | Prod |
 |---|---|---|---|
-| Branche Git | branches de fonctionnalité | `staging` | `main` |
-| URL | `localhost:3000` | `preprod.leenkey.fr` | `leenkey.fr` |
-| Vercel | preview automatique par PR | environnement Preview lié à `staging`, domaine `preprod.leenkey.fr` | environnement Production |
+| Branche Git | une branche par tâche | `v2` (joue le rôle de staging) | `main` |
+| URL | `localhost:3000` | `leenkey-v2.vercel.app` | `leenkey.fr` |
+| Vercel | preview automatique par PR (vérification du build uniquement, pas de test manuel) | projet `leenkey-v2`, déploiement « production » du projet à chaque push sur `v2` | projet `leenkey-estimator-main` |
 | Supabase | projet `leenkey-dev` (compte Nebula) | projet `leenkey-staging` (compte Nebula) | projet `leenkey-prod` (compte Leenkey, gratuit puis Pro au premier client payant) |
 | Stripe | mode test | mode test | mode live |
 | Anthropic | clé dev, quota bas | clé staging | clé prod |
 | Resend | domaine de test, envois vers une boîte de test uniquement | idem, préfixe `[PREPROD]` dans les sujets | domaine `leenkey.fr` vérifié |
-| Mapbox | clé restreinte à `localhost` | clé restreinte à `preprod.leenkey.fr` | clé restreinte à `leenkey.fr` |
+| Mapbox | clé restreinte à `localhost` | clé restreinte à `leenkey-v2.vercel.app` | clé restreinte à `leenkey.fr` |
 | Données | seed de test | seed de test + données saisies par Cédric en recette | données réelles |
-| Robots | `noindex` | `noindex` + protection par mot de passe Vercel | indexable |
+| Robots | `noindex` | `noindex` + protection par mot de passe dans le middleware (`PREPROD_USER` / `PREPROD_PASSWORD`) | indexable |
 
 ### Variables d'environnement
 
@@ -156,6 +158,8 @@ EMAIL_TEST_INBOX=               # destinataire unique des emails hors prod
 ANTHROPIC_API_KEY=
 RESEND_API_KEY=
 CRON_SECRET=                    # vérifié sur chaque route /api/cron/*
+PREPROD_USER=                   # préprod uniquement : authentification Basic dans middleware.ts
+PREPROD_PASSWORD=               # préprod uniquement ; absentes en prod = pas de protection
 AI_MODEL_FAST=                  # facultatif, surcharge de core/ai/models.ts
 AI_MODEL_SMART=                 # facultatif
 AI_MOCK=                        # 1 en tests E2E : réponses IA déterministes
@@ -176,22 +180,29 @@ Règles :
 
 Une bannière visible « Environnement de test » s'affiche sur toutes les pages quand `NEXT_PUBLIC_ENV=staging`.
 
+Protection de la préprod : `leenkey-v2.vercel.app` est une URL publique. On n'utilise pas l'option payante de Vercel : `middleware.ts` exige une authentification HTTP Basic quand `NEXT_PUBLIC_ENV=staging` et que `PREPROD_USER` / `PREPROD_PASSWORD` sont définies. Exclusions : `/api/webhooks/*` et `/api/cron/*` (qui ont leur propre vérification). En-tête `X-Robots-Tag: noindex, nofollow` sur toutes les réponses hors prod. Comparaison des identifiants en temps constant.
+
+Attention : sur le projet Vercel `leenkey-v2`, la préprod est l'environnement « Production » du projet. Ses variables (dont `NEXT_PUBLIC_ENV=staging`, les clés de test Stripe et le Supabase `leenkey-staging`) se saisissent donc dans l'onglet *Production* de **ce** projet, jamais dans `leenkey-estimator-main`.
+
+Les tests manuels se font sur la préprod **après fusion** dans `v2`, pas sur les previews de PR (pas de Supabase ni de clé Mapbox pour les previews).
+
 ---
 
 ## 5. Workflow Git et déploiement
 
 ```
-feature/xxx  →  PR vers staging  →  preview Vercel  →  review + merge
-staging      →  déploiement preprod.leenkey.fr automatique
-staging      →  PR vers main (uniquement à une livraison de lot ou un correctif validé)
-main         →  déploiement leenkey.fr automatique
+feature/<id>-<slug>  →  PR vers v2  →  CI (lint, typecheck, test, build)  →  review + merge
+v2                   →  déploiement leenkey-v2.vercel.app automatique  →  test manuel en préprod
+v2                   →  PR vers main (bascule V2 prévue le 4 janvier 2027, puis livraisons validées)
+main                 →  déploiement leenkey.fr automatique
 ```
 
-- `main` et `staging` sont protégées : pas de push direct, PR obligatoire, `npm run lint && npm run typecheck && npm run test` doivent passer (GitHub Actions).
+- Une tâche = une branche = une PR vers `v2`. Pas de push direct sur `v2` ni sur `main` (règle de travail ; la protection de branche GitHub n'est pas disponible sur un repo privé en plan gratuit, la CI GitHub Actions `npm run lint && npm run typecheck && npm run test && npm run build` doit être verte avant fusion).
+- `main` reste le site V1 en ligne (Vite) jusqu'à la bascule. Aucun commit V2 n'y arrive avant.
 - Une PR = une fonctionnalité ou un correctif. Titre au format `feat(listings): validation par l'admin` / `fix(messaging): notification en double`.
 - Chaque PR fusionnée ajoute une ligne dans `docs/CHANGELOG.md`.
-- Correctif urgent en prod : branche `hotfix/xxx` depuis `main`, PR vers `main`, puis merge de `main` dans `staging` pour resynchroniser.
-- Rollback : Vercel « Promote » du déploiement précédent. Si une migration est en cause, migration inverse écrite et jouée sur staging d'abord.
+- Correctif urgent en prod : branche `hotfix/xxx` depuis `main`, PR vers `main`. Avant la bascule, la V1 et la V2 n'ont plus de code commun : reporter le correctif à la main dans `v2` s'il concerne l'estimateur ou les pages marketing. Après la bascule : merge de `main` dans `v2` pour resynchroniser.
+- Rollback : Vercel « Promote » du déploiement précédent. Si une migration est en cause, migration inverse écrite et jouée sur staging (préprod) d'abord.
 
 ### Migrations Supabase
 
@@ -206,27 +217,18 @@ main         →  déploiement leenkey.fr automatique
 
 ## 6. Modèle de données : règles fixes
 
-Les statuts sont ceux-ci, sous forme d'enums Postgres. Ne pas en inventer d'autres.
+**La liste de référence des enums est `docs/SPEC-V2.md` section 4 (« Enums »).** Ne pas en inventer d'autres ; toute nouvelle valeur passe par `docs/DECISIONS.md` puis la SPEC avant d'arriver dans une migration.
 
-```
-listing_status:    draft | pending | published | paused | sold | rejected
-offer_status:      draft | submitted | viewed | accepted | declined | expired | withdrawn | superseded
-visit_status:      requested | confirmed | done | cancelled
-case_status:       new | in_progress | closed
-financing_status:  not_provided | declared | document_provided | document_checked   (jamais « validé » dans l'interface)
-conversation_kind: listing | advisor
-acquisition_mode:  own_name | joint | sci | other
-financing_mode:    no_loan | loan
-financing_progress: not_presented | simulation_done | broker_consulted | agreement_in_principle | other
-user_role:         seller | buyer | admin
-plan_code:         autonomie | accompagne | serenite
-```
+Rappel des points qui ont déjà prêté à confusion :
+- `listing_status` contient `suspended` : statut posé uniquement par l'admin, dont le vendeur ne peut pas sortir (seul l'admin le lève).
+- `financing_status` : `not_provided | declared | document_provided | document_checked`. Jamais « validé » dans l'interface.
+- Les rôles sont un tableau : `profiles.roles user_role[]`. Un compte peut être `seller` et `buyer`. Un admin est un profil tel que `'admin' = any(roles)`, testé en SQL par la fonction `is_admin()`.
 
 Conventions :
 - Tables en `snake_case` pluriel (`properties`, `listings`, `offers`). Colonnes en `snake_case`.
 - Toute table a `id uuid default gen_random_uuid()`, `created_at timestamptz default now()`, `updated_at timestamptz` (trigger), et `owner_id` ou équivalent quand une ligne appartient à quelqu'un.
 - Suppression logique (`deleted_at`) pour `properties`, `listings`, `documents`, `profiles`. Suppression physique uniquement pour les tables techniques.
-- Les fichiers (photos, documents) sont dans Supabase Storage, buckets `photos` (public en lecture pour les annonces publiées via URL signée courte) et `documents` (privé, URL signée 10 minutes, jamais d'URL permanente).
+- Les fichiers sont dans Supabase Storage, buckets `photos` (lecture des annonces publiées via URL signée courte), `documents` (privé : dossier de vente et justificatifs de financement, URL signée 10 minutes) et `offers` (privé : PDF des offres d'achat, URL signée 10 minutes). Jamais d'URL permanente pour un fichier privé.
 - Toute écriture passe par une server action ou un route handler qui valide avec Zod puis écrit via le client Supabase serveur avec la session de l'utilisateur. Le client `admin` (service role) n'est utilisé que là où la RLS ne peut pas s'appliquer (webhooks, crons).
 
 Le schéma complet des tables est dans `docs/SPEC-V2.md`, section 4 (référence à jour). `docs/plan-de-mise-en-oeuvre.md` est un document contractuel antérieur : ne pas s'en servir pour le schéma.
@@ -237,26 +239,28 @@ Le schéma complet des tables est dans `docs/SPEC-V2.md`, section 4 (référence
 
 - Un vendeur lit et modifie uniquement ses `properties`, `listings`, `photos`, `documents`, `sale_progress`, `visit_slots`.
 - Une `listing` en `published` est lisible par tous, y compris anonymes. Tout autre statut : propriétaire et admin seulement.
+- Le statut `suspended` n'est posé et levé que par l'admin. Le vendeur ne peut ni y entrer ni en sortir (transitions contrôlées par fonction SQL, jamais par un `update` direct du statut).
 - Une `conversation` et ses `messages` sont lisibles et modifiables uniquement par ses participants. L'admin lit, ne modifie pas.
 - Un `document` n'est lisible par un acquéreur que s'il existe une ligne `document_shares (document_id, buyer_id)`.
 - Un `visit_slot` n'est réservable par un acquéreur que s'il existe une `visit_invitations (property_id, buyer_id)`.
 - Une `offer` est lisible par son auteur, par le vendeur du bien concerné, et par l'admin. Le vendeur lit via la vue `offer_for_seller`, qui masque date de naissance, adresse, téléphone et e-mail de l'acquéreur tant que l'offre n'est pas acceptée.
 - Une offre envoyée est figée : trigger `offers_freeze_after_submit` en base. Ne jamais le contourner ni le désactiver dans une migration.
 - `buyer_profiles.financing_status` est lisible par le vendeur uniquement pour les acquéreurs qui l'ont contacté ou ont fait une offre sur son bien, via `buyer_summary_for_seller()`. Le justificatif et les montants du profil ne lui sont jamais exposés.
-- L'admin (`profiles.role = 'admin'`) a un accès en lecture global et des droits d'écriture limités aux actions de modération : statuts d'annonce, suspension, dossiers, base de connaissances.
+- L'admin (`'admin' = any(profiles.roles)`, via `is_admin()`) a un accès en lecture global et des droits d'écriture limités aux actions de modération : statuts d'annonce, suspension, dossiers, base de connaissances.
 - Aucune politique `using (true)` en écriture. Jamais.
 
-Chaque migration qui touche aux permissions est accompagnée d'un test dans `supabase/tests/` qui vérifie, avec les trois comptes de seed (`seller_a`, `seller_b`, `buyer_c`) et `admin`, qu'un utilisateur ne voit pas ce qu'il ne doit pas voir. Ne pas fusionner sans ce test.
+Chaque migration qui touche aux permissions est accompagnée d'un test dans `supabase/tests/` qui vérifie, avec les cinq comptes de seed (`seller_a`, `seller_b`, `buyer_c`, `buyer_d`, `admin`), qu'un utilisateur ne voit pas ce qu'il ne doit pas voir. Ne pas fusionner sans ce test.
 
 ---
 
 ## 8. Assistant IA : règles
 
-- Client unique dans `core/ai/client.ts`. Modèles définis dans `core/ai/models.ts` : un modèle rapide pour la conversation et les suggestions, un modèle plus capable pour l'analyse de documents et l'explication d'une offre à la demande. La synthèse vendeur d'une offre est produite par gabarits en code, sans appel au modèle. Ne pas appeler le SDK ailleurs.
+- Client unique dans `core/ai/client.ts`. Modèles définis dans `core/ai/models.ts` (identifiants par défaut vérifiés sur la documentation Anthropic le 2026-10-05, voir SPEC-V2 section 3) : un modèle rapide pour la conversation et les suggestions, un modèle plus capable pour l'analyse de documents et l'explication d'une offre à la demande. La synthèse vendeur d'une offre est produite par gabarits en code, sans appel au modèle. Ne pas appeler le SDK ailleurs.
 - Le prompt système est dans `core/ai/prompts/` en fichiers versionnés, un par contexte (`seller.md`, `buyer.md`, `admin.md`, `document-analysis/*.md`). Jamais de prompt en dur dans un composant.
 - Cadre non négociable dans tous les prompts : pas d'avis juridique ou fiscal engageant, renvoi vers Cédric sur tout sujet sensible, réponses ancrées sur la base de connaissances, ton Leenkey (direct, clair, sans jargon).
-- Outils (tool use) : chaque outil est un fichier dans `core/ai/tools/` avec son schéma Zod, sa description, sa fonction d'exécution, et un flag `requiresConfirmation`. Les outils qui écrivent (`update_listing_description`, `create_alert`, `propose_visit_slot`, `create_case`, `prefill_offer`) ont `requiresConfirmation: true` : l'interface affiche l'action proposée et l'utilisateur confirme avant exécution. Aucune écriture silencieuse.
-- Quota : `profiles.ai_messages_today` réinitialisé par cron ; limite lue depuis `plans.ai_daily_quota`. Réponse claire quand le quota est atteint.
+- Outils (tool use) : chaque outil est un fichier dans `core/ai/tools/` avec son schéma Zod, sa description, sa fonction d'exécution, et un flag `requiresConfirmation`. La liste de référence est SPEC-V2 section 12. Tous les outils qui écrivent (`update_listing_description`, `update_listing_price`, `create_case`, `contact_advisor`, `create_alert`, `prefill_offer`, `propose_visit_slot`) ont `requiresConfirmation: true` : l'interface affiche l'action proposée et l'utilisateur confirme avant exécution. Aucune écriture silencieuse.
+- Les outils s'exécutent avec la session de l'utilisateur (RLS). Quand une écriture doit dépasser les droits de l'utilisateur (ex. `create_case`, qui crée un dossier visible par l'admin), elle passe par une fonction SQL `security definer` dédiée, appelée en RPC, qui vérifie elle-même `auth.uid()` et ses paramètres. Jamais la clé service role dans `core/ai/`.
+- Quota : compteur `profiles.ai_messages_today` réinitialisé par cron. Les plafonds sont définis dans `core/ai/quotas.ts`, par rôle (acquéreur, vendeur, admin), avec un plafond plus élevé pour un vendeur qui a au moins un bien sous formule payante. Un compte vendeur et acquéreur reçoit le plafond le plus élevé de ses rôles. Pas de colonne de quota dans `plans`. Réponse claire quand le quota est atteint.
 - Toutes les conversations sont journalisées dans `ai_conversations` / `ai_messages` pour relecture par l'admin.
 - Base de connaissances : table `knowledge_base` avec `content`, `embedding vector(384)` (modèle `gte-small` intégré à Supabase, voir SPEC-V2 section 3), `category`, `step_code`. Recherche par similarité dans `core/ai/knowledge.ts`. Les fiches sont importées depuis `supabase/seed/knowledge/*.md`.
 - Streaming des réponses via route handler, jamais depuis une server action.
@@ -286,7 +290,7 @@ Chaque migration qui touche aux permissions est accompagnée d'un test dans `sup
 Une fonctionnalité est finie quand :
 1. La migration et ses RLS sont jouées sur local et staging, avec le test de permissions qui passe.
 2. `npm run lint`, `npm run typecheck`, `npm run test` passent.
-3. Le parcours est testé à la main sur la preview Vercel avec les trois comptes de seed, en mobile et en desktop.
+3. Le parcours est testé à la main sur la préprod (`leenkey-v2.vercel.app`) après fusion, avec les comptes de seed, en mobile et en desktop.
 4. Les emails déclenchés sont vérifiés dans la boîte de test.
 5. Une ligne est ajoutée à `docs/CHANGELOG.md`.
 6. Elle est démontrable à Cédric le vendredi.
@@ -336,12 +340,7 @@ Scripts à créer dans `scripts/` et déclarés dans `package.json` dès la sema
 
 ## 13. Jobs planifiés (Vercel Cron)
 
-Déclarés dans `vercel.json`, tous protégés par `CRON_SECRET` :
-- `0 3 * * *` : `/api/cron/ping-db` (évite la mise en pause du projet Supabase gratuit).
-- `0 6 * * *` : `/api/cron/expire-offers` (offres dont la validité est dépassée → `expired`).
-- `0 7 * * *` : `/api/cron/buyer-alerts` (nouveaux biens correspondant aux alertes).
-- `0 0 * * *` : `/api/cron/reset-ai-quotas`.
-- `0 8 * * *` : `/api/cron/visit-reminders` (rappels J-1).
+Déclarés dans `vercel.json`, tous protégés par `CRON_SECRET`, idempotents et journalisés. **La liste, les horaires et les rôles de référence sont dans `docs/SPEC-V2.md` section 19** ; ne pas les dupliquer ici. Les crons de la préprod tournent aussi (projet Vercel `leenkey-v2`) : ils ne doivent jamais envoyer d'email hors de `EMAIL_TEST_INBOX`.
 
 Sauvegarde : GitHub Action nocturne qui exécute `npm run backup` sur le projet prod et pousse l'archive vers un stockage privé, rétention 14 jours. Indépendante de Vercel.
 
@@ -352,13 +351,14 @@ Sauvegarde : GitHub Action nocturne qui exécute `npm run backup` sur le projet 
 - Ajouter une dépendance.
 - Modifier une migration déjà jouée sur staging.
 - Toucher aux politiques RLS existantes sans le signaler explicitement dans la PR.
-- Utiliser le client service role en dehors de `webhooks`, `cron` et `leenkey/admin/actions.ts`.
+- Utiliser le client service role en dehors de `webhooks`, `cron` et `leenkey/admin/actions.ts` (jamais dans `core/ai/` : passer par une fonction SQL `security definer`).
 - Créer une route API là où une server action suffit.
-- Ajouter un statut, un rôle ou un plan qui n'est pas dans la section 6.
+- Ajouter un statut, un rôle, un plan ou une valeur d'enum qui n'est pas dans SPEC-V2 section 4.
 - Tester un droit en comparant un nom de formule : toujours `hasEntitlement(propertyId, feature)`.
 - Bloquer une étape essentielle de la vente (publier, échanger, visiter, recevoir, accepter ou refuser une offre, finaliser) selon la formule : règle freemium du client, voir SPEC-V2 section 11 bis.
-- Implémenter quelque chose qui n'est pas dans `docs/cahier-des-charges.md` : le noter dans `docs/BACKLOG-V3.md` et le signaler.
-- Écrire en prod. La prod se déploie par merge de `staging` vers `main`, jamais autrement.
+- Implémenter quelque chose qui n'est ni dans `docs/SPEC-V2.md` ni dans `docs/DECISIONS.md` : le noter dans `docs/BACKLOG-V3.md` et le signaler.
+- Modifier le chiffre produit par le moteur d'estimation (`estimation.ts`) sans que les tests de non-régression soient mis à jour dans la même PR et la différence expliquée.
+- Écrire en prod, ou pousser quoi que ce soit sur `main`. La prod se déploie par merge de `v2` vers `main`, sur go explicite de Younes, jamais autrement.
 - Désactiver un test, un lint ou un typecheck pour faire passer une PR.
 
 ---
@@ -373,14 +373,69 @@ Pour chaque fonctionnalité, dans cet ordre :
 5. `queries.ts` puis `actions.ts`.
 6. Composants, à partir de `components/shared/`.
 7. Emails et notifications.
-8. Vérification manuelle sur preview, entrée dans `CHANGELOG.md`.
+8. Entrée dans `CHANGELOG.md`, PR vers `v2`, vérification manuelle en préprod après fusion.
 
 ### Ordre de priorité des documents
 
-En cas de contradiction : `docs/DECISIONS.md` (décisions datées du client) > `docs/SPEC-V2.md` > `CLAUDE.md` pour le contenu fonctionnel ; `CLAUDE.md` > tout le reste pour les règles techniques et de sécurité ; `docs/cahier-des-charges.md` et `docs/plan-de-mise-en-oeuvre.md` servent uniquement à vérifier le périmètre contractuel. Signaler toute contradiction relevée.
+En cas de contradiction :
+- **Fonctionnel** : `docs/DECISIONS.md` (décisions datées) > `docs/SPEC-V2.md` > `CLAUDE.md`.
+- **Technique et sécurité** : `CLAUDE.md` l'emporte sur tout le reste.
+- **Périmètre contractuel** : `docs/cahier-des-charges.md` et `docs/plan-de-mise-en-oeuvre.md` servent uniquement à le vérifier ; ils ne décrivent pas ce qu'il faut construire. Pour la garantie, c'est le contrat signé qui fait foi (60 jours bugs majeurs, 30 jours anomalies mineures).
+
+Signaler toute contradiction relevée, et l'inscrire dans `docs/DECISIONS.md`.
 
 ### Documents de suivi
 
 `docs/PLANNING.md` (tâches à cocher), `docs/CHANGELOG.md`, `docs/RECETTE.md`, `docs/SECURITE.md`, `docs/BACKLOG-V3.md`, `docs/PROMPTS.md`, maquettes dans `docs/maquettes/png/`. Commandes : `/tache`, `/revue`, `/bug`, `/vendredi`, `/recette`.
 
 Quand une instruction de session contredit ce fichier, le signaler avant d'agir. Quand ce fichier est incomplet sur un point, proposer la règle et l'ajouter ici dans la même PR.
+
+---
+
+## 16. Existant et règles éditoriales (repris du CLAUDE.md V1)
+
+### Le client et les sites
+
+Plateforme PropTech française de vente immobilière sans agence, développée par Younes (Nebula Creativ) pour Cédric Da Cunha (SAS LEENKEY, RCS Évry 107 616 211). Sites : leenkey.fr (principal) et leenkey.com (redirigé vers leenkey.fr).
+
+### La V1 en ligne (branche `main`, à préserver jusqu'à la bascule)
+
+- **Stack V1** : Vite + React 19 + TypeScript + TanStack Router (routes fichiers dans `src/routes/`), Tailwind 4, shadcn. Pas de base, pas d'auth, pas de paiement, pas de tests.
+- **Pages marketing** : HTML statiques dans `public/pages/` (landing, concept, investir, tarifs, faq, issus de Lovable), injectées par `src/components/site/HtmlPage.tsx`.
+- **Estimateur** : wizard multi-étapes dans `src/components/leenkey/` (maison/appartement dans `steps.tsx`, puis `steps-terrain.tsx`, `steps-local.tsx`, `steps-immeuble.tsx`, `steps-atypique.tsx`, orchestrés par `flows.tsx`).
+- **Moteur d'estimation** : `src/components/leenkey/estimation.ts` (~3 300 lignes). **Le moteur fait foi pour le chiffre** ; Claude ne rédige que l'analyse écrite.
+- **API serverless** (`api/`) : `estimate.ts` (Claude + emails), `contact.ts` (formulaires → emails), `send-report.ts` (rapport PDF), `dvf-comparables.ts` (fichiers officiels Etalab ; api.cquest.org est morte, ne pas y revenir).
+- **Emails V1** : Resend, expéditeur `noreply@leenkey.fr` (domaine vérifié ; DNS sur le compte IONOS de Cédric). Destinataire admin : `contact.leenkey@gmail.com`.
+- **Analytics** : GA4 `G-27N3E3WP2D` + GTM `GTM-MTRM36P4` + Vercel Analytics.
+- **Déploiement V1** : projet Vercel `leenkey-estimator-main`, team `nebula-creativ`, auto-deploy sur push `main` (~30 s). Secours : `npx vercel deploy --prod --scope nebula-creativ --yes`. Vérification : `curl https://leenkey.fr/...`.
+
+### Reprise de l'existant dans la V2 (tâche L1-01)
+
+1. **Avant tout déplacement** : tests de non-régression Vitest sur `estimation.ts`, au moins 20 cas réels couvrant tous les types de bien, avec les résultats actuels figés. Ces tests doivent passer avant et après le portage, à l'identique.
+2. Estimateur porté en composants client (`"use client"`) sous `app/(public)/estimer`, moteur dans `leenkey/estimator/` sans modification de logique.
+3. Les 4 endpoints deviennent des route handlers aux **mêmes chemins** (`/api/estimate`, `/api/contact`, `/api/send-report`, `/api/dvf-comparables`), même format de requête et de réponse, CORS de `send-report` conservé.
+4. Pages marketing `public/pages/*.html` conservées, avec le comportement de `HtmlPage.tsx` (interception des `<form>`) et l'en-tête `Cache-Control: max-age=0, must-revalidate` sur `/pages/*`.
+5. GA4, GTM (avec le `noscript`), Vercel Analytics et le `page_view` à chaque changement de route.
+6. Redirections 301 : `leenkey.com` et `www.leenkey.fr` → `leenkey.fr` (hors `/api`). URLs, `sitemap.xml` et `robots.txt` conservés.
+
+### Règles éditoriales (décisions client, ne pas régresser)
+
+S'appliquent à tous les textes : interface, emails, prompts de l'assistant, PDF.
+
+- Paiement **« à la souscription »**, jamais « au succès » ni « payé au succès ».
+- Voix **« nous »**, jamais « on » dans les textes Leenkey.
+- Réponse **« sous 48 h, 7 j/7 »** pour le formulaire de contact du site, jamais « ouvrées ». (Délais V2 décidés par Cédric : relecture d'annonce et contact après achat d'une formule sous 24 h, même non ouvrées.)
+- Vocabulaire **« valorisation / analyse de valeur »** : éviter « estimation » seul dans les textes marketing et d'interface (prudence loi Hoguet ; Leenkey n'est pas une agence). Le nom technique `estimation` reste permis dans le code et les tables.
+- Pas de chiffres ni de témoignages inventés sur le site.
+- Pas de mention « Prix ferme » sur les écrans.
+- Pas de pixel publicitaire tiers (Meta Pixel ou autre) hors décision écrite dans `docs/DECISIONS.md`.
+- Bleu de marque : `#1156FC` (pas le bleu Tailwind `#3B82F6`).
+
+### Pièges connus
+
+- Les `.html` de `public/pages/` embarquent leurs styles inline + `leenkey.css` (versionné `?v=N` : incrémenter à chaque modification du CSS pour casser le cache).
+- Le JS d'accordéon et de compteurs (`leenkey.js`) n'est pas chargé partout : préférer des valeurs statiques et une FAQ dépliée là où il est absent.
+- `HtmlPage.tsx` intercepte les `<form>` des pages HTML et poste vers `/api/contact` avec une `source` déduite de l'id du formulaire ; le message de succès `.form-success` doit être un **sibling** du form, pas un enfant.
+- Dans `generatePDF.ts`, mesurer le texte avec la même taille de police que le rendu.
+- Le client (Younes) privilégie toujours la solution la plus simple : proposer le minimum d'abord.
+
