@@ -4,7 +4,7 @@
 **Emplacement dans le repo :** `docs/SPEC-V2.md`
 **Documents liés :** `CLAUDE.md` (règles du repo, à la racine), `docs/cahier-des-charges.md` (périmètre contractuel), `docs/plan-de-mise-en-oeuvre.md` (planning), `docs/maquettes/` (maquettes de référence).
 
-Ce document est la source de vérité fonctionnelle, technique et visuelle de la V2. Le `CLAUDE.md` donne les règles de travail ; ce document dit **quoi** construire et **à quoi ça doit ressembler**. En cas de contradiction avec le cahier des charges sur le périmètre, le cahier des charges l'emporte : signaler l'écart dans `docs/DECISIONS.md`.
+Ce document est la source de vérité fonctionnelle, technique et visuelle de la V2. Le `CLAUDE.md` donne les règles de travail ; ce document dit **quoi** construire et **à quoi ça doit ressembler**. Ordre de priorité (arbitrage de Younes, 2026-10-05) : pour le fonctionnel, `docs/DECISIONS.md` > ce document > `CLAUDE.md` ; pour les règles techniques et de sécurité, `CLAUDE.md` l'emporte. Le cahier des charges et le plan de mise en œuvre servent uniquement à vérifier le périmètre contractuel. Signaler tout écart dans `docs/DECISIONS.md`.
 
 ---
 
@@ -46,7 +46,7 @@ Ce document est la source de vérité fonctionnelle, technique et visuelle de la
 
 1. Lire `CLAUDE.md` en entier, puis ce document en entier, avant la première ligne de code.
 2. Travailler **dans l'ordre de la section 23**. Chaque tâche a un identifiant (`L1-03`, etc.), des dépendances et des critères d'acceptation.
-3. Pour chaque tâche : branche `feature/<id>-<slug>`, PR vers `staging`, mise à jour de `docs/CHANGELOG.md` et cochage de la tâche dans `docs/PLANNING.md`.
+3. Pour chaque tâche : branche `feature/<id>-<slug>`, PR vers `v2` (la branche de préprod), mise à jour de `docs/CHANGELOG.md` et cochage de la tâche dans `docs/PLANNING.md`.
 4. Quand une information manque (contenu client, choix non tranché) : **ne pas bloquer**. Utiliser le placeholder prévu en section 24, le marquer `// TODO(client): ...`, et ajouter une ligne dans `docs/DECISIONS.md` avec la question à poser.
 5. Quand une demande sort du périmètre : ne pas l'implémenter, l'ajouter dans `docs/BACKLOG-V3.md`.
 
@@ -57,9 +57,9 @@ Ces étapes sont faites par Younes. Si elles ne sont pas faites, Claude Code tra
 | Action | Qui | Quand |
 |---|---|---|
 | Créer les projets Supabase `leenkey-dev`, `leenkey-staging`, `leenkey-prod` | Younes (prod : compte de Cédric) | Avant L1-01 |
-| Créer le compte Stripe Leenkey, les produits et prix en mode test | Younes | Avant L1-17 |
-| Créer les clés Anthropic, Resend, Mapbox par environnement | Younes | Avant L1-05 / L1-09 |
-| Configurer Vercel : environnement Preview lié à `staging`, domaine `preprod.leenkey.fr`, protection par mot de passe, variables par environnement | Younes | Avant L1-02 |
+| Créer le compte Stripe Leenkey (au nom de la SAS), les produits et prix en mode test | Younes avec Cédric | Avant L1-26 |
+| Créer les clés Resend (L1-09, emails d'auth), Mapbox (L1-11) et Anthropic (L1-28) par environnement | Younes | Avant la tâche concernée |
+| Configurer le projet Vercel `leenkey-v2` (branche `v2`) : variables de préprod dans son onglet « Production », dont `NEXT_PUBLIC_ENV=staging`, `PREPROD_USER`, `PREPROD_PASSWORD` | Younes | Avant L1-02 |
 | Vérifier le domaine `leenkey.fr` dans Resend | Younes | Avant la mise en production |
 | Fournir les contenus client (section 24) | Cédric via Younes | Au kick-off |
 | Passer Stripe en mode live, faire le passage en prod | Younes | S10 |
@@ -85,20 +85,21 @@ Leenkey est une plateforme de vente immobilière entre particuliers, où chaque 
 
 ### Ce qui existe déjà (V1)
 
-- Site marketing sur `leenkey.fr` (accueil, concept, investir), design tokens en place.
-- Estimateur de valeur (données DVF, rapport PDF par email), déployé sur Vercel.
-- Aucun compte utilisateur, aucune base de données applicative.
+- Site marketing sur `leenkey.fr` (accueil, concept, investir, tarifs, FAQ : pages HTML statiques), design tokens en place.
+- Analyse de valeur (estimateur : données DVF, rapport PDF par email), déployée sur Vercel.
+- **Stack V1 : Vite + React 19 + TanStack Router**, endpoints serverless dans `api/`. Contrairement à ce qu'indique le cahier des charges (§5, « Next.js (existant) »), la V1 n'est pas en Next.js : la V2 est un nouveau projet Next.js 15 dans le même repo, qui reprend l'existant en L1-01 (voir `CLAUDE.md` section 16).
+- Aucun compte utilisateur, aucune base de données applicative, aucun test.
 
-La V2 **conserve** l'estimateur et les pages marketing, et construit l'application autour. L'estimateur devient l'entrée du parcours vendeur : à la fin d'une estimation, bouton « Publier ce bien », qui crée un compte et préremplit la fiche du bien.
+La V2 **conserve** l'estimateur (moteur inchangé, sous tests de non-régression), les 4 endpoints (`/api/estimate`, `/api/contact`, `/api/send-report`, `/api/dvf-comparables`, en route handlers aux mêmes chemins), les pages marketing, GA4, GTM, Vercel Analytics et les redirections, et construit l'application autour. L'estimateur devient l'entrée du parcours vendeur : à la fin d'une estimation, bouton « Publier ce bien », qui crée un compte et préremplit la fiche du bien.
 
 ### Les trois lots
 
 | Lot | Semaines | Contenu |
 |---|---|---|
 | Lot 1 : socle | S1 à S5 | Comptes, fiche du bien, annonce, recherche, messagerie (acquéreurs et conseiller), dashboard vendeur avec moteur d'étapes, formules et droits, déclencheurs de montée en gamme, Stripe, assistant IA (vendeur + admin), back office |
-| Lot 2 : qualification | S6 à S7 | Offre d'achat structurée avec synthèse automatique et explication par l'IA à la demande, qualification acquéreur, assistant IA acquéreur |
-| Lot 3 : accompagnement | S8 à S9 | Visites sur invitation, dossier de vente et partage de documents, analyse IA des documents, alertes acheteur |
-| Mise en production | S10 | Recette, durcissement, bascule |
+| Lot 2 : qualification | S6 à S7 | Offre d'achat structurée (co-acquéreurs et SCI compris) avec synthèse automatique par gabarits, qualification acquéreur, assistant IA acquéreur |
+| Lot 3 : accompagnement | S8 à S9 | Visites sur invitation (créneaux ponctuels), dossier de vente et partage de documents, analyse IA des documents, alertes acheteur |
+| Mise en production | S10 | Recette, durcissement, livraison de la préprod validée le 18 décembre ; bascule en production le 4 janvier 2027 (à confirmer avec Cédric) |
 
 ---
 
@@ -163,9 +164,11 @@ Déclarés dans `core/ai/models.ts`, jamais en dur ailleurs :
 ```ts
 export const MODELS = {
   fast: process.env.AI_MODEL_FAST ?? 'claude-haiku-4-5-20251001',   // conversation, suggestions, pré-analyse
-  smart: process.env.AI_MODEL_SMART ?? 'claude-sonnet-5',           // analyse de documents, explication d'offre à la demande
+  smart: process.env.AI_MODEL_SMART ?? 'claude-sonnet-5-5',         // analyse de documents
 } as const;
 ```
+
+Identifiants vérifiés le 2026-10-05 sur la documentation Anthropic (platform.claude.com, « Models overview ») : `claude-sonnet-5-5` (Claude Sonnet 5.5, modèle courant) et `claude-haiku-4-5-20251001` (Claude Haiku 4.5). `claude-sonnet-5` est un modèle « legacy » : ne pas l'utiliser. **Attention** : Haiku 4.5 est annoncé avec un retrait « pas avant le 15 octobre 2026 » ; il peut donc être retiré pendant le projet. Vérifier la page des dépréciations avant la mise en production et basculer `AI_MODEL_FAST` si besoin (voir `DECISIONS.md`).
 
 Les identifiants sont surchargeables par variables d'environnement pour pouvoir changer de modèle sans déploiement de code.
 
@@ -241,7 +244,8 @@ Migrations dans `supabase/migrations/`. Le DDL ci-dessous est la cible ; le déc
 create type user_role        as enum ('seller','buyer','admin');
 create type plan_code        as enum ('autonomie','accompagne','serenite');
 create type property_type    as enum ('appartement','maison','terrain','autre');
-create type listing_status   as enum ('draft','pending','published','paused','sold','rejected');
+create type listing_status   as enum ('draft','pending','published','paused','suspended','sold','rejected');
+-- 'suspended' : posé et levé uniquement par l'admin (listing_suspend / listing_unsuspend) ; le vendeur ne peut pas en sortir
 create type offer_status     as enum ('draft','submitted','viewed','accepted','declined','expired','withdrawn','superseded');
 create type visit_status     as enum ('requested','confirmed','done','cancelled');
 create type case_status      as enum ('new','in_progress','closed');
@@ -284,12 +288,7 @@ create table buyer_profiles (
   loan_needed boolean,
   loan_amount_cents bigint,
   financing_status financing_status not null default 'not_provided',
-  financing_document_type financing_document_type,
-  financing_document_path text,        -- bucket 'documents', privé
-  financing_document_date date,        -- date figurant sur le justificatif
-  financing_checked_at timestamptz,    -- contrôle par Leenkey : présence + cohérence apparente
-  financing_checked_by uuid references profiles(id),
-  financing_check_note text,           -- note interne admin
+  current_financing_document_id uuid,  -- FK vers financing_documents(id), ajoutée en L2-02 avec la table
   situation_note text,                 -- texte libre court, 280 car. max
   updated_at timestamptz
 );
@@ -307,6 +306,29 @@ Statuts de financement, libellés affichés et sens (à reprendre mot pour mot) 
 Mention obligatoire partout où un statut de financement est affiché à un vendeur (infobulle ou ligne sous le badge) : « Leenkey vérifie la présence et la cohérence apparente des justificatifs transmis. Leenkey ne garantit ni l'obtention du financement ni la solvabilité de l'acquéreur. »
 
 Justificatifs acceptés : accord de principe bancaire, attestation d'un courtier, simulation ou offre bancaire nominative de moins de 3 mois environ, preuve de fonds propres (attestation bancaire) en cas d'achat comptant total ou partiel. Le contrôle signale un justificatif daté de plus de 3 mois (à confirmer par Cédric pour les types autres que la simulation, voir `DECISIONS.md`).
+
+Justificatifs de financement (table créée en L2-02, lot 2) :
+
+```sql
+create table financing_documents (
+  id uuid primary key default gen_random_uuid(),
+  buyer_id uuid not null references profiles(id) on delete cascade,
+  type financing_document_type not null,
+  document_date date,                  -- date figurant sur le justificatif (alerte au-delà de 3 mois)
+  storage_path text not null,          -- bucket 'documents', privé : {buyer_id}/financing/{uuid}.pdf
+  mime_type text not null,
+  size_bytes int not null,
+  checked_at timestamptz,              -- contrôle par Leenkey : présence + cohérence apparente
+  checked_by uuid references profiles(id),
+  check_note text,                     -- note interne admin, jamais visible par l'acquéreur ni le vendeur
+  created_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+alter table buyer_profiles add constraint buyer_profiles_current_doc_fk
+  foreign key (current_financing_document_id) references financing_documents(id);
+```
+
+Un acquéreur peut avoir plusieurs justificatifs dans le temps ; `buyer_profiles.current_financing_document_id` pointe vers celui en vigueur. `financing_status` passe à `document_provided` au dépôt et à `document_checked` quand l'admin marque le justificatif comme vérifié (fonction SQL `financing_document_check`, admin uniquement, écrite dans `audit_log`). Libellé affiché après contrôle : « Contrôlé par Leenkey le JJ/MM/AAAA ».
 
 Création automatique d'une ligne `profiles` à l'inscription par trigger sur `auth.users`.
 
@@ -358,6 +380,8 @@ create table listings (
   status listing_status not null default 'draft',
   rejection_reason text,
   submitted_at timestamptz, published_at timestamptz, sold_at timestamptz,
+  suspended_at timestamptz,
+  suspension_reason text,               -- motif admin, communiqué au vendeur par email
   views_count int not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz,
@@ -382,15 +406,16 @@ create table listing_views (             -- agrégation des vues, pas de trackin
   primary key (listing_id, day)
 );
 
-create table listing_revisions (         -- historique des modifications importantes
+create table listing_revisions (         -- historique simplifié : quels champs ont changé, quand, par qui
   id uuid primary key default gen_random_uuid(),
   listing_id uuid not null references listings(id) on delete cascade,
   changed_by uuid not null references profiles(id),
-  field text not null check (field in ('price','description','title','photos','status')),
-  old_value jsonb,
+  field text not null check (field in ('price','description','title')),
+  old_value jsonb,                      -- ancienne valeur brute (le prix en centimes, le texte tel quel)
   new_value jsonb,
   created_at timestamptz not null default now()
 );
+-- Alimentée par trigger sur listings, uniquement quand status = 'published'. Pas de diff visuel : une liste chronologique « champ · ancienne → nouvelle valeur ».
 create index on listing_revisions (listing_id, created_at desc);
 
 create table favorites (
@@ -415,7 +440,6 @@ create table plans (
   scope text not null default 'property' check (scope in ('property','account')), -- réservé : formule investisseur
   description text not null,
   features text[] not null,             -- liste affichée sur la page formules
-  ai_daily_quota int not null,
   position int not null,
   active boolean not null default true
 );
@@ -558,7 +582,7 @@ Modèle d'offre fourni par Cédric le 2026-10-05 (section 13). Une offre envoyé
 Le gel est garanti en base, pas seulement dans l'interface : un trigger `offers_freeze_after_submit` refuse toute mise à jour des colonnes de contenu (identité, bien, prix, financement, conditions, déclarations, validité) dès que `submitted_at` est renseigné. Seules les colonnes de statut et d'horodatage restent modifiables, et uniquement via les fonctions de transition.
 
 ```sql
--- enums acquisition_mode, financing_mode, financing_progress : section 5
+-- enums acquisition_mode, financing_mode, financing_progress : section 4 (Enums)
 create table offers (
   id uuid primary key default gen_random_uuid(),
   reference text not null unique,                -- LK-AAAA-NNNNN, générée à la création du brouillon
@@ -590,7 +614,7 @@ create table offers (
   lender_name text,                              -- banque ou courtier, facultatif
   financing_progress financing_progress,
   financing_progress_other text,
-  financing_document_id uuid,                    -- justificatif joint (celui du profil ou un nouveau)
+  financing_document_id uuid references financing_documents(id), -- justificatif joint (celui du profil ou un nouveau), table créée en L2-02
   financing_status_at_submit financing_status,   -- photographie du statut ; affiché au vendeur, jamais imprimé dans le PDF
 
   -- 5. Conditions (cases + précisions ; aucune clause libre rédigée par l'acquéreur)
@@ -609,7 +633,7 @@ create table offers (
   message text,                                  -- message facultatif au vendeur (hors PDF)
   status offer_status not null default 'draft',
   synthesis jsonb,                               -- section 13
-  pdf_path text,
+  pdf_path text,                                 -- bucket 'offers', privé
   superseded_by uuid references offers(id),
 
   submitted_at timestamptz, viewed_at timestamptz, answered_at timestamptz,
@@ -820,7 +844,8 @@ where l.status = 'published' and l.deleted_at is null and p.deleted_at is null;
 | Bucket | Accès | Contenu | URL |
 |---|---|---|---|
 | `photos` | privé, lecture via URL signée 1 h | photos redimensionnées : `{property_id}/{uuid}-{size}.webp`, tailles 400, 800, 1600 | signée |
-| `documents` | privé | documents du dossier, justificatifs de financement, PDF d'offre | signée 10 min |
+| `documents` | privé | documents du dossier de vente (`{property_id}/…`), justificatifs de financement (`{buyer_id}/financing/…`) | signée 10 min |
+| `offers` | privé | PDF des offres d'achat : `{offer_id}/v{version}.pdf`, jamais réécrit | signée 10 min |
 | `avatars` | privé | photos de profil | signée 1 h |
 
 Les photos des annonces publiées sont servies via une route Next.js `/img/[...path]` qui vérifie que l'annonce est publiée puis redirige vers une URL signée, avec cache CDN de 50 minutes. Aucune URL permanente.
@@ -854,9 +879,10 @@ Matrice (L = lecture, E = écriture) :
 | Table | Anonyme | Vendeur | Acquéreur | Admin |
 |---|---|---|---|---|
 | `profiles` | — | L/E soi | L/E soi | L tous, E `roles` |
-| `buyer_profiles` | — | L des acquéreurs ayant une relation avec ses biens : `project`, `financing_status`, `financing_document_type` uniquement, via la fonction `buyer_summary_for_seller()` ; jamais le justificatif ni les montants du profil (en attente de confirmation, voir `DECISIONS.md`) | L/E soi | L tous, E statut `document_checked` |
+| `buyer_profiles` | — | L des acquéreurs ayant une relation avec ses biens : `project`, `financing_status`, type et date de contrôle du justificatif uniquement, via la fonction `buyer_summary_for_seller()` ; jamais le justificatif ni les montants du profil (Q5) | L/E soi | L tous, E statut `document_checked` via `financing_document_check` |
+| `financing_documents` | — | — (jamais) | L/E les siens (pas `check_note`, pas `checked_*`) | L tous, E contrôle via fonction SQL |
 | `properties` | — (via vue) | L/E ses biens | — (via vue) | L tous, E |
-| `listings` | L si `published` | L/E ses annonces (sauf `status` → uniquement `draft`↔`pending`, `published`↔`paused`, `→sold`) | L si `published` | L/E tous |
+| `listings` | L si `published` | L/E ses annonces sauf si `suspended` (lecture seule) ; `status` uniquement via fonctions : `draft`↔`pending`, `published`↔`paused`, `→sold` ; jamais vers ou depuis `suspended` | L si `published` | L/E tous ; seul rôle autorisé à `→suspended` et `suspended→published/paused` |
 | `photos` | via route `/img` | L/E ses biens | via route `/img` | L tous |
 | `favorites` | — | — | L/E les siens | L |
 | `plans` | L | L | L | L/E |
@@ -881,7 +907,9 @@ Matrice (L = lecture, E = écriture) :
 | `notifications` | — | L/E (`read_at`) les siennes | idem | L |
 | `audit_log` | — | — | — | L |
 
-Les transitions de statut (annonces, offres) sont contrôlées par des **fonctions SQL** `security definer` appelées depuis les server actions (`listing_submit`, `listing_pause`, `offer_submit`, `offer_answer`…), pas par des `update` libres. Les politiques `update` directes sur `status` sont refusées.
+Les transitions de statut (annonces, offres) sont contrôlées par des **fonctions SQL** `security definer` appelées depuis les server actions (`listing_submit`, `listing_pause`, `listing_suspend`, `listing_unsuspend`, `offer_submit`, `offer_answer`…), pas par des `update` libres. Les politiques `update` directes sur `status` sont refusées. `listing_suspend` et `listing_unsuspend` vérifient `is_admin()`, exigent un motif pour la suspension et écrivent dans `audit_log` ; toutes les fonctions vendeur refusent une annonce `suspended`.
+
+Les écritures que l'assistant fait au-delà des droits de l'utilisateur passent aussi par des fonctions `security definer` dédiées, jamais par la clé service role : `create_case(p_property_id, p_subject, p_summary, p_source)` vérifie que `auth.uid()` est le propriétaire du bien (ou un acquéreur sans bien, `p_property_id` nul), force `profile_id = auth.uid()`, limite la longueur des textes et le nombre de dossiers ouverts par utilisateur (5), puis notifie l'admin.
 
 Tests : `supabase/tests/rls_*.sql` avec les comptes de seed `seller_a`, `seller_b`, `buyer_c`, `buyer_d`, `admin`. Chaque ligne de la matrice a au moins un test positif et un test négatif.
 
@@ -942,7 +970,13 @@ Implémentation CSS :
 
 ### Le ton
 
-Direct, clair, rassurant, sans jargon et sans ton commercial. Vouvoiement. Phrases courtes. On dit ce qui se passe et ce qui vient ensuite.
+Direct, clair, rassurant, sans jargon et sans ton commercial. Vouvoiement. Phrases courtes. Nous disons ce qui se passe et ce qui vient ensuite.
+
+Règles éditoriales du site existant, applicables à tous les textes V2 (interface, emails, PDF, prompts) : voir `CLAUDE.md` section 16. En particulier :
+- Leenkey parle à la première personne du pluriel : **« nous »**, jamais « on ». Les phrases de Cédric qui contiennent « on » sont en attente de reformulation (`DECISIONS.md`, Q16) et ne sont pas modifiées d'ici là.
+- **« Analyse de valeur » / « valorisation »**, pas « estimation » seul dans les libellés visibles (prudence loi Hoguet). Lien de navigation : « Valoriser mon bien » (libellé du site actuel), pas « Estimer mon bien » comme sur les maquettes. Le mot reste permis dans le code (`estimation_id`, `/estimer`) et dans « estimation indicative des frais d'acquisition », qui ne porte pas sur la valeur du bien.
+- Paiement « à la souscription », jamais « au succès ».
+- Pas de mention « Prix ferme ».
 
 La phrase de marque : **« Vous gardez les clés. »** Elle apparaît au maximum une fois par parcours (hero, écran de fin de publication), jamais en slogan répété.
 
@@ -1073,7 +1107,7 @@ Tous dans `components/shared/`, construits sur shadcn/ui quand un primitif exist
 | `SectionLabel` | Étiquette | Plex Mono, majuscules, bleu. Option numéro : `01 · PRÉPARATION`. |
 | `PropertyCard` | Carte de bien | Variantes `compact` (mobile, photo 110 × 96) et `wide` (desktop, photo 200 × 140). Contenu : prix (Sora), type · pièces · surface, lieu, 2 à 3 atouts en pastilles, badge DPE, mention « Dossier complet » si ≥ 5 documents du dossier et diagnostics complets. Survol : ombre `--shadow-card-hover`. Cœur favori en coin de photo. |
 | `PhotoGallery` | Galerie | Mobile : carrousel plein largeur avec compteur `1 / 12`. Desktop : grille 1 grande + 4 petites, dernière avec « + N photos », ouverture en visionneuse plein écran (clavier et swipe). |
-| `PriceBlock` | Prix | Prix Sora, prix au m² en dessous (Plex Mono, secondaire), mention « Prix ferme, sans commission ». |
+| `PriceBlock` | Prix | Prix Sora, prix au m² en dessous (Plex Mono, secondaire), mention « Sans commission d'agence ». |
 | `KeyFactsTable` | Ce qu'on sait avant de visiter | Lignes label / valeur (valeur en Plex Mono), séparateurs 1 px. |
 | `StepProgress` | Avancement de vente | Segments horizontaux (un par étape), étape courante en bleu, numéro et titre en `SectionLabel`. Version compacte (barre seule) et étendue (liste verticale des étapes avec état). |
 | `TaskList` | Tâches | Case ronde : faite = pastille verte avec coche, à faire = cercle bleu, future = cercle gris. Tâche faite barrée et grisée. Chevron vers l'action. |
@@ -1100,6 +1134,7 @@ Mappage `StatusBadge` :
 | `pending` | `--color-warning-bg` | `--color-warning-fg` | En attente de validation |
 | `published` | `--color-success-bg` | `--color-success-fg` | En ligne |
 | `paused` | `--color-tint` | `--color-blue` | En pause |
+| `suspended` | `--color-danger-bg` | `--color-danger-fg` | Suspendue par Leenkey |
 | `sold` | `--color-navy` | blanc | Vendu |
 | `rejected` | `--color-danger-bg` | `--color-danger-fg` | À corriger |
 
@@ -1168,9 +1203,9 @@ Création en 4 étapes, barre de progression + `SectionLabel` « 02 · CARACTÉR
 1. **Adresse** : autocomplétion Mapbox (France uniquement), type de bien. Géocodage → `location`, calcul de `public_location` (décalage aléatoire stable de 150 à 250 m, graine = id du bien).
 2. **Caractéristiques** : surface (`UnitInput` m²), Carrez, pièces, chambres, étage / nombre d'étages, année, DPE et GES (`SegmentedPicker`), chauffage, atouts (`ChipToggle`), charges mensuelles, taxe foncière, nombre de lots.
 3. **Photos** : glisser-déposer ou sélection, 15 max, 10 Mo max chacune, JPEG/PNG/HEIC/WebP. Conversion serveur en WebP 400/800/1600. Réordonnancement par glisser. Choix de la photo principale. Légende optionnelle.
-4. **Prix et description** : prix (`UnitInput` €), rappel de l'estimation (fourchette + valeur) avec écart en pourcentage, description (1 200 caractères max, compteur), bouton « Rédiger avec l'assistant » qui génère une proposition dans un `AssistantSuggestion`. Titre généré automatiquement (« Appartement 3 pièces 68 m² · Savigny-sur-Orge ») et modifiable.
+4. **Prix et description** : prix (`UnitInput` €), rappel de l'analyse de valeur (fourchette + valeur) avec écart en pourcentage, description (1 200 caractères max, compteur), bouton « Rédiger avec l'assistant » qui génère une proposition dans un `AssistantSuggestion`. Titre généré automatiquement (« Appartement 3 pièces 68 m² · Savigny-sur-Orge ») et modifiable.
 
-Préremplissage depuis l'estimation : bandeau `--color-tint` « Repris de votre estimation du [date]. Vérifiez et complétez. »
+Préremplissage depuis l'estimateur : bandeau `--color-tint` « Repris de votre analyse de valeur du [date]. Vérifiez et complétez. »
 
 Sauvegarde automatique à chaque étape (statut `draft`). Bouton « Enregistrer » explicite en haut.
 
@@ -1517,7 +1552,7 @@ Règles :
 
 ### Outils
 
-Chaque outil : `core/ai/tools/<nom>.ts` exportant `{ name, description, input: ZodSchema, requiresConfirmation, contexts, execute(input, ctx) }`. `execute` utilise le client Supabase **avec la session de l'utilisateur** (RLS appliquée), jamais le service role, sauf `create_case`.
+Chaque outil : `core/ai/tools/<nom>.ts` exportant `{ name, description, input: ZodSchema, requiresConfirmation, contexts, execute(input, ctx) }`. `execute` utilise le client Supabase **avec la session de l'utilisateur** (RLS appliquée), **jamais le service role**. Quand l'écriture dépasse les droits de l'utilisateur (`create_case`), l'outil appelle en RPC une fonction SQL `security definer` dédiée (section 5).
 
 | Outil | Contexte | Écrit ? | Description |
 |---|---|---|---|
@@ -1529,9 +1564,9 @@ Chaque outil : `core/ai/tools/<nom>.ts` exportant `{ name, description, input: Z
 | `draft_listing_description` | seller | non | Produit une proposition de description (renvoyée à l'UI en `AssistantSuggestion`, pas écrite) |
 | `update_listing_description` | seller | **oui** | Remplace la description (confirmation avec avant / après) |
 | `update_listing_price` | seller | **oui** | Modifie le prix (confirmation, rappel de l'écart à l'estimation) |
-| `summarize_offer` | seller | non | Explique une offre reçue à partir de sa `synthesis` (L2) |
+| `summarize_offer` | seller | non | Répond aux questions du vendeur sur une offre reçue à partir de sa `synthesis`, dans la conversation avec l'assistant (L2). Pas de bouton « Expliquer cette offre » en V2 (V3). |
 | `summarize_contacts` | seller | non | Résume les contacts reçus : qui, statut de financement, dernière activité |
-| `create_case` | seller, buyer | **oui** | Crée un `case` avec résumé de la conversation (Autonomie et acquéreurs) |
+| `create_case` | seller, buyer | **oui** | Crée un `case` avec résumé de la conversation (Autonomie et acquéreurs), via la fonction SQL `create_case` (`security definer`) |
 | `contact_advisor` | seller (`advisor`) | **oui** | Poste un résumé de la question dans la conversation conseiller du bien |
 | `get_upgrade_context` | seller | non | Renvoie la formule, les droits et le déclencheur actif, pour que l'assistant sache ce qui est inclus |
 | `search_listings` | buyer | non | Traduit une demande en `SearchFilters` (Zod) et renvoie 5 biens + le lien de recherche (L2) |
@@ -1539,6 +1574,7 @@ Chaque outil : `core/ai/tools/<nom>.ts` exportant `{ name, description, input: Z
 | `summarize_shared_documents` | buyer | non | Résume les documents partagés avec cet acquéreur pour ce bien (L3) |
 | `create_alert` | buyer | **oui** | Crée une alerte à partir des filtres (L3) |
 | `prefill_offer` | buyer | **oui** | Ouvre le formulaire d'offre prérempli (redirection, pas d'envoi) (L2) |
+| `propose_visit_slot` | seller | **oui** | Propose à un acquéreur ayant une conversation sur le bien un ou plusieurs créneaux existants du vendeur, ou en crée un ponctuel : après confirmation, crée l'invitation (`visit_invitations`) et poste le message `visit_invite` dans la conversation (L3, exigé par le cahier des charges) |
 | `admin_daily_brief` | admin | non | Annonces à valider, dossiers ouverts, offres du jour, signalements |
 | `admin_review_listing` | admin | non | Pré-analyse d'une annonce (complétude, cohérence prix / estimation, qualité photos par nombre et résolution) |
 | `admin_case_summary` | admin | non | Synthèse d'un dossier avant un appel |
@@ -1546,7 +1582,7 @@ Chaque outil : `core/ai/tools/<nom>.ts` exportant `{ name, description, input: Z
 
 ### Prompts
 
-Fichiers versionnés dans `core/ai/prompts/` : `base.md` (commun), `seller.md`, `buyer.md`, `admin.md`, `listing-description.md`, `offer-explain.md` (bouton « Expliquer cette offre » sur la page vendeur, via `summarize_offer`), `document-analysis/<type>.md`, `listing-summary.md`, `reply-suggestion.md`.
+Fichiers versionnés dans `core/ai/prompts/` : `base.md` (commun), `seller.md`, `buyer.md`, `admin.md`, `listing-description.md`, `document-analysis/<type>.md`, `listing-summary.md`, `reply-suggestion.md`.
 
 Contenu obligatoire de `base.md` :
 - Identité : « Tu es l'assistant de Leenkey, une plateforme de vente immobilière entre particuliers accompagnée par des conseillers. »
@@ -1575,7 +1611,7 @@ Règles métier impératives, fournies par le client (à reprendre dans `base.md
 - Route `/api/ai/chat` (route handler, streaming SSE). Entrée : `conversationId?`, `context`, `propertyId?`, `message`. Vérifie la session, le quota, charge l'historique (20 derniers messages), appelle l'API Anthropic avec les outils du contexte, exécute les outils non confirmables, renvoie au client les appels d'outils confirmables sous forme d'événement `confirm_required`.
 - Confirmation : le client appelle une server action `confirmToolCall(conversationId, toolCallId)` qui exécute l'outil et relance la génération avec le résultat.
 - Prompt caching : `cache_control` sur le prompt système et les définitions d'outils.
-- Quota : `plans.ai_daily_quota` (Autonomie 30, Accompagné 60, Sérénité 100 messages / jour ; acquéreurs 20 ; admin illimité). L'assistant fait partie d'Autonomie : le quota gratuit doit permettre de vendre réellement. Message à la limite : « Vous avez atteint la limite de messages de l'assistant pour aujourd'hui. Elle se renouvelle à minuit. Besoin d'aide maintenant ? Écrivez à un conseiller. » avec bouton `create_case`.
+- Quota : plafonds définis dans `core/ai/quotas.ts`, par rôle, sans colonne en base : acquéreur 20 messages / jour ; vendeur 30 ; vendeur ayant au moins un bien sous formule payante (Accompagné ou Sérénité) 100 ; admin illimité. Un compte à plusieurs rôles reçoit le plafond le plus élevé. Le compteur reste `profiles.ai_messages_today`. Valeurs provisoires, à ajuster après la recette selon la consommation réelle. L'assistant fait partie d'Autonomie : le quota gratuit doit permettre de vendre réellement. Message à la limite : « Vous avez atteint la limite de messages de l'assistant pour aujourd'hui. Elle se renouvelle à minuit. Besoin d'aide maintenant ? Écrivez à un conseiller. » avec bouton `create_case`.
 - Journalisation : chaque message et appel d'outil dans `ai_messages`, avec modèle et tokens.
 - Suggestions de réponse en messagerie : appel non-streamé `MODELS.fast` avec `reply-suggestion.md`, contexte = 10 derniers messages + fiche publique du bien + fiches KB pertinentes. Max 80 mots.
 - Description d'annonce : `MODELS.fast` avec `listing-description.md`, entrée = caractéristiques + atouts + notes libres du vendeur. Règles : factuel, 800 à 1 100 caractères, pas de superlatifs (« exceptionnel », « rare », « coup de cœur »), pas d'information inventée.
@@ -1654,7 +1690,7 @@ Envoi (fonction `submit_offer`, transaction unique) → statut `submitted`, `sub
 
 ### Synthèse pour le vendeur
 
-Stockée dans `offers.synthesis`. **Tout est calculé en code à partir de gabarits**, y compris le paragraphe « Analyse Leenkey » : pas d'appel au modèle pour la synthèse vendeur en V2 (plus fiable, sans risque d'invention, sans coût). L'IA intervient à la demande : bouton « Expliquer cette offre » sur la page vendeur (outil `summarize_offer`, `MODELS.smart`, prompt `offer-explain.md`), qui reformule à partir des seules données de l'offre, sans recommander d'accepter ou de refuser, en reprenant le libellé exact du statut de financement.
+Stockée dans `offers.synthesis`. **Tout est calculé en code à partir de gabarits**, y compris le paragraphe « Analyse Leenkey » : pas d'appel au modèle pour la synthèse vendeur en V2 (plus fiable, sans risque d'invention, sans coût). En V2, le vendeur peut poser des questions sur l'offre à l'assistant (outil `summarize_offer`, `MODELS.fast`), qui répond à partir des seules données de l'offre, sans recommander d'accepter ou de refuser, en reprenant le libellé exact du statut de financement. Le bouton dédié « Expliquer cette offre » est reporté en V3 (`BACKLOG-V3.md`).
 
 ```json
 {
@@ -1741,7 +1777,7 @@ Personne ne réserve une visite sans y avoir été invité par le vendeur. Le ve
 
 ### Vendeur : onglet « Visites »
 
-- Créneaux : ajout ponctuel (date, heure de début, durée 30 / 45 / 60 min) ou série (tous les samedis de 10 h à 12 h pendant 4 semaines, découpés en créneaux). Capacité 1 par défaut.
+- Créneaux : ajout ponctuel uniquement (date, heure de début, durée 30 / 45 / 60 min). Pas de séries en V2 (V3). Capacité 1 par défaut.
 - Invitations : depuis une conversation (bouton calendrier) ou depuis la liste des contacts. Crée `visit_invitations` avec un jeton (validité 7 jours) et un message système dans la conversation avec le lien.
 - Liste des visites à venir et passées, avec `FinancingBadge`.
 - Après la visite (J+1) : demande de retour au vendeur et à l'acquéreur (formulaire court : intérêt 1 à 5, commentaire).
@@ -1837,7 +1873,7 @@ Maquettes : `AdminAnnonces.dc.html`, `AdminDesktop.dc.html`. Conçu desktop d'ab
 - Détail `/admin/annonces/[id]` : aperçu exact de l'annonce, pré-analyse complète, historique (`audit_log`), actions :
   - **Valider et publier** → `published`, email vendeur, `listing.published`.
   - **Refuser avec motif** → `rejected`, motif obligatoire (modèles de motifs + texte libre, bouton « Rédiger avec l'assistant »), email au vendeur. Le vendeur corrige et renvoie.
-  - **Suspendre** / **Remettre en ligne**.
+  - **Suspendre** (motif obligatoire, email au vendeur) → `suspended` ; **Remettre en ligne** → `published`. Le vendeur voit l'annonce en lecture seule avec le motif et un lien vers la messagerie conseiller ou le formulaire de contact ; il ne peut pas la remettre en ligne lui-même.
   - **Modifier** (champs de l'annonce, traçé).
 
 ### Utilisateurs `/admin/utilisateurs`
@@ -1922,7 +1958,7 @@ Tous protégés par `CRON_SECRET`, idempotents, journalisés.
 ### SEO
 
 - Pages annonces : rendu serveur, `generateMetadata`, canonical, données structurées, image OG.
-- Pages de recherche par ville : `/acheter/[ville]` pour les villes de la zone de lancement (ci-dessous), indexables dès qu'elles ont ≥ 3 annonces publiées (`noindex` sinon), titre « Appartements et maisons à vendre à Savigny-sur-Orge, sans agence · Leenkey ». Intro courte factuelle (nombre de biens, prix médian au m² calculé sur les annonces Leenkey).
+- Pages de recherche par ville (`/acheter/[ville]`) : reportées en V3 (`BACKLOG-V3.md`). En V2, `/acheter?ville=` avec filtres dans l'URL suffit.
 
 ### Zone de lancement (décision client)
 
@@ -1931,8 +1967,8 @@ Rayon d'environ 10 km autour d'Épinay-sur-Orge (91). Fichier `lib/config/launch
 - **Zone 1, cœur de marché** : Épinay-sur-Orge, Villemoisson-sur-Orge, Morsang-sur-Orge, Savigny-sur-Orge, Longjumeau, Ballainvilliers, Villiers-sur-Orge, Sainte-Geneviève-des-Bois.
 - **Zone 2, extension immédiate** : Viry-Châtillon, Juvisy-sur-Orge, Athis-Mons, Morangis, Chilly-Mazarin, Saulx-les-Chartreux, La Ville-du-Bois, Montlhéry, Linas, Longpont-sur-Orge, Fleury-Mérogis, Grigny.
 
-Usages : centre et zoom par défaut de la carte de recherche (Épinay-sur-Orge, rayon 10 km), suggestions de villes dans la recherche et le profil acquéreur, pages villes, données de seed. Les annonces hors zone restent acceptées (pas de blocage), l'admin les voit signalées « hors zone ».
-- `sitemap.ts` dynamique (pages publiques, annonces publiées, pages villes), `robots.ts` (bloque tout hors prod, bloque `/vendeur`, `/acquereur`, `/admin`, `/messages`, `/api`).
+Usages : centre et zoom par défaut de la carte de recherche (Épinay-sur-Orge, rayon 10 km), suggestions de villes dans la recherche et le profil acquéreur, données de seed. Les annonces hors zone restent acceptées (pas de blocage), l'admin les voit signalées « hors zone ».
+- `sitemap.ts` dynamique (pages publiques, annonces publiées), `robots.ts` (bloque tout hors prod, bloque `/vendeur`, `/acquereur`, `/admin`, `/messages`, `/api`).
 - Annonce vendue : page conservée 90 jours avec bandeau « Vendu » et biens similaires, puis 410.
 
 ### Performance
@@ -1961,7 +1997,7 @@ Règles de sécurité : `CLAUDE.md` section 11. Compléments :
 - **Anthropic** : aucune donnée n'est utilisée pour l'entraînement via l'API ; ne pas envoyer à l'assistant les montants de financement d'un acquéreur à un vendeur.
 - **Droits** : export JSON et suppression depuis `/compte` ; anonymisation à 30 jours.
 - **Conservation** : messages et documents d'une annonce vendue conservés 12 mois puis supprimés (cron à ajouter en V3 ; noter dans `BACKLOG-V3.md`).
-- **Cookies** : uniquement fonctionnels + mesure d'audience ; bandeau de consentement pour GA4 / Meta Pixel déjà présents sur le site (reprendre le mécanisme existant ou l'ajouter).
+- **Cookies** : uniquement fonctionnels + mesure d'audience ; bandeau de consentement pour GA4 et GTM, déjà présents sur le site (reprendre le mécanisme existant ou l'ajouter). Aucun pixel publicitaire tiers.
 
 ---
 
@@ -1985,14 +2021,16 @@ Seed (`npm run db:seed`) : comptes `seller_a@test.leenkey.fr`, `seller_b@…`, `
 
 ## 23. Plan de travail détaillé
 
-Chaque tâche : identifiant, contenu, dépendances, critères d'acceptation. Les livraisons contractuelles sont en fin de S5 (lot 1), S7 (lot 2), S9 (lot 3), S10 (production).
+Chaque tâche : identifiant, contenu, dépendances, critères d'acceptation. Les livraisons contractuelles sont en fin de S5 (lot 1), S7 (lot 2), S9 (lot 3), S10 (livraison de la préprod validée, 18 décembre). La bascule en production est prévue le lundi 4 janvier 2027 (à confirmer avec Cédric). Les semaines et leurs dates sont dans `docs/PLANNING.md` ; ce tableau-ci donne les dépendances et les critères.
+
+Rééquilibrage du 2026-10-05 : L1-20 (pages villes) part en V3 ; L1-27 avance en S4 et L1-35 en S3 ; les déclencheurs de montée en gamme (non contractuels) deviennent L2-09 en S6 ; l'export RGPD et la suppression de compte deviennent L2-10 en S7.
 
 ### Semaine 1 : fondations
 
 | ID | Tâche | Dépend de | Accepté quand |
 |---|---|---|---|
-| L1-01 | Initialiser la structure du repo selon `CLAUDE.md` (dossiers, ESLint, Prettier, Vitest, Playwright, scripts npm, `.env.example`, GitHub Actions lint/typecheck/test) en conservant l'estimateur et les pages existantes | — | CI verte, estimateur fonctionne comme avant |
-| L1-02 | Environnements : `NEXT_PUBLIC_ENV`, bannière preprod, `noindex` hors prod, clients Supabase server/client/admin | L1-01 | Bannière visible en staging, absente en prod |
+| L1-01 | **(a)** Avant tout déplacement : tests de non-régression Vitest sur `estimation.ts` (au moins 20 cas réels, tous types de bien, résultats actuels figés), verts sur le code V1. **(b)** Nouveau projet Next.js 15 dans le repo, structure selon `CLAUDE.md` (dossiers, ESLint, Prettier, Vitest, Playwright, scripts npm, `.env.example`, GitHub Actions lint/typecheck/test/build). **(c)** Reprise de l'existant : wizard et moteur (sans changement de logique), 4 endpoints en route handlers aux mêmes chemins, pages marketing `public/pages/`, GA4, GTM, Vercel Analytics, redirections. Suppression du code Vite une fois la reprise validée | — | Les mêmes tests de non-régression passent à l'identique avant et après ; CI verte ; sur la préprod, une analyse de valeur de bout en bout (wizard → PDF → email de test) donne le même chiffre qu'en prod V1 pour 3 biens de référence ; formulaires des pages marketing et événements GA4 vérifiés |
+| L1-02 | Environnements : `NEXT_PUBLIC_ENV`, bannière « Environnement de test », `noindex` (`X-Robots-Tag` + `robots.ts`) hors prod, protection HTTP Basic de la préprod dans `middleware.ts` (`PREPROD_USER` / `PREPROD_PASSWORD`, exclusions webhooks et crons), clients Supabase server/client/admin | L1-01 | Bannière et mot de passe actifs sur `leenkey-v2.vercel.app`, absents en prod ; webhooks et crons accessibles sans mot de passe |
 | L1-03 | Migration enums + `profiles` + trigger d'inscription + `buyer_profiles` + RLS + tests | L1-01 | Tests RLS verts |
 | L1-04 | Migrations `properties`, `listings`, `photos`, `listing_views`, `favorites`, vue `public_listings`, séquence référence, fonctions de transition de statut + RLS + tests | L1-03 | Tests RLS verts, vue ne renvoie aucun champ privé |
 | L1-05 | Migrations `plans`, `subscriptions`, `stripe_events`, `sale_*`, `conversations`, `messages`, `reports`, `cases`, `case_notes`, `notifications`, `audit_log`, `knowledge_base`, `ai_*` + RLS + tests | L1-04 | Tests RLS verts |
@@ -2008,8 +2046,8 @@ Chaque tâche : identifiant, contenu, dépendances, critères d'acceptation. Les
 | L1-10 | Shells de navigation : `TopNav`, `BottomNav` par rôle, `AdminShell`, cloche de notifications (vide) | L1-09 | Navigation cohérente sur 390, 768, 1280 px |
 | L1-11 | Création de bien étapes 1 et 2 (Mapbox autocomplétion, géocodage, `public_location`, caractéristiques) avec sauvegarde auto | L1-04, L1-09 | Un bien brouillon complet se crée en mobile |
 | L1-12 | Photos : upload, conversion WebP 3 tailles, réordonnancement, couverture, route `/img` | L1-11 | 15 photos max, rejets propres, aucune URL permanente |
-| L1-13 | Étape 4 prix et description, rappel de l'estimation, reprise depuis l'estimateur (`?estimation=`), prévisualisation, envoi en validation | L1-12 | Parcours estimateur → annonce `pending` complet |
-| L1-14 | Fiche du bien (onglets Infos, Photos, Annonce), actions de statut | L1-13 | Pause / remise en ligne / vendu fonctionnent via fonctions SQL |
+| L1-13 | Étape 4 prix et description, rappel de l'analyse de valeur, reprise depuis l'estimateur (`?estimation=`), prévisualisation, envoi en validation | L1-12 | Parcours estimateur → annonce `pending` complet |
+| L1-14 | Fiche du bien (onglets Infos, Photos, Annonce), actions de statut | L1-13 | Pause / remise en ligne / vendu fonctionnent via fonctions SQL ; une annonce `suspended` est en lecture seule pour le vendeur (test) |
 
 ### Semaine 3 : recherche, annonce, back office minimum
 
@@ -2019,8 +2057,8 @@ Chaque tâche : identifiant, contenu, dépendances, critères d'acceptation. Les
 | L1-16 | Carte Mapbox (marqueurs prix, regroupement, synchronisation liste/carte, recherche dans la zone) | L1-15 | Mobile et desktop conformes aux maquettes |
 | L1-17 | Page annonce complète (galerie, cotations, KeyFacts, carte approximative, barre d'action), métadonnées, JSON-LD, OG image, compteur de vues | L1-15 | Lighthouse objectifs atteints, validation Rich Results OK |
 | L1-18 | Favoris | L1-17 | Ajout / retrait, liste dans l'espace acquéreur |
-| L1-19 | Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre, audit, emails | L1-14 | Parcours vendeur → admin → publication de bout en bout |
-| L1-20 | Pages SEO villes, sitemap, robots | L1-17 | Sitemap valide, robots bloque hors prod |
+| L1-19 | Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`listing_suspend`, motif obligatoire) / remettre en ligne, audit, emails, `sitemap.ts` (annonces publiées) | L1-14 | Parcours vendeur → admin → publication de bout en bout ; le vendeur ne peut pas lever une suspension (test RLS) ; sitemap valide |
+| L1-35 | `listing_revisions` simplifié : trigger sur les champs prix, titre, description d'une annonce publiée, historique chronologique côté vendeur et admin, notification `listing.revised` à l'admin | L1-14 | Changement de prix tracé avec ancienne et nouvelle valeur |
 
 ### Semaine 4 : messagerie, notifications, dashboard
 
@@ -2031,20 +2069,19 @@ Chaque tâche : identifiant, contenu, dépendances, critères d'acceptation. Les
 | L1-23 | Moteur d'étapes : `emitEvent`, bascule de modèle, `getNextAction`, branchement sur les événements existants | L1-06, L1-14 | Les tâches se cochent automatiquement sur le parcours E2E 1 |
 | L1-24 | Dashboard vendeur complet (en-tête blueprint, StepProgress, NextActionCard, StatTile, TaskList, conversations) | L1-23 | Conforme à la maquette + direction artistique |
 | L1-25 | Espace acquéreur v1 (accueil, profil projet et financement déclaratif, `FinancingBadge` côté vendeur) | L1-21 | Le vendeur voit le statut, jamais les montants (test) |
+| L1-27 | Embeddings (Edge Function `embed`), import KB, `search_knowledge` | L1-05 | Recherche test pertinente sur les fiches de `faq-cedric-v2.md` |
 
 ### Semaine 5 : paiement, assistant, back office → livraison lot 1
 
 | ID | Tâche | Dépend de | Accepté quand |
 |---|---|---|---|
 | L1-26 | Stripe : `startCheckout`, webhook idempotent, upgrade, écran de confirmation, page formule | L1-23 | E2E 3 vert avec Stripe CLI |
-| L1-27 | Embeddings (Edge Function `embed`), import KB, `search_knowledge` | L1-05 | Recherche test pertinente sur les fiches placeholder |
 | L1-28 | Assistant : route de streaming, outils vendeur, confirmation, quotas, journalisation, panneau desktop + page mobile | L1-27 | Modification de description via assistant avec confirmation |
 | L1-29 | Suggestion de réponse en messagerie + rédaction de description | L1-28 | `AssistantSuggestion` conforme, `ai_suggested` enregistré |
 | L1-30 | Back office complet lot 1 : tableau de bord + résumé du jour, utilisateurs, dossiers, signalements, pré-analyse des annonces, `/admin/assistant` (lecture + import) | L1-19, L1-28 | Cédric peut traiter une journée type sans accès base |
-| L1-31 | Passage à l'humain (`create_case`) côté vendeur | L1-28, L1-30 | Dossier créé avec résumé, notification admin |
-| L1-33 | `plan_entitlements`, `hasEntitlement`, contenu des formules dans `plans`, page formules avec tableau comparatif, `upgrade_prompts` + `getUpgradePrompt` + `UpgradePrompt` (déclencheurs disponibles en L1 : `valuation_done`, `listing_ready`, `low_contacts`, `contacts_no_visit`) | L1-26 | Aucun test de droit ne compare un nom de formule ; un vendeur Autonomie va jusqu'à la publication sans blocage |
-| L1-34 | Conversation conseiller : `kind = 'advisor'`, création au webhook, épinglage côté vendeur, `/admin/messages`, onglet Messages du dossier, outil IA `contact_advisor`, encart Autonomie | L1-21, L1-26 | Après paiement test, le vendeur et l'admin échangent en temps réel |
-| L1-35 | `listing_revisions` : enregistrement des modifications d'annonce publiée, historique vendeur et admin, notification `listing.revised` | L1-14 | Changement de prix tracé avec ancienne et nouvelle valeur |
+| L1-31 | Passage à l'humain (`create_case`) côté vendeur, via la fonction SQL `create_case` (`security definer`) | L1-28, L1-30 | Dossier créé avec résumé, notification admin ; aucun import du client service role dans `core/ai/` (test) |
+| L1-33 | `plan_entitlements`, `hasEntitlement`, contenu des formules dans `plans`, page formules avec tableau comparatif | L1-26 | Aucun test de droit ne compare un nom de formule ; un vendeur Autonomie va jusqu'à la publication sans blocage |
+| L1-34 | Conversation conseiller, version simple : `kind = 'advisor'` sur la messagerie existante (mêmes écrans, mêmes composants), créée au webhook de paiement, épinglée en tête de liste côté vendeur, vue admin `/admin/messages` (liste filtrée), outil IA `contact_advisor` | L1-21, L1-26 | Après paiement test, le vendeur et l'admin échangent en temps réel |
 | L1-32 | Recette interne lot 1 : E2E 1, 2, 3, 7 verts, Lighthouse, axe, revue RLS | tout L1 | Tag `v2.0.0-lot1`, déploiement staging, `docs/RECETTE.md` à jour avec comptes et scénarios |
 
 ### Semaines 6 et 7 : lot 2
@@ -2052,12 +2089,14 @@ Chaque tâche : identifiant, contenu, dépendances, critères d'acceptation. Les
 | ID | Tâche | Dépend de | Accepté quand |
 |---|---|---|---|
 | L2-01 | Migration `offers` (enums `acquisition_mode`, `financing_mode`, `financing_progress`, référence, version, photographies) + fonctions de transition + trigger de gel + RLS + tests | L1-32 | Tests verts |
-| L2-02 | Justificatif de financement (type, date, fichier), contrôle admin « Marquer comme vérifié », `FinancingBadge` et mention obligatoire | L2-01 | Statuts `document_provided` et `document_checked` fonctionnels ; aucun texte « validé » dans l'interface (test de recherche dans `lib/i18n/fr.ts`) |
+| L2-02 | Table `financing_documents` (+ FK depuis `buyer_profiles` et `offers`) + RLS + tests, dépôt du justificatif (type, date, fichier, bucket `documents`), contrôle admin « Marquer comme vérifié » (fonction `financing_document_check`), `FinancingBadge` et mention obligatoire | L2-01 | Statuts `document_provided` et `document_checked` fonctionnels ; aucun texte « validé » dans l'interface (test de recherche dans `lib/i18n/fr.ts`) |
 | L2-03 | Formulaire d'offre en 7 étapes (acquéreur et co-acquéreurs, bien prérempli, prix en lettres, financement, conditions, validité, déclarations), relecture, envoi, trigger de gel, PDF | L2-01 | PDF conforme au modèle de Cédric ; une mise à jour du contenu d'une offre envoyée échoue en base (test) ; aucun « financement validé » dans le PDF |
 | L2-04 | Synthèse et « Analyse Leenkey » par gabarits (sans IA), carte vendeur, écran d'acceptation intermédiaire, masquage des données personnelles avant acceptation, page offre vendeur, historique et journal, actions accepter / refuser, retrait acquéreur en trois états, offre de remplacement, saisie avant-contrat et délai, expiration, déclencheurs `offer_received` et `offer_accepted` | L2-03 | E2E 4 vert ; le bouton de retrait disparaît après acceptation |
 | L2-05 | Résumé de l'annonce par l'assistant (page annonce) | L1-28 | Régénéré à chaque modification |
 | L2-06 | Assistant acquéreur : `search_listings`, `get_listing_public`, `prefill_offer`, `create_case` | L2-04 | Recherche en langage naturel → filtres corrects sur 10 requêtes de test |
 | L2-07 | Outil vendeur `summarize_offer`, `summarize_contacts` ; back office offres | L2-04 | — |
+| L2-09 | Déclencheurs de montée en gamme : `upgrade_prompts`, `getUpgradePrompt`, `UpgradePrompt`, déclencheurs `valuation_done`, `listing_ready`, `low_contacts`, `contacts_no_visit`, `offer_received`, `offer_accepted` (seuils Q2) | L1-33, L2-04 | Un déclencheur masqué ne réapparaît pas ; aucun déclencheur ne bloque une action (test) |
+| L2-10 | RGPD : export JSON des données du compte et suppression depuis `/compte`, cron `anonymize-deleted` | L1-09 | L'export contient profil, biens, messages, offres ; un compte supprimé est anonymisé au bout de 30 jours (test sur date simulée) |
 | L2-08 | Recette lot 2 | tout L2 | Tag `v2.0.0-lot2` |
 
 ### Semaines 8 et 9 : lot 3
@@ -2065,7 +2104,7 @@ Chaque tâche : identifiant, contenu, dépendances, critères d'acceptation. Les
 | ID | Tâche | Dépend de | Accepté quand |
 |---|---|---|---|
 | L3-01 | Migrations visites, documents, partages, demandes d'accès, alertes + RLS + tests | L2-08 | Tests verts |
-| L3-02 | Créneaux (ponctuels et séries), invitations avec jeton, réservation, `.ics`, annulation, adresse révélée | L3-01 | E2E 5 vert |
+| L3-02 | Créneaux ponctuels (pas de séries), invitations avec jeton, réservation, `.ics`, annulation, adresse révélée, outil IA `propose_visit_slot` | L3-01 | E2E 5 vert ; `propose_visit_slot` n'écrit rien sans confirmation |
 | L3-03 | Retours de visite (cron J+1 et formulaires) | L3-02 | — |
 | L3-04 | Dossier de vente : checklist, dépôt, indicateur notaire, partage, demandes d'accès | L3-01 | — |
 | L3-05 | Analyse IA des documents (extraction, prompts par type, JSON validé), affichage vendeur, publication des faits sur l'annonce, résumé acquéreur | L3-04 | E2E 6 vert sur les documents de test |
@@ -2081,7 +2120,7 @@ Chaque tâche : identifiant, contenu, dépendances, critères d'acceptation. Les
 | P-02 | Performance et accessibilité finales | Objectifs section 20 atteints |
 | P-03 | Sauvegarde GitHub Action + restauration testée sur un projet vide | Restauration réussie documentée |
 | P-04 | Guide back office (`docs/GUIDE-BACK-OFFICE.md` + PDF) | Relu par Younes |
-| P-05 | Répétition de mise en prod sur staging, puis migrations prod, seed des `plans` et `sale_steps` uniquement, Stripe live, domaine, Resend vérifié | Site en ligne, parcours 1 et 3 testés en prod avec un vrai paiement remboursé |
+| P-05 | S10 : répétition complète de la mise en prod sur staging et livraison de la préprod validée (18 décembre). Bascule le lundi 4 janvier 2027 (à confirmer avec Cédric) : migrations prod, seed des `plans` et `sale_steps` uniquement, Stripe live, domaine `leenkey.fr` vers le nouveau déploiement, Resend vérifié, vérification de l'identifiant du modèle IA rapide (dépréciations) | Site en ligne, parcours 1 et 3 testés en prod avec un vrai paiement remboursé ; retour arrière vers la V1 possible en un « Promote » |
 | P-06 | Tag `v2.0.0`, `CHANGELOG.md` complet | — |
 
 ---
@@ -2119,3 +2158,6 @@ Chaque placeholder est tracé dans `docs/DECISIONS.md` et remplacé dès récept
 - Suppression automatique des données des ventes conclues après 12 mois.
 - Connexion Google / Apple.
 - Tableau de bord statistique avancé pour l'admin (au-delà des tuiles de la section 17).
+- Pages SEO par ville `/acheter/[ville]` (ex-L1-20, reporté en V3 le 2026-10-05).
+- Bouton « Expliquer cette offre » côté vendeur (reporté en V3 le 2026-10-05 ; en V2 le vendeur interroge l'assistant).
+- Séries de créneaux de visite (en V2 : créneaux ponctuels uniquement).
