@@ -23,6 +23,21 @@ Rends-moi :
 
 ---
 
+## Après la session 0 · installation du pack corrigé
+
+```
+J'ai mis à jour le pack avec mes décisions (docs/DECISIONS.md, entrées du 2026-10-07) : Next.js avec reprise de l'estimateur, v2 = préprod, statut suspended, create_case en security definer, quotas IA par rôle, reports en V3, etc.
+
+1. Installe le pack sur une branche docs/session-0 depuis v2.
+2. Fusionne CLAUDE.md : le pack comme base, plus la section « Existant et règles éditoriales » complétée avec les règles éditoriales du CLAUDE.md actuel du site.
+3. Relis les points de ta session 0 et dis-moi lesquels ne sont pas encore réglés dans les docs. Corrige ceux qui relèvent de la cohérence des docs ; pour le reste, propose.
+4. Vérifie l'identifiant exact du modèle Sonnet sur docs.claude.com et corrige core/ai/models.ts dans le SPEC.
+5. Recale docs/PLANNING.md sur la date de démarrage réelle : [date].
+6. PR vers v2, liste des fichiers modifiés, puis attends mon go pour /tache L1-01.
+```
+
+---
+
 ## Reprise après une pause
 
 ```

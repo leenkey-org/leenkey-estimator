@@ -121,6 +121,8 @@ Règle de séparation : `core/` ne connaît ni « bien », ni « annonce », ni 
 
 Trois environnements, strictement séparés. Aucun secret d'un environnement ne doit apparaître dans un autre.
 
+Dans ce document, « staging » désigne l'environnement de préprod : branche Git `v2`, projet Supabase `leenkey-staging`, `NEXT_PUBLIC_ENV=staging`.
+
 | | Local (dev) | Preprod (staging) | Prod |
 |---|---|---|---|
 | Branche Git | une branche par tâche | `v2` (joue le rôle de staging) | `main` |
@@ -249,7 +251,7 @@ Le schéma complet des tables est dans `docs/SPEC-V2.md`, section 4 (référence
 - L'admin (`'admin' = any(profiles.roles)`, via `is_admin()`) a un accès en lecture global et des droits d'écriture limités aux actions de modération : statuts d'annonce, suspension, dossiers, base de connaissances.
 - Aucune politique `using (true)` en écriture. Jamais.
 
-Chaque migration qui touche aux permissions est accompagnée d'un test dans `supabase/tests/` qui vérifie, avec les cinq comptes de seed (`seller_a`, `seller_b`, `buyer_c`, `buyer_d`, `admin`), qu'un utilisateur ne voit pas ce qu'il ne doit pas voir. Ne pas fusionner sans ce test.
+Chaque migration qui touche aux permissions est accompagnée d'un test dans `supabase/tests/` qui vérifie, avec les cinq comptes de seed (`seller_a`, `seller_b`, `buyer_c`, `buyer_d`, `admin`) et un visiteur anonyme, qu'un utilisateur ne voit pas ce qu'il ne doit pas voir. Ne pas fusionner sans ce test.
 
 ---
 
@@ -375,6 +377,10 @@ Pour chaque fonctionnalité, dans cet ordre :
 7. Emails et notifications.
 8. Entrée dans `CHANGELOG.md`, PR vers `v2`, vérification manuelle en préprod après fusion.
 
+### Textes de Cédric hors règles éditoriales
+
+Les textes fournis par Cédric qui ne respectent pas les règles de la section 16 (ex. « On pilote avec vous ») ne sont pas réécrits d'office : la reformulation est proposée dans `docs/DECISIONS.md` (Q18).
+
 ### Ordre de priorité des documents
 
 En cas de contradiction :
@@ -425,7 +431,7 @@ S'appliquent à tous les textes : interface, emails, prompts de l'assistant, PDF
 - Paiement **« à la souscription »**, jamais « au succès » ni « payé au succès ».
 - Voix **« nous »**, jamais « on » dans les textes Leenkey.
 - Réponse **« sous 48 h, 7 j/7 »** pour le formulaire de contact du site, jamais « ouvrées ». (Délais V2 décidés par Cédric : relecture d'annonce et contact après achat d'une formule sous 24 h, même non ouvrées.)
-- Vocabulaire **« valorisation / analyse de valeur »** : éviter « estimation » seul dans les textes marketing et d'interface (prudence loi Hoguet ; Leenkey n'est pas une agence). Le nom technique `estimation` reste permis dans le code et les tables.
+- Vocabulaire **« valorisation / analyse de valeur »** : éviter « estimation » seul dans les textes marketing et d'interface (décision client maintenue en V2, même si l'activité est couverte par la carte d'agent immobilier de Cédric : `DECISIONS.md`, 2026-10-07). Le nom technique `estimation` reste permis dans le code et les tables.
 - Pas de chiffres ni de témoignages inventés sur le site.
 - Pas de mention « Prix ferme » sur les écrans.
 - Pas de pixel publicitaire tiers (Meta Pixel ou autre) hors décision écrite dans `docs/DECISIONS.md`.

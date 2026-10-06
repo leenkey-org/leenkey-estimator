@@ -973,7 +973,7 @@ Implémentation CSS :
 Direct, clair, rassurant, sans jargon et sans ton commercial. Vouvoiement. Phrases courtes. Nous disons ce qui se passe et ce qui vient ensuite.
 
 Règles éditoriales du site existant, applicables à tous les textes V2 (interface, emails, PDF, prompts) : voir `CLAUDE.md` section 16. En particulier :
-- Leenkey parle à la première personne du pluriel : **« nous »**, jamais « on ». Les phrases de Cédric qui contiennent « on » sont en attente de reformulation (`DECISIONS.md`, Q16) et ne sont pas modifiées d'ici là.
+- Leenkey parle à la première personne du pluriel : **« nous »**, jamais « on ». Les phrases de Cédric qui contiennent « on » sont en attente de reformulation (`DECISIONS.md`, Q18) et ne sont pas modifiées d'ici là.
 - **« Analyse de valeur » / « valorisation »**, pas « estimation » seul dans les libellés visibles (prudence loi Hoguet). Lien de navigation : « Valoriser mon bien » (libellé du site actuel), pas « Estimer mon bien » comme sur les maquettes. Le mot reste permis dans le code (`estimation_id`, `/estimer`) et dans « estimation indicative des frais d'acquisition », qui ne porte pas sur la valeur du bien.
 - Paiement « à la souscription », jamais « au succès ».
 - Pas de mention « Prix ferme ».
@@ -2023,7 +2023,7 @@ Seed (`npm run db:seed`) : comptes `seller_a@test.leenkey.fr`, `seller_b@…`, `
 
 Chaque tâche : identifiant, contenu, dépendances, critères d'acceptation. Les livraisons contractuelles sont en fin de S5 (lot 1), S7 (lot 2), S9 (lot 3), S10 (livraison de la préprod validée, 18 décembre). La bascule en production est prévue le lundi 4 janvier 2027 (à confirmer avec Cédric). Les semaines et leurs dates sont dans `docs/PLANNING.md` ; ce tableau-ci donne les dépendances et les critères.
 
-Rééquilibrage du 2026-10-05 : L1-20 (pages villes) part en V3 ; L1-27 avance en S4 et L1-35 en S3 ; les déclencheurs de montée en gamme (non contractuels) deviennent L2-09 en S6 ; l'export RGPD et la suppression de compte deviennent L2-10 en S7.
+Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pages villes en V3) ; L1-27 avance en S4 et L1-35 en S3 ; les déclencheurs de montée en gamme (non contractuels) deviennent L2-09 en S6 ; l'export RGPD et la suppression de compte deviennent L2-10 en S7.
 
 ### Semaine 1 : fondations
 
@@ -2057,7 +2057,8 @@ Rééquilibrage du 2026-10-05 : L1-20 (pages villes) part en V3 ; L1-27 avance e
 | L1-16 | Carte Mapbox (marqueurs prix, regroupement, synchronisation liste/carte, recherche dans la zone) | L1-15 | Mobile et desktop conformes aux maquettes |
 | L1-17 | Page annonce complète (galerie, cotations, KeyFacts, carte approximative, barre d'action), métadonnées, JSON-LD, OG image, compteur de vues | L1-15 | Lighthouse objectifs atteints, validation Rich Results OK |
 | L1-18 | Favoris | L1-17 | Ajout / retrait, liste dans l'espace acquéreur |
-| L1-19 | Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`listing_suspend`, motif obligatoire) / remettre en ligne, audit, emails, `sitemap.ts` (annonces publiées) | L1-14 | Parcours vendeur → admin → publication de bout en bout ; le vendeur ne peut pas lever une suspension (test RLS) ; sitemap valide |
+| L1-19 | Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`listing_suspend`, motif obligatoire) / remettre en ligne, audit, emails | L1-14 | Parcours vendeur → admin → publication de bout en bout ; le vendeur ne peut pas lever une suspension (test RLS) |
+| L1-20 | Sitemap et robots (pages SEO par ville reportées en V3) | L1-17 | Sitemap valide, robots bloque hors prod |
 | L1-35 | `listing_revisions` simplifié : trigger sur les champs prix, titre, description d'une annonce publiée, historique chronologique côté vendeur et admin, notification `listing.revised` à l'admin | L1-14 | Changement de prix tracé avec ancienne et nouvelle valeur |
 
 ### Semaine 4 : messagerie, notifications, dashboard
@@ -2159,6 +2160,6 @@ Chaque placeholder est tracé dans `docs/DECISIONS.md` et remplacé dès récept
 - Suppression automatique des données des ventes conclues après 12 mois.
 - Connexion Google / Apple.
 - Tableau de bord statistique avancé pour l'admin (au-delà des tuiles de la section 17).
-- Pages SEO par ville `/acheter/[ville]` (ex-L1-20, reporté en V3 le 2026-10-05).
+- Pages SEO par ville `/acheter/[ville]` (reportées en V3 ; L1-20 ne garde que le sitemap et les robots).
 - Bouton « Expliquer cette offre » côté vendeur (reporté en V3 le 2026-10-05 ; en V2 le vendeur interroge l'assistant).
 - Séries de créneaux de visite (en V2 : créneaux ponctuels uniquement).

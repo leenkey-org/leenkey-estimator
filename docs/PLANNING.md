@@ -1,10 +1,10 @@
 # PLANNING
 
-Démarrage le **lundi 12 octobre 2026** (date provisoire, seule compatible avec les dates contractuelles : voir `DECISIONS.md` Q20). À recaler si l'acompte arrive plus tard ; les dates contractuelles ne bougent pas sans avenant.
+Démarrage le **lundi 12 octobre 2026** (date provisoire, seule compatible avec les dates contractuelles : voir `DECISIONS.md` Q21). À recaler si l'acompte arrive plus tard ; les dates contractuelles ne bougent pas sans avenant.
 
 Claude Code coche une tâche (`[x]`) dans la même PR que son code, avec le numéro de PR. Younes coche la colonne « Testé en préprod » après vérification sur `leenkey-v2.vercel.app`, une fois la PR fusionnée dans `v2`.
 
-Rééquilibrage du 5 octobre : la semaine 5 passe de 10 à 8 tâches. L1-20 (pages villes) part en V3 ; L1-35 avance en S3 à la place ; L1-27 (embeddings, sans dépendance au reste de S4) avance en S4 ; les déclencheurs de montée en gamme, non contractuels, deviennent L2-09 (S6) ; l'export RGPD et la suppression de compte deviennent L2-10 (S7). Aucune fonctionnalité du cahier des charges ne quitte le lot 1.
+Rééquilibrage du 5 octobre : la semaine 5 passe de 10 à 8 tâches. L1-20 est réduite au sitemap et aux robots (pages villes en V3) ; L1-35 avance en S3 ; L1-27 (embeddings, sans dépendance au reste de S4) avance en S4 ; les déclencheurs de montée en gamme, non contractuels, deviennent L2-09 (S6) ; l'export RGPD et la suppression de compte deviennent L2-10 (S7). Aucune fonctionnalité du cahier des charges ne quitte le lot 1.
 
 ## S1 · semaine du 12 oct. · Fondations et reprise de l'existant
 
@@ -34,7 +34,8 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [ ] **L1-16** Carte Mapbox (marqueurs prix, regroupement, synchronisation liste/carte, recherche dans la zone) · PR : · Testé en préprod : ☐
 - [ ] **L1-17** Page annonce complète (galerie, cotations, KeyFacts, carte approximative, barre d'action), métadonnées,… · PR : · Testé en préprod : ☐
 - [ ] **L1-18** Favoris · PR : · Testé en préprod : ☐
-- [ ] **L1-19** Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`suspended`) / remettre en ligne, audit, emails, sitemap · PR : · Testé en préprod : ☐
+- [ ] **L1-19** Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`suspended`) / remettre en ligne, audit, emails · PR : · Testé en préprod : ☐
+- [ ] **L1-20** Sitemap et robots (pages SEO par ville reportées en V3) · PR : · Testé en préprod : ☐
 - [ ] **L1-35** `listing_revisions` simplifié : historique des champs prix, titre, description d’une annonce publiée, vendeur et admin · PR : · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
@@ -91,7 +92,7 @@ Toujours la semaine la plus risquée du projet. Ordre imposé : L1-26 et L1-33 (
 - [ ] **P-04** Guide back office (`docs/GUIDE-BACK-OFFICE.md` + PDF) · PR : · Testé en préprod : ☐
 - [ ] **P-05** Répétition complète de la mise en production sur staging ; préprod validée par Cédric le 18 décembre · PR : · Testé en préprod : ☐
 
-## Bascule · lundi 4 janv. 2027 (à confirmer avec Cédric, `DECISIONS.md` Q19)
+## Bascule · lundi 4 janv. 2027 (à confirmer avec Cédric, `DECISIONS.md` Q17)
 
 - [ ] **P-05b** Mise en production : migrations prod, seed `plans` et `sale_steps`, Stripe live, domaine `leenkey.fr`, Resend, vérification du modèle IA rapide, plan de retour arrière vers la V1 · PR : · Testé en préprod : ☐
 - [ ] **P-06** Tag `v2.0.0`, `CHANGELOG.md` complet · PR : · Testé en préprod : ☐
@@ -104,7 +105,7 @@ Toujours la semaine la plus risquée du projet. Ordre imposé : L1-26 et L1-33 (
 | Fin de la semaine 5 (livraison lot 1) | ven. 13 nov. | ☐ | 30 % · 5 099,40 € TTC |
 | Lot 2 | ven. 27 nov. | ☐ | — |
 | Lot 3 | ven. 11 déc. | ☐ | — |
-| Livraison de la préprod validée | ven. 18 déc. | ☐ | — |
-| Mise en production | lun. 4 janv. 2027 (à confirmer) | ☐ | 20 % · 3 399,60 € TTC |
+| Livraison : préprod complète validée | ven. 18 déc. | ☐ | 20 % · 3 399,60 € TTC |
+| Bascule en production (à confirmer par Cédric) | lun. 4 janv. 2027 | — | — |
 
-Le contrat lie les 20 % à la « mise en production » : décaler la bascule au 4 janvier décale ce paiement d'autant, sauf accord écrit de Cédric pour le régler à la livraison de la préprod validée (Q19).
+Décision du 2026-10-07 : les 20 % sont dus à la livraison de la préprod validée (18 décembre), indépendamment de la date de bascule.

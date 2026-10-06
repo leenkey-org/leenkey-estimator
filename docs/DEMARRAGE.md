@@ -33,6 +33,7 @@ Guide pour Younes. Claude Code ne lit pas ce fichier en priorité : il lit `CLAU
 - [ ] Resend : compte créé, `EMAIL_TEST_INBOX` = ta boîte de test
 - [ ] Clé Anthropic avec plafond de dépenses mensuel
 - [ ] Clé Mapbox restreinte à `localhost` et `leenkey-v2.vercel.app`
+- [ ] Boîtes bonjour@ et admin@leenkey.fr créées (DNS chez IONOS, compte de Cédric)
 - [ ] `.env.local` rempli à partir de `.env.example`, variables staging saisies dans Vercel
 
 ## 3. Installer le pack dans le repo
@@ -45,7 +46,7 @@ Fait le 5 octobre 2026 par la PR `docs/session-0` vers `v2` (pack fusionné avec
 
 ## 4. Première session Claude Code
 
-Ouvre Claude Code à la racine du repo et colle le message « Session 0 » de `docs/PROMPTS.md`. Il lit tout, résume, pose ses questions, sans coder. Ne passe à `/tache L1-01` qu'après avoir validé son résumé.
+La session 0 est faite (lecture et cadrage). Ses décisions sont dans `DECISIONS.md` (2026-10-05 et 2026-10-07) et appliquées aux docs par la PR `docs/session-0`. Prochaine étape : `/tache L1-01`.
 
 ## 5. Routine de travail
 
