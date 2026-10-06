@@ -891,7 +891,7 @@ Matrice (L = lecture, E = écriture) :
 | `conversations` | — | L participant (`listing` et `advisor` de ses biens) | L/E participant (création `listing` uniquement) | L tous, E sur `advisor` |
 | `messages` | — | L/E participant | L/E participant | L tous ; E uniquement dans les conversations `advisor` |
 | `reports` | — | E | E | L/E |
-| `offers` | — | L sur ses annonces, transitions `viewed/accepted/declined` via fonctions SQL | L les siennes, création, retrait (`submitted`/`viewed` → `withdrawn`) via fonction SQL | L, E `precontract_signed_at` et `withdrawal_period_start` |
+| `offers` | — | L sur ses annonces **uniquement via la vue `offer_for_seller`** (aucune lecture directe de la table, qui exposerait les données personnelles avant acceptation), transitions `viewed/accepted/declined` via fonctions SQL | L les siennes, création, retrait (`submitted`/`viewed` → `withdrawn`) via fonction SQL | L, E `precontract_signed_at` et `withdrawal_period_start` |
 | `offer_events`, `listing_revisions` | — | L ses biens | L les siennes (`offer_events`) | L |
 | `plan_entitlements` | L | L | L | L/E |
 | `upgrade_prompts` | — | L/E ses biens | — | L |
@@ -1175,7 +1175,7 @@ Captures PNG de chaque maquette dans `docs/maquettes/png/` (à regarder en prior
 
 ## 8. Écrans : spécification détaillée
 
-Pour chaque écran : route, contenu dans l'ordre, états (chargement, vide, erreur), règles. Tous les écrans sont conçus en 390 px puis étendus à 768 et 1280 px.
+Pour chaque écran : route, contenu dans l'ordre, états (chargement, vide, erreur), règles. Tous les écrans sont conçus pour 375 px (vérifiés à 390 px, largeur des maquettes) puis étendus à 768 et 1280 px.
 
 ### 8.1 Accueil `/` (enrichissement de l'existant)
 
@@ -1403,7 +1403,6 @@ Fonction unique `notify(profileId, type, payload)` dans `core/notifications/`. E
 | `message.new` | oui | oui | Un email maximum par conversation toutes les 15 min ; si l'utilisateur a lu entre-temps, pas d'email |
 | `listing.published` | oui | oui | — |
 | `listing.rejected` | oui | oui | — |
-| `listing.modified` (admin) | oui | non | — |
 | `listing.pending` (admin) | oui | oui | Digest si > 3 en 1 h |
 | `offer.received` | oui | oui | — |
 | `offer.answered` | oui | oui | — |
@@ -1682,7 +1681,7 @@ Visite (choix obligatoire) : « Je confirme avoir visité le bien » ou « Je fo
 
 Bouton « Relire mon offre » (actif seulement quand tout est coché) → aperçu du document tel que le vendeur le recevra → bouton « Envoyer mon offre au vendeur ». Jamais un simple bouton « Envoyer ».
 
-Envoi (fonction `submit_offer`, transaction unique) → statut `submitted`, `submitted_at`, photographies (`buyer_identity`, `property_snapshot`, `financing_status_at_submit`), gel par trigger, `offer_events`, génération du PDF, synthèse, notification vendeur, message système dans la conversation.
+Envoi (fonction `offer_submit`, transaction unique) → statut `submitted`, `submitted_at`, photographies (`buyer_identity`, `property_snapshot`, `financing_status_at_submit`), gel par trigger, `offer_events`, génération du PDF, synthèse, notification vendeur, message système dans la conversation.
 
 ### PDF de l'offre
 
@@ -1715,7 +1714,7 @@ Gabarits de l'analyse (une phrase par ligne, ignorée si sans objet) : écart (�
 
 ### Côté vendeur
 
-Pas de PDF envoyé directement : le tableau de bord affiche une carte « Nouvelle offre reçue » avec, dans cet ordre : Prix demandé, Offre reçue, Écart, Financement déclaré, Justificatif financement, Durée de validité (compte à rebours « 4 jours et 7 heures restantes »), Analyse Leenkey. Puis « Voir l'offre complète » (page `/offres/[id]` avec le document et le PDF) et trois actions :
+Pas de PDF envoyé directement : le tableau de bord affiche une carte « Nouvelle offre reçue » avec, dans cet ordre : Prix demandé, Offre reçue, Écart, Financement déclaré, Justificatif financement, Durée de validité (compte à rebours « 4 jours et 7 heures restantes »), Analyse Leenkey. Puis « Voir l'offre complète » (page `/offres/[id]` : le document à l'écran, données personnelles masquées avant acceptation ; le PDF n'est téléchargeable par le vendeur qu'après acceptation, voir « Confidentialité des données de l'offre ») et trois actions :
 - **« Accepter l'offre »** → écran intermédiaire (voir ci-dessous).
 - **« Refuser l'offre »** (message facultatif).
 - **« Discuter avec l'acquéreur »** → ouvre la conversation du bien dans la messagerie. Pas de contre-offre structurée en V2.
@@ -1997,7 +1996,7 @@ Règles de sécurité : `CLAUDE.md` section 11. Compléments :
 - **Anthropic** : aucune donnée n'est utilisée pour l'entraînement via l'API ; ne pas envoyer à l'assistant les montants de financement d'un acquéreur à un vendeur.
 - **Droits** : export JSON et suppression depuis `/compte` ; anonymisation à 30 jours.
 - **Conservation** : messages et documents d'une annonce vendue conservés 12 mois puis supprimés (cron à ajouter en V3 ; noter dans `BACKLOG-V3.md`).
-- **Cookies** : uniquement fonctionnels + mesure d'audience ; bandeau de consentement pour GA4 et GTM, déjà présents sur le site (reprendre le mécanisme existant ou l'ajouter). Aucun pixel publicitaire tiers.
+- **Cookies** : uniquement fonctionnels + mesure d'audience. GA4 et GTM sont présents sur le site actuel **sans bandeau de consentement** (vérifié dans `index.html` le 2026-10-06) : un bandeau doit être ajouté (voir `DECISIONS.md`, Q23). Aucun pixel publicitaire tiers.
 
 ---
 
@@ -2015,7 +2014,7 @@ Voir `CLAUDE.md` section 10. Parcours E2E obligatoires (Playwright, sur staging,
 
 Mocks : un client IA factice (`AI_MOCK=1`) renvoie des réponses déterministes pour les tests. Documents de test anonymisés dans `supabase/seed/documents/`.
 
-Seed (`npm run db:seed`) : comptes `seller_a@test.leenkey.fr`, `seller_b@…`, `buyer_c@…`, `buyer_d@…`, `admin@…` (mot de passe commun en variable `SEED_PASSWORD`), 12 biens publiés répartis dans la zone de lancement (section 20) avec photos libres de droits générées (aplats ou photos Unsplash sous licence, jamais de photos de vraies annonces), 3 en attente, 1 refusé, conversations, 2 offres, fiches KB placeholder.
+Seed (`npm run db:seed`) : comptes `seller_a@test.leenkey.fr`, `seller_b@…`, `buyer_c@…`, `buyer_d@…`, `admin@…` (mot de passe commun en variable `SEED_PASSWORD`), 12 biens publiés répartis dans la zone de lancement (section 20) avec photos libres de droits générées (aplats ou photos Unsplash sous licence, jamais de photos de vraies annonces), 3 en attente, 1 refusé, conversations, 2 offres, fiches de la FAQ de Cédric.
 
 ---
 
@@ -2034,7 +2033,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-03 | Migration enums + `profiles` + trigger d'inscription + `buyer_profiles` + RLS + tests | L1-01 | Tests RLS verts |
 | L1-04 | Migrations `properties`, `listings`, `photos`, `listing_views`, `favorites`, vue `public_listings`, séquence référence, fonctions de transition de statut + RLS + tests | L1-03 | Tests RLS verts, vue ne renvoie aucun champ privé |
 | L1-05 | Migrations `plans`, `subscriptions`, `stripe_events`, `sale_*`, `conversations`, `messages`, `reports`, `cases`, `case_notes`, `notifications`, `audit_log`, `knowledge_base`, `ai_*` + RLS + tests | L1-04 | Tests RLS verts |
-| L1-06 | Seed complet (comptes, biens, plans, étapes placeholder, KB placeholder) | L1-05 | `npm run db:seed` idempotent en local et staging, refus en prod |
+| L1-06 | Seed complet (comptes, biens, plans, étapes de vente de la section 9, fiches de `faq-cedric-v2.md`) | L1-05 | `npm run db:seed` idempotent en local et staging, refus en prod |
 | L1-07 | Design system : tokens, polices, composants de base (Button, Input, Select, UnitInput, ChipToggle, SegmentedPicker, StatusBadge, DpeBadge, SectionLabel, BlueprintPanel, Dimension, DimensionGroup), page `/design` | L1-01 | Page `/design` complète, contrastes vérifiés |
 | L1-08 | Illustration `public/brand/plan.svg` et composant `EmptyState` | L1-07 | SVG conforme à la section 6, 3 cadrages utilisés dans `/design` |
 
@@ -2139,7 +2138,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | Décisions 1 à 9 | **Reçues** (`docs/DECISIONS.md`) | Toute la spec |
 | Modèle d'offre et mention juridique | Reçu et précisé le 2026-10-05 (section 13). Reste ouvert : relecture des textes par la notaire (Q9) | Valeurs provisoires de `DECISIONS.md` |
 | Mentions légales, CGU, CGV (rétractation, médiateur), confidentialité, cookies, mention IA, procédure de signalement | Demandés le 2026-10-05, **bloquant pour la prod** | Pages légales (page « En cours de rédaction » en staging) |
-| Adresse légale et coordonnées | Non reçu | Emails, pages légales (`[ADRESSE LEENKEY]`) |
+| Adresse légale et coordonnées | Présente sur le site V1 (mentions légales : 36 rue Pierre Brossolette, 91360 Épinay-sur-Orge), à confirmer par Cédric | Emails, pages légales |
 | Biens et documents de test | Non reçu | Seed (en attendant : biens fictifs dans la zone de lancement) |
 | Précisions en attente (Q1 à Q10, Q15) | Envoyées, valeurs provisoires utilisées | Voir `docs/DECISIONS.md` |
 
