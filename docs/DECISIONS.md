@@ -54,6 +54,7 @@ Journal des décisions client. Format : date · question · décision · qui. Le
 | 2026-10-07 | Cadre juridique (loi Hoguet) | Cédric est agent immobilier, l'activité est couverte. Sujet clos. | Cédric |
 | 2026-10-07 | Libellé « financement validé » du cahier des charges | Remplacé par « Justificatif vérifié » / « Contrôlé par Leenkey le … », confirmé par écrit à Cédric. | Younes |
 | 2026-10-07 | Mise en production | Livraison de la préprod validée le 18 décembre (déclenche les 20 %), bascule en production le lundi 4 janvier, à confirmer par Cédric. | Younes |
+| 2026-10-07 | Direction artistique | « Façade » remplace « Plan d'architecte » : photo d'abord, bleu Leenkey en aplats, neutres pierre, Archivo seule (titres élargis), angles 4 et 6 px, pas d'ombre sur les cartes, pas de majuscules espacées ni de monospace (SPEC-V2 section 6). Maquettes mises à jour. | Younes |
 
 ## Questions ouvertes (valeur provisoire utilisée en attendant)
 

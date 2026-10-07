@@ -2,7 +2,7 @@
 
 Ce fichier est lu automatiquement par Claude Code au début de chaque session. Il est la référence du projet : ce qui est écrit ici prime sur toute habitude ou convention par défaut. Le mettre à jour dès qu'une règle change.
 
-**Avant toute tâche, lire aussi `docs/SPEC-V2.md`** : la spécification fonctionnelle, technique et visuelle complète (modèle de données, écrans, direction artistique « Plan d'architecte », assistant IA, plan de travail tâche par tâche). Ce fichier-ci donne les règles ; la spec dit quoi construire.
+**Avant toute tâche, lire aussi `docs/SPEC-V2.md`** : la spécification fonctionnelle, technique et visuelle complète (modèle de données, écrans, direction artistique « Façade », assistant IA, plan de travail tâche par tâche). Ce fichier-ci donne les règles ; la spec dit quoi construire.
 
 ---
 
@@ -32,7 +32,7 @@ Trois lots contractuels. **Le périmètre à construire est celui de `docs/SPEC-
 | Couche | Choix | Notes |
 |---|---|---|
 | Framework | Next.js 15, App Router, TypeScript strict | Server Components par défaut, `"use client"` seulement si nécessaire |
-| UI | Tailwind CSS + shadcn/ui | Composants dans `components/ui/`, jamais modifiés à la main : on les étend |
+| UI | Tailwind CSS + shadcn/ui, police Archivo (axe de largeur), direction « Façade » (SPEC-V2 section 6) | Composants dans `components/ui/`, jamais modifiés à la main : on les étend |
 | Base, auth, storage, realtime | Supabase (Postgres, RLS, Auth, Storage, Realtime) | Un projet par environnement, voir section 4 |
 | Vecteurs | pgvector dans Supabase | Base de connaissances de l'assistant |
 | Paiement | Stripe Checkout + webhooks | Mode test en dev et preprod, live en prod uniquement |

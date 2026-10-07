@@ -16,7 +16,7 @@ Ce document est la source de vérité fonctionnelle, technique et visuelle de la
 3. Architecture technique
 4. Modèle de données (DDL)
 5. Permissions (RLS)
-6. Direction artistique « Plan d'architecte »
+6. Direction artistique « Façade »
 7. Design system : tokens, typographie, composants
 8. Écrans : spécification détaillée
 9. Moteur d'étapes de vente
@@ -915,57 +915,35 @@ Tests : `supabase/tests/rls_*.sql` avec les comptes de seed `seller_a`, `seller_
 
 ---
 
-## 6. Direction artistique « Plan d'architecte »
+## 6. Direction artistique « Façade »
+
+Décidée le 2026-10-07 (remplace la direction « Plan d'architecte »). Référence visuelle : `docs/maquettes/png/` et la présentation des écrans envoyée au client.
 
 ### Intention
 
-Leenkey ne doit pas ressembler à une proptech SaaS bleue de plus. La direction s'appuie sur le seul univers graphique propre à l'immobilier qui ne soit pas un cliché : **le plan d'architecte**. Traits fins, lignes de cote, grille, légendes numérotées, chiffres précis. Cela sert directement le positionnement : Leenkey, c'est la précision (annonces complètes, chiffres vérifiés, dossier en ordre) au service d'un propriétaire qui garde la main.
-
-Les couleurs actuelles de la marque (bleu `#1156FC`, navy `#1A2B4A` / `#0F1E35`) sont déjà des couleurs de plan : la direction ne change pas la marque, elle lui donne un vocabulaire.
+Leenkey vend des logements, pas un logiciel. L'interface doit faire voir les biens d'abord et s'effacer derrière eux : grandes photos, chiffres lisibles, le bleu Leenkey en aplats francs pour les moments qui comptent (en-têtes, action principale), des neutres couleur pierre pour le reste. Pas de décor qui fasse « interface générée » : pas de dégradés, pas d'ombres douces, pas d'étiquettes en capitales, pas de numérotation décorative.
 
 ### Les quatre signatures
 
-**1. Les cotations.** Les chiffres clés d'un bien (surface, prix au m², étage, surface d'une pièce) s'affichent avec une ligne de cote : deux traits verticaux, une ligne horizontale fine avec flèches, et la valeur centrée au-dessus en monospace.
+**1. La photo d'abord.** Sur l'annonce, la recherche, les cartes de bien et l'accueil acquéreur, la photo occupe la plus grande place possible (galerie pleine largeur en mobile, mosaïque 1 grande + 4 petites en desktop). Une annonce sans photo affiche le dessin `facade.svg` sur aplat pierre, jamais un bloc gris avec « Photo ».
 
-```
-   68 m²
-|←———————→|
-```
+**2. Le bleu en aplat.** `--color-blue` s'utilise en surfaces pleines : en-tête de l'accueil connecté et des écrans de fin de parcours, bouton principal, sélection active, marqueur de prix sélectionné sur la carte. Jamais en dégradé, jamais en ombre colorée. Le navy sert aux en-têtes sombres (dashboard vendeur, back office).
 
-Composant `<Dimension value="68" unit="m²" />` (section 7). Utilisé : page annonce (bloc chiffres clés), fiche du bien (récapitulatif), carte de bien desktop (surface), dashboard (surface du bien), PDF d'offre. **Pas plus de 4 cotations visibles à l'écran en même temps.**
+**3. La typographie élargie.** Une seule famille, **Archivo**, dont on utilise l'axe de largeur : titres, prix et chiffres clés en Archivo élargie (`font-stretch: 116%`, 700, interlettrage -0,02 em) ; tout le reste en Archivo normale. Les étiquettes restent en casse normale (« Prochaine action », jamais « PROCHAINE ACTION »).
 
-**2. La grille de plan.** Trame de fond de 8 px, trait `#DBEAFE` à 1 px sur fond clair, `rgba(255,255,255,0.06)` sur fond navy. Utilisée uniquement sur : l'en-tête du dashboard vendeur, le hero de la page d'accueil et de /vendre, les états vides, l'écran de fin de parcours (annonce envoyée, offre envoyée). **Jamais derrière du texte courant, jamais sur les listes et formulaires.**
+**4. Des formes nettes.** Angles de 4 px (boutons, champs, vignettes) et 6 px (cartes, panneaux) ; pastilles arrondies réservées aux statuts, filtres et avatars. Pas d'ombre portée sur les cartes : une bordure 1 px `--color-border` suffit. Seuls les éléments flottants (marqueurs de carte, bouton assistant, menus) ont une ombre courte et neutre.
 
-Implémentation CSS :
-```css
-.blueprint-grid {
-  background-image:
-    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-  background-size: 8px 8px;
-}
-.blueprint-grid-major { /* option : ligne majeure tous les 40 px */
-  background-image:
-    linear-gradient(to right, var(--grid-line-major) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line-major) 1px, transparent 1px),
-    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-  background-size: 40px 40px, 40px 40px, 8px 8px, 8px 8px;
-}
-```
-
-**3. La légende et les données en monospace.** Tout ce qui est donnée, référence ou numérotation passe en IBM Plex Mono : références d'annonce (`RÉF. LK-0142`), numéros d'étape (`01 · PRÉPARATION`), dates techniques, valeurs dans les tableaux de caractéristiques, montants dans le détail d'une offre. Les étiquettes de section sont en mono, majuscules, interlettrage 1,5 px, 11-12 px, couleur bleu primaire. Les numéros d'étape à deux chiffres sont systématiques.
-
-**4. Le plan comme illustration.** Une seule illustration de marque : un plan d'appartement minimaliste au trait (murs en trait 2 px navy, portes en arc 1 px, cotations bleues, un coin hachuré). Fichier SVG unique `public/brand/plan.svg`, 1200 × 800, décliné par cadrage (`object-position`) et par opacité. Utilisé : onboarding vendeur, états vides (aucun bien, aucune conversation, aucune offre), en-tête de la fiche du bien quand il n'y a pas encore de photo, page 404, image Open Graph par défaut. Claude Code dessine ce SVG à la main en respectant : lignes droites uniquement (sauf les arcs de porte), pas de mobilier détaillé, 4 à 6 pièces, une cote extérieure en haut et une à gauche.
+**Le dessin de marque.** Un dessin au trait d'une façade de maison (traits 1,5 px, toit, fenêtres, porte, une ligne de cote en haut avec sa valeur), fichier unique `public/brand/facade.svg`. Utilisé : en-tête de l'accueil connecté (blanc à 55 % sur aplat bleu), états vides, annonce sans photo, page 404, image Open Graph par défaut. C'est le seul clin d'œil au plan d'architecte qui reste.
 
 ### Ce qu'on s'interdit
 
-- Dégradés de couleur (sauf le dégradé CTA existant, réservé au bouton principal du hero marketing).
-- Icônes de maison ou de clé en dehors du logo.
+- Dégradés de couleur, ombres colorées ou diffuses sur les cartes.
+- Étiquettes en majuscules espacées, police monospace dans l'interface, numérotation décorative (« 01 · … ») hors étapes réelles d'un parcours.
+- Séparateurs « · » empilés dans un même libellé (deux au maximum, par exemple « 3 pièces · 68 m² »).
+- Icônes de maison ou de clé en dehors du logo et du dessin de marque.
 - Illustrations 3D, isométriques, personnages.
-- Photos de banque d'images (couple souriant, main qui tend des clés).
+- Photos de banque d'images dans l'interface marketing (couple souriant, main qui tend des clés). Les photos de l'interface sont celles des vendeurs.
 - Emoji dans l'interface.
-- Ombres portées lourdes : une seule ombre, bleutée et diffuse, pour les cartes au survol et les éléments flottants.
 - Bordure colorée sur un seul côté d'une carte.
 
 ### Le ton
@@ -1011,31 +989,28 @@ Définis en variables CSS dans `app/globals.css` et exposés dans `tailwind.conf
   --color-navy-deep: #0F1E35;
 
   /* Neutres */
-  --color-bg: #F8FAFF;
+  --color-bg: #F4F4F1;            /* fond d'application, pierre très clair */
   --color-surface: #FFFFFF;
-  --color-surface-alt: #F5F7FB;
-  --color-tint: #EEF4FF;
-  --color-border: #E2E8F0;
+  --color-surface-alt: #ECEDE8;   /* pierre : tuiles, en-têtes de tableau */
+  --color-stone: #E3E4DE;         /* aplats neutres, bandeaux */
+  --color-tint: #EEF4FF;          /* sélection, suggestion de l'assistant */
+  --color-border: #D9DBD3;
   --color-border-strong: #DBEAFE;
-  --color-text: #1E293B;
-  --color-text-2: #4B5563;
-  --color-text-3: #6B7280;         /* texte secondaire, contraste 4.8:1 sur blanc */
+  --color-text: #0F1E35;
+  --color-text-2: #3E4757;
+  --color-text-3: #5B6474;         /* texte secondaire, contraste ≥ 4.5:1 sur blanc */
 
   /* États (versions foncées pour le texte, claires pour les fonds) */
   --color-success: #0E9F6E;  --color-success-bg: #D1FAE5;  --color-success-fg: #065F46;
   --color-warning: #D97706;  --color-warning-bg: #FEF3C7;  --color-warning-fg: #92400E;
   --color-danger:  #DC2626;  --color-danger-bg:  #FEE2E2;  --color-danger-fg:  #991B1B;
 
-  /* Plan */
-  --grid-line: #DBEAFE;
-  --grid-line-major: #C7DAFE;
-  --dimension-line: #1156FC;
-
   /* Forme */
-  --radius-xs: 6px; --radius-sm: 8px; --radius-md: 10px; --radius-lg: 12px;
-  --radius-xl: 16px; --radius-2xl: 24px; --radius-full: 9999px;
-  --shadow-card: 0 4px 24px rgba(17, 86, 252, 0.08);
-  --shadow-card-hover: 0 12px 36px rgba(17, 86, 252, 0.14);
+  --radius-sm: 4px;   /* boutons, champs, vignettes */
+  --radius-md: 6px;   /* cartes, panneaux */
+  --radius-full: 9999px;  /* statuts, filtres, avatars */
+  --shadow-float: 0 2px 6px rgba(15, 30, 53, 0.18);  /* éléments flottants uniquement */
+  --stretch-display: 116%;
 
   /* Mouvement */
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -1063,25 +1038,19 @@ DPE : couleurs réglementaires adoucies pour les badges.
 
 ### Typographie
 
-| Rôle | Police | Graisses | Usage |
-|---|---|---|---|
-| Titres | **Sora** | 600, 700 | H1 à H3, prix principal, chiffres des indicateurs |
-| Texte | **Poppins** | 400, 500, 600 | Texte courant, boutons, formulaires (continuité avec le site actuel) |
-| Données | **IBM Plex Mono** | 400, 500 | Références, étiquettes de section, numéros d'étape, cotations, valeurs de tableaux |
+Une seule famille : **Archivo** (Google Fonts, axes `wdth` 62–125 et `wght`), chargée via `next/font/google` (auto-hébergée), `display: swap`, sous-ensembles `latin` et `latin-ext`.
 
-Chargées via `next/font/google` (auto-hébergées, pas de requête vers Google au runtime), `display: swap`, sous-ensembles `latin` et `latin-ext`.
-
-| Style | Mobile | Desktop | Police |
+| Style | Mobile | Desktop | Réglage |
 |---|---|---|---|
-| Display (hero) | 36 / 1.1 / 700 | 56 / 1.05 / 700 | Sora |
-| H1 | 26 / 1.2 / 700 | 32 / 1.15 / 700 | Sora |
-| H2 | 20 / 1.25 / 600 | 24 / 1.2 / 600 | Sora |
-| H3 | 16 / 1.3 / 600 | 17 / 1.3 / 600 | Sora |
-| Prix principal | 26 / 1 / 700 | 32 / 1 / 700 | Sora, chiffres tabulaires |
-| Corps | 15 / 1.55 / 400 | 16 / 1.6 / 400 | Poppins |
-| Secondaire | 13 / 1.5 / 400 | 14 / 1.5 / 400 | Poppins, `--color-text-3` |
-| Étiquette | 11 / 1.3 / 500, majuscules, +1.5 px | 12 | Plex Mono, `--color-blue` |
-| Donnée | 13 / 1.4 / 500 | 14 | Plex Mono |
+| Display (hero) | 36 / 1.05 / 700 | 56 / 1 / 700 | élargie 116 %, -0,02 em |
+| H1 | 26 / 1.1 / 700 | 32 / 1.1 / 700 | élargie 116 %, -0,02 em |
+| H2 | 20 / 1.2 / 700 | 24 / 1.15 / 700 | élargie 112 % |
+| H3 | 16 / 1.3 / 600 | 17 / 1.3 / 600 | normale |
+| Prix principal | 26 / 1 / 700 | 32 / 1 / 700 | élargie 116 %, chiffres tabulaires |
+| Corps | 15 / 1.55 / 400 | 16 / 1.6 / 400 | normale |
+| Secondaire | 13 / 1.5 / 400 | 14 / 1.5 / 400 | `--color-text-3` |
+| Étiquette | 12 / 1.3 / 600 | 12 | casse normale |
+| Donnée | 13 / 1.4 / 600 | 14 | chiffres tabulaires |
 
 Chiffres : `font-variant-numeric: tabular-nums` sur tous les montants et surfaces. Formatage : `Intl.NumberFormat('fr-FR')`, espace insécable fine avant `€` et `m²`.
 
@@ -1100,29 +1069,28 @@ Tous dans `components/shared/`, construits sur shadcn/ui quand un primitif exist
 | `DpeBadge` | Classe énergie | Couleurs du tableau DPE. |
 | `FinancingBadge` | Statut de financement | Libellés exacts de la section 4 : « Financement non renseigné » (neutre), « Informations déclarées » (teinte), « Justificatif fourni » (teinte), « Justificatif vérifié » (succès). Jamais « validé ». Icône d'information qui affiche la mention obligatoire. |
 | `UpgradePrompt` | Proposition de formule | Encart `--color-tint` sans bordure colorée : phrase contextuelle chiffrée, bouton secondaire « Voir l'accompagnement » vers la page formules, lien « Plus tard » (masque ce déclencheur pour ce bien). Jamais de modale bloquante, jamais devant une action essentielle. |
-| `SaleRecap` | Bilan de vente | Écran « Vente terminée » sur `BlueprintPanel` : prix de vente (cotation), durée de commercialisation, contacts, visites, offres reçues. |
-| `Dimension` | Cotation | Props `value`, `unit`, `label?`, `orientation='horizontal'`. Valeur en Plex Mono 500, ligne 1 px `--dimension-line`, flèches en SVG inline, traits d'extrémité de 8 px. S'adapte à la largeur du conteneur. `aria-label="Surface : 68 m²"`. |
-| `DimensionGroup` | Chiffres clés | 3 ou 4 `Dimension` alignées ; en mobile, grille 2 × 2. |
-| `BlueprintPanel` | Fond grille | Conteneur avec `.blueprint-grid`, variantes `light` et `dark`. |
-| `SectionLabel` | Étiquette | Plex Mono, majuscules, bleu. Option numéro : `01 · PRÉPARATION`. |
-| `PropertyCard` | Carte de bien | Variantes `compact` (mobile, photo 110 × 96) et `wide` (desktop, photo 200 × 140). Contenu : prix (Sora), type · pièces · surface, lieu, 2 à 3 atouts en pastilles, badge DPE, mention « Dossier complet » si ≥ 5 documents du dossier et diagnostics complets. Survol : ombre `--shadow-card-hover`. Cœur favori en coin de photo. |
+| `SaleRecap` | Bilan de vente | Écran « Vente terminée » sur `BrandPanel` : prix de vente, durée de commercialisation, contacts, visites, offres reçues. |
+| `KeyFigures` | Chiffres clés | 3 ou 4 chiffres (surface, pièces, chambres, étage) : valeur en Archivo élargie 700, libellé dessous en secondaire, sur tuiles `--color-surface-alt`. En mobile, grille de 4. |
+| `BrandPanel` | Aplat de marque | Conteneur en aplat `--color-blue` (variante `navy`), dessin `facade.svg` en option. Pour les en-têtes d'accueil et les écrans de fin de parcours. |
+| `SectionTitle` | Titre de section | Archivo 600, casse normale, 15–17 px. Pas de majuscules, pas de numéro. |
+| `PropertyCard` | Carte de bien | Variantes `compact` (mobile, photo 110 × 96) et `wide` (desktop, photo 200 × 140). Contenu : photo (obligatoire, sinon `facade.svg`), prix (Archivo élargie), type · pièces · surface, lieu, 2 à 3 atouts en pastilles, badge DPE, mention « Dossier complet » si ≥ 5 documents du dossier et diagnostics complets. Survol : bordure `--color-border-strong` (pas d'ombre). Cœur favori en coin de photo. |
 | `PhotoGallery` | Galerie | Mobile : carrousel plein largeur avec compteur `1 / 12`. Desktop : grille 1 grande + 4 petites, dernière avec « + N photos », ouverture en visionneuse plein écran (clavier et swipe). |
-| `PriceBlock` | Prix | Prix Sora, prix au m² en dessous (Plex Mono, secondaire), mention « Sans commission d'agence ». |
-| `KeyFactsTable` | Ce qu'on sait avant de visiter | Lignes label / valeur (valeur en Plex Mono), séparateurs 1 px. |
-| `StepProgress` | Avancement de vente | Segments horizontaux (un par étape), étape courante en bleu, numéro et titre en `SectionLabel`. Version compacte (barre seule) et étendue (liste verticale des étapes avec état). |
+| `PriceBlock` | Prix | Prix en Archivo élargie, prix au m² en dessous (secondaire), mention « Sans commission d'agence ». |
+| `KeyFactsTable` | Ce qu'on sait avant de visiter | Lignes libellé / valeur (valeur en 600, chiffres tabulaires), séparateurs 1 px. |
+| `StepProgress` | Avancement de vente | Segments horizontaux (un par étape), étape courante en bleu, « Étape 3 sur 6 » et titre de l'étape en `SectionTitle`. Version compacte (barre seule) et étendue (liste verticale des étapes avec état). |
 | `TaskList` | Tâches | Case ronde : faite = pastille verte avec coche, à faire = cercle bleu, future = cercle gris. Tâche faite barrée et grisée. Chevron vers l'action. |
 | `NextActionCard` | Prochaine action | Icône dans un carré teinté, titre, explication, 1 ou 2 boutons. Toujours en tête du dashboard. |
-| `StatTile` | Indicateur | Chiffre Sora 22 px, libellé 11 px secondaire. |
+| `StatTile` | Indicateur | Chiffre Archivo élargie 22 px, libellé 11 px secondaire. |
 | `MessageBubble` | Message | Reçu : fond blanc, bordure, coin inférieur gauche 4 px. Envoyé : fond bleu, texte blanc, coin inférieur droit 4 px. Heure et auteur en dessous. Message système : centré, secondaire, sans bulle. |
 | `AdvisorThreadHeader` | En-tête conversation conseiller | Titre « Mon conseiller Leenkey », formule du bien, mention « Réponse sous 24 h ». Messages Leenkey signés « L'équipe Leenkey » avec le prénom de l'admin qui répond. |
 | `AssistantSuggestion` | Suggestion IA | Encart `--color-tint`, bordure `--color-border-strong`, icône étoile à 5 branches au trait, titre « Suggéré par l'assistant », texte, boutons Utiliser / Modifier / Ignorer. **C'est la seule forme d'une proposition de l'IA dans l'interface.** |
 | `AssistantPanel` | Chat assistant | Mobile : page plein écran `/assistant`. Desktop : panneau latéral droit 400 px, ouvert depuis un bouton fixe dans l'en-tête (jamais une bulle flottante en bas à droite). Suggestions de départ sous forme de pastilles. Actions proposées par l'IA affichées en carte de confirmation (section 12). |
 | `ConfirmActionCard` | Action IA à confirmer | Résumé de l'action (« Remplacer la description de l'annonce »), aperçu avant / après si texte, boutons Confirmer / Annuler. |
-| `EmptyState` | État vide | Cadrage du `plan.svg` sur `BlueprintPanel`, titre, phrase utile, action. |
+| `EmptyState` | État vide | Dessin `facade.svg`, titre, phrase utile, action. |
 | `BottomNav` | Navigation mobile | 4 onglets, icônes au trait 22 px, libellé 11 px, actif en bleu. Vendeur : Ma vente, Dossier, Messages (dont le conseiller), Compte. Acquéreur : Chercher, Favoris, Messages, Compte. Admin : Annonces, Dossiers, Utilisateurs, Assistant. |
 | `TopNav` | Navigation desktop | 72 px, logo, liens, bouton compte, bouton assistant (connecté). |
 | `AdminShell` | Coque back office | Barre latérale navy profond 240 px, compteurs en pastilles, zone principale fond `--color-bg`. |
-| `DataTable` | Tableaux admin | En-têtes Plex Mono majuscules, lignes 56 px min, actions en fin de ligne ou sous la ligne. |
+| `DataTable` | Tableaux admin | En-têtes 12 px 600 casse normale sur `--color-surface-alt`, lignes 56 px min, actions en fin de ligne ou sous la ligne. |
 | `Toast` | Retour d'action | Bas de l'écran mobile, haut droite desktop, 4 s. |
 | `Dialog`, `Sheet` | Modales | shadcn ; `Sheet` du bas sur mobile pour les filtres et confirmations. |
 
@@ -1144,12 +1112,11 @@ Icônes : **Lucide** (déjà dans shadcn), trait 2 px, jamais remplies, sauf l'�
 
 - Transitions de 140 à 220 ms, `--ease-out`, sur couleur, ombre, opacité, transformation. Jamais sur la hauteur ou la largeur.
 - Apparition des cartes de liste : opacité + translation de 4 px, décalée de 30 ms, uniquement au premier rendu.
-- Cotations : la ligne se trace de gauche à droite en 360 ms au premier affichage de la page annonce.
 - `prefers-reduced-motion` : toutes les animations désactivées.
 
 ### Maquettes de référence
 
-Les maquettes du dossier `docs/maquettes/` (sources `.dc.html` ; versions HTML autonomes dans `docs/maquettes/html/` ; captures dans `docs/maquettes/png/`) ont été produites **avant** l'adoption de la direction « Plan d'architecte ». Elles font référence pour **la structure, le contenu et la hiérarchie** de chaque écran. Pour **le style**, ce document l'emporte : ajouter cotations, grille, Plex Mono et Sora selon les règles de la section 6.
+Les maquettes du dossier `docs/maquettes/` (sources `.dc.html` ; versions HTML autonomes dans `docs/maquettes/html/` ; captures dans `docs/maquettes/png/`) appliquent la direction « Façade » (section 6) : elles font référence pour la structure, le contenu, la hiérarchie **et** le style (photos, aplats, Archivo, angles de 4 et 6 px). Les photos sont des exemples libres de droits.
 
 | Maquette | Écran |
 |---|---|
@@ -1180,7 +1147,7 @@ Pour chaque écran : route, contenu dans l'ordre, états (chargement, vide, erre
 ### 8.1 Accueil `/` (enrichissement de l'existant)
 
 Garder la page actuelle. Ajouter :
-- Hero sur `BlueprintPanel` avec un cadrage du `plan.svg` en fond à droite (opacité 40 %).
+- Hero sur `BrandPanel` avec le dessin `facade.svg` à droite.
 - Deux entrées égales sous le hero : « Je vends » (→ `/estimer`) et « J'achète » (→ `/acheter`).
 - Bloc « Les derniers biens » : 3 `PropertyCard` publiées les plus récentes (masqué s'il y en a moins de 3).
 - Ne pas toucher au reste du contenu marketing sans validation.
@@ -1199,7 +1166,7 @@ Maquette : `Inscription.dc.html`.
 
 Maquette : `Bien.dc.html`.
 
-Création en 4 étapes, barre de progression + `SectionLabel` « 02 · CARACTÉRISTIQUES » :
+Création en 4 étapes, barre de progression + « Étape 2 sur 4 · Caractéristiques » :
 1. **Adresse** : autocomplétion Mapbox (France uniquement), type de bien. Géocodage → `location`, calcul de `public_location` (décalage aléatoire stable de 150 à 250 m, graine = id du bien).
 2. **Caractéristiques** : surface (`UnitInput` m²), Carrez, pièces, chambres, étage / nombre d'étages, année, DPE et GES (`SegmentedPicker`), chauffage, atouts (`ChipToggle`), charges mensuelles, taxe foncière, nombre de lots.
 3. **Photos** : glisser-déposer ou sélection, 15 max, 10 Mo max chacune, JPEG/PNG/HEIC/WebP. Conversion serveur en WebP 400/800/1600. Réordonnancement par glisser. Choix de la photo principale. Légende optionnelle.
@@ -1209,9 +1176,9 @@ Préremplissage depuis l'estimateur : bandeau `--color-tint` « Repris de votre 
 
 Sauvegarde automatique à chaque étape (statut `draft`). Bouton « Enregistrer » explicite en haut.
 
-Fin : prévisualisation exacte de la page annonce, puis « Envoyer en validation » → statut `pending`, écran de fin sur `BlueprintPanel` : « C'est envoyé. Nous relisons votre annonce sous 24 h et vous prévenons par email. »
+Fin : prévisualisation exacte de la page annonce, puis « Envoyer en validation » → statut `pending`, écran de fin sur `BrandPanel` : « C'est envoyé. Nous relisons votre annonce sous 24 h et vous prévenons par email. »
 
-Fiche du bien (après création) : onglets **Infos**, **Photos**, **Annonce**, **Documents** (L3), **Visites** (L3), **Offres** (L2). Récapitulatif en tête avec `DimensionGroup` (surface, pièces, étage, prix/m²) et `StatusBadge`. Actions selon statut : modifier, mettre en pause, remettre en ligne, marquer vendu (confirmation), supprimer (brouillon uniquement). Toute modification d'une annonce publiée (prix, description, titre, photos) **la laisse en ligne** (décision client), enregistre une ligne dans `listing_revisions` et crée une notification admin « annonce modifiée » pour contrôle a posteriori. L'historique des modifications, notamment du prix, est visible par le vendeur (onglet Annonce) et par l'admin. Il n'est pas affiché publiquement en V2.
+Fiche du bien (après création) : onglets **Infos**, **Photos**, **Annonce**, **Documents** (L3), **Visites** (L3), **Offres** (L2). Récapitulatif en tête avec `KeyFigures` (surface, pièces, étage, prix/m²) et `StatusBadge`. Actions selon statut : modifier, mettre en pause, remettre en ligne, marquer vendu (confirmation), supprimer (brouillon uniquement). Toute modification d'une annonce publiée (prix, description, titre, photos) **la laisse en ligne** (décision client), enregistre une ligne dans `listing_revisions` et crée une notification admin « annonce modifiée » pour contrôle a posteriori. L'historique des modifications, notamment du prix, est visible par le vendeur (onglet Annonce) et par l'admin. Il n'est pas affiché publiquement en V2.
 
 ### 8.4 Recherche `/acheter`
 
@@ -1234,7 +1201,7 @@ Maquettes : `Annonce.dc.html`, `AnnonceDesktop.dc.html`.
 Ordre du contenu :
 1. `PhotoGallery`. Boutons retour, favori, partager.
 2. Titre, lieu (quartier, ville), `StatusBadge` si non publiée (aperçu vendeur), `DpeBadge`, pastille « Dossier complet » si applicable.
-3. **`DimensionGroup`** : surface, pièces, chambres, étage. C'est la signature visuelle de la page.
+3. **`KeyFigures`** : surface, pièces, chambres, étage, juste sous la galerie photo.
 4. Vendeur : prénom, « Vente accompagnée par Leenkey » si formule payante, « Répond en général sous 24 h » uniquement si le temps de réponse médian réel est < 24 h (sinon rien).
 5. Description (repliée à 6 lignes sur mobile).
 6. Caractéristiques complètes en `KeyFactsTable` (deux colonnes en desktop).
@@ -1249,7 +1216,7 @@ Règles d'accès aux actions :
 - « Demander une visite » : envoie une demande dans la conversation ; la réservation se fait via invitation du vendeur (L3).
 - « Faire une offre » : financement au moins `declared` (L2). Sinon renvoi vers le profil avec explication.
 
-SEO : `generateMetadata` (titre « Appartement 3 pièces 68 m² à Savigny-sur-Orge · 350 000 € · Leenkey »), données structurées `RealEstateListing` + `Offer`, image Open Graph générée (`/api/og/[slug]`) avec photo principale et cotation de surface. Compteur de vues incrémenté côté serveur une fois par visiteur et par jour (cookie), hors vendeur et admin.
+SEO : `generateMetadata` (titre « Appartement 3 pièces 68 m² à Savigny-sur-Orge · 350 000 € · Leenkey »), données structurées `RealEstateListing` + `Offer`, image Open Graph générée (`/api/og/[slug]`) avec photo principale, prix et surface en Archivo élargie sur bandeau bleu. Compteur de vues incrémenté côté serveur une fois par visiteur et par jour (cookie), hors vendeur et admin.
 
 ### 8.6 Messagerie `/messages`, `/messages/[id]`
 
@@ -1275,7 +1242,7 @@ Maquette : `Messagerie.dc.html`.
 
 Maquette : `Dashboard.dc.html`.
 
-- En-tête navy sur `BlueprintPanel` sombre : salutation, bouton assistant, carte du bien (vignette, titre, prix, date de publication, `StatusBadge`), `StepProgress` compact avec « 03 · CONTACTS ET VISITES » et le nom de la formule.
+- En-tête navy (`BrandPanel` variante `navy`) : salutation, bouton assistant, carte du bien (vignette, titre, prix, date de publication, `StatusBadge`), `StepProgress` compact avec « 03 · CONTACTS ET VISITES » et le nom de la formule.
 - Plusieurs biens : sélecteur de bien sous la salutation.
 - **Prochaine action** (`NextActionCard`) : calculée par une fonction `getNextAction(property)` selon des priorités fixes : 1) annonce refusée à corriger ; 2) offre reçue non lue ; 3) message du conseiller non lu ; 4) visite à confirmer ; 5) message acquéreur sans réponse depuis plus de 24 h ; 6) première tâche non faite de l'étape en cours ; 7) sinon, conseil de l'étape. Le dashboard a la même logique pour les trois formules : seules les tâches et le libellé de qui agit changent.
 - `StatTile` × 3 : vues sur 7 jours, contacts, acquéreurs qualifiés (financement ≥ `declared`).
@@ -1299,7 +1266,7 @@ Maquette : `Formule.dc.html` (contenu à mettre à jour selon la section 11 bis)
 - Formule actuelle marquée d'une coche verte. Formule inférieure : non sélectionnable. Passage Accompagné → Sérénité : bouton « Passer à Sérénité pour 510 € ».
 - Si la page est ouverte depuis un déclencheur (`?from=offer_received`), rappel du contexte en tête : « Vous avez reçu une offre de 327 000 €… ».
 - Rassurance : « Paiement sécurisé par carte via Stripe. Reçu envoyé par email. Forfait payé une fois, pour ce bien. Sans abonnement. »
-- Retour de Stripe : `/vendeur/formule?paiement=ok` (écran de confirmation sur `BlueprintPanel` : « C'est activé. Votre conseiller Leenkey vous écrit sous 24 h. Vous pouvez déjà lui écrire. ») ou `?paiement=annule`.
+- Retour de Stripe : `/vendeur/formule?paiement=ok` (écran de confirmation sur `BrandPanel` : « C'est activé. Votre conseiller Leenkey vous écrit sous 24 h. Vous pouvez déjà lui écrire. ») ou `?paiement=annule`.
 
 ### 8.9 Espace acquéreur `/acquereur`, `/acquereur/profil`
 
@@ -1905,7 +1872,7 @@ Base de connaissances (liste, recherche test, import), journal des conversations
 
 React Email dans `emails/`, envoi par Resend depuis `Leenkey <bonjour@leenkey.fr>` (prod) pour tous les emails utilisateurs ; les notifications internes (annonce à valider, dossier créé, message client, signalement) sont envoyées à `admin@leenkey.fr` (variable `ADMIN_NOTIFICATION_EMAIL`) ; en staging, préfixe `[PREPROD]` et redirection de tous les envois vers `EMAIL_TEST_INBOX`.
 
-Gabarit commun : fond `#F8FAFF`, carte blanche 560 px, logo Leenkey en haut, bandeau fin à grille de plan en tête, titre Sora (fallback Arial), texte Poppins (fallback Arial), un bouton principal bleu, pied de page avec lien vers les préférences de notification et adresse légale (placeholder).
+Gabarit commun : fond `#F4F4F1`, carte blanche 560 px, logo Leenkey en haut, bandeau bleu Leenkey plein en tête, titres Archivo (fallback Arial, en gras), texte Archivo (fallback Arial), un bouton principal bleu, pied de page avec lien vers les préférences de notification et adresse légale (placeholder).
 
 | Email | Déclencheur | Contenu clé |
 |---|---|---|
@@ -1980,7 +1947,7 @@ Usages : centre et zoom par défaut de la carte de recherche (Épinay-sur-Orge, 
 ### Accessibilité
 
 - WCAG 2.1 AA visé : contrastes (le texte secondaire `#6B7280` est le plus clair autorisé sur blanc), focus visible (anneau 2 px bleu + halo), navigation clavier complète (galerie, carte : liste alternative, modales), `aria-label` sur les boutons icônes, formulaires avec labels et messages d'erreur liés (`aria-describedby`).
-- Cotations : `aria-label` explicite ; les flèches sont décoratives (`aria-hidden`).
+- Dessin `facade.svg` : décoratif (`aria-hidden`).
 - Zones tactiles ≥ 44 px.
 - Test automatique `@axe-core/playwright` sur les parcours E2E.
 
@@ -2034,8 +2001,8 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-04 | Migrations `properties`, `listings`, `photos`, `listing_views`, `favorites`, vue `public_listings`, séquence référence, fonctions de transition de statut + RLS + tests | L1-03 | Tests RLS verts, vue ne renvoie aucun champ privé |
 | L1-05 | Migrations `plans`, `subscriptions`, `stripe_events`, `sale_*`, `conversations`, `messages`, `reports`, `cases`, `case_notes`, `notifications`, `audit_log`, `knowledge_base`, `ai_*` + RLS + tests | L1-04 | Tests RLS verts |
 | L1-06 | Seed complet (comptes, biens, plans, étapes de vente de la section 9, fiches de `faq-cedric-v2.md`) | L1-05 | `npm run db:seed` idempotent en local et staging, refus en prod |
-| L1-07 | Design system : tokens, polices, composants de base (Button, Input, Select, UnitInput, ChipToggle, SegmentedPicker, StatusBadge, DpeBadge, SectionLabel, BlueprintPanel, Dimension, DimensionGroup), page `/design` | L1-01 | Page `/design` complète, contrastes vérifiés |
-| L1-08 | Illustration `public/brand/plan.svg` et composant `EmptyState` | L1-07 | SVG conforme à la section 6, 3 cadrages utilisés dans `/design` |
+| L1-07 | Design system : tokens, polices, composants de base (Button, Input, Select, UnitInput, ChipToggle, SegmentedPicker, StatusBadge, DpeBadge, SectionTitle, BrandPanel, KeyFigures, PropertyCard), page `/design` | L1-01 | Page `/design` complète, contrastes vérifiés |
+| L1-08 | Dessin `public/brand/facade.svg` et composant `EmptyState` | L1-07 | SVG conforme à la section 6, utilisé dans `/design` sur fond clair et sur aplat bleu |
 
 ### Semaine 2 : comptes et biens
 
@@ -2054,7 +2021,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 |---|---|---|---|
 | L1-15 | Fonction `search_listings`, index, schéma `SearchFilters`, page `/acheter` liste + filtres + tri + URL | L1-04 | Filtres combinés corrects sur le seed, URL partageable |
 | L1-16 | Carte Mapbox (marqueurs prix, regroupement, synchronisation liste/carte, recherche dans la zone) | L1-15 | Mobile et desktop conformes aux maquettes |
-| L1-17 | Page annonce complète (galerie, cotations, KeyFacts, carte approximative, barre d'action), métadonnées, JSON-LD, OG image, compteur de vues | L1-15 | Lighthouse objectifs atteints, validation Rich Results OK |
+| L1-17 | Page annonce complète (galerie photo, KeyFigures, KeyFacts, carte approximative, barre d'action), métadonnées, JSON-LD, OG image, compteur de vues | L1-15 | Lighthouse objectifs atteints, validation Rich Results OK |
 | L1-18 | Favoris | L1-17 | Ajout / retrait, liste dans l'espace acquéreur |
 | L1-19 | Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`listing_suspend`, motif obligatoire) / remettre en ligne, audit, emails | L1-14 | Parcours vendeur → admin → publication de bout en bout ; le vendeur ne peut pas lever une suspension (test RLS) |
 | L1-20 | Sitemap et robots (pages SEO par ville reportées en V3) | L1-17 | Sitemap valide, robots bloque hors prod |
@@ -2067,7 +2034,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-21 | Messagerie : création de conversation depuis l'annonce, liste, fil, Realtime, lu / non lu, signalement, limites anti-abus | L1-17 | Deux navigateurs échangent en temps réel |
 | L1-22 | Notifications : `notify()`, table, cloche Realtime, préférences, cron d'envoi groupé, emails React Email (gabarit + messages + annonce) | L1-21 | Regroupement des emails vérifié |
 | L1-23 | Moteur d'étapes : `emitEvent`, bascule de modèle, `getNextAction`, branchement sur les événements existants | L1-06, L1-14 | Les tâches se cochent automatiquement sur le parcours E2E 1 |
-| L1-24 | Dashboard vendeur complet (en-tête blueprint, StepProgress, NextActionCard, StatTile, TaskList, conversations) | L1-23 | Conforme à la maquette + direction artistique |
+| L1-24 | Dashboard vendeur complet (en-tête navy, StepProgress, NextActionCard, StatTile, TaskList, conversations) | L1-23 | Conforme à la maquette + direction artistique |
 | L1-25 | Espace acquéreur v1 (accueil, profil projet et financement déclaratif, `FinancingBadge` côté vendeur) | L1-21 | Le vendeur voit le statut, jamais les montants (test) |
 | L1-27 | Embeddings (Edge Function `embed`), import KB, `search_knowledge` | L1-05 | Recherche test pertinente sur les fiches de `faq-cedric-v2.md` |
 

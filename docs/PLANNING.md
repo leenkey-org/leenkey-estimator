@@ -15,7 +15,7 @@ Rééquilibrage du 5 octobre : la semaine 5 passe de 10 à 8 tâches. L1-20 est 
 - [ ] **L1-05** Migrations `plans`, `subscriptions`, `stripe_events`, `sale_*`, `conversations`, `messages`, `reports`,… · PR : · Testé en préprod : ☐
 - [ ] **L1-06** Seed complet (comptes, biens, plans, étapes placeholder, KB placeholder) · PR : · Testé en préprod : ☐
 - [ ] **L1-07** Design system : tokens, polices, composants de base (Button, Input, Select, UnitInput, ChipToggle,… · PR : · Testé en préprod : ☐
-- [ ] **L1-08** Illustration `public/brand/plan.svg` et composant `EmptyState` · PR : · Testé en préprod : ☐
+- [ ] **L1-08** Dessin `public/brand/facade.svg` et composant `EmptyState` · PR : · Testé en préprod : ☐
 
 Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contrat initial. Si elle déborde, L1-08 (illustration) glisse en S2 sans conséquence.
 
@@ -32,7 +32,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 
 - [ ] **L1-15** Fonction `search_listings`, index, schéma `SearchFilters`, page `/acheter` liste + filtres + tri + URL · PR : · Testé en préprod : ☐
 - [ ] **L1-16** Carte Mapbox (marqueurs prix, regroupement, synchronisation liste/carte, recherche dans la zone) · PR : · Testé en préprod : ☐
-- [ ] **L1-17** Page annonce complète (galerie, cotations, KeyFacts, carte approximative, barre d'action), métadonnées,… · PR : · Testé en préprod : ☐
+- [ ] **L1-17** Page annonce complète (galerie photo, KeyFigures, KeyFacts, carte approximative, barre d'action), métadonnées,… · PR : · Testé en préprod : ☐
 - [ ] **L1-18** Favoris · PR : · Testé en préprod : ☐
 - [ ] **L1-19** Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`suspended`) / remettre en ligne, audit, emails · PR : · Testé en préprod : ☐
 - [ ] **L1-20** Sitemap et robots (pages SEO par ville reportées en V3) · PR : · Testé en préprod : ☐
@@ -43,7 +43,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [ ] **L1-21** Messagerie : création de conversation depuis l'annonce, liste, fil, Realtime, lu / non lu, signalement,… · PR : · Testé en préprod : ☐
 - [ ] **L1-22** Notifications : `notify()`, table, cloche Realtime, préférences, cron d'envoi groupé, emails React Email… · PR : · Testé en préprod : ☐
 - [ ] **L1-23** Moteur d'étapes : `emitEvent`, bascule de modèle, `getNextAction`, branchement sur les événements existants · PR : · Testé en préprod : ☐
-- [ ] **L1-24** Dashboard vendeur complet (en-tête blueprint, StepProgress, NextActionCard, StatTile, TaskList, conversations) · PR : · Testé en préprod : ☐
+- [ ] **L1-24** Dashboard vendeur complet (en-tête navy, StepProgress, NextActionCard, StatTile, TaskList, conversations) · PR : · Testé en préprod : ☐
 - [ ] **L1-25** Espace acquéreur v1 (accueil, profil projet et financement déclaratif, `FinancingBadge` côté vendeur) · PR : · Testé en préprod : ☐
 - [ ] **L1-27** Embeddings (Edge Function `embed`), import de la FAQ de Cédric, `search_knowledge` (avancé depuis S5) · PR : · Testé en préprod : ☐
 

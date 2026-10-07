@@ -77,7 +77,7 @@ Dis-moi si c'est dans le périmètre de docs/SPEC-V2.md (cite la section) ou non
 ## Appliquer la direction artistique sur un écran
 
 ```
-L'écran <route> est fonctionnel. Applique la direction « Plan d'architecte » (docs/SPEC-V2.md sections 6 et 7) : cotations, grille, typographies Sora / Poppins / IBM Plex Mono, composants Dimension et BlueprintPanel. Ne change ni la structure ni les textes. Montre-moi une capture à 390 px et à 1280 px avant et après.
+L'écran <route> est fonctionnel. Applique la direction « Façade » (docs/SPEC-V2.md sections 6 et 7) : photo d'abord, bleu en aplats, neutres pierre, Archivo seule (titres élargis), angles 4 et 6 px, pas d'ombre sur les cartes, pas de majuscules espacées ni de monospace. Ne change ni la structure ni les textes. Montre-moi une capture à 390 px et à 1280 px avant et après.
 ```
 
 ---
