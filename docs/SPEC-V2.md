@@ -917,7 +917,7 @@ Tests : `supabase/tests/rls_*.sql` avec les comptes de seed `seller_a`, `seller_
 
 ## 6. Direction artistique « Façade »
 
-Décidée le 2026-10-07 (remplace la direction « Plan d'architecte »). Référence visuelle : `docs/maquettes/png/` et la présentation des écrans envoyée au client.
+Décidée le 2026-10-07 (remplace la direction « Plan d'architecte »), validée par Cédric le 2026-10-08. **Les valeurs exactes (couleurs, typographie, espacements, composants, écrans) sont dans `docs/DESIGN.md`, qui fait foi pour tout ce qui est visuel.** Cette section en donne l'esprit ; références visuelles : `docs/maquettes/png/`.
 
 ### Intention
 
@@ -927,11 +927,11 @@ Leenkey vend des logements, pas un logiciel. L'interface doit faire voir les bie
 
 **1. La photo d'abord.** Sur l'annonce, la recherche, les cartes de bien et l'accueil acquéreur, la photo occupe la plus grande place possible (galerie pleine largeur en mobile, mosaïque 1 grande + 4 petites en desktop). Une annonce sans photo affiche le dessin `facade.svg` sur aplat pierre, jamais un bloc gris avec « Photo ».
 
-**2. Le bleu en aplat.** `--color-blue` s'utilise en surfaces pleines : en-tête de l'accueil connecté et des écrans de fin de parcours, bouton principal, sélection active, marqueur de prix sélectionné sur la carte. Jamais en dégradé, jamais en ombre colorée. Le navy sert aux en-têtes sombres (dashboard vendeur, back office).
+**2. Le bleu en aplat.** `--lk-blue` s'utilise en surfaces pleines : en-tête de l'accueil connecté et des écrans de fin de parcours, bouton principal, sélection active, marqueur de prix sélectionné sur la carte. Jamais en dégradé, jamais en ombre colorée. Le navy sert aux en-têtes sombres (dashboard vendeur, back office).
 
 **3. La typographie élargie.** Une seule famille, **Archivo**, dont on utilise l'axe de largeur : titres, prix et chiffres clés en Archivo élargie (`font-stretch: 116%`, 700, interlettrage -0,02 em) ; tout le reste en Archivo normale. Les étiquettes restent en casse normale (« Prochaine action », jamais « PROCHAINE ACTION »).
 
-**4. Des formes nettes.** Angles de 4 px (boutons, champs, vignettes) et 6 px (cartes, panneaux) ; pastilles arrondies réservées aux statuts, filtres et avatars. Pas d'ombre portée sur les cartes : une bordure 1 px `--color-border` suffit. Seuls les éléments flottants (marqueurs de carte, bouton assistant, menus) ont une ombre courte et neutre.
+**4. Des formes nettes.** Angles de 4 px (boutons, champs, vignettes) et 6 px (cartes, panneaux) ; pastilles arrondies réservées aux statuts, filtres et avatars. Pas d'ombre portée sur les cartes : une bordure 1 px `--lk-line` suffit. Seuls les éléments flottants (marqueurs de carte, bouton assistant, menus) ont une ombre courte et neutre.
 
 **Le dessin de marque.** Un dessin au trait d'une façade de maison (traits 1,5 px, toit, fenêtres, porte, une ligne de cote en haut avec sa valeur), fichier unique `public/brand/facade.svg`. Utilisé : en-tête de l'accueil connecté (blanc à 55 % sur aplat bleu), états vides, annonce sans photo, page 404, image Open Graph par défaut. C'est le seul clin d'œil au plan d'architecte qui reste.
 
@@ -976,104 +976,34 @@ Tous les textes d'interface sont centralisés dans `lib/i18n/fr.ts`.
 
 ## 7. Design system : tokens, typographie, composants
 
-### Tokens
+### Tokens et typographie
 
-Définis en variables CSS dans `app/globals.css` et exposés dans `tailwind.config.ts`. Les valeurs de couleur reprennent celles du site actuel.
+Définis dans `docs/DESIGN.md` sections 2 et 3 (fichier `app/globals.css` complet en Tailwind 4, chargement d'Archivo avec l'axe de largeur, échelle typographique, formatage des nombres). Ne pas redéfinir ici.
 
-```css
-:root {
-  /* Marque */
-  --color-blue: #1156FC;
-  --color-blue-hover: #0D47E0;
-  --color-navy: #1A2B4A;
-  --color-navy-deep: #0F1E35;
-
-  /* Neutres */
-  --color-bg: #F4F4F1;            /* fond d'application, pierre très clair */
-  --color-surface: #FFFFFF;
-  --color-surface-alt: #ECEDE8;   /* pierre : tuiles, en-têtes de tableau */
-  --color-stone: #E3E4DE;         /* aplats neutres, bandeaux */
-  --color-tint: #EEF4FF;          /* sélection, suggestion de l'assistant */
-  --color-border: #D9DBD3;
-  --color-border-strong: #DBEAFE;
-  --color-text: #0F1E35;
-  --color-text-2: #3E4757;
-  --color-text-3: #5B6474;         /* texte secondaire, contraste ≥ 4.5:1 sur blanc */
-
-  /* États (versions foncées pour le texte, claires pour les fonds) */
-  --color-success: #0E9F6E;  --color-success-bg: #D1FAE5;  --color-success-fg: #065F46;
-  --color-warning: #D97706;  --color-warning-bg: #FEF3C7;  --color-warning-fg: #92400E;
-  --color-danger:  #DC2626;  --color-danger-bg:  #FEE2E2;  --color-danger-fg:  #991B1B;
-
-  /* Forme */
-  --radius-sm: 4px;   /* boutons, champs, vignettes */
-  --radius-md: 6px;   /* cartes, panneaux */
-  --radius-full: 9999px;  /* statuts, filtres, avatars */
-  --shadow-float: 0 2px 6px rgba(15, 30, 53, 0.18);  /* éléments flottants uniquement */
-  --stretch-display: 116%;
-
-  /* Mouvement */
-  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --duration-fast: 140ms; --duration-base: 220ms; --duration-slow: 360ms;
-
-  /* Mise en page */
-  --container-max: 1200px;
-  --navbar-height: 72px;
-}
-```
-
-Échelle d'espacement : multiples de 4 px (Tailwind par défaut). Espacements courants : 8, 12, 16, 20, 24, 32, 40, 56.
-
-DPE : couleurs réglementaires adoucies pour les badges.
-
-| Classe | Fond | Texte |
-|---|---|---|
-| A | `#D1FAE5` | `#065F46` |
-| B | `#DCFCE7` | `#166534` |
-| C | `#ECFCCB` | `#3F6212` |
-| D | `#FEF9C3` | `#854D0E` |
-| E | `#FEF3C7` | `#92400E` |
-| F | `#FFEDD5` | `#9A3412` |
-| G | `#FEE2E2` | `#991B1B` |
-
-### Typographie
-
-Une seule famille : **Archivo** (Google Fonts, axes `wdth` 62–125 et `wght`), chargée via `next/font/google` (auto-hébergée), `display: swap`, sous-ensembles `latin` et `latin-ext`.
-
-| Style | Mobile | Desktop | Réglage |
-|---|---|---|---|
-| Display (hero) | 36 / 1.05 / 700 | 56 / 1 / 700 | élargie 116 %, -0,02 em |
-| H1 | 26 / 1.1 / 700 | 32 / 1.1 / 700 | élargie 116 %, -0,02 em |
-| H2 | 20 / 1.2 / 700 | 24 / 1.15 / 700 | élargie 112 % |
-| H3 | 16 / 1.3 / 600 | 17 / 1.3 / 600 | normale |
-| Prix principal | 26 / 1 / 700 | 32 / 1 / 700 | élargie 116 %, chiffres tabulaires |
-| Corps | 15 / 1.55 / 400 | 16 / 1.6 / 400 | normale |
-| Secondaire | 13 / 1.5 / 400 | 14 / 1.5 / 400 | `--color-text-3` |
-| Étiquette | 12 / 1.3 / 600 | 12 | casse normale |
-| Donnée | 13 / 1.4 / 600 | 14 | chiffres tabulaires |
-
-Chiffres : `font-variant-numeric: tabular-nums` sur tous les montants et surfaces. Formatage : `Intl.NumberFormat('fr-FR')`, espace insécable fine avant `€` et `m²`.
+Badges DPE : couleurs dans `docs/DESIGN.md` section 2.1.
 
 ### Composants
+
+Liste de référence ci-dessous ; anatomie, dimensions, variantes et états de chaque composant dans `docs/DESIGN.md` section 10.
 
 Tous dans `components/shared/`, construits sur shadcn/ui quand un primitif existe. Chaque composant a une story de démonstration sur la page interne `/design` (accessible uniquement quand `NEXT_PUBLIC_ENV !== 'production'`), qui sert de catalogue vivant.
 
 | Composant | Rôle | Spécification |
 |---|---|---|
-| `Button` | Action | Variantes `primary` (bleu plein), `secondary` (contour `--color-border-strong`, texte bleu), `ghost`, `dark` (navy), `success` (validation admin), `danger`. Tailles `sm` 40 px, `md` 48 px, `lg` 52 px. Rayon 12 px. Toujours ≥ 44 px de zone tactile. |
-| `Input`, `Select`, `Textarea` | Saisie | Hauteur 48 px, bordure 1,5 px `--color-border`, focus bordure bleue + halo 3 px `--color-border-strong`, erreur bordure `--color-danger` + message sous le champ. Label toujours visible au-dessus. |
+| `Button` | Action | Variantes `primary` (bleu plein), `secondary` (contour `--lk-blue-line`, texte bleu), `ghost`, `dark` (navy), `success` (validation admin), `danger`. Tailles `sm` 40 px, `md` 48 px, `lg` 52 px. Rayon 4 px (`docs/DESIGN.md` 10.1). Toujours ≥ 44 px de zone tactile. |
+| `Input`, `Select`, `Textarea` | Saisie | Hauteur 48 px, bordure 1,5 px `--lk-field`, focus bordure bleue + halo 3 px `--lk-blue-line`, erreur bordure `--lk-danger` + message sous le champ. Label toujours visible au-dessus. |
 | `UnitInput` | Saisie avec unité | Input + suffixe (`m²`, `€`, `%`) dans le champ. |
-| `ChipToggle` | Sélection multiple | Pastille 40 px, sélectionnée : fond `--color-tint`, bordure et texte bleus. |
+| `ChipToggle` | Sélection multiple | Pastille 40 px, sélectionnée : fond `--lk-blue-tint`, bordure et texte bleus. |
 | `SegmentedPicker` | Choix unique court | Utilisé pour le DPE (A à G) : boutons égaux, sélectionné en bleu plein. |
 | `StatusBadge` | Statut | Mappage fixe statut → couleurs (voir ci-dessous). Pastille arrondie, 12 px, 600. |
 | `DpeBadge` | Classe énergie | Couleurs du tableau DPE. |
 | `FinancingBadge` | Statut de financement | Libellés exacts de la section 4 : « Financement non renseigné » (neutre), « Informations déclarées » (teinte), « Justificatif fourni » (teinte), « Justificatif vérifié » (succès). Jamais « validé ». Icône d'information qui affiche la mention obligatoire. |
-| `UpgradePrompt` | Proposition de formule | Encart `--color-tint` sans bordure colorée : phrase contextuelle chiffrée, bouton secondaire « Voir l'accompagnement » vers la page formules, lien « Plus tard » (masque ce déclencheur pour ce bien). Jamais de modale bloquante, jamais devant une action essentielle. |
+| `UpgradePrompt` | Proposition de formule | Encart `--lk-blue-tint` sans bordure colorée : phrase contextuelle chiffrée, bouton secondaire « Voir l'accompagnement » vers la page formules, lien « Plus tard » (masque ce déclencheur pour ce bien). Jamais de modale bloquante, jamais devant une action essentielle. |
 | `SaleRecap` | Bilan de vente | Écran « Vente terminée » sur `BrandPanel` : prix de vente, durée de commercialisation, contacts, visites, offres reçues. |
-| `KeyFigures` | Chiffres clés | 3 ou 4 chiffres (surface, pièces, chambres, étage) : valeur en Archivo élargie 700, libellé dessous en secondaire, sur tuiles `--color-surface-alt`. En mobile, grille de 4. |
-| `BrandPanel` | Aplat de marque | Conteneur en aplat `--color-blue` (variante `navy`), dessin `facade.svg` en option. Pour les en-têtes d'accueil et les écrans de fin de parcours. |
+| `KeyFigures` | Chiffres clés | 3 ou 4 chiffres (surface, pièces, chambres, étage) : valeur en Archivo élargie 700, libellé dessous en secondaire, sur tuiles `--lk-stone-2`. En mobile, grille de 4. |
+| `BrandPanel` | Aplat de marque | Conteneur en aplat `--lk-blue` (variante `navy`), dessin `facade.svg` en option. Pour les en-têtes d'accueil et les écrans de fin de parcours. |
 | `SectionTitle` | Titre de section | Archivo 600, casse normale, 15–17 px. Pas de majuscules, pas de numéro. |
-| `PropertyCard` | Carte de bien | Variantes `compact` (mobile, photo 110 × 96) et `wide` (desktop, photo 200 × 140). Contenu : photo (obligatoire, sinon `facade.svg`), prix (Archivo élargie), type · pièces · surface, lieu, 2 à 3 atouts en pastilles, badge DPE, mention « Dossier complet » si ≥ 5 documents du dossier et diagnostics complets. Survol : bordure `--color-border-strong` (pas d'ombre). Cœur favori en coin de photo. |
+| `PropertyCard` | Carte de bien | Variantes `compact` (mobile, photo 110 × 96) et `wide` (desktop, photo 200 × 140). Contenu : photo (obligatoire, sinon `facade.svg`), prix (Archivo élargie), type · pièces · surface, lieu, 2 à 3 atouts en pastilles, badge DPE, mention « Dossier complet » si ≥ 5 documents du dossier et diagnostics complets. Survol : bordure `--lk-blue-line` (pas d'ombre). Cœur favori en coin de photo. |
 | `PhotoGallery` | Galerie | Mobile : carrousel plein largeur avec compteur `1 / 12`. Desktop : grille 1 grande + 4 petites, dernière avec « + N photos », ouverture en visionneuse plein écran (clavier et swipe). |
 | `PriceBlock` | Prix | Prix en Archivo élargie, prix au m² en dessous (secondaire), mention « Sans commission d'agence ». |
 | `KeyFactsTable` | Ce qu'on sait avant de visiter | Lignes libellé / valeur (valeur en 600, chiffres tabulaires), séparateurs 1 px. |
@@ -1083,14 +1013,14 @@ Tous dans `components/shared/`, construits sur shadcn/ui quand un primitif exist
 | `StatTile` | Indicateur | Chiffre Archivo élargie 22 px, libellé 11 px secondaire. |
 | `MessageBubble` | Message | Reçu : fond blanc, bordure, coin inférieur gauche 4 px. Envoyé : fond bleu, texte blanc, coin inférieur droit 4 px. Heure et auteur en dessous. Message système : centré, secondaire, sans bulle. |
 | `AdvisorThreadHeader` | En-tête conversation conseiller | Titre « Mon conseiller Leenkey », formule du bien, mention « Réponse sous 24 h ». Messages Leenkey signés « L'équipe Leenkey » avec le prénom de l'admin qui répond. |
-| `AssistantSuggestion` | Suggestion IA | Encart `--color-tint`, bordure `--color-border-strong`, icône étoile à 5 branches au trait, titre « Suggéré par l'assistant », texte, boutons Utiliser / Modifier / Ignorer. **C'est la seule forme d'une proposition de l'IA dans l'interface.** |
+| `AssistantSuggestion` | Suggestion IA | Encart `--lk-blue-tint`, bordure `--lk-blue-line`, icône étoile à 5 branches au trait, titre « Suggéré par l'assistant », texte, boutons Utiliser / Modifier / Ignorer. **C'est la seule forme d'une proposition de l'IA dans l'interface.** |
 | `AssistantPanel` | Chat assistant | Mobile : page plein écran `/assistant`. Desktop : panneau latéral droit 400 px, ouvert depuis un bouton fixe dans l'en-tête (jamais une bulle flottante en bas à droite). Suggestions de départ sous forme de pastilles. Actions proposées par l'IA affichées en carte de confirmation (section 12). |
 | `ConfirmActionCard` | Action IA à confirmer | Résumé de l'action (« Remplacer la description de l'annonce »), aperçu avant / après si texte, boutons Confirmer / Annuler. |
 | `EmptyState` | État vide | Dessin `facade.svg`, titre, phrase utile, action. |
 | `BottomNav` | Navigation mobile | 4 onglets, icônes au trait 22 px, libellé 11 px, actif en bleu. Vendeur : Ma vente, Dossier, Messages (dont le conseiller), Compte. Acquéreur : Chercher, Favoris, Messages, Compte. Admin : Annonces, Dossiers, Utilisateurs, Assistant. |
 | `TopNav` | Navigation desktop | 72 px, logo, liens, bouton compte, bouton assistant (connecté). |
-| `AdminShell` | Coque back office | Barre latérale navy profond 240 px, compteurs en pastilles, zone principale fond `--color-bg`. |
-| `DataTable` | Tableaux admin | En-têtes 12 px 600 casse normale sur `--color-surface-alt`, lignes 56 px min, actions en fin de ligne ou sous la ligne. |
+| `AdminShell` | Coque back office | Barre latérale navy profond 240 px, compteurs en pastilles, zone principale fond `--lk-bg`. |
+| `DataTable` | Tableaux admin | En-têtes 12 px 600 casse normale sur `--lk-stone-2`, lignes 56 px min, actions en fin de ligne ou sous la ligne. |
 | `Toast` | Retour d'action | Bas de l'écran mobile, haut droite desktop, 4 s. |
 | `Dialog`, `Sheet` | Modales | shadcn ; `Sheet` du bas sur mobile pour les filtres et confirmations. |
 
@@ -1098,13 +1028,13 @@ Mappage `StatusBadge` :
 
 | Statut | Fond | Texte | Libellé |
 |---|---|---|---|
-| `draft` | `--color-surface-alt` | `--color-text-2` | Brouillon |
-| `pending` | `--color-warning-bg` | `--color-warning-fg` | En attente de validation |
-| `published` | `--color-success-bg` | `--color-success-fg` | En ligne |
-| `paused` | `--color-tint` | `--color-blue` | En pause |
-| `suspended` | `--color-danger-bg` | `--color-danger-fg` | Suspendue par Leenkey |
-| `sold` | `--color-navy` | blanc | Vendu |
-| `rejected` | `--color-danger-bg` | `--color-danger-fg` | À corriger |
+| `draft` | `--lk-stone-2` | `--lk-ink-2` | Brouillon |
+| `pending` | `--lk-warning-bg` | `--lk-warning-fg` | En attente de validation |
+| `published` | `--lk-success` | blanc | En ligne |
+| `paused` | `--lk-blue-tint` | `--lk-blue` | En pause |
+| `suspended` | `--lk-danger-bg` | `--lk-danger` | Suspendue par Leenkey |
+| `sold` | `--lk-navy` | blanc | Vendu |
+| `rejected` | `--lk-danger-bg` | `--lk-danger-fg` | À corriger |
 
 Icônes : **Lucide** (déjà dans shadcn), trait 2 px, jamais remplies, sauf l'étoile de l'assistant qui est un SVG maison au trait.
 
@@ -1172,7 +1102,7 @@ Création en 4 étapes, barre de progression + « Étape 2 sur 4 · Caractérist
 3. **Photos** : glisser-déposer ou sélection, 15 max, 10 Mo max chacune, JPEG/PNG/HEIC/WebP. Conversion serveur en WebP 400/800/1600. Réordonnancement par glisser. Choix de la photo principale. Légende optionnelle.
 4. **Prix et description** : prix (`UnitInput` €), rappel de l'analyse de valeur (fourchette + valeur) avec écart en pourcentage, description (1 200 caractères max, compteur), bouton « Rédiger avec l'assistant » qui génère une proposition dans un `AssistantSuggestion`. Titre généré automatiquement (« Appartement 3 pièces 68 m² · Savigny-sur-Orge ») et modifiable.
 
-Préremplissage depuis l'estimateur : bandeau `--color-tint` « Repris de votre analyse de valeur du [date]. Vérifiez et complétez. »
+Préremplissage depuis l'estimateur : bandeau `--lk-blue-tint` « Repris de votre analyse de valeur du [date]. Vérifiez et complétez. »
 
 Sauvegarde automatique à chaque étape (statut `draft`). Bouton « Enregistrer » explicite en haut.
 
@@ -1207,7 +1137,7 @@ Ordre du contenu :
 6. Caractéristiques complètes en `KeyFactsTable` (deux colonnes en desktop).
 7. **« Ce que vous savez avant de visiter »** : charges, taxe foncière, lots, travaux votés et procédures (issus de l'analyse des documents en L3 ; « Non renseigné » sinon), documents disponibles avec « Demander l'accès ».
 8. Carte avec la zone approximative (cercle de 300 m autour de `public_location`), jamais l'adresse.
-9. Résumé de l'assistant (L2) : 2 phrases factuelles générées à la publication, stockées, régénérées à chaque modification. Encart `--color-tint`.
+9. Résumé de l'assistant (L2) : 2 phrases factuelles générées à la publication, stockées, régénérées à chaque modification. Encart `--lk-blue-tint`.
 10. Barre d'action : mobile, fixée en bas (« Contacter le vendeur » + bouton visite) ; desktop, carte collante à droite avec `PriceBlock` et les boutons « Contacter le vendeur », « Demander une visite », « Faire une offre » (L2).
 
 Règles d'accès aux actions :

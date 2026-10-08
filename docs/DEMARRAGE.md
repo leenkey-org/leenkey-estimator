@@ -10,6 +10,7 @@ Guide pour Younes. Claude Code ne lit pas ce fichier en priorité : il lit `CLAU
 | `.claude/commands/` | Commandes Claude Code : `/tache`, `/revue`, `/bug`, `/vendredi`, `/recette` |
 | `.env.example` | Liste des variables d'environnement |
 | `docs/SPEC-V2.md` | Spécification complète : données, écrans, règles, plan de 57 tâches |
+| `docs/DESIGN.md` | Référence visuelle exacte : tokens, typographie, composants, écrans (fait foi pour le visuel) |
 | `docs/DECISIONS.md` | Décisions de Cédric et questions ouvertes avec leur valeur provisoire |
 | `docs/PLANNING.md` | Les 57 tâches à cocher, semaine par semaine |
 | `docs/RECETTE.md` | Scénarios de recette de Cédric par lot |
