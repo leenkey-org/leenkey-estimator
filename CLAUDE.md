@@ -32,7 +32,7 @@ Trois lots contractuels. **Le périmètre à construire est celui de `docs/SPEC-
 | Couche | Choix | Notes |
 |---|---|---|
 | Framework | Next.js 15, App Router, TypeScript strict | Server Components par défaut, `"use client"` seulement si nécessaire |
-| UI | Tailwind CSS + shadcn/ui, police Archivo (axe de largeur), direction « Façade » (SPEC-V2 section 6) | Composants dans `components/ui/`, jamais modifiés à la main : on les étend |
+| UI | Tailwind CSS + shadcn/ui, police Archivo (axe de largeur), direction « Façade » (SPEC-V2 section 6) | Composants dans `components/ui/`, jamais modifiés à la main : on les étend. Seule exception : l'ajustement des rayons demandé par `docs/DESIGN.md` section 2.2, fait une fois à l'installation de chaque composant et signalé dans la PR |
 | Base, auth, storage, realtime | Supabase (Postgres, RLS, Auth, Storage, Realtime) | Un projet par environnement, voir section 4 |
 | Vecteurs | pgvector dans Supabase | Base de connaissances de l'assistant |
 | Paiement | Stripe Checkout + webhooks | Mode test en dev et preprod, live en prod uniquement |
@@ -94,7 +94,7 @@ leenkey/
 │   ├── visits/                ← spécialisation de core/scheduling
 │   └── admin/                 ← écrans et actions du back office
 ├── components/
-│   ├── ui/                    ← shadcn, ne pas éditer
+│   ├── ui/                    ← shadcn, ne pas éditer (sauf rayons à l'installation, DESIGN.md 2.2)
 │   └── shared/                ← composants du design system Leenkey
 ├── emails/                    ← templates React Email
 ├── supabase/
@@ -284,7 +284,7 @@ Chaque migration qui touche aux permissions est accompagnée d'un test dans `sup
 - Aucune requête Supabase dans un composant client : passer par une server action ou une route.
 - Erreurs : logguer côté serveur avec contexte (`user_id`, `entity_id`), message générique côté utilisateur.
 - Accessibilité minimale : labels sur tous les champs, focus visible, contrastes du design system, navigation clavier sur les modales.
-- Mobile-first : chaque écran est d'abord conçu pour 375 px de large.
+- Mobile-first : chaque écran est d'abord conçu à 390 px de large (largeur des maquettes, points de rupture de `docs/DESIGN.md` section 4.2).
 
 ---
 
@@ -333,6 +333,7 @@ npm run db:migrate:staging
 npm run db:migrate:prod  # demande une confirmation explicite
 npm run db:seed          # charge supabase/seed/ (local et staging uniquement, refuse en prod)
 npm run db:rls-test      # tests de permissions
+npm run a11y             # contrôle d'accessibilité axe sur les parcours E2E (docs/DESIGN.md section 15)
 npm run stripe:listen    # Stripe CLI vers /api/webhooks/stripe en local
 npm run backup           # pg_dump du projet lié vers ./backups/ (utilisé par la GitHub Action nocturne)
 ```
