@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Notifications</title>
+
+</head>
+<body>
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Archivo',system-ui,sans-serif;background:#F4F4F1;color:#0F1E35}
+a{color:#1156FC}a:hover{color:#0D47E0}
+</style>
+
+<div style="width: 900px; height: 844px; box-sizing: border-box; display: flex; gap: 60px; background: #F4F4F1; font-family: 'Archivo', system-ui, sans-serif; color: #0F1E35">
+
+  <!-- Panneau rempli -->
+  <div style="width: 420px; height: 844px; box-sizing: border-box; background: #FFFFFF; border: 1px solid #D9DBD3; display: flex; flex-direction: column">
+    <div style="height: 72px; padding: 0 16px; border-bottom: 1px solid #D9DBD3; display: flex; align-items: center; gap: 12px; flex: none">
+      <a href="AccueilDesktop.html" aria-label="Fermer" style="width: 40px; height: 40px; border-radius: 100px; border: 1.5px solid #0F1E35; display: flex; align-items: center; justify-content: center; box-sizing: border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F1E35" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
+      <div style="font-size: 15px; font-weight: 600; flex-grow: 1">Notifications</div>
+      <a href="#reglages" aria-label="Réglages des notifications" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F1E35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
+    </div>
+    <div style="padding: 12px 16px; display: flex; gap: 8px; border-bottom: 1px solid #D9DBD3; flex: none">
+      <button style="height: 34px; padding: 0 14px; border: 0; border-radius: 4px; background: #0F1E35; color: #FFFFFF; font: 600 12px 'Archivo', sans-serif">Toutes</button>
+      <button style="height: 34px; padding: 0 14px; border: 1.5px solid #D9DBD3; border-radius: 4px; background: #FFFFFF; color: #0F1E35; font: 500 12px 'Archivo', sans-serif">Mes recherches</button>
+      <button style="height: 34px; padding: 0 14px; border: 1.5px solid #D9DBD3; border-radius: 4px; background: #FFFFFF; color: #0F1E35; font: 500 12px 'Archivo', sans-serif">Visites et offres</button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; flex-grow: 1; overflow: hidden">
+      <div style="padding: 10px 16px 4px; font-size: 11px; font-weight: 600; color: #5B6474; letter-spacing: 0.4px">AUJOURD'HUI</div>
+
+      <a href="#offre" style="padding: 14px 16px; display: flex; gap: 12px; text-decoration: none; color: #0F1E35; background: #EEF4FF; border-bottom: 1px solid #DBEAFE">
+        <div style="width: 40px; height: 40px; flex: none; border-radius: 100px; background: #D1FAE5; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#065F46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1"><div style="font-size: 13px; font-weight: 600; line-height: 1.4">Le vendeur a répondu à votre offre</div><div style="font-size: 12px; color: #3E4757; line-height: 1.4">Appartement 3 p · Épinay-sur-Orge. Ouvrez l'offre pour voir sa réponse.</div><div style="font-size: 11px; color: #5B6474">Il y a 12 min</div></div>
+        <span style="width: 8px; height: 8px; border-radius: 100px; background: #1156FC; flex: none; margin-top: 6px"></span>
+      </a>
+
+      <a href="AnnonceDesktop.html" style="padding: 14px 16px; display: flex; gap: 12px; text-decoration: none; color: #0F1E35; background: #EEF4FF; border-bottom: 1px solid #DBEAFE">
+        <div style="width: 40px; height: 40px; flex: none; border-radius: 4px; background: #DBEAFE; background-image: url('data:image/jpeg;base64,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'); background-size: cover; background-position: center"></div>
+        <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1"><div style="font-size: 13px; font-weight: 600; line-height: 1.4">3 nouveaux biens dans votre alerte</div><div style="font-size: 12px; color: #3E4757; line-height: 1.4">Appartement · Épinay-sur-Orge 10 km · dès 298&nbsp;000&nbsp;€</div><div style="font-size: 11px; color: #5B6474">Il y a 2 h</div></div>
+        <span style="width: 8px; height: 8px; border-radius: 100px; background: #1156FC; flex: none; margin-top: 6px"></span>
+      </a>
+
+      <a href="Messagerie.html" style="padding: 14px 16px; display: flex; gap: 12px; text-decoration: none; color: #0F1E35; background: #EEF4FF; border-bottom: 1px solid #DBEAFE">
+        <div style="width: 40px; height: 40px; flex: none; border-radius: 100px; background: #EEF4FF; border: 1.5px solid #1156FC; box-sizing: border-box; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1156FC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1"><div style="font-size: 13px; font-weight: 600; line-height: 1.4">Nouveau message du vendeur</div><div style="font-size: 12px; color: #3E4757; line-height: 1.4">« Avec plaisir, je vous propose samedi à 10 h… »</div><div style="font-size: 11px; color: #5B6474">Il y a 3 h</div></div>
+        <span style="width: 8px; height: 8px; border-radius: 100px; background: #1156FC; flex: none; margin-top: 6px"></span>
+      </a>
+
+      <div style="padding: 14px 16px 4px; font-size: 11px; font-weight: 600; color: #5B6474; letter-spacing: 0.4px">CETTE SEMAINE</div>
+
+      <a href="#visite" style="padding: 14px 16px; display: flex; gap: 12px; text-decoration: none; color: #0F1E35; border-bottom: 1px solid #D9DBD3">
+        <div style="width: 40px; height: 40px; flex: none; border-radius: 100px; background: #ECEDE8; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1E35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1"><div style="font-size: 13px; font-weight: 600; line-height: 1.4">Visite confirmée samedi 3 octobre à 10 h</div><div style="font-size: 12px; color: #3E4757; line-height: 1.4">Appartement 3 p · Savigny-sur-Orge</div><div style="font-size: 11px; color: #5B6474">Mardi</div></div>
+      </a>
+
+      <a href="AnnonceDesktop.html" style="padding: 14px 16px; display: flex; gap: 12px; text-decoration: none; color: #0F1E35; border-bottom: 1px solid #D9DBD3">
+        <div style="width: 40px; height: 40px; flex: none; border-radius: 100px; background: #ECEDE8; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 18l-9.5-9.5-5 5L1 6"/><path d="M17 18h6v-6"/></svg></div>
+        <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1"><div style="font-size: 13px; font-weight: 600; line-height: 1.4">Baisse de prix sur un favori</div><div style="font-size: 12px; color: #3E4757; line-height: 1.4">Morsang-sur-Orge · 310 000 € → 298 000 €</div><div style="font-size: 11px; color: #5B6474">Lundi</div></div>
+      </a>
+
+      <a href="#dossier" style="padding: 14px 16px; display: flex; gap: 12px; text-decoration: none; color: #0F1E35; border-bottom: 1px solid #D9DBD3">
+        <div style="width: 40px; height: 40px; flex: none; border-radius: 100px; background: #ECEDE8; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1E35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+        <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1"><div style="font-size: 13px; font-weight: 600; line-height: 1.4">Complétez votre dossier acquéreur</div><div style="font-size: 12px; color: #3E4757; line-height: 1.4">Ajoutez votre justificatif de financement avant de faire une offre.</div><div style="font-size: 11px; color: #5B6474">Dimanche</div></div>
+      </a>
+    </div>
+
+    <div style="padding: 14px 16px; border-top: 1px solid #D9DBD3; display: flex; justify-content: space-between; align-items: center; flex: none">
+      <button style="height: 36px; padding: 0; border: 0; background: transparent; color: #1156FC; font: 600 13px 'Archivo', sans-serif">Tout marquer comme lu</button>
+      <a href="#assistant" style="height: 40px; padding: 0 14px; border-radius: 4px; border: 1.5px solid #0F1E35; color: #0F1E35; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; text-decoration: none">Assistant Leenkey</a>
+    </div>
+  </div>
+
+  <!-- Panneau vide -->
+  <div style="width: 420px; height: 844px; box-sizing: border-box; background: #FFFFFF; border: 1px solid #D9DBD3; display: flex; flex-direction: column">
+    <div style="height: 72px; padding: 0 16px; border-bottom: 1px solid #D9DBD3; display: flex; align-items: center; gap: 12px; flex: none">
+      <div style="width: 40px; height: 40px; border-radius: 100px; border: 1.5px solid #0F1E35; display: flex; align-items: center; justify-content: center; box-sizing: border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F1E35" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+      <div style="font-size: 15px; font-weight: 600; flex-grow: 1">Notifications</div>
+    </div>
+    <div style="flex-grow: 1; padding: 0 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center">
+      <svg width="150" height="120" viewBox="0 0 150 120" fill="none" aria-hidden="true">
+        <g stroke="#0F1E35" stroke-width="1.5">
+          <rect x="20" y="30" width="70" height="50" fill="#FFFFFF"/><rect x="55" y="15" width="70" height="50" fill="#FFFFFF"/>
+          <path d="M66 54V36l10-7 10 7v18z" fill="#1156FC"/><path d="M73 54v-8h6v8" fill="#FFFFFF"/>
+          <path d="M94 32h22M94 40h22M94 48h16"/>
+          <path d="M31 70V52l10-7 10 7v18z" fill="#1156FC"/><path d="M38 70v-8h6v8" fill="#FFFFFF"/>
+        </g>
+        <g stroke="#1156FC" stroke-width="1"><path d="M20 92h70"/><path d="M20 88v8M90 88v8"/></g>
+        <text x="55" y="106" fill="#1156FC" font-family="monospace" font-size="9" text-anchor="middle">votre zone</text>
+      </svg>
+      <div style="font-size: 20px; font-weight: 700; font-stretch: 116%; letter-spacing: -0.02em; color: #0F1E35; line-height: 1.3">Soyez le premier sur les nouveaux biens</div>
+      <div style="font-size: 13px; color: #3E4757; line-height: 1.6">Créez une alerte : on vous prévient dès qu'un propriétaire publie un bien qui vous correspond, ou qu'un prix baisse.</div>
+      <a href="RechercheDesktop.html" style="height: 46px; padding: 0 22px; border-radius: 4px; background: #1156FC; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; text-decoration: none">Créer une alerte</a>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>

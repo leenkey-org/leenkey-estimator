@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Plan des écrans Leenkey V2</title>
+
+</head>
+<body>
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Poppins:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Poppins',system-ui,sans-serif;background:#F8FAFF;color:#1E293B}
+a{color:#1156FC}a:hover{color:#0D47E0}
+</style>
+
+<div style="width: 2400px; height: 2100px; box-sizing: border-box; padding: 64px; display: flex; flex-direction: column; gap: 40px; background-color: #F8FAFF; background-image: linear-gradient(to right, #E3EDFE 1px, transparent 1px), linear-gradient(to bottom, #E3EDFE 1px, transparent 1px); background-size: 8px 8px; font-family: 'Poppins', system-ui, sans-serif; color: #1E293B">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 40px; padding-bottom: 24px; border-bottom: 2px solid #1A2B4A">
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 500; letter-spacing: 2px; color: #1156FC">PLANCHE 00 · ARCHITECTURE DES ÉCRANS</div>
+      <h1 style="margin: 0; font-family: 'Sora', sans-serif; font-size: 52px; font-weight: 700; color: #0F1E35; line-height: 1.05">Leenkey V2, plan des écrans</h1>
+      <div style="font-size: 17px; color: #4B5563">37 écrans répartis en quatre espaces. Chaque écran porte son identifiant, sa route et le lot dans lequel il est livré.</div>
+    </div>
+    <div style="display: flex; gap: 28px; align-items: center; flex: none">
+      <div style="display: flex; align-items: center; gap: 10px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: 6px; background: #1156FC; color: #FFFFFF">L1</span><span style="font-size: 14px; color: #4B5563">Socle · S1 à S5</span></div>
+      <div style="display: flex; align-items: center; gap: 10px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: 6px; background: #1A2B4A; color: #FFFFFF">L2</span><span style="font-size: 14px; color: #4B5563">Offres · S6 à S7</span></div>
+      <div style="display: flex; align-items: center; gap: 10px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; padding: 3px 9px; border-radius: 6px; background: #FFFFFF; color: #1156FC; border: 1.5px solid #1156FC">L3</span><span style="font-size: 14px; color: #4B5563">Visites, documents · S8 à S9</span></div>
+      <div style="display: flex; align-items: center; gap: 10px"><span style="width: 10px; height: 10px; border-radius: 100px; background: #0E9F6E"></span><span style="font-size: 14px; color: #4B5563">Maquette existante</span></div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; flex-grow: 1; min-height: 0">
+    <sc-for list="{{ columns }}" as="col" hint-placeholder-count="4">
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 6px; padding: 18px 20px; border-radius: 14px; background: {{ col.headBg }}; color: {{ col.headFg }}">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; letter-spacing: 2px; opacity: 0.8">{{ col.code }}</div>
+          <div style="font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 700">{{ col.title }}</div>
+          <div style="font-size: 14px; opacity: 0.85">{{ col.subtitle }}</div>
+        </div>
+        <sc-for list="{{ col.screens }}" as="sc" hint-placeholder-count="8">
+          <div style="display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E2E8F0">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; color: #1156FC; width: 44px; flex: none; padding-top: 3px">{{ sc.id }}</div>
+            <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-width: 0">
+              <div style="display: flex; align-items: center; gap: 8px">
+                <div style="font-size: 16px; font-weight: 600; color: #0F1E35">{{ sc.name }}</div>
+                <sc-if value="{{ sc.mock }}" hint-placeholder-val="{{ false }}"><span title="Maquette existante" style="width: 8px; height: 8px; border-radius: 100px; background: #0E9F6E; flex: none"></span></sc-if>
+              </div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6B7280">{{ sc.route }}</div>
+              <sc-if value="{{ sc.hasNote }}" hint-placeholder-val="{{ false }}"><div style="font-size: 13px; color: #4B5563; line-height: 1.4">{{ sc.note }}</div></sc-if>
+            </div>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; padding: 3px 8px; border-radius: 6px; flex: none; background: {{ sc.badgeBg }}; color: {{ sc.badgeFg }}; border: 1.5px solid {{ sc.badgeBorder }}">{{ sc.lot }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 24px; border-top: 2px solid #1A2B4A">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 500; letter-spacing: 2px; color: #1156FC">PARCOURS CLÉS</div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px">
+      <sc-for list="{{ flows }}" as="fl" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 14px; background: #FFFFFF; border: 1px solid #E2E8F0">
+          <div style="font-family: 'Sora', sans-serif; font-size: 19px; font-weight: 600; color: #0F1E35">{{ fl.title }}</div>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+            <sc-for list="{{ fl.steps }}" as="st" hint-placeholder-count="5">
+              <div style="display: flex; align-items: center; gap: 8px">
+                <span style="padding: 6px 10px; border-radius: 8px; background: #EEF4FF; font-size: 13px; font-weight: 500; color: #1A2B4A; white-space: nowrap"><span style="font-family: 'IBM Plex Mono', monospace; color: #1156FC">{{ st.id }}</span> {{ st.label }}</span>
+                <sc-if value="{{ st.arrow }}" hint-placeholder-val="{{ true }}"><svg width="18" height="10" viewBox="0 0 18 10" fill="none" stroke="#1156FC" stroke-width="1.5" aria-hidden="true"><path d="M0 5h16M12 1l4 4-4 4"/></svg></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>
