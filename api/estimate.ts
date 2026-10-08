@@ -177,12 +177,13 @@ async function genererAnalyse(payload: Record<string, unknown>): Promise<string 
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-5",
-      max_tokens: 1024,
-      // Déterministe : deux estimations identiques doivent produire la même
-      // analyse. Par défaut la température est à 1, ce qui faisait varier le
-      // texte — et, quand le modèle produisait encore les prix, les montants.
-      temperature: 0,
+      // claude-sonnet-4-5 est retiré le 30 novembre 2026 : remplacé par
+      // claude-sonnet-5-5. Ce modèle refuse `temperature` (erreur 400) et
+      // réfléchit par défaut ; `between_tools` coupe la réflexion pour garder
+      // le coût et la latence d'avant. Le chiffre vient toujours du moteur.
+      model: "claude-sonnet-5-5",
+      max_tokens: 2048,
+      thinking: { type: "between_tools" },
       messages: [{ role: "user", content: buildPrompt(payload) }],
     }),
   });
@@ -193,9 +194,16 @@ async function genererAnalyse(payload: Record<string, unknown>): Promise<string 
   }
 
   const data = (await response.json()) as {
-    content: Array<{ type: string; text: string }>;
+    stop_reason?: string;
+    content: Array<{ type: string; text?: string }>;
   };
-  const clean = (data.content[0]?.text ?? "").replace(/```json|```/g, "").trim();
+  if (data.stop_reason === "refusal") {
+    console.error("Analyse refusée par le modèle");
+    return undefined;
+  }
+  // La réponse peut contenir d'autres blocs (réflexion) avant le texte.
+  const text = data.content.find((b) => b.type === "text")?.text ?? "";
+  const clean = text.replace(/```json|```/g, "").trim();
   try {
     return (JSON.parse(clean) as { analyse?: string }).analyse;
   } catch {
