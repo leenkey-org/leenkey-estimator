@@ -6,3 +6,11 @@ pnpm-lock.yaml
 package-lock.json
 bun.lock
 routeTree.gen.ts
+.next
+playwright-report
+test-results
+public
+docs
+supabase/seed
+.claude
+*.md

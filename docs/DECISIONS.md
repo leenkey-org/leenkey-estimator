@@ -79,6 +79,9 @@ Journal des décisions client. Format : date · question · décision · qui. Le
 | 2026-10-08 | Écrans non spécifiés | Construits selon `DESIGN.md` section 13 (gabarits et règles des écrans non dessinés), relus en recette. | Younes |
 | 2026-10-08 | Tâches ajoutées | Pages légales (L1-36), bandeau de consentement (L1-37), en-têtes de sécurité et limitation de débit (L1-38), page `/compte` (L1-39), déclencheurs `visits_no_offer` et `file_incomplete` (L3-09) (SPEC section 23). | Younes |
 | 2026-10-08 | Textes non fournis | Claude Code rédige les textes absents de la SPEC (emails, motifs de refus, notifications, messages d'état, requêtes de test de l'assistant) dans `lib/i18n/fr.ts`, selon les règles éditoriales ; Younes les relit en une passe par lot. | Younes |
+| 2026-10-08 | Plan Vercel | L'équipe Nebula Creativ reste en plan Hobby jusqu'à la mise en ligne ; passage en Pro à la bascule. Conséquence : aucun cron Vercel à haute fréquence pendant le développement. Les tâches planifiées (SPEC §19) sont déclenchées par Supabase `pg_cron` + `pg_net`, qui appellent les routes `/api/cron/*` avec `CRON_SECRET` : le fonctionnement ne dépend plus du plan Vercel. | Younes |
+| 2026-10-08 | Préprod (L1-02) | GA4 et GTM chargés uniquement en production ; fonctions Vercel en région `cdg1` (Paris) ; bandeau « Environnement de test » en haut de page. | Younes |
+| 2026-10-08 | Dépendance `server-only` | Ajoutée (paquet officiel Next.js, sans code) : empêche d'importer un module serveur (clients Supabase serveur et service role) dans un composant client. | Claude Code |
 
 ## Questions ouvertes (valeur provisoire utilisée en attendant, réponse attendue de Cédric)
 

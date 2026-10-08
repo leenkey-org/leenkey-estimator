@@ -344,7 +344,7 @@ Scripts à créer dans `scripts/` et déclarés dans `package.json` dès la sema
 
 ## 13. Jobs planifiés (Vercel Cron)
 
-Déclarés dans `vercel.json`, tous protégés par `CRON_SECRET`, idempotents et journalisés. **La liste, les horaires et les rôles de référence sont dans `docs/SPEC-V2.md` section 19** ; ne pas les dupliquer ici. Les crons de la préprod tournent aussi (projet Vercel `leenkey-v2`) : ils ne doivent jamais envoyer d'email hors de `EMAIL_TEST_INBOX`.
+Déclenchés par Supabase `pg_cron` + `pg_net` (et non Vercel Cron, plan Hobby jusqu'à la bascule : `DECISIONS.md` 2026-10-08), tous protégés par `CRON_SECRET`, idempotents et journalisés. **La liste, les horaires et les rôles de référence sont dans `docs/SPEC-V2.md` section 19** ; ne pas les dupliquer ici. Les crons de la préprod tournent aussi (projet Vercel `leenkey-v2`) : ils ne doivent jamais envoyer d'email hors de `EMAIL_TEST_INBOX`.
 
 Sauvegarde : GitHub Action nocturne qui exécute `npm run backup` sur le projet prod et pousse l'archive vers un stockage privé, rétention 14 jours. Indépendante de Vercel.
 
