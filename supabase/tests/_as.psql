@@ -1,0 +1,11 @@
+-- Usage: \set who seller_a  then  \ir _as.psql   (or \set who anon)
+-- Sets both claim formats read by auth.uid() (hosted and local images).
+\o /dev/null
+reset role;
+select set_config('request.jwt.claims',
+         case when :'who' = 'anon' then '{"role":"anon"}'
+              else json_build_object('sub', tests.uid(:'who'), 'role', 'authenticated')::text end,
+         true),
+       set_config('request.jwt.claim.sub', coalesce(tests.uid(:'who')::text, ''), true),
+       set_config('role', case when :'who' = 'anon' then 'anon' else 'authenticated' end, true);
+\o
