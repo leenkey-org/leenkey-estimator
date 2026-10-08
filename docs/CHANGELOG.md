@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-08 · L1-03 · PR #6 · Comptes et profils
+- Ajouté : tous les enums de la SPEC, tables `profiles` et `buyer_profiles` avec RLS (lecture et modification de soi, lecture globale admin), droits par colonne (rôles, quota, suspension et suppression non modifiables par l'utilisateur), trigger d'inscription (rôle « vendeur » ou « acquéreur » repris du formulaire, jamais « admin »), fonction `profile_add_role` (ajout « Je vends » / « J'achète » depuis le compte), calcul automatique du statut `declared` du financement, fonction `is_admin()`.
+- Ajouté : scripts `db:migrate:local|staging|prod` et `db:rls-test` (pgTAP sur l'image Postgres de Supabase), job CI `rls` qui rejoue migrations et tests de permissions à chaque PR.
+- Migration : 20261008120000_profiles.sql
+
 ### 2026-10-08 · L1-02 · PR #5 · Environnements et préprod
 - Ajouté : `lib/env.ts` (`NEXT_PUBLIC_ENV`), protection HTTP Basic de la préprod dans `middleware.ts` (comparaison en temps constant, webhooks et crons exemptés), `X-Robots-Tag: noindex, nofollow` et `robots.ts` fermé hors production, bandeau « Environnement de test », clients Supabase server, client et admin (`server-only`), règle ESLint qui limite le client service role aux webhooks, crons et actions admin.
 - Modifié : GA4 et GTM chargés uniquement en production ; fonctions Vercel à Paris (`cdg1`) ; CI construite et testée en mode production.

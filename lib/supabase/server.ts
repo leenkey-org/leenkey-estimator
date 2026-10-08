@@ -1,13 +1,14 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import type { Database } from "@/types/database";
 import { supabaseAnonKey, supabaseUrl } from "./config";
 
 // Supabase client bound to the signed-in user's session: every query runs
 // under RLS. Use it in Server Components, server actions and route handlers.
 export async function createClient() {
   const cookieStore = await cookies();
-  return createServerClient(supabaseUrl(), supabaseAnonKey(), {
+  return createServerClient<Database>(supabaseUrl(), supabaseAnonKey(), {
     cookies: {
       getAll() {
         return cookieStore.getAll();
