@@ -82,6 +82,7 @@ Journal des décisions client. Format : date · question · décision · qui. Le
 | 2026-10-08 | Plan Vercel | L'équipe Nebula Creativ reste en plan Hobby jusqu'à la mise en ligne ; passage en Pro à la bascule. Conséquence : aucun cron Vercel à haute fréquence pendant le développement. Les tâches planifiées (SPEC §19) sont déclenchées par Supabase `pg_cron` + `pg_net`, qui appellent les routes `/api/cron/*` avec `CRON_SECRET` : le fonctionnement ne dépend plus du plan Vercel. | Younes |
 | 2026-10-08 | Préprod (L1-02) | GA4 et GTM chargés uniquement en production ; fonctions Vercel en région `cdg1` (Paris) ; bandeau « Environnement de test » en haut de page. | Younes |
 | 2026-10-08 | Dépendance `server-only` | Ajoutée (paquet officiel Next.js, sans code) : empêche d'importer un module serveur (clients Supabase serveur et service role) dans un composant client. | Claude Code |
+| 2026-10-08 | Relecture notariale du modèle d'offre | Aucune modification, textes de SPEC-V2 section 13 définitifs (Q9 close) | Cédric |
 
 ## Questions ouvertes (valeur provisoire utilisée en attendant, réponse attendue de Cédric)
 
@@ -94,7 +95,6 @@ Journal des décisions client. Format : date · question · décision · qui. Le
 | Q5 | Le vendeur voit-il le justificatif lui-même ou seulement son statut ? | Statut seulement |
 | Q7 | Qui saisit la date de départ du délai de rétractation ? | Saisie possible par le vendeur et par l'admin |
 | Q8 | Bilan de vente avec économie estimée face à une agence : V2 ou plus tard ? Taux de référence ? | Bilan sans économie estimée ; `sold_price_cents` stocké |
-| Q9 | Les textes du modèle d'offre (encadré « Avant d'envoyer », mise en garde sur les conditions, écran d'acceptation) ont-ils été relus par la notaire ? | Textes de Cédric utilisés tels quels |
 | Q10 | Textes légaux, adresse légale, biens de test | Pages « en cours de rédaction » en staging ; adresse reprise des mentions légales V1 (36 rue Pierre Brossolette, Épinay-sur-Orge) ; biens fictifs |
 | Q15 | Offre sans visite préalable : autorisée sans restriction ? | Oui, mentionnée dans l'offre (prévu par le modèle de Cédric) |
 | Q17 | Bascule en production le 4 janvier plutôt que le 18 décembre ? | 4 janvier (à confirmer par Cédric) |

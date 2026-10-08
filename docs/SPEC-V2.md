@@ -2072,7 +2072,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | Étapes de vente par formule | **Reçu** (section 9) | `sale_steps` |
 | FAQ vendeur et acquéreur | **Reçu** (`supabase/seed/knowledge/faq-cedric-v2.md`) | `knowledge_base` |
 | Décisions 1 à 9 | **Reçues** (`docs/DECISIONS.md`) | Toute la spec |
-| Modèle d'offre et mention juridique | Reçu et précisé le 2026-10-05 (section 13). Reste ouvert : relecture des textes par la notaire (Q9) | Valeurs provisoires de `DECISIONS.md` |
+| Modèle d'offre et mention juridique | Reçu et précisé le 2026-10-05 (section 13). Validé par la notaire le 2026-10-08, sans modification (Q9 close) : textes définitifs | — |
 | Mentions légales, CGU, CGV (rétractation, médiateur), confidentialité, cookies, mention IA, procédure de signalement | Demandés le 2026-10-05, **bloquant pour la prod** | Pages légales (page « En cours de rédaction » en staging) |
 | Adresse légale et coordonnées | Présente sur le site V1 (mentions légales : 36 rue Pierre Brossolette, 91360 Épinay-sur-Orge), à confirmer par Cédric | Emails, pages légales |
 | Biens et documents de test | Non reçu | Seed (en attendant : biens fictifs dans la zone de lancement) |
