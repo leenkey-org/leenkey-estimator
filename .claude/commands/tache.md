@@ -10,4 +10,4 @@ Tâche à réaliser : **$ARGUMENTS**.
 4. Après mon go : crée la branche `feature/$ARGUMENTS-<slug>`, code, écris les tests (RLS en premier pour toute table), lance `npm run lint && npm run typecheck && npm test`.
 5. Une information manque ? Ne bloque pas : placeholder de la section 24, `// TODO(client): …`, ligne ajoutée dans `docs/DECISIONS.md`.
 6. Une idée hors périmètre ? Ne l'implémente pas : ajoute-la dans `docs/BACKLOG-V3.md`.
-7. Termine par : cochage de la tâche dans `docs/PLANNING.md`, entrée dans `docs/CHANGELOG.md`, commit, PR vers `v2` avec les critères d'acceptation de la tâche cochés un par un dans la description, et la liste de ce que je dois tester à la main en préprod (`leenkey-v2.vercel.app`) après fusion.
+7. Termine par : cochage de la tâche dans `docs/PLANNING.md`, entrée dans `docs/CHANGELOG.md`, commit, PR vers `v2` (fusionnée par Claude Code si la CI est verte et que `/revue` ne relève rien de bloquant) avec les critères d'acceptation de la tâche cochés un par un dans la description, et la liste de ce que je dois tester à la main en préprod (`leenkey-v2.vercel.app`) après fusion.

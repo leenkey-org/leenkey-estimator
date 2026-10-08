@@ -4,7 +4,7 @@ Démarrage le **lundi 12 octobre 2026** (date provisoire, seule compatible avec 
 
 Claude Code coche une tâche (`[x]`) dans la même PR que son code, avec le numéro de PR. Younes coche la colonne « Testé en préprod » après vérification sur `leenkey-v2.vercel.app`, une fois la PR fusionnée dans `v2`.
 
-Rééquilibrage du 5 octobre : la semaine 5 passe de 10 à 8 tâches. L1-20 est réduite au sitemap et aux robots (pages villes en V3) ; L1-35 avance en S3 ; L1-27 (embeddings, sans dépendance au reste de S4) avance en S4 ; les déclencheurs de montée en gamme, non contractuels, deviennent L2-09 (S6) ; l'export RGPD et la suppression de compte deviennent L2-10 (S7). Aucune fonctionnalité du cahier des charges ne quitte le lot 1.
+Rééquilibrage du 5 octobre : la semaine 5 passe de 10 à 8 tâches. L1-20 est réduite au sitemap et aux robots (pages villes en V3) ; L1-35 avance en S3 ; L1-27 (embeddings, sans dépendance au reste de S4) avance en S4 ; les déclencheurs de montée en gamme, non contractuels, deviennent L2-09 (S6) ; l'export RGPD et la suppression de compte deviennent L2-10 (S7). Aucune fonctionnalité du cahier des charges ne quitte le lot 1. Ajout du 8 octobre : L1-36 et L1-37 (S2), L1-38 et L1-39 (S4), L3-09 (S8-S9).
 
 ## S1 · semaine du 12 oct. · Fondations et reprise de l'existant
 
@@ -27,6 +27,8 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [ ] **L1-12** Photos : upload, conversion WebP 3 tailles, réordonnancement, couverture, route `/img` · PR : · Testé en préprod : ☐
 - [ ] **L1-13** Étape 4 prix et description, rappel de l’analyse de valeur, reprise depuis l’estimateur (`?estimation=`),… · PR : · Testé en préprod : ☐
 - [ ] **L1-14** Fiche du bien (onglets Infos, Photos, Annonce), actions de statut · PR : · Testé en préprod : ☐
+- [ ] **L1-36** Pages légales (CGU et mentions reprises de la V1, autres « En cours de rédaction ») · PR : · Testé en préprod : ☐
+- [ ] **L1-37** Bandeau de consentement cookies, Google Consent Mode (Q23) · PR : · Testé en préprod : ☐
 
 ## S3 · semaine du 26 oct. · Recherche, annonce, back office minimum
 
@@ -46,6 +48,8 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [ ] **L1-24** Dashboard vendeur complet (en-tête navy, StepProgress, NextActionCard, StatTile, TaskList, conversations) · PR : · Testé en préprod : ☐
 - [ ] **L1-25** Espace acquéreur v1 (accueil, profil projet et financement déclaratif, `FinancingBadge` côté vendeur) · PR : · Testé en préprod : ☐
 - [ ] **L1-27** Embeddings (Edge Function `embed`), import de la FAQ de Cédric, `search_knowledge` (avancé depuis S5) · PR : · Testé en préprod : ☐
+- [ ] **L1-38** En-têtes de sécurité et limitation de débit (`lib/rate-limit.ts`) · PR : · Testé en préprod : ☐
+- [ ] **L1-39** Page `/compte` (informations, e-mail, mot de passe, notifications, rôles) · PR : · Testé en préprod : ☐
 
 ## S5 · semaine du 9 nov. · Paiement, assistant, back office → livraison lot 1 (ven. 13 nov.)
 
@@ -82,6 +86,7 @@ Toujours la semaine la plus risquée du projet. Ordre imposé : L1-26 et L1-33 (
 - [ ] **L3-05** Analyse IA des documents (extraction, prompts par type, JSON validé), affichage vendeur, publication des… · PR : · Testé en préprod : ☐
 - [ ] **L3-06** Alertes : création, gestion, cron digest, biens similaires après vente, outil `create_alert` · PR : · Testé en préprod : ☐
 - [ ] **L3-07** `summarize_shared_documents`, tâches L3 dans le moteur d'étapes · PR : · Testé en préprod : ☐
+- [ ] **L3-09** Déclencheurs de montée en gamme `visits_no_offer` et `file_incomplete` · PR : · Testé en préprod : ☐
 - [ ] **L3-08** Recette lot 3 · PR : · Testé en préprod : ☐
 
 ## S10 · semaine du 14 déc. · Préprod validée → livraison ven. 18 déc.

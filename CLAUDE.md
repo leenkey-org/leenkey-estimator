@@ -200,7 +200,7 @@ v2                   →  PR vers main (bascule V2 prévue le 4 janvier 2027, pu
 main                 →  déploiement leenkey.fr automatique
 ```
 
-- Une tâche = une branche = une PR vers `v2`. Pas de push direct sur `v2` ni sur `main` (règle de travail ; la protection de branche GitHub n'est pas disponible sur un repo privé en plan gratuit, la CI GitHub Actions `npm run lint && npm run typecheck && npm run test && npm run build` doit être verte avant fusion).
+- Une tâche = une branche = une PR vers `v2`. **Claude Code fusionne lui-même sa PR dans `v2`** quand la CI est verte et que `/revue` ne relève rien de bloquant (décision du 2026-10-08) ; Younes teste en préprod à chaque fin de lot. Pas de push direct sur `v2` ni sur `main` (règle de travail ; la protection de branche GitHub n'est pas disponible sur un repo privé en plan gratuit, la CI GitHub Actions `npm run lint && npm run typecheck && npm run test && npm run build` doit être verte avant fusion).
 - `main` reste le site V1 en ligne (Vite) jusqu'à la bascule. Aucun commit V2 n'y arrive avant.
 - Une PR = une fonctionnalité ou un correctif. Titre au format `feat(listings): validation par l'admin` / `fix(messaging): notification en double`.
 - Chaque PR fusionnée ajoute une ligne dans `docs/CHANGELOG.md`.
@@ -352,7 +352,7 @@ Sauvegarde : GitHub Action nocturne qui exécute `npm run backup` sur le projet 
 
 ## 14. Ce que Claude Code ne fait pas sans demander
 
-- Ajouter une dépendance.
+- Ajouter une dépendance hors de la liste pré-approuvée de `docs/DECISIONS.md` (2026-10-08).
 - Modifier une migration déjà jouée sur staging.
 - Toucher aux politiques RLS existantes sans le signaler explicitement dans la PR.
 - Utiliser le client service role en dehors de `webhooks`, `cron` et `leenkey/admin/actions.ts` (jamais dans `core/ai/` : passer par une fonction SQL `security definer`).

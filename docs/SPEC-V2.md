@@ -163,12 +163,12 @@ Déclarés dans `core/ai/models.ts`, jamais en dur ailleurs :
 
 ```ts
 export const MODELS = {
-  fast: process.env.AI_MODEL_FAST ?? 'claude-haiku-4-5-20251001',   // conversation, suggestions, pré-analyse
+  fast: process.env.AI_MODEL_FAST ?? 'claude-sonnet-5-5',           // conversation, suggestions, pré-analyse
   smart: process.env.AI_MODEL_SMART ?? 'claude-sonnet-5-5',         // analyse de documents
 } as const;
 ```
 
-Identifiants vérifiés le 2026-10-05 sur la documentation Anthropic (platform.claude.com, « Models overview ») : `claude-sonnet-5-5` (Claude Sonnet 5.5, modèle courant) et `claude-haiku-4-5-20251001` (Claude Haiku 4.5). `claude-sonnet-5` est un modèle « legacy » : ne pas l'utiliser. **Attention** : Haiku 4.5 est annoncé avec un retrait « pas avant le 15 octobre 2026 » ; il peut donc être retiré pendant le projet. Vérifier la page des dépréciations avant la mise en production et basculer `AI_MODEL_FAST` si besoin (voir `DECISIONS.md`).
+Identifiants vérifiés le 2026-10-05 sur la documentation Anthropic (platform.claude.com, « Models overview » et « Model deprecations »). Décision du 2026-10-08 : `claude-sonnet-5-5` (Claude Sonnet 5.5) pour les deux usages ; Claude Haiku 4.5 n'est pas utilisé (retrait possible à partir du 15 octobre 2026). `claude-sonnet-5` est un modèle « legacy » : ne pas l'utiliser. Vérifier la page des dépréciations avant la bascule (P-05b).
 
 Les identifiants sont surchargeables par variables d'environnement pour pouvoir changer de modèle sans déploiement de code.
 
@@ -273,6 +273,9 @@ create table profiles (
   avatar_path text,
   roles user_role[] not null default '{}',
   ai_messages_today int not null default 0,
+  ai_messages_date date,                -- jour (Europe/Paris) du compteur ; remise à zéro à la lecture si différent du jour
+  suspended_at timestamptz,             -- suspension du compte par l'admin (fonction admin_suspend_user)
+  suspension_reason text,
   notification_prefs jsonb not null default '{"email_messages":true,"email_offers":true,"email_alerts":true}',
   created_at timestamptz not null default now(),
   updated_at timestamptz,
@@ -361,13 +364,27 @@ create table properties (
   charges_monthly_cents int,
   property_tax_yearly_cents int,
   copro_lots int,
-  estimation_id uuid,                   -- lien vers l'estimation d'origine
+  estimation_id uuid,                   -- lien vers estimations(id) (FK ajoutée avec la table estimations, L1-04)
   estimation_value_cents bigint,
   estimation_low_cents bigint, estimation_high_cents bigint,
   created_at timestamptz not null default now(),
   updated_at timestamptz,
   deleted_at timestamptz
 );
+
+create table estimations (               -- analyses de valeur faites sur l'estimateur (V1 reprise)
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid references profiles(id) on delete set null,  -- rattachée au compte à l'inscription
+  input jsonb not null,                 -- saisies du wizard
+  result jsonb not null,                -- sortie du moteur estimation.ts (valeur, fourchette, comparables)
+  value_cents bigint, low_cents bigint, high_cents bigint,
+  email text,                           -- adresse saisie pour recevoir le rapport (facultative)
+  claim_token text unique,              -- jeton aléatoire renvoyé au navigateur pour rattacher l'estimation après inscription
+  created_at timestamptz not null default now()
+);
+-- Écrite par /api/estimate via la fonction estimation_record() (security definer, pas de clé service role) ; rattachée au compte par estimation_claim(token).
+-- RGPD : estimations anonymes (sans profile_id) supprimées après 12 mois par le cron anonymize-deleted.
+alter table properties add constraint properties_estimation_fk foreign key (estimation_id) references estimations(id);
 
 create table listings (
   id uuid primary key default gen_random_uuid(),
@@ -382,6 +399,9 @@ create table listings (
   submitted_at timestamptz, published_at timestamptz, sold_at timestamptz,
   suspended_at timestamptz,
   suspension_reason text,               -- motif admin, communiqué au vendeur par email
+  sold_price_cents bigint,              -- prix de vente final saisi au passage en « vendu » (facultatif)
+  review jsonb,                         -- pré-analyse admin calculée à la soumission (section 12)
+  summary text,                         -- résumé de l'assistant (L2-05), régénéré à chaque modification
   views_count int not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz,
@@ -510,6 +530,7 @@ create table sale_step_tasks (           -- tâches modèle par étape
   code text not null,
   title text not null,
   auto_trigger text,                    -- ex: 'document.uploaded:dpe'
+  required boolean not null default true, -- tâche obligatoire pour passer à l'étape suivante (les tâches dont owner = 'leenkey' ne bloquent jamais)
   position int not null
 );
 
@@ -704,6 +725,9 @@ create table documents (
   extracted_text text,                  -- texte brut, jamais exposé côté client
   analysis jsonb,                       -- résultat IA, voir section 15
   analyzed_at timestamptz,
+  reviewed_at timestamptz,              -- revue humaine Leenkey (Sérénité)
+  review_note text,
+  public_facts_approved_at timestamptz, -- le vendeur a choisi d'« Afficher sur l'annonce » les faits extraits
   created_at timestamptz not null default now(),
   deleted_at timestamptz
 );
@@ -882,6 +906,7 @@ Matrice (L = lecture, E = écriture) :
 | `buyer_profiles` | — | L des acquéreurs ayant une relation avec ses biens : `project`, `financing_status`, type et date de contrôle du justificatif uniquement, via la fonction `buyer_summary_for_seller()` ; jamais le justificatif ni les montants du profil (Q5) | L/E soi | L tous, E statut `document_checked` via `financing_document_check` |
 | `financing_documents` | — | — (jamais) | L/E les siens (pas `check_note`, pas `checked_*`) | L tous, E contrôle via fonction SQL |
 | `properties` | — (via vue) | L/E ses biens | — (via vue) | L tous, E |
+| `estimations` | création via la fonction `estimation_record()` (`security definer`, appelée par `/api/estimate`) ; aucune lecture | L les siennes ; rattachement via `estimation_claim(token)` | L les siennes | L tous |
 | `listings` | L si `published` | L/E ses annonces sauf si `suspended` (lecture seule) ; `status` uniquement via fonctions : `draft`↔`pending`, `published`↔`paused`, `→sold` ; jamais vers ou depuis `suspended` | L si `published` | L/E tous ; seul rôle autorisé à `→suspended` et `suspended→published/paused` |
 | `photos` | via route `/img` | L/E ses biens | via route `/img` | L tous |
 | `favorites` | — | — | L/E les siens | L |
@@ -1104,7 +1129,7 @@ Maquette : `Bien.dc.html`.
 
 Création en 4 étapes (ordre de `docs/DESIGN.md` 12.2), `ProgressBar` « Étape 2 sur 4 · Caractéristiques » :
 1. **Adresse** : autocomplétion Mapbox (France uniquement). Géocodage → `location`, calcul de `public_location` (décalage aléatoire stable de 150 à 250 m, graine = id du bien).
-2. **Caractéristiques et photos** : type de bien, surface (`UnitInput` m²), Carrez, pièces, chambres, étage / nombre d'étages, année, DPE et GES (`SegmentedPicker`), chauffage, atouts (`ChipToggle`), charges mensuelles, taxe foncière, nombre de lots. Photos (`PhotoUploader`) : glisser-déposer ou sélection, 15 max, 10 Mo max chacune, JPEG/PNG/HEIC/WebP. Conversion serveur en WebP 400/800/1600. Réordonnancement par glisser. Choix de la photo principale. Légende optionnelle.
+2. **Caractéristiques et photos** : type de bien, surface (`UnitInput` m²), Carrez, pièces, chambres, étage / nombre d'étages, année, DPE et GES (`SegmentedPicker`), chauffage, atouts (`ChipToggle`), charges mensuelles, taxe foncière, nombre de lots. Photos (`PhotoUploader`) : glisser-déposer ou sélection, 15 max, 10 Mo max chacune, JPEG/PNG/WebP (pas de HEIC, décision du 2026-10-08). Conversion serveur en WebP 400/800/1600. Réordonnancement par glisser. Choix de la photo principale. Légende optionnelle.
 3. **Prix et description** : prix (`UnitInput` €), rappel de l'analyse de valeur (fourchette + valeur) avec écart en pourcentage, description (1 200 caractères max, compteur), bouton « Rédiger avec l'assistant » qui génère une proposition dans un `AssistantSuggestion`. Titre généré automatiquement (« Appartement 3 pièces 68 m² · Savigny-sur-Orge ») et modifiable.
 4. **Aperçu** : prévisualisation exacte de la page annonce, puis « Envoyer en validation ».
 
@@ -1660,7 +1685,7 @@ Trois états, textes à reprendre exactement :
 - Aucun bouton de rétractation, aucune conclusion juridique.
 
 **Avant-contrat signé** (`precontract_signed_at` renseignée)
-- Si `withdrawal_period_start` est renseignée : rappel du délai légal de rétractation calculé à partir de cette date, avec la mention « Date indicative. Votre notaire fait foi. »
+- Si `withdrawal_period_start` est renseignée : rappel du délai légal de rétractation calculé à partir de cette date (10 jours calendaires ; s'il expire un samedi, un dimanche ou un jour férié, prorogé au premier jour ouvrable suivant), avec la mention « Date indicative. Votre notaire fait foi. »
 - Sinon : « Le point de départ de votre délai de rétractation dépend de la date de notification ou de remise de l'avant-contrat. Votre notaire peut vous l'indiquer. » Ne jamais calculer « 10 jours après la signature ».
 - Ne jamais écrire que l'acquéreur doit signer un avant-contrat pour pouvoir se rétracter.
 
@@ -1703,7 +1728,11 @@ L'adresse exacte n'est communiquée qu'à l'acquéreur qui a une visite confirm�
 Onglet « Documents » de la fiche du bien :
 - Checklist par catégorie, selon le type de bien : Diagnostics (DPE, amiante, plomb, électricité, gaz, termites, ERP, Carrez), Propriété (titre, taxe foncière), Copropriété (PV des 3 dernières AG, règlement, appels de charges), Travaux (factures). Chaque ligne : déposé / manquant, date, bouton déposer.
 - Dépôt : PDF, JPEG, PNG, 20 Mo max, type choisi à l'envoi (préselectionné par le nom de fichier si possible).
-- Indicateur « Dossier notaire : 12 / 15 pièces ». Déclencheur `documents.notary_ready` quand toutes les pièces obligatoires sont présentes.
+- Indicateur « Dossier notaire : 12 / 15 pièces ». Déclencheur `documents.notary_ready` quand toutes les pièces obligatoires sont présentes. Liste des pièces obligatoires par type de bien dans `lib/config/documents.ts` (décision du 2026-10-08) :
+  - **Appartement en copropriété (15)** : DPE, amiante (permis avant 1997), plomb (avant 1949), électricité et gaz (installations de plus de 15 ans), ERP, termites (zone concernée), mesurage Carrez, titre de propriété, taxe foncière, 3 derniers PV d'AG, règlement de copropriété et état descriptif de division, appels de charges (2 dernières années), carnet d'entretien de l'immeuble, fiche synthétique de la copropriété, pré-état daté.
+  - **Maison (11)** : DPE, amiante, plomb, électricité, gaz, ERP, termites, assainissement (non collectif ou contrôle de raccordement), titre de propriété, taxe foncière, factures des travaux de moins de 10 ans.
+  - **Terrain (4)** : ERP, titre de propriété, taxe foncière, certificat d'urbanisme ou bornage si disponible.
+  - Les diagnostics conditionnels (amiante, plomb, gaz, termites) sont marqués « non concerné » par le vendeur quand ils ne s'appliquent pas ; ils comptent alors comme présents. Le badge « Dossier complet » n'est affiché qu'à partir du lot 3.
 - Partage : par document ou par lot (« Partager les diagnostics »), à un acquéreur ayant une relation avec le bien. Demandes d'accès des acquéreurs listées en tête avec Accorder / Refuser.
 
 ### Analyse IA
@@ -1842,7 +1871,7 @@ Voir `CLAUDE.md` section 13. Détail :
 | Route | Fréquence (UTC) | Rôle |
 |---|---|---|
 | `/api/cron/ping-db` | `0 3 * * *` | Requête légère pour éviter la mise en pause du projet Supabase gratuit |
-| `/api/cron/reset-ai-quotas` | `0 22 * * *` (minuit Paris en été) | Remise à zéro de `ai_messages_today` ; à ajuster à l'heure d'hiver ou calculer côté SQL en `Europe/Paris` |
+| `/api/cron/reset-ai-quotas` | `0 22 * * *` | Remise à zéro de `ai_messages_today`. Filet de sécurité : le compteur est aussi remis à zéro à la lecture si sa date (`ai_messages_date`, en `Europe/Paris`) n'est pas celle du jour, ce qui couvre le passage à l'heure d'hiver |
 | `/api/cron/expire-offers` | `0 5 * * *` | Offres `submitted`/`viewed` dont `validity_until` est passée → `expired` |
 | `/api/cron/buyer-alerts` | `0 5 * * *` | Digest d'alertes (7 h Paris) |
 | `/api/cron/visit-reminders` | `0 6 * * *` | Rappels J-1 |
@@ -1933,7 +1962,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-01 | **(a)** Avant tout déplacement : tests de non-régression Vitest sur `estimation.ts` (au moins 20 cas réels, tous types de bien, résultats actuels figés), verts sur le code V1. **(b)** Nouveau projet Next.js 15 dans le repo, structure selon `CLAUDE.md` (dossiers, ESLint, Prettier, Vitest, Playwright, scripts npm, `.env.example`, GitHub Actions lint/typecheck/test/build). **(c)** Reprise de l'existant : wizard et moteur (sans changement de logique), 4 endpoints en route handlers aux mêmes chemins, pages marketing `public/pages/`, GA4, GTM, Vercel Analytics, redirections. Suppression du code Vite une fois la reprise validée | — | Les mêmes tests de non-régression passent à l'identique avant et après ; CI verte ; sur la préprod, une analyse de valeur de bout en bout (wizard → PDF → email de test) donne le même chiffre qu'en prod V1 pour 3 biens de référence ; formulaires des pages marketing et événements GA4 vérifiés |
 | L1-02 | Environnements : `NEXT_PUBLIC_ENV`, bannière « Environnement de test », `noindex` (`X-Robots-Tag` + `robots.ts`) hors prod, protection HTTP Basic de la préprod dans `middleware.ts` (`PREPROD_USER` / `PREPROD_PASSWORD`, exclusions webhooks et crons), clients Supabase server/client/admin | L1-01 | Bannière et mot de passe actifs sur `leenkey-v2.vercel.app`, absents en prod ; webhooks et crons accessibles sans mot de passe |
 | L1-03 | Migration enums + `profiles` + trigger d'inscription + `buyer_profiles` + RLS + tests | L1-01 | Tests RLS verts |
-| L1-04 | Migrations `properties`, `listings`, `photos`, `listing_views`, `favorites`, vue `public_listings`, séquence référence, fonctions de transition de statut + RLS + tests | L1-03 | Tests RLS verts, vue ne renvoie aucun champ privé |
+| L1-04 | Migrations `estimations`, `properties`, `listings`, `photos`, `listing_views`, `favorites`, vue `public_listings`, séquence référence, fonctions de transition de statut + RLS + tests | L1-03 | Tests RLS verts, vue ne renvoie aucun champ privé |
 | L1-05 | Migrations `plans`, `subscriptions`, `stripe_events`, `sale_*`, `conversations`, `messages`, `reports`, `cases`, `case_notes`, `notifications`, `audit_log`, `knowledge_base`, `ai_*` + RLS + tests | L1-04 | Tests RLS verts |
 | L1-06 | Seed complet (comptes, biens, plans, étapes de vente de la section 9, fiches de `faq-cedric-v2.md`) | L1-05 | `npm run db:seed` idempotent en local et staging, refus en prod |
 | L1-07 | Design system : tokens, polices, composants de base (Button, Input, Select, UnitInput, ChipToggle, SegmentedPicker, StatusBadge, DpeBadge, titre de section (H3, `docs/DESIGN.md` 3.2), BrandPanel, KeyFigures, PropertyCard), page `/design` | L1-01 | Page `/design` conforme à `docs/DESIGN.md` 12.14 (tous les composants de la section 10), contrastes vérifiés |
@@ -1949,6 +1978,8 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-12 | Photos (dans l'étape 2) : upload, conversion WebP 3 tailles, réordonnancement, couverture, route `/img` | L1-11 | 15 photos max, rejets propres, aucune URL permanente |
 | L1-13 | Étape 3 prix et description, rappel de l'analyse de valeur, reprise depuis l'estimateur (`?estimation=`), étape 4 aperçu, envoi en validation | L1-12 | Parcours estimateur → annonce `pending` complet |
 | L1-14 | Fiche du bien (onglets Infos, Photos, Annonce), actions de statut | L1-13 | Pause / remise en ligne / vendu fonctionnent via fonctions SQL ; une annonce `suspended` est en lecture seule pour le vendeur (test) |
+| L1-36 | Pages légales : CGU et mentions légales reprises de la V1, confidentialité, CGV, cookies et mention IA en « En cours de rédaction » (`TODO(client)`, Q10), liens en pied de page | L1-01 | Toutes les pages accessibles depuis le pied de page, adresse légale affichée |
+| L1-37 | Bandeau de consentement (Accepter / Refuser / Personnaliser), Google Consent Mode : GA4 et GTM ne déposent aucun cookie avant consentement ; choix mémorisé 6 mois, modifiable depuis le pied de page (Q23) | L1-01 | Aucun cookie `_ga` avant consentement (test E2E) ; refus respecté |
 
 ### Semaine 3 : recherche, annonce, back office minimum
 
@@ -1971,6 +2002,8 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-23 | Moteur d'étapes : `emitEvent`, bascule de modèle, `getNextAction`, branchement sur les événements existants | L1-06, L1-14 | Les tâches se cochent automatiquement sur le parcours E2E 1 |
 | L1-24 | Dashboard vendeur complet (`SellerHeader`, StepProgress, NextActionCard, StatTile, TaskList, conversations) | L1-23 | Conforme à `docs/DESIGN.md` 12.3 |
 | L1-25 | Espace acquéreur v1 (accueil, profil projet et financement déclaratif, `FinancingBadge` côté vendeur) | L1-21 | Le vendeur voit le statut, jamais les montants (test) |
+| L1-38 | Sécurité transverse : en-têtes (CSP, HSTS, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) dans `next.config.ts`, `lib/rate-limit.ts` sur table Postgres (inscription, connexion, contact, messages, assistant) | L1-21 | En-têtes présents (test), 429 au-delà des seuils (test) |
+| L1-39 | Page `/compte` : informations personnelles, changement d'e-mail avec confirmation, mot de passe, préférences de notification, rôles (« Je vends » / « J'achète ») | L1-22 | Changement d'e-mail confirmé par lien ; préférences respectées par `notify()` |
 | L1-27 | Embeddings (Edge Function `embed`), import KB, `search_knowledge` | L1-05 | Recherche test pertinente sur les fiches de `faq-cedric-v2.md` |
 
 ### Semaine 5 : paiement, assistant, back office → livraison lot 1
@@ -2012,6 +2045,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L3-05 | Analyse IA des documents (extraction, prompts par type, JSON validé), affichage vendeur, publication des faits sur l'annonce, résumé acquéreur | L3-04 | E2E 6 vert sur les documents de test |
 | L3-06 | Alertes : création, gestion, cron digest, biens similaires après vente, outil `create_alert` | L3-01 | Digest reçu en staging |
 | L3-07 | `summarize_shared_documents`, tâches L3 dans le moteur d'étapes | L3-05 | — |
+| L3-09 | Déclencheurs de montée en gamme du lot 3 : `visits_no_offer`, `file_incomplete` (seuils Q2) | L2-09, L3-04 | Déclencheurs affichés selon les seuils, masquables, jamais bloquants |
 | L3-08 | Recette lot 3 | tout L3 | Tag `v2.0.0-lot3` |
 
 ### Semaine 10 : production
