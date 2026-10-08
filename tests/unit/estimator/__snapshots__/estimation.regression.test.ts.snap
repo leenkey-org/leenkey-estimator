@@ -1,0 +1,1504 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`estimation engine non-regression > appartement T2 Morsang-sur-Orge à rénover, DPE F, rez-de-chaussée 1`] = `
+{
+  "delaiVente": "65–100 jours",
+  "deltaMarche": -23,
+  "facteurs": [
+    {
+      "detail": "Morsang-sur-Orge · 3 500 €/m² moyen",
+      "impact": -11,
+      "label": "Localisation",
+    },
+    {
+      "detail": "À rénover",
+      "impact": -18,
+      "label": "État général",
+    },
+    {
+      "detail": "DPE F — passoire énergétique",
+      "impact": -9,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "Aucun extérieur renseigné",
+      "impact": 0,
+      "label": "Extérieur",
+    },
+    {
+      "detail": "Standard",
+      "impact": 0,
+      "label": "Prestations",
+    },
+    {
+      "detail": "Étage 0",
+      "impact": -2,
+      "label": "Étage & exposition",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 73,
+  "prixBas": 108000,
+  "prixEstime": 118000,
+  "prixHaut": 128000,
+  "prixM2": 2687,
+  "prixM2Marche": 3500,
+  "recommandations": [
+    {
+      "description": "Passer d'un DPE F à un DPE C/D pourrait revaloriser votre bien.",
+      "title": "Améliorer la performance énergétique",
+      "uplift": "+5 à 10%",
+    },
+    {
+      "description": "Peinture, sols et cuisine refaits accélèrent fortement la vente.",
+      "title": "Rafraîchir avant mise en vente",
+      "uplift": "+3 à 7%",
+    },
+    {
+      "description": "Soignez la luminosité et le home staging pour compenser l'absence d'extérieur.",
+      "title": "Mettre en valeur les atouts manquants",
+    },
+  ],
+  "scoreAttractivite": 0,
+  "surface": 44,
+  "tensionMarche": "moderee",
+}
+`;
+
+exports[`estimation engine non-regression > appartement T3 Savigny, bon état, DPE D, sans DVF 1`] = `
+{
+  "delaiVente": "45–70 jours",
+  "deltaMarche": 6,
+  "facteurs": [
+    {
+      "detail": "Savigny-sur-Orge · 3 769 €/m² moyen",
+      "impact": 3,
+      "label": "Localisation",
+    },
+    {
+      "detail": "Bon état",
+      "impact": 0,
+      "label": "État général",
+    },
+    {
+      "detail": "DPE D — moyen",
+      "impact": 0,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "balcon 6 m²",
+      "impact": 1,
+      "label": "Extérieur",
+    },
+    {
+      "detail": "Standard",
+      "impact": 0,
+      "label": "Prestations",
+    },
+    {
+      "detail": "Étage 2",
+      "impact": 0,
+      "label": "Étage & exposition",
+    },
+  ],
+  "fiabilite": "elevee",
+  "fiabiliteScore": 82,
+  "prixBas": 242000,
+  "prixEstime": 256000,
+  "prixHaut": 270000,
+  "prixM2": 4002,
+  "prixM2Marche": 3769,
+  "recommandations": [
+    {
+      "description": "Diagnostics à jour, factures de travaux, taxe foncière : un dossier complet rassure les acheteurs.",
+      "title": "Préparer un dossier de vente complet",
+    },
+  ],
+  "scoreAttractivite": 52,
+  "surface": 64,
+  "tensionMarche": "moderee",
+}
+`;
+
+exports[`estimation engine non-regression > appartement T3 Savigny, même bien avec DVF 3 900 €/m² 1`] = `
+{
+  "delaiVente": "45–70 jours",
+  "deltaMarche": 6,
+  "facteurs": [
+    {
+      "detail": "Savigny-sur-Orge · 3 861 €/m² moyen",
+      "impact": 3,
+      "label": "Localisation",
+    },
+    {
+      "detail": "Bon état",
+      "impact": 0,
+      "label": "État général",
+    },
+    {
+      "detail": "DPE D — moyen",
+      "impact": 0,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "balcon 6 m²",
+      "impact": 1,
+      "label": "Extérieur",
+    },
+    {
+      "detail": "Standard",
+      "impact": 0,
+      "label": "Prestations",
+    },
+    {
+      "detail": "Étage 2",
+      "impact": 0,
+      "label": "Étage & exposition",
+    },
+  ],
+  "fiabilite": "elevee",
+  "fiabiliteScore": 82,
+  "prixBas": 251000,
+  "prixEstime": 262000,
+  "prixHaut": 273000,
+  "prixM2": 4100,
+  "prixM2Marche": 3861,
+  "recommandations": [
+    {
+      "description": "Diagnostics à jour, factures de travaux, taxe foncière : un dossier complet rassure les acheteurs.",
+      "title": "Préparer un dossier de vente complet",
+    },
+  ],
+  "scoreAttractivite": 52,
+  "surface": 64,
+  "tensionMarche": "moderee",
+}
+`;
+
+exports[`estimation engine non-regression > appartement T4 Lyon 6e, excellent état, prestations haut de gamme 1`] = `
+{
+  "delaiVente": "30–50 jours",
+  "deltaMarche": 22,
+  "facteurs": [
+    {
+      "detail": "Lyon · 5 490 €/m² moyen",
+      "impact": 11,
+      "label": "Localisation",
+    },
+    {
+      "detail": "Excellent état",
+      "impact": 8,
+      "label": "État général",
+    },
+    {
+      "detail": "DPE C — correct",
+      "impact": 1,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "cave",
+      "impact": 1,
+      "label": "Extérieur",
+    },
+    {
+      "detail": "5 prestations premium",
+      "impact": 4,
+      "label": "Prestations",
+    },
+    {
+      "detail": "Étage 3",
+      "impact": 1,
+      "label": "Étage & exposition",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 73,
+  "prixBas": 614000,
+  "prixEstime": 654000,
+  "prixHaut": 694000,
+  "prixM2": 6671,
+  "prixM2Marche": 5490,
+  "recommandations": [
+    {
+      "description": "Diagnostics à jour, factures de travaux, taxe foncière : un dossier complet rassure les acheteurs.",
+      "title": "Préparer un dossier de vente complet",
+    },
+  ],
+  "scoreAttractivite": 85,
+  "surface": 98,
+  "tensionMarche": "forte",
+}
+`;
+
+exports[`estimation engine non-regression > appartement minimal (seuls les champs essentiels saisis) 1`] = `
+{
+  "delaiVente": "45–70 jours",
+  "deltaMarche": -8,
+  "facteurs": [
+    {
+      "detail": "Savigny-sur-Orge · 3 769 €/m² moyen",
+      "impact": -4,
+      "label": "Localisation",
+    },
+    {
+      "detail": "État moyen",
+      "impact": -7,
+      "label": "État général",
+    },
+    {
+      "detail": "DPE E — passoire modérée",
+      "impact": -4,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "Aucun extérieur renseigné",
+      "impact": 0,
+      "label": "Extérieur",
+    },
+    {
+      "detail": "Standard",
+      "impact": 0,
+      "label": "Prestations",
+    },
+    {
+      "detail": "Étage ?",
+      "impact": -2,
+      "label": "Étage & exposition",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 64,
+  "prixBas": 183000,
+  "prixEstime": 201000,
+  "prixHaut": 219000,
+  "prixM2": 3463,
+  "prixM2Marche": 3769,
+  "recommandations": [
+    {
+      "description": "Passer d'un DPE E à un DPE C/D pourrait revaloriser votre bien.",
+      "title": "Améliorer la performance énergétique",
+      "uplift": "+5 à 10%",
+    },
+    {
+      "description": "Peinture, sols et cuisine refaits accélèrent fortement la vente.",
+      "title": "Rafraîchir avant mise en vente",
+      "uplift": "+3 à 7%",
+    },
+    {
+      "description": "Soignez la luminosité et le home staging pour compenser l'absence d'extérieur.",
+      "title": "Mettre en valeur les atouts manquants",
+    },
+  ],
+  "scoreAttractivite": 28,
+  "surface": 58,
+  "tensionMarche": "moderee",
+}
+`;
+
+exports[`estimation engine non-regression > appartement studio Paris 11e, dernier étage sans ascenseur, DPE G 1`] = `
+{
+  "delaiVente": "30–50 jours",
+  "deltaMarche": -12,
+  "facteurs": [
+    {
+      "detail": "Paris · 10 077 €/m² moyen",
+      "impact": -6,
+      "label": "Localisation",
+    },
+    {
+      "detail": "État moyen",
+      "impact": -7,
+      "label": "État général",
+    },
+    {
+      "detail": "DPE G — passoire énergétique",
+      "impact": -13,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "Aucun extérieur renseigné",
+      "impact": 0,
+      "label": "Extérieur",
+    },
+    {
+      "detail": "Standard",
+      "impact": 0,
+      "label": "Prestations",
+    },
+    {
+      "detail": "Dernier étage",
+      "impact": 3,
+      "label": "Étage & exposition",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 55,
+  "prixBas": 158000,
+  "prixEstime": 168000,
+  "prixHaut": 178000,
+  "prixM2": 8818,
+  "prixM2Marche": 10077,
+  "recommandations": [
+    {
+      "description": "Passer d'un DPE G à un DPE C/D pourrait revaloriser votre bien.",
+      "title": "Améliorer la performance énergétique",
+      "uplift": "+5 à 10%",
+    },
+    {
+      "description": "Peinture, sols et cuisine refaits accélèrent fortement la vente.",
+      "title": "Rafraîchir avant mise en vente",
+      "uplift": "+3 à 7%",
+    },
+    {
+      "description": "Soignez la luminosité et le home staging pour compenser l'absence d'extérieur.",
+      "title": "Mettre en valeur les atouts manquants",
+    },
+  ],
+  "scoreAttractivite": 14,
+  "surface": 19,
+  "tensionMarche": "forte",
+}
+`;
+
+exports[`estimation engine non-regression > atypique château à restaurer en pleine campagne 1`] = `
+{
+  "delaiVente": "360–630 jours",
+  "deltaMarche": -100,
+  "facteurs": [
+    {
+      "detail": "Château · référence 789 €/m²",
+      "impact": -55,
+      "label": "Nature du bien",
+    },
+    {
+      "detail": "0 élément d'exception déclaré",
+      "impact": 0,
+      "label": "Caractères exceptionnels",
+    },
+    {
+      "detail": "600 000 € de travaux déduits directement",
+      "impact": -0,
+      "label": "État & travaux",
+    },
+    {
+      "detail": "Pleine campagne",
+      "impact": 4,
+      "label": "Cadre & environnement",
+    },
+    {
+      "detail": "Non renseignée",
+      "impact": 0,
+      "label": "Accessibilité",
+    },
+    {
+      "detail": "événementiel, création de gîtes",
+      "impact": 13,
+      "label": "Potentiel d'exploitation",
+    },
+    {
+      "detail": "Aucune déclarée",
+      "impact": -0,
+      "label": "Contraintes",
+    },
+    {
+      "detail": "DPE G — passoire énergétique",
+      "impact": -6,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "Au-delà de 200 m², chaque mètre carré supplémentaire se valorise moins : il coûte à entretenir sans élargir la clientèle",
+      "impact": -37,
+      "label": "Effet de surface",
+    },
+  ],
+  "fiabilite": "faible",
+  "fiabiliteScore": 50,
+  "prixBas": 0,
+  "prixEstime": 0,
+  "prixHaut": 0,
+  "prixM2": 0,
+  "prixM2Marche": 789,
+  "recommandations": [
+    {
+      "description": "Sur ce type de bien, la vente se joue sur l'émotion et une clientèle éloignée. Photos, drone et visite virtuelle ne sont pas un supplément, ce sont l'outil de vente principal.",
+      "title": "Faire réaliser un reportage photo professionnel",
+      "uplift": "+3 à 8%",
+    },
+    {
+      "description": "Plans, historique du bien, factures de travaux, diagnostics, arrêté de classement : sur un bien d'exception, le dossier fait partie du produit.",
+      "title": "Constituer le dossier historique et technique",
+    },
+  ],
+  "scoreAttractivite": 63,
+  "surface": 650,
+  "tensionMarche": "faible",
+}
+`;
+
+exports[`estimation engine non-regression > atypique loft d'architecte Montreuil 1`] = `
+{
+  "delaiVente": "90–180 jours",
+  "deltaMarche": 12,
+  "facteurs": [
+    {
+      "detail": "Loft · référence 7 181 €/m²",
+      "impact": 15,
+      "label": "Nature du bien",
+    },
+    {
+      "detail": "2 éléments d'exception déclarés",
+      "impact": 1,
+      "label": "Caractères exceptionnels",
+    },
+    {
+      "detail": "Aucun poste majeur à reprendre",
+      "impact": -0,
+      "label": "État & travaux",
+    },
+    {
+      "detail": "Centre-ville",
+      "impact": 10,
+      "label": "Cadre & environnement",
+    },
+    {
+      "detail": "Non renseignée",
+      "impact": 0,
+      "label": "Accessibilité",
+    },
+    {
+      "detail": "Usage résidentiel seul",
+      "impact": 0,
+      "label": "Potentiel d'exploitation",
+    },
+    {
+      "detail": "Aucune déclarée",
+      "impact": -0,
+      "label": "Contraintes",
+    },
+    {
+      "detail": "DPE C — correct",
+      "impact": 0,
+      "label": "Performance énergétique",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 63,
+  "prixBas": 1110000,
+  "prixEstime": 1288000,
+  "prixHaut": 1466000,
+  "prixM2": 8050,
+  "prixM2Marche": 7181,
+  "recommandations": [
+    {
+      "description": "Gîtes, chambres d'hôtes, événementiel : un bien capable de générer des revenus s'adresse à une clientèle bien plus large qu'une simple résidence secondaire.",
+      "title": "Faire étudier le potentiel d'exploitation",
+      "uplift": "+8 à 15%",
+    },
+    {
+      "description": "Sur ce type de bien, la vente se joue sur l'émotion et une clientèle éloignée. Photos, drone et visite virtuelle ne sont pas un supplément, ce sont l'outil de vente principal.",
+      "title": "Faire réaliser un reportage photo professionnel",
+      "uplift": "+3 à 8%",
+    },
+    {
+      "description": "Plans, historique du bien, factures de travaux, diagnostics, arrêté de classement : sur un bien d'exception, le dossier fait partie du produit.",
+      "title": "Constituer le dossier historique et technique",
+    },
+  ],
+  "scoreAttractivite": 52,
+  "surface": 160,
+  "tensionMarche": "forte",
+}
+`;
+
+exports[`estimation engine non-regression > atypique moulin avec revenus de gîte 1`] = `
+{
+  "delaiVente": "144–288 jours",
+  "deltaMarche": -4,
+  "facteurs": [
+    {
+      "detail": "Moulin · référence 2 188 €/m²",
+      "impact": -30,
+      "label": "Nature du bien",
+    },
+    {
+      "detail": "0 élément d'exception déclaré",
+      "impact": 0,
+      "label": "Caractères exceptionnels",
+    },
+    {
+      "detail": "Aucun poste majeur à reprendre",
+      "impact": -0,
+      "label": "État & travaux",
+    },
+    {
+      "detail": "Village",
+      "impact": 2,
+      "label": "Cadre & environnement",
+    },
+    {
+      "detail": "Non renseignée",
+      "impact": 0,
+      "label": "Accessibilité",
+    },
+    {
+      "detail": "chambres d'hôtes",
+      "impact": 5,
+      "label": "Potentiel d'exploitation",
+    },
+    {
+      "detail": "Aucune déclarée",
+      "impact": -0,
+      "label": "Contraintes",
+    },
+    {
+      "detail": "DPE E — passoire modérée",
+      "impact": -2,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "Au-delà de 200 m², chaque mètre carré supplémentaire se valorise moins : il coûte à entretenir sans élargir la clientèle",
+      "impact": -2,
+      "label": "Effet de surface",
+    },
+    {
+      "detail": "18 000 € de revenus − 6 000 € de coûts = 12 000 € d'excédent annuel — le bien s'autofinance, ce qui élargit nettement la clientèle",
+      "impact": 0,
+      "label": "Exploitation en place",
+    },
+  ],
+  "fiabilite": "faible",
+  "fiabiliteScore": 50,
+  "prixBas": 344000,
+  "prixEstime": 443000,
+  "prixHaut": 542000,
+  "prixM2": 2110,
+  "prixM2Marche": 2188,
+  "recommandations": [
+    {
+      "description": "Sur ce type de bien, la vente se joue sur l'émotion et une clientèle éloignée. Photos, drone et visite virtuelle ne sont pas un supplément, ce sont l'outil de vente principal.",
+      "title": "Faire réaliser un reportage photo professionnel",
+      "uplift": "+3 à 8%",
+    },
+    {
+      "description": "Plans, historique du bien, factures de travaux, diagnostics, arrêté de classement : sur un bien d'exception, le dossier fait partie du produit.",
+      "title": "Constituer le dossier historique et technique",
+    },
+  ],
+  "scoreAttractivite": 63,
+  "surface": 210,
+  "tensionMarche": "faible",
+}
+`;
+
+exports[`estimation engine non-regression > immeuble de rapport 4 lots occupés Savigny 1`] = `
+{
+  "delaiVente": "120–210 jours",
+  "deltaMarche": -46,
+  "facteurs": [
+    {
+      "detail": "30 720 € de loyers − 7 000 € de charges = 23 720 € nets, capitalisés à 5.60 %",
+      "impact": 0,
+      "label": "Rendement locatif",
+    },
+    {
+      "detail": "3/4 lots loués — 75 % d'occupation · 4 360 € de loyers annuels à récupérer",
+      "impact": -2,
+      "label": "Occupation",
+    },
+    {
+      "detail": "Aucun poste majeur à reprendre",
+      "impact": -0,
+      "label": "État technique",
+    },
+    {
+      "detail": "Aucun potentiel déclaré",
+      "impact": 0,
+      "label": "Potentiel de développement",
+    },
+    {
+      "detail": "Un immeuble entier se négocie sous la somme de ses lots · valeur à la découpe estimée 791 000 €",
+      "impact": -22,
+      "label": "Vente en bloc",
+    },
+  ],
+  "fiabilite": "elevee",
+  "fiabiliteScore": 88,
+  "prixBas": 444000,
+  "prixEstime": 487000,
+  "prixHaut": 530000,
+  "prixM2": 2029,
+  "prixM2Marche": 3769,
+  "recommandations": [
+    {
+      "description": "Les lots libres représentent 4 360 € de loyers annuels. Un immeuble plein se vend sur un rendement constaté, pas sur une promesse.",
+      "title": "Relouer les lots vacants avant la vente",
+      "uplift": "+51 000 € environ",
+    },
+    {
+      "description": "Surélévation, division, combles : un potentiel documenté élargit la clientèle aux marchands de biens et fait monter les offres.",
+      "title": "Faire étudier le potentiel du PLU",
+      "uplift": "+5 à 15%",
+    },
+    {
+      "description": "Baux, quittances, taxe foncière, charges détaillées, DPE de chaque lot et diagnostics communs : c'est ce qu'un acquéreur demandera avant toute offre.",
+      "title": "Préparer le dossier investisseur",
+    },
+  ],
+  "scoreAttractivite": 47,
+  "surface": 240,
+  "tensionMarche": "moderee",
+}
+`;
+
+exports[`estimation engine non-regression > immeuble mixte commerce + logements avec DVF 1`] = `
+{
+  "delaiVente": "75–150 jours",
+  "deltaMarche": -48,
+  "facteurs": [
+    {
+      "detail": "47 760 € de loyers − 7 000 € de charges = 40 760 € nets, capitalisés à 7.50 %",
+      "impact": 0,
+      "label": "Rendement locatif",
+    },
+    {
+      "detail": "5/5 lots loués — 100 % d'occupation",
+      "impact": 0,
+      "label": "Occupation",
+    },
+    {
+      "detail": "Aucun poste majeur à reprendre",
+      "impact": -0,
+      "label": "État technique",
+    },
+    {
+      "detail": "Aucun potentiel déclaré",
+      "impact": 0,
+      "label": "Potentiel de développement",
+    },
+    {
+      "detail": "Un immeuble entier se négocie sous la somme de ses lots · valeur à la découpe estimée 213 000 €",
+      "impact": -22,
+      "label": "Vente en bloc",
+    },
+    {
+      "detail": "Les loyers actuels valorisent l'immeuble 228 % au-dessus de sa valeur patrimoniale. Un acquéreur vérifiera qu'ils sont tenables dans la durée.",
+      "impact": 228,
+      "label": "Loyers en place vs marché",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 75,
+  "prixBas": 367000,
+  "prixEstime": 411000,
+  "prixHaut": 455000,
+  "prixM2": 1284,
+  "prixM2Marche": 2488,
+  "recommandations": [
+    {
+      "description": "Surélévation, division, combles : un potentiel documenté élargit la clientèle aux marchands de biens et fait monter les offres.",
+      "title": "Faire étudier le potentiel du PLU",
+      "uplift": "+5 à 15%",
+    },
+    {
+      "description": "Baux, quittances, taxe foncière, charges détaillées, DPE de chaque lot et diagnostics communs : c'est ce qu'un acquéreur demandera avant toute offre.",
+      "title": "Préparer le dossier investisseur",
+    },
+  ],
+  "scoreAttractivite": 55,
+  "surface": 320,
+  "tensionMarche": "faible",
+}
+`;
+
+exports[`estimation engine non-regression > immeuble sans lots saisis (cas dégradé) 1`] = `
+{
+  "delaiVente": "120–210 jours",
+  "deltaMarche": -22,
+  "facteurs": [
+    {
+      "detail": "Aucun revenu net déclaré — l'immeuble est valorisé sur sa seule valeur patrimoniale",
+      "impact": 0,
+      "label": "Rendement locatif",
+    },
+    {
+      "detail": "0/0 lots loués — 0 % d'occupation",
+      "impact": 0,
+      "label": "Occupation",
+    },
+    {
+      "detail": "Aucun poste majeur à reprendre",
+      "impact": -0,
+      "label": "État technique",
+    },
+    {
+      "detail": "Aucun potentiel déclaré",
+      "impact": 0,
+      "label": "Potentiel de développement",
+    },
+    {
+      "detail": "Un immeuble entier se négocie sous la somme de ses lots · valeur à la découpe estimée 609 000 €",
+      "impact": -22,
+      "label": "Vente en bloc",
+    },
+  ],
+  "fiabilite": "faible",
+  "fiabiliteScore": 38,
+  "prixBas": 381000,
+  "prixEstime": 475000,
+  "prixHaut": 569000,
+  "prixM2": 2639,
+  "prixM2Marche": 3385,
+  "recommandations": [
+    {
+      "description": "Surélévation, division, combles : un potentiel documenté élargit la clientèle aux marchands de biens et fait monter les offres.",
+      "title": "Faire étudier le potentiel du PLU",
+      "uplift": "+5 à 15%",
+    },
+    {
+      "description": "Baux, quittances, taxe foncière, charges détaillées, DPE de chaque lot et diagnostics communs : c'est ce qu'un acquéreur demandera avant toute offre.",
+      "title": "Préparer le dossier investisseur",
+    },
+  ],
+  "scoreAttractivite": 22,
+  "surface": 180,
+  "tensionMarche": "moderee",
+}
+`;
+
+exports[`estimation engine non-regression > local commercial boutique rue très commerçante, libre 1`] = `
+{
+  "delaiVente": "60–120 jours",
+  "deltaMarche": 10,
+  "facteurs": [
+    {
+      "detail": "Rue très commerçante · 4 143 €/m² de référence",
+      "impact": 30,
+      "label": "Emplacement commercial",
+    },
+    {
+      "detail": "Boutique",
+      "impact": 0,
+      "label": "Destination",
+    },
+    {
+      "detail": "local d'angle, vitrine de 7 m",
+      "impact": 16,
+      "label": "Configuration & vitrine",
+    },
+    {
+      "detail": "Visibilité excellent · flux piéton bon",
+      "impact": 8,
+      "label": "Flux & visibilité",
+    },
+    {
+      "detail": "Bon état",
+      "impact": 0,
+      "label": "État & équipements",
+    },
+    {
+      "detail": "DPE non renseigné",
+      "impact": -1,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "Aucun atout déclaré",
+      "impact": 0,
+      "label": "Potentiel",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 75,
+  "prixBas": 319000,
+  "prixEstime": 386000,
+  "prixHaut": 453000,
+  "prixM2": 4541,
+  "prixM2Marche": 4143,
+  "recommandations": [
+    {
+      "description": "Un local occupé par un locataire solide se vend à un investisseur, sur la base du rendement — une clientèle plus large et plus rapide qu'un local vide.",
+      "title": "Louer avant de vendre",
+      "uplift": "+5 à 15%",
+    },
+    {
+      "description": "L'accessibilité est obligatoire pour tout ERP. Sans elle, l'acheteur déduit le coût des travaux de son offre.",
+      "title": "Mettre le local aux normes PMR",
+      "uplift": "+3 à 5%",
+    },
+    {
+      "description": "Une extraction possible ouvre le local à la restauration, de loin la demande la plus forte du marché commercial.",
+      "title": "Faire vérifier la faisabilité d'une extraction",
+      "uplift": "+5 à 10%",
+    },
+  ],
+  "scoreAttractivite": 82,
+  "surface": 85,
+  "tensionMarche": "faible",
+}
+`;
+
+exports[`estimation engine non-regression > local commercial bureau en rue secondaire, sans DVF 1`] = `
+{
+  "delaiVente": "120–210 jours",
+  "deltaMarche": -20,
+  "facteurs": [
+    {
+      "detail": "Rue secondaire · 2 452 €/m² de référence",
+      "impact": -30,
+      "label": "Emplacement commercial",
+    },
+    {
+      "detail": "Bureau",
+      "impact": -10,
+      "label": "Destination",
+    },
+    {
+      "detail": "Configuration standard",
+      "impact": 0,
+      "label": "Configuration & vitrine",
+    },
+    {
+      "detail": "Visibilité faible · flux piéton faible",
+      "impact": -10,
+      "label": "Flux & visibilité",
+    },
+    {
+      "detail": "Bon état",
+      "impact": 0,
+      "label": "État & équipements",
+    },
+    {
+      "detail": "DPE non renseigné",
+      "impact": -1,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "Aucun atout déclaré",
+      "impact": 0,
+      "label": "Potentiel",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 75,
+  "prixBas": 200000,
+  "prixEstime": 235000,
+  "prixHaut": 270000,
+  "prixM2": 1958,
+  "prixM2Marche": 2452,
+  "recommandations": [
+    {
+      "description": "Un local occupé par un locataire solide se vend à un investisseur, sur la base du rendement — une clientèle plus large et plus rapide qu'un local vide.",
+      "title": "Louer avant de vendre",
+      "uplift": "+5 à 15%",
+    },
+    {
+      "description": "L'accessibilité est obligatoire pour tout ERP. Sans elle, l'acheteur déduit le coût des travaux de son offre.",
+      "title": "Mettre le local aux normes PMR",
+      "uplift": "+3 à 5%",
+    },
+    {
+      "description": "Une extraction possible ouvre le local à la restauration, de loin la demande la plus forte du marché commercial.",
+      "title": "Faire vérifier la faisabilité d'une extraction",
+      "uplift": "+5 à 10%",
+    },
+  ],
+  "scoreAttractivite": 40,
+  "surface": 120,
+  "tensionMarche": "forte",
+}
+`;
+
+exports[`estimation engine non-regression > local commercial restaurant occupé, bail en cours 1`] = `
+{
+  "delaiVente": "70–120 jours",
+  "deltaMarche": -12,
+  "facteurs": [
+    {
+      "detail": "24 000 € de loyer annuel capitalisés à 7.0 % — soit 311 000 € par la méthode du rendement",
+      "impact": 0,
+      "label": "Rendement locatif",
+    },
+    {
+      "detail": "Rue passante · 2 830 €/m² de référence",
+      "impact": -5,
+      "label": "Emplacement commercial",
+    },
+    {
+      "detail": "Restaurant",
+      "impact": 2,
+      "label": "Destination",
+    },
+    {
+      "detail": "Configuration standard",
+      "impact": 0,
+      "label": "Configuration & vitrine",
+    },
+    {
+      "detail": "Visibilité bon · flux piéton moyen",
+      "impact": 2,
+      "label": "Flux & visibilité",
+    },
+    {
+      "detail": "Bon état",
+      "impact": 7,
+      "label": "État & équipements",
+    },
+    {
+      "detail": "DPE non renseigné",
+      "impact": -1,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "Aucun atout déclaré",
+      "impact": 0,
+      "label": "Potentiel",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 75,
+  "prixBas": 304000,
+  "prixEstime": 349000,
+  "prixHaut": 394000,
+  "prixM2": 2493,
+  "prixM2Marche": 2830,
+  "recommandations": [
+    {
+      "description": "Bail, quittances, taxe foncière, diagnostics et attestation ERP : un dossier complet est décisif pour un acquéreur investisseur.",
+      "title": "Réunir le dossier commercial",
+    },
+  ],
+  "scoreAttractivite": 70,
+  "surface": 140,
+  "tensionMarche": "moderee",
+}
+`;
+
+exports[`estimation engine non-regression > maison 5 pièces Épinay-sur-Orge, terrain 520 m², DPE E 1`] = `
+{
+  "delaiVente": "45–70 jours",
+  "deltaMarche": 2,
+  "facteurs": [
+    {
+      "detail": "Épinay-sur-Orge · 3 627 €/m² moyen",
+      "impact": 1,
+      "label": "Localisation",
+    },
+    {
+      "detail": "Bon état",
+      "impact": 0,
+      "label": "État général",
+    },
+    {
+      "detail": "DPE E — passoire modérée",
+      "impact": -4,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "jardin 380 m², terrasse 25 m²",
+      "impact": 6,
+      "label": "Extérieur",
+    },
+    {
+      "detail": "Standard",
+      "impact": 0,
+      "label": "Prestations",
+    },
+  ],
+  "fiabilite": "elevee",
+  "fiabiliteScore": 91,
+  "prixBas": 388000,
+  "prixEstime": 415000,
+  "prixHaut": 442000,
+  "prixM2": 3702,
+  "prixM2Marche": 3627,
+  "recommandations": [
+    {
+      "description": "Passer d'un DPE E à un DPE C/D pourrait revaloriser votre bien.",
+      "title": "Améliorer la performance énergétique",
+      "uplift": "+5 à 10%",
+    },
+    {
+      "description": "Diagnostics à jour, factures de travaux, taxe foncière : un dossier complet rassure les acheteurs.",
+      "title": "Préparer un dossier de vente complet",
+    },
+  ],
+  "scoreAttractivite": 55,
+  "surface": 112,
+  "tensionMarche": "moderee",
+}
+`;
+
+exports[`estimation engine non-regression > maison Haute-Savoie, vue montagne, DPE B 1`] = `
+{
+  "delaiVente": "30–50 jours",
+  "deltaMarche": 23,
+  "facteurs": [
+    {
+      "detail": "Chamonix-Mont-Blanc · 10 685 €/m² moyen",
+      "impact": 12,
+      "label": "Localisation",
+    },
+    {
+      "detail": "Excellent état",
+      "impact": 8,
+      "label": "État général",
+    },
+    {
+      "detail": "DPE B — performant",
+      "impact": 4,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "jardin, terrasse",
+      "impact": 7,
+      "label": "Extérieur",
+    },
+    {
+      "detail": "2 prestations premium",
+      "impact": 2,
+      "label": "Prestations",
+    },
+    {
+      "detail": "700 m² de terrain · 1 000 € ajoutés",
+      "impact": 0,
+      "label": "Terrain",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 73,
+  "prixBas": 1591000,
+  "prixEstime": 1709000,
+  "prixHaut": 1827000,
+  "prixM2": 13137,
+  "prixM2Marche": 10685,
+  "recommandations": [
+    {
+      "description": "Diagnostics à jour, factures de travaux, taxe foncière : un dossier complet rassure les acheteurs.",
+      "title": "Préparer un dossier de vente complet",
+    },
+  ],
+  "scoreAttractivite": 94,
+  "surface": 130,
+  "tensionMarche": "forte",
+}
+`;
+
+exports[`estimation engine non-regression > maison Sainte-Geneviève-des-Bois, grande parcelle 2 400 m², piscine 1`] = `
+{
+  "delaiVente": "45–70 jours",
+  "deltaMarche": 25,
+  "facteurs": [
+    {
+      "detail": "Sainte-Geneviève-des-Bois · 3 410 €/m² moyen",
+      "impact": 13,
+      "label": "Localisation",
+    },
+    {
+      "detail": "Excellent état",
+      "impact": 8,
+      "label": "État général",
+    },
+    {
+      "detail": "DPE C — correct",
+      "impact": 1,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "jardin, piscine 40 m², dépendance 35 m²",
+      "impact": 12,
+      "label": "Extérieur",
+    },
+    {
+      "detail": "3 prestations premium",
+      "impact": 3,
+      "label": "Prestations",
+    },
+    {
+      "detail": "2 400 m² de terrain · 30 000 € ajoutés",
+      "impact": 5,
+      "label": "Terrain",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 73,
+  "prixBas": 600000,
+  "prixEstime": 650000,
+  "prixHaut": 700000,
+  "prixM2": 4276,
+  "prixM2Marche": 3410,
+  "recommandations": [
+    {
+      "description": "Diagnostics à jour, factures de travaux, taxe foncière : un dossier complet rassure les acheteurs.",
+      "title": "Préparer un dossier de vente complet",
+    },
+  ],
+  "scoreAttractivite": 100,
+  "surface": 145,
+  "tensionMarche": "moderee",
+}
+`;
+
+exports[`estimation engine non-regression > maison de bourg Creuse, petite parcelle, à rénover, DPE inconnu 1`] = `
+{
+  "delaiVente": "80–120 jours",
+  "deltaMarche": -28,
+  "facteurs": [
+    {
+      "detail": "Guéret · 1 065 €/m² moyen",
+      "impact": -14,
+      "label": "Localisation",
+    },
+    {
+      "detail": "À rénover",
+      "impact": -18,
+      "label": "État général",
+    },
+    {
+      "detail": "DPE non renseigné",
+      "impact": -2,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "Aucun extérieur renseigné",
+      "impact": -10,
+      "label": "Extérieur",
+    },
+    {
+      "detail": "Standard",
+      "impact": 0,
+      "label": "Prestations",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 73,
+  "prixBas": 58000,
+  "prixEstime": 65000,
+  "prixHaut": 72000,
+  "prixM2": 770,
+  "prixM2Marche": 1065,
+  "recommandations": [
+    {
+      "description": "Peinture, sols et cuisine refaits accélèrent fortement la vente.",
+      "title": "Rafraîchir avant mise en vente",
+      "uplift": "+3 à 7%",
+    },
+    {
+      "description": "Diagnostics à jour, factures de travaux, taxe foncière : un dossier complet rassure les acheteurs.",
+      "title": "Préparer un dossier de vente complet",
+    },
+  ],
+  "scoreAttractivite": 0,
+  "surface": 85,
+  "tensionMarche": "faible",
+}
+`;
+
+exports[`estimation engine non-regression > maison Épinay-sur-Orge, même bien avec DVF 3 600 €/m² 1`] = `
+{
+  "delaiVente": "45–70 jours",
+  "deltaMarche": 2,
+  "facteurs": [
+    {
+      "detail": "Épinay-sur-Orge · 3 608 €/m² moyen",
+      "impact": 1,
+      "label": "Localisation",
+    },
+    {
+      "detail": "Bon état",
+      "impact": 0,
+      "label": "État général",
+    },
+    {
+      "detail": "DPE E — passoire modérée",
+      "impact": -4,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "jardin 380 m², terrasse 25 m²",
+      "impact": 6,
+      "label": "Extérieur",
+    },
+    {
+      "detail": "Standard",
+      "impact": 0,
+      "label": "Prestations",
+    },
+  ],
+  "fiabilite": "elevee",
+  "fiabiliteScore": 91,
+  "prixBas": 391000,
+  "prixEstime": 412000,
+  "prixHaut": 433000,
+  "prixM2": 3683,
+  "prixM2Marche": 3608,
+  "recommandations": [
+    {
+      "description": "Passer d'un DPE E à un DPE C/D pourrait revaloriser votre bien.",
+      "title": "Améliorer la performance énergétique",
+      "uplift": "+5 à 10%",
+    },
+    {
+      "description": "Diagnostics à jour, factures de travaux, taxe foncière : un dossier complet rassure les acheteurs.",
+      "title": "Préparer un dossier de vente complet",
+    },
+  ],
+  "scoreAttractivite": 55,
+  "surface": 112,
+  "tensionMarche": "moderee",
+}
+`;
+
+exports[`estimation engine non-regression > terrain constructibilité incertaine en hameau, contraintes 1`] = `
+{
+  "delaiVente": "90–150 jours",
+  "deltaMarche": -49,
+  "facteurs": [
+    {
+      "detail": "Terrain à bâtir",
+      "impact": 0,
+      "label": "Nature du terrain",
+    },
+    {
+      "detail": "Constructibilité à confirmer en mairie",
+      "impact": -15,
+      "label": "Constructibilité",
+    },
+    {
+      "detail": "5 réseaux à raccorder (eau potable, électricité, tout-à-l'égout, gaz, fibre) — 13 000 € déduits",
+      "impact": 0,
+      "label": "Viabilisation",
+    },
+    {
+      "detail": "campagne",
+      "impact": 2,
+      "label": "Terrain & vue",
+    },
+    {
+      "detail": "Hameau",
+      "impact": -15,
+      "label": "Situation",
+    },
+    {
+      "detail": "retrait-gonflement des argiles",
+      "impact": -5,
+      "label": "Contraintes",
+    },
+    {
+      "detail": "Aucune démarche engagée",
+      "impact": 0,
+      "label": "Potentiel foncier",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 63,
+  "prixBas": 195000,
+  "prixEstime": 236000,
+  "prixHaut": 277000,
+  "prixM2": 157,
+  "prixM2Marche": 309.6,
+  "recommandations": [
+    {
+      "description": "Il manque : eau potable, électricité, tout-à-l'égout, gaz, fibre. Un terrain viabilisé se vend plus vite et se négocie moins.",
+      "title": "Viabiliser avant la mise en vente",
+      "uplift": "+13 000 € environ",
+    },
+    {
+      "description": "Le CU est gratuit et s'obtient en mairie sous 1 à 2 mois. Sans lui, les acheteurs appliquent une décote de précaution.",
+      "title": "Demander un certificat d'urbanisme",
+      "uplift": "+10 à 15%",
+    },
+    {
+      "description": "Un bornage par géomètre lève l'incertitude sur les limites et évite les litiges — souvent exigé par l'acheteur.",
+      "title": "Faire borner le terrain",
+      "uplift": "+2 à 4%",
+    },
+  ],
+  "scoreAttractivite": 37,
+  "surface": 1500,
+  "tensionMarche": "faible",
+}
+`;
+
+exports[`estimation engine non-regression > terrain non constructible agricole 1`] = `
+{
+  "delaiVente": "120–240 jours",
+  "deltaMarche": -99,
+  "facteurs": [
+    {
+      "detail": "Terrain agricole",
+      "impact": -99,
+      "label": "Nature du terrain",
+    },
+    {
+      "detail": "Non constructible",
+      "impact": 0,
+      "label": "Constructibilité",
+    },
+    {
+      "detail": "Terrain entièrement viabilisé",
+      "impact": 0,
+      "label": "Viabilisation",
+    },
+    {
+      "detail": "Non renseigné",
+      "impact": 0,
+      "label": "Terrain & vue",
+    },
+    {
+      "detail": "Zone isolée",
+      "impact": -30,
+      "label": "Situation",
+    },
+    {
+      "detail": "Aucune déclarée",
+      "impact": 0,
+      "label": "Contraintes",
+    },
+    {
+      "detail": "Aucune démarche engagée",
+      "impact": 0,
+      "label": "Potentiel foncier",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 63,
+  "prixBas": 17000,
+  "prixEstime": 21000,
+  "prixHaut": 25000,
+  "prixM2": 2.6,
+  "prixM2Marche": 309.6,
+  "recommandations": [
+    {
+      "description": "Un bornage par géomètre lève l'incertitude sur les limites et évite les litiges — souvent exigé par l'acheteur.",
+      "title": "Faire borner le terrain",
+      "uplift": "+2 à 4%",
+    },
+    {
+      "description": "Plan cadastral, CU, étude de sol et relevé de bornage : un dossier complet rassure et accélère la vente.",
+      "title": "Réunir le dossier foncier",
+    },
+  ],
+  "scoreAttractivite": 40,
+  "surface": 8000,
+  "tensionMarche": "faible",
+}
+`;
+
+exports[`estimation engine non-regression > terrain à bâtir viabilisé Longjumeau, constructible 1`] = `
+{
+  "delaiVente": "60–100 jours",
+  "deltaMarche": -1,
+  "facteurs": [
+    {
+      "detail": "Terrain à bâtir",
+      "impact": 0,
+      "label": "Nature du terrain",
+    },
+    {
+      "detail": "Constructible",
+      "impact": 0,
+      "label": "Constructibilité",
+    },
+    {
+      "detail": "2 réseaux à raccorder (gaz, fibre) — 2 000 € déduits",
+      "impact": 0,
+      "label": "Viabilisation",
+    },
+    {
+      "detail": "Plat",
+      "impact": 0,
+      "label": "Terrain & vue",
+    },
+    {
+      "detail": "Lotissement",
+      "impact": 0,
+      "label": "Situation",
+    },
+    {
+      "detail": "Aucune déclarée",
+      "impact": 0,
+      "label": "Contraintes",
+    },
+    {
+      "detail": "Aucune démarche engagée",
+      "impact": 0,
+      "label": "Potentiel foncier",
+    },
+  ],
+  "fiabilite": "moyenne",
+  "fiabiliteScore": 75,
+  "prixBas": 154000,
+  "prixEstime": 184000,
+  "prixHaut": 214000,
+  "prixM2": 307,
+  "prixM2Marche": 309.6,
+  "recommandations": [
+    {
+      "description": "Il manque : gaz, fibre. Un terrain viabilisé se vend plus vite et se négocie moins.",
+      "title": "Viabiliser avant la mise en vente",
+      "uplift": "+2 000 € environ",
+    },
+    {
+      "description": "Un bornage par géomètre lève l'incertitude sur les limites et évite les litiges — souvent exigé par l'acheteur.",
+      "title": "Faire borner le terrain",
+      "uplift": "+2 à 4%",
+    },
+    {
+      "description": "Plan cadastral, CU, étude de sol et relevé de bornage : un dossier complet rassure et accélère la vente.",
+      "title": "Réunir le dossier foncier",
+    },
+  ],
+  "scoreAttractivite": 74,
+  "surface": 600,
+  "tensionMarche": "moderee",
+}
+`;
+
+exports[`estimation engine non-regression > type non renseigné (défaut maison, surface absente) 1`] = `
+{
+  "delaiVente": "45–70 jours",
+  "deltaMarche": -2,
+  "facteurs": [
+    {
+      "detail": "Épinay-sur-Orge · 3 625 €/m² moyen",
+      "impact": -1,
+      "label": "Localisation",
+    },
+    {
+      "detail": "Bon état",
+      "impact": 0,
+      "label": "État général",
+    },
+    {
+      "detail": "DPE non renseigné",
+      "impact": -2,
+      "label": "Performance énergétique",
+    },
+    {
+      "detail": "Aucun extérieur renseigné",
+      "impact": 0,
+      "label": "Extérieur",
+    },
+    {
+      "detail": "Standard",
+      "impact": 0,
+      "label": "Prestations",
+    },
+  ],
+  "fiabilite": "faible",
+  "fiabiliteScore": 18,
+  "prixBas": 183000,
+  "prixEstime": 213000,
+  "prixHaut": 243000,
+  "prixM2": 3553,
+  "prixM2Marche": 3625,
+  "recommandations": [
+    {
+      "description": "Diagnostics à jour, factures de travaux, taxe foncière : un dossier complet rassure les acheteurs.",
+      "title": "Préparer un dossier de vente complet",
+    },
+  ],
+  "scoreAttractivite": 46,
+  "surface": 60,
+  "tensionMarche": "moderee",
+}
+`;
