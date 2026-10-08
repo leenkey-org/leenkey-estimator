@@ -48,8 +48,17 @@ test("l'estimateur affiche sa première étape", async ({ page }) => {
   await expect(page.getByText("Quel type de bien souhaitez-vous vendre ?")).toBeVisible();
 });
 
+test("GA4 et GTM ne chargent que en production", async ({ page }) => {
+  await page.goto("/");
+  const hasGtag = await page.evaluate(
+    () => typeof (window as { gtag?: unknown }).gtag === "function",
+  );
+  expect(hasGtag).toBe(process.env.NEXT_PUBLIC_ENV === "production");
+});
+
 test("GA4 reçoit un page_view à chaque navigation", async ({ page, isMobile }) => {
   test.skip(isMobile, "lien de navigation dans le menu desktop");
+  test.skip(process.env.NEXT_PUBLIC_ENV !== "production", "GA4 actif en production uniquement");
   await page.goto("/");
   await page.waitForFunction(() => Array.isArray((window as { dataLayer?: unknown[] }).dataLayer));
   await page.locator('nav a[href="/tarifs"]').first().click();

@@ -33,7 +33,23 @@ export default tseslint.config(
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
       "@typescript-eslint/no-unused-vars": "off",
+      // Service role client: only webhooks, crons and admin actions (CLAUDE.md section 14).
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@/lib/supabase/admin",
+              message: "Service role: webhooks, cron and leenkey/admin/actions.ts only.",
+            },
+          ],
+        },
+      ],
     },
+  },
+  {
+    files: ["app/api/webhooks/**", "app/api/cron/**", "leenkey/admin/actions.ts"],
+    rules: { "no-restricted-imports": "off" },
   },
   eslintPluginPrettier,
 );

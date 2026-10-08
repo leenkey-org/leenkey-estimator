@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-08 · L1-02 · Environnements et préprod
+- Ajouté : `lib/env.ts` (`NEXT_PUBLIC_ENV`), protection HTTP Basic de la préprod dans `middleware.ts` (comparaison en temps constant, webhooks et crons exemptés), `X-Robots-Tag: noindex, nofollow` et `robots.ts` fermé hors production, bandeau « Environnement de test », clients Supabase server, client et admin (`server-only`), règle ESLint qui limite le client service role aux webhooks, crons et actions admin.
+- Modifié : GA4 et GTM chargés uniquement en production ; fonctions Vercel à Paris (`cdg1`) ; CI construite et testée en mode production.
+
 ### 2026-10-08 · L1-01 · PR #4 · Projet Next.js 15 et reprise de la V1
 - Ajouté : tests de non-régression du moteur d'estimation (24 cas, tous types de bien, résultats V1 figés avant le portage) ; Vitest, Playwright (21 parcours : pages, formulaire de contact, estimateur, page_view GA4), CI GitHub Actions (lint, typecheck, test, build, E2E).
 - Modifié : passage de Vite + TanStack Router à Next.js 15 (App Router). Estimateur et moteur dans `leenkey/estimator/` sans changement de logique ; pages V1 dans `app/(public)/` ; 4 endpoints en route handlers aux mêmes chemins ; GA4, GTM (noscript compris), Vercel Analytics, en-tête no-cache sur `/pages/*`, redirections leenkey.com et www.

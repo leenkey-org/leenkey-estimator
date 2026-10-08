@@ -1879,7 +1879,7 @@ Voir `CLAUDE.md` section 13. Détail :
 | `/api/cron/send-notification-emails` | `*/5 * * * *` | Envoi des emails de notification en attente (regroupement) |
 | `/api/cron/anonymize-deleted` | `0 2 * * 0` | Anonymisation des comptes supprimés depuis plus de 30 jours |
 
-Tous protégés par `CRON_SECRET`, idempotents, journalisés.
+Tous protégés par `CRON_SECRET`, idempotents, journalisés. **Déclenchement** (décision du 2026-10-08) : par Supabase `pg_cron` + `pg_net` (requête HTTPS vers la route avec l'en-tête `Authorization: Bearer <CRON_SECRET>`), pas par Vercel Cron, tant que l'équipe Vercel est en plan Hobby. Le secret est stocké dans Supabase Vault.
 
 ---
 
