@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-08 · L1-01 · Projet Next.js 15 et reprise de la V1
+### 2026-10-08 · L1-01 · PR #4 · Projet Next.js 15 et reprise de la V1
 - Ajouté : tests de non-régression du moteur d'estimation (24 cas, tous types de bien, résultats V1 figés avant le portage) ; Vitest, Playwright (21 parcours : pages, formulaire de contact, estimateur, page_view GA4), CI GitHub Actions (lint, typecheck, test, build, E2E).
 - Modifié : passage de Vite + TanStack Router à Next.js 15 (App Router). Estimateur et moteur dans `leenkey/estimator/` sans changement de logique ; pages V1 dans `app/(public)/` ; 4 endpoints en route handlers aux mêmes chemins ; GA4, GTM (noscript compris), Vercel Analytics, en-tête no-cache sur `/pages/*`, redirections leenkey.com et www.
 - Corrigé : modèle IA de l'analyse écrite (`claude-sonnet-5-5`, report du correctif Q22 de `main`).
