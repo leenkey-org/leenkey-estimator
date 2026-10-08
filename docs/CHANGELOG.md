@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-08 · L1-02 · Environnements et préprod
+### 2026-10-08 · L1-02 · PR #5 · Environnements et préprod
 - Ajouté : `lib/env.ts` (`NEXT_PUBLIC_ENV`), protection HTTP Basic de la préprod dans `middleware.ts` (comparaison en temps constant, webhooks et crons exemptés), `X-Robots-Tag: noindex, nofollow` et `robots.ts` fermé hors production, bandeau « Environnement de test », clients Supabase server, client et admin (`server-only`), règle ESLint qui limite le client service role aux webhooks, crons et actions admin.
 - Modifié : GA4 et GTM chargés uniquement en production ; fonctions Vercel à Paris (`cdg1`) ; CI construite et testée en mode production.
 

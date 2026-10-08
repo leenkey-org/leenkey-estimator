@@ -9,7 +9,7 @@ Rééquilibrage du 5 octobre : la semaine 5 passe de 10 à 8 tâches. L1-20 est 
 ## S1 · semaine du 12 oct. · Fondations et reprise de l'existant
 
 - [x] **L1-01** Tests de non-régression sur `estimation.ts` (≥ 20 cas réels) **avant tout déplacement**, puis projet Next.js 15 selon `CLAUDE.md` (ESLint, Prettier, Vitest, Playwright, CI), puis reprise de l’estimateur, des 4 endpoints, des pages marketing, d’Analytics et des redirections · PR : #4 · Testé en préprod : ☐
-- [x] **L1-02** Environnements : `NEXT_PUBLIC_ENV`, bandeau « Environnement de test », `noindex`, mot de passe de préprod dans `middleware.ts`, clients Supabase… · PR : #PR · Testé en préprod : ☐
+- [x] **L1-02** Environnements : `NEXT_PUBLIC_ENV`, bandeau « Environnement de test », `noindex`, mot de passe de préprod dans `middleware.ts`, clients Supabase… · PR : #5 · Testé en préprod : ☐
 - [ ] **L1-03** Migration enums + `profiles` + trigger d'inscription + `buyer_profiles` + RLS + tests · PR : · Testé en préprod : ☐
 - [ ] **L1-04** Migrations `properties`, `listings`, `photos`, `listing_views`, `favorites`, vue `public_listings`,… · PR : · Testé en préprod : ☐
 - [ ] **L1-05** Migrations `plans`, `subscriptions`, `stripe_events`, `sale_*`, `conversations`, `messages`, `reports`,… · PR : · Testé en préprod : ☐
