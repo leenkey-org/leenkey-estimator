@@ -2,7 +2,7 @@
 
 Ce fichier est lu automatiquement par Claude Code au début de chaque session. Il est la référence du projet : ce qui est écrit ici prime sur toute habitude ou convention par défaut. Le mettre à jour dès qu'une règle change.
 
-**Avant toute tâche, lire aussi `docs/SPEC-V2.md`**, et **`docs/DESIGN.md` avant toute tâche qui touche à l'interface** : la spécification fonctionnelle, technique et visuelle complète (modèle de données, écrans, direction artistique « Façade », assistant IA, plan de travail tâche par tâche). Ce fichier-ci donne les règles ; la spec dit quoi construire.
+**Avant toute tâche, lire aussi `docs/SPEC-V2.md`**, et **`docs/DESIGN.md` avant toute tâche qui touche à l'interface ou à l'UX (il fait foi sur la SPEC pour tout ce qui est UX)** : la spécification fonctionnelle, technique et visuelle complète (modèle de données, écrans, direction artistique « Façade », assistant IA, plan de travail tâche par tâche). Ce fichier-ci donne les règles ; la spec dit quoi construire.
 
 ---
 
@@ -386,7 +386,7 @@ Les textes fournis par Cédric qui ne respectent pas les règles de la section 1
 
 En cas de contradiction :
 - **Fonctionnel** : `docs/DECISIONS.md` (décisions datées) > `docs/SPEC-V2.md` > `CLAUDE.md`.
-- **Visuel** : `docs/DESIGN.md` > maquettes PNG > maquettes HTML.
+- **UX** (visuel, structure et ordre des écrans, composants, navigation, interactions, états, responsive) : `docs/DESIGN.md` > maquettes PNG > maquettes HTML > `docs/SPEC-V2.md`. Décision de Younes du 2026-10-08. La SPEC et `DECISIONS.md` gardent la main sur les règles métier, les données, les permissions, les textes réglementaires et les règles éditoriales de la section 16 (un libellé de DESIGN.md qui les enfreint est corrigé, pas recopié).
 - **Technique et sécurité** : `CLAUDE.md` l'emporte sur tout le reste.
 - **Périmètre contractuel** : `docs/cahier-des-charges.md` et `docs/plan-de-mise-en-oeuvre.md` servent uniquement à le vérifier ; ils ne décrivent pas ce qu'il faut construire. Pour la garantie, c'est le contrat signé qui fait foi (60 jours bugs majeurs, 30 jours anomalies mineures).
 
@@ -394,7 +394,7 @@ Signaler toute contradiction relevée, et l'inscrire dans `docs/DECISIONS.md`.
 
 ### Documents de suivi
 
-`docs/DESIGN.md` (référence visuelle, fait foi pour tout ce qui est visuel), `docs/PLANNING.md` (tâches à cocher), `docs/CHANGELOG.md`, `docs/RECETTE.md`, `docs/SECURITE.md`, `docs/BACKLOG-V3.md`, `docs/PROMPTS.md`, maquettes dans `docs/maquettes/png/`. Commandes : `/tache`, `/revue`, `/bug`, `/vendredi`, `/recette`.
+`docs/DESIGN.md` (référence UX et visuelle, fait foi pour tout ce qui est UX), `docs/PLANNING.md` (tâches à cocher), `docs/CHANGELOG.md`, `docs/RECETTE.md`, `docs/SECURITE.md`, `docs/BACKLOG-V3.md`, `docs/PROMPTS.md`, maquettes dans `docs/maquettes/png/`. Commandes : `/tache`, `/revue`, `/bug`, `/vendredi`, `/recette`.
 
 Quand une instruction de session contredit ce fichier, le signaler avant d'agir. Quand ce fichier est incomplet sur un point, proposer la règle et l'ajouter ici dans la même PR.
 

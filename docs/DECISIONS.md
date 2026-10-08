@@ -56,6 +56,7 @@ Journal des décisions client. Format : date · question · décision · qui. Le
 | 2026-10-07 | Mise en production | Livraison de la préprod validée le 18 décembre (déclenche les 20 %), bascule en production le lundi 4 janvier, à confirmer par Cédric. | Younes |
 | 2026-10-07 | Direction artistique | « Façade » remplace « Plan d'architecte » : photo d'abord, bleu Leenkey en aplats, neutres pierre, Archivo seule (titres élargis), angles 4 et 6 px, pas d'ombre sur les cartes, pas de majuscules espacées ni de monospace (SPEC-V2 section 6). Maquettes mises à jour. | Younes |
 | 2026-10-08 | Validation des maquettes | Cédric valide par écrit la direction graphique et les maquettes (présentation du 7 octobre) : « je valide complètement la direction graphique ». Toute modification de style ou de structure des écrans maquettés après cette date est une demande nouvelle (`BACKLOG-V3.md` ou chiffrage). | Cédric |
+| 2026-10-08 | Référence UX | Pour tout ce qui est UX (visuel, structure des écrans, composants, navigation, interactions, états, responsive), `docs/DESIGN.md` fait foi, devant les maquettes et la SPEC. La SPEC et DECISIONS restent la référence pour les règles métier, les données, les permissions, les textes réglementaires et les règles éditoriales. | Younes |
 
 ## Questions ouvertes (valeur provisoire utilisée en attendant)
 
