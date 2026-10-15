@@ -99,7 +99,7 @@ La V2 **conserve** l'estimateur (moteur inchangé, sous tests de non-régression
 | Lot 1 : socle | S1 à S5 | Reprise de l'existant en Next.js, comptes, fiche du bien, annonce, recherche, messagerie (acquéreurs, puis conseiller en fin de lot), dashboard vendeur avec moteur d'étapes, formules et droits, Stripe, assistant IA (vendeur + admin), back office. Les déclencheurs de montée en gamme (L2-09) et l'export RGPD (L2-10) sont livrés avec le lot 2 |
 | Lot 2 : qualification | S6 à S7 | Offre d'achat structurée (co-acquéreurs et SCI compris) avec synthèse automatique par gabarits, qualification acquéreur, assistant IA acquéreur |
 | Lot 3 : accompagnement | S8 à S9 | Visites sur invitation (créneaux ponctuels), dossier de vente et partage de documents, analyse IA des documents, alertes acheteur |
-| Mise en production | S10 | Recette, durcissement, livraison de la préprod validée le 18 décembre ; bascule en production le 4 janvier 2027 (à confirmer avec Cédric) |
+| Mise en production | S10 | Recette, durcissement, livraison de la préprod validée le 18 décembre. **Mise en ligne de la V2 avant le 30 novembre 2026** (décision du 2026-10-15, avant le retrait du modèle IA de la V1) en changeant la branche de production du projet Vercel de `leenkey.fr`, jamais par une fusion dans `main` ; les lots suivants sont mis en ligne après validation en préprod (P-05b) |
 
 ---
 
@@ -164,11 +164,11 @@ Déclarés dans `core/ai/models.ts`, jamais en dur ailleurs :
 ```ts
 export const MODELS = {
   fast: process.env.AI_MODEL_FAST ?? 'claude-sonnet-5-5',           // conversation, suggestions, pré-analyse
-  smart: process.env.AI_MODEL_SMART ?? 'claude-sonnet-5-5',         // analyse de documents
+  smart: process.env.AI_MODEL_SMART ?? 'claude-opus-5-5',           // analyse de documents, explication d'une offre, résumé du jour admin
 } as const;
 ```
 
-Identifiants vérifiés le 2026-10-05 sur la documentation Anthropic (platform.claude.com, « Models overview » et « Model deprecations »). Décision du 2026-10-08 : `claude-sonnet-5-5` (Claude Sonnet 5.5) pour les deux usages ; Claude Haiku 4.5 n'est pas utilisé (retrait possible à partir du 15 octobre 2026). `claude-sonnet-5` est un modèle « legacy » : ne pas l'utiliser. Vérifier la page des dépréciations avant la bascule (P-05b).
+Identifiants vérifiés le 2026-10-05 sur la documentation Anthropic (platform.claude.com, « Models overview » et « Model deprecations »), puis le 2026-10-15. Décision du 2026-10-15 (remplace celle du 2026-10-08) : **Claude Sonnet 5.5** (`claude-sonnet-5-5`, 2 $ / 10 $ par million de tokens) pour la conversation, les suggestions et la pré-analyse, où la vitesse compte ; **Claude Opus 5.5** (`claude-opus-5-5`, 4 $ / 20 $) pour les analyses à faible volume où une erreur coûte cher : documents du dossier de vente (L3-05), explication d'une offre à la demande (L2), résumé du jour admin (L1-30). Opus 5.5 réfléchit toujours (non désactivable) : régler l'effort explicitement (défaut `medium`). Claude Haiku 4.5 et `claude-sonnet-5` ne sont pas utilisés. Vérifier la page des dépréciations avant la mise en ligne (P-05b).
 
 Les identifiants sont surchargeables par variables d'environnement pour pouvoir changer de modèle sans déploiement de code.
 
@@ -481,8 +481,24 @@ create table subscriptions (             -- formule active d'un bien
   stripe_payment_intent_id text,
   stripe_promotion_code text,                     -- réservé : codes promo Stripe
   activated_at timestamptz not null default now(),
-  replaced_by uuid references subscriptions(id),  -- upgrade
-  refunded_at timestamptz
+  ends_at timestamptz,                            -- activated_at + 12 mois (trigger) ; à l'échéance, retour en Autonomie
+  replaced_by uuid references subscriptions(id),  -- upgrade : nouvel abonnement, les 12 mois repartent
+  refunded_at timestamptz,
+  -- Vente conforme (L1-40, décision du 2026-10-15)
+  plan_snapshot jsonb,                            -- fiche formule acceptée à la commande (nom, prix TTC, prestations, version des CGV)
+  early_start_requested_at timestamptz,           -- case « démarrage immédiat » cochée ; sinon prestations humaines à partir du 15e jour
+  withdrawal_requested_at timestamptz             -- bouton « Renoncer au contrat » (14 jours) ; remboursement par Cédric dans Stripe sous 14 jours
+);
+-- Formule en cours d'un bien : property_current_plan(property_id) = abonnement ni remplacé, ni remboursé, ni échu, sinon 'autonomie'.
+
+create table legal_acceptances (          -- acceptations datées et versionnées (L1-09 à l'inscription, L1-40 à la commande)
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references profiles(id) on delete cascade,
+  document text not null check (document in ('cgu','cgv','privacy')),
+  version text not null,                -- ex: '2026-11-20', version publiée du texte
+  context text not null check (context in ('signup','checkout')),
+  subscription_id uuid references subscriptions(id),
+  accepted_at timestamptz not null default now()
 );
 
 create table stripe_events (             -- idempotence
@@ -912,6 +928,7 @@ Matrice (L = lecture, E = écriture) :
 | `favorites` | — | — | L/E les siens | L |
 | `plans` | L | L | L | L/E |
 | `subscriptions` | — | L les siennes | — | L tous |
+| `legal_acceptances` | — | L les siennes (écriture par fonction à l'inscription et à la commande) | L les siennes | L tous |
 | `sale_*` | — | L ses biens, E `sale_task_status` sur tâches `owner in (seller,both)` | — | L/E |
 | `conversations` | — | L participant (`listing` et `advisor` de ses biens) | L/E participant (création `listing` uniquement) | L tous, E sur `advisor` |
 | `messages` | — | L/E participant | L/E participant | L tous ; E uniquement dans les conversations `advisor` |
@@ -1360,19 +1377,24 @@ Créés par Younes dans Stripe (test puis live), identifiants reportés dans `pl
 
 ### Flux
 
-1. Server action `startCheckout(propertyId, plan)` : vérifie la propriété, la formule actuelle, crée une Checkout Session (`mode: 'payment'`, `customer_email`, `metadata: { property_id, owner_id, plan, kind: 'new'|'upgrade' }`, `success_url`, `cancel_url`, `locale: 'fr'`, factures automatiques activées `invoice_creation.enabled = true`, `allow_promotion_codes: true`).
+0. **Récapitulatif avant paiement** (vente conforme, L1-40, décision du 2026-10-15) sur `/vendeur/formule` : nom de la formule, bien concerné, liste exacte des prestations (fiche formule, Q30), prix TTC, durée de 12 mois sans renouvellement automatique, retour en Autonomie à l'échéance, droit de rétractation de 14 jours, coordonnées du médiateur (Q32). Deux cases **non précochées** : « J'ai lu et j'accepte les CGU et les CGV » (obligatoire, versions affichées) et « Je demande que les prestations commencent avant la fin du délai de rétractation de 14 jours… » (facultative, texte de `docs/juridique/`). Bouton : « Commander et payer 990 € TTC » (ou 1 500 €, 510 € pour le passage à Sérénité).
+1. Server action `startCheckout(propertyId, plan, { acceptedTerms, earlyStart })` : refuse sans acceptation des CGU et CGV, vérifie la propriété, la formule actuelle, crée une Checkout Session (`mode: 'payment'`, `customer_email`, `metadata: { property_id, owner_id, plan, kind: 'new'|'upgrade', early_start, terms_version }`, `success_url`, `cancel_url`, `locale: 'fr'`, factures automatiques activées `invoice_creation.enabled = true`, `allow_promotion_codes: true`).
 2. Redirection vers Stripe.
 3. Webhook `checkout.session.completed` sur `/api/webhooks/stripe` :
    - vérification de la signature ;
    - insertion dans `stripe_events` (si déjà présent → 200 sans rien faire) ;
-   - création de `subscriptions` (et `replaced_by` sur l'ancienne en cas d'upgrade) ;
+   - création de `subscriptions` avec `plan_snapshot` (fiche formule acceptée) et `early_start_requested_at` ; `ends_at` = activation + 12 mois ; en cas d'upgrade, `replaced_by` sur l'ancienne et les 12 mois repartent ;
+   - lignes `legal_acceptances` (CGU et CGV, contexte `checkout`, version acceptée) ;
    - mise à jour de `sale_progress.plan`, bascule du modèle d'étapes ;
-   - création d'un `case` source `plan_purchase` ;
+   - création d'un `case` source `plan_purchase`, avec la date de premier contact : immédiate si démarrage immédiat demandé, sinon à partir du 15e jour ;
    - création de la conversation conseiller (`kind = 'advisor'`) si elle n'existe pas, avec le message d'accueil (section 8.6) ;
-   - notifications vendeur (`plan.activated`) et admin (`case.created`).
+   - notifications vendeur (`plan.activated`) et admin (`case.created`) ;
+   - **e-mail récapitulatif** (support durable) : formule, prix, bien, date, durée, début des prestations, fiche formule, CGV et CGU acceptées, informations et formulaire de rétractation (PDF joints ou liens durables).
 4. Le retour sur `success_url` n'active rien : l'écran de confirmation lit l'état en base et affiche « Paiement en cours de confirmation » tant que le webhook n'est pas passé (rafraîchissement toutes les 2 s, 30 s max).
+5. **Rétractation** : pendant 14 jours après la souscription, bouton visible « Renoncer au contrat » sur `/vendeur/formule` (et lien dans l'e-mail récapitulatif). Il enregistre `withdrawal_requested_at`, envoie un accusé de réception par e-mail, notifie l'admin et ajoute une note au dossier. Remboursement intégral par Cédric depuis Stripe sous 14 jours (valeur provisoire, Q31).
+6. **Échéance** : à `ends_at`, le bien repasse en Autonomie (`property_current_plan`) ; le cron quotidien met à jour `sale_progress.plan` et prévient le vendeur 30 jours avant.
 
-Événements écoutés : `checkout.session.completed`, `charge.refunded` (formule marquée remboursée, `case` note automatique, pas de rétrogradation automatique : signalé à l'admin).
+Événements écoutés : `checkout.session.completed`, `charge.refunded` (formule marquée remboursée, les droits payants s'arrêtent, `case` note automatique ; pas de bascule automatique du modèle d'étapes : signalé à l'admin).
 
 Remboursements : faits par Cédric depuis le dashboard Stripe (hors application en V2).
 
@@ -1395,6 +1417,8 @@ Le propriétaire continue de gérer sa vente et réalise ses visites.
 Constitution du dossier de vente complet · Contrôle des pièces nécessaires · Identification et suivi des documents manquants · Anticipation des diagnostics nécessaires · Analyse des documents · Signalement des éventuels points de vigilance · Préparation du dossier destiné au notaire · Coordination avec le notaire · Suivi de l'avancement du dossier · Accompagnement jusqu'au compromis ou avant-contrat · Suivi des conditions suspensives · Accompagnement jusqu'à la signature définitive.
 
 Ne jamais mentionner de « garantie juridique » ni de « relecture des actes » (exclu par le client), ni de photos professionnelles ou de visites réalisées par Leenkey (non proposées).
+
+**Durée et fin de formule** (décision du 2026-10-15 ; valeurs provisoires en attendant la fiche contractuelle de Cédric, Q30) : une formule payante couvre un bien pendant 12 mois à compter de la souscription, sans renouvellement automatique. À l'échéance, le bien repasse en Autonomie : l'annonce reste en ligne, les prestations humaines s'arrêtent. Un passage d'Accompagné à Sérénité fait repartir les 12 mois. Sans demande de démarrage immédiat à la commande, le conseiller ne contacte le client qu'à partir du 15e jour (délai de rétractation, section 11).
 
 ### Tableau comparatif (page formules)
 
@@ -1467,6 +1491,7 @@ Règles :
 3. Il répond à partir de la **base de connaissances de Leenkey** (l'expertise de Cédric), pas de connaissances générales sur l'immobilier quand une fiche existe.
 4. Il ne donne **aucun avis juridique ou fiscal engageant**. Il explique, il oriente, il renvoie vers Cédric ou le notaire.
 5. Il peut **passer la main à un humain** à tout moment.
+6. **Aucun justificatif de financement ni aucune pièce d'identité n'est envoyé au modèle** (décision du 2026-10-15). L'analyse IA de documents (L3-05) porte uniquement sur les documents du dossier de vente ; le contrôle des justificatifs de financement reste humain (admin).
 
 ### Contextes
 
@@ -1826,6 +1851,8 @@ Lecture seule : toutes les offres et leur journal, filtres, accès à la synthè
 
 Conversation signalée (lecture complète autorisée dans ce cadre, traçée), actions : clore, avertir, suspendre un utilisateur.
 
+Version minimale retenue (décision du 2026-10-15, dossier juridique) : le motif est obligatoire à l'envoi d'un signalement ; quand une annonce est refusée ou suspendue, le motif est communiqué au vendeur par e-mail (section 17, Annonces) ; le vendeur conteste en écrivant au back office (conversation conseiller s'il en a une, sinon formulaire de contact), et la contestation est traitée par Cédric. Pas de procédure de recours plus formelle en V2.
+
 ### Assistant `/admin/assistant`
 
 Base de connaissances (liste, recherche test, import), journal des conversations de l'assistant (filtres par contexte, recherche), consommation de tokens par jour et par environnement.
@@ -1923,10 +1950,10 @@ Règles de sécurité : `CLAUDE.md` section 11. Compléments :
 
 - **Données personnelles traitées** : identité, contact, bien (adresse), financement déclaratif et justificatif, messages, documents du bien, conversations avec l'assistant.
 - **Minimisation** : montants de financement jamais visibles du vendeur ; adresse exacte uniquement après visite confirmée ; justificatifs visibles uniquement du propriétaire et de l'admin.
-- **Sous-traitants** (à lister dans la politique de confidentialité fournie par le client) : Supabase (hébergement UE, région `eu-west` à choisir à la création des projets), Vercel, Stripe, Anthropic, Resend, Mapbox.
-- **Anthropic** : aucune donnée n'est utilisée pour l'entraînement via l'API ; ne pas envoyer à l'assistant les montants de financement d'un acquéreur à un vendeur.
+- **Prestataires techniques (sous-traitants)** : liste de travail dans `docs/juridique/prestataires.md` (entité, rôle, données concernées, lieu de traitement, points à vérifier), à valider par l'avocat puis reprendre dans la politique de confidentialité. Supabase en région Paris (`eu-west-3`) pour staging et production.
+- **Anthropic** : jamais de justificatif de financement ni de pièce d'identité envoyé au modèle (section 12) ; jamais les montants de financement d'un acquéreur dans une réponse à un vendeur. Les conditions de conservation et d'usage des données de l'API sont à vérifier contractuellement avant toute mention publique (dossier juridique).
 - **Droits** : export JSON et suppression depuis `/compte` ; anonymisation à 30 jours.
-- **Conservation** : messages et documents d'une annonce vendue conservés 12 mois puis supprimés (cron à ajouter en V3 ; noter dans `BACKLOG-V3.md`).
+- **Conservation** : messages et documents d'une annonce vendue conservés 12 mois. L'effacement automatique par catégorie de données est reporté en V3 (`BACKLOG-V3.md`, décision du 2026-10-15) ; la durée de chaque catégorie est à fixer (Q37).
 - **Cookies** : uniquement fonctionnels + mesure d'audience. GA4 et GTM sont présents sur le site actuel **sans bandeau de consentement** (vérifié dans `index.html` le 2026-10-06) : un bandeau doit être ajouté (voir `DECISIONS.md`, Q23). Aucun pixel publicitaire tiers.
 
 ---
@@ -1972,7 +1999,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 
 | ID | Tâche | Dépend de | Accepté quand |
 |---|---|---|---|
-| L1-09 | Auth : inscription (choix du rôle), connexion, mot de passe oublié, confirmation, middleware de protection des routes, redirection `?next=`, templates email Supabase | L1-03, L1-07 | Parcours complet en staging, emails reçus |
+| L1-09 | Auth : inscription (choix du rôle), connexion, mot de passe oublié, confirmation, middleware de protection des routes, redirection `?next=`, templates email Supabase ; acceptation datée et versionnée des CGU et de la politique de confidentialité (`legal_acceptances`, contexte `signup`) | L1-03, L1-07 | Parcours complet en staging, emails reçus, acceptation enregistrée avec sa version |
 | L1-10 | Shells de navigation : `TopNav`, `BottomNav` par rôle, `AdminShell`, cloche de notifications (vide) | L1-09 | Navigation cohérente sur 390, 768, 1280 px |
 | L1-11 | Création de bien étapes 1 et 2 (Mapbox autocomplétion, géocodage, `public_location`, caractéristiques) avec sauvegarde auto | L1-04, L1-09 | Un bien brouillon complet se crée en mobile |
 | L1-12 | Photos (dans l'étape 2) : upload, conversion WebP 3 tailles, réordonnancement, couverture, route `/img` | L1-11 | 15 photos max, rejets propres, aucune URL permanente |
@@ -2011,6 +2038,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | ID | Tâche | Dépend de | Accepté quand |
 |---|---|---|---|
 | L1-26 | Stripe : `startCheckout`, webhook idempotent, upgrade, écran de confirmation, page formule | L1-23 | E2E 3 vert avec Stripe CLI |
+| L1-40 | Vente conforme des formules (décision du 2026-10-15, section 11) : récapitulatif avant paiement, cases non précochées (CGU + CGV, démarrage immédiat), bouton « Commander et payer … € TTC », `plan_snapshot` et `legal_acceptances` à la commande, e-mail récapitulatif avec fiche formule, CGV et formulaire de rétractation, bouton « Renoncer au contrat » pendant 14 jours avec accusé de réception, premier contact du conseiller au 15e jour sans démarrage immédiat, retour en Autonomie à l'échéance (cron) et rappel 30 jours avant | L1-26, L1-22 | Commande, rétractation et échéance testées en E2E (Stripe test) ; aucune case précochée |
 | L1-28 | Assistant : route de streaming, outils vendeur, confirmation, quotas, journalisation, panneau desktop ouvert par `AssistantFab` + page mobile | L1-27 | Modification de description via assistant avec confirmation |
 | L1-29 | Suggestion de réponse en messagerie + rédaction de description | L1-28 | `AssistantSuggestion` conforme, `ai_suggested` enregistré |
 | L1-30 | Back office complet lot 1 : tableau de bord + résumé du jour, utilisateurs, dossiers, signalements, pré-analyse des annonces, `/admin/assistant` (lecture + import) | L1-19, L1-28 | Cédric peut traiter une journée type sans accès base |
@@ -2057,7 +2085,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | P-03 | Sauvegarde GitHub Action + restauration testée sur un projet vide | Restauration réussie documentée |
 | P-04 | Guide back office (`docs/GUIDE-BACK-OFFICE.md` + PDF) | Relu par Younes |
 | P-05 | Répétition complète de la mise en prod sur staging ; livraison de la préprod validée par Cédric (18 décembre) | Procédure jouée de bout en bout sur staging, retour arrière documenté |
-| P-05b | Bascule le lundi 4 janvier 2027 (à confirmer avec Cédric) : migrations prod, seed des `plans` et `sale_steps` uniquement, Stripe live, domaine `leenkey.fr` vers le nouveau déploiement, Resend vérifié, vérification de l'identifiant du modèle IA rapide (dépréciations) | Site en ligne, parcours 1 et 3 testés en prod avec un vrai paiement remboursé ; retour arrière vers la V1 possible en un « Promote » |
+| P-05b | **Mise en ligne de la V2 avant le 30 novembre 2026** (décision du 2026-10-15), semaine du 23 novembre, sur go de Younes : projet Supabase de production (compte de Leenkey, région Paris), migrations, seed des `plans` et `sale_steps` uniquement, variables de production, Resend vérifié, identifiants des modèles IA vérifiés (dépréciations), Stripe live seulement si les CGV définitives et le médiateur sont en place (sinon les formules payantes restent non commandables) ; puis, dans le projet Vercel `leenkey-estimator-main` qui porte `leenkey.fr`, la branche de production passe de `main` à la branche de production de la V2. **Jamais de fusion ni de push dans `main`.** La branche de production est créée depuis le commit de livraison du lot 1 validé ; les corrections de recette y sont reportées par cherry-pick ; les lots 2 et 3 n'y arrivent qu'après validation en préprod | Site en ligne, parcours 1 testé en prod (parcours 3 avec un vrai paiement remboursé si Stripe live) ; retour arrière vers la V1 en remettant `main` comme branche de production |
 | P-06 | Tag `v2.0.0`, `CHANGELOG.md` complet | — |
 
 ---
@@ -2068,12 +2096,12 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 
 | Contenu | Statut | Utilisé par |
 |---|---|---|
-| Contenu des formules | **Reçu** (section 11 bis) | `plans`, page formules |
+| Contenu des formules | **Reçu** (section 11 bis). Fiche contractuelle détaillée attendue (quantités, canaux, délais, exclusions, durée : Q30) | `plans`, page formules, `plan_snapshot` |
 | Étapes de vente par formule | **Reçu** (section 9) | `sale_steps` |
 | FAQ vendeur et acquéreur | **Reçu** (`supabase/seed/knowledge/faq-cedric-v2.md`) | `knowledge_base` |
 | Décisions 1 à 9 | **Reçues** (`docs/DECISIONS.md`) | Toute la spec |
 | Modèle d'offre et mention juridique | Reçu et précisé le 2026-10-05 (section 13). Validé par la notaire le 2026-10-08, sans modification (Q9 close) : textes définitifs | — |
-| Mentions légales, CGU, CGV (rétractation, médiateur), confidentialité, cookies, mention IA, procédure de signalement | Demandés le 2026-10-05, **bloquant pour la prod** | Pages légales (page « En cours de rédaction » en staging) |
+| Mentions légales, CGU, CGV (rétractation, médiateur), confidentialité, cookies, mention IA, procédure de signalement | **Projet reçu le 2026-10-15** (dossier du 9 octobre, `docs/juridique/`), non publiable en l'état : relecture par l'avocat et versions définitives attendues avant le 27 novembre (Q34), médiateur à désigner (Q32). **Bloquant pour la prod** | Pages légales (page « En cours de rédaction » en staging), récapitulatif de commande, e-mail récapitulatif |
 | Adresse légale et coordonnées | Présente sur le site V1 (mentions légales : 36 rue Pierre Brossolette, 91360 Épinay-sur-Orge), à confirmer par Cédric | Emails, pages légales |
 | Biens et documents de test | Non reçu | Seed (en attendant : biens fictifs dans la zone de lancement) |
 | Précisions en attente (Q1 à Q10, Q15) | Envoyées, valeurs provisoires utilisées | Voir `docs/DECISIONS.md` |

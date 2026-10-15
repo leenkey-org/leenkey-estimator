@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-15 · Documentation · PR #10 · Décisions du 15 octobre
+- Ajouté : `docs/juridique/` (dossier juridique du 9 octobre converti, non publiable en l'état ; index avec ce qui est intégré au produit et questions pour l'avocat ; liste des prestataires techniques).
+- Modifié : CLAUDE.md, SPEC, DEMARRAGE et SECURITE : rien n'est jamais poussé ni fusionné dans `main` ; mise en ligne de la V2 avant le 30 novembre par changement de la branche de production dans Vercel (P-05b).
+- Modifié : SPEC : date de fin des formules (`ends_at`, retour en Autonomie), table `legal_acceptances`, vente conforme des formules (section 11, nouvelle tâche L1-40), signalement en version minimale, aucun justificatif envoyé à l'IA, Opus 5.5 pour les analyses et Sonnet 5.5 pour la conversation, prestataires techniques.
+- Modifié : DECISIONS (décisions du 15 octobre, Q17 et Q29 closes, questions Q30 à Q37 pour Cédric), PLANNING recalé (lot 1 au 13 novembre, quatre éléments décalés en S6, mise en ligne la semaine du 23 novembre), BACKLOG-V3 (effacement automatique des données).
+
 ### 2026-10-15 · L1-05 · PR #9 · Formules, étapes de vente, messagerie, dossiers
 - Ajouté : tables `plans`, `plan_entitlements`, `subscriptions` (durée de 12 mois calculée à l'activation, `ends_at`), `stripe_events`, `upgrade_prompts`, `sale_steps`, `sale_step_tasks`, `sale_progress` (créée avec le bien), `sale_task_status`, `conversations`, `messages`, `reports`, `cases`, `case_notes`, `notifications`, `knowledge_base` (vecteurs 384), `ai_conversations`, `ai_messages`, toutes avec RLS ; formule en cours d'un bien (`property_current_plan` : retour en Autonomie à l'échéance) ; ouverture d'une conversation par l'acquéreur sur une annonce publiée (`conversation_start`), lecture (`conversation_mark_read`) ; l'admin écrit seulement dans les conversations conseiller ; résumé acquéreur pour le vendeur sans montants (`buyer_summary_for_seller`) ; rôles et suspension de compte par l'admin, journalisés (`admin_set_roles`, `admin_suspend_user`, `admin_unsuspend_user`) ; formule de la vente affichée dans `public_listings`.
 - Modifié : fonctions d'aide (`is_admin`, `owns_property`…) réservées aux utilisateurs connectés.

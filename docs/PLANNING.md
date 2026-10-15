@@ -6,6 +6,12 @@ Claude Code coche une tâche (`[x]`) dans la même PR que son code, avec le num�
 
 Rééquilibrage du 5 octobre : la semaine 5 passe de 10 à 8 tâches. L1-20 est réduite au sitemap et aux robots (pages villes en V3) ; L1-35 avance en S3 ; L1-27 (embeddings, sans dépendance au reste de S4) avance en S4 ; les déclencheurs de montée en gamme, non contractuels, deviennent L2-09 (S6) ; l'export RGPD et la suppression de compte deviennent L2-10 (S7). Aucune fonctionnalité du cahier des charges ne quitte le lot 1. Ajout du 8 octobre : L1-36 et L1-37 (S2), L1-38 et L1-39 (S4), L3-09 (S8-S9).
 
+**Recalage du 15 octobre** (décision de Younes) : la semaine 1 a perdu deux jours (reprise après le cadrage, mise en pause du projet Supabase de staging). Le lot 1 reste livré le **vendredi 13 novembre** et la V2 est **mise en ligne avant le 30 novembre** (semaine du 23 novembre, P-05b). Pour tenir ces dates :
+- L1-06, L1-07 et L1-08 sont terminées le lundi 19 octobre.
+- Décalés en S6, sans effet sur les parcours du lot 1 : la carte avancée (regroupement, synchronisation liste et carte, « rechercher dans cette zone » ; L1-16 livre au lot 1 une carte avec les marqueurs de prix), les suggestions de l'assistant en messagerie et la rédaction de description (L1-29), l'historique des modifications d'annonce (L1-35), le résumé du jour par l'assistant dans le back office (partie de L1-30).
+- Le bloc « vendre légalement » (environ 3 jours, inclus au forfait) est réparti : acceptation des CGU à l'inscription en L1-09 (S2), date de fin des formules en L1-05 (faite), récapitulatif de commande, cases, rétractation, e-mail récapitulatif et échéance en L1-40 (S5).
+- Conditions : les clés et accès listés dans `DEMARRAGE.md` sont fournis avant la tâche qui en dépend (Mapbox avant L1-11, Resend avant L1-09, Anthropic avant L1-27, Stripe en mode test avant L1-26). Une question ouverte à Cédric ne bloque jamais le développement : la valeur provisoire de `DECISIONS.md` s'applique.
+
 ## S1 · semaine du 12 oct. · Fondations et reprise de l'existant
 
 - [x] **L1-01** Tests de non-régression sur `estimation.ts` (≥ 20 cas réels) **avant tout déplacement**, puis projet Next.js 15 selon `CLAUDE.md` (ESLint, Prettier, Vitest, Playwright, CI), puis reprise de l’estimateur, des 4 endpoints, des pages marketing, d’Analytics et des redirections · PR : #4 · Testé en préprod : ☐
@@ -17,11 +23,11 @@ Rééquilibrage du 5 octobre : la semaine 5 passe de 10 à 8 tâches. L1-20 est 
 - [ ] **L1-07** Design system : tokens, polices, composants de base (Button, Input, Select, UnitInput, ChipToggle,… · PR : · Testé en préprod : ☐
 - [ ] **L1-08** Dessin `public/brand/facade.svg` et composant `EmptyState` · PR : · Testé en préprod : ☐
 
-Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contrat initial. Si elle déborde, L1-08 (illustration) glisse en S2 sans conséquence.
+Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contrat initial. L1-06, L1-07 et L1-08 se terminent le lundi 19 octobre (recalage du 15 octobre).
 
 ## S2 · semaine du 19 oct. · Comptes et biens
 
-- [ ] **L1-09** Auth : inscription (choix du rôle), connexion, mot de passe oublié, confirmation, middleware de protection… · PR : · Testé en préprod : ☐
+- [ ] **L1-09** Auth : inscription (choix du rôle), connexion, mot de passe oublié, confirmation, middleware de protection, acceptation datée des CGU… · PR : · Testé en préprod : ☐
 - [ ] **L1-10** Shells de navigation : `TopNav`, `BottomNav` par rôle, `AdminShell`, cloche de notifications (vide) · PR : · Testé en préprod : ☐
 - [ ] **L1-11** Création de bien étapes 1 et 2 (Mapbox autocomplétion, géocodage, `public_location`, caractéristiques)… · PR : · Testé en préprod : ☐
 - [ ] **L1-12** Photos : upload, conversion WebP 3 tailles, réordonnancement, couverture, route `/img` · PR : · Testé en préprod : ☐
@@ -33,12 +39,11 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 ## S3 · semaine du 26 oct. · Recherche, annonce, back office minimum
 
 - [ ] **L1-15** Fonction `search_listings`, index, schéma `SearchFilters`, page `/acheter` liste + filtres + tri + URL · PR : · Testé en préprod : ☐
-- [ ] **L1-16** Carte Mapbox (marqueurs prix, regroupement, synchronisation liste/carte, recherche dans la zone) · PR : · Testé en préprod : ☐
+- [ ] **L1-16** Carte Mapbox avec les marqueurs de prix (regroupement, synchronisation liste/carte et recherche dans la zone : S6) · PR : · Testé en préprod : ☐
 - [ ] **L1-17** Page annonce complète (galerie photo, KeyFigures, KeyFacts, carte approximative, barre d'action), métadonnées,… · PR : · Testé en préprod : ☐
 - [ ] **L1-18** Favoris · PR : · Testé en préprod : ☐
 - [ ] **L1-19** Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`suspended`) / remettre en ligne, audit, emails · PR : · Testé en préprod : ☐
 - [ ] **L1-20** Sitemap et robots (pages SEO par ville reportées en V3) · PR : · Testé en préprod : ☐
-- [ ] **L1-35** `listing_revisions` simplifié : historique des champs prix, titre, description d’une annonce publiée, vendeur et admin · PR : · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
 
@@ -54,10 +59,10 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 ## S5 · semaine du 9 nov. · Paiement, assistant, back office → livraison lot 1 (ven. 13 nov.)
 
 - [ ] **L1-26** Stripe : `startCheckout`, webhook idempotent, upgrade, écran de confirmation, page formule · PR : · Testé en préprod : ☐
+- [ ] **L1-40** Vente conforme des formules : récapitulatif avant paiement, cases non précochées, « Commander et payer », e-mail récapitulatif, bouton de rétractation (14 jours), contact au 15e jour sans démarrage immédiat, retour en Autonomie à l'échéance · PR : · Testé en préprod : ☐
 - [ ] **L1-33** `plan_entitlements`, `hasEntitlement`, contenu des formules dans `plans`, page formules avec tableau comparatif (déclencheurs : voir L2-09) · PR : · Testé en préprod : ☐
 - [ ] **L1-28** Assistant : route de streaming, outils vendeur, confirmation, quotas, journalisation, panneau desktop +… · PR : · Testé en préprod : ☐
-- [ ] **L1-29** Suggestion de réponse en messagerie + rédaction de description · PR : · Testé en préprod : ☐
-- [ ] **L1-30** Back office complet lot 1 : tableau de bord + résumé du jour, utilisateurs, dossiers, signalements,… · PR : · Testé en préprod : ☐
+- [ ] **L1-30** Back office complet lot 1 : tableau de bord, utilisateurs, dossiers, signalements (résumé du jour par l'assistant : S6),… · PR : · Testé en préprod : ☐
 - [ ] **L1-31** Passage à l’humain (`create_case`, fonction SQL `security definer`) côté vendeur · PR : · Testé en préprod : ☐
 - [ ] **L1-34** Conversation conseiller : `kind = 'advisor'` sur la messagerie existante, créée au paiement, vue admin `/admin/messages`, outil `contact_advisor` · PR : · Testé en préprod : ☐
 - [ ] **L1-32** Recette interne lot 1 : E2E 1, 2, 3, 7 verts, Lighthouse, axe, revue RLS · PR : · Testé en préprod : ☐
@@ -65,6 +70,19 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 Toujours la semaine la plus risquée du projet. Ordre imposé : L1-26 et L1-33 (paiement) le lundi, L1-28 avant L1-29 et L1-31, L1-34 en dernier. Si L1-34 n'est pas prête jeudi soir, elle est livrée en S6 et la recette du lot 1 le dit explicitement.
 
 ## S6-S7 · semaines du 16 et 23 nov. · Lot 2 : offre d'achat et qualification → livraison ven. 27 nov.
+
+Recette du lot 1 par Cédric du 16 au 20 novembre ; mise en ligne de la V2 la semaine du 23 novembre (P-05b, ci-dessous). Reportés du lot 1 (recalage du 15 octobre) :
+
+- [ ] **L1-16b** Carte avancée : regroupement, synchronisation liste/carte, recherche dans la zone · PR : · Testé en préprod : ☐
+- [ ] **L1-29** Suggestion de réponse en messagerie + rédaction de description · PR : · Testé en préprod : ☐
+- [ ] **L1-35** `listing_revisions` simplifié : historique des champs prix, titre, description d’une annonce publiée, vendeur et admin · PR : · Testé en préprod : ☐
+- [ ] **L1-30b** Résumé du jour par l'assistant dans le back office · PR : · Testé en préprod : ☐
+
+Mise en ligne :
+
+- [ ] **P-05b** Mise en ligne de la V2 (semaine du 23 nov., avant le 30 nov., sur go de Younes) : projet Supabase de production, migrations, seed `plans` et `sale_steps`, variables de production, Resend, vérification des modèles IA, Stripe live si CGV et médiateur prêts ; puis changement de la branche de production du projet Vercel de `leenkey.fr` (jamais de fusion dans `main`) ; retour arrière : remettre `main` · PR : · Testé en préprod : ☐
+
+Lot 2 :
 
 - [ ] **L2-01** Migration `offers` (enums `acquisition_mode`, `financing_mode`, `financing_progress`, référence, version,… · PR : · Testé en préprod : ☐
 - [ ] **L2-02** Table `financing_documents` + RLS, justificatif de financement (type, date, fichier), contrôle admin « Marquer comme vérifié »,… · PR : · Testé en préprod : ☐
@@ -97,9 +115,8 @@ Toujours la semaine la plus risquée du projet. Ordre imposé : L1-26 et L1-33 (
 - [ ] **P-04** Guide back office (`docs/GUIDE-BACK-OFFICE.md` + PDF) · PR : · Testé en préprod : ☐
 - [ ] **P-05** Répétition complète de la mise en production sur staging ; préprod validée par Cédric le 18 décembre · PR : · Testé en préprod : ☐
 
-## Bascule · lundi 4 janv. 2027 (à confirmer avec Cédric, `DECISIONS.md` Q17)
+## Fin du projet
 
-- [ ] **P-05b** Mise en production : migrations prod, seed `plans` et `sale_steps`, Stripe live, domaine `leenkey.fr`, Resend, vérification du modèle IA rapide, plan de retour arrière vers la V1 · PR : · Testé en préprod : ☐
 - [ ] **P-06** Tag `v2.0.0`, `CHANGELOG.md` complet · PR : · Testé en préprod : ☐
 
 ## Livraisons et paiements
@@ -111,6 +128,6 @@ Toujours la semaine la plus risquée du projet. Ordre imposé : L1-26 et L1-33 (
 | Lot 2 | ven. 27 nov. | ☐ | — |
 | Lot 3 | ven. 11 déc. | ☐ | — |
 | Livraison : préprod complète validée | ven. 18 déc. | ☐ | 20 % · 3 399,60 € TTC |
-| Bascule en production (à confirmer par Cédric) | lun. 4 janv. 2027 | — | — |
+| Mise en ligne de la V2 (décision du 15 octobre) | semaine du 23 nov. (avant le 30 nov.) | — | — |
 
-Décision du 2026-10-07 : les 20 % sont dus à la livraison de la préprod validée (18 décembre), indépendamment de la date de bascule.
+Décision du 2026-10-07 : les 20 % sont dus à la livraison de la préprod validée (18 décembre), indépendamment de la date de mise en ligne.

@@ -22,7 +22,8 @@ Trois lots contractuels. **Le périmètre à construire est celui de `docs/SPEC-
 - **Lot 1 (S1 à S5)** : reprise de l'existant en Next.js (estimateur, pages marketing, endpoints), comptes, bien, annonce, recherche, messagerie, dashboard vendeur avec moteur d'étapes, Stripe, assistant IA vendeur + admin, back office. La conversation conseiller (`kind = 'advisor'`) est placée en fin de lot 1.
 - **Lot 2 (S6 à S7)** : offre d'achat structurée (modèle client, SPEC-V2 section 13) avec synthèse automatique par gabarits, co-acquéreurs et SCI, qualification acquéreur, assistant IA acquéreur.
 - **Lot 3 (S8 à S9)** : visites sur invitation (créneaux ponctuels uniquement), dossier de vente et partage sélectif, analyse IA des documents, alertes acheteur.
-- **S10** : recette globale ; le 18 décembre 2026 = livraison de la préprod validée. Bascule en production prévue le lundi 4 janvier 2027 (à confirmer avec Cédric).
+- **Mise en ligne** : la V2 remplace la V1 sur leenkey.fr **avant le 30 novembre 2026** (décision du 2026-10-15), en changeant la branche de production du projet Vercel de leenkey.fr, **jamais par une fusion dans `main`**. Les lots 2 et 3 sont mis en ligne après validation en préprod (SPEC-V2 P-05b).
+- **S10** : recette globale ; le 18 décembre 2026 = livraison de la préprod validée.
 - **Garantie** : c'est le contrat qui fait foi : 60 jours pour les bugs majeurs, 30 jours pour les anomalies mineures, à compter de la mise en production.
 
 ---
@@ -125,9 +126,9 @@ Dans ce document, « staging » désigne l'environnement de préprod : branche G
 
 | | Local (dev) | Preprod (staging) | Prod |
 |---|---|---|---|
-| Branche Git | une branche par tâche | `v2` (joue le rôle de staging) | `main` |
+| Branche Git | une branche par tâche | `v2` (joue le rôle de staging) | V1 : `main`, gelée. V2 : branche de production créée au lancement depuis `v2` (SPEC-V2 P-05b) |
 | URL | `localhost:3000` | `leenkey-v2.vercel.app` | `leenkey.fr` |
-| Vercel | preview automatique par PR (vérification du build uniquement, pas de test manuel) | projet `leenkey-v2`, déploiement « production » du projet à chaque push sur `v2` | projet `leenkey-estimator-main` |
+| Vercel | preview automatique par PR (vérification du build uniquement, pas de test manuel) | projet `leenkey-v2`, déploiement « production » du projet à chaque push sur `v2` | projet `leenkey-estimator-main` (sa branche de production passe de `main` à celle de la V2 au lancement) |
 | Supabase | projet `leenkey-dev` (compte Nebula) | projet `leenkey-staging` (compte Nebula) | projet `leenkey-prod` (compte Leenkey, gratuit puis Pro au premier client payant) |
 | Stripe | mode test | mode test | mode live |
 | Anthropic | clé dev, quota bas | clé staging | clé prod |
@@ -196,16 +197,17 @@ Les tests manuels se font sur la préprod **après fusion** dans `v2`, pas sur l
 ```
 feature/<id>-<slug>  →  PR vers v2  →  CI (lint, typecheck, test, build)  →  review + merge
 v2                   →  déploiement leenkey-v2.vercel.app automatique  →  test manuel en préprod
-v2                   →  PR vers main (bascule V2 prévue le 4 janvier 2027, puis livraisons validées)
-main                 →  déploiement leenkey.fr automatique
+v2                   →  branche de production de la V2, mise à jour sur go de Younes après validation en préprod
+                        (lancement avant le 30 novembre 2026 : le projet Vercel de leenkey.fr bascule sur cette branche)
+main                 →  V1 gelée : rien n'y est jamais poussé ni fusionné
 ```
 
 - Une tâche = une branche = une PR vers `v2`. **Claude Code fusionne lui-même sa PR dans `v2`** quand la CI est verte et que `/revue` ne relève rien de bloquant (décision du 2026-10-08) ; Younes teste en préprod à chaque fin de lot. Pas de push direct sur `v2` ni sur `main` (règle de travail ; la protection de branche GitHub n'est pas disponible sur un repo privé en plan gratuit, la CI GitHub Actions `npm run lint && npm run typecheck && npm run test && npm run build` doit être verte avant fusion).
-- `main` reste le site V1 en ligne (Vite) jusqu'à la bascule. Aucun commit V2 n'y arrive avant.
+- **Rien n'est jamais poussé ni fusionné dans `main`** (règle permanente, décision du 2026-10-15). `main` porte la V1 en ligne (Vite) jusqu'au lancement, puis reste en l'état comme point de retour arrière.
 - Une PR = une fonctionnalité ou un correctif. Titre au format `feat(listings): validation par l'admin` / `fix(messaging): notification en double`.
 - Chaque PR fusionnée ajoute une ligne dans `docs/CHANGELOG.md`.
-- Correctif urgent en prod : branche `hotfix/xxx` depuis `main`, PR vers `main`. Avant la bascule, la V1 et la V2 n'ont plus de code commun : reporter le correctif à la main dans `v2` s'il concerne l'estimateur ou les pages marketing. Après la bascule : merge de `main` dans `v2` pour resynchroniser.
-- Rollback : Vercel « Promote » du déploiement précédent. Si une migration est en cause, migration inverse écrite et jouée sur staging (préprod) d'abord.
+- Avant le lancement, aucun correctif n'est apporté à la V1. Après le lancement, correctif urgent : PR vers `v2`, vérification en préprod, puis report par cherry-pick sur la branche de production de la V2, sur go de Younes.
+- Rollback : Vercel « Promote » du déploiement précédent ; retour à la V1 en remettant `main` comme branche de production. Si une migration est en cause, migration inverse écrite et jouée sur staging (préprod) d'abord.
 
 ### Migrations Supabase
 
@@ -344,7 +346,7 @@ Scripts à créer dans `scripts/` et déclarés dans `package.json` dès la sema
 
 ## 13. Jobs planifiés (Vercel Cron)
 
-Déclenchés par Supabase `pg_cron` + `pg_net` (et non Vercel Cron, plan Hobby jusqu'à la bascule : `DECISIONS.md` 2026-10-08), tous protégés par `CRON_SECRET`, idempotents et journalisés. **La liste, les horaires et les rôles de référence sont dans `docs/SPEC-V2.md` section 19** ; ne pas les dupliquer ici. Les crons de la préprod tournent aussi (projet Vercel `leenkey-v2`) : ils ne doivent jamais envoyer d'email hors de `EMAIL_TEST_INBOX`.
+Déclenchés par Supabase `pg_cron` + `pg_net` (et non Vercel Cron, plan Hobby jusqu'au lancement : `DECISIONS.md` 2026-10-08), tous protégés par `CRON_SECRET`, idempotents et journalisés. **La liste, les horaires et les rôles de référence sont dans `docs/SPEC-V2.md` section 19** ; ne pas les dupliquer ici. Les crons de la préprod tournent aussi (projet Vercel `leenkey-v2`) : ils ne doivent jamais envoyer d'email hors de `EMAIL_TEST_INBOX`.
 
 Sauvegarde : GitHub Action nocturne qui exécute `npm run backup` sur le projet prod et pousse l'archive vers un stockage privé, rétention 14 jours. Indépendante de Vercel.
 
@@ -362,7 +364,7 @@ Sauvegarde : GitHub Action nocturne qui exécute `npm run backup` sur le projet 
 - Bloquer une étape essentielle de la vente (publier, échanger, visiter, recevoir, accepter ou refuser une offre, finaliser) selon la formule : règle freemium du client, voir SPEC-V2 section 11 bis.
 - Implémenter quelque chose qui n'est ni dans `docs/SPEC-V2.md` ni dans `docs/DECISIONS.md` : le noter dans `docs/BACKLOG-V3.md` et le signaler.
 - Modifier le chiffre produit par le moteur d'estimation (`estimation.ts`) sans que les tests de non-régression soient mis à jour dans la même PR et la différence expliquée.
-- Écrire en prod, ou pousser quoi que ce soit sur `main`. La prod se déploie par merge de `v2` vers `main`, sur go explicite de Younes, jamais autrement.
+- Écrire en prod, ou pousser ou fusionner quoi que ce soit dans `main` (jamais, quelle que soit la demande). La V2 est mise en ligne en changeant la branche de production dans Vercel, sur go explicite de Younes, jamais autrement.
 - Désactiver un test, un lint ou un typecheck pour faire passer une PR.
 
 ---
@@ -407,7 +409,7 @@ Quand une instruction de session contredit ce fichier, le signaler avant d'agir.
 
 Plateforme PropTech française de vente immobilière sans agence, développée par Younes (Nebula Creativ) pour Cédric Da Cunha (SAS LEENKEY, RCS Évry 107 616 211). Sites : leenkey.fr (principal) et leenkey.com (redirigé vers leenkey.fr).
 
-### La V1 en ligne (branche `main`, à préserver jusqu'à la bascule)
+### La V1 en ligne (branche `main`, gelée : rien n'y est poussé, décision du 2026-10-15)
 
 - **Stack V1** : Vite + React 19 + TypeScript + TanStack Router (routes fichiers dans `src/routes/`), Tailwind 4, shadcn. Pas de base, pas d'auth, pas de paiement, pas de tests.
 - **Pages marketing** : HTML statiques dans `public/pages/` (landing, concept, investir, tarifs, faq, issus de Lovable), injectées par `src/components/site/HtmlPage.tsx`.

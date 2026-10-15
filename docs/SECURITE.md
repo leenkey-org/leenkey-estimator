@@ -1,6 +1,6 @@
 # SÉCURITÉ · checklist de mise en production (P-01)
 
-À cocher avant la bascule de `v2` vers `main`. Chaque point est vérifié sur la préprod (`leenkey-v2.vercel.app`) avec les comptes de seed.
+À cocher avant la mise en ligne de la V2 (changement de la branche de production dans Vercel, avant le 30 novembre 2026 ; jamais de fusion dans `main`). Chaque point est vérifié sur la préprod (`leenkey-v2.vercel.app`) avec les comptes de seed.
 
 ## Données et permissions
 - [ ] RLS activée sur toutes les tables du schéma `public` (requête de contrôle dans `supabase/tests/rls_enabled.sql`)
