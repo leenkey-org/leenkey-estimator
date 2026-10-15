@@ -121,3 +121,4 @@ Journal des décisions client. Format : date · question · décision · qui. Le
 | Q35 | Coordonnées publiées : adresse e-mail légale et RGPD (`contact.leenkey@gmail.com` ou une adresse `@leenkey.fr`), téléphone des mentions légales | Coordonnées actuelles du site V1 |
 | Q36 | Comptes de production au nom de Leenkey (carte bancaire de Leenkey) : Supabase, Stripe, Anthropic, Resend, Mapbox | Au nom de Leenkey ; ouverts avant la mise en ligne |
 | Q37 | Durées de conservation par catégorie de données (comptes inactifs, annonces, messages, offres, justificatifs de financement, factures) | Tableau proposé par Claude Code, à valider avec l'avocat ; effacement automatique en V3 |
+| Q38 | Correction Q29 : jusqu'où déduire le budget de travaux déclaré d'un bien atypique (château, moulin…) ? | Déduction limitée à 70 % de la valeur avant travaux : le bien garde au moins 30 % de sa valeur (château du test : 168 000 € au lieu de 0 €). Paramètre `ATYPIQUE_DEDUCTION_TRAVAUX_MAX` |

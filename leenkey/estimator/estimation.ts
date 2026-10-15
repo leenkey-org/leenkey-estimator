@@ -2791,6 +2791,10 @@ const ATYPIQUE_POTENTIEL_BONUS: Record<string, { bonus: number; label: string }>
   exploitation_agricole: { bonus: 0.03, label: "exploitation agricole" },
 };
 const ATYPIQUE_POTENTIEL_CAP = 0.25;
+// Declared works are deducted euro for euro up to this share of the value
+// before works: a property to restore keeps a value (land, shell, potential)
+// and never comes out at 0 € (DECISIONS Q29, 2026-10-15).
+const ATYPIQUE_DEDUCTION_TRAVAUX_MAX = 0.7;
 
 const ATYPIQUE_CONTRAINTE_MALUS: Record<string, { malus: number; label: string }> = {
   risques_naturels: { malus: 0.06, label: "risques naturels" },
@@ -2943,7 +2947,11 @@ function computeAtypiqueEstimation(form: LeenkeyForm, dvfPrixM2?: number | null)
       ? valeurPatrimoniale * 0.75 + valeurExploitation * 0.25
       : valeurPatrimoniale;
 
-  const prixEstime = Math.max(0, Math.round((valeurAvantTravaux - budgetTravaux) / 1000) * 1000);
+  const deductionTravaux = Math.min(
+    budgetTravaux,
+    valeurAvantTravaux * ATYPIQUE_DEDUCTION_TRAVAUX_MAX,
+  );
+  const prixEstime = Math.max(0, Math.round((valeurAvantTravaux - deductionTravaux) / 1000) * 1000);
   const prixM2Final = surface > 0 ? Math.round(prixEstime / surface) : 0;
   const deltaMarche = Math.round(((prixM2Final - prixM2Marche) / prixM2Marche) * 100);
 
@@ -2962,7 +2970,9 @@ function computeAtypiqueEstimation(form: LeenkeyForm, dvfPrixM2?: number | null)
       label: "État & travaux",
       impact: -Math.round(malusApplique * 100),
       detail: budgetTravaux
-        ? `${budgetTravaux.toLocaleString("fr-FR")} € de travaux déduits directement${postesARefaire.length ? ` · à reprendre : ${postesARefaire.join(", ")}` : ""}`
+        ? deductionTravaux < budgetTravaux
+          ? `${budgetTravaux.toLocaleString("fr-FR")} € de travaux déclarés, déduction limitée à ${(Math.round(deductionTravaux / 1000) * 1000).toLocaleString("fr-FR")} € (70 % de la valeur avant travaux)${postesARefaire.length ? ` · à reprendre : ${postesARefaire.join(", ")}` : ""}`
+          : `${budgetTravaux.toLocaleString("fr-FR")} € de travaux déduits directement${postesARefaire.length ? ` · à reprendre : ${postesARefaire.join(", ")}` : ""}`
         : postesARefaire.length
           ? `À reprendre : ${postesARefaire.join(", ")}`
           : "Aucun poste majeur à reprendre",
