@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-15 · L1-04 · PR #… · Biens et annonces
+### 2026-10-15 · L1-04 · PR #8 · Biens et annonces
 - Ajouté : tables `estimations`, `properties`, `listings`, `photos`, `listing_views`, `favorites`, `audit_log` (avancée de L1-05) avec RLS et droits par colonne ; référence `LK-0001` et adresse de page (slug) générées en base ; position publique du bien arrondie à environ 200 m, calculée en base et jamais fournie par le client ; vue `public_listings` (annonces publiées, champs publics uniquement, coordonnées approximatives) ; fonctions de transition de statut côté vendeur (envoi en validation, retrait, pause, remise en ligne, vendu, suppression d'un brouillon) et côté admin (publication, refus motivé, suspension motivée, levée), journalisées dans `audit_log` ; enregistrement et rattachement des analyses de valeur (`estimation_record`, `estimation_claim`) ; compteur de vues agrégé par jour.
 - Tests : 70 tests de permissions (5 comptes de seed et visiteur anonyme).
 - Migration : 20261015120000_properties_listings.sql
