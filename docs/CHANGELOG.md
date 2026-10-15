@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-15 · L1-04 · PR #… · Biens et annonces
+- Ajouté : tables `estimations`, `properties`, `listings`, `photos`, `listing_views`, `favorites`, `audit_log` (avancée de L1-05) avec RLS et droits par colonne ; référence `LK-0001` et adresse de page (slug) générées en base ; position publique du bien arrondie à environ 200 m, calculée en base et jamais fournie par le client ; vue `public_listings` (annonces publiées, champs publics uniquement, coordonnées approximatives) ; fonctions de transition de statut côté vendeur (envoi en validation, retrait, pause, remise en ligne, vendu, suppression d'un brouillon) et côté admin (publication, refus motivé, suspension motivée, levée), journalisées dans `audit_log` ; enregistrement et rattachement des analyses de valeur (`estimation_record`, `estimation_claim`) ; compteur de vues agrégé par jour.
+- Tests : 70 tests de permissions (5 comptes de seed et visiteur anonyme).
+- Migration : 20261015120000_properties_listings.sql
+
 ### 2026-10-08 · L1-03 · PR #6 · Comptes et profils
 - Ajouté : tous les enums de la SPEC, tables `profiles` et `buyer_profiles` avec RLS (lecture et modification de soi, lecture globale admin), droits par colonne (rôles, quota, suspension et suppression non modifiables par l'utilisateur), trigger d'inscription (rôle « vendeur » ou « acquéreur » repris du formulaire, jamais « admin »), fonction `profile_add_role` (ajout « Je vends » / « J'achète » depuis le compte), calcul automatique du statut `declared` du financement, fonction `is_admin()`.
 - Ajouté : scripts `db:migrate:local|staging|prod` et `db:rls-test` (pgTAP sur l'image Postgres de Supabase), job CI `rls` qui rejoue migrations et tests de permissions à chaque PR.
