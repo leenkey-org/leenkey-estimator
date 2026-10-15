@@ -1,0 +1,34 @@
+-- Shared helpers for RLS tests. Included by each rls_*.sql file, inside its
+-- transaction (everything is rolled back at the end of the file).
+-- Seed accounts (CLAUDE.md section 7): seller_a, seller_b, buyer_c, buyer_d, admin.
+create extension if not exists pgtap with schema extensions;
+set search_path = public, extensions;
+
+create schema if not exists tests;
+grant usage on schema tests to anon, authenticated;
+
+create or replace function tests.uid(p_name text) returns uuid
+language sql immutable as $$
+  select case p_name
+    when 'seller_a' then '00000000-0000-4000-a000-00000000000a'::uuid
+    when 'seller_b' then '00000000-0000-4000-a000-00000000000b'::uuid
+    when 'buyer_c'  then '00000000-0000-4000-a000-00000000000c'::uuid
+    when 'buyer_d'  then '00000000-0000-4000-a000-00000000000d'::uuid
+    when 'admin'    then '00000000-0000-4000-a000-0000000000ad'::uuid
+  end;
+$$;
+grant execute on function tests.uid(text) to anon, authenticated;
+
+-- Create the five accounts through auth.users, so the signup trigger runs.
+insert into auth.users (id, email, raw_user_meta_data, aud, role)
+values
+  (tests.uid('seller_a'), 'seller_a@test.leenkey.fr', '{"role":"seller","first_name":"Alice"}', 'authenticated', 'authenticated'),
+  (tests.uid('seller_b'), 'seller_b@test.leenkey.fr', '{"role":"seller","first_name":"Bruno"}', 'authenticated', 'authenticated'),
+  (tests.uid('buyer_c'),  'buyer_c@test.leenkey.fr',  '{"role":"buyer","first_name":"Chloé"}',  'authenticated', 'authenticated'),
+  (tests.uid('buyer_d'),  'buyer_d@test.leenkey.fr',  '{"role":"buyer","first_name":"David"}',  'authenticated', 'authenticated'),
+  (tests.uid('admin'),    'admin@test.leenkey.fr',    '{"role":"admin","first_name":"Cédric"}', 'authenticated', 'authenticated');
+-- 'admin' in metadata is ignored by the trigger; the role is granted here as superuser.
+update public.profiles set roles = '{admin}' where id = tests.uid('admin');
+
+-- pgTAP keeps its state in temp tables created by plan(): call
+-- \ir _plan.psql right after select plan(n) so test roles can write them.

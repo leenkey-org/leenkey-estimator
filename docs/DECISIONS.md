@@ -83,6 +83,8 @@ Journal des décisions client. Format : date · question · décision · qui. Le
 | 2026-10-08 | Préprod (L1-02) | GA4 et GTM chargés uniquement en production ; fonctions Vercel en région `cdg1` (Paris) ; bandeau « Environnement de test » en haut de page. | Younes |
 | 2026-10-08 | Dépendance `server-only` | Ajoutée (paquet officiel Next.js, sans code) : empêche d'importer un module serveur (clients Supabase serveur et service role) dans un composant client. | Claude Code |
 | 2026-10-08 | Relecture notariale du modèle d'offre | Aucune modification, textes de SPEC-V2 section 13 définitifs (Q9 close) | Cédric |
+| 2026-10-08 | Comptes (L1-03) | Le rôle choisi à l'inscription (`seller` ou `buyer`) est lu dans les métadonnées Supabase par le trigger ; `admin` n'y est jamais accepté. L'ajout d'un rôle depuis le compte passe par `profile_add_role` (vendeur ou acquéreur uniquement). La modification des rôles par l'admin et `admin_suspend_user` arrivent en L1-05, avec `audit_log`. | Claude Code |
+| 2026-10-08 | Outillage des migrations | Pas de dépendance au CLI Supabase : `scripts/db-migrate.sh` applique les migrations avec `psql` et les enregistre dans `supabase_migrations.schema_migrations` (même table que le CLI) ; `npm run db:types` génère `types/database.ts` depuis la base locale avec le générateur officiel (image `supabase/postgres-meta`). Tests de permissions en pgTAP sur l'image Docker `supabase/postgres` 17, en local et en CI. Staging : migrations appliquées par Claude Code via le connecteur Supabase, avec la même version que le fichier. | Claude Code |
 
 ## Questions ouvertes (valeur provisoire utilisée en attendant, réponse attendue de Cédric)
 
