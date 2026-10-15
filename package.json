@@ -12,7 +12,12 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "a11y": "playwright test --grep @a11y",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:migrate:local": "scripts/db-migrate.sh local",
+    "db:migrate:staging": "scripts/db-migrate.sh staging",
+    "db:migrate:prod": "scripts/db-migrate.sh prod",
+    "db:rls-test": "scripts/db-rls-test.sh",
+    "db:types": "scripts/db-types.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

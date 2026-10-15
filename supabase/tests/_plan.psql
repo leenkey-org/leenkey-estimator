@@ -1,0 +1,3 @@
+-- Lets anon/authenticated update pgTAP's temp tables (created by plan()).
+grant all on all tables in schema pg_temp to anon, authenticated;
+grant all on all sequences in schema pg_temp to anon, authenticated;
