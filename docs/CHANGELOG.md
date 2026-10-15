@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-15 · L1-05 · PR #9 · Formules, étapes de vente, messagerie, dossiers
+- Ajouté : tables `plans`, `plan_entitlements`, `subscriptions` (durée de 12 mois calculée à l'activation, `ends_at`), `stripe_events`, `upgrade_prompts`, `sale_steps`, `sale_step_tasks`, `sale_progress` (créée avec le bien), `sale_task_status`, `conversations`, `messages`, `reports`, `cases`, `case_notes`, `notifications`, `knowledge_base` (vecteurs 384), `ai_conversations`, `ai_messages`, toutes avec RLS ; formule en cours d'un bien (`property_current_plan` : retour en Autonomie à l'échéance) ; ouverture d'une conversation par l'acquéreur sur une annonce publiée (`conversation_start`), lecture (`conversation_mark_read`) ; l'admin écrit seulement dans les conversations conseiller ; résumé acquéreur pour le vendeur sans montants (`buyer_summary_for_seller`) ; rôles et suspension de compte par l'admin, journalisés (`admin_set_roles`, `admin_suspend_user`, `admin_unsuspend_user`) ; formule de la vente affichée dans `public_listings`.
+- Modifié : fonctions d'aide (`is_admin`, `owns_property`…) réservées aux utilisateurs connectés.
+- Tests : 82 tests de permissions (184 au total).
+- Migration : 20261015130000_plans_sales_messaging.sql
+
 ### 2026-10-15 · L1-04 · PR #8 · Biens et annonces
 - Ajouté : tables `estimations`, `properties`, `listings`, `photos`, `listing_views`, `favorites`, `audit_log` (avancée de L1-05) avec RLS et droits par colonne ; référence `LK-0001` et adresse de page (slug) générées en base ; position publique du bien arrondie à environ 200 m, calculée en base et jamais fournie par le client ; vue `public_listings` (annonces publiées, champs publics uniquement, coordonnées approximatives) ; fonctions de transition de statut côté vendeur (envoi en validation, retrait, pause, remise en ligne, vendu, suppression d'un brouillon) et côté admin (publication, refus motivé, suspension motivée, levée), journalisées dans `audit_log` ; enregistrement et rattachement des analyses de valeur (`estimation_record`, `estimation_claim`) ; compteur de vues agrégé par jour.
 - Tests : 70 tests de permissions (5 comptes de seed et visiteur anonyme).

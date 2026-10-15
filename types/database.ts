@@ -9,6 +9,83 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_conversations: {
+        Row: {
+          context: string
+          created_at: string
+          id: string
+          profile_id: string
+          property_id: string | null
+        }
+        Insert: {
+          context: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          property_id?: string | null
+        }
+        Update: {
+          context?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          property_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_conversations_profile_id_fkey"
+            columns: ["profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_conversations_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_messages: {
+        Row: {
+          content: Json
+          conversation_id: string
+          created_at: string
+          id: string
+          input_tokens: number | null
+          model: string | null
+          output_tokens: number | null
+          role: string
+        }
+        Insert: {
+          content: Json
+          conversation_id: string
+          created_at?: string
+          id?: string
+          input_tokens?: number | null
+          model?: string | null
+          output_tokens?: number | null
+          role: string
+        }
+        Update: {
+          content?: Json
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          input_tokens?: number | null
+          model?: string | null
+          output_tokens?: number | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -98,6 +175,174 @@ export type Database = {
           },
         ]
       }
+      case_notes: {
+        Row: {
+          author_id: string
+          body: string
+          case_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          case_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          case_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_notes_author_id_fkey"
+            columns: ["author_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_notes_case_id_fkey"
+            columns: ["case_id"]
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cases: {
+        Row: {
+          ai_summary: string | null
+          assigned_to: string | null
+          created_at: string
+          id: string
+          plan: Database["public"]["Enums"]["plan_code"] | null
+          profile_id: string
+          property_id: string | null
+          source: Database["public"]["Enums"]["case_source"]
+          status: Database["public"]["Enums"]["case_status"]
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          ai_summary?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          id?: string
+          plan?: Database["public"]["Enums"]["plan_code"] | null
+          profile_id: string
+          property_id?: string | null
+          source: Database["public"]["Enums"]["case_source"]
+          status?: Database["public"]["Enums"]["case_status"]
+          subject: string
+          updated_at?: string | null
+        }
+        Update: {
+          ai_summary?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          id?: string
+          plan?: Database["public"]["Enums"]["plan_code"] | null
+          profile_id?: string
+          property_id?: string | null
+          source?: Database["public"]["Enums"]["case_source"]
+          status?: Database["public"]["Enums"]["case_status"]
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cases_assigned_to_fkey"
+            columns: ["assigned_to"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_profile_id_fkey"
+            columns: ["profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          buyer_id: string | null
+          buyer_last_read_at: string | null
+          closed_at: string | null
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["conversation_kind"]
+          last_message_at: string | null
+          leenkey_last_read_at: string | null
+          listing_id: string | null
+          property_id: string
+          seller_id: string
+          seller_last_read_at: string | null
+        }
+        Insert: {
+          buyer_id?: string | null
+          buyer_last_read_at?: string | null
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["conversation_kind"]
+          last_message_at?: string | null
+          leenkey_last_read_at?: string | null
+          listing_id?: string | null
+          property_id: string
+          seller_id: string
+          seller_last_read_at?: string | null
+        }
+        Update: {
+          buyer_id?: string | null
+          buyer_last_read_at?: string | null
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["conversation_kind"]
+          last_message_at?: string | null
+          leenkey_last_read_at?: string | null
+          listing_id?: string | null
+          property_id?: string
+          seller_id?: string
+          seller_last_read_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_buyer_id_fkey"
+            columns: ["buyer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_listing_id_fkey"
+            columns: ["listing_id"]
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_seller_id_fkey"
+            columns: ["seller_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       estimations: {
         Row: {
           claim_token: string | null
@@ -174,6 +419,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      knowledge_base: {
+        Row: {
+          answer: string
+          audience: string
+          category: string
+          embedding: string | null
+          id: string
+          question: string
+          source_file: string | null
+          step_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          audience: string
+          category: string
+          embedding?: string | null
+          id?: string
+          question: string
+          source_file?: string | null
+          step_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          audience?: string
+          category?: string
+          embedding?: string | null
+          id?: string
+          question?: string
+          source_file?: string | null
+          step_code?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       listing_views: {
         Row: {
@@ -279,6 +560,98 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          ai_suggested: boolean
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          kind: string
+          meta: Json | null
+          sender_id: string
+        }
+        Insert: {
+          ai_suggested?: boolean
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          kind?: string
+          meta?: Json | null
+          sender_id: string
+        }
+        Update: {
+          ai_suggested?: boolean
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          meta?: Json | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          channels: Database["public"]["Enums"]["notification_channel"][]
+          created_at: string
+          email_sent_at: string | null
+          id: string
+          link: string | null
+          profile_id: string
+          read_at: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          channels?: Database["public"]["Enums"]["notification_channel"][]
+          created_at?: string
+          email_sent_at?: string | null
+          id?: string
+          link?: string | null
+          profile_id: string
+          read_at?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          channels?: Database["public"]["Enums"]["notification_channel"][]
+          created_at?: string
+          email_sent_at?: string | null
+          id?: string
+          link?: string | null
+          profile_id?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_profile_id_fkey"
+            columns: ["profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       photos: {
         Row: {
           caption: string | null
@@ -321,6 +694,67 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      plan_entitlements: {
+        Row: {
+          feature: Database["public"]["Enums"]["plan_feature"]
+          plan: Database["public"]["Enums"]["plan_code"]
+        }
+        Insert: {
+          feature: Database["public"]["Enums"]["plan_feature"]
+          plan: Database["public"]["Enums"]["plan_code"]
+        }
+        Update: {
+          feature?: Database["public"]["Enums"]["plan_feature"]
+          plan?: Database["public"]["Enums"]["plan_code"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_entitlements_plan_fkey"
+            columns: ["plan"]
+            referencedRelation: "plans"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          active: boolean
+          code: Database["public"]["Enums"]["plan_code"]
+          description: string
+          features: string[]
+          name: string
+          position: number
+          price_cents: number
+          scope: string
+          stripe_price_id: string | null
+          tagline: string
+        }
+        Insert: {
+          active?: boolean
+          code: Database["public"]["Enums"]["plan_code"]
+          description: string
+          features: string[]
+          name: string
+          position: number
+          price_cents: number
+          scope?: string
+          stripe_price_id?: string | null
+          tagline: string
+        }
+        Update: {
+          active?: boolean
+          code?: Database["public"]["Enums"]["plan_code"]
+          description?: string
+          features?: string[]
+          name?: string
+          position?: number
+          price_cents?: number
+          scope?: string
+          stripe_price_id?: string | null
+          tagline?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -506,6 +940,318 @@ export type Database = {
           },
         ]
       }
+      reports: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_conversation_id_fkey"
+            columns: ["conversation_id"]
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_progress: {
+        Row: {
+          current_step_code: string
+          plan: Database["public"]["Enums"]["plan_code"]
+          property_id: string
+          started_at: string
+          updated_at: string | null
+        }
+        Insert: {
+          current_step_code: string
+          plan?: Database["public"]["Enums"]["plan_code"]
+          property_id: string
+          started_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          current_step_code?: string
+          plan?: Database["public"]["Enums"]["plan_code"]
+          property_id?: string
+          started_at?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_progress_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_step_tasks: {
+        Row: {
+          auto_trigger: string | null
+          code: string
+          id: string
+          position: number
+          required: boolean
+          step_id: string
+          title: string
+        }
+        Insert: {
+          auto_trigger?: string | null
+          code: string
+          id?: string
+          position: number
+          required?: boolean
+          step_id: string
+          title: string
+        }
+        Update: {
+          auto_trigger?: string | null
+          code?: string
+          id?: string
+          position?: number
+          required?: boolean
+          step_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_step_tasks_step_id_fkey"
+            columns: ["step_id"]
+            referencedRelation: "sale_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_steps: {
+        Row: {
+          auto_trigger: string | null
+          code: string
+          description: string
+          id: string
+          owner: string
+          plan: Database["public"]["Enums"]["plan_code"]
+          position: number
+          title: string
+        }
+        Insert: {
+          auto_trigger?: string | null
+          code: string
+          description: string
+          id?: string
+          owner: string
+          plan: Database["public"]["Enums"]["plan_code"]
+          position: number
+          title: string
+        }
+        Update: {
+          auto_trigger?: string | null
+          code?: string
+          description?: string
+          id?: string
+          owner?: string
+          plan?: Database["public"]["Enums"]["plan_code"]
+          position?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      sale_task_status: {
+        Row: {
+          done_at: string | null
+          done_by: string | null
+          property_id: string
+          task_id: string
+        }
+        Insert: {
+          done_at?: string | null
+          done_by?: string | null
+          property_id: string
+          task_id: string
+        }
+        Update: {
+          done_at?: string | null
+          done_by?: string | null
+          property_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_task_status_done_by_fkey"
+            columns: ["done_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_task_status_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_task_status_task_id_fkey"
+            columns: ["task_id"]
+            referencedRelation: "sale_step_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stripe_events: {
+        Row: {
+          id: string
+          processed_at: string
+          type: string
+        }
+        Insert: {
+          id: string
+          processed_at?: string
+          type: string
+        }
+        Update: {
+          id?: string
+          processed_at?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          activated_at: string
+          amount_paid_cents: number
+          discount_cents: number
+          ends_at: string | null
+          id: string
+          owner_id: string
+          plan: Database["public"]["Enums"]["plan_code"]
+          property_id: string
+          refunded_at: string | null
+          replaced_by: string | null
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_promotion_code: string | null
+        }
+        Insert: {
+          activated_at?: string
+          amount_paid_cents?: number
+          discount_cents?: number
+          ends_at?: string | null
+          id?: string
+          owner_id: string
+          plan: Database["public"]["Enums"]["plan_code"]
+          property_id: string
+          refunded_at?: string | null
+          replaced_by?: string | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_promotion_code?: string | null
+        }
+        Update: {
+          activated_at?: string
+          amount_paid_cents?: number
+          discount_cents?: number
+          ends_at?: string | null
+          id?: string
+          owner_id?: string
+          plan?: Database["public"]["Enums"]["plan_code"]
+          property_id?: string
+          refunded_at?: string | null
+          replaced_by?: string | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_promotion_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_owner_id_fkey"
+            columns: ["owner_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_replaced_by_fkey"
+            columns: ["replaced_by"]
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      upgrade_prompts: {
+        Row: {
+          clicked_at: string | null
+          dismissed_at: string | null
+          id: string
+          property_id: string
+          shown_at: string
+          target_plan: Database["public"]["Enums"]["plan_code"]
+          trigger_code: string
+        }
+        Insert: {
+          clicked_at?: string | null
+          dismissed_at?: string | null
+          id?: string
+          property_id: string
+          shown_at?: string
+          target_plan: Database["public"]["Enums"]["plan_code"]
+          trigger_code: string
+        }
+        Update: {
+          clicked_at?: string | null
+          dismissed_at?: string | null
+          id?: string
+          property_id?: string
+          shown_at?: string
+          target_plan?: Database["public"]["Enums"]["plan_code"]
+          trigger_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upgrade_prompts_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       public_listings: {
@@ -547,14 +1293,52 @@ export type Database = {
       }
     }
     Functions: {
+      admin_set_roles: {
+        Args: {
+          p_roles: Database["public"]["Enums"]["user_role"][]
+          p_profile_id: string
+        }
+        Returns: Database["public"]["Enums"]["user_role"][]
+      }
+      admin_suspend_user: {
+        Args: { p_profile_id: string; p_reason: string }
+        Returns: undefined
+      }
+      admin_unsuspend_user: {
+        Args: { p_profile_id: string }
+        Returns: undefined
+      }
       audit: {
         Args: {
           p_entity: string
+          p_action: string
           p_meta?: Json
           p_entity_id: string
-          p_action: string
         }
         Returns: undefined
+      }
+      buyer_summary_for_seller: {
+        Args: { p_property_id: string }
+        Returns: {
+          financing_checked_at: string
+          financing_document_type: Database["public"]["Enums"]["financing_document_type"]
+          financing_status: Database["public"]["Enums"]["financing_status"]
+          project: Database["public"]["Enums"]["buyer_project"]
+          first_name: string
+          buyer_id: string
+        }[]
+      }
+      can_write_conversation: {
+        Args: { c: string }
+        Returns: boolean
+      }
+      conversation_mark_read: {
+        Args: { p_conversation_id: string }
+        Returns: undefined
+      }
+      conversation_start: {
+        Args: { p_listing_id: string }
+        Returns: string
       }
       estimation_claim: {
         Args: { p_token: string }
@@ -562,17 +1346,21 @@ export type Database = {
       }
       estimation_record: {
         Args: {
-          p_low_cents?: number
-          p_input: Json
           p_result: Json
-          p_value_cents?: number
-          p_high_cents?: number
+          p_input: Json
           p_email?: string
+          p_high_cents?: number
+          p_low_cents?: number
+          p_value_cents?: number
         }
         Returns: {
-          id: string
           claim_token: string
+          id: string
         }[]
+      }
+      has_buyer_relation: {
+        Args: { p: string; b: string }
+        Returns: boolean
       }
       is_active_user: {
         Args: Record<PropertyKey, never>
@@ -580,6 +1368,10 @@ export type Database = {
       }
       is_admin: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_conversation_participant: {
+        Args: { c: string }
         Returns: boolean
       }
       listing_bad_transition: {
@@ -624,7 +1416,7 @@ export type Database = {
         Returns: boolean
       }
       listing_mark_sold: {
-        Args: { p_listing_id: string; p_sold_price_cents?: number }
+        Args: { p_sold_price_cents?: number; p_listing_id: string }
         Returns: Database["public"]["Enums"]["listing_status"]
       }
       listing_pause: {
@@ -636,7 +1428,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["listing_status"]
       }
       listing_reject: {
-        Args: { p_reason: string; p_listing_id: string }
+        Args: { p_listing_id: string; p_reason: string }
         Returns: Database["public"]["Enums"]["listing_status"]
       }
       listing_require_admin: {
@@ -674,7 +1466,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["listing_status"]
       }
       listing_suspend: {
-        Args: { p_listing_id: string; p_reason: string }
+        Args: { p_reason: string; p_listing_id: string }
         Returns: Database["public"]["Enums"]["listing_status"]
       }
       listing_unsuspend: {
@@ -688,6 +1480,10 @@ export type Database = {
         Args: { p_listing_id: string }
         Returns: undefined
       }
+      owns_ai_conversation: {
+        Args: { c: string }
+        Returns: boolean
+      }
       owns_property: {
         Args: { p: string }
         Returns: boolean
@@ -695,6 +1491,10 @@ export type Database = {
       profile_add_role: {
         Args: { p_role: Database["public"]["Enums"]["user_role"] }
         Returns: Database["public"]["Enums"]["user_role"][]
+      }
+      property_current_plan: {
+        Args: { p: string }
+        Returns: Database["public"]["Enums"]["plan_code"]
       }
       property_is_editable: {
         Args: { p: string }
@@ -707,8 +1507,14 @@ export type Database = {
       public_listings_rows: {
         Args: Record<PropertyKey, never>
         Returns: {
-          has_balcony: boolean
           type: Database["public"]["Enums"]["property_type"]
+          id: string
+          slug: string
+          reference: string
+          title: string
+          description: string
+          price_cents: number
+          published_at: string
           city: string
           postal_code: string
           district: string
@@ -720,6 +1526,7 @@ export type Database = {
           bedrooms: number
           floor: number
           has_elevator: boolean
+          has_balcony: boolean
           has_terrace: boolean
           has_garden: boolean
           has_parking: boolean
@@ -732,14 +1539,11 @@ export type Database = {
           property_tax_yearly_cents: number
           seller_first_name: string
           plan: Database["public"]["Enums"]["plan_code"]
-          id: string
-          slug: string
-          reference: string
-          title: string
-          description: string
-          price_cents: number
-          published_at: string
         }[]
+      }
+      sale_task_is_seller_owned: {
+        Args: { p_task_id: string }
+        Returns: boolean
       }
       slugify: {
         Args: { p: string }
