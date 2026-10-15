@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-15 · Q29 · PR #11 · Bien atypique à restaurer jamais à 0 €
+- Corrigé : moteur de valorisation, biens atypiques : le budget de travaux déclaré est déduit dans la limite de 70 % de la valeur avant travaux. Seul cas modifié parmi les 24 cas de non-régression : château à restaurer (650 m², 600 000 € de travaux) **0 € → 168 000 €** (fourchette 0 – 0 → 119 000 – 217 000 €, 258 €/m²). Les 23 autres cas sont identiques. V2 uniquement : la V1 en ligne n'est pas modifiée.
+- Tests : snapshot du château mis à jour, test ajouté (aucun budget de travaux ne ramène un bien atypique à 0 €).
+
 ### 2026-10-15 · Documentation · PR #10 · Décisions du 15 octobre
 - Ajouté : `docs/juridique/` (dossier juridique du 9 octobre converti, non publiable en l'état ; index avec ce qui est intégré au produit et questions pour l'avocat ; liste des prestataires techniques).
 - Modifié : CLAUDE.md, SPEC, DEMARRAGE et SECURITE : rien n'est jamais poussé ni fusionné dans `main` ; mise en ligne de la V2 avant le 30 novembre par changement de la branche de production dans Vercel (P-05b).
