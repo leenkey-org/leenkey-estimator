@@ -547,7 +547,9 @@ create table sale_step_tasks (           -- tâches modèle par étape
   title text not null,
   auto_trigger text,                    -- ex: 'document.uploaded:dpe'
   required boolean not null default true, -- tâche obligatoire pour passer à l'étape suivante (les tâches dont owner = 'leenkey' ne bloquent jamais)
-  position int not null
+  position int not null,
+  owner text check (owner in ('seller','leenkey','both')),  -- qui coche la tâche ; vide : owner de l'étape (DECISIONS 2026-10-15)
+  unique (step_id, code)
 );
 
 create table sale_progress (             -- instance par bien
@@ -816,6 +818,7 @@ create table knowledge_base (
   updated_at timestamptz not null default now()
 );
 create index on knowledge_base using hnsw (embedding vector_cosine_ops);
+create unique index on knowledge_base (source_file, category, question);  -- import idempotent des fiches
 
 create table ai_conversations (
   id uuid primary key default gen_random_uuid(),
@@ -1286,7 +1289,7 @@ Chaque bien a un parcours de vente fait d'étapes, elles-mêmes faites de tâche
 
 ### Les six étapes (validées par le client)
 
-Fichier `supabase/seed/sale_steps.yaml`. Une ligne `sale_steps` par étape **et par formule** : même code et même titre, tâches et `owner` qui varient. Les déclencheurs automatiques sont entre parenthèses.
+Fichier `supabase/seed/02_sale_steps.sql`. Une ligne `sale_steps` par étape **et par formule** : même code et même titre, tâches et `owner` qui varient. Les déclencheurs automatiques sont entre parenthèses.
 
 | # | Code | Titre affiché | Objectif |
 |---|---|---|---|
@@ -1972,7 +1975,7 @@ Voir `CLAUDE.md` section 10. Parcours E2E obligatoires (Playwright, sur staging,
 
 Mocks : un client IA factice (`AI_MOCK=1`) renvoie des réponses déterministes pour les tests. Documents de test anonymisés dans `supabase/seed/documents/`.
 
-Seed (`npm run db:seed`) : comptes `seller_a@test.leenkey.fr`, `seller_b@…`, `buyer_c@…`, `buyer_d@…`, `admin@…` (mot de passe commun en variable `SEED_PASSWORD`), 12 biens publiés répartis dans la zone de lancement (section 20) avec photos libres de droits générées (aplats ou photos Unsplash sous licence, jamais de photos de vraies annonces), 3 en attente, 1 refusé, conversations, 2 offres, fiches de la FAQ de Cédric.
+Seed (`npm run db:seed`, `npm run db:seed:staging`, refusé en production) : comptes `seller_a@test.leenkey.fr`, `seller_b@…`, `buyer_c@…`, `buyer_d@…`, `admin@…` (mot de passe commun en variable `SEED_PASSWORD`, sinon secret Vault `seed_password`), 12 biens publiés répartis dans la zone de lancement (section 20) avec photos libres de droits générées (aplats ou photos Unsplash sous licence, jamais de photos de vraies annonces ; ajoutées avec L1-12), 3 en attente, 1 refusé, conversations, 2 offres (ajoutées avec L2-01), fiches de la FAQ de Cédric. Fichiers `supabase/seed/01_plans.sql`, `02_sale_steps.sql`, la FAQ (`scripts/seed-knowledge.mjs`), `04_accounts.sql`, `05_demo_data.sql`, chargés en une transaction. Idempotent : les données de référence sont mises à jour, les données de démonstration créées une seule fois.
 
 ---
 
@@ -2085,7 +2088,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | P-03 | Sauvegarde GitHub Action + restauration testée sur un projet vide | Restauration réussie documentée |
 | P-04 | Guide back office (`docs/GUIDE-BACK-OFFICE.md` + PDF) | Relu par Younes |
 | P-05 | Répétition complète de la mise en prod sur staging ; livraison de la préprod validée par Cédric (18 décembre) | Procédure jouée de bout en bout sur staging, retour arrière documenté |
-| P-05b | **Mise en ligne de la V2 avant le 30 novembre 2026** (décision du 2026-10-15), semaine du 23 novembre, sur go de Younes : projet Supabase de production (compte de Leenkey, région Paris), migrations, seed des `plans` et `sale_steps` uniquement, variables de production, Resend vérifié, identifiants des modèles IA vérifiés (dépréciations), Stripe live seulement si les CGV définitives et le médiateur sont en place (sinon les formules payantes restent non commandables) ; puis, dans le projet Vercel `leenkey-estimator-main` qui porte `leenkey.fr`, la branche de production passe de `main` à la branche de production de la V2. **Jamais de fusion ni de push dans `main`.** La branche de production est créée depuis le commit de livraison du lot 1 validé ; les corrections de recette y sont reportées par cherry-pick ; les lots 2 et 3 n'y arrivent qu'après validation en préprod | Site en ligne, parcours 1 testé en prod (parcours 3 avec un vrai paiement remboursé si Stripe live) ; retour arrière vers la V1 en remettant `main` comme branche de production |
+| P-05b | **Mise en ligne de la V2 avant le 30 novembre 2026** (décision du 2026-10-15), semaine du 23 novembre, sur go de Younes : projet Supabase de production (compte de Leenkey, région Paris), migrations, seed des `plans`, `sale_steps` et de la base de connaissances uniquement (ni comptes ni données de démonstration), variables de production, Resend vérifié, identifiants des modèles IA vérifiés (dépréciations), Stripe live seulement si les CGV définitives et le médiateur sont en place (sinon les formules payantes restent non commandables) ; puis, dans le projet Vercel `leenkey-estimator-main` qui porte `leenkey.fr`, la branche de production passe de `main` à la branche de production de la V2. **Jamais de fusion ni de push dans `main`.** La branche de production est créée depuis le commit de livraison du lot 1 validé ; les corrections de recette y sont reportées par cherry-pick ; les lots 2 et 3 n'y arrivent qu'après validation en préprod | Site en ligne, parcours 1 testé en prod (parcours 3 avec un vrai paiement remboursé si Stripe live) ; retour arrière vers la V1 en remettant `main` comme branche de production |
 | P-06 | Tag `v2.0.0`, `CHANGELOG.md` complet | — |
 
 ---

@@ -20,8 +20,8 @@ Rééquilibrage du 5 octobre : la semaine 5 passe de 10 à 8 tâches. L1-20 est 
 - [x] **L1-04** Migrations `properties`, `listings`, `photos`, `listing_views`, `favorites`, vue `public_listings`,… · PR : #8 · Testé en préprod : ☐
 - [x] **L1-05** Migrations `plans`, `subscriptions`, `stripe_events`, `sale_*`, `conversations`, `messages`, `reports`,… · PR : #9 · Testé en préprod : ☐
 - [ ] **L1-06** Seed complet (comptes, biens, plans, étapes placeholder, KB placeholder) · PR : · Testé en préprod : ☐
-- [ ] **L1-07** Design system : tokens, polices, composants de base (Button, Input, Select, UnitInput, ChipToggle,… · PR : · Testé en préprod : ☐
-- [ ] **L1-08** Dessin `public/brand/facade.svg` et composant `EmptyState` · PR : · Testé en préprod : ☐
+- [x] **L1-07** Design system : tokens, polices, composants de base (Button, Input, Select, UnitInput, ChipToggle,… · PR : #12 · Testé en préprod : ☐
+- [x] **L1-08** Dessin `public/brand/facade.svg` et composant `EmptyState` · PR : #12 · Testé en préprod : ☐
 
 Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contrat initial. L1-06, L1-07 et L1-08 se terminent le lundi 19 octobre (recalage du 15 octobre).
 

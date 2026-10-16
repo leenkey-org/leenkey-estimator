@@ -409,7 +409,9 @@ Leenkey vous accompagne notamment dans sa constitution, le suivi des documents, 
 ## Combien coûtent les formules ?
 <!-- audience: both | category: formules -->
 
-Autonomie : 0 € Accompagné : 990 € / bien Sérénité : 1 500 € / bien
+Autonomie : 0 €
+Accompagné : 990 € / bien
+Sérénité : 1 500 € / bien
 
 ## Puis-je changer de formule pendant ma vente ?
 <!-- audience: both | category: formules -->

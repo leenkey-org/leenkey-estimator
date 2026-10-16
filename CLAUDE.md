@@ -277,6 +277,7 @@ Chaque migration qui touche aux permissions est accompagnée d'un test dans `sup
 
 - TypeScript strict, pas de `any`, pas de `as unknown as`. Types de base de données depuis `types/database.ts`.
 - Server Components par défaut. `"use client"` uniquement pour l'interactivité (formulaires, carte, chat, realtime).
+- Tout écran V2 est rendu dans `<FacadeRoot>` (design system Façade) ; les jetons Façade portent le préfixe `lk` tant que les pages V1 sont en ligne (`docs/DESIGN.md` 2.2).
 - Mutations via server actions dans `*/actions.ts`, chacune : vérification de session → validation Zod → requête → `revalidatePath` → retour typé `{ ok: true, data } | { ok: false, error }`. Pas de `throw` vers le client.
 - Lecture de données dans des fonctions `*/queries.ts`, appelées depuis les Server Components.
 - Nommage : fichiers `kebab-case.tsx`, composants `PascalCase`, fonctions et variables `camelCase`, tables et colonnes `snake_case`.
@@ -333,7 +334,7 @@ npm run db:types         # génère types/database.ts depuis le projet Supabase 
 npm run db:migrate:local # applique les migrations en local
 npm run db:migrate:staging
 npm run db:migrate:prod  # demande une confirmation explicite
-npm run db:seed          # charge supabase/seed/ (local et staging uniquement, refuse en prod)
+npm run db:seed          # charge supabase/seed/ en local (npm run db:seed:staging pour la préprod ; refuse la prod)
 npm run db:rls-test      # tests de permissions
 npm run a11y             # contrôle d'accessibilité axe sur les parcours E2E (docs/DESIGN.md section 15)
 npm run stripe:listen    # Stripe CLI vers /api/webhooks/stripe en local
