@@ -50,10 +50,17 @@ test("l'estimateur affiche sa première étape", async ({ page }) => {
 
 test("GA4 et GTM ne chargent que en production", async ({ page }) => {
   await page.goto("/");
-  const hasGtag = await page.evaluate(
-    () => typeof (window as { gtag?: unknown }).gtag === "function",
-  );
-  expect(hasGtag).toBe(process.env.NEXT_PUBLIC_ENV === "production");
+  // The tags are `afterInteractive` scripts: they run after hydration, which
+  // can come after the load event that `goto` waits for.
+  if (process.env.NEXT_PUBLIC_ENV === "production") {
+    await page.waitForFunction(() => {
+      const w = window as { gtag?: unknown; dataLayer?: Array<{ event?: string }> };
+      return typeof w.gtag === "function" && !!w.dataLayer?.some((e) => e?.event === "gtm.js");
+    });
+  } else {
+    await page.waitForLoadState("networkidle");
+    expect(await page.evaluate(() => typeof (window as { gtag?: unknown }).gtag)).toBe("undefined");
+  }
 });
 
 test("GA4 reçoit un page_view à chaque navigation", async ({ page, isMobile }) => {
