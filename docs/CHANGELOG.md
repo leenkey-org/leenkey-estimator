@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-16 · L1-09 · PR #__PR__ · Inscription et connexion
+### 2026-10-16 · L1-09 · PR #14 · Inscription et connexion
 - Ajouté : `/inscription` (choix « Je vends » / « J'achète », indicateur de robustesse du mot de passe, case CGU et confidentialité), `/connexion`, `/mot-de-passe-oublie`, `/reinitialiser`, `/auth/confirm` (liens des emails, valables depuis n'importe quel navigateur), retour à la page d'origine (`?next=`, chemins du site uniquement), `/conditions` (nouvelle version des textes à accepter), pages d'attente `/vendeur`, `/acquereur` et `/admin` (rôle admin, 404 sinon), `/confidentialite` (en cours de rédaction).
 - Ajouté : middleware qui renouvelle la session Supabase et protège les espaces connectés ; modèles d'email Supabase (`supabase/templates/`) ; composants `RoleCards`, `Checkbox`, `InlineAlert` sur `/design` ; `scripts/local-stack.sh` (pile locale Supabase Auth, API et emails capturés).
 - Migration : `20261016110000_legal_acceptances.sql` (acceptations datées et versionnées, contexte `update`, `legal_accept`, trigger d'inscription).
