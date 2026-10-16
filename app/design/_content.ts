@@ -461,6 +461,6 @@ export const spacing = {
 export const motion = [
   { name: "Survol, pression", value: "140 ms · duration-140 ease-out-lk" },
   { name: "Panneau, feuille, menu", value: "220 ms · duration-220 ease-out-lk" },
-  { name: "Fondu d'image", value: "160 ms · linéaire" },
+  { name: "Fondu d'image", value: "160 ms · linéaire, avec le composant photo (L1-12)" },
   { name: "Mouvement réduit", value: "animations et transitions coupées dans .facade" },
 ];

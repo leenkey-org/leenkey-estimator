@@ -16,8 +16,8 @@ test("/design n'existe pas en production", async ({ page }) => {
 });
 
 test("les pages V1 ne chargent pas la police Archivo", async ({ page }) => {
+  // goto waits for "load": every stylesheet, hence every @font-face, is in.
   await page.goto("/");
-  await page.waitForLoadState("networkidle");
   const families = await page.evaluate(() => [...document.fonts].map((face) => face.family));
   expect(families.some((family) => /archivo/i.test(family))).toBe(false);
 });
