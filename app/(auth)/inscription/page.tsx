@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getProfile } from "@/core/auth/session";
-import { homePathForRoles, safeNextPath } from "@/core/auth/next-path";
+import { safeNextPath } from "@/core/auth/next-path";
+import { homePathForRoles } from "@/leenkey/auth/routes";
 import { fr } from "@/lib/i18n/fr";
 import { AuthShell } from "../_components/auth-shell";
 import { SignupForm } from "./signup-form";
@@ -18,7 +19,8 @@ function defaultRole(role: unknown, next: string | undefined): "seller" | "buyer
 
 export default async function SignupPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const next = typeof params.next === "string" ? params.next : undefined;
+  // Only a path of this site goes back into the form (never blocks it).
+  const next = safeNextPath(typeof params.next === "string" ? params.next : null, "") || undefined;
   const profile = await getProfile();
   if (profile) redirect(safeNextPath(next, homePathForRoles(profile.roles)));
 

@@ -197,7 +197,7 @@ Resend ◄────────── core/notifications (file notifications 
   /vendre                   page vendeur (existante, CTA vers inscription)
   /mentions-legales, /cgu, /confidentialite, /cgv
 (auth)
-  /inscription, /connexion, /mot-de-passe-oublie, /reinitialiser
+  /inscription, /connexion, /mot-de-passe-oublie, /reinitialiser, /confirmation (lien des emails), /conditions
 (app)  — connecté
   /vendeur                  dashboard vendeur
   /vendeur/biens/nouveau    création de bien (étapes)

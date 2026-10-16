@@ -3,11 +3,15 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { AuthError } from "@supabase/supabase-js";
+import { splitFullName } from "@/core/auth/identity";
+import { safeNextPath } from "@/core/auth/next-path";
+import { getUser, missingAcceptances } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 import { fr } from "@/lib/i18n/fr";
 import {
   acceptTermsSchema,
+  confirmLinkSchema,
   fieldErrors,
   forgotPasswordSchema,
   resendSchema,
@@ -15,9 +19,8 @@ import {
   signInSchema,
   signUpSchema,
 } from "@/lib/validations/auth";
-import { splitFullName } from "./identity";
-import { homePathForRoles, safeNextPath } from "./next-path";
-import { getUser, missingAcceptances } from "./session";
+import { EXPIRED_LINK_PATH, pathAfterEmailLink } from "./landing";
+import { homePathForRoles } from "./routes";
 
 const t = fr.auth.errors;
 
@@ -29,6 +32,8 @@ export type FormResult<T = undefined> =
       fieldErrors?: Record<string, string>;
       /** Values to put back in the form (never the password). */
       values?: Record<string, string>;
+      /** Sign-in refused because the email is not confirmed yet: offer to resend. */
+      unconfirmed?: boolean;
     };
 
 function formValues(formData: FormData, keys: string[]): Record<string, string> {
@@ -40,12 +45,30 @@ function formValues(formData: FormData, keys: string[]): Record<string, string> 
   return values;
 }
 
-/** Origin of this request: the confirmation links come back to the same site. */
+/** Site the links of the emails come back to: NEXT_PUBLIC_SITE_URL, else this request's host. */
 async function siteOrigin(): Promise<string> {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL;
+  if (configured) {
+    try {
+      return new URL(configured).origin;
+    } catch {
+      // Malformed variable: fall back to the request.
+    }
+  }
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
-  if (host) return `${h.get("x-forwarded-proto") ?? "https"}://${host}`;
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  return host ? `${h.get("x-forwarded-proto") ?? "https"}://${host}` : "http://localhost:3000";
+}
+
+/**
+ * Supabase Auth refuses a second email to the same address within a minute.
+ * It only happens for an address that has an account: telling it would reveal
+ * which addresses are registered, so the answer stays « sent ».
+ */
+function isEmailFrequencyLimit(error: AuthError | null, action: string): boolean {
+  if (error?.code !== "over_email_send_rate_limit") return false;
+  console.warn(`[auth] ${action}: email not sent, frequency limit`);
+  return true;
 }
 
 function authErrorMessage(error: AuthError, action: string): string {
@@ -62,7 +85,6 @@ function authErrorMessage(error: AuthError, action: string): string {
     case "same_password":
       return t.passwordSame;
     case "over_request_rate_limit":
-    case "over_email_send_rate_limit":
       return t.tooManyRequests;
     default:
       console.error(`[auth] ${action} failed`, { code: error.code, status: error.status });
@@ -104,8 +126,8 @@ export async function signUp(
     password: input.password,
     options: {
       emailRedirectTo: `${await siteOrigin()}/auth/confirm`,
-      // Read by the signup trigger (profile, role, accepted versions) and by
-      // /auth/confirm (where to go once the email is confirmed).
+      // Read by the signup trigger (profile, role, accepted versions) and
+      // once the email is confirmed (where to go).
       data: {
         role: input.role,
         first_name: firstName,
@@ -116,12 +138,12 @@ export async function signUp(
       },
     },
   });
-  if (error) {
+  if (error && !isEmailFrequencyLimit(error, "signUp")) {
     const message = authErrorMessage(error, "signUp");
     const field = error.code === "weak_password" ? { password: message } : undefined;
     return { ok: false, error: message, fieldErrors: field, values };
   }
-  // Email confirmation switched off (local stack): the session already exists.
+  // Email confirmation switched off in the project settings: already signed in.
   if (data.session) redirect(safeNextPath(input.next, fallback));
   // Same answer whether the email was new or already registered (no enumeration).
   return { ok: true, data: { email: input.email } };
@@ -139,8 +161,24 @@ export async function resendConfirmation(
     email: parsed.data.email,
     options: { emailRedirectTo: `${await siteOrigin()}/auth/confirm` },
   });
-  if (error) return { ok: false, error: authErrorMessage(error, "resend") };
+  if (error && !isEmailFrequencyLimit(error, "resend")) {
+    return { ok: false, error: authErrorMessage(error, "resend") };
+  }
   return { ok: true, data: undefined };
+}
+
+/** « Confirmer » on /confirmation: the token of the email is used only now. */
+export async function confirmEmailLink(formData: FormData): Promise<void> {
+  const parsed = confirmLinkSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) redirect(EXPIRED_LINK_PATH);
+  const { token_hash, type } = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({ type, token_hash });
+  if (error) {
+    console.error("[auth] verifyOtp failed", { code: error.code, type });
+    redirect(EXPIRED_LINK_PATH);
+  }
+  redirect(await pathAfterEmailLink(supabase, type));
 }
 
 // --- Sign-in and sign-out --------------------------------------------------
@@ -160,13 +198,21 @@ export async function signIn(
     email: parsed.data.email,
     password: parsed.data.password,
   });
-  if (error) return { ok: false, error: authErrorMessage(error, "signIn"), values };
+  if (error) {
+    return {
+      ok: false,
+      error: authErrorMessage(error, "signIn"),
+      values,
+      unconfirmed: error.code === "email_not_confirmed",
+    };
+  }
   redirect(safeNextPath(parsed.data.next, homePathForRoles(await rolesOf(data.user.id))));
 }
 
+/** This device only: the other sessions of the account stay open. */
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: "local" });
   redirect("/");
 }
 
@@ -185,12 +231,14 @@ export async function requestPasswordReset(
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
     redirectTo: `${await siteOrigin()}/auth/confirm?type=recovery`,
   });
-  // Unknown addresses get the same answer (no enumeration); only the rate
-  // limit is worth telling.
-  if (error?.code === "over_email_send_rate_limit" || error?.code === "over_request_rate_limit") {
+  // Unknown addresses get the same answer (no enumeration); only the limit
+  // per visitor, which does not depend on the address, is worth telling.
+  if (error?.code === "over_request_rate_limit") {
     return { ok: false, error: t.tooManyRequests, values };
   }
-  if (error) console.error("[auth] resetPasswordForEmail failed", { code: error.code });
+  if (error && !isEmailFrequencyLimit(error, "resetPasswordForEmail")) {
+    console.error("[auth] resetPasswordForEmail failed", { code: error.code });
+  }
   return { ok: true, data: undefined };
 }
 
@@ -210,6 +258,11 @@ export async function updatePassword(
   if (error) {
     const message = authErrorMessage(error, "updatePassword");
     return { ok: false, error: message, fieldErrors: { password: message } };
+  }
+  // New password: the sessions opened elsewhere with the old one are closed.
+  const { error: othersError } = await supabase.auth.signOut({ scope: "others" });
+  if (othersError) {
+    console.error("[auth] signOut others failed", { user_id: user.id, code: othersError.code });
   }
   redirect(homePathForRoles(await rolesOf(user.id)));
 }

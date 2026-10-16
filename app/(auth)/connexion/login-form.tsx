@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
-import { signIn } from "@/core/auth/actions";
+import { useActionState, type ReactNode } from "react";
+import { resendConfirmation, signIn } from "@/leenkey/auth/actions";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
@@ -12,18 +12,46 @@ const t = fr.auth.login;
 
 export function LoginForm({ next, notice }: { next?: string; notice?: string }) {
   const [state, action, pending] = useActionState(signIn, null);
+  const [resent, resendAction, resending] = useActionState(resendConfirmation, null);
   const errors = state?.ok === false ? (state.fieldErrors ?? {}) : {};
   const values = state?.ok === false ? (state.values ?? {}) : {};
+  const unconfirmed = state?.ok === false && state.unconfirmed === true;
   const signupHref = next ? `/inscription?next=${encodeURIComponent(next)}` : "/inscription";
+
+  let alert: ReactNode = null;
+  if (unconfirmed && resent?.ok) {
+    alert = <InlineAlert tone="success">{fr.auth.signup.resent}</InlineAlert>;
+  } else if (unconfirmed && resent?.ok === false) {
+    alert = <InlineAlert tone="danger">{resent.error}</InlineAlert>;
+  } else if (state?.ok === false) {
+    alert = (
+      <InlineAlert
+        tone="danger"
+        action={
+          unconfirmed ? (
+            // Same form, other action: the email typed above is resent a link.
+            <button
+              type="submit"
+              formAction={resendAction}
+              disabled={resending}
+              className="rounded-lk-sm font-semibold underline underline-offset-2 hover:no-underline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue disabled:opacity-60"
+            >
+              {fr.auth.signup.resend}
+            </button>
+          ) : undefined
+        }
+      >
+        {state.error}
+      </InlineAlert>
+    );
+  } else if (notice) {
+    alert = <InlineAlert tone="info">{notice}</InlineAlert>;
+  }
 
   return (
     <form action={action} noValidate className="flex flex-col gap-3.5">
       <div aria-live="polite" className="empty:hidden">
-        {state?.ok === false ? (
-          <InlineAlert tone="danger">{state.error}</InlineAlert>
-        ) : notice ? (
-          <InlineAlert tone="info">{notice}</InlineAlert>
-        ) : null}
+        {alert}
       </div>
       <input type="hidden" name="next" value={next ?? ""} />
       <Input

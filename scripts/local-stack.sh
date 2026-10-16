@@ -9,7 +9,8 @@
 #         password generated in .local-stack/, never committed)
 #   env   prints the variables to export before building the app for port 3200
 #   down  removes the containers
-# Ports: gateway 54331, Mailpit 54328 (UI and API), Postgres 54326.
+# Ports: gateway 54331, Mailpit 54328 (UI and API), Postgres 54326, on 127.0.0.1
+# (and on the docker host address for the containers), never on the network.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -39,7 +40,8 @@ case "${1:-}" in
     jwt anon > $DIR/anon_key
     docker rm -f $CONTAINERS >/dev/null 2>&1 || true
 
-    docker run -d --name lk-stack-db -e POSTGRES_PASSWORD=postgres -p $DB_PORT:5432 supabase/postgres:17.4.1.054 >/dev/null
+    docker run -d --name lk-stack-db -e POSTGRES_PASSWORD=postgres \
+      -p 127.0.0.1:$DB_PORT:5432 -p $HOST_IP:$DB_PORT:5432 supabase/postgres:17.4.1.054 >/dev/null
     for _ in $(seq 1 60); do
       [ "$(psql "$DB_URL" -At -c "select to_regprocedure('auth.uid()') is not null" 2>/dev/null)" = "t" ] && break
       sleep 2
@@ -48,13 +50,13 @@ case "${1:-}" in
     psql "postgresql://supabase_admin:postgres@127.0.0.1:$DB_PORT/postgres" -q \
       -c "alter role supabase_auth_admin with password 'postgres'; alter role authenticator with password 'postgres';"
 
-    docker run -d --name lk-stack-mail -p $SMTP:1025 -p $MAIL_UI:8025 axllent/mailpit:v1.27 >/dev/null
-    node scripts/local-stack-gateway.mjs $GATEWAY $AUTH $REST "$PWD/supabase/templates" > $DIR/gateway.log 2>&1 &
+    docker run -d --name lk-stack-mail -p $HOST_IP:$SMTP:1025 -p 127.0.0.1:$MAIL_UI:8025 axllent/mailpit:v1.27 >/dev/null
+    node scripts/local-stack-gateway.mjs $GATEWAY $AUTH $REST "$PWD/supabase/templates" $HOST_IP > $DIR/gateway.log 2>&1 &
     echo $! > $DIR/gateway.pid
     sleep 1
     kill -0 "$(cat $DIR/gateway.pid)" 2>/dev/null || { echo "Gateway not started (port $GATEWAY taken?): $DIR/gateway.log"; exit 1; }
 
-    docker run -d --name lk-stack-auth -p $AUTH:9999 \
+    docker run -d --name lk-stack-auth -p 127.0.0.1:$AUTH:9999 \
       -e GOTRUE_API_HOST=0.0.0.0 -e GOTRUE_API_PORT=9999 -e API_EXTERNAL_URL="http://localhost:$GATEWAY/auth/v1" \
       -e GOTRUE_DB_DRIVER=postgres \
       -e "GOTRUE_DB_DATABASE_URL=postgres://supabase_auth_admin:postgres@$HOST_IP:$DB_PORT/postgres" \
@@ -79,7 +81,7 @@ case "${1:-}" in
     DATABASE_URL="$DB_URL" scripts/db-migrate.sh local
     SEED_PASSWORD="$(cat $DIR/seed_password)" DATABASE_URL="$DB_URL" scripts/db-seed.sh local
 
-    docker run -d --name lk-stack-rest -p $REST:3000 \
+    docker run -d --name lk-stack-rest -p 127.0.0.1:$REST:3000 \
       -e "PGRST_DB_URI=postgres://authenticator:postgres@$HOST_IP:$DB_PORT/postgres" -e PGRST_DB_SCHEMAS=public \
       -e PGRST_DB_ANON_ROLE=anon -e PGRST_JWT_SECRET="$(cat $DIR/jwt_secret)" -e PGRST_DB_USE_LEGACY_GUCS=false \
       postgrest/postgrest:v12.2.12 >/dev/null

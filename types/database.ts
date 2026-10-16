@@ -1361,10 +1361,10 @@ export type Database = {
       }
       audit: {
         Args: {
-          p_entity: string
           p_entity_id: string
-          p_meta?: Json
+          p_entity: string
           p_action: string
+          p_meta?: Json
         }
         Returns: undefined
       }
@@ -1374,8 +1374,8 @@ export type Database = {
           financing_status: Database["public"]["Enums"]["financing_status"]
           financing_document_type: Database["public"]["Enums"]["financing_document_type"]
           financing_checked_at: string
-          first_name: string
           buyer_id: string
+          first_name: string
           project: Database["public"]["Enums"]["buyer_project"]
         }[]
       }
@@ -1397,11 +1397,11 @@ export type Database = {
       }
       estimation_record: {
         Args: {
-          p_low_cents?: number
+          p_high_cents?: number
           p_input: Json
           p_result: Json
           p_value_cents?: number
-          p_high_cents?: number
+          p_low_cents?: number
           p_email?: string
         }
         Returns: {
@@ -1410,7 +1410,7 @@ export type Database = {
         }[]
       }
       has_buyer_relation: {
-        Args: { p: string; b: string }
+        Args: { b: string; p: string }
         Returns: boolean
       }
       is_active_user: {
@@ -1432,6 +1432,10 @@ export type Database = {
       legal_record_signup: {
         Args: { p_profile_id: string; p_legal: Json }
         Returns: undefined
+      }
+      legal_version_valid: {
+        Args: { p_version: string }
+        Returns: boolean
       }
       listing_bad_transition: {
         Args: {
@@ -1585,8 +1589,8 @@ export type Database = {
           floors_total: number
           carrez_m2: number
           heating: string
-          is_new_build: boolean
           copro_lots: number
+          is_new_build: boolean
           id: string
           slug: string
           reference: string
@@ -1654,6 +1658,8 @@ export type Database = {
           p_page?: number
         }
         Returns: {
+          dpe_class: string
+          total_count: number
           id: string
           slug: string
           reference: string
@@ -1676,8 +1682,6 @@ export type Database = {
           has_garden: boolean
           has_parking: boolean
           has_cellar: boolean
-          dpe_class: string
-          total_count: number
         }[]
       }
       slugify: {

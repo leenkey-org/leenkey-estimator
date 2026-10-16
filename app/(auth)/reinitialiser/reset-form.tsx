@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { updatePassword } from "@/core/auth/actions";
+import { updatePassword } from "@/leenkey/auth/actions";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";

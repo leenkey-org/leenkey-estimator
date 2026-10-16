@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { acceptanceStatus, getProfile } from "@/core/auth/session";
-import { homePathForRoles, loginPath, safeNextPath } from "@/core/auth/next-path";
+import { loginPath, safeNextPath } from "@/core/auth/next-path";
+import { homePathForRoles } from "@/leenkey/auth/routes";
 import { fr } from "@/lib/i18n/fr";
 import { AuthShell } from "../_components/auth-shell";
 import { TermsForm } from "./terms-form";
@@ -14,7 +15,8 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 // (new version of a text, or account created without the signup form).
 export default async function TermsPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const next = typeof params.next === "string" ? params.next : undefined;
+  // Only a path of this site goes back into the form (never blocks it).
+  const next = safeNextPath(typeof params.next === "string" ? params.next : null, "") || undefined;
   const profile = await getProfile();
   if (!profile) redirect(loginPath(next));
   const { missing, acceptedBefore } = await acceptanceStatus(profile.id);

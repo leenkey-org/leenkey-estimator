@@ -53,10 +53,22 @@ describe("signUpSchema", () => {
   it("refuses passwords that bcrypt would cut", () => {
     expect(signUpSchema.safeParse({ ...valid, password: "x".repeat(73) }).success).toBe(false);
     expect(signUpSchema.safeParse({ ...valid, password: "x".repeat(72) }).success).toBe(true);
+    // bcrypt keeps 72 bytes: « é » counts twice.
+    expect(signUpSchema.safeParse({ ...valid, password: "é".repeat(36) }).success).toBe(true);
+    expect(signUpSchema.safeParse({ ...valid, password: "é".repeat(37) }).success).toBe(false);
   });
 });
 
 describe("other auth forms", () => {
+  it("an oversized destination never blocks a form", () => {
+    const parsed = signInSchema.safeParse({
+      email: "a@b.fr",
+      password: "1",
+      next: `/${"a".repeat(600)}`,
+    });
+    expect(parsed.success && parsed.data.next).toBeUndefined();
+  });
+
   it("login does not check the password length", () => {
     expect(signInSchema.safeParse({ email: "a@b.fr", password: "1" }).success).toBe(true);
     expect(signInSchema.safeParse({ email: "a@b.fr", password: "" }).success).toBe(false);

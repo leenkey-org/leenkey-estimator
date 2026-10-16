@@ -19,10 +19,11 @@ const email = z
 const newPassword = z
   .string({ required_error: t.passwordRequired })
   .min(PASSWORD_MIN, t.passwordTooShort)
-  .max(PASSWORD_MAX, t.passwordTooLong);
+  // Bytes, not characters: « é » takes two.
+  .refine((value) => new TextEncoder().encode(value).length <= PASSWORD_MAX, t.passwordTooLong);
 
-/** Destination after the form (validated again by safeNextPath). */
-const next = z.string().max(512).optional();
+/** Destination after the form (validated again by safeNextPath); never blocks it. */
+const next = z.string().max(512).optional().catch(undefined);
 
 /** Ticked HTML checkbox: FormData gives "on", nothing when unticked. */
 const accepted = z.literal("on", { errorMap: () => ({ message: t.termsRequired }) });
@@ -69,6 +70,12 @@ export const resetPasswordSchema = z
   });
 
 export const acceptTermsSchema = z.object({ acceptTerms: accepted, next });
+
+/** Hidden fields of /confirmation, copied from the link of the email. */
+export const confirmLinkSchema = z.object({
+  token_hash: z.string().regex(/^[A-Za-z0-9_-]{1,512}$/),
+  type: z.enum(["email", "signup", "recovery", "email_change"]),
+});
 
 /** First message of each invalid field, keyed by field name. */
 export function fieldErrors(error: z.ZodError): Record<string, string> {

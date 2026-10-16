@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isAuthorized, isExemptPath } from "@/core/auth/basic-auth";
-import { isProtectedPath, loginPath } from "@/core/auth/next-path";
+import { loginPath } from "@/core/auth/next-path";
+import { isProtectedPath } from "@/leenkey/auth/routes";
 import { appEnv } from "@/lib/env";
 import { updateSession } from "@/lib/supabase/middleware";
 
@@ -51,7 +52,10 @@ export async function middleware(request: NextRequest) {
       response = redirect;
     }
   } else {
-    response = NextResponse.next();
+    // The path header is ours only: never one sent by the client.
+    const headers = new Headers(request.headers);
+    headers.delete(PATH_HEADER);
+    response = NextResponse.next({ request: { headers } });
   }
 
   if (env !== "production") response.headers.set("X-Robots-Tag", "noindex, nofollow");

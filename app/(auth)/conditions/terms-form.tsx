@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { acceptTerms } from "@/core/auth/actions";
+import { acceptTerms } from "@/leenkey/auth/actions";
 import { Button } from "@/components/shared/button";
 import { Checkbox } from "@/components/shared/checkbox";
 import { InlineAlert } from "@/components/shared/inline-alert";

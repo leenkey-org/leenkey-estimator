@@ -11,6 +11,7 @@ const AUTH_PATHS = [
   "/mot-de-passe-oublie",
   "/reinitialiser",
   "/conditions",
+  "/confirmation",
   "/auth",
 ];
 
@@ -34,39 +35,14 @@ export function safeNextPath(raw: string | null | undefined, fallback: string): 
   if (AUTH_PATHS.some((path) => url.pathname === path || url.pathname.startsWith(`${path}/`))) {
     return fallback;
   }
-  return `${url.pathname}${url.search}${url.hash}`;
-}
-
-/** Home of a signed-in user, by role (an account can be seller and buyer). */
-export function homePathForRoles(roles: readonly string[] | null | undefined): string {
-  if (!roles) return "/";
-  if (roles.includes("admin")) return "/admin";
-  if (roles.includes("seller")) return "/vendeur";
-  if (roles.includes("buyer")) return "/acquereur";
-  return "/";
+  const path = `${url.pathname}${url.search}${url.hash}`;
+  // Dot segments are resolved by URL: « /.//evil.com » becomes « //evil.com ».
+  if (path.startsWith("//") || path.startsWith("/\\")) return fallback;
+  return path;
 }
 
 /** Login page that comes back to `path` afterwards. */
 export function loginPath(path: string | null | undefined): string {
   const next = safeNextPath(path, "");
   return next ? `/connexion?next=${encodeURIComponent(next)}` : "/connexion";
-}
-
-/** Routes reserved to signed-in users (SPEC section 3, "Routes applicatives"). */
-export const PROTECTED_PREFIXES = [
-  "/vendeur",
-  "/acquereur",
-  "/messages",
-  "/offres",
-  "/visites",
-  "/assistant",
-  "/compte",
-  "/admin",
-  "/conditions",
-];
-
-export function isProtectedPath(pathname: string): boolean {
-  return PROTECTED_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  );
 }

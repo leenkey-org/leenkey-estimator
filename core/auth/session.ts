@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -76,5 +76,16 @@ export async function requireProfile(): Promise<SessionProfile> {
   if ((await missingAcceptances(profile.id)).length > 0) {
     redirect(`/conditions?next=${encodeURIComponent(path)}`);
   }
+  return profile;
+}
+
+/**
+ * Back office: an admin profile, otherwise a 404. Called by every admin page,
+ * query and action, not only by the layout: a layout is not rendered again on
+ * a client navigation, and can be skipped by a crafted router request.
+ */
+export async function requireAdmin(): Promise<SessionProfile> {
+  const profile = await requireProfile();
+  if (!profile.roles.includes("admin")) notFound();
   return profile;
 }

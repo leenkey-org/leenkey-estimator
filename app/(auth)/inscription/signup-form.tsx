@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { resendConfirmation, signUp } from "@/core/auth/actions";
+import { resendConfirmation, signUp } from "@/leenkey/auth/actions";
 import { passwordStrength } from "@/core/auth/identity";
 import { Button } from "@/components/shared/button";
 import { Checkbox } from "@/components/shared/checkbox";

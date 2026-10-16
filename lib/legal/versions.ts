@@ -3,7 +3,7 @@
 // published, set their date here and every user accepts them again through
 // /conditions (legal_acceptances, context 'update').
 export const LEGAL_VERSIONS = {
-  cgu: "2026-10-16",
+  cgu: "2026-06-28",
   privacy: "2026-10-16",
 } as const;
 

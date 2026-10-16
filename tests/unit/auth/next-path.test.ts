@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { homePathForRoles, isProtectedPath, loginPath, safeNextPath } from "@/core/auth/next-path";
+import { loginPath, safeNextPath } from "@/core/auth/next-path";
+import { homePathForRoles, isProtectedPath } from "@/leenkey/auth/routes";
 
 describe("safeNextPath", () => {
   it("keeps a path of the site with its query and hash", () => {
@@ -20,6 +21,11 @@ describe("safeNextPath", () => {
       "javascript:alert(1)",
       "evil.example",
       "/ok\nLocation: https://evil.example",
+      // Dot segments resolved by URL into a protocol-relative path.
+      "/.//evil.example",
+      "/%2e//evil.example",
+      "/a/..//evil.example",
+      "/./\\evil.example",
     ]) {
       expect(safeNextPath(raw, "/vendeur")).toBe("/vendeur");
     }
@@ -30,6 +36,7 @@ describe("safeNextPath", () => {
     expect(safeNextPath("/inscription?role=buyer", "/acquereur")).toBe("/acquereur");
     expect(safeNextPath("/auth/confirm?code=x", "/acquereur")).toBe("/acquereur");
     expect(safeNextPath("/conditions", "/acquereur")).toBe("/acquereur");
+    expect(safeNextPath("/confirmation?token_hash=x&type=email", "/acquereur")).toBe("/acquereur");
   });
 
   it("falls back on empty or oversized values", () => {

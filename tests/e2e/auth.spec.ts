@@ -56,6 +56,34 @@ test("l'inscription annonce les erreurs et garde la saisie", async ({ page }) =>
   await expect(page.getByLabel("Email")).toHaveAttribute("aria-invalid", "true");
 });
 
+test("le lien d'un email ouvre une page de confirmation qui n'utilise rien", async ({ page }) => {
+  await page.goto("/confirmation?token_hash=abc123&type=email");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Confirmez votre adresse email");
+  await expect(page.getByRole("button", { name: "Confirmer mon adresse" })).toBeVisible();
+  await page.goto("/confirmation?token_hash=abc123&type=recovery");
+  await expect(page.getByRole("button", { name: "Continuer" })).toBeVisible();
+  // Former link format, then malformed links.
+  await page.goto("/auth/confirm?token_hash=abc123&type=email");
+  await expect(page).toHaveURL(/\/confirmation\?token_hash=abc123&type=email$/);
+  for (const path of [
+    "/confirmation",
+    "/confirmation?token_hash=abc&type=magic",
+    "/auth/confirm",
+  ]) {
+    await page.goto(path);
+    await expect(page, path).toHaveURL(/\/connexion\?lien=expire$/);
+  }
+});
+
+test("une destination hors du site est ignorée", async ({ page }) => {
+  await page.goto(`/connexion?next=${encodeURIComponent("/.//evil.example")}`);
+  await expect(page.locator('input[name="next"]')).toHaveValue("");
+  await expect(page.getByRole("link", { name: "Créer un compte" })).toHaveAttribute(
+    "href",
+    "/inscription",
+  );
+});
+
 test("les liens des conditions mènent à des pages existantes", async ({ page }) => {
   for (const path of ["/cgu", "/confidentialite"]) {
     const response = await page.goto(path);
@@ -64,7 +92,13 @@ test("les liens des conditions mènent à des pages existantes", async ({ page }
 });
 
 test("écrans d'authentification sans violation sérieuse ou critique @a11y", async ({ page }) => {
-  for (const path of ["/inscription", "/connexion", "/mot-de-passe-oublie", "/confidentialite"]) {
+  for (const path of [
+    "/inscription",
+    "/connexion",
+    "/mot-de-passe-oublie",
+    "/confidentialite",
+    "/confirmation?token_hash=abc123&type=email",
+  ]) {
     await page.goto(path);
     await page.evaluate(() => document.fonts.ready);
     expect(await blockingViolations(page), path).toEqual([]);

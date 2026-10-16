@@ -24,7 +24,7 @@ async function emailLink(to: string, subject: string): Promise<string> {
       ).json()) as {
         HTML: string;
       };
-      const href = message.HTML.match(/href="([^"]*\/auth\/confirm\?[^"]*)"/)?.[1];
+      const href = message.HTML.match(/href="([^"]*\/confirmation\?[^"]*)"/)?.[1];
       if (href) return href.replace(/&amp;/g, "&");
     }
     await new Promise((resolve) => setTimeout(resolve, 500));
@@ -56,19 +56,48 @@ test("inscription, puis confirmation depuis un autre navigateur", async ({ page,
   await expect(page.getByRole("heading", { name: "Vérifiez votre boîte mail" })).toBeVisible();
 
   const link = await emailLink(email, "Confirmez votre adresse email");
-  expect(link).toMatch(/\/auth\/confirm\?token_hash=[^&]+&type=email$/);
+  expect(link).toMatch(/\/confirmation\?token_hash=[^&]+&type=email$/);
+  // Opening the link uses nothing (an email scanner may open it first).
+  const scanner = await (await browser.newContext()).newPage();
+  await scanner.goto(link);
+  await expect(scanner.getByRole("heading", { level: 1 })).toHaveText(
+    "Confirmez votre adresse email",
+  );
   const other = await (await browser.newContext()).newPage();
   await other.goto(link);
+  await other.getByRole("button", { name: "Confirmer mon adresse" }).click();
   await expect(other).toHaveURL(/\/acquereur\?bienvenue=1$/);
   await expect(other.getByRole("heading", { level: 1 })).toHaveText("Bonjour Camille");
 
   // A used link is refused clearly.
   const third = await (await browser.newContext()).newPage();
   await third.goto(link);
+  await third.getByRole("button", { name: "Confirmer mon adresse" }).click();
   await expect(third).toHaveURL(/\/connexion\?lien=expire$/);
   await expect(third.getByRole("status")).toHaveText(
     "Ce lien n'est plus valable. Connectez-vous, ou demandez un nouveau lien.",
   );
+});
+
+test("un compte non confirmé redemande le lien depuis la connexion", async ({ page }) => {
+  const pending = `dominique.${Date.now()}@exemple.test`;
+  await page.goto("/inscription");
+  await page.getByLabel("Prénom et nom").fill("Dominique Petit");
+  await page.getByLabel("Email").fill(pending);
+  await page.getByLabel("Mot de passe").fill("Maison-91-Savigny");
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Créer mon compte" }).click();
+  await expect(page.getByRole("heading", { name: "Vérifiez votre boîte mail" })).toBeVisible();
+
+  await page.goto("/connexion");
+  await page.getByLabel("Email").fill(pending);
+  await page.getByLabel("Mot de passe").fill("Maison-91-Savigny");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Votre email n'est pas encore confirmé." }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Renvoyer l'email" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "C'est renvoyé." })).toBeVisible();
 });
 
 test("connexion : mauvais mot de passe, puis le bon", async ({ page }) => {
@@ -96,6 +125,7 @@ test("mot de passe oublié, nouveau mot de passe", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Vérifiez votre boîte mail" })).toBeVisible();
 
   await page.goto(await emailLink(email, "Choisissez un nouveau mot de passe"));
+  await page.getByRole("button", { name: "Continuer" }).click();
   await expect(page).toHaveURL(/\/reinitialiser$/);
   await page.getByLabel("Nouveau mot de passe").fill("Nouveau-mdp-2026");
   await page.getByLabel("Confirmez le mot de passe").fill("Nouveau-mdp-2025");

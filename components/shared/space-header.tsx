@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { signOut } from "@/core/auth/actions";
+import { signOut } from "@/leenkey/auth/actions";
 import { fr } from "@/lib/i18n/fr";
 import { Button } from "./button";
 

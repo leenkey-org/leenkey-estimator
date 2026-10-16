@@ -60,7 +60,7 @@ export const fr = {
         `Nous avons envoyé un lien de confirmation à ${email}. Cliquez dessus pour activer votre compte.`,
       sentHint: "Rien reçu ? Regardez dans vos courriers indésirables, ou renvoyez l'email.",
       resend: "Renvoyer l'email",
-      resent: "C'est renvoyé. Le lien précédent ne fonctionne plus.",
+      resent: "C'est renvoyé. Ouvrez le lien du dernier email reçu.",
     },
     login: {
       metaTitle: "Se connecter · Leenkey",
@@ -91,6 +91,15 @@ export const fr = {
       expired: "Ce lien n'est plus valable. Demandez-en un nouveau.",
       requestNew: "Demander un nouveau lien",
     },
+    confirm: {
+      metaTitle: "Confirmation · Leenkey",
+      emailTitle: "Confirmez votre adresse email",
+      emailLead: "Un dernier clic pour activer votre compte.",
+      emailSubmit: "Confirmer mon adresse",
+      recoveryTitle: "Choisissez un nouveau mot de passe",
+      recoveryLead: "Continuez pour définir votre nouveau mot de passe.",
+      recoverySubmit: "Continuer",
+    },
     terms: {
       metaTitle: "Conditions d'utilisation · Leenkey",
       titleFirst: "Acceptez nos conditions",
@@ -107,7 +116,8 @@ export const fr = {
       phoneInvalid: "Ce numéro n'est pas valide.",
       passwordRequired: "Indiquez votre mot de passe.",
       passwordTooShort: "8 caractères minimum.",
-      passwordTooLong: "72 caractères maximum.",
+      passwordTooLong:
+        "Ce mot de passe est trop long (72 caractères maximum, moins avec des accents).",
       passwordMismatch: "Les deux mots de passe sont différents.",
       passwordSame: "Choisissez un mot de passe différent de l'ancien.",
       passwordWeak:
@@ -116,7 +126,7 @@ export const fr = {
         "Acceptez les conditions d'utilisation et la politique de confidentialité pour continuer.",
       invalidCredentials: "Email ou mot de passe incorrect.",
       emailNotConfirmed:
-        "Confirmez d'abord votre email : cliquez sur le lien que nous vous avons envoyé.",
+        "Votre email n'est pas encore confirmé. Cliquez sur le lien reçu, ou demandez-en un nouveau.",
       tooManyRequests: "Trop de tentatives. Réessayez dans quelques minutes.",
       alreadyRegistered: "Un compte existe déjà avec cet email. Connectez-vous.",
       generic: "Une erreur est survenue. Réessayez dans un instant.",

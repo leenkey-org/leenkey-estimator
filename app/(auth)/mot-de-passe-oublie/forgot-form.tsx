@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { requestPasswordReset } from "@/core/auth/actions";
+import { requestPasswordReset } from "@/leenkey/auth/actions";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
