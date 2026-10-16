@@ -237,7 +237,6 @@ export const fields = {
   dpe: { label: "DPE" },
   surface: {
     label: "Surface",
-    placeholder: "en m²",
     unit: "m²",
     error: "La surface est obligatoire.",
   },
@@ -320,6 +319,9 @@ export const cardCaptions = {
   noPhoto: "Sans photo : le dessin de marque sur pierre",
   favourite: "Ajouter aux favoris",
 };
+
+/** The compact card keeps the short form of the note (Recherche.png). */
+export const compactNote: PropertyCardData["note"] = { text: "Dossier complet", tone: "success" };
 
 export const exampleCards: Record<"savigny" | "epinay" | "juvisy" | "morsang", PropertyCardData> = {
   savigny: {

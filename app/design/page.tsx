@@ -196,7 +196,6 @@ export default function DesignPage() {
                 <UnitInput
                   label={content.fields.surface.label}
                   unit={content.fields.surface.unit}
-                  placeholder={content.fields.surface.placeholder}
                   error={content.fields.surface.error}
                   inputMode="decimal"
                 />
@@ -215,6 +214,7 @@ export default function DesignPage() {
               <PropertyCard
                 variant="compact"
                 {...content.exampleCards.savigny}
+                note={content.compactNote}
                 className="md:hidden"
               />
               <PropertyCard
@@ -484,7 +484,11 @@ export default function DesignPage() {
           <Section id="cartes" title={content.sections.cards} level="h3">
             <Caption>{content.cardCaptions.compact}</Caption>
             <div className="grid gap-3 md:grid-cols-2">
-              <PropertyCard variant="compact" {...content.exampleCards.savigny} />
+              <PropertyCard
+                variant="compact"
+                {...content.exampleCards.savigny}
+                note={content.compactNote}
+              />
               <PropertyCard variant="compact" {...content.exampleCards.epinay} />
             </div>
             <div className="hidden flex-col gap-3.5 md:flex">

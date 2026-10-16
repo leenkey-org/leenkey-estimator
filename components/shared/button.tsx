@@ -14,6 +14,8 @@ export const buttonVariants = cva(
     "focus-visible:ring-0 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
     // Disabled: 0.45 opacity, "not allowed" cursor, no hover (not-disabled: below).
     "disabled:pointer-events-auto disabled:cursor-not-allowed disabled:opacity-45",
+    // Loading is disabled too, but keeps its colours: the spinner says it is working.
+    "aria-busy:cursor-progress aria-busy:opacity-100",
   ],
   {
     variants: {

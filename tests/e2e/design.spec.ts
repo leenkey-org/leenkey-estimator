@@ -56,9 +56,13 @@ test.describe("catalogue /design", () => {
     const dpe = page.getByRole("radiogroup", { name: "DPE" });
     await expect(dpe.getByRole("radio", { name: "Classe C" })).toBeChecked();
     await dpe.getByRole("radio", { name: "Classe C" }).focus();
-    await page.keyboard.press("ArrowRight");
-    await expect(dpe.getByRole("radio", { name: "Classe D" })).toBeChecked();
+    // Radix moves the focus just after keydown and selects while the key is
+    // down: hold it like a person does (press() releases it at once).
+    await page.keyboard.down("ArrowRight");
     await expect(dpe.getByRole("radio", { name: "Classe D" })).toBeFocused();
+    await page.keyboard.up("ArrowRight");
+    await expect(dpe.getByRole("radio", { name: "Classe D" })).toBeChecked();
+    await expect(dpe.getByRole("radio", { name: "Classe C" })).not.toBeChecked();
   });
 
   test("le titre et les prix utilisent Archivo élargie", async ({ page }) => {
