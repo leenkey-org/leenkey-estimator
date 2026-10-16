@@ -1,6 +1,10 @@
+import type { FilterSelectDemoOption } from "./_filter-select-demo";
+import type { GalleryPhoto } from "@/components/shared/gallery";
+import type { KeyFact } from "@/components/shared/key-facts-table";
 import type { PropertyCardData } from "@/components/shared/property-card";
 import type { KeyFigure } from "@/components/shared/key-figures";
 import { formatPrice, formatPriceShort, formatSurface } from "@/lib/format";
+import { fr } from "@/lib/i18n/fr";
 
 // Texts and example data of the internal /design catalogue (docs/DESIGN.md
 // 12.14). Example data lives here only, never in the components.
@@ -30,13 +34,20 @@ export const sections = {
   iconButtons: "Boutons icône",
   inputs: "Champs de saisie",
   choices: "Sélections",
+  filters: "Barre de filtres",
   badges: "Pastilles de statut",
   sectionTitle: "Titre de section",
   keyFigures: "Chiffres clés",
+  gallery: "Galerie",
+  price: "Prix",
+  contact: "Vendeur",
+  keyFacts: "Tableau des caractéristiques",
   cards: "Cartes de bien",
   brandPanel: "Aplat de marque",
   drawing: "Dessin de marque",
   emptyState: "État vide",
+  alerts: "Alertes",
+  skeleton: "Chargement",
   formats: "Formats des nombres et des dates",
   shapes: "Rayons, ombres et bordures",
   spacing: "Espacements, points de rupture et conteneurs",
@@ -464,3 +475,100 @@ export const motion = [
   { name: "Fondu d'image", value: "160 ms · linéaire, avec le composant photo (L1-12)" },
   { name: "Mouvement réduit", value: "animations et transitions coupées dans .facade" },
 ];
+
+const bar = fr.search.bar;
+
+export const filterBar = {
+  selectCaption:
+    "FilterSelect · barre de filtres desktop, 44 px, aussi large que son texte ; teinte bleue quand une valeur est choisie",
+  type: {
+    label: bar.type,
+    defaultValue: "appartement",
+    options: [
+      { value: "", label: bar.type },
+      ...(["appartement", "maison", "terrain"] as const).map((type) => ({
+        value: type,
+        label: fr.search.types[type],
+      })),
+    ] satisfies FilterSelectDemoOption[],
+  },
+  budget: {
+    label: bar.budgetLabel,
+    defaultValue: "",
+    options: [
+      { value: "", label: bar.budget },
+      ...[300_000, 400_000, 500_000].map((euros) => ({
+        value: String(euros),
+        label: bar.priceUpTo(formatPrice(euros * 100)),
+      })),
+    ] satisfies FilterSelectDemoOption[],
+  },
+  rooms: {
+    label: bar.roomsLabel,
+    defaultValue: "3",
+    options: [
+      { value: "", label: bar.rooms },
+      ...[1, 2, 3, 4, 5].map((rooms) => ({ value: String(rooms), label: bar.roomsAtLeast(rooms) })),
+    ] satisfies FilterSelectDemoOption[],
+  },
+  more: bar.more,
+  chipCaption:
+    "ChipButton · même forme qu'un filtre rapide inactif, ouvre le panneau des filtres sur son champ (barre mobile)",
+  chips: [fr.search.chips.budget, fr.search.chips.rooms, fr.search.chips.dpe],
+};
+
+export const galleryPhotos: GalleryPhoto[] = [
+  exampleCards.savigny.photo,
+  exampleCards.epinay.photo,
+  exampleCards.juvisy.photo,
+].filter((photo): photo is GalleryPhoto => photo !== null);
+
+export const gallery = {
+  caption:
+    "Mobile : une photo sur la largeur, 280 px, défilement, compteur. À partir de 1024 px : une grande photo et les suivantes. Toucher ou cliquer agrandit en plein écran.",
+  back: "Retour",
+  noPhotoCaption: "Sans photo : le dessin de marque sur pierre, jusqu'aux photos (L1-12)",
+};
+
+export const price = {
+  priceCents: 35_000_000,
+  surfaceM2: 68,
+  mdCaption: "md · annonce mobile, 26 px",
+  lgCaption: "lg · colonne prix desktop, 30 px à partir de 1024 px",
+};
+
+export const contact = {
+  firstName: "Camille",
+  otherFirstName: "Thomas",
+  cardCaption: "card · annonce mobile ; formule payante : « Vente accompagnée par Leenkey »",
+  freeCaption: "Formule Autonomie : le prénom seul",
+  tileCaption: "tile · colonne prix desktop",
+  unknownCaption: "Prénom absent",
+};
+
+export const keyFacts: { items: KeyFact[]; linkLabel: string; linkValue: string; caption: string } =
+  {
+    items: [
+      { label: "Charges de copropriété", value: `${formatPrice(18_000)} / mois` },
+      { label: "Taxe foncière", value: `${formatPrice(115_000)} / an` },
+      { label: "Classe énergie (DPE)", value: "C" },
+      { label: "Diagnostics", value: "Complets", tone: "success" },
+      { label: "Travaux votés", value: fr.listing.facts.notProvided, tone: "muted" },
+    ],
+    linkLabel: "Procès-verbaux d'AG",
+    linkValue: "Demander l'accès",
+    caption: "Valeur : normale, « Non renseigné » en encre 3, succès, ou lien",
+  };
+
+export const alerts = {
+  danger: fr.search.error,
+  retry: fr.search.retry,
+  warning: "Votre annonce est en pause : elle n'apparaît plus dans les résultats.",
+  info: fr.listing.actions.accountRequired,
+  caption: "danger (role alert), warning et info (role status)",
+};
+
+export const skeleton = {
+  caption:
+    "Skeleton · bloc pierre au rayon de l'élément remplacé, opacité 0,6 → 1 en 1,2 s, immobile si le mouvement est réduit",
+};

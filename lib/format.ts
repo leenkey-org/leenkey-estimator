@@ -32,6 +32,11 @@ function formatNumber(value: number, maximumFractionDigits = 0): string {
   return normaliseSpaces(format.format(value));
 }
 
+/** « 1 250 »: counts and other whole numbers. */
+export function formatInteger(value: number): string {
+  return formatNumber(Math.round(value));
+}
+
 /** « 350 000 € » from cents, rounded to the euro. */
 export function formatPrice(cents: number): string {
   return `${formatNumber(Math.round(cents / 100))}${NNBSP}€`;
@@ -97,6 +102,11 @@ function parisParts(date: Date) {
 function parisDayNumber(date: Date): number {
   const { year, month, day } = parisParts(date);
   return Math.round(Date.UTC(year, month - 1, day) / DAY);
+}
+
+/** Calendar days between a date and now, in Paris: 0 today, 1 yesterday. */
+export function parisDaysAgo(value: DateInput, now: DateInput = new Date()): number {
+  return parisDayNumber(toDate(now)) - parisDayNumber(toDate(value));
 }
 
 function sameParisYear(a: Date, b: Date): boolean {

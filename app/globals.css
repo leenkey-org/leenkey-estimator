@@ -453,6 +453,16 @@ html {
   font-variant-numeric: tabular-nums;
 }
 
+/* Skeleton pulse (DESIGN.md 10.8): opacity 0.6 → 1 in 1.2 s */
+@keyframes lk-skeleton {
+  from {
+    opacity: 0.6;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @layer base {
   /* Façade scope: Archivo (variable set by next/font on the same element),
      Leenkey colours and the shadcn/ui variables of DESIGN.md 2.2. */
