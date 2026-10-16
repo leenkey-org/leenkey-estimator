@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export type EmptyStateProps = {
   title: string;
-  titleAs?: "h2" | "h3" | "h4";
+  titleAs?: "h1" | "h2" | "h3" | "h4";
   /** One useful sentence (SPEC-V2 section 6, « Le ton »). */
   description?: string;
   /** A single action: Button primary, or inverse on the blue flat. */

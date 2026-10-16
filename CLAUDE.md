@@ -167,6 +167,7 @@ PREPROD_PASSWORD=               # préprod uniquement ; absentes en prod = pas d
 AI_MODEL_FAST=                  # facultatif, surcharge de core/ai/models.ts
 AI_MODEL_SMART=                 # facultatif
 AI_MOCK=                        # 1 en tests E2E : réponses IA déterministes
+E2E_SEED=                       # 1 : tests E2E sur une base chargée par npm run db:seed (local, préprod)
 SEED_PASSWORD=                  # mot de passe commun des comptes de seed (local et staging uniquement)
 ```
 

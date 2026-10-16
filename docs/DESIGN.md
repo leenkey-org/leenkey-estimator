@@ -468,6 +468,10 @@ Pour chaque composant : anatomie, dimensions, variantes, états. Les composants 
 
 **Checkbox** : 20 × 20, rayon 4, bordure 1,5 px `--lk-field`, cochée = fond `--lk-blue` + coche blanche. Libellé 12–13 px `--lk-ink-2`, cliquable.
 
+**FilterSelect** (select de la `FilterBar` desktop) : 44 px, valeur courte affichée au-dessus d'un select natif transparent, jamais sur deux lignes, teinte bleue quand une valeur est choisie (L1-15).
+
+**ChipButton** : forme d'un `ChipToggle` inactif ; ouvre le panneau des filtres sur son champ au lieu de basculer un état (L1-15).
+
 **ChipToggle** (atouts, filtres rapides) : hauteur 40 px (36 px dans la barre de filtres mobile), padding 0 12–14 px, 13 px 500, rayon 4. Inactif : fond blanc, bordure 1,5 px `--lk-line`, texte `--lk-ink`. Actif : fond `--lk-blue-tint`, bordure 1,5 px `--lk-blue`, texte `--lk-blue`. `aria-pressed`.
 
 **SegmentedPicker** (DPE A à G, choix du projet) : boutons égaux de 44 px, écart 6 px, rayon 4. Inactif : fond `--lk-stone-2`, texte `--lk-ink-2` 600 14 px. Actif : fond `--lk-blue`, texte blanc. Rôle `radiogroup`.
@@ -630,7 +634,7 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 **Toast** : en bas au centre (mobile, au-dessus de la `BottomNav`) ou en bas à droite (desktop). Fond `--lk-ink`, texte blanc 14 px, rayon 4, padding 12 × 16, action en `--lk-on-blue-2` 600. Durée 5 s, `role="status"`.
 
-**Alert inline** : fond `--lk-warning-bg` / `--lk-danger-bg` / `--lk-blue-tint`, rayon 6, padding 10 × 12, icône 14 px, texte 12–13 px de la couleur `-fg`.
+**Alert inline** (`InlineAlert`, L1-15) : fond `--lk-warning-bg` / `--lk-danger-bg` / `--lk-blue-tint`, rayon 6, padding 10 × 12, icône 14 px, texte 12–13 px de la couleur `-fg`.
 
 **Dialog / écran de confirmation** : desktop = dialogue centré 520 px, fond blanc, rayon 6, padding 24, titre 20 px 700 large, actions alignées à droite. Mobile = écran plein (pas de modale) avec en-tête retour. Les confirmations à portée juridique (acceptation d'offre) sont **toujours** des écrans pleins, jamais des dialogues (section 13.3).
 

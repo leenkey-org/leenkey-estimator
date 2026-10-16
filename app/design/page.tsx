@@ -4,23 +4,29 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Bell, ChevronLeft, Heart, Plus, Settings, Sparkles, X } from "lucide-react";
 import * as content from "./_content";
+import { FilterSelectDemo } from "./_filter-select-demo";
 import { BrandPanel } from "@/components/shared/brand-panel";
 import { Button } from "@/components/shared/button";
 import { Checkbox } from "@/components/shared/checkbox";
-import { ChipToggle } from "@/components/shared/chip-toggle";
+import { ChipButton, ChipToggle } from "@/components/shared/chip-toggle";
+import { ContactCard } from "@/components/shared/contact-card";
 import { DPE_CLASSES, DpeBadge } from "@/components/shared/dpe-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FacadeDrawing } from "@/components/shared/facade-drawing";
 import { FacadeRoot } from "@/components/shared/facade-root";
+import { Gallery } from "@/components/shared/gallery";
 import { IconButton } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
+import { KeyFactsTable } from "@/components/shared/key-facts-table";
 import { KeyFigures } from "@/components/shared/key-figures";
+import { PriceBlock } from "@/components/shared/price-block";
 import { PropertyCard } from "@/components/shared/property-card";
 import { RoleCards } from "@/components/shared/role-cards";
 import { SectionTitle } from "@/components/shared/section-title";
 import { SegmentedPicker } from "@/components/shared/segmented-picker";
 import { Select } from "@/components/shared/select";
+import { Skeleton } from "@/components/shared/skeleton";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { UnitInput } from "@/components/shared/unit-input";
 import { isProduction } from "@/lib/env";
@@ -459,12 +465,26 @@ export default function DesignPage() {
             </div>
           </Section>
 
-          <Section id="alertes" title={content.sections.alerts} level="h3">
-            <div className="flex max-w-lk-form flex-col gap-3">
-              <InlineAlert tone="danger">{content.alerts.danger}</InlineAlert>
-              <InlineAlert tone="warning">{content.alerts.warning}</InlineAlert>
-              <InlineAlert tone="info">{content.alerts.info}</InlineAlert>
-              <InlineAlert tone="success">{content.alerts.success}</InlineAlert>
+          <Section id="filtres" title={content.sections.filters} level="h3">
+            <Caption>{content.filterBar.selectCaption}</Caption>
+            <div className="flex flex-wrap items-center gap-3">
+              <FilterSelectDemo {...content.filterBar.type} />
+              <FilterSelectDemo {...content.filterBar.budget} />
+              <FilterSelectDemo {...content.filterBar.rooms} />
+              <Button
+                variant="outline-ink"
+                className="shrink-0 whitespace-nowrap px-3.5 text-lk-label"
+              >
+                {content.filterBar.more}
+              </Button>
+            </div>
+            <Caption>{content.filterBar.chipCaption}</Caption>
+            <div className="flex flex-wrap gap-2">
+              {content.filterBar.chips.map((label) => (
+                <ChipButton key={label} compact>
+                  {label}
+                </ChipButton>
+              ))}
             </div>
           </Section>
 
@@ -511,6 +531,86 @@ export default function DesignPage() {
           <Section id="chiffres-cles" title={content.sections.keyFigures} level="h3">
             <KeyFigures items={content.keyFigures} className="max-w-lk-settings" />
             <Caption>{content.keyFiguresCaption}</Caption>
+          </Section>
+
+          <Section id="galerie" title={content.sections.gallery} level="h3">
+            <Gallery
+              photos={content.galleryPhotos}
+              topLeft={
+                <IconButton
+                  icon={ChevronLeft}
+                  variant="white-float"
+                  aria-label={content.gallery.back}
+                />
+              }
+              className="overflow-hidden rounded-lk-md lg:rounded-none"
+            />
+            <Caption>{content.gallery.caption}</Caption>
+            <Gallery photos={[]} className="overflow-hidden rounded-lk-md lg:rounded-none" />
+            <Caption>{content.gallery.noPhotoCaption}</Caption>
+          </Section>
+
+          <Section id="prix" title={content.sections.price} level="h3">
+            <div className="flex flex-wrap items-end gap-x-12 gap-y-6">
+              <div className="flex flex-col gap-2">
+                <PriceBlock
+                  priceCents={content.price.priceCents}
+                  surfaceM2={content.price.surfaceM2}
+                />
+                <Caption>{content.price.mdCaption}</Caption>
+              </div>
+              <div className="flex flex-col gap-2">
+                <PriceBlock
+                  priceCents={content.price.priceCents}
+                  surfaceM2={content.price.surfaceM2}
+                  size="lg"
+                />
+                <Caption>{content.price.lgCaption}</Caption>
+              </div>
+            </div>
+          </Section>
+
+          <Section id="vendeur" title={content.sections.contact} level="h3">
+            <div className="grid max-w-lk-settings gap-x-4 gap-y-5 sm:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <ContactCard firstName={content.contact.firstName} accompanied />
+                <Caption>{content.contact.cardCaption}</Caption>
+              </div>
+              <div className="flex flex-col gap-2">
+                <ContactCard firstName={content.contact.otherFirstName} accompanied={false} />
+                <Caption>{content.contact.freeCaption}</Caption>
+              </div>
+              <div className="flex flex-col gap-2">
+                <ContactCard firstName={content.contact.firstName} accompanied variant="tile" />
+                <Caption>{content.contact.tileCaption}</Caption>
+              </div>
+              <div className="flex flex-col gap-2">
+                <ContactCard firstName={null} accompanied={false} variant="tile" />
+                <Caption>{content.contact.unknownCaption}</Caption>
+              </div>
+            </div>
+          </Section>
+
+          <Section id="caracteristiques" title={content.sections.keyFacts} level="h3">
+            <KeyFactsTable
+              className="max-w-lk-prose"
+              items={[
+                ...content.keyFacts.items,
+                {
+                  label: content.keyFacts.linkLabel,
+                  value: (
+                    <Link
+                      href="/design#caracteristiques"
+                      className="underline underline-offset-2 hover:no-underline"
+                    >
+                      {content.keyFacts.linkValue}
+                    </Link>
+                  ),
+                  tone: "link",
+                },
+              ]}
+            />
+            <Caption>{content.keyFacts.caption}</Caption>
           </Section>
 
           <Section id="cartes" title={content.sections.cards} level="h3">
@@ -623,6 +723,47 @@ export default function DesignPage() {
                 />
               </BlueFlat>
             </div>
+          </Section>
+
+          <Section id="alertes" title={content.sections.alerts} level="h3">
+            <div className="flex max-w-lk-prose flex-col gap-3">
+              <InlineAlert
+                tone="danger"
+                action={
+                  <Link
+                    href="/design#alertes"
+                    className="font-semibold underline underline-offset-2 hover:no-underline"
+                  >
+                    {content.alerts.retry}
+                  </Link>
+                }
+              >
+                {content.alerts.danger}
+              </InlineAlert>
+              <InlineAlert tone="warning">{content.alerts.warning}</InlineAlert>
+              <InlineAlert tone="info">{content.alerts.info}</InlineAlert>
+              <InlineAlert tone="success">{content.alerts.success}</InlineAlert>
+            </div>
+            <Caption>{content.alerts.caption}</Caption>
+          </Section>
+
+          <Section id="chargement" title={content.sections.skeleton} level="h3">
+            <div className="grid max-w-lk-settings gap-3 md:grid-cols-2">
+              {[0, 1].map((index) => (
+                <div
+                  key={index}
+                  className="flex gap-3 rounded-lk-md border border-lk-line bg-lk-surface p-2.5"
+                >
+                  <Skeleton className="size-24 shrink-0" />
+                  <div className="flex min-w-0 flex-1 flex-col gap-2 py-1">
+                    <Skeleton className="h-5 w-28" />
+                    <Skeleton className="h-3.5 w-4/5" />
+                    <Skeleton className="h-3.5 w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Caption>{content.skeleton.caption}</Caption>
           </Section>
 
           <Section id="formats" title={content.sections.formats} level="h3">
