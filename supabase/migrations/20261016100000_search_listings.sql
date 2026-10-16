@@ -9,14 +9,13 @@
 -- public_listings: + floors_total, carrez_m2, heating, copro_lots,
 -- is_new_build, shown in « Ce que vous savez avant de visiter » (SPEC 8.5).
 -- Public facts of any listing, never the address, the exact location or the
--- owner. The return type changes: the view and its function are recreated,
--- with the new columns at the end; the rest is unchanged (plan of the sale
--- from sale_progress, as in L1-05).
+-- owner. The rows now come from public_listings_details() (new return type,
+-- new columns at the end); the view is replaced in place, which keeps its
+-- grants, and public_listings_rows() keeps its L1-05 signature on top of it.
+-- No drop: on the preprod, destructive statements wait for a manual
+-- confirmation (DECISIONS 2026-10-16).
 -- ---------------------------------------------------------------------------
-drop view public.public_listings;
-drop function public.public_listings_rows();
-
-create function public.public_listings_rows()
+create function public.public_listings_details()
 returns table (
   id uuid, slug text, reference text, title text, description text,
   price_cents bigint, published_at timestamptz,
@@ -48,11 +47,33 @@ language sql stable security definer set search_path = '' as $$
   where l.status = 'published' and l.deleted_at is null and p.deleted_at is null;
 $$;
 
-create view public.public_listings with (security_invoker = true) as
-  select * from public.public_listings_rows();
+create or replace view public.public_listings with (security_invoker = true) as
+  select * from public.public_listings_details();
 
-revoke execute on function public.public_listings_rows() from public;
-grant execute on function public.public_listings_rows() to anon, authenticated;
+create or replace function public.public_listings_rows()
+returns table (
+  id uuid, slug text, reference text, title text, description text,
+  price_cents bigint, published_at timestamptz,
+  type public.property_type, city text, postal_code text, district text,
+  public_location extensions.geography, public_lat double precision, public_lng double precision,
+  surface_m2 numeric, rooms int, bedrooms int, floor int,
+  has_elevator boolean, has_balcony boolean, has_terrace boolean, has_garden boolean,
+  has_parking boolean, has_cellar boolean, orientation text, build_year int,
+  dpe_class char(1), ges_class char(1), charges_monthly_cents int,
+  property_tax_yearly_cents int, seller_first_name text, plan public.plan_code
+)
+language sql stable security definer set search_path = '' as $$
+  select d.id, d.slug, d.reference, d.title, d.description, d.price_cents, d.published_at,
+         d.type, d.city, d.postal_code, d.district, d.public_location, d.public_lat, d.public_lng,
+         d.surface_m2, d.rooms, d.bedrooms, d.floor, d.has_elevator, d.has_balcony,
+         d.has_terrace, d.has_garden, d.has_parking, d.has_cellar, d.orientation,
+         d.build_year, d.dpe_class, d.ges_class, d.charges_monthly_cents,
+         d.property_tax_yearly_cents, d.seller_first_name, d.plan
+  from public.public_listings_details() d;
+$$;
+
+revoke execute on function public.public_listings_details() from public;
+grant execute on function public.public_listings_details() to anon, authenticated;
 revoke all on public.public_listings from anon, authenticated;
 grant select on public.public_listings to anon, authenticated;
 
@@ -73,7 +94,7 @@ create index properties_postal_code_idx on public.properties (postal_code);
 -- search_listings(filters, bbox, sort, page): published listings only, public
 -- columns only (those of the search cards and of the map), 20 per page, with
 -- the total number of matches on every row. Reads the tables directly, with
--- the same condition as public_listings_rows(), so that the indexes apply.
+-- the same condition as public_listings_details(), so that the indexes apply.
 --
 -- p_filters (JSON object, every key optional, unknown keys refused):
 --   type             'appartement' | 'maison' | 'terrain' | 'autre'

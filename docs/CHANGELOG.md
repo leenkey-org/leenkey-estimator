@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-16 · L1-15, L1-17 · PR #15 · Recherche et page annonce
+- Ajouté : recherche `/acheter` (fonction `search_listings`, filtres combinés et partageables dans l'URL, suggestions des communes de la zone de lancement, panneau de filtres « Voir N biens », tri, « Voir plus ») ; page annonce `/annonce/[slug]` (galerie, chiffres clés, « Ce que vous savez avant de visiter », actions vers l'inscription acquéreur, métadonnées, JSON-LD, image de partage `/api/og/[slug]`, une vue comptée par visiteur et par jour) ; composants `FilterSelect`, `ChipButton`, `InlineAlert`, `Skeleton`, `PriceBlock`, `ContactCard`, `KeyFactsTable`, `Gallery` dans `/design`.
+- Modifié : `public_listings` (5 colonnes publiques de plus, lignes lues dans `public_listings_details()`, vue remplacée sans suppression) ; `listing_view_increment` ne compte ni le propriétaire ni l'admin.
+- Migration : `20261016100000_search_listings.sql`.
+- Tests : `rls_search_listings.sql` (69 assertions), 53 tests unitaires, `tests/e2e/search.spec.ts` (mode `E2E_SEED=1` sur base de seed, mode sans base en CI).
+
 ### 2026-10-16 · L1-06 · PR #13 · Seed complet
 - Ajouté : `npm run db:seed` (local) et `npm run db:seed:staging`, refusés en production ; une transaction, idempotent. Formules et droits, six étapes de vente par formule (section 9), 73 fiches de la FAQ de Cédric, comptes `seller_a`, `seller_b`, `buyer_c`, `buyer_d`, `admin` (`@test.leenkey.fr`), 16 biens fictifs dans la zone de lancement (12 publiés, 3 en attente, 1 refusé), formules Accompagné et Sérénité sur deux biens avec leur conversation conseiller, conversations acquéreurs, favoris, vues.
 - Migration : `20261015140000_seed_support.sql` (colonne `sale_step_tasks.owner`, clé d'import de la base de connaissances).

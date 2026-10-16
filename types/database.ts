@@ -1309,7 +1309,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"][]
       }
       admin_suspend_user: {
-        Args: { p_reason: string; p_profile_id: string }
+        Args: { p_profile_id: string; p_reason: string }
         Returns: undefined
       }
       admin_unsuspend_user: {
@@ -1318,22 +1318,22 @@ export type Database = {
       }
       audit: {
         Args: {
+          p_entity: string
+          p_entity_id: string
           p_action: string
           p_meta?: Json
-          p_entity_id: string
-          p_entity: string
         }
         Returns: undefined
       }
       buyer_summary_for_seller: {
         Args: { p_property_id: string }
         Returns: {
+          financing_checked_at: string
+          project: Database["public"]["Enums"]["buyer_project"]
           financing_status: Database["public"]["Enums"]["financing_status"]
           financing_document_type: Database["public"]["Enums"]["financing_document_type"]
-          financing_checked_at: string
           buyer_id: string
           first_name: string
-          project: Database["public"]["Enums"]["buyer_project"]
         }[]
       }
       can_write_conversation: {
@@ -1354,20 +1354,20 @@ export type Database = {
       }
       estimation_record: {
         Args: {
-          p_result: Json
-          p_email?: string
-          p_high_cents?: number
-          p_low_cents?: number
           p_value_cents?: number
           p_input: Json
+          p_result: Json
+          p_low_cents?: number
+          p_high_cents?: number
+          p_email?: string
         }
         Returns: {
-          claim_token: string
           id: string
+          claim_token: string
         }[]
       }
       has_buyer_relation: {
-        Args: { p: string; b: string }
+        Args: { b: string; p: string }
         Returns: boolean
       }
       is_active_user: {
@@ -1436,7 +1436,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["listing_status"]
       }
       listing_reject: {
-        Args: { p_reason: string; p_listing_id: string }
+        Args: { p_listing_id: string; p_reason: string }
         Returns: Database["public"]["Enums"]["listing_status"]
       }
       listing_require_admin: {
@@ -1470,7 +1470,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["listing_status"]
       }
       listing_submit: {
-        Args: { p_review?: Json; p_listing_id: string }
+        Args: { p_listing_id: string; p_review?: Json }
         Returns: Database["public"]["Enums"]["listing_status"]
       }
       listing_suspend: {
@@ -1512,12 +1512,9 @@ export type Database = {
         Args: { p_property_id: string }
         Returns: undefined
       }
-      public_listings_rows: {
+      public_listings_details: {
         Args: Record<PropertyKey, never>
         Returns: {
-          bedrooms: number
-          floor: number
-          has_elevator: boolean
           has_balcony: boolean
           has_terrace: boolean
           has_garden: boolean
@@ -1531,11 +1528,11 @@ export type Database = {
           property_tax_yearly_cents: number
           seller_first_name: string
           plan: Database["public"]["Enums"]["plan_code"]
-          floors_total: number
           carrez_m2: number
+          heating: string
           copro_lots: number
           is_new_build: boolean
-          heating: string
+          floors_total: number
           id: string
           slug: string
           reference: string
@@ -1552,6 +1549,46 @@ export type Database = {
           public_lng: number
           surface_m2: number
           rooms: number
+          bedrooms: number
+          floor: number
+          has_elevator: boolean
+        }[]
+      }
+      public_listings_rows: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          orientation: string
+          has_elevator: boolean
+          has_balcony: boolean
+          has_terrace: boolean
+          has_garden: boolean
+          has_parking: boolean
+          has_cellar: boolean
+          build_year: number
+          dpe_class: string
+          ges_class: string
+          charges_monthly_cents: number
+          property_tax_yearly_cents: number
+          seller_first_name: string
+          plan: Database["public"]["Enums"]["plan_code"]
+          id: string
+          slug: string
+          reference: string
+          title: string
+          description: string
+          price_cents: number
+          published_at: string
+          type: Database["public"]["Enums"]["property_type"]
+          city: string
+          postal_code: string
+          district: string
+          public_location: unknown
+          public_lat: number
+          public_lng: number
+          surface_m2: number
+          rooms: number
+          bedrooms: number
+          floor: number
         }[]
       }
       sale_task_is_seller_owned: {
