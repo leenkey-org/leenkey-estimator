@@ -1,0 +1,667 @@
+import type { CSSProperties, ReactNode } from "react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Bell, ChevronLeft, Heart, Plus, Settings, Sparkles, X } from "lucide-react";
+import * as content from "./_content";
+import { BrandPanel } from "@/components/shared/brand-panel";
+import { Button } from "@/components/shared/button";
+import { ChipToggle } from "@/components/shared/chip-toggle";
+import { DPE_CLASSES, DpeBadge } from "@/components/shared/dpe-badge";
+import { EmptyState } from "@/components/shared/empty-state";
+import { FacadeDrawing } from "@/components/shared/facade-drawing";
+import { FacadeRoot } from "@/components/shared/facade-root";
+import { IconButton } from "@/components/shared/icon-button";
+import { Input } from "@/components/shared/input";
+import { KeyFigures } from "@/components/shared/key-figures";
+import { PropertyCard } from "@/components/shared/property-card";
+import { SectionTitle } from "@/components/shared/section-title";
+import { SegmentedPicker } from "@/components/shared/segmented-picker";
+import { Select } from "@/components/shared/select";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { UnitInput } from "@/components/shared/unit-input";
+import { isProduction } from "@/lib/env";
+import {
+  formatDate,
+  formatDateTime,
+  formatPrice,
+  formatPricePerSquareMetre,
+  formatPriceShort,
+  formatRelative,
+  formatRooms,
+  formatSurface,
+} from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+// Living catalogue of the Façade design system (docs/DESIGN.md 12.14): the
+// board of Main.png with the real components, then every component of
+// components/shared. Local and preprod only.
+
+export const metadata: Metadata = {
+  title: content.page.metaTitle,
+  robots: { index: false, follow: false },
+};
+
+const LISTING_STATUSES = [
+  "draft",
+  "pending",
+  "published",
+  "paused",
+  "suspended",
+  "sold",
+  "rejected",
+] as const;
+const PLANS = ["autonomie", "accompagne", "serenite"] as const;
+const BUTTON_VARIANTS = [
+  "primary",
+  "secondary",
+  "outline-ink",
+  "ghost",
+  "on-dark",
+  "success",
+  "danger",
+] as const;
+
+function Section({
+  id,
+  title,
+  level = "h2",
+  children,
+  className,
+}: {
+  id: string;
+  title: string;
+  level?: "h2" | "h3";
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section aria-labelledby={id} className={cn("flex flex-col gap-4", className)}>
+      <SectionTitle as={level} id={id}>
+        {title}
+      </SectionTitle>
+      {children}
+    </section>
+  );
+}
+
+function Caption({ children }: { children: ReactNode }) {
+  return <p className="text-lk-caption text-lk-ink-3">{children}</p>;
+}
+
+function SwatchTile({ swatch }: { swatch: content.Swatch }) {
+  const style: CSSProperties = { backgroundColor: `var(--color-${swatch.token})` };
+  return (
+    <div className="flex min-w-0 flex-col gap-2">
+      <div className="h-14 rounded-lk-sm border border-lk-line" style={style} />
+      <div className="min-w-0">
+        <p className="truncate text-lk-label font-semibold text-lk-ink">{swatch.name}</p>
+        <p className="text-lk-caption tabular text-lk-ink-3">{swatch.hex}</p>
+        <p className="truncate text-lk-caption text-lk-ink-3">{swatch.token}</p>
+      </div>
+    </div>
+  );
+}
+
+function BlueFlat({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn("rounded-lk-md bg-lk-blue p-6 text-white", className)}>{children}</div>;
+}
+
+export default function DesignPage() {
+  if (isProduction()) notFound();
+
+  const now = content.formats.now;
+  const formatRows: Array<[string, string]> = [
+    [content.formats.rows.price, formatPrice(35_000_000)],
+    [content.formats.rows.priceShort, formatPriceShort(35_000_000)],
+    [content.formats.rows.surface, formatSurface(68)],
+    [content.formats.rows.pricePerSquareMetre, formatPricePerSquareMetre(35_000_000, 68)],
+    [content.formats.rows.rooms, formatRooms(3)],
+    [content.formats.rows.roomsShort, formatRooms(3, "short")],
+    [content.formats.rows.date, formatDate("2026-09-22T10:00:00Z", now)],
+    [content.formats.rows.dateTime, formatDateTime("2026-10-03T08:00:00Z", now)],
+    [content.formats.rows.relative, formatRelative("2026-10-15T10:00:00Z", now)],
+  ];
+
+  return (
+    <FacadeRoot className="min-h-screen">
+      <main className="mx-auto flex max-w-lk-page flex-col gap-16 px-5 pb-24 pt-10 md:px-10">
+        <header className="flex flex-col gap-3 border-b border-lk-line pb-8 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
+          <h1 className="text-lk-h1 font-bold text-wide lg:text-lk-h1-lg">{content.page.title}</h1>
+          <p className="text-lk-secondary text-lk-ink-3 lg:max-w-lk-form lg:text-right">
+            {content.page.subtitle}
+          </p>
+        </header>
+
+        {/* Board of DESIGN.md 12.14 (Main.png) */}
+        <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
+          <div className="flex flex-col gap-12">
+            <Section id="couleurs" title={content.sections.colors}>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                {content.boardSwatches.map((swatch) => (
+                  <SwatchTile key={swatch.token} swatch={swatch} />
+                ))}
+              </div>
+            </Section>
+
+            <Section id="typographie" title={content.sections.typography}>
+              <div className="flex flex-col gap-3 rounded-lk-md border border-lk-line p-6">
+                <p className="text-lk-h1 font-bold text-wide lg:text-lk-h1-lg">
+                  {content.boardType.h1}
+                </p>
+                <p className="text-lk-h2 font-bold text-wide lg:text-lk-h2-lg">
+                  {content.boardType.h2}
+                </p>
+                <p className="text-lk-h3 font-semibold lg:text-lk-h3-lg">{content.boardType.h3}</p>
+                <p className="text-lk-body lg:text-lk-body-lg">{content.boardType.body}</p>
+                <p className="text-lk-secondary text-lk-ink-3">{content.boardType.secondary}</p>
+                <p className="text-lk-tag font-semibold text-lk-blue">{content.boardType.tag}</p>
+              </div>
+            </Section>
+          </div>
+
+          <div className="flex flex-col gap-12">
+            <Section id="boutons" title={content.sections.buttons}>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button>{content.buttons.publish}</Button>
+                <Button variant="secondary">{content.buttons.secondary}</Button>
+                <Button variant="ghost">{content.buttons.ghost}</Button>
+                <Button variant="on-dark">{content.buttons.onDark}</Button>
+                <Button variant="secondary" size="sm">
+                  {content.buttons.small}
+                </Button>
+              </div>
+            </Section>
+
+            <Section id="champs" title={content.sections.fields}>
+              <div className="grid gap-x-4 gap-y-3.5 sm:grid-cols-2">
+                <Input
+                  label={content.fields.address.label}
+                  defaultValue={content.fields.address.value}
+                  autoComplete="street-address"
+                />
+                <UnitInput
+                  label={content.fields.price.label}
+                  unit={content.fields.price.unit}
+                  defaultValue={content.fields.price.value}
+                  inputMode="numeric"
+                />
+                <Select label={content.fields.dpe.label} defaultValue="C">
+                  {DPE_CLASSES.map((letter) => (
+                    <option key={letter} value={letter}>
+                      {letter}
+                    </option>
+                  ))}
+                </Select>
+                <UnitInput
+                  label={content.fields.surface.label}
+                  unit={content.fields.surface.unit}
+                  placeholder={content.fields.surface.placeholder}
+                  error={content.fields.surface.error}
+                  inputMode="decimal"
+                />
+              </div>
+            </Section>
+
+            <Section id="statuts" title={content.sections.statuses}>
+              <div className="flex flex-wrap gap-2">
+                {LISTING_STATUSES.map((status) => (
+                  <StatusBadge key={status} status={status} />
+                ))}
+              </div>
+            </Section>
+
+            <Section id="carte-de-bien" title={content.sections.card}>
+              <PropertyCard
+                variant="compact"
+                {...content.exampleCards.savigny}
+                className="md:hidden"
+              />
+              <PropertyCard
+                variant="wide"
+                {...content.exampleCards.savigny}
+                className="hidden md:block"
+              />
+            </Section>
+          </div>
+        </div>
+
+        {/* Every component of components/shared (DESIGN.md section 10) */}
+        <section
+          aria-labelledby="catalogue"
+          className="flex flex-col gap-12 border-t border-lk-line pt-12"
+        >
+          <div className="flex flex-col gap-2">
+            <h2 id="catalogue" className="text-lk-h2 font-bold text-wide lg:text-lk-h2-lg">
+              {content.page.catalogueTitle}
+            </h2>
+            <p className="max-w-lk-prose text-lk-body text-lk-ink-2">
+              {content.page.catalogueIntro}
+            </p>
+          </div>
+
+          <Section id="palette" title={content.sections.palette} level="h3">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
+              {content.paletteSwatches.map((swatch) => (
+                <SwatchTile key={swatch.token} swatch={swatch} />
+              ))}
+            </div>
+            <Caption>{content.sections.dpe}</Caption>
+            <div className="flex flex-wrap gap-2">
+              {DPE_CLASSES.map((letter) => (
+                <DpeBadge key={letter} value={letter} />
+              ))}
+            </div>
+          </Section>
+
+          <Section id="echelle" title={content.sections.typeScale} level="h3">
+            <div className="divide-y divide-lk-line rounded-lk-md border border-lk-line">
+              {content.typeScale.map((role) => (
+                <div
+                  key={role.role}
+                  className="grid gap-2 p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-6 lg:p-5"
+                >
+                  <p className={cn("min-w-0 text-lk-ink", role.sampleClassName ?? role.classes)}>
+                    {role.sample}
+                  </p>
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <p className="text-lk-label font-semibold text-lk-ink">{role.role}</p>
+                    <p className="text-lk-caption text-lk-ink-3">{role.spec}</p>
+                    <p className="break-words text-lk-caption text-lk-ink-2">{role.classes}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          <Section id="variantes" title={content.sections.buttonVariants} level="h3">
+            <div className="flex flex-wrap items-center gap-3">
+              {BUTTON_VARIANTS.map((variant) => (
+                <Button key={variant} variant={variant}>
+                  {content.buttons.variants[variant]}
+                </Button>
+              ))}
+              <Button variant="ghost" muted>
+                {content.buttons.variants.ghostMuted}
+              </Button>
+            </div>
+            <BlueFlat className="flex flex-wrap items-center gap-4">
+              <Button variant="inverse">{content.buttons.variants.inverse}</Button>
+              <p className="text-lk-secondary text-lk-on-blue-2">{content.buttons.onBlueCaption}</p>
+            </BlueFlat>
+          </Section>
+
+          <Section id="tailles" title={content.sections.buttonSizes} level="h3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button size="lg">{content.buttons.sizes.lg}</Button>
+              <Button size="md">{content.buttons.sizes.md}</Button>
+              <Button size="sm">{content.buttons.sizes.sm}</Button>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button icon={Plus}>{content.buttons.withIcon}</Button>
+              <Button variant="secondary" disabled>
+                {content.buttons.disabled}
+              </Button>
+              <Button loading>{content.buttons.loading}</Button>
+              <Button variant="outline-ink" asChild>
+                <Link href="/design#tailles">{content.buttons.link}</Link>
+              </Button>
+            </div>
+            <div className="flex gap-2.5">
+              <Button variant="secondary" size="lg" className="flex-1">
+                {content.buttons.variants.secondary}
+              </Button>
+              <Button size="lg" className="flex-[1.4]">
+                {content.buttons.variants.primary}
+              </Button>
+            </div>
+          </Section>
+
+          <Section id="boutons-icone" title={content.sections.iconButtons} level="h3">
+            <div className="flex flex-wrap items-center gap-3">
+              <IconButton icon={ChevronLeft} aria-label={content.iconButtons.stone} />
+              <IconButton
+                icon={Heart}
+                variant="white-float"
+                aria-label={content.iconButtons.whiteFloat}
+              />
+              <IconButton icon={Bell} variant="tint" aria-label={content.iconButtons.tint} />
+              <IconButton icon={X} variant="outline" aria-label={content.iconButtons.outline} />
+              <IconButton
+                icon={Heart}
+                variant="transparent"
+                aria-label={content.iconButtons.transparent}
+              />
+              <IconButton
+                icon={Settings}
+                variant="transparent"
+                size="sm"
+                aria-label={content.iconButtons.small}
+              />
+              <div className="rounded-lk-md bg-lk-navy p-3">
+                <IconButton
+                  icon={Sparkles}
+                  variant="on-dark"
+                  aria-label={content.iconButtons.onDark}
+                />
+              </div>
+            </div>
+          </Section>
+
+          <Section id="saisie" title={content.sections.inputs} level="h3">
+            <div className="grid max-w-lk-form gap-3.5">
+              <Input
+                label={content.fields.phone.label}
+                optional
+                type="tel"
+                autoComplete="tel"
+                placeholder={content.fields.phone.placeholder}
+                help={content.fields.phone.help}
+              />
+              <Input
+                label={content.fields.password.label}
+                type="password"
+                autoComplete="new-password"
+                placeholder={content.fields.password.placeholder}
+                error={content.fields.password.error}
+              />
+              <Select
+                label={content.fields.type.label}
+                placeholder={content.fields.type.placeholder}
+                defaultValue=""
+              >
+                {content.fields.type.options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+              <UnitInput
+                label={content.fields.charges.label}
+                unit={content.fields.charges.unit}
+                defaultValue={content.fields.charges.value}
+                inputMode="numeric"
+              />
+              <Input
+                label={content.fields.search.label}
+                defaultValue={content.fields.search.value}
+                compact
+              />
+              <Input
+                label={content.fields.disabled.label}
+                defaultValue={content.fields.disabled.value}
+                disabled
+              />
+            </div>
+          </Section>
+
+          <Section id="selections" title={content.sections.choices} level="h3">
+            <div className="flex flex-col gap-1.5">
+              <p className="text-lk-label font-medium text-lk-ink">
+                {content.choices.amenitiesLabel}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {content.choices.amenities.map((chip) => (
+                  <ChipToggle key={chip.label} defaultPressed={chip.pressed}>
+                    {chip.label}
+                  </ChipToggle>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Caption>{content.choices.filtersLabel}</Caption>
+              <div className="flex flex-wrap gap-2">
+                {content.choices.filters.map((chip) => (
+                  <ChipToggle key={chip.label} defaultPressed={chip.pressed} compact>
+                    {chip.label}
+                  </ChipToggle>
+                ))}
+              </div>
+            </div>
+            <div className="grid max-w-lk-form gap-3.5">
+              <SegmentedPicker
+                label={content.choices.dpeLabel}
+                defaultValue="C"
+                options={DPE_CLASSES.map((letter) => ({
+                  value: letter,
+                  label: letter,
+                  ariaLabel: content.choices.dpeAria(letter),
+                }))}
+              />
+              <SegmentedPicker
+                label={content.choices.financingLabel}
+                defaultValue={content.choices.financing[0].value}
+                options={content.choices.financing}
+              />
+            </div>
+          </Section>
+
+          <Section id="pastilles" title={content.sections.badges} level="h3">
+            <Caption>{content.statuses.listingCaption}</Caption>
+            <div className="flex flex-wrap gap-2">
+              {LISTING_STATUSES.map((status) => (
+                <StatusBadge key={status} status={status} />
+              ))}
+            </div>
+            <Caption>{content.statuses.planCaption}</Caption>
+            <div className="flex flex-wrap gap-2">
+              {PLANS.map((plan) => (
+                <StatusBadge key={plan} plan={plan} />
+              ))}
+            </div>
+            <Caption>{content.statuses.dpeCaption}</Caption>
+            <div className="flex flex-wrap items-center gap-2">
+              <DpeBadge value="C" />
+              <DpeBadge value="C" compact />
+              <DpeBadge value="F" compact />
+            </div>
+          </Section>
+
+          <Section id="titre-de-section" title={content.sections.sectionTitle} level="h3">
+            <div className="flex max-w-lk-form flex-col gap-4">
+              <SectionTitle as="h4">{content.sectionTitle.plain}</SectionTitle>
+              <SectionTitle
+                as="h4"
+                action={
+                  <Link
+                    href="/design#titre-de-section"
+                    className="text-lk-label font-semibold text-lk-blue underline underline-offset-2"
+                  >
+                    {content.sectionTitle.action}
+                  </Link>
+                }
+              >
+                {content.sectionTitle.withAction}
+              </SectionTitle>
+            </div>
+          </Section>
+
+          <Section id="chiffres-cles" title={content.sections.keyFigures} level="h3">
+            <KeyFigures items={content.keyFigures} className="max-w-lk-settings" />
+            <Caption>{content.keyFiguresCaption}</Caption>
+          </Section>
+
+          <Section id="cartes" title={content.sections.cards} level="h3">
+            <Caption>{content.cardCaptions.compact}</Caption>
+            <div className="grid gap-3 md:grid-cols-2">
+              <PropertyCard variant="compact" {...content.exampleCards.savigny} />
+              <PropertyCard variant="compact" {...content.exampleCards.epinay} />
+            </div>
+            <div className="hidden flex-col gap-3.5 md:flex">
+              <Caption>{content.cardCaptions.wide}</Caption>
+              <PropertyCard
+                variant="wide"
+                {...content.exampleCards.savigny}
+                className="max-w-155"
+              />
+              <PropertyCard variant="wide" {...content.exampleCards.epinay} className="max-w-155" />
+            </div>
+            <Caption>{content.cardCaptions.tile}</Caption>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <PropertyCard
+                variant="tile"
+                {...content.exampleCards.juvisy}
+                action={
+                  <IconButton
+                    icon={Heart}
+                    variant="white-float"
+                    aria-label={content.cardCaptions.favourite}
+                  />
+                }
+              />
+              <PropertyCard variant="tile" {...content.exampleCards.morsang} />
+              <PropertyCard variant="tile" {...content.exampleCards.epinay} />
+            </div>
+            <Caption>{content.cardCaptions.noPhoto}</Caption>
+          </Section>
+
+          <Section id="aplat" title={content.sections.brandPanel} level="h3">
+            <BrandPanel
+              titleAs="h4"
+              title={content.brandPanel.blueTitle}
+              description={content.brandPanel.blueText}
+              illustration
+            />
+            <BrandPanel
+              variant="navy"
+              titleAs="h4"
+              title={content.brandPanel.navyTitle}
+              description={content.brandPanel.navyText}
+            />
+          </Section>
+
+          <Section id="dessin" title={content.sections.drawing} level="h3">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="flex flex-col gap-3 rounded-lk-md border border-lk-line p-6">
+                <FacadeDrawing className="h-auto w-full max-w-95 text-lk-ink-3" />
+                <Caption>{content.drawing.lightCaption}</Caption>
+              </div>
+              <BlueFlat className="flex flex-col gap-3">
+                <FacadeDrawing className="h-auto w-full max-w-95 opacity-55" />
+                <p className="text-lk-caption text-lk-on-blue-2">{content.drawing.blueCaption}</p>
+              </BlueFlat>
+              <div className="flex flex-col gap-3 rounded-lk-md border border-lk-line p-6">
+                <span
+                  aria-hidden="true"
+                  className="block aspect-[380/210] w-full max-w-95 bg-lk-ink-3 [mask:url(/brand/facade.svg)_center/contain_no-repeat]"
+                />
+                <Caption>{content.drawing.fileCaption}</Caption>
+              </div>
+              <BlueFlat className="flex flex-col gap-3">
+                <span
+                  aria-hidden="true"
+                  className="block aspect-[380/210] w-full max-w-95 bg-white opacity-55 [mask:url(/brand/facade.svg)_center/contain_no-repeat]"
+                />
+                <p className="text-lk-caption text-lk-on-blue-2">{content.drawing.fileCaption}</p>
+              </BlueFlat>
+            </div>
+          </Section>
+
+          <Section id="etat-vide" title={content.sections.emptyState} level="h3">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-lk-md bg-lk-bg px-5 py-10">
+                <EmptyState
+                  titleAs="h4"
+                  title={content.emptyStates.light.title}
+                  description={content.emptyStates.light.text}
+                  action={<Button>{content.emptyStates.light.action}</Button>}
+                />
+              </div>
+              <BlueFlat className="px-5 py-10">
+                <EmptyState
+                  tone="blue"
+                  titleAs="h4"
+                  title={content.emptyStates.blue.title}
+                  description={content.emptyStates.blue.text}
+                  action={<Button variant="inverse">{content.emptyStates.blue.action}</Button>}
+                />
+              </BlueFlat>
+            </div>
+          </Section>
+
+          <Section id="formats" title={content.sections.formats} level="h3">
+            <dl className="max-w-lk-settings divide-y divide-lk-line rounded-lk-md border border-lk-line">
+              {formatRows.map(([label, value]) => (
+                <div key={label} className="flex items-baseline justify-between gap-4 px-3.5 py-3">
+                  <dt className="text-lk-secondary text-lk-ink-3">{label}</dt>
+                  <dd className="text-right text-lk-secondary font-semibold tabular text-lk-ink">
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </Section>
+
+          <Section id="formes" title={content.sections.shapes} level="h3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="flex flex-col gap-2">
+                <div className="h-16 rounded-lk-sm border-[1.5px] border-lk-field bg-lk-surface" />
+                <Caption>{content.shapes.radiusSm}</Caption>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="h-16 rounded-lk-md border border-lk-line bg-lk-surface" />
+                <Caption>{content.shapes.radiusMd}</Caption>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="h-16 rounded-full bg-lk-stone-2" />
+                <Caption>{content.shapes.radiusFull}</Caption>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="h-16 rounded-lk-sm bg-lk-surface shadow-float" />
+                <Caption>{content.shapes.shadowFloat}</Caption>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="h-16 rounded-t-lk-md bg-lk-surface shadow-sheet" />
+                <Caption>{content.shapes.shadowSheet}</Caption>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="h-16 rounded-lk-md border border-lk-line" />
+                <Caption>{content.shapes.borderLine}</Caption>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="h-16 rounded-lk-sm border-[1.5px] border-lk-field" />
+                <Caption>{content.shapes.borderField}</Caption>
+              </div>
+            </div>
+          </Section>
+
+          <Section id="espacements" title={content.sections.spacing} level="h3">
+            <Caption>{content.spacing.scaleCaption}</Caption>
+            <div className="flex flex-col gap-1.5">
+              {content.spacing.scale.map((size) => (
+                <div key={size} className="flex items-center gap-3">
+                  <span className="w-8 text-right text-lk-caption tabular text-lk-ink-3">
+                    {size}
+                  </span>
+                  <span
+                    className="block h-3 rounded-lk-sm bg-lk-blue-line"
+                    style={{ width: `calc(var(--spacing) * ${size / 4})` }}
+                  />
+                </div>
+              ))}
+            </div>
+            <dl className="grid max-w-lk-settings gap-x-6 gap-y-1.5 sm:grid-cols-[auto_1fr]">
+              {[...content.spacing.breakpoints, ...content.spacing.containers].map((item) => (
+                <div key={item.name} className="contents">
+                  <dt className="text-lk-secondary font-semibold text-lk-ink">{item.name}</dt>
+                  <dd className="text-lk-secondary text-lk-ink-3">{item.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </Section>
+
+          <Section id="mouvement" title={content.sections.motion} level="h3">
+            <dl className="grid max-w-lk-settings gap-x-6 gap-y-1.5 sm:grid-cols-[auto_1fr]">
+              {content.motion.map((item) => (
+                <div key={item.name} className="contents">
+                  <dt className="text-lk-secondary font-semibold text-lk-ink">{item.name}</dt>
+                  <dd className="text-lk-secondary text-lk-ink-3">{item.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </Section>
+        </section>
+      </main>
+    </FacadeRoot>
+  );
+}

@@ -6,9 +6,9 @@ import { fr } from "@/lib/i18n/fr";
 // library is needed for these display formats.
 
 /** Narrow no-break space (U+202F): thousands separator and before € or m². */
-export const NNBSP = " ";
+export const NNBSP = "\u202F";
 /** No-break space (U+00A0): keeps a number and its word together. */
-export const NBSP = " ";
+export const NBSP = "\u00A0";
 
 const TIME_ZONE = "Europe/Paris";
 const LOCALE = "fr-FR";
@@ -21,7 +21,7 @@ const integerFormat = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 }
 // ICU versions differ on the grouping space (U+202F or U+00A0): normalise so
 // that the server and the browser render exactly the same string.
 function normaliseSpaces(value: string): string {
-  return value.replace(/[\s  ]/g, NNBSP);
+  return value.replace(/[\s\u00A0\u202F]/g, NNBSP);
 }
 
 function formatNumber(value: number, maximumFractionDigits = 0): string {

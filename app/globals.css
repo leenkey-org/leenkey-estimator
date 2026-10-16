@@ -313,7 +313,9 @@ html {
    md 768 px, lg 1024 px, xl 1280 px.
    ═══════════════════════════════════════════════════════════════════════ */
 
-@theme {
+/* static: every token exists as a CSS variable (var(--color-lk-line)), even
+   when no utility uses it yet. */
+@theme static {
   /* Palette (DESIGN.md 2.1): bg-lk-blue, text-lk-ink-3, border-lk-line… */
   --color-lk-blue: #1156fc;
   --color-lk-blue-hover: #0d47e0;

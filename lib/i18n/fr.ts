@@ -5,17 +5,17 @@ export const fr = {
     stagingBannerDetail:
       "Les données de cette version peuvent être modifiées ou supprimées à tout moment.",
   },
-  // lib/format.ts (docs/DESIGN.md section 3.3).   keeps a number with its unit.
+  // lib/format.ts (docs/DESIGN.md section 3.3). \u00A0 keeps a number with its unit.
   format: {
     room: "pièce",
     rooms: "pièces",
     roomsShort: "p",
     at: "à",
     justNow: "à l'instant",
-    minutesAgo: (minutes: number) => `il y a ${minutes} min`,
-    hoursAgo: (hours: number) => `il y a ${hours} h`,
+    minutesAgo: (minutes: number) => `il y a ${minutes}\u00A0min`,
+    hoursAgo: (hours: number) => `il y a ${hours}\u00A0h`,
     yesterday: "hier",
-    daysAgo: (days: number) => `il y a ${days} j`,
+    daysAgo: (days: number) => `il y a ${days}\u00A0j`,
   },
   field: {
     optional: "(facultatif)",
