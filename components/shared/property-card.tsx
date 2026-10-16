@@ -46,15 +46,14 @@ export type PropertyCardProps = PropertyCardData & {
 
 const SEPARATOR = `${NBSP}· `;
 
+/** « Appartement 3 p · 68 m² », « Terrain · 450 m² », or « 3 p · 64 m² » without the type. */
 function summary(card: PropertyCardData, roomsStyle: "long" | "short", withType: boolean) {
-  const parts = [
-    card.rooms ? formatRooms(card.rooms, roomsStyle) : null,
-    card.surfaceM2 ? formatSurface(card.surfaceM2) : null,
-  ].filter(Boolean);
-  const type = fr.propertyType[card.propertyType];
-  if (!withType) return parts.join(SEPARATOR);
-  const [rooms, ...rest] = parts;
-  return [rooms ? `${type} ${rooms}` : type, ...rest].join(SEPARATOR);
+  const rooms = card.rooms ? formatRooms(card.rooms, roomsStyle) : null;
+  const surface = card.surfaceM2 ? formatSurface(card.surfaceM2) : null;
+  const head = withType
+    ? [fr.propertyType[card.propertyType], rooms].filter(Boolean).join(" ")
+    : rooms;
+  return [head, surface].filter(Boolean).join(SEPARATOR);
 }
 
 function Photo({

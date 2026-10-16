@@ -385,10 +385,14 @@ export const exampleCards: Record<"savigny" | "epinay" | "juvisy" | "morsang", P
 };
 
 export const brandPanel = {
+  pageCaption: "titleSize page · 36 px, accueil acquéreur",
   blueTitle: "Bonjour Thomas",
   blueText: "Des biens vendus directement par leurs propriétaires. Sans frais d'agence.",
   navyTitle: "Ma vente",
   navyText: "Étape 3 sur 6 · Contacts et visites",
+  heroCaption: "titleSize hero · 36 puis 56 px, accueil public et fins de parcours",
+  heroTitle: "Vous gardez les clés.",
+  heroText: "Vendez votre bien sans agence, accompagné à chaque étape.",
 };
 
 export const drawing = {

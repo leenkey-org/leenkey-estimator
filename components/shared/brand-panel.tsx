@@ -8,6 +8,11 @@ export type BrandPanelProps = {
   title: string;
   /** HTML level, set by the page outline: h1 when the panel heads the page. */
   titleAs?: "h1" | "h2" | "h3" | "h4";
+  /**
+   * hero: display 36 then 56 px (public home, end of a flow, DESIGN.md 13.1
+   * and 10.8); page: display 36 px (buyer home, 36 to 44 px in DESIGN.md 12.10).
+   */
+  titleSize?: "hero" | "page";
   description?: string;
   /** facade.svg on the right, white at 55 %, from 1024 px. */
   illustration?: boolean;
@@ -25,6 +30,7 @@ export function BrandPanel({
   variant = "blue",
   title,
   titleAs: Title = "h1",
+  titleSize = "hero",
   description,
   illustration = false,
   children,
@@ -42,7 +48,12 @@ export function BrandPanel({
         <div
           className={cn("flex max-w-lk-prose flex-col gap-2", illustration && "lg:max-w-lk-form")}
         >
-          <Title className="text-lk-display font-bold text-wide lg:text-lk-display-lg">
+          <Title
+            className={cn(
+              "text-lk-display font-bold text-wide",
+              titleSize === "hero" && "lg:text-lk-display-lg",
+            )}
+          >
             {title}
           </Title>
           {description ? (

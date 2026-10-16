@@ -520,8 +520,10 @@ export default function DesignPage() {
           </Section>
 
           <Section id="aplat" title={content.sections.brandPanel} level="h3">
+            <Caption>{content.brandPanel.pageCaption}</Caption>
             <BrandPanel
               titleAs="h4"
+              titleSize="page"
               title={content.brandPanel.blueTitle}
               description={content.brandPanel.blueText}
               illustration
@@ -529,8 +531,16 @@ export default function DesignPage() {
             <BrandPanel
               variant="navy"
               titleAs="h4"
+              titleSize="page"
               title={content.brandPanel.navyTitle}
               description={content.brandPanel.navyText}
+            />
+            <Caption>{content.brandPanel.heroCaption}</Caption>
+            <BrandPanel
+              titleAs="h4"
+              title={content.brandPanel.heroTitle}
+              description={content.brandPanel.heroText}
+              illustration
             />
           </Section>
 
