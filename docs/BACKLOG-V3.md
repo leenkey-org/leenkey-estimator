@@ -27,3 +27,5 @@ Demandes et idées hors périmètre V2. Rien de cette liste n'est implémenté e
 | 2026-10-05 | Younes (session 0) | Pages SEO par ville `/acheter/[ville]` (ancienne partie de L1-20) | Hors cahier des charges. Environ 1,5 j. Pertinent quand la zone compte ≥ 3 annonces par ville |
 | 2026-10-05 | Younes (session 0) | Bouton « Expliquer cette offre » (prompt `offer-explain.md`, `MODELS.smart`) | En V2, le vendeur pose la question à l'assistant (`summarize_offer`). Environ 0,5 j |
 | 2026-10-05 | Younes (session 0) | Séries de créneaux de visite (ex. tous les samedis de 10 h à 12 h pendant 4 semaines) | En V2 : créneaux ponctuels. Environ 1 j |
+| 2026-10-15 | Younes (dossier juridique) | Effacement automatique des données par catégorie (comptes inactifs, annonces, messages, offres, justificatifs, factures) | Hors périmètre V2. Durées à fixer avec l'avocat (`DECISIONS.md` Q37) |
+| 2026-10-15 | Dossier juridique | Procédure de recours formalisée pour la modération (au-delà de la version minimale du SPEC section 17) | Seulement si l'avocat la juge obligatoire pour Leenkey (DSA) |

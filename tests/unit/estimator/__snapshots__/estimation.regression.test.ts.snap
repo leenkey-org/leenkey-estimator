@@ -363,7 +363,7 @@ exports[`estimation engine non-regression > appartement studio Paris 11e, dernie
 exports[`estimation engine non-regression > atypique château à restaurer en pleine campagne 1`] = `
 {
   "delaiVente": "360–630 jours",
-  "deltaMarche": -100,
+  "deltaMarche": -67,
   "facteurs": [
     {
       "detail": "Château · référence 789 €/m²",
@@ -376,7 +376,7 @@ exports[`estimation engine non-regression > atypique château à restaurer en pl
       "label": "Caractères exceptionnels",
     },
     {
-      "detail": "600 000 € de travaux déduits directement",
+      "detail": "600 000 € de travaux déclarés, déduction limitée à 392 000 € (70 % de la valeur avant travaux)",
       "impact": -0,
       "label": "État & travaux",
     },
@@ -413,10 +413,10 @@ exports[`estimation engine non-regression > atypique château à restaurer en pl
   ],
   "fiabilite": "faible",
   "fiabiliteScore": 50,
-  "prixBas": 0,
-  "prixEstime": 0,
-  "prixHaut": 0,
-  "prixM2": 0,
+  "prixBas": 119000,
+  "prixEstime": 168000,
+  "prixHaut": 217000,
+  "prixM2": 258,
   "prixM2Marche": 789,
   "recommandations": [
     {

@@ -43,7 +43,7 @@ Le développement se fait dans le repo existant de Leenkey (celui de l'estimateu
 
 Fait le 5 octobre 2026 par la PR `docs/session-0` vers `v2` (pack fusionné avec le CLAUDE.md de la V1).
 
-`main` reste le site en ligne jusqu'à la bascule (4 janvier 2027, à confirmer). Tout le travail V2 arrive sur `v2` par PR, une branche par tâche.
+`main` porte la V1 en ligne et reste gelée : rien n'y est poussé ni fusionné. La V2 est mise en ligne avant le 30 novembre 2026 en changeant la branche de production du projet Vercel de leenkey.fr. Tout le travail V2 arrive sur `v2` par PR, une branche par tâche.
 
 ## 4. Première session Claude Code
 
@@ -75,4 +75,4 @@ La session 0 est faite (lecture et cadrage). Ses décisions sont dans `DECISIONS
 | Adresse légale | S9 | En attente |
 | Biens de test réels (facultatif) | S8 | En attente |
 | Compte Supabase prod (sur son compte) | S10 | À créer avec lui |
-| Accès DNS de `leenkey.fr` (IONOS) | Bascule du 4 janvier (la préprod n'en a pas besoin) | À demander |
+| Accès DNS de `leenkey.fr` (IONOS) | Non nécessaire si le domaine reste sur le projet Vercel actuel (changement de branche de production) ; utile en secours au lancement | À demander |

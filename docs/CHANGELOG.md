@@ -12,6 +12,22 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-15 · Q29 · PR #11 · Bien atypique à restaurer jamais à 0 €
+- Corrigé : moteur de valorisation, biens atypiques : le budget de travaux déclaré est déduit dans la limite de 70 % de la valeur avant travaux. Seul cas modifié parmi les 24 cas de non-régression : château à restaurer (650 m², 600 000 € de travaux) **0 € → 168 000 €** (fourchette 0 – 0 → 119 000 – 217 000 €, 258 €/m²). Les 23 autres cas sont identiques. V2 uniquement : la V1 en ligne n'est pas modifiée.
+- Tests : snapshot du château mis à jour, test ajouté (aucun budget de travaux ne ramène un bien atypique à 0 €).
+
+### 2026-10-15 · Documentation · PR #10 · Décisions du 15 octobre
+- Ajouté : `docs/juridique/` (dossier juridique du 9 octobre converti, non publiable en l'état ; index avec ce qui est intégré au produit et questions pour l'avocat ; liste des prestataires techniques).
+- Modifié : CLAUDE.md, SPEC, DEMARRAGE et SECURITE : rien n'est jamais poussé ni fusionné dans `main` ; mise en ligne de la V2 avant le 30 novembre par changement de la branche de production dans Vercel (P-05b).
+- Modifié : SPEC : date de fin des formules (`ends_at`, retour en Autonomie), table `legal_acceptances`, vente conforme des formules (section 11, nouvelle tâche L1-40), signalement en version minimale, aucun justificatif envoyé à l'IA, Opus 5.5 pour les analyses et Sonnet 5.5 pour la conversation, prestataires techniques.
+- Modifié : DECISIONS (décisions du 15 octobre, Q17 et Q29 closes, questions Q30 à Q37 pour Cédric), PLANNING recalé (lot 1 au 13 novembre, quatre éléments décalés en S6, mise en ligne la semaine du 23 novembre), BACKLOG-V3 (effacement automatique des données).
+
+### 2026-10-15 · L1-05 · PR #9 · Formules, étapes de vente, messagerie, dossiers
+- Ajouté : tables `plans`, `plan_entitlements`, `subscriptions` (durée de 12 mois calculée à l'activation, `ends_at`), `stripe_events`, `upgrade_prompts`, `sale_steps`, `sale_step_tasks`, `sale_progress` (créée avec le bien), `sale_task_status`, `conversations`, `messages`, `reports`, `cases`, `case_notes`, `notifications`, `knowledge_base` (vecteurs 384), `ai_conversations`, `ai_messages`, toutes avec RLS ; formule en cours d'un bien (`property_current_plan` : retour en Autonomie à l'échéance) ; ouverture d'une conversation par l'acquéreur sur une annonce publiée (`conversation_start`), lecture (`conversation_mark_read`) ; l'admin écrit seulement dans les conversations conseiller ; résumé acquéreur pour le vendeur sans montants (`buyer_summary_for_seller`) ; rôles et suspension de compte par l'admin, journalisés (`admin_set_roles`, `admin_suspend_user`, `admin_unsuspend_user`) ; formule de la vente affichée dans `public_listings`.
+- Modifié : fonctions d'aide (`is_admin`, `owns_property`…) réservées aux utilisateurs connectés.
+- Tests : 82 tests de permissions (184 au total).
+- Migration : 20261015130000_plans_sales_messaging.sql
+
 ### 2026-10-15 · L1-04 · PR #8 · Biens et annonces
 - Ajouté : tables `estimations`, `properties`, `listings`, `photos`, `listing_views`, `favorites`, `audit_log` (avancée de L1-05) avec RLS et droits par colonne ; référence `LK-0001` et adresse de page (slug) générées en base ; position publique du bien arrondie à environ 200 m, calculée en base et jamais fournie par le client ; vue `public_listings` (annonces publiées, champs publics uniquement, coordonnées approximatives) ; fonctions de transition de statut côté vendeur (envoi en validation, retrait, pause, remise en ligne, vendu, suppression d'un brouillon) et côté admin (publication, refus motivé, suspension motivée, levée), journalisées dans `audit_log` ; enregistrement et rattachement des analyses de valeur (`estimation_record`, `estimation_claim`) ; compteur de vues agrégé par jour.
 - Tests : 70 tests de permissions (5 comptes de seed et visiteur anonyme).
