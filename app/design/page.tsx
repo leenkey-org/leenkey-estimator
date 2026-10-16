@@ -37,10 +37,10 @@ import { cn } from "@/lib/utils";
 // board of Main.png with the real components, then every component of
 // components/shared. Local and preprod only.
 
-export const metadata: Metadata = {
-  title: content.page.metaTitle,
-  robots: { index: false, follow: false },
-};
+// Nothing about the catalogue leaks into the production 404.
+export const metadata: Metadata = isProduction()
+  ? {}
+  : { title: content.page.metaTitle, robots: { index: false, follow: false } };
 
 const LISTING_STATUSES = [
   "draft",
