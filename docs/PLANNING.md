@@ -19,7 +19,7 @@ Rééquilibrage du 5 octobre : la semaine 5 passe de 10 à 8 tâches. L1-20 est 
 - [x] **L1-03** Migration enums + `profiles` + trigger d'inscription + `buyer_profiles` + RLS + tests · PR : #6 · Testé en préprod : ☐
 - [x] **L1-04** Migrations `properties`, `listings`, `photos`, `listing_views`, `favorites`, vue `public_listings`,… · PR : #8 · Testé en préprod : ☐
 - [x] **L1-05** Migrations `plans`, `subscriptions`, `stripe_events`, `sale_*`, `conversations`, `messages`, `reports`,… · PR : #9 · Testé en préprod : ☐
-- [ ] **L1-06** Seed complet (comptes, biens, plans, étapes placeholder, KB placeholder) · PR : · Testé en préprod : ☐
+- [x] **L1-06** Seed complet (comptes, biens, formules, étapes de vente, FAQ) · PR : #13 · Testé en préprod : ☐
 - [x] **L1-07** Design system : tokens, polices, composants de base (Button, Input, Select, UnitInput, ChipToggle,… · PR : #12 · Testé en préprod : ☐
 - [x] **L1-08** Dessin `public/brand/facade.svg` et composant `EmptyState` · PR : #12 · Testé en préprod : ☐
 

@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-16 · L1-06 · PR #__PR__ · Seed complet
+### 2026-10-16 · L1-06 · PR #13 · Seed complet
 - Ajouté : `npm run db:seed` (local) et `npm run db:seed:staging`, refusés en production ; une transaction, idempotent. Formules et droits, six étapes de vente par formule (section 9), 73 fiches de la FAQ de Cédric, comptes `seller_a`, `seller_b`, `buyer_c`, `buyer_d`, `admin` (`@test.leenkey.fr`), 16 biens fictifs dans la zone de lancement (12 publiés, 3 en attente, 1 refusé), formules Accompagné et Sérénité sur deux biens avec leur conversation conseiller, conversations acquéreurs, favoris, vues.
 - Migration : `20261015140000_seed_support.sql` (colonne `sale_step_tasks.owner`, clé d'import de la base de connaissances).
 - Tests : les tests de permissions passent sur une base vide et sur une base seedée ; la CI vérifie l'idempotence et les volumes du seed.
