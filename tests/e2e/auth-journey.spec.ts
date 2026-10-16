@@ -39,8 +39,8 @@ async function signOut(page: Page) {
 
 const email = `camille.${Date.now()}@exemple.test`;
 
-test.beforeEach(({}, testInfo) => {
-  test.skip(testInfo.project.name !== "mobile", "un seul passage suffit (comptes créés)");
+test.beforeEach(() => {
+  test.skip(test.info().project.name !== "mobile", "un seul passage suffit (comptes créés)");
 });
 
 test("inscription, puis confirmation depuis un autre navigateur", async ({ page, browser }) => {
