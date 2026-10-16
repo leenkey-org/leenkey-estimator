@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import type { DpeClass } from "@/components/shared/dpe-badge";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { DPE_CLASSES } from "@/lib/validations/search";
 import type { Database } from "@/types/database";
 
@@ -70,7 +70,8 @@ export const getPublicListing = cache(
   async (slug: string): Promise<QueryResult<PublicListing | null>> => {
     if (slug.length > 200 || !SLUG.test(slug)) return { ok: true, data: null };
     try {
-      const supabase = await createClient();
+      // Public data, also read by the cached share image: no session cookie.
+      const supabase = createPublicClient();
       const [listing, advisorPlans] = await Promise.all([
         supabase.from("public_listings").select(COLUMNS).eq("slug", slug).maybeSingle(),
         // « Vente accompagnée » is a right of the plan, never a plan name (CLAUDE.md 14).

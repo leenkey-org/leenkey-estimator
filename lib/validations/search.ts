@@ -92,8 +92,6 @@ export type SearchQuery = {
   page: number;
 };
 
-export const EMPTY_QUERY: SearchQuery = { filters: {}, sort: "recent", page: 1 };
-
 // ---------------------------------------------------------------------------
 // URL form
 // ---------------------------------------------------------------------------

@@ -31,11 +31,14 @@ async function loadFont(axes: string, text: string): Promise<ArrayBuffer | null>
   try {
     const css = await fetch(
       `https://fonts.googleapis.com/css2?family=Archivo:${axes}&text=${encodeURIComponent(text)}`,
-      { next: { revalidate: 86_400 } },
+      { next: { revalidate: 86_400 }, signal: AbortSignal.timeout(2_000) },
     ).then((response) => (response.ok ? response.text() : ""));
     const url = css.match(/src: url\((.+?)\) format\('(?:opentype|truetype)'\)/)?.[1];
     if (!url) return null;
-    const font = await fetch(url, { next: { revalidate: 86_400 } });
+    const font = await fetch(url, {
+      next: { revalidate: 86_400 },
+      signal: AbortSignal.timeout(2_000),
+    });
     return font.ok ? await font.arrayBuffer() : null;
   } catch {
     return null;

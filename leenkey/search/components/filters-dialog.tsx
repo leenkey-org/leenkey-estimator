@@ -98,8 +98,14 @@ function FiltersPanel() {
     if (invalid || count.key === draftKey) return;
     let cancelled = false;
     const timer = window.setTimeout(async () => {
-      const result = await countSearchResults(filters);
-      if (!cancelled) setCount({ key: draftKey, value: result.ok ? result.data : null });
+      let value: number | null = null;
+      try {
+        const result = await countSearchResults(filters);
+        value = result.ok ? result.data : null;
+      } catch {
+        // Network or new deployment: « Voir les biens » without a number.
+      }
+      if (!cancelled) setCount({ key: draftKey, value });
     }, 300);
     return () => {
       cancelled = true;

@@ -45,7 +45,7 @@ export function ListingDescription({ text }: { text: string }) {
           aria-expanded={expanded}
           aria-controls={id}
           onClick={() => setExpanded((value) => !value)}
-          className="self-start rounded-lk-sm py-1 text-lk-label font-semibold text-lk-blue underline underline-offset-2 hover:no-underline lg:hidden"
+          className="inline-flex min-h-11 items-center self-start rounded-lk-sm text-lk-label font-semibold text-lk-blue underline underline-offset-2 hover:no-underline lg:hidden"
         >
           {expanded ? t.less : t.more}
         </button>

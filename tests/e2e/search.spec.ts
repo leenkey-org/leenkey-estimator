@@ -112,6 +112,16 @@ test("une adresse d'annonce mal formée répond 404", async ({ page, request }) 
   expect((await request.get("/api/og/Pas_Une_Annonce")).status()).toBe(404);
 });
 
+test("une ville hors de la zone passée dans l'adresse n'est jamais indexée", async ({ page }) => {
+  await page.goto("/acheter?ville=arnaque-appelez-le-0612345678");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  const canonical = await page.locator('link[rel="canonical"]').getAttribute("href");
+  expect(new URL(canonical ?? "").pathname).toBe("/acheter");
+  expect(new URL(canonical ?? "").search).toBe("");
+  await expect(page).toHaveTitle(/^Biens à vendre/);
+  await expect(page).not.toHaveTitle(/Arnaque/i);
+});
+
 test.describe("sans base de données", () => {
   test.skip(seeded, NO_DATABASE_ONLY);
 

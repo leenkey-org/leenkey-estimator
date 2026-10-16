@@ -39,7 +39,10 @@ function placePhrase(place: ResolvedLocation, around: boolean): string {
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const { filters } = parseSearchParams(await searchParams);
-  const place = filters.location ? resolveLocation(filters.location) : null;
+  const resolved = filters.location ? resolveLocation(filters.location) : null;
+  // A place outside the launch zone comes from the URL only: never an
+  // indexable title (« ?ville=anything »).
+  const place = resolved?.centre ? resolved : null;
   const title = place ? t.metaTitleIn(placePhrase(place, false)) : t.metaTitle;
   // One canonical page per commune: the other filters are variations of it.
   const canonical = absoluteUrl(searchHref({ filters: { location: place?.value } }));
@@ -47,6 +50,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     title,
     description: t.metaDescription,
     alternates: { canonical },
+    robots: resolved && !place ? { index: false, follow: true } : undefined,
     openGraph: { title, description: t.metaDescription, url: canonical, type: "website" },
   };
 }
@@ -83,7 +87,8 @@ export default async function SearchPage({ searchParams }: Props) {
         description={filtered ? t.empty.text : undefined}
         action={
           filtered ? (
-            <Button asChild>
+            // The filters button of the header stays the one primary action.
+            <Button asChild variant="outline-ink">
               <Link href={SEARCH_PATH}>{t.empty.action}</Link>
             </Button>
           ) : undefined

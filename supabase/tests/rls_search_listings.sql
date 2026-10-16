@@ -5,7 +5,7 @@
 -- empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(69);
+select plan(73);
 \ir _plan.psql
 
 -- ===========================================================================
@@ -115,6 +115,9 @@ select is((select max(total_count) from search_listings('{}')),
           'anon: without filters, the total is the number of rows of public_listings');
 select ok((select bool_and(total_count = 4) from search_listings('{"postal_code":"99999"}')),
           'anon: every row carries the total number of matches');
+select set_eq($$select id from public_listings_details() where postal_code = '99999'$$,
+              array[:'l1', :'l2', :'l3', :'l4']::uuid[],
+              'anon: public_listings_details() called directly gives the published listings only');
 select is((select seller_first_name from public_listings where id = :'l1'), 'Alice', 'anon: public_listings still gives the seller first name');
 select is((select plan::text from public_listings where id = :'l1'), 'serenite', 'public_listings: still the plan of the sale');
 select is((select plan::text from public_listings where id = :'l2'), 'autonomie', 'public_listings: Autonomie by default');
@@ -212,6 +215,17 @@ select set_eq($$select id from search_listings('{"postal_code":"99999"}')$$,
 \ir _as.psql
 select set_eq($$select id from search_listings('{"postal_code":"99999"}')$$,
               array[:'l1', :'l2', :'l3', :'l4']::uuid[], 'buyer_c: same results as a visitor');
+\set who buyer_d
+\ir _as.psql
+select set_eq($$select id from search_listings('{"postal_code":"99999"}')$$,
+              array[:'l1', :'l2', :'l3', :'l4']::uuid[], 'buyer_d: published listings only');
+select set_eq($$select id from public_listings_details() where postal_code = '99999'$$,
+              array[:'l1', :'l2', :'l3', :'l4']::uuid[], 'buyer_d: public_listings_details() too');
+\set who seller_b
+\ir _as.psql
+select is((select count(*) from public_listings_details()
+           where id in ('00000000-0000-4000-c000-000000000014', '00000000-0000-4000-c000-000000000016'))::int, 0,
+          'seller_b: own suspended and rejected listings stay out of public_listings_details()');
 \set who admin
 \ir _as.psql
 select set_eq($$select id from search_listings('{"postal_code":"99999"}')$$,
