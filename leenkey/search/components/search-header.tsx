@@ -20,34 +20,33 @@ export function SearchHeader() {
   const { query, openFilters } = useSearch();
   const active = countActiveFilters(query.filters);
   return (
-    <div
-      role="search"
-      aria-label={t.bar.label}
-      className="border-b border-lk-line bg-lk-surface px-5 pb-3 pt-4.5 lg:px-10 lg:py-4"
-    >
-      <div className="flex items-center gap-2.5 lg:gap-3">
-        <LocationField className="min-w-0 flex-1 lg:w-75 lg:flex-none" />
-        <Button
-          aria-haspopup="dialog"
-          onClick={() => openFilters()}
-          className="size-12 shrink-0 px-0 lg:hidden [&_svg]:size-5"
-        >
-          <SlidersHorizontal aria-hidden="true" />
-          <span className="sr-only">
-            {active ? `${t.filtersButton}, ${t.activeFilters(active)}` : t.filtersButton}
-          </span>
-          {active ? (
-            <span
-              aria-hidden="true"
-              className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-lk-surface bg-lk-navy px-1 text-lk-micro font-semibold tabular text-white"
-            >
-              {active}
+    <div role="search" aria-label={t.bar.label} className="border-b border-lk-line bg-lk-surface">
+      {/* Aligned with the results (same container and gutters). */}
+      <div className="mx-auto max-w-lk-page px-5 pb-3 pt-4.5 md:px-10 lg:py-4">
+        <div className="flex items-center gap-2.5 lg:gap-3">
+          <LocationField className="min-w-0 flex-1 lg:w-75 lg:flex-none" />
+          <Button
+            aria-haspopup="dialog"
+            onClick={() => openFilters()}
+            className="size-12 shrink-0 px-0 lg:hidden [&_svg]:size-5"
+          >
+            <SlidersHorizontal aria-hidden="true" />
+            <span className="sr-only">
+              {active ? `${t.filtersButton}, ${t.activeFilters(active)}` : t.filtersButton}
             </span>
-          ) : null}
-        </Button>
-        <FilterBar className="hidden lg:flex" />
+            {active ? (
+              <span
+                aria-hidden="true"
+                className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-lk-surface bg-lk-navy px-1 text-lk-micro font-semibold tabular text-white"
+              >
+                {active}
+              </span>
+            ) : null}
+          </Button>
+          <FilterBar className="hidden lg:flex" />
+        </div>
+        <QuickFilters className="mt-2 lg:hidden" />
       </div>
-      <QuickFilters className="mt-2 lg:hidden" />
     </div>
   );
 }
