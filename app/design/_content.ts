@@ -30,6 +30,8 @@ export const sections = {
   iconButtons: "Boutons icône",
   inputs: "Champs de saisie",
   choices: "Sélections",
+  checkboxes: "Cases à cocher",
+  alerts: "Alertes",
   badges: "Pastilles de statut",
   sectionTitle: "Titre de section",
   keyFigures: "Chiffres clés",
@@ -287,6 +289,22 @@ export const choices = {
     { value: "loan", label: "Avec prêt" },
     { value: "no_loan", label: "Sans prêt" },
   ],
+  roleCaption: "Choix du rôle (RoleCard), boutons radio natifs",
+  roleLegend: "Votre projet",
+  roles: [
+    { value: "seller", title: "Je vends", hint: "Un bien à publier" },
+    { value: "buyer", title: "J'achète", hint: "Je cherche un bien" },
+  ],
+  checkboxLabel: "J'accepte les conditions d'utilisation et la politique de confidentialité.",
+  checkboxCheckedLabel: "Recevoir les nouvelles annonces par email",
+  checkboxError: "Acceptez les conditions pour continuer.",
+};
+
+export const alerts = {
+  danger: "Email ou mot de passe incorrect.",
+  warning: "Ce lien n'est plus valable. Demandez-en un nouveau.",
+  info: "Cette page est en cours de rédaction.",
+  success: "C'est renvoyé. Le lien précédent ne fonctionne plus.",
 };
 
 export const statuses = {

@@ -11,6 +11,7 @@ export const FACADE_TEXT_SIZES = [
   "lk-h2-lg",
   "lk-h3",
   "lk-h3-lg",
+  "lk-logo",
   "lk-title",
   "lk-price",
   "lk-price-lg",

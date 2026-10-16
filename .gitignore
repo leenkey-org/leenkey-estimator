@@ -46,3 +46,6 @@ test-results
 
 # Claude Code agent worktrees
 .claude/worktrees/
+
+# scripts/local-stack.sh (keys, seed password, logs)
+.local-stack/

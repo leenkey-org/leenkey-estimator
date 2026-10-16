@@ -456,6 +456,49 @@ export type Database = {
         }
         Relationships: []
       }
+      legal_acceptances: {
+        Row: {
+          accepted_at: string
+          context: string
+          document: string
+          id: string
+          profile_id: string
+          subscription_id: string | null
+          version: string
+        }
+        Insert: {
+          accepted_at?: string
+          context: string
+          document: string
+          id?: string
+          profile_id: string
+          subscription_id?: string | null
+          version: string
+        }
+        Update: {
+          accepted_at?: string
+          context?: string
+          document?: string
+          id?: string
+          profile_id?: string
+          subscription_id?: string | null
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_acceptances_profile_id_fkey"
+            columns: ["profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_acceptances_subscription_id_fkey"
+            columns: ["subscription_id"]
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_views: {
         Row: {
           count: number
@@ -1304,7 +1347,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"][]
       }
       admin_suspend_user: {
-        Args: { p_profile_id: string; p_reason: string }
+        Args: { p_reason: string; p_profile_id: string }
         Returns: undefined
       }
       admin_unsuspend_user: {
@@ -1313,22 +1356,22 @@ export type Database = {
       }
       audit: {
         Args: {
-          p_entity: string
           p_action: string
-          p_meta?: Json
           p_entity_id: string
+          p_meta?: Json
+          p_entity: string
         }
         Returns: undefined
       }
       buyer_summary_for_seller: {
         Args: { p_property_id: string }
         Returns: {
-          financing_checked_at: string
           financing_document_type: Database["public"]["Enums"]["financing_document_type"]
           financing_status: Database["public"]["Enums"]["financing_status"]
+          buyer_id: string
           project: Database["public"]["Enums"]["buyer_project"]
           first_name: string
-          buyer_id: string
+          financing_checked_at: string
         }[]
       }
       can_write_conversation: {
@@ -1349,20 +1392,20 @@ export type Database = {
       }
       estimation_record: {
         Args: {
-          p_result: Json
           p_input: Json
-          p_email?: string
-          p_high_cents?: number
-          p_low_cents?: number
+          p_result: Json
           p_value_cents?: number
+          p_low_cents?: number
+          p_high_cents?: number
+          p_email?: string
         }
         Returns: {
-          claim_token: string
           id: string
+          claim_token: string
         }[]
       }
       has_buyer_relation: {
-        Args: { p: string; b: string }
+        Args: { b: string; p: string }
         Returns: boolean
       }
       is_active_user: {
@@ -1377,10 +1420,18 @@ export type Database = {
         Args: { c: string }
         Returns: boolean
       }
+      legal_accept: {
+        Args: { p_versions: Json }
+        Returns: undefined
+      }
+      legal_record_signup: {
+        Args: { p_legal: Json; p_profile_id: string }
+        Returns: undefined
+      }
       listing_bad_transition: {
         Args: {
-          p_action: string
           p_from: Database["public"]["Enums"]["listing_status"]
+          p_action: string
         }
         Returns: undefined
       }
@@ -1431,7 +1482,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["listing_status"]
       }
       listing_reject: {
-        Args: { p_listing_id: string; p_reason: string }
+        Args: { p_reason: string; p_listing_id: string }
         Returns: Database["public"]["Enums"]["listing_status"]
       }
       listing_require_admin: {
@@ -1511,37 +1562,37 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           type: Database["public"]["Enums"]["property_type"]
-          id: string
-          slug: string
-          reference: string
-          title: string
-          description: string
-          price_cents: number
-          published_at: string
-          city: string
-          postal_code: string
-          district: string
-          public_location: unknown
-          public_lat: number
-          public_lng: number
-          surface_m2: number
-          rooms: number
-          bedrooms: number
-          floor: number
-          has_elevator: boolean
-          has_balcony: boolean
-          has_terrace: boolean
-          has_garden: boolean
-          has_parking: boolean
-          has_cellar: boolean
-          orientation: string
-          build_year: number
-          dpe_class: string
-          ges_class: string
-          charges_monthly_cents: number
+          plan: Database["public"]["Enums"]["plan_code"]
           property_tax_yearly_cents: number
           seller_first_name: string
-          plan: Database["public"]["Enums"]["plan_code"]
+          charges_monthly_cents: number
+          ges_class: string
+          dpe_class: string
+          build_year: number
+          orientation: string
+          has_cellar: boolean
+          has_parking: boolean
+          has_garden: boolean
+          has_terrace: boolean
+          has_balcony: boolean
+          has_elevator: boolean
+          floor: number
+          bedrooms: number
+          rooms: number
+          surface_m2: number
+          public_lng: number
+          public_lat: number
+          public_location: unknown
+          district: string
+          postal_code: string
+          city: string
+          published_at: string
+          price_cents: number
+          description: string
+          title: string
+          reference: string
+          slug: string
+          id: string
         }[]
       }
       sale_task_is_seller_owned: {

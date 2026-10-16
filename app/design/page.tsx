@@ -6,15 +6,18 @@ import { Bell, ChevronLeft, Heart, Plus, Settings, Sparkles, X } from "lucide-re
 import * as content from "./_content";
 import { BrandPanel } from "@/components/shared/brand-panel";
 import { Button } from "@/components/shared/button";
+import { Checkbox } from "@/components/shared/checkbox";
 import { ChipToggle } from "@/components/shared/chip-toggle";
 import { DPE_CLASSES, DpeBadge } from "@/components/shared/dpe-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FacadeDrawing } from "@/components/shared/facade-drawing";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { IconButton } from "@/components/shared/icon-button";
+import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
 import { KeyFigures } from "@/components/shared/key-figures";
 import { PropertyCard } from "@/components/shared/property-card";
+import { RoleCards } from "@/components/shared/role-cards";
 import { SectionTitle } from "@/components/shared/section-title";
 import { SegmentedPicker } from "@/components/shared/segmented-picker";
 import { Select } from "@/components/shared/select";
@@ -433,6 +436,35 @@ export default function DesignPage() {
                 defaultValue={content.choices.financing[0].value}
                 options={content.choices.financing}
               />
+            </div>
+            <div className="flex max-w-lk-form flex-col gap-1.5">
+              <Caption>{content.choices.roleCaption}</Caption>
+              <RoleCards
+                name="design-role"
+                legend={content.choices.roleLegend}
+                options={content.choices.roles}
+                defaultValue="seller"
+              />
+            </div>
+          </Section>
+
+          <Section id="cases-a-cocher" title={content.sections.checkboxes} level="h3">
+            <div className="flex max-w-lk-form flex-col gap-4">
+              <Checkbox label={content.choices.checkboxLabel} />
+              <Checkbox label={content.choices.checkboxCheckedLabel} defaultChecked />
+              <Checkbox
+                label={content.choices.checkboxLabel}
+                error={content.choices.checkboxError}
+              />
+            </div>
+          </Section>
+
+          <Section id="alertes" title={content.sections.alerts} level="h3">
+            <div className="flex max-w-lk-form flex-col gap-3">
+              <InlineAlert tone="danger">{content.alerts.danger}</InlineAlert>
+              <InlineAlert tone="warning">{content.alerts.warning}</InlineAlert>
+              <InlineAlert tone="info">{content.alerts.info}</InlineAlert>
+              <InlineAlert tone="success">{content.alerts.success}</InlineAlert>
             </div>
           </Section>
 

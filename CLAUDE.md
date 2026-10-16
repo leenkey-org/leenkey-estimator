@@ -313,7 +313,7 @@ Tests automatisés attendus :
 - Jamais de secret dans le code, les commits, les logs ou les messages d'erreur. Si un secret a fuité dans un commit, le révoquer immédiatement, pas seulement supprimer le commit.
 - Routes `/api/cron/*` : vérifier l'en-tête `Authorization: Bearer ${CRON_SECRET}`.
 - Webhook Stripe : vérifier la signature avec `STRIPE_WEBHOOK_SECRET`, traiter de façon idempotente (`stripe_event_id` unique en base).
-- Rate limiting sur : inscription, connexion, formulaire de contact, envoi de message, assistant IA. Implémenté dans `lib/rate-limit.ts` (Upstash si disponible, sinon table Postgres).
+- Rate limiting sur : inscription, connexion, formulaire de contact, envoi de message, assistant IA. Inscription, connexion et mot de passe oublié : limites de Supabase Auth (réglées dans le tableau de bord). Le reste : `lib/rate-limit.ts`, table Postgres (pas d'Upstash, `DECISIONS.md` 2026-10-08), créé avec la messagerie (L1-21). Décision du 2026-10-16.
 - Uploads : types MIME vérifiés côté serveur, taille max 10 Mo par photo et 20 Mo par document, noms de fichiers régénérés (uuid), jamais le nom d'origine dans l'URL.
 - En-têtes de sécurité dans `next.config.ts` : CSP, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`.
 - Les URL signées Storage expirent : 1 h pour les photos, 10 min pour les documents.
@@ -335,6 +335,7 @@ npm run db:migrate:local # applique les migrations en local
 npm run db:migrate:staging
 npm run db:migrate:prod  # demande une confirmation explicite
 npm run db:seed          # charge supabase/seed/ en local (npm run db:seed:staging pour la préprod ; refuse la prod)
+scripts/local-stack.sh up # pile locale type Supabase (Auth, API, emails capturés) pour tester les parcours connectés
 npm run db:rls-test      # tests de permissions
 npm run a11y             # contrôle d'accessibilité axe sur les parcours E2E (docs/DESIGN.md section 15)
 npm run stripe:listen    # Stripe CLI vers /api/webhooks/stripe en local

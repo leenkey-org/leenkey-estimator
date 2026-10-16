@@ -37,6 +37,15 @@ Guide pour Younes. Claude Code ne lit pas ce fichier en priorité : il lit `CLAU
 - [ ] Boîtes bonjour@ et admin@leenkey.fr créées (DNS chez IONOS, compte de Cédric)
 - [ ] `.env.local` rempli à partir de `.env.example`, variables staging saisies dans Vercel
 
+### Supabase Auth de la préprod (L1-09, une seule fois, tableau de bord du projet `leenkey-staging`)
+
+- [ ] **Authentication → URL Configuration** : *Site URL* `https://leenkey-v2.vercel.app` ; *Redirect URLs* `https://leenkey-v2.vercel.app/**` et `http://localhost:3000/**`.
+- [ ] **Authentication → Emails → Templates** : *Confirm signup*, sujet `[PREPROD] Confirmez votre adresse email`, corps = contenu de `supabase/templates/confirmation.html` ; *Reset password*, sujet `[PREPROD] Choisissez un nouveau mot de passe`, corps = `supabase/templates/recovery.html`. Les liens de ces modèles marchent depuis n'importe quel navigateur (inscription sur l'ordinateur, clic sur le téléphone) ; avec les modèles par défaut de Supabase, seulement dans le navigateur de l'inscription.
+- [ ] **Authentication → Emails → SMTP Settings** : SMTP personnalisé Resend (hôte `smtp.resend.com`, port 465, utilisateur `resend`, mot de passe = une clé API Resend dédiée, expéditeur `noreply@leenkey.fr`, nom `Leenkey`). Sans lui, Supabase n'envoie qu'aux membres du projet, quelques emails par heure.
+- [ ] **Authentication → Rate Limits** : relever « sign-ups and sign-ins » si la recette en enchaîne beaucoup (les appels partent des serveurs Vercel, qui partagent quelques adresses IP).
+- [ ] **Vercel `leenkey-v2`, onglet Production** : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (projet staging) et `NEXT_PUBLIC_SITE_URL=https://leenkey-v2.vercel.app`.
+- Comptes de test : `seller_a@test.leenkey.fr`, `seller_b@…`, `buyer_c@…`, `buyer_d@…`, `admin@…` ; mot de passe dans **Integrations → Vault**, secret `seed_password`. À la première connexion, chacun accepte les conditions (écran « Acceptez nos conditions »).
+
 ## 3. Installer le pack dans le repo
 
 Le développement se fait dans le repo existant de Leenkey (celui de l'estimateur), sans casser le site actuel.

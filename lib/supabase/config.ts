@@ -10,3 +10,8 @@ export function supabaseAnonKey(): string {
   if (!key) throw new Error("NEXT_PUBLIC_SUPABASE_ANON_KEY is not set");
   return key;
 }
+
+/** False when the Supabase variables are missing (CI build, PR previews). */
+export function isSupabaseConfigured(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+}

@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-16 · L1-09 · PR #__PR__ · Inscription et connexion
+- Ajouté : `/inscription` (choix « Je vends » / « J'achète », indicateur de robustesse du mot de passe, case CGU et confidentialité), `/connexion`, `/mot-de-passe-oublie`, `/reinitialiser`, `/auth/confirm` (liens des emails, valables depuis n'importe quel navigateur), retour à la page d'origine (`?next=`, chemins du site uniquement), `/conditions` (nouvelle version des textes à accepter), pages d'attente `/vendeur`, `/acquereur` et `/admin` (rôle admin, 404 sinon), `/confidentialite` (en cours de rédaction).
+- Ajouté : middleware qui renouvelle la session Supabase et protège les espaces connectés ; modèles d'email Supabase (`supabase/templates/`) ; composants `RoleCards`, `Checkbox`, `InlineAlert` sur `/design` ; `scripts/local-stack.sh` (pile locale Supabase Auth, API et emails capturés).
+- Migration : `20261016110000_legal_acceptances.sql` (acceptations datées et versionnées, contexte `update`, `legal_accept`, trigger d'inscription).
+- Tests : 24 tests de permissions ; tests unitaires (redirections, validation, robustesse) ; E2E sans base (protection, erreurs, accessibilité) et parcours complet avec emails réels sur la pile locale (inscription, confirmation depuis un autre navigateur, lien déjà utilisé, mot de passe oublié, conditions des comptes de seed, back office refusé à un vendeur).
+
 ### 2026-10-16 · L1-06 · PR #13 · Seed complet
 - Ajouté : `npm run db:seed` (local) et `npm run db:seed:staging`, refusés en production ; une transaction, idempotent. Formules et droits, six étapes de vente par formule (section 9), 73 fiches de la FAQ de Cédric, comptes `seller_a`, `seller_b`, `buyer_c`, `buyer_d`, `admin` (`@test.leenkey.fr`), 16 biens fictifs dans la zone de lancement (12 publiés, 3 en attente, 1 refusé), formules Accompagné et Sérénité sur deux biens avec leur conversation conseiller, conversations acquéreurs, favoris, vues.
 - Migration : `20261015140000_seed_support.sql` (colonne `sale_step_tasks.owner`, clé d'import de la base de connaissances).

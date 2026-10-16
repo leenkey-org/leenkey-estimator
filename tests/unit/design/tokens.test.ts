@@ -41,6 +41,7 @@ describe("palette (DESIGN.md 2.1)", () => {
     ["ink", "surface"],
     ["ink-2", "surface"],
     ["ink-2", "stone-2"],
+    ["ink-2", "blue-tint"],
     ["ink-3", "surface"],
     ["ink-3", "stone-2"],
     ["ink-3", "bg"],

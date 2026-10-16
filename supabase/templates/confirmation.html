@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Confirmez votre adresse email</title>
+  </head>
+  <!-- Supabase Auth template (Confirm signup). docs/DESIGN.md 14: #F4F4F1 background,
+       560 px white card, 8 px #1156FC band, Arial bold for titles (mail
+       clients ignore font-stretch), 48 px #1156FC button.
+       Link: /auth/confirm (app/auth/confirm/route.ts) with the token hash,
+       valid from any browser. -->
+  <body style="margin:0;padding:0;background:#F4F4F1;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F4F1;">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border-radius:6px;overflow:hidden;">
+            <tr><td style="height:8px;background:#1156FC;font-size:0;line-height:0;">&nbsp;</td></tr>
+            <tr>
+              <td style="padding:32px 32px 8px;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:700;color:#0F1E35;">Leenkey</td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 0;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.2;font-weight:700;color:#0F1E35;">Confirmez votre adresse email</td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#0F1E35;">Bonjour, vous venez de créer votre compte Leenkey. Confirmez votre adresse email pour l&#39;activer.</td>
+            </tr>
+            <tr>
+              <td style="padding:24px 32px 0;">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="border-radius:4px;background:#1156FC;">
+                      <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email" style="display:inline-block;padding:0 24px;line-height:48px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:4px;">Confirmer mon email</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 32px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:#3E4757;">Ce lien est valable une heure. Si vous n&#39;êtes pas à l&#39;origine de cette inscription, ignorez cet email.</td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 32px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#5B6474;word-break:break-all;">
+                Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br />{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email
+              </td>
+            </tr>
+          </table>
+          <p style="margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#5B6474;">
+            Leenkey · SAS LEENKEY, RCS Évry 107 616 211
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
