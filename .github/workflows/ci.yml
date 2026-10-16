@@ -55,3 +55,38 @@ jobs:
       - run: npm run db:rls-test
         env:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      # Seed twice: same row counts (idempotent), expected volumes, then the
+      # permission tests again on the seeded database.
+      - name: Seed (idempotence and volumes)
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          export SEED_PASSWORD="$(openssl rand -hex 12)"
+          counts() {
+            psql "$DATABASE_URL" -At -c "select concat_ws(' ',
+              (select count(*) from public.plans), (select count(*) from public.plan_entitlements),
+              (select count(*) from public.sale_steps), (select count(*) from public.sale_step_tasks),
+              (select count(*) from public.knowledge_base), (select count(*) from auth.users),
+              (select count(*) from public.properties), (select count(*) from public.listings),
+              (select count(*) from public.subscriptions), (select count(*) from public.conversations),
+              (select count(*) from public.messages), (select count(*) from public.sale_task_status),
+              (select count(*) from public.favorites), (select count(*) from public.listing_views))"
+          }
+          npm run db:seed
+          first="$(counts)"
+          npm run db:seed
+          second="$(counts)"
+          echo "first:  $first"; echo "second: $second"
+          [ "$first" = "$second" ] || { echo "The seed is not idempotent."; exit 1; }
+          volumes="$(psql "$DATABASE_URL" -At -c "select concat_ws(' ',
+            (select count(*) from public.plans), (select count(*) from public.sale_steps),
+            (select count(*) from auth.users where email like '%@test.leenkey.fr'),
+            (select count(*) from public.listings where property_id::text like '5eed1000-%' and status = 'published'),
+            (select count(*) from public.listings where property_id::text like '5eed1000-%' and status = 'pending'),
+            (select count(*) from public.listings where property_id::text like '5eed1000-%' and status = 'rejected'),
+            (select count(*) from public.knowledge_base) = (select count(*) from public.knowledge_base where source_file = 'faq-cedric-v2.md'))")"
+          echo "volumes: $volumes"
+          [ "$volumes" = "3 18 5 12 3 1 t" ] || { echo "Unexpected seed volumes."; exit 1; }
+      - run: npm run db:rls-test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres

@@ -12,6 +12,17 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-16 · L1-06 · PR #13 · Seed complet
+- Ajouté : `npm run db:seed` (local) et `npm run db:seed:staging`, refusés en production ; une transaction, idempotent. Formules et droits, six étapes de vente par formule (section 9), 73 fiches de la FAQ de Cédric, comptes `seller_a`, `seller_b`, `buyer_c`, `buyer_d`, `admin` (`@test.leenkey.fr`), 16 biens fictifs dans la zone de lancement (12 publiés, 3 en attente, 1 refusé), formules Accompagné et Sérénité sur deux biens avec leur conversation conseiller, conversations acquéreurs, favoris, vues.
+- Migration : `20261015140000_seed_support.sql` (colonne `sale_step_tasks.owner`, clé d'import de la base de connaissances).
+- Tests : les tests de permissions passent sur une base vide et sur une base seedée ; la CI vérifie l'idempotence et les volumes du seed.
+- Corrigé : FAQ de Cédric, fiche « Combien coûtent les formules ? » : deux séparateurs de ligne invisibles (U+2028) remplacés par de vrais retours à la ligne.
+- Préprod : migration et seed joués sur `leenkey-staging` ; FAQ, biens et messages vérifiés identiques au dépôt par empreinte.
+
+### 2026-10-16 · L1-07, L1-08 · PR #12 · Design system Façade
+- Ajouté : design system Façade (tokens préfixés `lk`, Archivo avec axe de largeur, formats de prix, surfaces et dates, 17 composants partagés dont `Button`, `Input`, `UnitInput`, `ChipToggle`, `SegmentedPicker`, `StatusBadge`, `DpeBadge`, `KeyFigures`, `BrandPanel`, `PropertyCard`), page `/design` hors production, dessin `public/brand/facade.svg` et `EmptyState`.
+- Vérifié : les 9 pages V1 sont identiques à l'octet près en 390 et 1280 px avant et après ; axe sans violation sérieuse ni critique sur `/design`.
+
 ### 2026-10-15 · Q29 · PR #11 · Bien atypique à restaurer jamais à 0 €
 - Corrigé : moteur de valorisation, biens atypiques : le budget de travaux déclaré est déduit dans la limite de 70 % de la valeur avant travaux. Seul cas modifié parmi les 24 cas de non-régression : château à restaurer (650 m², 600 000 € de travaux) **0 € → 168 000 €** (fourchette 0 – 0 → 119 000 – 217 000 €, 258 €/m²). Les 23 autres cas sont identiques. V2 uniquement : la V1 en ligne n'est pas modifiée.
 - Tests : snapshot du château mis à jour, test ajouté (aucun budget de travaux ne ramène un bien atypique à 0 €).

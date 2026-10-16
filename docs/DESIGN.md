@@ -101,6 +101,8 @@ Règles :
 
 À créer tel quel en `L1-07` (Tailwind 4, configuration CSS-first). Les noms de classes Tailwind générés sont indiqués en commentaire.
 
+> **Mise en œuvre (L1-07, PR #12).** Tant que les pages V1 sont servies par la V2, les jetons Façade portent le préfixe `lk` pour ne pas modifier les pages V1 : couleurs `bg-lk-*` / `text-lk-*`, rayons `rounded-lk-sm` (4 px) et `rounded-lk-md` (6 px) au lieu de `rounded-sm` / `rounded-md`, échelle typographique en jetons de rôle `text-lk-*` (section 3.2). Les styles de base et les variables shadcn s'appliquent dans la portée `.facade`, posée par `<FacadeRoot>` (`components/shared/facade-root.tsx`). À l'arrêt des pages V1, un rechercher-remplacer ramène les noms de cette section.
+
 ```css
 @import "tailwindcss";
 
@@ -205,6 +207,8 @@ Les composants shadcn/ui installés sont ensuite ajustés pour respecter les ray
 ## 3. Typographie
 
 ### 3.1 Chargement
+
+> **Mise en œuvre (L1-07, PR #12).** Archivo est déclarée dans `lib/fonts.ts` et chargée par `<FacadeRoot>`, pas par `app/layout.tsx` : les pages V1 ne la téléchargent pas.
 
 `app/layout.tsx` :
 

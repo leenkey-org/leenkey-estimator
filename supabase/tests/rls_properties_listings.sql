@@ -68,7 +68,7 @@ select is((select count(*) from listings)::int, 0, 'buyer_c: reads no listing ta
 \ir _as.psql
 select throws_ok('select count(*) from properties', '42501', null, 'anon: no access to properties');
 select throws_ok('select count(*) from listings', '42501', null, 'anon: no access to listings');
-select is((select count(*) from public_listings)::int, 0, 'anon: public_listings empty while nothing is published');
+select is((select count(*) from public_listings where id = :'listing_a')::int, 0, 'anon: a draft is not in public_listings');
 select id as est_id, claim_token as est_token
   from estimation_record('{"type":"maison"}'::jsonb, '{"value":300000}'::jsonb, 30000000, 28000000, 32000000, 'x@example.com') \gset
 select ok(char_length(:'est_token') = 48, 'anon: estimation_record returns a claim token');

@@ -2,20 +2,31 @@
 -- cases, notifications, knowledge base, assistant logs, admin account functions.
 begin;
 \ir _helpers.psql
-select plan(82);
+select plan(83);
 \ir _plan.psql
 
--- Reference data (loaded by the seed in real environments)
+-- Reference data: loaded by the seed in real environments, inserted here when
+-- missing so the file runs on an empty or a seeded database. Test tasks: one
+-- owned by the seller, one by Leenkey in the same seller step (the task owner
+-- wins), one without owner in a Leenkey step (the step owner applies).
 insert into plans (code, name, tagline, price_cents, description, features, position) values
   ('autonomie', 'Autonomie', 'Tous les outils pour vendre vous-même.', 0, 'Gratuit', '{}', 1),
   ('accompagne', 'Accompagné', 'Vous vendez. On vous accompagne à chaque étape.', 99000, 'Accompagné', '{}', 2),
-  ('serenite', 'Sérénité', 'On pilote avec vous jusqu''à la signature.', 150000, 'Sérénité', '{}', 3);
-insert into sale_steps (id, plan, code, position, title, description, owner) values
-  ('20000000-0000-4000-a000-000000000001', 'autonomie', 'prepare', 1, 'Préparer', 'Préparer la vente', 'seller'),
-  ('20000000-0000-4000-a000-000000000002', 'autonomie', 'publish', 2, 'Publier', 'Validation Leenkey', 'leenkey');
-insert into sale_step_tasks (id, step_id, code, title, position) values
-  ('21000000-0000-4000-a000-000000000001', '20000000-0000-4000-a000-000000000001', 'photos', 'Ajouter des photos', 1),
-  ('21000000-0000-4000-a000-000000000002', '20000000-0000-4000-a000-000000000002', 'review', 'Relecture Leenkey', 1);
+  ('serenite', 'Sérénité', 'On pilote avec vous jusqu''à la signature.', 150000, 'Sérénité', '{}', 3)
+on conflict (code) do nothing;
+insert into sale_steps (plan, code, position, title, description, owner) values
+  ('autonomie', 'prepare', 1, 'Préparer', 'Préparer la vente', 'seller'),
+  ('autonomie', 'publish', 2, 'Publier', 'Validation Leenkey', 'leenkey')
+on conflict (plan, code) do update set owner = excluded.owner;
+insert into sale_step_tasks (step_id, code, title, position, owner)
+select id, 'rls_seller_task', 'Ajouter des photos', 99, 'seller' from sale_steps where plan = 'autonomie' and code = 'prepare'
+returning id as task_seller \gset
+insert into sale_step_tasks (step_id, code, title, position, owner)
+select id, 'rls_leenkey_task', 'Stratégie de prix', 98, 'leenkey' from sale_steps where plan = 'autonomie' and code = 'prepare'
+returning id as task_leenkey \gset
+insert into sale_step_tasks (step_id, code, title, position)
+select id, 'rls_step_owned_task', 'Relecture Leenkey', 99 from sale_steps where plan = 'autonomie' and code = 'publish'
+returning id as task_step_owned \gset
 
 -- ===========================================================================
 -- seller_a: property, steps
@@ -31,11 +42,14 @@ returning id as listing_a \gset
 select is((select plan::text || '/' || current_step_code from sale_progress where property_id = :'prop_a'),
           'autonomie/prepare', 'sale_progress created with the property (Autonomie, first step)');
 select lives_ok(format($$insert into sale_task_status (property_id, task_id, done_at, done_by)
-                         values (%L, '21000000-0000-4000-a000-000000000001', now(), tests.uid('seller_a'))$$, :'prop_a'),
+                         values (%L, %L, now(), tests.uid('seller_a'))$$, :'prop_a', :'task_seller'),
                 'seller_a: ticks a seller task');
 select throws_ok(format($$insert into sale_task_status (property_id, task_id, done_at)
-                          values (%L, '21000000-0000-4000-a000-000000000002', now())$$, :'prop_a'),
-                 '42501', null, 'seller_a: cannot tick a Leenkey task');
+                          values (%L, %L, now())$$, :'prop_a', :'task_leenkey'),
+                 '42501', null, 'seller_a: cannot tick a Leenkey task, even in a seller step');
+select throws_ok(format($$insert into sale_task_status (property_id, task_id, done_at)
+                          values (%L, %L, now())$$, :'prop_a', :'task_step_owned'),
+                 '42501', null, 'seller_a: cannot tick a task without owner in a Leenkey step');
 select throws_ok(format($$update sale_task_status set done_by = tests.uid('seller_b')
                           where property_id = %L$$, :'prop_a'),
                  '42501', null, 'seller_a: cannot attribute a task to someone else');
@@ -52,7 +66,7 @@ insert into listings (property_id, title, description, price_cents)
 values (:'prop_b', 'Maison 5 pièces', 'Jardin.', 42000000)
 returning id as listing_b \gset
 select throws_ok(format($$insert into sale_task_status (property_id, task_id, done_at)
-                          values (%L, '21000000-0000-4000-a000-000000000001', now())$$, :'prop_a'),
+                          values (%L, %L, now())$$, :'prop_a', :'task_seller'),
                  '42501', null, 'seller_b: cannot tick seller_a tasks');
 select is((select count(*) from sale_progress where property_id = :'prop_a')::int, 0, 'seller_b: cannot read seller_a progress');
 
@@ -114,7 +128,7 @@ select lives_ok(format($$update sale_progress set plan = 'serenite' where proper
 \set who anon
 \ir _as.psql
 select is((select plan from public_listings where id = :'listing_a'), 'serenite'::plan_code, 'public_listings follows sale_progress');
-select is((select count(*) from public_listings)::int, 1, 'anon: still reads public_listings');
+select is((select count(*) from public_listings where id = :'listing_a')::int, 1, 'anon: still reads public_listings');
 
 -- ===========================================================================
 -- messaging: listing conversation
@@ -167,7 +181,7 @@ select is((select count(*) from reports)::int, 0, 'buyer_c: does not read report
 select is((select count(*) from messages where conversation_id = :'conv')::int, 2, 'admin: reads all messages');
 select throws_ok(format($$insert into messages (conversation_id, sender_id, body) values (%L, tests.uid('admin'), 'Intervention')$$, :'conv'),
                  '42501', null, 'admin: does not write in a listing conversation');
-select is((select count(*) from reports)::int, 1, 'admin: reads reports');
+select is((select count(*) from reports where conversation_id = :'conv')::int, 1, 'admin: reads reports');
 
 -- ===========================================================================
 -- messaging: advisor conversation (created by the payment webhook)

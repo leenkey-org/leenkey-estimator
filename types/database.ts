@@ -1025,6 +1025,7 @@ export type Database = {
           auto_trigger: string | null
           code: string
           id: string
+          owner: string | null
           position: number
           required: boolean
           step_id: string
@@ -1034,6 +1035,7 @@ export type Database = {
           auto_trigger?: string | null
           code: string
           id?: string
+          owner?: string | null
           position: number
           required?: boolean
           step_id: string
@@ -1043,6 +1045,7 @@ export type Database = {
           auto_trigger?: string | null
           code?: string
           id?: string
+          owner?: string | null
           position?: number
           required?: boolean
           step_id?: string

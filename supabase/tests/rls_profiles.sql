@@ -10,7 +10,7 @@ select is((select roles from profiles where id = tests.uid('buyer_c')), '{buyer}
 select ok(exists (select 1 from buyer_profiles where profile_id = tests.uid('buyer_c')), 'signup: buyer_profiles row created for a buyer');
 select ok(not exists (select 1 from buyer_profiles where profile_id = tests.uid('seller_a')), 'signup: no buyer_profiles row for a seller');
 insert into auth.users (id, email, raw_user_meta_data, aud, role)
-values ('00000000-0000-4000-a000-0000000000ee', 'evil@test.leenkey.fr', '{"role":"admin"}', 'authenticated', 'authenticated');
+values ('00000000-0000-4000-a000-0000000000ee', 'evil@rls.leenkey.test', '{"role":"admin"}', 'authenticated', 'authenticated');
 select is((select roles from profiles where id = '00000000-0000-4000-a000-0000000000ee'), '{}'::user_role[], 'signup: admin role in metadata is ignored');
 
 -- Anonymous ----------------------------------------------------------------
@@ -58,9 +58,10 @@ select is((select count(*) from buyer_profiles where profile_id = tests.uid('buy
 \set who admin
 \ir _as.psql
 select ok(is_admin(), 'admin: is_admin() is true');
-select is((select count(*) from profiles)::int, 6, 'admin: reads all profiles');
+select is((select count(*) from profiles where id::text like '00000000-0000-4000-a000-%')::int, 6, 'admin: reads all profiles');
 select is((select first_name from profiles where id = tests.uid('seller_b')), 'Bruno', 'seller_b: untouched by seller_a update');
-select is((select count(*) from buyer_profiles)::int, 3, 'admin: reads all buyer profiles');
+select is((select count(*) from buyer_profiles where profile_id::text like '00000000-0000-4000-a000-%')::int, 3,
+          'admin: reads all buyer profiles');
 
 select * from finish();
 rollback;

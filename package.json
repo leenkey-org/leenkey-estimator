@@ -17,6 +17,8 @@
     "db:migrate:staging": "scripts/db-migrate.sh staging",
     "db:migrate:prod": "scripts/db-migrate.sh prod",
     "db:rls-test": "scripts/db-rls-test.sh",
+    "db:seed": "scripts/db-seed.sh local",
+    "db:seed:staging": "scripts/db-seed.sh staging",
     "db:types": "scripts/db-types.sh"
   },
   "dependencies": {
