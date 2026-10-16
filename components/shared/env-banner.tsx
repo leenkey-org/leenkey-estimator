@@ -8,10 +8,10 @@ export function EnvBanner() {
   return (
     <div
       role="status"
+      // Façade tokens (white on --lk-warning, 5.02:1). The font stays the
+      // system one: the banner also sits above the V1 pages.
+      className="bg-lk-warning text-white"
       style={{
-        // Colours move to the design tokens with L1-07.
-        background: "#B45309",
-        color: "#FFFFFF",
         font: "600 12px/1.4 system-ui, sans-serif",
         textAlign: "center",
         padding: "6px 12px",

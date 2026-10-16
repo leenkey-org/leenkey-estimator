@@ -295,3 +295,229 @@ html {
     display: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Façade design system (L1-07): docs/DESIGN.md sections 2 to 5 and 9.
+
+   The V1 pages ported in L1-01 keep the theme above until they are restyled
+   (DECISIONS Q25 c), so Façade is added next to it without changing it:
+   - no Façade token reuses a V1 name: public/pages/leenkey.css declares
+     unlayered :root variables (--radius-sm, --radius-md, --font-display,
+     --color-navy, --color-border, --ease-out…) that would override a shared
+     name on the marketing pages. Colours keep their DESIGN.md names
+     (bg-lk-blue…); radii are rounded-lk-sm / rounded-lk-md and font sizes
+     text-lk-* instead of rounded-sm / rounded-md / text-[13px];
+   - base styles (Archivo, colours, shadcn/ui variables, focus ring, reduced
+     motion) only apply inside the `.facade` scope set by <FacadeRoot>.
+   Breakpoints are Tailwind's defaults, which are DESIGN.md 4.2's values:
+   md 768 px, lg 1024 px, xl 1280 px.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* static: every token exists as a CSS variable (var(--color-lk-line)), even
+   when no utility uses it yet. */
+@theme static {
+  /* Palette (DESIGN.md 2.1): bg-lk-blue, text-lk-ink-3, border-lk-line… */
+  --color-lk-blue: #1156fc;
+  --color-lk-blue-hover: #0d47e0;
+  --color-lk-blue-tint: #eef4ff;
+  --color-lk-blue-line: #dbeafe;
+  --color-lk-on-blue-2: #f0f4ff;
+  --color-lk-navy: #1a2b4a;
+  --color-lk-ink: #0f1e35;
+  --color-lk-ink-2: #3e4757;
+  --color-lk-ink-3: #5b6474;
+  --color-lk-bg: #f4f4f1;
+  --color-lk-surface: #ffffff;
+  --color-lk-stone: #e3e4de;
+  --color-lk-stone-2: #ecede8;
+  --color-lk-line: #d9dbd3;
+  --color-lk-field: #8a909a;
+  --color-lk-success: #047857;
+  --color-lk-success-bg: #d1fae5;
+  --color-lk-success-fg: #065f46;
+  --color-lk-warning: #b45309;
+  --color-lk-warning-bg: #fef3c7;
+  --color-lk-warning-fg: #92400e;
+  --color-lk-danger: #b91c1c;
+  --color-lk-danger-bg: #fee2e2;
+  --color-lk-danger-fg: #991b1b;
+
+  /* DPE badges (DESIGN.md 2.1): bg-lk-dpe-c-bg text-lk-dpe-c-fg… */
+  --color-lk-dpe-a-bg: #d1fae5;
+  --color-lk-dpe-a-fg: #065f46;
+  --color-lk-dpe-b-bg: #dcfce7;
+  --color-lk-dpe-b-fg: #166534;
+  --color-lk-dpe-c-bg: #ecfccb;
+  --color-lk-dpe-c-fg: #3f6212;
+  --color-lk-dpe-d-bg: #fef9c3;
+  --color-lk-dpe-d-fg: #854d0e;
+  --color-lk-dpe-e-bg: #fef3c7;
+  --color-lk-dpe-e-fg: #92400e;
+  --color-lk-dpe-f-bg: #ffedd5;
+  --color-lk-dpe-f-fg: #9a3412;
+  --color-lk-dpe-g-bg: #fee2e2;
+  --color-lk-dpe-g-fg: #991b1b;
+
+  /* Radii (DESIGN.md 5): 4 px controls, 6 px containers, rounded-full pills */
+  --radius-lk-sm: 4px;
+  --radius-lk-md: 6px;
+
+  /* Elevation (DESIGN.md 5): floating elements only, never cards */
+  --shadow-float: 0 2px 6px rgba(15, 30, 53, 0.18);
+  --shadow-sheet: 0 -8px 24px rgba(15, 30, 53, 0.16);
+
+  /* Motion (DESIGN.md 9): duration-140 for hover, duration-220 for panels */
+  --ease-out-lk: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  /* Containers (DESIGN.md 4.3): max-w-lk-page… */
+  --container-lk-page: 75rem; /* 1200 px, public pages */
+  --container-lk-home: 51.25rem; /* 820 px, buyer home */
+  --container-lk-settings: 45rem; /* 720 px, account and settings */
+  --container-lk-prose: 40rem; /* 640 px, about 68 characters per line */
+  --container-lk-form: 35rem; /* 560 px, step forms */
+
+  /* Type scale (DESIGN.md 3.2): size and line height of each role, mobile
+     first, then the -lg value used from 1024 px (lg:text-lk-h1-lg). Weights
+     come from font-medium / font-semibold / font-bold, the "Large" width from
+     text-wide. Sizes in rem so that they follow the reader's font size. */
+  --text-lk-display: 2.25rem; /* 36 px */
+  --text-lk-display--line-height: 1.05;
+  --text-lk-display-lg: 3.5rem; /* 56 px */
+  --text-lk-display-lg--line-height: 1;
+  --text-lk-h1: 1.625rem; /* 26 px */
+  --text-lk-h1--line-height: 1.15;
+  --text-lk-h1-lg: 2rem; /* 32 px */
+  --text-lk-h1-lg--line-height: 1.1;
+  --text-lk-h2: 1.25rem; /* 20 px, also the app header title */
+  --text-lk-h2--line-height: 1.2;
+  --text-lk-h2-lg: 1.5rem; /* 24 px */
+  --text-lk-h2-lg--line-height: 1.15;
+  --text-lk-h3: 1rem; /* 16 px, section title */
+  --text-lk-h3--line-height: 1.3;
+  --text-lk-h3-lg: 1.0625rem; /* 17 px */
+  --text-lk-h3-lg--line-height: 1.3;
+  --text-lk-title: 0.9375rem; /* 15 px, bar and card titles */
+  --text-lk-title--line-height: 1.3;
+  --text-lk-price: 1.625rem; /* 26 px, main price */
+  --text-lk-price--line-height: 1;
+  --text-lk-price-lg: 1.875rem; /* 30 px */
+  --text-lk-price-lg--line-height: 1;
+  --text-lk-card-price: 1.0625rem; /* 17 px, compact card */
+  --text-lk-card-price--line-height: 1.1;
+  --text-lk-card-price-sm: 1rem; /* 16 px, tile */
+  --text-lk-card-price-sm--line-height: 1.1;
+  --text-lk-card-price-lg: 1.375rem; /* 22 px, wide card */
+  --text-lk-card-price-lg--line-height: 1.1;
+  --text-lk-figure: 0.9375rem; /* 15 px, key figure */
+  --text-lk-figure--line-height: 1;
+  --text-lk-figure-lg: 1.0625rem; /* 17 px */
+  --text-lk-figure-lg--line-height: 1;
+  --text-lk-stat: 1.375rem; /* 22 px, indicator */
+  --text-lk-stat--line-height: 1;
+  --text-lk-body: 0.9375rem; /* 15 px */
+  --text-lk-body--line-height: 1.55;
+  --text-lk-body-lg: 1rem; /* 16 px */
+  --text-lk-body-lg--line-height: 1.6;
+  --text-lk-compact: 0.875rem; /* 14 px, lists and messages */
+  --text-lk-compact--line-height: 1.5;
+  --text-lk-label: 0.8125rem; /* 13 px, field label */
+  --text-lk-label--line-height: 1.3;
+  --text-lk-button-lg: 0.9375rem; /* 15 px */
+  --text-lk-button-lg--line-height: 1;
+  --text-lk-button-md: 0.875rem; /* 14 px */
+  --text-lk-button-md--line-height: 1;
+  --text-lk-button-sm: 0.8125rem; /* 13 px */
+  --text-lk-button-sm--line-height: 1;
+  --text-lk-secondary: 0.8125rem; /* 13 px */
+  --text-lk-secondary--line-height: 1.5;
+  --text-lk-caption: 0.75rem; /* 12 px, help, errors, small secondary text */
+  --text-lk-caption--line-height: 1.5;
+  --text-lk-tag: 0.75rem; /* 12 px, "Prochaine action" */
+  --text-lk-tag--line-height: 1.3;
+  --text-lk-micro: 0.6875rem; /* 11 px, badges and counters */
+  --text-lk-micro--line-height: 1.3;
+}
+
+/* Brand utilities (DESIGN.md 2.2) */
+@utility text-display {
+  font-weight: 700;
+  font-stretch: 116%;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+@utility text-wide {
+  font-stretch: 116%;
+  letter-spacing: -0.02em;
+}
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@layer base {
+  /* Façade scope: Archivo (variable set by next/font on the same element),
+     Leenkey colours and the shadcn/ui variables of DESIGN.md 2.2. */
+  .facade {
+    font-family:
+      var(--font-archivo),
+      system-ui,
+      -apple-system,
+      "Segoe UI",
+      Arial,
+      sans-serif;
+    color: var(--color-lk-ink);
+    background-color: var(--color-lk-surface);
+    -webkit-font-smoothing: antialiased;
+    --background: var(--color-lk-surface);
+    --foreground: var(--color-lk-ink);
+    --card: var(--color-lk-surface);
+    --card-foreground: var(--color-lk-ink);
+    --popover: var(--color-lk-surface);
+    --popover-foreground: var(--color-lk-ink);
+    --primary: var(--color-lk-blue);
+    --primary-foreground: var(--color-lk-surface);
+    --secondary: var(--color-lk-stone-2);
+    --secondary-foreground: var(--color-lk-ink);
+    --muted: var(--color-lk-stone-2);
+    --muted-foreground: var(--color-lk-ink-3);
+    --accent: var(--color-lk-blue-tint);
+    --accent-foreground: var(--color-lk-blue);
+    --destructive: var(--color-lk-danger);
+    --border: var(--color-lk-line);
+    --input: var(--color-lk-field);
+    --ring: var(--color-lk-blue);
+    --radius: 0.375rem;
+    /* Read by the V1 base layer above, resolved at :root otherwise */
+    --color-border: var(--color-lk-line);
+  }
+
+  /* The V1 base layer gives h1 to h4 Sora and the V1 navy */
+  .facade :where(h1, h2, h3, h4, h5, h6) {
+    font-family: inherit;
+    color: inherit;
+    letter-spacing: normal;
+    text-wrap: balance;
+  }
+  .facade :where(p) {
+    text-wrap: pretty;
+  }
+
+  .facade :focus-visible {
+    outline: 2px solid var(--color-lk-blue);
+    outline-offset: 2px;
+  }
+
+  /* DESIGN.md 2.2, scoped so that the V1 animations stay as they are. The
+     iteration count stops infinite animations (spinner, skeleton) instead of
+     replaying them every millisecond. */
+  @media (prefers-reduced-motion: reduce) {
+    .facade,
+    .facade *,
+    .facade *::before,
+    .facade *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
