@@ -18,10 +18,12 @@ export function ActionBar({ signUpHref }: { signUpHref: string }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2.5 border-t border-lk-line bg-lk-surface px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3.5 lg:hidden">
       <Button asChild size="lg" className="flex-1">
-        <Link href={signUpHref}>{t.contact}</Link>
+        <Link href={signUpHref} prefetch={false}>
+          {t.contact}
+        </Link>
       </Button>
       <Button asChild variant="secondary" size="lg" className="w-13 shrink-0 px-0 [&_svg]:size-5">
-        <Link href={signUpHref} aria-label={t.visit}>
+        <Link href={signUpHref} prefetch={false} aria-label={t.visit}>
           <Calendar aria-hidden="true" />
         </Link>
       </Button>
@@ -46,10 +48,14 @@ export function PriceColumn({
         accompanied={listing.accompanied}
       />
       <Button asChild size="lg">
-        <Link href={signUpHref}>{t.contact}</Link>
+        <Link href={signUpHref} prefetch={false}>
+          {t.contact}
+        </Link>
       </Button>
       <Button asChild variant="secondary">
-        <Link href={signUpHref}>{t.visit}</Link>
+        <Link href={signUpHref} prefetch={false}>
+          {t.visit}
+        </Link>
       </Button>
       <p className="text-center text-lk-micro text-lk-ink-3">{t.accountRequired}</p>
     </div>

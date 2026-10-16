@@ -63,7 +63,6 @@ export const fr = {
       suggestions: "Communes",
       noSuggestion: "Aucune commune de la zone ne correspond. Validez pour chercher ce nom.",
       radius: (km: number) => `${km}\u00A0km`,
-      radiusDescription: (km: number) => `Rayon de ${km}\u00A0km autour de la commune.`,
     },
     filtersButton: "Filtres",
     activeFilters: (count: number) =>

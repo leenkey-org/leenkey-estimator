@@ -14,7 +14,8 @@ const t = fr.search.location;
  * combobox that suggests the communes of the launch zone (Mapbox later,
  * DECISIONS proposal of L1-15). Choosing a commune applies the search at once;
  * Enter without a choice takes the best suggestion, a postal code or the typed
- * name. The radius, set in the filters panel, is shown after the commune.
+ * name. At rest the field reads « Savigny-sur-Orge · 5 km » (the radius is set
+ * in the filters panel); while typing, the commune alone.
  */
 export function LocationField({ className }: { className?: string }) {
   const { query, placeLabel, applyFilters } = useSearch();
@@ -22,25 +23,27 @@ export function LocationField({ className }: { className?: string }) {
   const id = useId();
   const inputId = `${id}-input`;
   const listId = `${id}-list`;
-  const radiusId = `${id}-radius`;
   const inputRef = useRef<HTMLInputElement>(null);
+  const radius = filters.location && filters.radiusKm ? filters.radiusKm : undefined;
+  const atRest = (label: string | null) =>
+    label ? (radius ? `${label} · ${t.radius(radius)}` : label) : "";
 
-  const [text, setText] = useState(placeLabel ?? "");
+  const [text, setText] = useState(atRest(placeLabel));
   const [editing, setEditing] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   // Label of a place just chosen, shown until the new results arrive.
   const chosenLabel = useRef<string | null>(null);
 
-  // A new search (back button, chip, link) shows its own place.
+  // A new search (back button, chip, link, radius) shows its own place.
   useEffect(() => {
     chosenLabel.current = null;
-    setText(placeLabel ?? "");
-  }, [placeLabel]);
+    setEditing(false);
+    setText(placeLabel ? (radius ? `${placeLabel} · ${t.radius(radius)}` : placeLabel) : "");
+  }, [placeLabel, radius]);
 
   const suggestions = useMemo(() => suggestCommunes(editing ? text : ""), [editing, text]);
   const expanded = open && suggestions.length > 0;
-  const radius = filters.location && filters.radiusKm ? filters.radiusKm : undefined;
 
   function close() {
     setOpen(false);
@@ -50,7 +53,7 @@ export function LocationField({ className }: { className?: string }) {
   function apply(location: string | undefined, label: string) {
     close();
     setEditing(false);
-    setText(label);
+    setText(location ? atRest(label) : "");
     if (location === filters.location) return;
     chosenLabel.current = label;
     applyFilters({
@@ -97,8 +100,6 @@ export function LocationField({ className }: { className?: string }) {
         if (open) {
           event.preventDefault();
           close();
-        } else {
-          setText(placeLabel ?? "");
         }
         break;
     }
@@ -126,7 +127,6 @@ export function LocationField({ className }: { className?: string }) {
           aria-expanded={expanded}
           aria-controls={listId}
           aria-activedescendant={expanded && active >= 0 ? `${listId}-${active}` : undefined}
-          aria-describedby={radius ? radiusId : undefined}
           autoComplete="off"
           spellCheck={false}
           enterKeyHint="search"
@@ -138,24 +138,21 @@ export function LocationField({ className }: { className?: string }) {
             setOpen(true);
             setActive(-1);
           }}
-          onFocus={(event) => {
+          onFocus={() => {
             setEditing(true);
             setOpen(true);
-            event.target.select();
+            // While typing, the commune alone, selected: typing replaces it.
+            setText(chosenLabel.current ?? placeLabel ?? "");
+            requestAnimationFrame(() => inputRef.current?.select());
           }}
           onBlur={() => {
             close();
             setEditing(false);
-            setText(chosenLabel.current ?? placeLabel ?? "");
+            setText(atRest(chosenLabel.current ?? placeLabel));
           }}
           onKeyDown={onKeyDown}
           className="h-full min-w-0 flex-1 bg-transparent text-lk-compact font-medium text-lk-ink outline-none placeholder:font-normal placeholder:text-lk-ink-3"
         />
-        {radius && !editing ? (
-          <span aria-hidden="true" className="shrink-0 text-lk-compact font-medium text-lk-ink">
-            {`· ${t.radius(radius)}`}
-          </span>
-        ) : null}
         {filters.location ? (
           <button
             type="button"
@@ -177,11 +174,6 @@ export function LocationField({ className }: { className?: string }) {
           <span className="w-2.5 shrink-0" />
         )}
       </div>
-      {radius ? (
-        <span id={radiusId} className="sr-only">
-          {t.radiusDescription(radius)}
-        </span>
-      ) : null}
 
       <ul
         id={listId}

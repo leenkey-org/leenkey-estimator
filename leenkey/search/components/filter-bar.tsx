@@ -34,7 +34,6 @@ export function FilterBar({ className }: { className?: string }) {
   const filters = query.filters;
   const update = (patch: Partial<SearchFilters>) => applyFilters({ ...filters, ...patch });
   const number = (value: string) => (value ? Number(value) : undefined);
-
   const budgetMax =
     filters.priceMaxCents === undefined ? undefined : Math.round(filters.priceMaxCents / 100);
 
@@ -42,6 +41,7 @@ export function FilterBar({ className }: { className?: string }) {
     <div className={cn("flex min-w-0 items-center gap-3", className)}>
       <FilterSelect
         label={t.type}
+        display={filters.type ? fr.search.types[filters.type] : t.type}
         active={filters.type !== undefined}
         value={filters.type ?? ""}
         onChange={(event) =>
@@ -58,6 +58,7 @@ export function FilterBar({ className }: { className?: string }) {
 
       <FilterSelect
         label={t.budgetLabel}
+        display={budgetMax === undefined ? t.budget : t.priceUpTo(formatPrice(budgetMax * 100))}
         active={budgetMax !== undefined}
         value={budgetMax ?? ""}
         onChange={(event) => {
@@ -80,6 +81,7 @@ export function FilterBar({ className }: { className?: string }) {
 
       <FilterSelect
         label={t.roomsLabel}
+        display={filters.roomsMin ? t.roomsAtLeast(filters.roomsMin) : t.rooms}
         active={filters.roomsMin !== undefined}
         value={filters.roomsMin ?? ""}
         onChange={(event) => update({ roomsMin: number(event.target.value) })}
@@ -94,9 +96,12 @@ export function FilterBar({ className }: { className?: string }) {
 
       <FilterSelect
         label={t.surfaceLabel}
+        display={
+          filters.surfaceMin ? t.surfaceAtLeast(formatSurface(filters.surfaceMin)) : t.surface
+        }
         active={filters.surfaceMin !== undefined}
         value={filters.surfaceMin ?? ""}
-        containerClassName="hidden xl:block"
+        containerClassName="hidden xl:inline-flex"
         onChange={(event) => {
           const min = number(event.target.value);
           const max = filters.surfaceMax;
@@ -116,9 +121,10 @@ export function FilterBar({ className }: { className?: string }) {
 
       <FilterSelect
         label={t.dpeLabel}
+        display={filters.dpeMax ? t.dpeUpTo(filters.dpeMax) : t.dpe}
         active={filters.dpeMax !== undefined}
         value={filters.dpeMax ?? ""}
-        containerClassName="hidden xl:block"
+        containerClassName="hidden xl:inline-flex"
         onChange={(event) =>
           update({ dpeMax: DPE_CLASSES.find((letter) => letter === event.target.value) })
         }
