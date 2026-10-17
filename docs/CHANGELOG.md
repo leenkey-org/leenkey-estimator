@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-17 · L1-36, L1-37 · PR #? · Pages légales et bandeau cookies
+### 2026-10-17 · L1-36, L1-37 · PR #16 · Pages légales et bandeau cookies
 - Ajouté : bandeau de consentement aux cookies (Accepter, Refuser de même forme, Personnaliser), choix gardé 6 mois et modifiable par « Gérer mes cookies » ; GA4 et GTM chargés seulement après accord, en production (Consent Mode, publicité toujours refusée, cookies GA de 13 mois au plus) ; retrait qui efface les cookies Google.
 - Ajouté : pages `/cgv`, `/cookies` (liste des cookies du site), `/signalement`, `/intelligence-artificielle` (en cours de rédaction, adresse légale) ; pied de page V2 avec tous les liens légaux et l'identité de Leenkey ; mêmes liens dans le pied des pages marketing ; `ConsentBanner` et `SiteFooter` sur `/design`.
 - Modifié : mentions légales (paragraphe « Cookies » corrigé, renvoi à `/cookies`) ; `/confidentialite` sur le gabarit des pages légales ; le `noscript` de GTM est retiré.
