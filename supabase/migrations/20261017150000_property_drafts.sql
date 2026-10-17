@@ -23,6 +23,9 @@ begin
   if l.status not in ('draft', 'rejected') then
     perform public.listing_bad_transition(l.status, 'submit');
   end if;
+  -- Locked against a change of the property at the same moment: it waits for
+  -- this sending, then properties_keep_complete sees the listing pending.
+  perform 1 from public.properties where id = l.property_id for share;
   if exists (select 1 from public.properties p
               where p.id = l.property_id
                 and (p.type is null or p.surface_m2 is null or p.rooms is null)) then

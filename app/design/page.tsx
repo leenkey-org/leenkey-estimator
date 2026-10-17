@@ -41,6 +41,7 @@ import { NotificationBell } from "@/components/shared/notification-bell";
 import { PriceBlock } from "@/components/shared/price-block";
 import { ProgressBar } from "@/components/shared/progress-bar";
 import { PropertyCard } from "@/components/shared/property-card";
+import { PropertyThumb } from "@/components/shared/property-thumb";
 import { RoleCards } from "@/components/shared/role-cards";
 import { SectionTitle } from "@/components/shared/section-title";
 import { SegmentedPicker } from "@/components/shared/segmented-picker";
@@ -584,6 +585,12 @@ export default function DesignPage() {
             <Caption>{content.gallery.caption}</Caption>
             <Gallery photos={[]} className="overflow-hidden rounded-lk-md lg:rounded-none" />
             <Caption>{content.gallery.noPhotoCaption}</Caption>
+            <div className="flex items-end gap-4">
+              <PropertyThumb className="size-14" />
+              <PropertyThumb className="h-11 w-14" />
+              <PropertyThumb className="size-11" />
+            </div>
+            <Caption>{content.gallery.thumbsCaption}</Caption>
           </Section>
 
           <Section id="prix" title={content.sections.price} level="h3">

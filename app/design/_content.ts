@@ -600,6 +600,8 @@ export const gallery = {
     "Mobile : une photo sur la largeur, 280 px, défilement, compteur. À partir de 1024 px : une grande photo et les suivantes. Toucher ou cliquer agrandit en plein écran.",
   back: "Retour",
   noPhotoCaption: "Sans photo : le dessin de marque sur pierre, jusqu'aux photos (L1-12)",
+  thumbsCaption:
+    "PropertyThumb : vignettes d'un bien sans photo, 56 × 56 (Ma vente), 56 × 44 (back office), 44 × 44 (conversation)",
 };
 
 export const price = {

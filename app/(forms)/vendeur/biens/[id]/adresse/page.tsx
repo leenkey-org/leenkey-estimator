@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AddressStep } from "@/leenkey/properties/components/address-step";
 import { CreationHeader } from "@/leenkey/properties/components/creation-header";
 import { CreationBody, CreationLoadError } from "@/leenkey/properties/components/creation-page";
+import { addressLabel } from "@/leenkey/properties/creation";
 import { propertyForCreation } from "@/leenkey/properties/load";
 import { fr } from "@/lib/i18n/fr";
 
@@ -24,12 +25,14 @@ export default async function PropertyAddressPage({ params }: Props) {
       </>
     );
   }
-  const { line, postalCode, city } = property.address;
   return (
     <>
       {header}
       <CreationBody>
-        <AddressStep propertyId={property.id} initial={`${line} ${postalCode} ${city}`} />
+        <AddressStep
+          propertyId={property.id}
+          initial={{ label: addressLabel(property.address), ...property.address }}
+        />
       </CreationBody>
     </>
   );

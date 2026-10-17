@@ -12,6 +12,7 @@ import {
   characteristicsIntentSchema,
   characteristicsSchema,
   missingCharacteristics,
+  storableAddress,
   type CharacteristicsField,
   type PropertyFeature,
 } from "@/lib/validations/property";
@@ -39,7 +40,7 @@ export async function suggestAddresses(text: unknown): Promise<SuggestResult> {
   if (!result.ok) return result;
   return {
     ok: true,
-    data: result.data.map(({ label, line, postalCode, city }) => ({
+    data: result.data.filter(storableAddress).map(({ label, line, postalCode, city }) => ({
       label,
       line,
       postalCode,
@@ -108,7 +109,9 @@ export async function saveAddress(input: unknown): Promise<SaveAddressResult> {
 
   const search = await searchAddresses({ text: label, near: LAUNCH_ZONE_CENTRE, limit: 5 });
   if (!search.ok) return { ok: false, error: "unavailable" };
-  const address = search.data.find((candidate) => sameAddressLabel(candidate.label, label));
+  const address = search.data.find(
+    (candidate) => storableAddress(candidate) && sameAddressLabel(candidate.label, label),
+  );
   if (!address) return { ok: false, error: "address_not_found" };
 
   const values = {

@@ -14,6 +14,7 @@ import {
   forType,
   missingCharacteristics,
   parseFrenchNumber,
+  storableAddress,
   type Characteristics,
 } from "@/lib/validations/property";
 
@@ -46,7 +47,8 @@ describe("parseFrenchNumber", () => {
     expect(parseFrenchNumber("68")).toBe(68);
     expect(parseFrenchNumber("68,5")).toBe(68.5);
     expect(parseFrenchNumber(" 1 250 ")).toBe(1250);
-    expect(parseFrenchNumber("1 250")).toBe(1250);
+    expect(parseFrenchNumber("1\u202F250")).toBe(1250);
+    expect(parseFrenchNumber("1\u00A0250")).toBe(1250);
     expect(parseFrenchNumber("-1")).toBe(-1);
   });
 
@@ -172,12 +174,11 @@ describe("fields of a type", () => {
     coproLots: 12,
   };
 
-  it("keeps the levels, lots and charges of a house, not its floor, Carrez nor lift", () => {
+  it("keeps the levels, lots, charges and Carrez surface of a house, not its floor nor lift", () => {
     for (const type of ["maison", "autre"] as const) {
       expect(forType({ ...filled, type }), type).toEqual({
         ...filled,
         type,
-        carrezM2: null,
         floor: null,
         features: ["garden", "parking"],
       });
@@ -299,18 +300,6 @@ describe("national address base", () => {
           },
         },
         { type: "Feature", geometry: null, properties: { label: "Sans point" } },
-        {
-          // A name the base cannot store (3 characters at least).
-          type: "Feature",
-          geometry: { type: "Point", coordinates: [2.33, 48.67] },
-          properties: {
-            label: "B 91360 Épinay-sur-Orge",
-            name: "B",
-            postcode: "91360",
-            city: "Épinay-sur-Orge",
-            type: "street",
-          },
-        },
       ],
     };
     expect(readAddresses(answer)).toEqual([
@@ -324,6 +313,19 @@ describe("national address base", () => {
       },
     ]);
     expect(() => readAddresses({ error: "bad request" })).toThrow();
+  });
+
+  it("keeps the addresses that a property can hold", () => {
+    const address = {
+      label: "12 Rue de la Gare 91360 Épinay-sur-Orge",
+      line: "12 Rue de la Gare",
+      city: "Épinay-sur-Orge",
+    };
+    expect(storableAddress(address)).toBe(true);
+    // The table asks for 3 characters of street at least, 100 of town at most.
+    expect(storableAddress({ ...address, line: "B" })).toBe(false);
+    expect(storableAddress({ ...address, city: "x".repeat(101) })).toBe(false);
+    expect(storableAddress({ ...address, label: "x".repeat(201) })).toBe(false);
   });
 
   it("compares the labels whatever the case and the spaces", () => {

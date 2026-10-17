@@ -41,8 +41,8 @@ export function AddressStep({
 }: {
   /** Absent for a new property. */
   propertyId?: string;
-  /** Label of the address already saved. */
-  initial?: string;
+  /** The address already saved. */
+  initial?: AddressSuggestion;
 }) {
   const router = useRouter();
   const listId = useId();
@@ -50,7 +50,7 @@ export function AddressStep({
   const field = useRef<HTMLInputElement>(null);
   const next = useRef<HTMLButtonElement>(null);
   const [text, setText] = useState("");
-  const [chosen, setChosen] = useState<string | null>(initial ?? null);
+  const [chosen, setChosen] = useState<AddressSuggestion | null>(initial ?? null);
   const [search, setSearch] = useState<Search>({ state: "idle" });
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -101,7 +101,7 @@ export function AddressStep({
     // The card replaces the field: the focus goes to « Continuer », the next
     // action, and the live region says the address chosen.
     flushSync(() => {
-      setChosen(suggestion.label);
+      setChosen(suggestion);
       close();
       setError(null);
     });
@@ -150,7 +150,7 @@ export function AddressStep({
     startSaving(async () => {
       let result: Awaited<ReturnType<typeof saveAddress>> | null = null;
       try {
-        result = await saveAddress({ propertyId, label: chosen });
+        result = await saveAddress({ propertyId, label: chosen.label });
       } catch (caught) {
         console.error("[properties] address save failed", caught);
       }
@@ -171,15 +171,16 @@ export function AddressStep({
       }
       const target =
         intent === "save" ? "/vendeur" : `/vendeur/biens/${result.data.id}/caracteristiques`;
-      // From « nouveau »: back would open the empty form again, for a second property.
-      if (propertyId) router.push(target);
-      else router.replace(target);
+      // In the transition: « Continuer » loads until the next page shows. From
+      // « nouveau », replaced: back would open the empty form again, for a
+      // second property.
+      startSaving(() => (propertyId ? router.push(target) : router.replace(target)));
     });
   }
 
   const status =
     chosen !== null
-      ? t.chosenStatus(chosen)
+      ? t.chosenStatus(chosen.label)
       : search.state === "searching"
         ? t.searching
         : search.state === "error"
@@ -207,9 +208,28 @@ export function AddressStep({
             <MapPin aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-lk-blue" />
             <div className="min-w-0 flex-1">
               <p className="text-lk-caption text-lk-ink-3">{t.chosen}</p>
-              <p className="text-lk-compact font-semibold text-lk-ink">{chosen}</p>
+              <p className="text-lk-compact font-semibold text-lk-ink">{chosen.line}</p>
+              <p className="text-lk-compact text-lk-ink-2">
+                {chosen.postalCode} {chosen.city}
+              </p>
+              {/* Under the address on a phone: the town keeps the width. */}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={change}
+                className="mt-2 -ml-3 md:hidden"
+              >
+                {t.change}
+              </Button>
             </div>
-            <Button type="button" variant="ghost" size="sm" onClick={change}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={change}
+              className="hidden md:inline-flex"
+            >
               {t.change}
             </Button>
           </div>

@@ -82,9 +82,9 @@ test("créer un bien en mobile : adresse, caractéristiques, reprise depuis Ma v
   await expectNoSeriousViolation(page);
   await field.press("ArrowDown");
   await field.press("Enter");
-  await expect(
-    page.getByText("12 Rue de la Gare 91360 Épinay-sur-Orge", { exact: true }),
-  ).toBeVisible();
+  // The card: the street, then the postal code and the town.
+  await expect(page.getByText("12 Rue de la Gare", { exact: true })).toBeVisible();
+  await expect(page.getByText("91360 Épinay-sur-Orge", { exact: true })).toBeVisible();
   // The field gives way to the card: the focus goes on, the choice is said.
   await expect(next).toBeFocused();
   await expect(page.getByRole("status").filter({ hasText: "Adresse choisie" })).toHaveText(
@@ -169,9 +169,8 @@ test("créer un bien en mobile : adresse, caractéristiques, reprise depuis Ma v
 
   // The address of a draft changes from step 1.
   await page.goto(`/vendeur/biens/${id}/adresse`);
-  await expect(
-    page.getByText("12 Rue de la Gare 91360 Épinay-sur-Orge", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText("12 Rue de la Gare", { exact: true })).toBeVisible();
+  await expect(page.getByText("91360 Épinay-sur-Orge", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Changer d'adresse" }).click();
   await expect(field).toBeFocused();
   await field.fill("8 avenue carnot");

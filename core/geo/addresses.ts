@@ -21,8 +21,9 @@ export async function searchAddresses(query: AddressQuery): Promise<AddressResul
   if (process.env.GEOCODER === "fixtures" && process.env.NEXT_PUBLIC_ENV !== "production") {
     return { ok: true, data: searchFixtures(query.text, query.limit ?? 5) };
   }
-  const url = addressSearchUrl(process.env.GEOCODER_URL || DEFAULT_GEOCODER_URL, query);
   try {
+    // Inside: a wrong GEOCODER_URL is said as unavailable too.
+    const url = addressSearchUrl(process.env.GEOCODER_URL || DEFAULT_GEOCODER_URL, query);
     const response = await fetch(url, {
       headers: { Accept: "application/json" },
       cache: "no-store",

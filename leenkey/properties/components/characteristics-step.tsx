@@ -53,6 +53,10 @@ const NUMBER_FIELDS: readonly NumberField[] = [
 ];
 
 const text = (value: number | null) => (value === null ? "" : String(value).replace(".", ","));
+/** « 120,50 », not « 120,5 »: an amount with cents shows both digits. */
+const amountText = (value: number | null) =>
+  value === null || Number.isInteger(value) ? text(value) : value.toFixed(2).replace(".", ",");
+const AMOUNT_FIELDS: readonly NumberField[] = ["chargesMonthlyEuros", "propertyTaxYearlyEuros"];
 
 export function CharacteristicsStep({
   propertyId,
@@ -67,10 +71,12 @@ export function CharacteristicsStep({
   const [type, setType] = useState<PropertyType | null>(initial.type);
   const [numbers, setNumbers] = useState<Record<NumberField, string>>(
     () =>
-      Object.fromEntries(NUMBER_FIELDS.map((field) => [field, text(initial[field])])) as Record<
-        NumberField,
-        string
-      >,
+      Object.fromEntries(
+        NUMBER_FIELDS.map((field) => [
+          field,
+          AMOUNT_FIELDS.includes(field) ? amountText(initial[field]) : text(initial[field]),
+        ]),
+      ) as Record<NumberField, string>,
   );
   const [dpe, setDpe] = useState(initial.dpe);
   const [ges, setGes] = useState(initial.ges);
@@ -83,6 +89,7 @@ export function CharacteristicsStep({
   const submitting = useRef(false);
 
   const hidden = (type && NOT_FOR_TYPE[type]) || { fields: [], features: [] };
+  const land = type === "terrain";
   const shows = (field: CharacteristicsField) => !hidden.fields.includes(field);
   const shownFeatures = PROPERTY_FEATURES.filter((feature) => !hidden.features.includes(feature));
 
@@ -161,7 +168,7 @@ export function CharacteristicsStep({
               : result.error === "not_found"
                 ? common.notFound
                 : result.error === "incomplete"
-                  ? type === "terrain"
+                  ? land
                     ? t.requiredLand
                     : t.required
                   : result.error === "invalid"
@@ -170,13 +177,14 @@ export function CharacteristicsStep({
         );
         return;
       }
-      router.push(
+      const target =
         intent === "save"
           ? "/vendeur"
           : intent === "previous"
             ? `/vendeur/biens/${propertyId}/adresse`
-            : `/vendeur/biens/${propertyId}/prix`,
-      );
+            : `/vendeur/biens/${propertyId}/prix`;
+      // In the transition: the buttons stay busy until the next page shows.
+      startSaving(() => router.push(target));
     });
   }
 
@@ -231,10 +239,12 @@ export function CharacteristicsStep({
       </Select>
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-4">
-        {unitInput("surfaceM2", type === "terrain" ? t.landSurface : t.surface, "m²")}
+        {unitInput("surfaceM2", land ? t.landSurface : t.surface, "m²")}
         {shows("rooms") ? numberInput("rooms", t.rooms) : null}
         {shows("bedrooms") ? numberInput("bedrooms", t.bedrooms) : null}
         {shows("floor") ? numberInput("floor", t.floor, t.floorHelp) : null}
+        {/* Land: no charges nor co-ownership, the tax next to the surface. */}
+        {land ? unitInput("propertyTaxYearlyEuros", t.tax, t.perYear) : null}
       </div>
 
       {shows("dpe") ? (
@@ -271,32 +281,34 @@ export function CharacteristicsStep({
         </fieldset>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-x-3 gap-y-4">
-        {shows("carrezM2") ? unitInput("carrezM2", t.carrez, "m²") : null}
-        {shows("floorsTotal")
-          ? numberInput(
-              "floorsTotal",
-              type === "appartement" || type === null ? t.floorsTotal : t.levels,
-            )
-          : null}
-        {shows("buildYear") ? numberInput("buildYear", t.buildYear) : null}
-        {shows("heating") ? (
-          <Select
-            label={t.heating}
-            placeholder={t.heatingPlaceholder}
-            value={heating ?? ""}
-            onChange={(event) =>
-              setHeating(HEATING_OPTIONS.find((value) => value === event.target.value) ?? null)
-            }
-          >
-            {HEATING_OPTIONS.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </Select>
-        ) : null}
-      </div>
+      {land ? null : (
+        <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+          {shows("carrezM2") ? unitInput("carrezM2", t.carrez, "m²") : null}
+          {shows("floorsTotal")
+            ? numberInput(
+                "floorsTotal",
+                type === "appartement" || type === null ? t.floorsTotal : t.levels,
+              )
+            : null}
+          {shows("buildYear") ? numberInput("buildYear", t.buildYear) : null}
+          {shows("heating") ? (
+            <Select
+              label={t.heating}
+              placeholder={t.heatingPlaceholder}
+              value={heating ?? ""}
+              onChange={(event) =>
+                setHeating(HEATING_OPTIONS.find((value) => value === event.target.value) ?? null)
+              }
+            >
+              {HEATING_OPTIONS.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </Select>
+          ) : null}
+        </div>
+      )}
 
       {shows("ges") ? (
         <SegmentedPicker
@@ -311,16 +323,16 @@ export function CharacteristicsStep({
         />
       ) : null}
 
-      <fieldset className="flex flex-col gap-4">
-        <legend className="mb-1 text-lk-h3 font-semibold text-lk-ink">{t.details}</legend>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-4">
-          {shows("chargesMonthlyEuros")
-            ? unitInput("chargesMonthlyEuros", t.charges, t.perMonth)
-            : null}
-          {unitInput("propertyTaxYearlyEuros", t.tax, t.perYear)}
-          {shows("coproLots") ? numberInput("coproLots", t.lots) : null}
-        </div>
-      </fieldset>
+      {land ? null : (
+        <fieldset className="flex flex-col gap-4">
+          <legend className="mb-1 text-lk-h3 font-semibold text-lk-ink">{t.details}</legend>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+            {unitInput("chargesMonthlyEuros", t.charges, t.perMonth)}
+            {unitInput("propertyTaxYearlyEuros", t.tax, t.perYear)}
+            {numberInput("coproLots", t.lots)}
+          </div>
+        </fieldset>
+      )}
 
       <FormActionBar className="md:mt-3">
         <Button type="submit" name="intent" value="previous" variant="secondary" disabled={saving}>

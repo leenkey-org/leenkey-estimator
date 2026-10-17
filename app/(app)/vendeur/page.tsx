@@ -70,6 +70,7 @@ export default async function SellerHomePage() {
             {result.data.map((property) => {
               const href = resumeHref(property);
               const name = summary(property);
+              const status = property.listingStatus ?? "draft";
               const content = (
                 <>
                   <PropertyThumb className="size-14" />
@@ -81,8 +82,10 @@ export default async function SellerHomePage() {
                     <p className="truncate text-lk-caption text-lk-ink-3">
                       {property.address.line} · {property.address.city}
                     </p>
+                    {/* Under the text on a phone: the summary keeps its width. */}
+                    <StatusBadge status={status} className="mt-1 self-start md:hidden" />
                   </div>
-                  <StatusBadge status={property.listingStatus ?? "draft"} />
+                  <StatusBadge status={status} className="hidden md:inline-flex" />
                   {href ? (
                     <ChevronRight aria-hidden="true" className="size-4 text-lk-ink-3" />
                   ) : null}

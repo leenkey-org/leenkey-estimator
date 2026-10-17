@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 
 /**
  * Thumbnail of a property (docs/DESIGN.md 7.1: dashboard 56 × 56, admin
- * 56 × 44, radius 4): facade.svg on stone until the photos (L1-12).
+ * 56 × 44, conversation 44 × 44, radius 4): facade.svg on stone, 40 % of the
+ * width (7.3), until the photos (L1-12).
  */
 export function PropertyThumb({ className }: { className?: string }) {
   return (
@@ -14,7 +15,7 @@ export function PropertyThumb({ className }: { className?: string }) {
         className,
       )}
     >
-      <FacadeDrawing className="w-3/5 text-lk-ink-3" />
+      <FacadeDrawing className="w-2/5 text-lk-ink-3" />
     </div>
   );
 }

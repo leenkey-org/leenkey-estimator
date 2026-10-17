@@ -25,6 +25,16 @@ export const addressChoiceSchema = z.object({
 
 export type AddressChoice = z.infer<typeof addressChoiceSchema>;
 
+/** An address that a property can hold (the checks of the table), and be chosen by its label. */
+export function storableAddress(address: { label: string; line: string; city: string }): boolean {
+  return (
+    address.line.trim().length >= 3 &&
+    address.line.length <= 200 &&
+    address.city.length <= 100 &&
+    addressChoiceSchema.shape.label.safeParse(address.label).success
+  );
+}
+
 export const PROPERTY_FEATURES = [
   "balcony",
   "terrace",
@@ -93,13 +103,13 @@ type NotForType = {
   features: readonly PropertyFeature[];
 };
 
-const HOUSE: NotForType = { fields: ["carrezM2", "floor"], features: ["elevator"] };
+const HOUSE: NotForType = { fields: ["floor"], features: ["elevator"] };
 
 /**
  * Fields and features that a type does not have, as the listing page shows
  * it (leenkey/listings): hidden in the form, saved empty. A house (and any
- * other property) has levels, and lots and charges in a co-ownership, but no
- * floor, Carrez surface nor lift; land, its surface and its property tax.
+ * other property) has levels, and in a co-ownership lots, charges and a
+ * Carrez surface, but no floor nor lift; land, its surface and its tax.
  */
 export const NOT_FOR_TYPE: Partial<Record<PropertyType, NotForType>> = {
   maison: HOUSE,

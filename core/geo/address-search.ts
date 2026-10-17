@@ -33,11 +33,10 @@ const featureSchema = z.object({
     coordinates: z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]),
   }),
   properties: z.object({
-    // The bounds of the columns of properties and of addressChoiceSchema.
-    label: z.string().min(5).max(200),
-    name: z.string().min(3).max(200),
+    label: z.string().min(1),
+    name: z.string().min(1),
     postcode: z.string().regex(/^[0-9]{5}$/),
-    city: z.string().min(1).max(100),
+    city: z.string().min(1),
     type: z.string(),
   }),
 });
@@ -83,10 +82,7 @@ export function addressSearchUrl(base: string, { text, near, limit = 5 }: Addres
   return url;
 }
 
-/**
- * Addresses of an answer (GeoJSON): an unreadable entry, one that the base
- * cannot store, or a town alone is left out.
- */
+/** Addresses of an answer (GeoJSON): an unreadable entry or a town alone is left out. */
 export function readAddresses(body: unknown): Address[] {
   const { features } = responseSchema.parse(body);
   return features.flatMap((feature) => {

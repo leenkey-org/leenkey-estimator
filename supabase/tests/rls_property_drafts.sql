@@ -1,11 +1,12 @@
 -- L1-11: a property saved from its address, as a draft (type, surface and
 -- rooms come with the second step); its listing cannot be sent for review
--- before they are known, and they cannot be removed once it is sent.
--- Fixtures in postal code 99995: the file passes on an empty and on a seeded
--- database.
+-- before they are known, and they cannot be removed once it is sent (pending,
+-- published), by the seller nor by the admin; back to a draft (cancelled,
+-- rejected), it may be incomplete again. Fixtures in postal code 99995: the
+-- file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(19);
+select plan(26);
 \ir _plan.psql
 
 -- ===========================================================================
@@ -48,6 +49,18 @@ update properties set rooms = 3, bedrooms = 2 where id = :'draft';
 select is((select rooms from properties where id = :'draft'), 3,
           'seller_a: its values still change while it waits for review');
 
+-- Sending cancelled: a draft again, which may be incomplete, and is not sent while it is.
+select is(listing_cancel_submission(:'draft_listing'), 'draft'::listing_status,
+          'seller_a: cancels the sending');
+update properties set surface_m2 = null where id = :'draft';
+select ok((select surface_m2 is null from properties where id = :'draft'),
+          'seller_a: the property of a draft may be incomplete again');
+select throws_ok(format($$select listing_submit(%L)$$, :'draft_listing'), '22023', null,
+                 'seller_a: and its listing is not sent again while it is');
+update properties set surface_m2 = 48 where id = :'draft';
+select is(listing_submit(:'draft_listing'), 'pending'::listing_status,
+          'seller_a: complete, sent again');
+
 -- ===========================================================================
 -- Everyone else
 -- ===========================================================================
@@ -78,11 +91,25 @@ select throws_ok(format($$update properties set type = null where id = %L$$, :'d
 select is(listing_reject(:'draft_listing', 'Photos manquantes'), 'rejected'::listing_status,
           'admin: rejects the listing');
 
+-- ===========================================================================
+-- Rejected, then sent again and published
+-- ===========================================================================
 \set who seller_a
 \ir _as.psql
 update properties set surface_m2 = null where id = :'draft';
 select ok((select surface_m2 is null from properties where id = :'draft'),
           'seller_a: a rejected listing is a draft again, its property may be incomplete');
+update properties set surface_m2 = 48 where id = :'draft';
+select is(listing_submit(:'draft_listing'), 'pending'::listing_status,
+          'seller_a: corrected, sent again');
+\set who admin
+\ir _as.psql
+select is(listing_publish(:'draft_listing'), 'published'::listing_status,
+          'admin: publishes the listing');
+\set who seller_a
+\ir _as.psql
+select throws_ok(format($$update properties set rooms = null where id = %L$$, :'draft'), '22023', null,
+                 'seller_a: a property online keeps its rooms');
 
 select * from finish();
 rollback;
