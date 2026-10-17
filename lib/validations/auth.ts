@@ -71,7 +71,7 @@ export const resetPasswordSchema = z
 
 export const acceptTermsSchema = z.object({ acceptTerms: accepted, next });
 
-/** Hidden fields of /confirmation, copied from the link of the email. */
+/** Token and type of an email link (kept in a cookie for /confirmation). */
 export const confirmLinkSchema = z.object({
   token_hash: z.string().regex(/^[A-Za-z0-9_-]{1,512}$/),
   type: z.enum(["email", "signup", "recovery", "email_change"]),

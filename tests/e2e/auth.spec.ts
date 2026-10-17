@@ -57,17 +57,22 @@ test("l'inscription annonce les erreurs et garde la saisie", async ({ page }) =>
 });
 
 test("le lien d'un email ouvre une page de confirmation qui n'utilise rien", async ({ page }) => {
-  await page.goto("/confirmation?token_hash=abc123&type=email");
+  // The token goes into a cookie: the page address never carries it.
+  await page.goto("/auth/confirm?token_hash=abc123&type=email");
+  await expect(page).toHaveURL(/\/confirmation$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Confirmez votre adresse email");
   await expect(page.getByRole("button", { name: "Confirmer mon adresse" })).toBeVisible();
-  await page.goto("/confirmation?token_hash=abc123&type=recovery");
+  await page.goto("/auth/confirm?token_hash=abc123&type=recovery");
   await expect(page.getByRole("button", { name: "Continuer" })).toBeVisible();
-  // Former link format, then malformed links.
-  await page.goto("/auth/confirm?token_hash=abc123&type=email");
-  await expect(page).toHaveURL(/\/confirmation\?token_hash=abc123&type=email$/);
+  // A token in the address of /confirmation is moved into the cookie first.
+  await page.goto("/confirmation?token_hash=abc123&type=email");
+  await expect(page).toHaveURL(/\/confirmation$/);
+  // Without the cookie, or with a malformed link: expired.
+  await page.context().clearCookies();
   for (const path of [
     "/confirmation",
-    "/confirmation?token_hash=abc&type=magic",
+    "/auth/confirm?token_hash=abc&type=magic",
+    "/auth/confirm?token_hash=a%20b&type=email",
     "/auth/confirm",
   ]) {
     await page.goto(path);
@@ -97,7 +102,7 @@ test("écrans d'authentification sans violation sérieuse ou critique @a11y", as
     "/connexion",
     "/mot-de-passe-oublie",
     "/confidentialite",
-    "/confirmation?token_hash=abc123&type=email",
+    "/auth/confirm?token_hash=abc123&type=email",
   ]) {
     await page.goto(path);
     await page.evaluate(() => document.fonts.ready);

@@ -24,7 +24,7 @@ async function emailLink(to: string, subject: string): Promise<string> {
       ).json()) as {
         HTML: string;
       };
-      const href = message.HTML.match(/href="([^"]*\/confirmation\?[^"]*)"/)?.[1];
+      const href = message.HTML.match(/href="([^"]*\/auth\/confirm\?[^"]*)"/)?.[1];
       if (href) return href.replace(/&amp;/g, "&");
     }
     await new Promise((resolve) => setTimeout(resolve, 500));
@@ -56,10 +56,12 @@ test("inscription, puis confirmation depuis un autre navigateur", async ({ page,
   await expect(page.getByRole("heading", { name: "Vérifiez votre boîte mail" })).toBeVisible();
 
   const link = await emailLink(email, "Confirmez votre adresse email");
-  expect(link).toMatch(/\/confirmation\?token_hash=[^&]+&type=email$/);
-  // Opening the link uses nothing (an email scanner may open it first).
+  expect(link).toMatch(/\/auth\/confirm\?token_hash=[^&]+&type=email$/);
+  // Opening the link uses nothing (an email scanner may open it first), and
+  // the page address never carries the token (analytics).
   const scanner = await (await browser.newContext()).newPage();
   await scanner.goto(link);
+  await expect(scanner).toHaveURL(/\/confirmation$/);
   await expect(scanner.getByRole("heading", { level: 1 })).toHaveText(
     "Confirmez votre adresse email",
   );
@@ -88,6 +90,7 @@ test("un compte non confirmé redemande le lien depuis la connexion", async ({ p
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Créer mon compte" }).click();
   await expect(page.getByRole("heading", { name: "Vérifiez votre boîte mail" })).toBeVisible();
+  const signedUpAt = Date.now();
 
   await page.goto("/connexion");
   await page.getByLabel("Email").fill(pending);
@@ -96,8 +99,18 @@ test("un compte non confirmé redemande le lien depuis la connexion", async ({ p
   await expect(
     page.getByRole("alert").filter({ hasText: "Votre email n'est pas encore confirmé." }),
   ).toBeVisible();
+  // The local stack allows one email per address and per second.
+  await page.waitForTimeout(Math.max(0, 1_100 - (Date.now() - signedUpAt)));
   await page.getByRole("button", { name: "Renvoyer l'email" }).click();
   await expect(page.getByRole("status").filter({ hasText: "C'est renvoyé." })).toBeVisible();
+  await expect
+    .poll(async () => {
+      const search = await fetch(
+        `${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:"${pending}"`)}`,
+      );
+      return ((await search.json()) as { messages?: unknown[] }).messages?.length ?? 0;
+    })
+    .toBe(2);
 });
 
 test("connexion : mauvais mot de passe, puis le bon", async ({ page }) => {

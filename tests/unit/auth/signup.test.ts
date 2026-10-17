@@ -126,3 +126,17 @@ describe("missingLegalDocuments", () => {
     ).toEqual([]);
   });
 });
+
+describe("LEGAL_VERSIONS", () => {
+  // legal_accept() and the signup trigger refuse a version dated after
+  // tomorrow: a text dated in advance would block every account on
+  // /conditions.
+  it("are real dates that are not in the future", () => {
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
+    for (const version of Object.values(LEGAL_VERSIONS)) {
+      expect(version).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(new Date(`${version}T00:00:00Z`).toISOString().slice(0, 10)).toBe(version);
+      expect(version <= today).toBe(true);
+    }
+  });
+});

@@ -8,7 +8,7 @@
   <!-- Supabase Auth template (Reset password). docs/DESIGN.md 14: #F4F4F1 background,
        560 px white card, 8 px #1156FC band, Arial bold for titles (mail
        clients ignore font-stretch), 48 px #1156FC button.
-       Link: /confirmation (app/(auth)/confirmation/page.tsx) with the token hash,
+       Link: /auth/confirm with the token hash, then the button of /confirmation,
        valid from any browser. -->
   <body style="margin:0;padding:0;background:#F4F4F1;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F4F1;">
@@ -30,7 +30,7 @@
                 <table role="presentation" cellpadding="0" cellspacing="0">
                   <tr>
                     <td style="border-radius:4px;background:#1156FC;">
-                      <a href="{{ .SiteURL }}/confirmation?token_hash={{ .TokenHash }}&amp;type=recovery" style="display:inline-block;padding:0 24px;line-height:48px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:4px;">Choisir un nouveau mot de passe</a>
+                      <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display:inline-block;padding:0 24px;line-height:48px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:4px;">Choisir un nouveau mot de passe</a>
                     </td>
                   </tr>
                 </table>
@@ -41,7 +41,7 @@
             </tr>
             <tr>
               <td style="padding:16px 32px 32px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#5B6474;word-break:break-all;">
-                Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br />{{ .SiteURL }}/confirmation?token_hash={{ .TokenHash }}&amp;type=recovery
+                Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br />{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery
               </td>
             </tr>
           </table>

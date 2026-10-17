@@ -1,6 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { AuthError } from "@supabase/supabase-js";
 import { splitFullName } from "@/core/auth/identity";
@@ -11,7 +11,6 @@ import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 import { fr } from "@/lib/i18n/fr";
 import {
   acceptTermsSchema,
-  confirmLinkSchema,
   fieldErrors,
   forgotPasswordSchema,
   resendSchema,
@@ -19,7 +18,12 @@ import {
   signInSchema,
   signUpSchema,
 } from "@/lib/validations/auth";
-import { EXPIRED_LINK_PATH, pathAfterEmailLink } from "./landing";
+import {
+  CONFIRM_COOKIE,
+  decodeConfirmLink,
+  EXPIRED_LINK_PATH,
+  pathAfterEmailLink,
+} from "./landing";
 import { homePathForRoles } from "./routes";
 
 const t = fr.auth.errors;
@@ -61,13 +65,16 @@ async function siteOrigin(): Promise<string> {
 }
 
 /**
- * Supabase Auth refuses a second email to the same address within a minute.
- * It only happens for an address that has an account: telling it would reveal
- * which addresses are registered, so the answer stays « sent ».
+ * Supabase Auth refuses a second email to the same address within a minute
+ * (« For security purposes… »). It only happens for an address that has an
+ * account: telling it would reveal which addresses are registered, so the
+ * answer stays « sent ». The quota of the whole project shares the error code
+ * with another message: that one is told (« Trop de tentatives »).
  */
-function isEmailFrequencyLimit(error: AuthError | null, action: string): boolean {
+function isAddressEmailLimit(error: AuthError | null, action: string): boolean {
   if (error?.code !== "over_email_send_rate_limit") return false;
-  console.warn(`[auth] ${action}: email not sent, frequency limit`);
+  if (!/security purposes/i.test(error.message)) return false;
+  console.warn(`[auth] ${action}: email not sent, limit per address`);
   return true;
 }
 
@@ -85,6 +92,7 @@ function authErrorMessage(error: AuthError, action: string): string {
     case "same_password":
       return t.passwordSame;
     case "over_request_rate_limit":
+    case "over_email_send_rate_limit":
       return t.tooManyRequests;
     default:
       console.error(`[auth] ${action} failed`, { code: error.code, status: error.status });
@@ -138,7 +146,7 @@ export async function signUp(
       },
     },
   });
-  if (error && !isEmailFrequencyLimit(error, "signUp")) {
+  if (error && !isAddressEmailLimit(error, "signUp")) {
     const message = authErrorMessage(error, "signUp");
     const field = error.code === "weak_password" ? { password: message } : undefined;
     return { ok: false, error: message, fieldErrors: field, values };
@@ -161,17 +169,19 @@ export async function resendConfirmation(
     email: parsed.data.email,
     options: { emailRedirectTo: `${await siteOrigin()}/auth/confirm` },
   });
-  if (error && !isEmailFrequencyLimit(error, "resend")) {
+  if (error && !isAddressEmailLimit(error, "resend")) {
     return { ok: false, error: authErrorMessage(error, "resend") };
   }
   return { ok: true, data: undefined };
 }
 
-/** « Confirmer » on /confirmation: the token of the email is used only now. */
-export async function confirmEmailLink(formData: FormData): Promise<void> {
-  const parsed = confirmLinkSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) redirect(EXPIRED_LINK_PATH);
-  const { token_hash, type } = parsed.data;
+/** « Confirmer » on /confirmation: the token kept by /auth/confirm is used only now. */
+export async function confirmEmailLink(): Promise<void> {
+  const store = await cookies();
+  const link = decodeConfirmLink(store.get(CONFIRM_COOKIE.name)?.value);
+  store.delete({ name: CONFIRM_COOKIE.name, path: CONFIRM_COOKIE.options.path });
+  if (!link) redirect(EXPIRED_LINK_PATH);
+  const { token_hash, type } = link;
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({ type, token_hash });
   if (error) {
@@ -232,13 +242,13 @@ export async function requestPasswordReset(
     redirectTo: `${await siteOrigin()}/auth/confirm?type=recovery`,
   });
   // Unknown addresses get the same answer (no enumeration); only the limit
-  // per visitor, which does not depend on the address, is worth telling.
+  // per visitor, which does not depend on the address, is worth telling. An
+  // email limit (per address or for the project) only applies when an account
+  // exists, so it is answered « sent » too.
   if (error?.code === "over_request_rate_limit") {
     return { ok: false, error: t.tooManyRequests, values };
   }
-  if (error && !isEmailFrequencyLimit(error, "resetPasswordForEmail")) {
-    console.error("[auth] resetPasswordForEmail failed", { code: error.code });
-  }
+  if (error) console.error("[auth] resetPasswordForEmail failed", { code: error.code });
   return { ok: true, data: undefined };
 }
 

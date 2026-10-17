@@ -71,7 +71,7 @@ case "${1:-}" in
       -e GOTRUE_MAILER_TEMPLATES_RECOVERY="http://$HOST_IP:$GATEWAY/templates/recovery.html" \
       -e "GOTRUE_MAILER_SUBJECTS_CONFIRMATION=Confirmez votre adresse email" \
       -e "GOTRUE_MAILER_SUBJECTS_RECOVERY=Choisissez un nouveau mot de passe" \
-      -e GOTRUE_RATE_LIMIT_EMAIL_SENT=1000 \
+      -e GOTRUE_RATE_LIMIT_EMAIL_SENT=1000 -e GOTRUE_SMTP_MAX_FREQUENCY=1s \
       supabase/gotrue:v2.177.0 >/dev/null
     # Supabase Auth migrates the auth schema first, then our migrations and seed.
     for _ in $(seq 1 60); do

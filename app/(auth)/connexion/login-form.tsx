@@ -29,15 +29,18 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
         tone="danger"
         action={
           unconfirmed ? (
-            // Same form, other action: the email typed above is resent a link.
-            <button
-              type="submit"
-              formAction={resendAction}
-              disabled={resending}
-              className="rounded-lk-sm font-semibold underline underline-offset-2 hover:no-underline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue disabled:opacity-60"
-            >
-              {fr.auth.signup.resend}
-            </button>
+            // Its own form, outside the login form: Enter in a field of the
+            // login form still signs in.
+            <form action={resendAction}>
+              <input type="hidden" name="email" value={values.email ?? ""} />
+              <button
+                type="submit"
+                disabled={resending}
+                className="rounded-lk-sm font-semibold underline underline-offset-2 hover:no-underline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue disabled:opacity-60"
+              >
+                {fr.auth.signup.resend}
+              </button>
+            </form>
           ) : undefined
         }
       >
@@ -49,39 +52,41 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
   }
 
   return (
-    <form action={action} noValidate className="flex flex-col gap-3.5">
+    <div className="flex flex-col gap-3.5">
       <div aria-live="polite" className="empty:hidden">
         {alert}
       </div>
-      <input type="hidden" name="next" value={next ?? ""} />
-      <Input
-        name="email"
-        type="email"
-        label={fr.auth.email}
-        placeholder={fr.auth.emailPlaceholder}
-        autoComplete="email"
-        inputMode="email"
-        defaultValue={values.email}
-        error={errors.email}
-        required
-      />
-      <Input
-        name="password"
-        type="password"
-        label={fr.auth.password}
-        autoComplete="current-password"
-        error={errors.password}
-        required
-      />
-      <p className="text-lk-compact">
-        <AuthLink href="/mot-de-passe-oublie">{t.forgot}</AuthLink>
-      </p>
-      <Button type="submit" size="lg" loading={pending} className="mt-2 w-full">
-        {t.submit}
-      </Button>
-      <p className="text-center text-lk-compact text-lk-ink-2">
-        {t.noAccount} <AuthLink href={signupHref}>{t.signup}</AuthLink>
-      </p>
-    </form>
+      <form action={action} noValidate className="flex flex-col gap-3.5">
+        <input type="hidden" name="next" value={next ?? ""} />
+        <Input
+          name="email"
+          type="email"
+          label={fr.auth.email}
+          placeholder={fr.auth.emailPlaceholder}
+          autoComplete="email"
+          inputMode="email"
+          defaultValue={values.email}
+          error={errors.email}
+          required
+        />
+        <Input
+          name="password"
+          type="password"
+          label={fr.auth.password}
+          autoComplete="current-password"
+          error={errors.password}
+          required
+        />
+        <p className="text-lk-compact">
+          <AuthLink href="/mot-de-passe-oublie">{t.forgot}</AuthLink>
+        </p>
+        <Button type="submit" size="lg" loading={pending} className="mt-2 w-full">
+          {t.submit}
+        </Button>
+        <p className="text-center text-lk-compact text-lk-ink-2">
+          {t.noAccount} <AuthLink href={signupHref}>{t.signup}</AuthLink>
+        </p>
+      </form>
+    </div>
   );
 }

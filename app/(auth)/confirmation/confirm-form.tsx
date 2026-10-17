@@ -13,19 +13,10 @@ function Submit({ label }: { label: string }) {
   );
 }
 
-export function ConfirmForm({
-  tokenHash,
-  type,
-  label,
-}: {
-  tokenHash: string;
-  type: string;
-  label: string;
-}) {
+/** The token is in an httpOnly cookie: the form only says « go ». */
+export function ConfirmForm({ label }: { label: string }) {
   return (
     <form action={confirmEmailLink} className="flex flex-col gap-3.5">
-      <input type="hidden" name="token_hash" value={tokenHash} />
-      <input type="hidden" name="type" value={type} />
       <Submit label={label} />
     </form>
   );

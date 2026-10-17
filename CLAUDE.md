@@ -132,7 +132,7 @@ Dans ce document, « staging » désigne l'environnement de préprod : branche G
 | Supabase | projet `leenkey-dev` (compte Nebula) | projet `leenkey-staging` (compte Nebula) | projet `leenkey-prod` (compte Leenkey, gratuit puis Pro au premier client payant) |
 | Stripe | mode test | mode test | mode live |
 | Anthropic | clé dev, quota bas | clé staging | clé prod |
-| Resend | domaine de test, envois vers une boîte de test uniquement | idem, préfixe `[PREPROD]` dans les sujets | domaine `leenkey.fr` vérifié |
+| Resend | domaine de test, envois vers une boîte de test uniquement | idem, préfixe `[PREPROD]` dans les sujets ; exception : les emails d'authentification de Supabase partent à l'adresse saisie (`DECISIONS.md` 2026-10-16, à valider par Younes) | domaine `leenkey.fr` vérifié |
 | Mapbox | clé restreinte à `localhost` | clé restreinte à `leenkey-v2.vercel.app` | clé restreinte à `leenkey.fr` |
 | Données | seed de test | seed de test + données saisies par Cédric en recette | données réelles |
 | Robots | `noindex` | `noindex` + protection par mot de passe dans le middleware (`PREPROD_USER` / `PREPROD_PASSWORD`) | indexable |
