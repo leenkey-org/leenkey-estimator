@@ -344,7 +344,10 @@ export const cardCaptions = {
   wide: "wide · recherche desktop (à partir de 768 px)",
   tile: "tile · accueil, biens similaires",
   noPhoto: "Sans photo : le dessin de marque sur pierre",
-  favourite: "Ajouter aux favoris",
+  favourite:
+    "FavoriteButton (L1-18) : sans session (lien vers l'inscription), non sauvegardé, sauvegardé ; white-float sur une photo, stone dans la colonne prix",
+  /** Not a real listing: a tap in the catalogue fails and the heart comes back. */
+  favouriteListingId: "00000000-0000-4000-8000-000000000000",
 };
 
 /** The compact card keeps the short form of the note (Recherche.png). */

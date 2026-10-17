@@ -56,3 +56,15 @@ const twMerge = extendTailwindMerge<"lk-width">({
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/**
+ * Splits a list in parts of `size` items at most: an `.in()` filter of
+ * Supabase goes in the URL, which stays short with 100 ids (about 3.7 kB).
+ */
+export function chunk<T>(items: readonly T[], size: number): T[][] {
+  const parts: T[][] = [];
+  for (let start = 0; start < items.length; start += size) {
+    parts.push(items.slice(start, start + size));
+  }
+  return parts;
+}

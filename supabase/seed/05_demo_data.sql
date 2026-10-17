@@ -286,6 +286,16 @@ join public.listings l on l.property_id = i.property_id
 where i.property_id in (select property_id from seed_new)
 on conflict do nothing;
 
+-- Test data of L1-18, put back by every db:seed (local and preprod): buyer_c
+-- keeps the listing 16, refused, a favourite that is no longer online.
+-- tests/e2e/favorites.spec.ts removes it.
+insert into public.favorites (buyer_id, listing_id)
+select '5eed0000-0000-4000-8000-00000000000c'::uuid, l.id
+from seed_ids i
+join public.listings l on l.property_id = i.property_id
+where i.n = 16 and l.status <> 'published'
+on conflict do nothing;
+
 -- Daily views since publication (14 days at most), deterministic counts.
 insert into public.listing_views (listing_id, day, count)
 select l.id, d::date, 4 + abs(hashtext(l.id::text || d::date::text)::bigint) % 22
