@@ -2,26 +2,21 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
 // L1-18: favourites, on the seed (E2E_SEED=1 with SEED_PASSWORD). seller_a
-// saves and removes listings: no other test reads its favourites (the empty
-// favourites page of buyer_c is checked by navigation.spec.ts). The two
-// projects use different listings, so that they can run at the same time.
+// saves and removes listings of seller_b: no other test reads its favourites
+// (navigation.spec.ts checks the favourites page of buyer_c). Fixed seed
+// listings, one per project, so that the two projects can run at the same
+// time and the order of the search results does not matter.
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
 
 test.skip(!seeded || !SEED_PASSWORD, "comptes de seed requis (E2E_SEED=1 et SEED_PASSWORD)");
 
-/** Address of a listing of the search, from its results. */
-async function listingHref(page: Page, index: number): Promise<string> {
-  await page.goto("/acheter");
-  const href = await page
-    .getByRole("list", { name: "Résultats" })
-    .locator("a:visible")
-    .nth(index)
-    .getAttribute("href");
-  expect(href).toMatch(/^\/annonce\//);
-  return href ?? "/";
-}
+/** Published seed listings of seller_b (supabase/seed/05_demo_data.sql). */
+const LISTINGS = {
+  mobile: "/annonce/appartement-3-pieces-viry-chatillon-lk0009",
+  desktop: "/annonce/appartement-3-pieces-chilly-mazarin-lk0011",
+} as const;
 
 /** Signs seller_a in and lands on `path` (terms gate as in navigation.spec.ts). */
 async function signIn(page: Page, path: string) {
@@ -45,7 +40,7 @@ async function signIn(page: Page, path: string) {
 }
 
 test("sans session, le cœur mène à l'inscription acquéreur", async ({ page }) => {
-  const href = await listingHref(page, 0);
+  const href = LISTINGS.mobile;
   await page.goto(href);
   const heart = page.getByRole("link", { name: "Ajouter aux favoris" });
   await expect(heart).toBeVisible();
@@ -59,7 +54,7 @@ test("ajouter une annonce aux favoris, la retrouver, puis la retirer", async ({
   page,
   isMobile,
 }) => {
-  const href = await listingHref(page, isMobile ? 0 : 1);
+  const href = isMobile ? LISTINGS.mobile : LISTINGS.desktop;
   // Through a signed-in page first: the terms gate is passed before the
   // favourites page needs it (a listing is public, it does not ask).
   await signIn(page, "/acquereur/favoris");
