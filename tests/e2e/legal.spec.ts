@@ -52,6 +52,7 @@ test("la politique cookies liste les cookies et le stockage du site", async ({ p
   });
   for (const name of [
     "sb-…-auth-token",
+    "sb-…-auth-token-code-verifier",
     "lk_consent",
     "lk_lien",
     "lk_vues",
@@ -59,7 +60,7 @@ test("la politique cookies liste les cookies et le stockage du site", async ({ p
     "lk_rappel_…",
     "_ga, _ga_…",
   ]) {
-    await expect(list.getByRole("heading", { level: 3, name })).toBeVisible();
+    await expect(list.getByRole("heading", { level: 3, name, exact: true })).toBeVisible();
   }
   await expect(list).toContainText("Fournisseur");
 });

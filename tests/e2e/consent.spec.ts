@@ -23,9 +23,17 @@ async function consentCookie(page: Page) {
   return (await page.context().cookies()).find((cookie) => cookie.name === "lk_consent");
 }
 
-/** Value of the consent cookie once the server has answered (it sets the lasting one). */
+/** Value of the consent cookie (written at once by the page). */
 function consentValue(page: Page) {
   return expect.poll(async () => (await consentCookie(page))?.value ?? "");
+}
+
+/** Answer of the server action that sets the lasting cookie (Safari, iOS). */
+function consentAction(page: Page) {
+  return page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" && !!response.request().headers()["next-action"],
+  );
 }
 
 async function analyticsCookies(page: Page) {
@@ -51,9 +59,14 @@ test("premier passage : le bandeau demande l'accord, rien de Google avant", asyn
 test("Refuser : rien ne se charge, et le choix est gardé six mois", async ({ page }) => {
   const google = watchGoogle(page);
   await page.goto("/acheter");
+  const action = consentAction(page);
   await banner(page).getByRole("button", { name: "Refuser" }).click();
   await expect(banner(page)).toBeHidden();
   await consentValue(page).toMatch(/^v1\.0\.\d{4}-\d{2}-\d{2}$/);
+  // The lasting cookie comes from the server: Safari caps script cookies to 7 days.
+  const setCookie = (await (await action).headerValue("set-cookie")) ?? "";
+  expect(setCookie).toMatch(/lk_consent=v1\.0\.\d{4}-\d{2}-\d{2}/);
+  expect(setCookie).toMatch(/Max-Age=15724800/i);
   const cookie = await consentCookie(page);
   const days = ((cookie?.expires ?? 0) - Date.now() / 1000) / 86_400;
   expect(days).toBeGreaterThan(179);

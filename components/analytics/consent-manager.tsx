@@ -88,6 +88,18 @@ export function ConsentManager({
     return () => window.removeEventListener(CONSENT_OPEN_EVENT, open);
   }, []);
 
+  // A refusal made in another tab: this one stops measuring when shown again.
+  useEffect(() => {
+    if (!tagsMounted) return;
+    const recheck = () => {
+      if (document.visibilityState === "visible" && !readConsent()?.analytics) {
+        window.location.reload();
+      }
+    };
+    document.addEventListener("visibilitychange", recheck);
+    return () => document.removeEventListener("visibilitychange", recheck);
+  }, [tagsMounted]);
+
   const choose = useCallback(
     async (analytics: boolean) => {
       const next = { analytics, date: consentDay() };

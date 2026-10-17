@@ -3,6 +3,9 @@ import { Analytics } from "@vercel/analytics/react";
 import { ConsentManager } from "@/components/analytics/consent-manager";
 import { EnvBanner } from "@/components/shared/env-banner";
 import { isProduction } from "@/lib/env";
+// V1 fonts (Sora, DM Sans, Poppins), self-hosted: no request to Google before
+// consent (L1-37). Façade uses Archivo through next/font.
+import "./v1-fonts.css";
 import "./globals.css";
 
 const GA_ID = "G-27N3E3WP2D";
@@ -41,10 +44,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr">
       <head>
-        {/* V1 fonts (Sora, DM Sans, Poppins), self-hosted: no request to Google
-            before consent (L1-37). Façade uses Archivo through next/font. */}
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link href="/fonts/v1-fonts.css" rel="stylesheet" />
         <link rel="preload" href="/pages/landing.html" as="fetch" crossOrigin="anonymous" />
         <link rel="preload" href="/pages/leenkey.css" as="style" />
         <link rel="prefetch" href="/pages/concept.html" />

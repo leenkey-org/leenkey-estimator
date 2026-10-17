@@ -197,6 +197,14 @@ export const fr = {
           duration: "400 jours, effacé à la déconnexion",
         },
         {
+          name: "sb-…-auth-token-code-verifier",
+          provider: "Leenkey (Supabase, notre fournisseur de base de données)",
+          purpose:
+            "Sécuriser le lien envoyé par email à l'inscription ou pour un nouveau mot de passe",
+          kind: "necessary",
+          duration: "Jusqu'à l'utilisation du lien",
+        },
+        {
           name: "lk_lien",
           provider: "Leenkey",
           purpose: "Terminer la confirmation de votre email ou le choix d'un nouveau mot de passe",
