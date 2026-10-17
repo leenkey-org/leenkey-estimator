@@ -1,0 +1,142 @@
+import { describe, expect, it } from "vitest";
+import { passwordStrength, splitFullName } from "@/core/auth/identity";
+import { LEGAL_VERSIONS, missingLegalDocuments } from "@/lib/legal/versions";
+import {
+  fieldErrors,
+  resetPasswordSchema,
+  signInSchema,
+  signUpSchema,
+} from "@/lib/validations/auth";
+
+const valid = {
+  role: "buyer",
+  fullName: "  Camille   Martin ",
+  email: " Camille.Martin@Exemple.FR ",
+  phone: "06 12 34 56 78",
+  password: "un-mot-de-passe",
+  acceptTerms: "on",
+};
+
+describe("signUpSchema", () => {
+  it("accepts a complete form and normalises it", () => {
+    const parsed = signUpSchema.parse(valid);
+    expect(parsed.email).toBe("camille.martin@exemple.fr");
+    expect(parsed.fullName).toBe("Camille   Martin");
+  });
+
+  it("accepts an empty phone (optional field)", () => {
+    expect(signUpSchema.safeParse({ ...valid, phone: "" }).success).toBe(true);
+    expect(signUpSchema.safeParse({ ...valid, phone: "+33 6 12 34 56 78" }).success).toBe(true);
+  });
+
+  it("explains each invalid field in French", () => {
+    const result = signUpSchema.safeParse({
+      role: "admin",
+      fullName: "C",
+      email: "pas-un-email",
+      phone: "appelle-moi",
+      password: "court",
+    });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(fieldErrors(result.error)).toEqual({
+      role: "Choisissez « Je vends » ou « J'achète ».",
+      fullName: "Indiquez votre prénom et votre nom.",
+      email: "Cet email n'est pas valide.",
+      phone: "Ce numéro n'est pas valide.",
+      password: "8 caractères minimum.",
+      acceptTerms:
+        "Acceptez les conditions d'utilisation et la politique de confidentialité pour continuer.",
+    });
+  });
+
+  it("refuses passwords that bcrypt would cut", () => {
+    expect(signUpSchema.safeParse({ ...valid, password: "x".repeat(73) }).success).toBe(false);
+    expect(signUpSchema.safeParse({ ...valid, password: "x".repeat(72) }).success).toBe(true);
+    // bcrypt keeps 72 bytes: « é » counts twice.
+    expect(signUpSchema.safeParse({ ...valid, password: "é".repeat(36) }).success).toBe(true);
+    expect(signUpSchema.safeParse({ ...valid, password: "é".repeat(37) }).success).toBe(false);
+  });
+});
+
+describe("other auth forms", () => {
+  it("an oversized destination never blocks a form", () => {
+    const parsed = signInSchema.safeParse({
+      email: "a@b.fr",
+      password: "1",
+      next: `/${"a".repeat(600)}`,
+    });
+    expect(parsed.success && parsed.data.next).toBeUndefined();
+  });
+
+  it("login does not check the password length", () => {
+    expect(signInSchema.safeParse({ email: "a@b.fr", password: "1" }).success).toBe(true);
+    expect(signInSchema.safeParse({ email: "a@b.fr", password: "" }).success).toBe(false);
+  });
+
+  it("reset requires two identical passwords", () => {
+    const result = resetPasswordSchema.safeParse({
+      password: "nouveau-mdp",
+      confirm: "nouveau-mdP",
+    });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(fieldErrors(result.error)).toEqual({
+      confirm: "Les deux mots de passe sont différents.",
+    });
+  });
+});
+
+describe("splitFullName", () => {
+  it("first word is the first name, the rest the last name", () => {
+    expect(splitFullName("Camille Martin")).toEqual({ firstName: "Camille", lastName: "Martin" });
+    expect(splitFullName(" Anne  de la  Fontaine ")).toEqual({
+      firstName: "Anne",
+      lastName: "de la Fontaine",
+    });
+    expect(splitFullName("Cédric")).toEqual({ firstName: "Cédric", lastName: null });
+  });
+});
+
+describe("passwordStrength", () => {
+  it("grades length and variety", () => {
+    expect(passwordStrength("")).toBeNull();
+    expect(passwordStrength("abc")).toBe("weak");
+    expect(passwordStrength("abcdefgh")).toBe("weak");
+    expect(passwordStrength("abcdef12X")).toBe("fair");
+    expect(passwordStrength("abcdefghijkl")).toBe("fair");
+    expect(passwordStrength("Maison-91-Savigny")).toBe("strong");
+  });
+});
+
+describe("missingLegalDocuments", () => {
+  it("lists the texts whose current version is not accepted", () => {
+    expect(missingLegalDocuments([])).toEqual(["cgu", "privacy"]);
+    expect(
+      missingLegalDocuments([
+        { document: "cgu", version: LEGAL_VERSIONS.cgu },
+        { document: "privacy", version: "2020-01-01" },
+      ]),
+    ).toEqual(["privacy"]);
+    expect(
+      missingLegalDocuments([
+        { document: "cgu", version: LEGAL_VERSIONS.cgu },
+        { document: "privacy", version: LEGAL_VERSIONS.privacy },
+      ]),
+    ).toEqual([]);
+  });
+});
+
+describe("LEGAL_VERSIONS", () => {
+  // legal_accept() and the signup trigger refuse a version dated after
+  // tomorrow: a text dated in advance would block every account on
+  // /conditions.
+  it("are real dates that are not in the future", () => {
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
+    for (const version of Object.values(LEGAL_VERSIONS)) {
+      expect(version).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(new Date(`${version}T00:00:00Z`).toISOString().slice(0, 10)).toBe(version);
+      expect(version <= today).toBe(true);
+    }
+  });
+});

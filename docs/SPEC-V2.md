@@ -197,7 +197,7 @@ Resend ◄────────── core/notifications (file notifications 
   /vendre                   page vendeur (existante, CTA vers inscription)
   /mentions-legales, /cgu, /confidentialite, /cgv
 (auth)
-  /inscription, /connexion, /mot-de-passe-oublie, /reinitialiser
+  /inscription, /connexion, /mot-de-passe-oublie, /reinitialiser, /confirmation (lien des emails), /conditions
 (app)  — connecté
   /vendeur                  dashboard vendeur
   /vendeur/biens/nouveau    création de bien (étapes)
@@ -495,8 +495,8 @@ create table legal_acceptances (          -- acceptations datées et versionnée
   id uuid primary key default gen_random_uuid(),
   profile_id uuid not null references profiles(id) on delete cascade,
   document text not null check (document in ('cgu','cgv','privacy')),
-  version text not null,                -- ex: '2026-11-20', version publiée du texte
-  context text not null check (context in ('signup','checkout')),
+  version text not null check (version ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'),  -- date de la version publiée du texte
+  context text not null check (context in ('signup','update','checkout')),  -- update : nouvelle version acceptée (DECISIONS 2026-10-16)
   subscription_id uuid references subscriptions(id),
   accepted_at timestamptz not null default now()
 );

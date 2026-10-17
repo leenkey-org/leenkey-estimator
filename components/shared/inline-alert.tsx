@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
-import { AlertCircle, AlertTriangle, Info } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type InlineAlertProps = {
-  tone?: "danger" | "warning" | "info";
+  tone?: "danger" | "warning" | "info" | "success";
   children: ReactNode;
   /** A link or a button after the text (« Réessayer »). */
   action?: ReactNode;
@@ -14,6 +14,7 @@ const tones = {
   danger: { box: "bg-lk-danger-bg text-lk-danger-fg", icon: AlertCircle },
   warning: { box: "bg-lk-warning-bg text-lk-warning-fg", icon: AlertTriangle },
   info: { box: "bg-lk-blue-tint text-lk-navy", icon: Info },
+  success: { box: "bg-lk-success-bg text-lk-success-fg", icon: CheckCircle2 },
 } as const;
 
 /**

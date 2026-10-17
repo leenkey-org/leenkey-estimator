@@ -34,6 +34,7 @@ export const sections = {
   iconButtons: "Boutons icône",
   inputs: "Champs de saisie",
   choices: "Sélections",
+  checkboxes: "Cases à cocher",
   filters: "Barre de filtres",
   badges: "Pastilles de statut",
   sectionTitle: "Titre de section",
@@ -298,6 +299,15 @@ export const choices = {
     { value: "loan", label: "Avec prêt" },
     { value: "no_loan", label: "Sans prêt" },
   ],
+  roleCaption: "Choix du rôle (RoleCard), boutons radio natifs",
+  roleLegend: "Votre projet",
+  roles: [
+    { value: "seller", title: "Je vends", hint: "Un bien à publier" },
+    { value: "buyer", title: "J'achète", hint: "Je cherche un bien" },
+  ],
+  checkboxLabel: "J'accepte les conditions d'utilisation et la politique de confidentialité.",
+  checkboxCheckedLabel: "Recevoir les nouvelles annonces par email",
+  checkboxError: "Acceptez les conditions pour continuer.",
 };
 
 export const statuses = {
@@ -565,7 +575,8 @@ export const alerts = {
   retry: fr.search.retry,
   warning: "Votre annonce est en pause : elle n'apparaît plus dans les résultats.",
   info: fr.listing.actions.accountRequired,
-  caption: "danger (role alert), warning et info (role status)",
+  success: "C'est renvoyé. Le lien précédent ne fonctionne plus.",
+  caption: "danger (role alert) ; warning, info et success (role status)",
 };
 
 export const skeleton = {

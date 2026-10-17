@@ -45,39 +45,54 @@ describe("middleware", () => {
     vi.stubEnv("PREPROD_PASSWORD", "s3cret");
   };
 
-  it("asks for credentials on the preprod", () => {
+  it("asks for credentials on the preprod", async () => {
     staging();
-    const res = middleware(request("/estimer"));
+    const res = await middleware(request("/estimer"));
     expect(res.status).toBe(401);
     expect(res.headers.get("www-authenticate")).toContain("Basic");
   });
 
-  it("lets the right credentials through, with noindex", () => {
+  it("lets the right credentials through, with noindex", async () => {
     staging();
-    const res = middleware(request("/estimer", basic("leenkey", "s3cret")));
+    const res = await middleware(request("/estimer", basic("leenkey", "s3cret")));
     expect(res.status).toBe(200);
     expect(res.headers.get("x-robots-tag")).toBe("noindex, nofollow");
   });
 
-  it("never blocks webhooks and crons", () => {
+  it("never blocks webhooks and crons", async () => {
     staging();
-    expect(middleware(request("/api/webhooks/stripe")).status).toBe(200);
-    expect(middleware(request("/api/cron/ping-db")).status).toBe(200);
+    expect((await middleware(request("/api/webhooks/stripe"))).status).toBe(200);
+    expect((await middleware(request("/api/cron/ping-db"))).status).toBe(200);
   });
 
-  it("stays open on the preprod while the credentials are not configured", () => {
+  it("stays open on the preprod while the credentials are not configured", async () => {
     vi.stubEnv("NEXT_PUBLIC_ENV", "staging");
     vi.stubEnv("PREPROD_USER", "");
     vi.stubEnv("PREPROD_PASSWORD", "");
-    expect(middleware(request("/")).status).toBe(200);
+    expect((await middleware(request("/"))).status).toBe(200);
   });
 
-  it("is open and indexable in production", () => {
+  it("is open and indexable in production", async () => {
     vi.stubEnv("NEXT_PUBLIC_ENV", "production");
     vi.stubEnv("PREPROD_USER", "leenkey");
     vi.stubEnv("PREPROD_PASSWORD", "s3cret");
-    const res = middleware(request("/"));
+    const res = await middleware(request("/"));
     expect(res.status).toBe(200);
     expect(res.headers.get("x-robots-tag")).toBeNull();
+  });
+
+  it("sends signed-out visitors of a protected area to the login page", async () => {
+    vi.stubEnv("NEXT_PUBLIC_ENV", "production");
+    const res = await middleware(request("/vendeur/biens?onglet=photos"));
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toBe(
+      "https://leenkey-v2.vercel.app/connexion?next=%2Fvendeur%2Fbiens%3Fonglet%3Dphotos",
+    );
+  });
+
+  it("leaves public pages to signed-out visitors", async () => {
+    vi.stubEnv("NEXT_PUBLIC_ENV", "production");
+    expect((await middleware(request("/acheter"))).status).toBe(200);
+    expect((await middleware(request("/vendre"))).status).toBe(200);
   });
 });

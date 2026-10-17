@@ -7,6 +7,7 @@ import * as content from "./_content";
 import { FilterSelectDemo } from "./_filter-select-demo";
 import { BrandPanel } from "@/components/shared/brand-panel";
 import { Button } from "@/components/shared/button";
+import { Checkbox } from "@/components/shared/checkbox";
 import { ChipButton, ChipToggle } from "@/components/shared/chip-toggle";
 import { ContactCard } from "@/components/shared/contact-card";
 import { DPE_CLASSES, DpeBadge } from "@/components/shared/dpe-badge";
@@ -21,6 +22,7 @@ import { KeyFactsTable } from "@/components/shared/key-facts-table";
 import { KeyFigures } from "@/components/shared/key-figures";
 import { PriceBlock } from "@/components/shared/price-block";
 import { PropertyCard } from "@/components/shared/property-card";
+import { RoleCards } from "@/components/shared/role-cards";
 import { SectionTitle } from "@/components/shared/section-title";
 import { SegmentedPicker } from "@/components/shared/segmented-picker";
 import { Select } from "@/components/shared/select";
@@ -441,6 +443,26 @@ export default function DesignPage() {
                 options={content.choices.financing}
               />
             </div>
+            <div className="flex max-w-lk-form flex-col gap-1.5">
+              <Caption>{content.choices.roleCaption}</Caption>
+              <RoleCards
+                name="design-role"
+                legend={content.choices.roleLegend}
+                options={content.choices.roles}
+                defaultValue="seller"
+              />
+            </div>
+          </Section>
+
+          <Section id="cases-a-cocher" title={content.sections.checkboxes} level="h3">
+            <div className="flex max-w-lk-form flex-col gap-4">
+              <Checkbox label={content.choices.checkboxLabel} />
+              <Checkbox label={content.choices.checkboxCheckedLabel} defaultChecked />
+              <Checkbox
+                label={content.choices.checkboxLabel}
+                error={content.choices.checkboxError}
+              />
+            </div>
           </Section>
 
           <Section id="filtres" title={content.sections.filters} level="h3">
@@ -720,6 +742,7 @@ export default function DesignPage() {
               </InlineAlert>
               <InlineAlert tone="warning">{content.alerts.warning}</InlineAlert>
               <InlineAlert tone="info">{content.alerts.info}</InlineAlert>
+              <InlineAlert tone="success">{content.alerts.success}</InlineAlert>
             </div>
             <Caption>{content.alerts.caption}</Caption>
           </Section>

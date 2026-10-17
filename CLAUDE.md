@@ -132,7 +132,7 @@ Dans ce document, « staging » désigne l'environnement de préprod : branche G
 | Supabase | projet `leenkey-dev` (compte Nebula) | projet `leenkey-staging` (compte Nebula) | projet `leenkey-prod` (compte Leenkey, gratuit puis Pro au premier client payant) |
 | Stripe | mode test | mode test | mode live |
 | Anthropic | clé dev, quota bas | clé staging | clé prod |
-| Resend | domaine de test, envois vers une boîte de test uniquement | idem, préfixe `[PREPROD]` dans les sujets | domaine `leenkey.fr` vérifié |
+| Resend | domaine de test, envois vers une boîte de test uniquement | idem, préfixe `[PREPROD]` dans les sujets ; exception : les emails d'authentification de Supabase partent à l'adresse saisie (`DECISIONS.md` 2026-10-16, à valider par Younes) | domaine `leenkey.fr` vérifié |
 | Mapbox | clé restreinte à `localhost` | clé restreinte à `leenkey-v2.vercel.app` | clé restreinte à `leenkey.fr` |
 | Données | seed de test | seed de test + données saisies par Cédric en recette | données réelles |
 | Robots | `noindex` | `noindex` + protection par mot de passe dans le middleware (`PREPROD_USER` / `PREPROD_PASSWORD`) | indexable |
@@ -336,6 +336,7 @@ npm run db:migrate:local # applique les migrations en local
 npm run db:migrate:staging
 npm run db:migrate:prod  # demande une confirmation explicite
 npm run db:seed          # charge supabase/seed/ en local (npm run db:seed:staging pour la préprod ; refuse la prod)
+scripts/local-stack.sh up # pile locale type Supabase (Auth, API, emails capturés) pour tester les parcours connectés
 npm run db:rls-test      # tests de permissions
 npm run a11y             # contrôle d'accessibilité axe sur les parcours E2E (docs/DESIGN.md section 15)
 npm run stripe:listen    # Stripe CLI vers /api/webhooks/stripe en local

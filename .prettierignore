@@ -15,3 +15,6 @@ supabase/seed
 .claude
 *.md
 types/database.ts
+
+# Supabase Auth email templates: hand-written HTML for mail clients
+supabase/templates/
