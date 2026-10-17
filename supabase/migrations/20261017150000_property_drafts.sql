@@ -38,8 +38,11 @@ $$;
 
 -- Back to a draft (cancelled submission, rejection), the property may be
 -- incomplete again: listing_submit checks it at the next sending. Security
--- definer: the check sees the listing whatever the RLS of the writer.
-create function public.properties_keep_complete() returns trigger
+-- definer: the check sees the listing whatever the RLS of the writer. The
+-- file can be played twice (or replace, drop if exists): the connector that
+-- applies it on staging records its own version (DECISIONS, outillage des
+-- migrations).
+create or replace function public.properties_keep_complete() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
   if (new.type is null or new.surface_m2 is null or new.rooms is null)
@@ -53,6 +56,7 @@ begin
 end;
 $$;
 
+drop trigger if exists properties_keep_complete on public.properties;
 create trigger properties_keep_complete before update of type, surface_m2, rooms on public.properties
   for each row execute function public.properties_keep_complete();
 
