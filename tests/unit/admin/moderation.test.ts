@@ -1,11 +1,15 @@
 import { render } from "@react-email/components";
 import { describe, expect, it } from "vitest";
 import { routeEmail } from "@/core/notifications/routing";
+import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
 import { ListingDecisionEmail, listingDecisionSubject } from "@/emails/listing-decision";
+import { moderationError } from "@/leenkey/admin/moderation";
+import { isInLaunchZone } from "@/lib/config/launch-zone";
 import {
   adminListingsHref,
   moderationSchema,
   parseAdminListingsQuery,
+  reasonLength,
 } from "@/lib/validations/admin";
 
 // L1-19: back office of the listings.
@@ -31,6 +35,8 @@ describe("moderationSchema", () => {
     for (const input of [
       { action: "reject", listingId },
       { action: "reject", listingId, reason: " a " },
+      // Four UTF-16 units, but two characters for Postgres (char_length).
+      { action: "reject", listingId, reason: "🙂🙂" },
       { action: "suspend", listingId, reason: "x".repeat(1001) },
       { action: "delete", listingId },
       { action: "publish", listingId: "LK-0005" },
@@ -38,6 +44,35 @@ describe("moderationSchema", () => {
     ]) {
       expect(moderationSchema.safeParse(input).success, JSON.stringify(input)).toBe(false);
     }
+  });
+});
+
+describe("motive length", () => {
+  it("counts the characters as Postgres does, after the trim", () => {
+    expect(reasonLength("  Photos  ")).toBe(6);
+    expect(reasonLength("🙂🙂")).toBe(2);
+    expect(
+      moderationSchema.safeParse({ action: "reject", listingId, reason: "🙂🙂🙂" }).success,
+    ).toBe(true);
+  });
+});
+
+describe("moderationError", () => {
+  it("reads the SQLSTATE of the status functions of L1-04", () => {
+    expect(moderationError("42501")).toBe("forbidden");
+    expect(moderationError("P0002")).toBe("not_found");
+    expect(moderationError("22023")).toBe("conflict");
+    expect(moderationError("08006")).toBe("unavailable");
+    expect(moderationError(undefined)).toBe("unavailable");
+  });
+});
+
+describe("isInLaunchZone", () => {
+  it("knows the postal codes around Épinay-sur-Orge, the others are flagged", () => {
+    expect(isInLaunchZone("91360")).toBe(true);
+    expect(isInLaunchZone(" 91620 ")).toBe(true);
+    expect(isInLaunchZone("91300")).toBe(false);
+    expect(isInLaunchZone("75011")).toBe(false);
   });
 });
 
@@ -104,7 +139,9 @@ describe("moderation emails", () => {
 
   it("published: the link to the listing", async () => {
     const html = await render(ListingDecisionEmail({ ...props, decision: "published" }));
-    expect(listingDecisionSubject("published")).toBe("Votre annonce est en ligne");
+    expect(listingDecisionSubject("published", "LK-0001")).toBe(
+      "Votre annonce est en ligne (LK-0001)",
+    );
     expect(html).toContain('lang="fr"');
     expect(html).toContain("Bonjour Alice,");
     expect(html).toContain(props.listingUrl);
@@ -118,8 +155,10 @@ describe("moderation emails", () => {
       { plainText: true },
     );
     expect(rejected).toContain(reason);
-    expect(rejected).toContain("sous 24 h");
-    expect(listingDecisionSubject("rejected")).toBe("Votre annonce est à corriger");
+    expect(rejected).toContain("sous 24\u00A0h");
+    expect(listingDecisionSubject("rejected", "LK-0001")).toBe(
+      "Votre annonce est à corriger (LK-0001)",
+    );
 
     const suspended = await render(
       ListingDecisionEmail({ ...props, decision: "suspended", reason, firstName: null }),
@@ -128,7 +167,25 @@ describe("moderation emails", () => {
     expect(suspended).toContain("Bonjour,");
     expect(suspended).toContain(reason);
     expect(suspended).toContain(props.contactEmail);
-    expect(listingDecisionSubject("suspended")).toBe("Votre annonce est suspendue");
+    // The delay of the contact form (CLAUDE.md section 16).
+    expect(suspended).toContain("sous 48\u00A0h, 7\u00A0j/7");
+    expect(listingDecisionSubject("suspended", "LK-0001")).toBe(
+      "Votre annonce est suspendue (LK-0001)",
+    );
+    const html = await render(
+      ListingDecisionEmail({ ...props, decision: "suspended", reason: "Ligne 1\nLigne 2" }),
+    );
+    expect(html).toContain(`href="mailto:${props.contactEmail}"`);
+    expect(html).toContain("white-space:pre-line");
+  });
+
+  it("plain text: the title keeps its case", async () => {
+    const text = await render(
+      ListingDecisionEmail({ ...props, decision: "published" }),
+      EMAIL_PLAIN_TEXT,
+    );
+    expect(text).toContain("Votre annonce est en ligne");
+    expect(text).not.toContain("VOTRE ANNONCE");
   });
 
   it("speaks with « nous », never « on » (CLAUDE.md section 16)", async () => {

@@ -456,8 +456,10 @@ export const fr = {
     filters: {
       label: "Statut des annonces",
       all: "Toutes",
-      count: (label: string, count: number) => `${label} · ${count}`,
     },
+    limited: (count: number) =>
+      `Les ${count}\u00A0premières annonces sont affichées : précisez la recherche ou le filtre.`,
+    outOfZone: "Hors zone",
     search: {
       label: "Rechercher une annonce",
       placeholder: "Référence, ville ou vendeur",
@@ -489,14 +491,13 @@ export const fr = {
       seller: "Vendeur",
       plan: "Formule",
       received: "Reçue",
-      published: "En ligne depuis",
+      published: "Publiée le",
       rejection: "Motif du refus",
       suspension: "Motif de la suspension",
       preview: "Aperçu de l'annonce",
       history: "Historique",
       historyEmpty: "Aucune décision pour l'instant.",
       publicPage: "Voir la page publique",
-      notFound: "Cette annonce n'existe pas ou a été supprimée.",
     },
     history: {
       actions: {
@@ -529,6 +530,8 @@ export const fr = {
       reason: "Motif envoyé au vendeur",
       reasonHint: "Au moins 3 caractères, envoyé tel quel.",
       cancel: "Annuler",
+      back: "Retour",
+      close: "Fermer",
       confirmReject: "Refuser l'annonce",
       confirmSuspend: "Suspendre l'annonce",
     },
@@ -551,6 +554,7 @@ export const fr = {
       suspended: "Annonce suspendue.",
       unsuspended: "Annonce remise en ligne.",
       emailSent: "Le vendeur est prévenu par email.",
+      emailTest: "Email envoyé à la boîte de test (hors production).",
       emailLogged: "Email non envoyé : environnement local.",
       emailFailed: "L'email au vendeur n'a pas pu partir : prévenez-le autrement.",
     },
@@ -560,6 +564,8 @@ export const fr = {
       notFound: "Cette annonce n'existe plus.",
       forbidden: "Cette action est réservée à l'équipe Leenkey.",
       unavailable: "La décision n'a pas pu être enregistrée. Réessayez.",
+      network:
+        "Pas de réponse du serveur : la décision a peut-être été enregistrée. Vérifiez le statut de l'annonce avant de recommencer.",
     },
   },
   // Transactional emails (SPEC-V2 section 18, DESIGN.md 14), texts of emails/.
@@ -571,8 +577,9 @@ export const fr = {
       why: "Vous recevez cet email parce que vous vendez un bien sur Leenkey.",
       preferences: "Gérer mes notifications",
     },
+    // The reference in the subjects: one thread per listing in the inbox.
     listingPublished: {
-      subject: "Votre annonce est en ligne",
+      subject: (reference: string) => `Votre annonce est en ligne (${reference})`,
       title: "Votre annonce est en ligne",
       text: (title: string) =>
         `Nous avons relu « ${title} » : elle est maintenant visible des acquéreurs sur Leenkey.`,
@@ -580,21 +587,24 @@ export const fr = {
       action: "Voir mon annonce",
     },
     listingRejected: {
-      subject: "Votre annonce est à corriger",
+      subject: (reference: string) => `Votre annonce est à corriger (${reference})`,
       title: "Votre annonce est à corriger",
       text: (title: string) =>
         `Nous avons relu « ${title} » : elle ne peut pas encore être publiée.`,
       reason: "Ce qu'il faut corriger",
-      next: "Corrigez-la depuis votre espace vendeur et renvoyez-la : nous la relisons sous 24 h.",
+      next: "Corrigez-la depuis votre espace vendeur et renvoyez-la : nous la relisons sous 24\u00A0h.",
       action: "Corriger mon annonce",
     },
     listingSuspended: {
-      subject: "Votre annonce est suspendue",
+      subject: (reference: string) => `Votre annonce est suspendue (${reference})`,
       title: "Votre annonce est suspendue",
       text: (title: string) => `« ${title} » n'est plus visible des acquéreurs pour le moment.`,
       reason: "Motif",
-      contest: (email: string) =>
-        `Si vous n'êtes pas d'accord ou si vous avez corrigé le problème, écrivez-nous à ${email} : nous vous répondons sous 24 h.`,
+      // Around the address, a mailto link. Delay of the contact form (CLAUDE.md 16), Q44.
+      contest: {
+        before: "Si vous n'êtes pas d'accord ou si vous avez corrigé le problème, écrivez-nous à ",
+        after: " : nous vous répondons sous 48\u00A0h, 7\u00A0j/7.",
+      },
       action: "Voir mon espace vendeur",
     },
   },

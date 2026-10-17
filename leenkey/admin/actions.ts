@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { moderationSchema, type ModerationAction } from "@/lib/validations/admin";
 import type { Database } from "@/types/database";
 import { emailSellerAboutDecision } from "./listing-emails";
+import { moderationError, type ModerationError } from "./moderation";
 
 // Server actions of the back office (L1-19). The status changes go through
 // the SQL functions of L1-04 (listing_publish, listing_reject,
@@ -17,7 +18,7 @@ type ListingStatus = Database["public"]["Enums"]["listing_status"];
 
 export type ModerationResult =
   | { ok: true; data: { status: ListingStatus; email: EmailDelivery | null } }
-  | { ok: false; error: "invalid" | "forbidden" | "not_found" | "conflict" | "unavailable" };
+  | { ok: false; error: ModerationError };
 
 const DECISION = {
   publish: "published",
@@ -27,10 +28,10 @@ const DECISION = {
 } as const satisfies Record<ModerationAction, "published" | "rejected" | "suspended" | null>;
 
 export async function moderateListing(input: unknown): Promise<ModerationResult> {
-  const parsed = moderationSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: "invalid" };
   const profile = await getProfile();
   if (!profile?.roles.includes("admin")) return { ok: false, error: "forbidden" };
+  const parsed = moderationSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
 
   const command = parsed.data;
   const supabase = await createClient();
@@ -47,7 +48,8 @@ export async function moderateListing(input: unknown): Promise<ModerationResult>
               p_listing_id: command.listingId,
               p_reason: command.reason,
             })
-          : await supabase.rpc("listing_unsuspend", {
+          : // Back online, as SPEC-V2 section 17 says, even when paused before (Q45).
+            await supabase.rpc("listing_unsuspend", {
               p_listing_id: command.listingId,
               p_to: "published",
             });
@@ -58,11 +60,7 @@ export async function moderateListing(input: unknown): Promise<ModerationResult>
       action: command.action,
       code: error.code,
     });
-    if (error.code === "42501") return { ok: false, error: "forbidden" };
-    if (error.code === "P0002") return { ok: false, error: "not_found" };
-    // 22023: the listing changed status since the page was shown.
-    if (error.code === "22023") return { ok: false, error: "conflict" };
-    return { ok: false, error: "unavailable" };
+    return { ok: false, error: moderationError(error.code) };
   }
 
   const decision = DECISION[command.action];

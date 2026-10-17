@@ -14,6 +14,7 @@ import {
   ModerationFeedback,
 } from "@/leenkey/admin/components/listing-moderation";
 import { adminListing } from "@/leenkey/admin/queries";
+import { isInLaunchZone } from "@/lib/config/launch-zone";
 import { ListingDescription } from "@/leenkey/listings/components/listing-description";
 import { listingKeyFacts } from "@/leenkey/listings/key-facts";
 import { listingKeyFigures } from "@/leenkey/listings/presentation";
@@ -89,6 +90,7 @@ export default async function AdminListingPage({ params }: Props) {
   return (
     <AdminPage
       title={listing.title}
+      titleOnMobile
       back={
         <Link
           href={adminListingsHref({})}
@@ -108,6 +110,12 @@ export default async function AdminListingPage({ params }: Props) {
             </span>
             <span className="text-lk-secondary text-lk-ink-3">
               {listing.city} · {listing.postalCode}
+              {isInLaunchZone(listing.postalCode) ? null : (
+                <>
+                  {" · "}
+                  <span className="font-semibold text-lk-warning-fg">{t.outOfZone}</span>
+                </>
+              )}
             </span>
           </div>
           <dl className="grid grid-cols-2 gap-x-6 gap-y-3 md:grid-cols-4">
@@ -121,7 +129,7 @@ export default async function AdminListingPage({ params }: Props) {
           {reason?.text ? (
             <div className="rounded-lk-md bg-lk-danger-bg px-4 py-3 text-lk-danger-fg">
               <p className="text-lk-caption font-semibold">{reason.label}</p>
-              <p className="text-lk-secondary">{reason.text}</p>
+              <p className="text-lk-secondary whitespace-pre-line">{reason.text}</p>
             </div>
           ) : null}
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -171,7 +179,7 @@ export default async function AdminListingPage({ params }: Props) {
                   </p>
                   <p className="text-lk-caption text-lk-ink-3">{formatDateTime(entry.at, now)}</p>
                   {entry.reason ? (
-                    <p className="text-lk-secondary text-lk-ink-2">
+                    <p className="text-lk-secondary whitespace-pre-line text-lk-ink-2">
                       {t.history.reason(entry.reason)}
                     </p>
                   ) : null}

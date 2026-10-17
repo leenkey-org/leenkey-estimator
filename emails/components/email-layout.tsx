@@ -15,10 +15,12 @@ import {
 import { fr } from "@/lib/i18n/fr";
 
 // Common template of the emails (docs/DESIGN.md 14, SPEC-V2 section 18):
-// stone background, white card of 560 px, 8 px blue band, « Leenkey » in
-// text, Archivo titles with an Arial fallback (mail clients ignore
-// font-stretch), one blue button, footer with the notification settings and
-// the legal identity. Inline styles only: mail clients drop style sheets.
+// stone background, white card of 560 px, 8 px blue band (a top border,
+// which Outlook keeps, unlike an empty block), « Leenkey » in text, Archivo
+// titles with an Arial fallback (mail clients ignore font-stretch), one blue
+// button, footer with the notification settings and the legal identity.
+// Inline styles only: mail clients drop style sheets. Colours of the palette
+// (DESIGN.md 2.1).
 
 const t = fr.emails;
 
@@ -26,8 +28,23 @@ const FONT = "Archivo, Arial, Helvetica, sans-serif";
 const INK = "#0F1E35";
 const MUTED = "#5B6474";
 const BLUE = "#1156FC";
+const BLUE_TINT = "#EEF4FF";
+const LINE = "#D9DBD3";
+const BACKGROUND = "#F4F4F1";
 
 export const emailText = { margin: "0 0 16px", fontSize: "15px", lineHeight: "1.6", color: INK };
+
+/**
+ * Options of render() for the plain text version: the titles keep their case
+ * (html-to-text writes them in capitals by default, DESIGN.md 16).
+ */
+export const EMAIL_PLAIN_TEXT = {
+  plainText: true,
+  htmlToTextOptions: {
+    selectors: ["h1", "h2", "h3"].map((selector) => ({ selector, options: { uppercase: false } })),
+  },
+} as const;
+export const emailLink = { color: BLUE, textDecoration: "underline" };
 
 export type EmailLayoutProps = {
   /** Line shown by the inbox after the subject. */
@@ -45,17 +62,16 @@ export function EmailLayout({ preview, title, siteUrl, action, children }: Email
       <Head />
       <Preview>{preview}</Preview>
       <Body
-        style={{ margin: 0, padding: "24px 12px", backgroundColor: "#F4F4F1", fontFamily: FONT }}
+        style={{ margin: 0, padding: "24px 12px", backgroundColor: BACKGROUND, fontFamily: FONT }}
       >
         <Container
           style={{
             maxWidth: "560px",
             backgroundColor: "#FFFFFF",
+            borderTop: `8px solid ${BLUE}`,
             borderRadius: "6px",
-            overflow: "hidden",
           }}
         >
-          <Section style={{ height: "8px", backgroundColor: BLUE }} />
           <Section style={{ padding: "28px 32px 32px" }}>
             <Text style={{ margin: "0 0 24px", fontSize: "20px", fontWeight: 700, color: INK }}>
               {t.brand}
@@ -102,7 +118,7 @@ export function EmailLayout({ preview, title, siteUrl, action, children }: Email
               {t.footer.preferences}
             </Link>
           </Text>
-          <Hr style={{ margin: "8px 0", borderColor: "#E4E3DE" }} />
+          <Hr style={{ margin: "8px 0", borderColor: LINE }} />
           <Text style={{ margin: 0, fontSize: "12px", lineHeight: "1.5", color: MUTED }}>
             {fr.legal.company} · {fr.legal.address}
           </Text>
@@ -112,7 +128,7 @@ export function EmailLayout({ preview, title, siteUrl, action, children }: Email
   );
 }
 
-/** The motive of a decision, set apart in the email. */
+/** The motive of a decision, set apart in the email, its line breaks kept. */
 export function EmailQuote({ label, children }: { label: string; children: ReactNode }) {
   return (
     <Section
@@ -120,14 +136,24 @@ export function EmailQuote({ label, children }: { label: string; children: React
         margin: "0 0 16px",
         padding: "12px 16px",
         borderLeft: `4px solid ${BLUE}`,
-        backgroundColor: "#F0F4FF",
+        backgroundColor: BLUE_TINT,
         borderRadius: "4px",
       }}
     >
       <Text style={{ margin: "0 0 4px", fontSize: "13px", fontWeight: 600, color: INK }}>
         {label}
       </Text>
-      <Text style={{ margin: 0, fontSize: "15px", lineHeight: "1.6", color: INK }}>{children}</Text>
+      <Text
+        style={{
+          margin: 0,
+          fontSize: "15px",
+          lineHeight: "1.6",
+          color: INK,
+          whiteSpace: "pre-line",
+        }}
+      >
+        {children}
+      </Text>
     </Section>
   );
 }

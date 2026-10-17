@@ -26,11 +26,16 @@ export function FilterPills({
   return (
     <nav
       aria-label={label}
-      className={cn("-mx-5 overflow-x-auto px-5 md:mx-0 md:overflow-visible md:px-0", className)}
+      className={cn(
+        // The scrolling list cuts what passes its box: 5 px above and below
+        // for the touch target, without moving the layout.
+        "-mx-5 -my-1.25 overflow-x-auto px-5 py-1.25 md:m-0 md:overflow-visible md:p-0",
+        className,
+      )}
     >
       <ul className="flex w-max gap-2 md:w-auto md:flex-wrap">
         {items.map((item) => (
-          <li key={item.href}>
+          <li key={item.label}>
             <Link
               href={item.href}
               aria-current={item.active ? "page" : undefined}

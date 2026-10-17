@@ -55,3 +55,13 @@ export const LAUNCH_ZONE: readonly LaunchZoneCommune[] = COMMUNES.map(
     centre: { lat, lng },
   }),
 );
+
+const POSTAL_CODES = new Set(LAUNCH_ZONE.flatMap((commune) => commune.postalCodes));
+
+/**
+ * Whether a postal code is in the launch zone. A listing outside stays
+ * accepted; the back office flags it « Hors zone » (SPEC-V2 section 20).
+ */
+export function isInLaunchZone(postalCode: string): boolean {
+  return POSTAL_CODES.has(postalCode.trim());
+}

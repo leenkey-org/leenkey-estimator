@@ -22,7 +22,7 @@ export function DataTable({
     >
       <table
         aria-label={label}
-        className="w-full border-collapse text-left text-lk-compact text-lk-ink"
+        className="w-full border-collapse text-left text-lk-secondary text-lk-ink"
       >
         {children}
       </table>
@@ -54,6 +54,17 @@ export function DataTableRow({ className, ...props }: ComponentProps<"tr">) {
 
 export function DataTableCell({ className, ...props }: ComponentProps<"td">) {
   return <td className={cn("h-14 px-5 py-3.5 align-middle", className)} {...props} />;
+}
+
+/** First cell of a row, which names it (the property, the person). */
+export function DataTableRowHeader({ className, ...props }: ComponentProps<"th">) {
+  return (
+    <th
+      scope="row"
+      className={cn("h-14 px-5 py-3.5 text-left align-middle font-normal", className)}
+      {...props}
+    />
+  );
 }
 
 /** Actions of the row above, aligned right, without a separator between the two. */

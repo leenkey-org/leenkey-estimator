@@ -1,6 +1,6 @@
-import { Text } from "@react-email/components";
+import { Link, Text } from "@react-email/components";
 import { fr } from "@/lib/i18n/fr";
-import { EmailLayout, EmailQuote, emailText } from "./components/email-layout";
+import { EmailLayout, EmailQuote, emailLink, emailText } from "./components/email-layout";
 
 // Emails of the moderation of a listing (SPEC-V2 sections 17 and 18):
 // published, to correct (rejected) and suspended, with the motive written
@@ -24,10 +24,10 @@ export type ListingDecisionEmailProps = {
   siteUrl: string;
 };
 
-export function listingDecisionSubject(decision: ListingDecision): string {
-  if (decision === "published") return t.listingPublished.subject;
-  if (decision === "rejected") return t.listingRejected.subject;
-  return t.listingSuspended.subject;
+export function listingDecisionSubject(decision: ListingDecision, reference: string): string {
+  if (decision === "published") return t.listingPublished.subject(reference);
+  if (decision === "rejected") return t.listingRejected.subject(reference);
+  return t.listingSuspended.subject(reference);
 }
 
 export function ListingDecisionEmail({
@@ -82,7 +82,13 @@ export function ListingDecisionEmail({
       <Text style={emailText}>{t.greeting(firstName)}</Text>
       <Text style={emailText}>{copy.text(title)}</Text>
       <EmailQuote label={copy.reason}>{reason}</EmailQuote>
-      <Text style={emailText}>{copy.contest(contactEmail)}</Text>
+      <Text style={emailText}>
+        {copy.contest.before}
+        <Link href={`mailto:${contactEmail}`} style={emailLink}>
+          {contactEmail}
+        </Link>
+        {copy.contest.after}
+      </Text>
     </EmailLayout>
   );
 }

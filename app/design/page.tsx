@@ -22,6 +22,7 @@ import {
   DataTableCell,
   DataTableHeader,
   DataTableRow,
+  DataTableRowHeader,
 } from "@/components/shared/data-table";
 import { DPE_CLASSES, DpeBadge } from "@/components/shared/dpe-badge";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -939,12 +940,12 @@ export default function DesignPage() {
               {content.backOffice.rows.map((row) => (
                 <tbody key={row.title} className="border-t border-lk-line">
                   <DataTableRow className="border-t-0">
-                    <DataTableCell>
+                    <DataTableRowHeader>
                       <div className="flex flex-col">
                         <span className="font-semibold">{row.title}</span>
                         <span className="text-lk-caption text-lk-ink-3">{row.place}</span>
                       </div>
-                    </DataTableCell>
+                    </DataTableRowHeader>
                     <DataTableCell>{row.seller}</DataTableCell>
                     <DataTableCell className="whitespace-nowrap tabular">
                       {formatPrice(row.priceCents)}

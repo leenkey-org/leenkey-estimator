@@ -4,7 +4,7 @@
 -- passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(28);
+select plan(34);
 \ir _plan.psql
 
 -- ===========================================================================
@@ -57,6 +57,11 @@ select is((select count(*) from admin_listings(null, 'modérationVILLE') where p
           'admin: finds the listings of a town, whatever the case');
 select is((select count(*) from admin_listings(null, '%') where postal_code = '99996')::int, 0,
           'admin: « % » is searched as a character, not as a wildcard');
+select is((select count(*) from admin_listings(null, '_') where postal_code = '99996')::int, 0,
+          'admin: « _ » is searched as a character, not as a wildcard');
+-- Unescaped, « \a » would be a plain « a », found in every title.
+select is((select count(*) from admin_listings(null, '\a') where postal_code = '99996')::int, 0,
+          'admin: a backslash is searched as a character, not as an escape');
 select is((select count(*) from admin_listings(null, '   '))::int,
           (select count(*) from admin_listings(null, null))::int,
           'admin: a blank search is no search');
@@ -105,6 +110,7 @@ select throws_ok(format($$select * from admin_listing_seller_contact(%L)$$, :'la
 \set who buyer_d
 \ir _as.psql
 select throws_ok($$select * from admin_listings()$$, '42501', null, 'buyer_d: cannot list the listings');
+select throws_ok($$select * from admin_listing_counts()$$, '42501', null, 'buyer_d: cannot count the listings');
 select throws_ok(format($$select * from admin_listing_seller_contact(%L)$$, :'la'), '42501', null,
                  'buyer_d: cannot read a seller email');
 \set who anon
@@ -113,6 +119,13 @@ select throws_ok($$select * from admin_listings()$$, '42501', null, 'anon: canno
 select throws_ok($$select * from admin_listing_counts()$$, '42501', null, 'anon: cannot count the listings');
 select throws_ok(format($$select * from admin_listing_seller_contact(%L)$$, :'la'), '42501', null,
                  'anon: cannot read a seller email');
+-- Refused before any check of the role: the execute right is revoked.
+select ok(not has_function_privilege('anon', 'public.admin_listings(public.listing_status, text, int)', 'execute'),
+          'anon: no execute right on admin_listings');
+select ok(not has_function_privilege('anon', 'public.admin_listing_counts()', 'execute'),
+          'anon: no execute right on admin_listing_counts');
+select ok(not has_function_privilege('anon', 'public.admin_listing_seller_contact(uuid)', 'execute'),
+          'anon: no execute right on admin_listing_seller_contact');
 
 select * from finish();
 rollback;

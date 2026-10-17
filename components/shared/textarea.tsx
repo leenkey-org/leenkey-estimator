@@ -37,7 +37,7 @@ export function Textarea({
         aria-describedby={fieldDescribedBy(textareaId, { help, error }, describedBy)}
         className={cn(
           fieldControlClassName,
-          "h-auto min-h-28 resize-y py-3 leading-normal",
+          "h-auto min-h-30 resize-y py-3 leading-normal",
           className,
         )}
         {...props}

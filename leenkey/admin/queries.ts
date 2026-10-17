@@ -29,11 +29,18 @@ export type AdminListingRow = {
   publishedAt: string | null;
   type: PropertyType;
   city: string;
+  postalCode: string;
   rooms: number;
   surfaceM2: number;
   sellerName: string | null;
   plan: PlanCode;
 };
+
+/** The rows, and whether more listings match than the page shows. */
+export type AdminListingList = { rows: AdminListingRow[]; limited: boolean };
+
+/** Rows of /admin/annonces at most (admin_listings). */
+export const ADMIN_LISTINGS_LIMIT = 200;
 
 export type AdminListingCounts = Record<ListingStatus, number>;
 
@@ -78,40 +85,48 @@ function logFailure(read: string, error: unknown, context: Record<string, unknow
   });
 }
 
-/** Rows of /admin/annonces: pending first, oldest first; 200 at most. */
+/**
+ * Rows of /admin/annonces: pending first, oldest first; ADMIN_LISTINGS_LIMIT
+ * at most, one more read to know whether the list is cut.
+ */
 export async function adminListings(
   filter: AdminListingsQuery,
-): Promise<QueryResult<AdminListingRow[]>> {
+): Promise<QueryResult<AdminListingList>> {
   const admin = await requireAdmin();
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("admin_listings", {
       p_status: filter.status,
       p_query: filter.query,
+      p_limit: ADMIN_LISTINGS_LIMIT + 1,
     });
     if (error) throw new Error(`admin_listings: ${error.code} ${error.message}`);
-    return {
-      ok: true,
-      data: data.map((row) => ({
-        id: row.id,
-        reference: row.reference,
-        slug: row.slug,
-        title: row.title,
-        status: row.status,
-        priceCents: Number(row.price_cents),
-        // Generated types declare the columns of a function result as never null.
-        submittedAt: (row.submitted_at as string | null) ?? null,
-        publishedAt: (row.published_at as string | null) ?? null,
-        type: row.type,
-        city: row.city,
-        rooms: row.rooms,
-        surfaceM2: Number(row.surface_m2),
-        sellerName: fullName(row.seller_first_name, row.seller_last_name),
-        plan: row.plan,
-      })),
-    };
+    const rows = data.slice(0, ADMIN_LISTINGS_LIMIT).map((row) => ({
+      id: row.id,
+      reference: row.reference,
+      slug: row.slug,
+      title: row.title,
+      status: row.status,
+      priceCents: Number(row.price_cents),
+      // Generated types declare the columns of a function result as never null.
+      submittedAt: (row.submitted_at as string | null) ?? null,
+      publishedAt: (row.published_at as string | null) ?? null,
+      type: row.type,
+      city: row.city,
+      postalCode: row.postal_code,
+      rooms: row.rooms,
+      surfaceM2: Number(row.surface_m2),
+      sellerName: fullName(row.seller_first_name, row.seller_last_name),
+      plan: row.plan,
+    }));
+    return { ok: true, data: { rows, limited: data.length > ADMIN_LISTINGS_LIMIT } };
   } catch (error) {
-    logFailure("listings", error, { user_id: admin.id, ...filter });
+    // Not the search itself: it may be the name of a person.
+    logFailure("listings", error, {
+      user_id: admin.id,
+      status: filter.status,
+      search: Boolean(filter.query),
+    });
     return { ok: false, error: "unavailable" };
   }
 }

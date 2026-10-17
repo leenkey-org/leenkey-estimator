@@ -46,8 +46,24 @@ export function adminListingsHref({ status, query }: AdminListingsQuery): string
 }
 
 const listingId = z.string().uuid();
-/** Sent as is to the seller: 3 characters at least, as listing_reject and listing_suspend require. */
-const reason = z.string().trim().min(3).max(1000);
+
+/** Characters of a motive, at least: what listing_reject and listing_suspend require. */
+export const REASON_MIN = 3;
+
+/**
+ * Length of a motive as Postgres counts it (char_length: code points, not the
+ * UTF-16 units of String.length, two for an emoji).
+ */
+export function reasonLength(value: string): number {
+  return [...value.trim()].length;
+}
+
+/** Sent as is to the seller. */
+const reason = z
+  .string()
+  .trim()
+  .max(1000)
+  .refine((value) => reasonLength(value) >= REASON_MIN);
 
 export const moderationSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("publish"), listingId }),

@@ -6,15 +6,25 @@ import { routeEmail } from "./routing";
 // the Resend API. Generic: the caller brings the rendered template (emails/).
 // Outside production, every email goes to EMAIL_TEST_INBOX only, its subject
 // prefixed with « [PREPROD] » (or « [LOCAL] »). Without RESEND_API_KEY,
-// nothing leaves: in local the email is only written to the server log.
+// nothing leaves: in local, only its subject is written to the server log.
 
 const DEFAULT_FROM = "Leenkey <bonjour@leenkey.fr>";
 const RESEND_URL = "https://api.resend.com/emails";
 
-export type OutgoingEmail = { to: string; subject: string; html: string; text: string };
+export type OutgoingEmail = {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  /** Where an answer goes, when not to the sender. */
+  replyTo?: string;
+};
 
-/** sent: handed to Resend; logged: local only, written to the log. */
-export type EmailDelivery = "sent" | "logged" | "failed";
+/**
+ * sent: handed to Resend for the recipient (production); test: handed to
+ * Resend for EMAIL_TEST_INBOX (elsewhere); logged: local only, nothing sent.
+ */
+export type EmailDelivery = "sent" | "test" | "logged" | "failed";
 
 export async function sendEmail(email: OutgoingEmail): Promise<EmailDelivery> {
   const env = appEnv();
@@ -44,8 +54,10 @@ export async function sendEmail(email: OutgoingEmail): Promise<EmailDelivery> {
         subject: route.subject,
         html: email.html,
         text: email.text,
+        ...(email.replyTo ? { reply_to: email.replyTo } : {}),
       }),
-      signal: AbortSignal.timeout(10_000),
+      // Short: the caller waits (a decision of the back office).
+      signal: AbortSignal.timeout(5_000),
     });
     if (!response.ok) {
       console.error("[email] refused by Resend", {
@@ -54,7 +66,7 @@ export async function sendEmail(email: OutgoingEmail): Promise<EmailDelivery> {
       });
       return "failed";
     }
-    return "sent";
+    return env === "production" ? "sent" : "test";
   } catch (error) {
     console.error("[email] Resend unreachable", {
       subject: email.subject,

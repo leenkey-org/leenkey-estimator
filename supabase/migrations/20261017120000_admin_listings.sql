@@ -4,7 +4,10 @@
 -- write audit_log. Added here, for the admin only (each function checks
 -- is_admin() itself): the list with its search, the counters by status, and
 -- the contact of a seller, to tell them about a decision by email (the
--- address lives in auth.users, out of reach of PostgREST). No table.
+-- address lives in auth.users, out of reach of PostgREST). No table. The list
+-- and the counters run with the caller's rights (security invoker): the RLS
+-- of the tables they read is a second barrier. Only the contact needs the
+-- rights of the owner, for auth.users.
 
 -- List of /admin/annonces: pending first, the oldest first (24 h target),
 -- then the others, the most recent first. Search on the reference, the slug,
@@ -21,7 +24,7 @@ returns table (
   type public.property_type, city text, postal_code text, rooms int, surface_m2 numeric,
   owner_id uuid, seller_first_name text, seller_last_name text, plan public.plan_code
 )
-language plpgsql stable security definer set search_path = '' as $$
+language plpgsql stable security invoker set search_path = '' as $$
 declare
   q text := nullif(btrim(coalesce(p_query, '')), '');
   pattern text;
@@ -58,7 +61,7 @@ $$;
 -- Counters of the status filters.
 create function public.admin_listing_counts()
 returns table (status public.listing_status, total bigint)
-language plpgsql stable security definer set search_path = '' as $$
+language plpgsql stable security invoker set search_path = '' as $$
 begin
   if not public.is_admin() then
     raise exception 'admin only' using errcode = '42501';

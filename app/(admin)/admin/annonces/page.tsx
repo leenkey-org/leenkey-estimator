@@ -9,6 +9,7 @@ import {
   DataTableCell,
   DataTableHeader,
   DataTableRow,
+  DataTableRowHeader,
 } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FilterPills } from "@/components/shared/filter-pills";
@@ -21,8 +22,14 @@ import {
   ListingModeration,
   ModerationFeedback,
 } from "@/leenkey/admin/components/listing-moderation";
+import { ListingPlace } from "@/leenkey/admin/components/listing-place";
 import { ListingThumb } from "@/leenkey/admin/components/listing-thumb";
-import { adminListingCounts, adminListings, type AdminListingRow } from "@/leenkey/admin/queries";
+import {
+  ADMIN_LISTINGS_LIMIT,
+  adminListingCounts,
+  adminListings,
+  type AdminListingRow,
+} from "@/leenkey/admin/queries";
 import { capitalize, formatPrice, formatRelative } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -63,7 +70,7 @@ function detailHref(row: AdminListingRow): string {
 export default async function AdminListingsPage({ searchParams }: Props) {
   await requireAdmin();
   const filter = parseAdminListingsQuery(await searchParams);
-  const [rows, counts] = await Promise.all([adminListings(filter), adminListingCounts()]);
+  const [list, counts] = await Promise.all([adminListings(filter), adminListingCounts()]);
   const now = new Date();
 
   const pills = [
@@ -88,7 +95,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
   ];
 
   let content: ReactNode;
-  if (!rows.ok) {
+  if (!list.ok) {
     content = (
       <InlineAlert
         tone="danger"
@@ -104,7 +111,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
         {t.error}
       </InlineAlert>
     );
-  } else if (rows.data.length === 0) {
+  } else if (list.data.rows.length === 0) {
     content = (
       <EmptyState
         className="py-10"
@@ -120,16 +127,18 @@ export default async function AdminListingsPage({ searchParams }: Props) {
       />
     );
   } else {
+    const { rows, limited } = list.data;
     content = (
       <>
+        {limited ? <InlineAlert tone="info">{t.limited(ADMIN_LISTINGS_LIMIT)}</InlineAlert> : null}
         <ul aria-label={t.table.label} className="flex flex-col gap-3 lg:hidden">
-          {rows.data.map((row) => (
+          {rows.map((row) => (
             <li key={row.id} className="rounded-lk-md border border-lk-line bg-lk-surface p-3">
               <div className="flex gap-3">
                 <ListingThumb className="h-16 w-18" />
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-lk-card-price font-bold text-wide tabular text-lk-ink">
+                    <p className="text-lk-title font-bold text-wide tabular text-lk-ink">
                       {formatPrice(row.priceCents)}
                     </p>
                     <StatusBadge status={row.status} />
@@ -140,9 +149,12 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                   >
                     {row.title}
                   </Link>
-                  <p className="truncate text-lk-caption text-lk-ink-3">
-                    {row.city} · {row.reference}
-                  </p>
+                  <ListingPlace
+                    city={row.city}
+                    reference={row.reference}
+                    postalCode={row.postalCode}
+                    className="truncate text-lk-caption text-lk-ink-3"
+                  />
                   <p className="truncate text-lk-caption text-lk-ink-3">
                     {[
                       row.sellerName ?? t.sellerUnknown,
@@ -176,10 +188,10 @@ export default async function AdminListingsPage({ searchParams }: Props) {
 
         <DataTable label={t.table.label} className="hidden lg:block">
           <DataTableHeader columns={COLUMNS} />
-          {rows.data.map((row) => (
-            <tbody key={row.id} className="border-t border-lk-line first:border-t-0">
+          {rows.map((row) => (
+            <tbody key={row.id} className="border-t border-lk-line">
               <DataTableRow className="border-t-0">
-                <DataTableCell>
+                <DataTableRowHeader>
                   <div className="flex items-center gap-3">
                     <ListingThumb className="h-11 w-14" />
                     <div className="flex min-w-0 flex-col">
@@ -189,12 +201,15 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                       >
                         {row.title}
                       </Link>
-                      <span className="text-lk-caption text-lk-ink-3">
-                        {row.city} · {row.reference}
-                      </span>
+                      <ListingPlace
+                        city={row.city}
+                        reference={row.reference}
+                        postalCode={row.postalCode}
+                        className="text-lk-caption text-lk-ink-3"
+                      />
                     </div>
                   </div>
-                </DataTableCell>
+                </DataTableRowHeader>
                 <DataTableCell>{row.sellerName ?? t.sellerUnknown}</DataTableCell>
                 <DataTableCell className="whitespace-nowrap tabular">
                   {formatPrice(row.priceCents)}
@@ -242,7 +257,13 @@ export default async function AdminListingsPage({ searchParams }: Props) {
         </p>
       ) : null}
       <div className="flex flex-col gap-3">
-        <form role="search" action="/admin/annonces" className="flex items-end gap-2 md:max-w-md">
+        {/* A new form for each address: the field shows the search of the page. */}
+        <form
+          key={adminListingsHref(filter)}
+          role="search"
+          action="/admin/annonces"
+          className="flex items-end gap-2 md:max-w-md"
+        >
           {filter.status ? (
             <input
               type="hidden"
@@ -267,7 +288,8 @@ export default async function AdminListingsPage({ searchParams }: Props) {
         </form>
         <FilterPills label={t.filters.label} items={pills} />
       </div>
-      <ModerationFeedback>{content}</ModerationFeedback>
+      {/* The outcome of a decision does not follow to another list. */}
+      <ModerationFeedback key={adminListingsHref(filter)}>{content}</ModerationFeedback>
     </AdminPage>
   );
 }

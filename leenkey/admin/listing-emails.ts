@@ -1,6 +1,7 @@
 import "server-only";
 import { render } from "@react-email/components";
 import { sendEmail, type EmailDelivery } from "@/core/notifications/email";
+import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
 import {
   ListingDecisionEmail,
   listingDecisionSubject,
@@ -12,7 +13,8 @@ import { absoluteUrl, siteUrl } from "@/lib/site";
 
 // Email to the seller after a decision of the back office (SPEC-V2 sections
 // 17 and 18), with the admin's session: admin_listing_seller_contact checks
-// is_admin() and gives the address kept in auth.users.
+// is_admin() and gives the address kept in auth.users. An answer goes to the
+// contact address of Leenkey, not to the sender.
 
 export async function emailSellerAboutDecision({
   listingId,
@@ -27,7 +29,7 @@ export async function emailSellerAboutDecision({
     const supabase = await createClient();
     const [contact, listing] = await Promise.all([
       supabase.rpc("admin_listing_seller_contact", { p_listing_id: listingId }),
-      supabase.from("listings").select("title, slug").eq("id", listingId).maybeSingle(),
+      supabase.from("listings").select("title, slug, reference").eq("id", listingId).maybeSingle(),
     ]);
     if (contact.error) throw new Error(`contact: ${contact.error.code} ${contact.error.message}`);
     if (listing.error) throw new Error(`listing: ${listing.error.code} ${listing.error.message}`);
@@ -44,12 +46,13 @@ export async function emailSellerAboutDecision({
       contactEmail: fr.legal.contactEmail,
       siteUrl: siteUrl(),
     });
-    const [html, text] = await Promise.all([render(element), render(element, { plainText: true })]);
+    const [html, text] = await Promise.all([render(element), render(element, EMAIL_PLAIN_TEXT)]);
     return await sendEmail({
       to: seller.email,
-      subject: listingDecisionSubject(decision),
+      subject: listingDecisionSubject(decision, listing.data.reference),
       html,
       text,
+      replyTo: fr.legal.contactEmail,
     });
   } catch (error) {
     console.error("[admin] decision email failed", {
