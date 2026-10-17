@@ -194,7 +194,7 @@ Resend ◄────────── core/notifications (file notifications 
   /estimer                  estimateur (existant)
   /acheter                  recherche liste + carte
   /annonce/[slug]           page annonce publique
-  /vendre                   page vendeur (existante, CTA vers inscription)
+  /vendre                   page vendeur : en V2, la page d'accueil V1 (/), lien « Vendre » (DECISIONS 2026-10-17)
   /mentions-legales, /cgu, /confidentialite, /cgv
 (auth)
   /inscription, /connexion, /mot-de-passe-oublie, /reinitialiser, /confirmation (lien des emails), /conditions
@@ -202,8 +202,10 @@ Resend ◄────────── core/notifications (file notifications 
   /vendeur                  dashboard vendeur
   /vendeur/biens/nouveau    création de bien (étapes)
   /vendeur/biens/[id]       fiche du bien (onglets : infos, photos, annonce, documents, visites, offres)
+  /vendeur/dossier          dossier de vente : fiche du bien et documents (onglet « Dossier », L1-14 et L3-04)
   /vendeur/formule          choix et gestion de la formule
   /acquereur                accueil acquéreur (favoris, conversations, visites, offres)
+  /acquereur/favoris        biens sauvegardés (onglet « Favoris », L1-18)
   /acquereur/profil         projet et financement
   /acquereur/alertes
   /messages                 liste des conversations (dont « Mon conseiller Leenkey » pour les formules payantes)
