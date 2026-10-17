@@ -24,8 +24,10 @@ export const metadata: Metadata = { title: t.metaTitle };
 // listings no longer online are counted, and can be removed in one go.
 export default async function FavouritesPage() {
   const profile = await requireProfile();
+  // Before the read: a heart changed since then wins (favorite-store.ts).
+  const checkedAt = Date.now();
   const result = await listFavorites(profile.id);
-  const now = new Date();
+  const now = new Date(checkedAt);
 
   return (
     <SpacePage title={t.title} roles={profile.roles}>
@@ -70,6 +72,7 @@ export default async function FavouritesPage() {
                     <FavoriteButton
                       listingId={item.id}
                       favorite
+                      checkedAt={checkedAt}
                       signUpHref={buyerSignUpHref(item.slug)}
                       property={`${listingSummary(item)}, ${item.city}`}
                     />
@@ -80,13 +83,12 @@ export default async function FavouritesPage() {
           </ul>
         </>
       )}
-      {result.ok && result.data.offline > 0 ? (
-        <div className="mt-5 flex flex-col items-start gap-1">
-          {result.data.items.length > 0 ? (
-            <p className="text-lk-secondary text-lk-ink-3">{t.offline(result.data.offline)}</p>
-          ) : null}
-          <ClearOfflineFavorites />
-        </div>
+      {result.ok ? (
+        <ClearOfflineFavorites
+          count={result.data.offline}
+          showCount={result.data.items.length > 0}
+          className={result.data.items.length === 0 ? "items-center text-center" : undefined}
+        />
       ) : null}
     </SpacePage>
   );

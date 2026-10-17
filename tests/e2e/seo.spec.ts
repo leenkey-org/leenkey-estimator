@@ -26,10 +26,18 @@ test("le sitemap liste les pages du site et les annonces publiées", async ({ re
   }
   const listings = paths.filter((path) => path.startsWith("/annonce/"));
   if (seeded) {
-    // Twelve published in the seed (the back office tests may publish more).
-    expect(listings.length).toBeGreaterThanOrEqual(12);
-    // Pending (LK-0006) and refused (LK-0016) listings are never listed.
-    expect(listings.some((path) => /-lk00(06|16)$/.test(path))).toBe(false);
+    // The published listings of the seed, whatever the other tests change.
+    expect(listings.length).toBeGreaterThan(0);
+    for (const path of listings) expect(path).toMatch(/^\/annonce\/[a-z0-9-]+-lk\d{4}$/);
+    // Each one opens. The sitemap of a build is kept for an hour (ISR): a
+    // listing withdrawn since, by a back office test, may answer 404, never
+    // an error. Only published listings are read (public_listings, tested in
+    // supabase/tests/).
+    const statuses = await Promise.all(
+      listings.map(async (path) => (await request.get(path, { maxRedirects: 0 })).status()),
+    );
+    expect(statuses.filter((status) => status !== 200 && status !== 404)).toEqual([]);
+    expect(statuses.filter((status) => status === 200).length).toBeGreaterThan(0);
   } else {
     expect(listings).toEqual([]);
   }

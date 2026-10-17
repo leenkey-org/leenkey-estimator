@@ -15,6 +15,8 @@ export type FavoriteButtonProps = {
   listingId: string;
   /** Saved by the signed-in account; null without a session. */
   favorite: boolean | null;
+  /** Server time of the render that read `favorite` (Date.now() in the page). */
+  checkedAt: number;
   /** Without a session: the buyer sign-up, back to the listing (an account is needed). */
   signUpHref: string;
   /** The property, in the name of the button when several hearts share a page (favourites). */
@@ -34,12 +36,13 @@ export type FavoriteButtonProps = {
 export function FavoriteButton({
   listingId,
   favorite,
+  checkedAt,
   signUpHref,
   property,
   variant = "white-float",
   className,
 }: FavoriteButtonProps) {
-  const saved = useFavorite(listingId, favorite === true);
+  const saved = useFavorite(listingId, favorite === true, checkedAt);
   const [shown, setShown] = useOptimistic(saved);
   const [, startTransition] = useTransition();
   const [message, setMessage] = useState("");
@@ -78,7 +81,7 @@ export function FavoriteButton({
               // Network, server error or an action unknown since a deployment.
               console.error("[favorites] action failed", error);
             }
-            if (result?.ok) rememberFavorite(listingId, next);
+            if (result?.ok) rememberFavorite(listingId, next, result.data.at);
             setMessage(
               result?.ok
                 ? next

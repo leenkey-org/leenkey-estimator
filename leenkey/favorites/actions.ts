@@ -3,10 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { getProfile } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { chunk } from "@/lib/utils";
 import { favoriteSchema } from "@/lib/validations/favorites";
+import { IDS_PER_REQUEST } from "./queries";
 
 export type FavoriteResult =
-  | { ok: true; data: { favorite: boolean } }
+  /** at: server time of the change (favorite-store.ts). */
+  | { ok: true; data: { favorite: boolean; at: number } }
   | { ok: false; error: "invalid" | "auth" | "unavailable" };
 
 /**
@@ -40,12 +43,13 @@ export async function setFavorite(input: unknown): Promise<FavoriteResult> {
     });
     return { ok: false, error: "unavailable" };
   }
-  return { ok: true, data: { favorite } };
+  return { ok: true, data: { favorite, at: Date.now() } };
 }
 
 /**
  * Removes the favourites that are no longer online (sold, paused, suspended):
- * the favourites page cannot show them, only count them.
+ * the favourites page cannot show them, only count them. No input, hence no
+ * Zod schema: the account is the session's.
  */
 export async function clearOfflineFavorites(): Promise<
   { ok: true; data: { removed: number } } | { ok: false; error: "auth" | "unavailable" }
@@ -58,16 +62,19 @@ export async function clearOfflineFavorites(): Promise<
     if (saved.error) throw new Error(`favorites: ${saved.error.code}`);
     const ids = saved.data.map((row) => row.listing_id);
     if (ids.length === 0) return { ok: true, data: { removed: 0 } };
-    const online = await supabase.from("public_listings").select("id").in("id", ids);
-    if (online.error) throw new Error(`public_listings: ${online.error.code}`);
-    const onlineIds = new Set(online.data.map((row) => row.id));
+    const onlineIds = new Set<string | null>();
+    for (const part of chunk(ids, IDS_PER_REQUEST)) {
+      const online = await supabase.from("public_listings").select("id").in("id", part);
+      if (online.error) throw new Error(`public_listings: ${online.error.code}`);
+      for (const row of online.data) onlineIds.add(row.id);
+    }
     const offline = ids.filter((id) => !onlineIds.has(id));
-    if (offline.length > 0) {
+    for (const part of chunk(offline, IDS_PER_REQUEST)) {
       const removed = await supabase
         .from("favorites")
         .delete()
         .eq("buyer_id", profile.id)
-        .in("listing_id", offline);
+        .in("listing_id", part);
       if (removed.error) throw new Error(`favorites delete: ${removed.error.code}`);
     }
     revalidatePath("/acquereur/favoris");

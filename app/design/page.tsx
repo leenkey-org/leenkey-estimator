@@ -664,6 +664,7 @@ export default function DesignPage() {
                   <FavoriteButton
                     listingId={content.cardCaptions.favouriteListingId}
                     favorite={false}
+                    checkedAt={0}
                     signUpHref="/design#cartes"
                   />
                 }
@@ -676,21 +677,25 @@ export default function DesignPage() {
               <FavoriteButton
                 listingId={content.cardCaptions.favouriteListingId}
                 favorite={null}
+                checkedAt={0}
                 signUpHref="/design#cartes"
               />
               <FavoriteButton
                 listingId={content.cardCaptions.favouriteListingId}
                 favorite={false}
+                checkedAt={0}
                 signUpHref="/design#cartes"
               />
               <FavoriteButton
                 listingId={`${content.cardCaptions.favouriteListingId.slice(0, -1)}1`}
                 favorite
+                checkedAt={0}
                 signUpHref="/design#cartes"
               />
               <FavoriteButton
                 listingId={`${content.cardCaptions.favouriteListingId.slice(0, -1)}1`}
                 favorite
+                checkedAt={0}
                 signUpHref="/design#cartes"
                 variant="stone"
               />

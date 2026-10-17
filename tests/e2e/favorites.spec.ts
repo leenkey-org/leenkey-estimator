@@ -5,7 +5,8 @@ import { expect, test, type Page } from "@playwright/test";
 // saves and removes listings of seller_b: no other test reads its favourites
 // (navigation.spec.ts checks the favourites page of buyer_c). Fixed seed
 // listings, one per project, so that the two projects can run at the same
-// time and the order of the search results does not matter.
+// time and the order of the search results does not matter. The last test
+// removes the offline favourite of buyer_c: npm run db:seed puts it back.
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
@@ -105,6 +106,9 @@ test("un échec d'enregistrement laisse la page en place et remet le cœur", asy
   test.skip(!isMobile, "un seul passage suffit");
   await signIn(page, "/acquereur/favoris");
   await page.goto(LISTINGS.failure);
+  const title = page.getByRole("heading", { level: 1 });
+  const titleText = (await title.textContent()) ?? "";
+  expect(titleText).not.toBe("");
   const heart = page.getByRole("button", { name: "Ajouter aux favoris" });
   const before = (await heart.getAttribute("aria-pressed")) ?? "false";
   // The server action posts to the page: cut it, as a lost network would.
@@ -116,7 +120,8 @@ test("un échec d'enregistrement laisse la page en place et remet le cœur", asy
     page.getByText("Le changement n'a pas pu être enregistré. Réessayez."),
   ).toBeAttached();
   await expect(heart).toHaveAttribute("aria-pressed", before);
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // Still the listing, not an error screen.
+  await expect(title).toHaveText(titleText);
 });
 
 test("les favoris qui ne sont plus en ligne sont comptés, puis retirés", async ({
@@ -129,13 +134,32 @@ test("les favoris qui ne sont plus en ligne sont comptés, puis retirés", async
   const offline = page.getByText("1\u00A0bien de vos favoris n'est plus en ligne", {
     exact: false,
   });
+  await expect(offline, "favori hors ligne absent : rejouer npm run db:seed").toBeVisible();
+  const cards = page.getByRole("list", { name: "Biens sauvegardés" }).getByRole("listitem");
+  await expect(cards).toHaveCount(3);
+  const clear = page.getByRole("button", { name: "Les retirer de mes favoris" });
+  // A lost network first: the message says so, the focus is back on the button.
+  await page.route("**/acquereur/favoris", (route) =>
+    route.request().method() === "POST" ? route.abort() : route.continue(),
+  );
+  await clear.click();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Ces favoris n'ont pas pu être retirés. Réessayez." }),
+  ).toBeVisible();
+  await expect(clear).toBeFocused();
   await expect(offline).toBeVisible();
-  await expect(
-    page.getByRole("list", { name: "Biens sauvegardés" }).getByRole("listitem"),
-  ).toHaveCount(3);
-  await page.getByRole("button", { name: "Les retirer de mes favoris" }).click();
+  await page.unroute("**/acquereur/favoris");
+  await clear.click();
+  const message = page.getByRole("status").filter({
+    hasText: "Les biens qui ne sont plus en ligne sont retirés de vos favoris.",
+  });
+  // The message stays once the page has no offline favourite left, with the focus.
+  await expect(message).toBeVisible();
   await expect(offline).toHaveCount(0);
-  await expect(
-    page.getByRole("list", { name: "Biens sauvegardés" }).getByRole("listitem"),
-  ).toHaveCount(3);
+  await expect(page.getByRole("button", { name: "Les retirer de mes favoris" })).toHaveCount(0);
+  await expect(message).toBeVisible();
+  await expect(message).toBeFocused();
+  await expect(cards).toHaveCount(3);
 });

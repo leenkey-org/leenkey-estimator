@@ -1,6 +1,7 @@
 import "server-only";
 import { getProfile } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { chunk } from "@/lib/utils";
 import { DPE_CLASSES } from "@/lib/validations/search";
 import type { SearchListing } from "@/leenkey/search/queries";
 
@@ -15,6 +16,9 @@ export type FavoriteListings = {
   /** Saved listings that are no longer online (sold, paused, suspended…). */
   offline: number;
 };
+
+/** Ids per `.in()` filter (lib/utils.ts, chunk). */
+export const IDS_PER_REQUEST = 100;
 
 // Columns of the cards (leenkey/search/cards.ts).
 const CARD_COLUMNS =
@@ -59,12 +63,17 @@ export async function listFavorites(profileId: string): Promise<QueryResult<Favo
     const ids = saved.data.map((row) => row.listing_id);
     if (ids.length === 0) return { ok: true, data: { items: [], offline: 0 } };
 
-    const listings = await supabase.from("public_listings").select(CARD_COLUMNS).in("id", ids);
-    if (listings.error) {
-      throw new Error(`public_listings: ${listings.error.code} ${listings.error.message}`);
-    }
+    const pages = await Promise.all(
+      chunk(ids, IDS_PER_REQUEST).map((part) =>
+        supabase.from("public_listings").select(CARD_COLUMNS).in("id", part),
+      ),
+    );
+    const rows = pages.flatMap((page) => {
+      if (page.error) throw new Error(`public_listings: ${page.error.code} ${page.error.message}`);
+      return page.data;
+    });
     const byId = new Map<string, SearchListing>();
-    for (const row of listings.data) {
+    for (const row of rows) {
       if (
         !row.id ||
         !row.slug ||

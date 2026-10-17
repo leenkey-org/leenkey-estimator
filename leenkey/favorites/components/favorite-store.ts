@@ -1,11 +1,14 @@
 import { useSyncExternalStore } from "react";
 
-// Favourites changed in this tab (L1-18), by listing: the two hearts of a
-// listing page (gallery under 1024 px, price column above) and a page shown
-// again from the router cache (back button) then agree with the last change,
-// without a new server render.
+// Favourites changed in this tab (L1-18), by listing, with the server time of
+// the change. A render of the server made before it (a page shown again from
+// the router cache, the other heart of a listing page) shows the change; a
+// render made after it (a new visit, another account in this tab, a change
+// from another tab or device) wins.
 
-const saved = new Map<string, boolean>();
+type Change = { favorite: boolean; at: number };
+
+const changes = new Map<string, Change>();
 const listeners = new Set<() => void>();
 
 function subscribe(listener: () => void) {
@@ -13,16 +16,20 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-export function rememberFavorite(listingId: string, favorite: boolean) {
-  saved.set(listingId, favorite);
+/** `at`: server time of the change (setFavorite). */
+export function rememberFavorite(listingId: string, favorite: boolean, at: number) {
+  changes.set(listingId, { favorite, at });
   for (const listener of listeners) listener();
 }
 
-/** The last change made in this tab, otherwise what the server rendered. */
-export function useFavorite(listingId: string, rendered: boolean): boolean {
+/** The state to show: the server's, unless this tab changed it since `checkedAt`. */
+export function useFavorite(listingId: string, rendered: boolean, checkedAt: number): boolean {
   return useSyncExternalStore(
     subscribe,
-    () => saved.get(listingId) ?? rendered,
+    () => {
+      const change = changes.get(listingId);
+      return change && change.at > checkedAt ? change.favorite : rendered;
+    },
     () => rendered,
   );
 }

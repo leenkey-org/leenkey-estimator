@@ -1,4 +1,5 @@
 import "server-only";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
 import { cache } from "react";
 import type { DpeClass } from "@/components/shared/dpe-badge";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -151,34 +152,46 @@ const SITEMAP_PAGE = 1000;
 const SITEMAP_MAX = 10_000;
 
 /**
- * Published listings for /sitemap.xml (L1-20), most recent first, by pages of
- * 1 000. An empty list when the database cannot be read in time (build
- * without Supabase, outage): the sitemap keeps its other pages.
+ * Published listings for /sitemap.xml (L1-20), most recent first, by pages
+ * until the count read with the first one (a lower max_rows only adds pages),
+ * each slug once (a listing published between two pages shifts them).
+ * Without Supabase, or when the database cannot be read in time during the
+ * build: none, the sitemap goes out with its other pages. At runtime, the
+ * error goes up: Next keeps serving the last sitemap built (ISR) instead of
+ * one without listings for an hour.
  */
 export async function sitemapListings(): Promise<SitemapListing[]> {
   if (!isSupabaseConfigured()) return [];
   try {
     const client = createPublicClient();
     const listings: SitemapListing[] = [];
-    for (let from = 0; from < SITEMAP_MAX; from += SITEMAP_PAGE) {
-      const { data, error } = await client
+    const slugs = new Set<string>();
+    let total = SITEMAP_MAX;
+    for (let from = 0; from < Math.min(total, SITEMAP_MAX); ) {
+      const { data, error, count } = await client
         .from("public_listings")
-        .select("slug, published_at")
+        .select("slug, published_at", { count: from === 0 ? "exact" : undefined })
         .order("published_at", { ascending: false })
         .order("slug")
         .range(from, from + SITEMAP_PAGE - 1)
         .abortSignal(AbortSignal.timeout(5_000));
       if (error) throw new Error(`public_listings: ${error.code} ${error.message}`);
+      if (from === 0 && count !== null) total = count;
+      if (data.length === 0) break;
       for (const row of data) {
-        if (row.slug) listings.push({ slug: row.slug, publishedAt: row.published_at });
+        if (row.slug && !slugs.has(row.slug)) {
+          slugs.add(row.slug);
+          listings.push({ slug: row.slug, publishedAt: row.published_at });
+        }
       }
-      if (data.length < SITEMAP_PAGE) break;
+      from += data.length;
     }
     return listings;
   } catch (error) {
     console.error("[sitemap] listings read failed", {
       error: error instanceof Error ? error.message : String(error),
     });
-    return [];
+    if (process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD) return [];
+    throw error;
   }
 }

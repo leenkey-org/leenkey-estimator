@@ -221,7 +221,7 @@ export const fr = {
     added: "Ajouté à vos favoris.",
     removed: "Retiré de vos favoris.",
     error: "Le changement n'a pas pu être enregistré. Réessayez.",
-    signedOut: "Votre session a pris fin : reconnectez-vous pour sauvegarder ce bien.",
+    signedOut: "Votre session a pris fin : reconnectez-vous, puis réessayez.",
     page: {
       metaTitle: "Favoris · Leenkey",
       title: "Favoris",

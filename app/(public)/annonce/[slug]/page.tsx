@@ -84,11 +84,14 @@ export default async function ListingPage({ params }: Props) {
 
   const { place, detail } = listingPlace(listing);
   const signUpHref = buyerSignUpHref(listing.slug);
+  // Before the read: a heart changed since then wins (favorite-store.ts).
+  const checkedAt = Date.now();
   const favorite = await favoriteState(listing.id);
   const heart = (variant: "white-float" | "stone") => (
     <FavoriteButton
       listingId={listing.id}
       favorite={favorite}
+      checkedAt={checkedAt}
       signUpHref={signUpHref}
       variant={variant}
     />

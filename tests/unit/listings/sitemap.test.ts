@@ -71,9 +71,33 @@ describe("robots", () => {
         "/conditions",
       ]),
     );
-    // The public pages stay open.
-    for (const open of ["/acheter", "/annonce", "/estimer", "/connexion", "/inscription"]) {
-      expect(rules.disallow, open).not.toContain(open);
+    // A rule closes every path that starts with it: no public page does.
+    const disallow = Array.isArray(rules.disallow) ? rules.disallow : [rules.disallow ?? ""];
+    for (const open of [
+      "/",
+      "/acheter",
+      "/annonce/appartement-3-pieces-savigny-sur-orge-lk0005",
+      "/estimer",
+      "/concept",
+      "/tarifs",
+      "/faq",
+      "/investir",
+      "/qui-sommes-nous",
+      "/intelligence-artificielle",
+      "/signalement",
+      "/mentions-legales",
+      "/cgu",
+      "/cgv",
+      "/confidentialite",
+      "/cookies",
+      "/connexion",
+      "/inscription",
+      "/mot-de-passe-oublie",
+    ]) {
+      expect(
+        disallow.filter((rule) => open.startsWith(rule)),
+        open,
+      ).toEqual([]);
     }
   });
 });
