@@ -159,6 +159,7 @@ STRIPE_PRICE_SERENITE=
 STRIPE_PRICE_UPGRADE=           # Accompagné → Sérénité, 510 €
 ADMIN_NOTIFICATION_EMAIL=       # admin@leenkey.fr en prod
 EMAIL_TEST_INBOX=               # destinataire unique des emails hors prod
+EMAIL_FROM=                     # facultatif : expéditeur des emails (Leenkey <bonjour@leenkey.fr> par défaut)
 ANTHROPIC_API_KEY=
 RESEND_API_KEY=
 CRON_SECRET=                    # vérifié sur chaque route /api/cron/*
@@ -170,6 +171,7 @@ AI_MOCK=                        # 1 en tests E2E : réponses IA déterministes
 GEOCODER=                       # facultatif : fixtures = adresses de démonstration (tests E2E, environnement sans accès à la Base Adresse Nationale)
 GEOCODER_URL=                   # facultatif, surcharge du service de géocodage (core/geo/address-search.ts)
 E2E_SEED=                       # 1 : tests E2E sur une base chargée par npm run db:seed (local, préprod)
+E2E_MUTATE=                     # 1 : aussi les tests E2E qui changent le seed pour de bon (pile locale seulement, jamais la préprod)
 SEED_PASSWORD=                  # mot de passe commun des comptes de seed (local et staging uniquement)
 ```
 

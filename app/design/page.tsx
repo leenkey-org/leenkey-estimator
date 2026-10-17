@@ -17,10 +17,19 @@ import { Checkbox } from "@/components/shared/checkbox";
 import { ChipButton, ChipToggle } from "@/components/shared/chip-toggle";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { ContactCard } from "@/components/shared/contact-card";
+import {
+  DataTable,
+  DataTableActions,
+  DataTableCell,
+  DataTableHeader,
+  DataTableRow,
+  DataTableRowHeader,
+} from "@/components/shared/data-table";
 import { DPE_CLASSES, DpeBadge } from "@/components/shared/dpe-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FacadeDrawing } from "@/components/shared/facade-drawing";
 import { FacadeRoot } from "@/components/shared/facade-root";
+import { FilterPills } from "@/components/shared/filter-pills";
 import { FormActionBar } from "@/components/shared/form-action-bar";
 import { Gallery } from "@/components/shared/gallery";
 import { IconButton } from "@/components/shared/icon-button";
@@ -39,6 +48,7 @@ import { SiteFooter } from "@/components/shared/site-footer";
 import { Select } from "@/components/shared/select";
 import { Skeleton } from "@/components/shared/skeleton";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { Textarea } from "@/components/shared/textarea";
 import { TopNav } from "@/components/shared/top-nav";
 import { FavoriteButton } from "@/leenkey/favorites/components/favorite-button";
 import { UnitInput } from "@/components/shared/unit-input";
@@ -940,6 +950,63 @@ export default function DesignPage() {
               <InlineAlert tone="success">{content.alerts.success}</InlineAlert>
             </div>
             <Caption>{content.alerts.caption}</Caption>
+          </Section>
+
+          <Section id="back-office" title={content.sections.backOffice} level="h3">
+            <FilterPills
+              label={content.backOffice.pillsLabel}
+              items={content.backOffice.pills.map((pill) => ({
+                ...pill,
+                href: "/design#back-office",
+              }))}
+            />
+            <Caption>{content.backOffice.pillsCaption}</Caption>
+            <DataTable label={content.backOffice.tableLabel}>
+              <DataTableHeader columns={content.backOffice.columns} />
+              {content.backOffice.rows.map((row) => (
+                <tbody key={row.title} className="border-t border-lk-line">
+                  <DataTableRow className="border-t-0">
+                    <DataTableRowHeader>
+                      <div className="flex flex-col">
+                        <span className="font-semibold">{row.title}</span>
+                        <span className="text-lk-caption text-lk-ink-3">{row.place}</span>
+                      </div>
+                    </DataTableRowHeader>
+                    <DataTableCell>{row.seller}</DataTableCell>
+                    <DataTableCell className="whitespace-nowrap tabular">
+                      {formatPrice(row.priceCents)}
+                    </DataTableCell>
+                    <DataTableCell>
+                      <StatusBadge plan={row.plan} />
+                    </DataTableCell>
+                    <DataTableCell className="whitespace-nowrap text-lk-ink-2">
+                      {row.received}
+                    </DataTableCell>
+                    <DataTableCell>
+                      <StatusBadge status={row.status} />
+                    </DataTableCell>
+                  </DataTableRow>
+                  <DataTableActions columns={content.backOffice.columns.length}>
+                    <Button variant="ghost" size="sm">
+                      {content.backOffice.open}
+                    </Button>
+                    <Button variant="secondary" size="sm">
+                      {content.backOffice.reject}
+                    </Button>
+                    <Button variant="success" size="sm">
+                      {content.backOffice.publish}
+                    </Button>
+                  </DataTableActions>
+                </tbody>
+              ))}
+            </DataTable>
+            <Caption>{content.backOffice.tableCaption}</Caption>
+            <Textarea
+              label={content.backOffice.textarea.label}
+              help={content.backOffice.textarea.help}
+              defaultValue={content.backOffice.textarea.value}
+              containerClassName="max-w-lk-form"
+            />
           </Section>
 
           <Section id="chargement" title={content.sections.skeleton} level="h3">

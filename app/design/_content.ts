@@ -52,6 +52,7 @@ export const sections = {
   navigation: "Navigation",
   notifications: "Notifications et menu du compte",
   alerts: "Alertes",
+  backOffice: "Back office : filtres, tableau, motif",
   skeleton: "Chargement",
   consent: "Consentement aux cookies",
   footer: "Pied de page",
@@ -655,3 +656,48 @@ export const footer = {
   caption:
     "SiteFooter · liens légaux, « Gérer mes cookies », identité et adresse légale (pages V2 ; même liste dans le pied V1)",
 };
+
+// L1-19: FilterPills, DataTable and Textarea (back office).
+export const backOffice = {
+  pillsLabel: "Statut des annonces (exemple)",
+  pills: [
+    { label: "Toutes", count: 16, active: false },
+    { label: "En attente de validation", count: 3, active: true },
+    { label: "En ligne", count: 12, active: false },
+    { label: "Suspendue par Leenkey", count: 0, active: false },
+  ],
+  pillsCaption: "FilterPill : liens de 34 px, actif sur navy, compteur dans le libellé.",
+  tableLabel: "Annonces (exemple)",
+  columns: ["Bien", "Vendeur", "Prix", "Formule", "Reçue", "Statut"],
+  rows: [
+    {
+      title: "Appartement 2 pièces au calme",
+      place: "Villemoisson-sur-Orge · LK-0015",
+      seller: "Bruno Lefèvre",
+      priceCents: 18_900_000,
+      plan: "autonomie",
+      received: "Il y a 2 h",
+      status: "pending",
+    },
+    {
+      title: "Maison 5 pièces avec jardin",
+      place: "Villiers-sur-Orge · LK-0006",
+      seller: "Alice Martin",
+      priceCents: 36_500_000,
+      plan: "serenite",
+      received: "Hier",
+      status: "pending",
+    },
+  ],
+  open: "Aperçu",
+  reject: "Refuser avec motif",
+  publish: "Valider et publier",
+  tableCaption:
+    "DataTable : en-tête pierre, lignes de 56 px, actions de la ligne dessous, alignées à droite.",
+  textarea: {
+    label: "Motif envoyé au vendeur",
+    help: "Au moins 3 caractères, envoyé tel quel.",
+    value:
+      "La description est incomplète : précisez l'état du bien, ses pièces et ses points forts.",
+  },
+} as const;
