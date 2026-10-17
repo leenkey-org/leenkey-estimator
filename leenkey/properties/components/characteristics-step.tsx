@@ -24,7 +24,7 @@ import {
   type CharacteristicsField,
   type SaveCharacteristicsResult,
 } from "../actions";
-import { CREATION_FORM_ID, intentOf } from "./creation-header";
+import { CREATION_FORM_ID, intentOf, submitWithEnter } from "./creation-header";
 
 const t = fr.properties.characteristics;
 const common = fr.properties.creation;
@@ -89,6 +89,7 @@ export function CharacteristicsStep({
 }) {
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
+  const next = useRef<HTMLButtonElement>(null);
   const [type, setType] = useState<PropertyType | null>(initial.type);
   const [numbers, setNumbers] = useState<Record<NumberField, string>>(
     () =>
@@ -229,6 +230,7 @@ export function CharacteristicsStep({
       ref={form}
       id={CREATION_FORM_ID}
       onSubmit={submit}
+      onKeyDown={(event) => submitWithEnter(event, event.currentTarget, next.current)}
       noValidate
       className="flex flex-col gap-5"
     >
@@ -343,7 +345,7 @@ export function CharacteristicsStep({
         <Button type="submit" name="intent" value="previous" variant="secondary" disabled={saving}>
           {common.previous}
         </Button>
-        <Button type="submit" name="intent" value="next" loading={saving}>
+        <Button ref={next} type="submit" name="intent" value="next" loading={saving}>
           {common.next}
         </Button>
       </FormActionBar>

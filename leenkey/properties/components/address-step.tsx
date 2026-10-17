@@ -18,7 +18,7 @@ import { Input } from "@/components/shared/input";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import { saveAddress, suggestAddresses, type AddressSuggestion } from "../actions";
-import { CREATION_FORM_ID, intentOf } from "./creation-header";
+import { CREATION_FORM_ID, intentOf, submitWithEnter } from "./creation-header";
 
 const t = fr.properties.address;
 const common = fr.properties.creation;
@@ -47,6 +47,7 @@ export function AddressStep({
   const listId = useId();
   const helpId = useId();
   const field = useRef<HTMLInputElement>(null);
+  const next = useRef<HTMLButtonElement>(null);
   const [text, setText] = useState("");
   const [chosen, setChosen] = useState<string | null>(initial ?? null);
   const [search, setSearch] = useState<Search>({ state: "idle" });
@@ -59,8 +60,9 @@ export function AddressStep({
   // Suggestions 250 ms after the last key; an answer older than the last
   // request is dropped.
   useEffect(() => {
-    if (chosen !== null || text.trim().length < 3) return;
+    // A new request, or none: an answer still on its way is dropped either way.
     const id = ++request.current;
+    if (chosen !== null || text.trim().length < 3) return;
     const timer = window.setTimeout(async () => {
       setSearch({ state: "searching" });
       let result: Awaited<ReturnType<typeof suggestAddresses>> | null = null;
@@ -164,7 +166,13 @@ export function AddressStep({
           : "";
 
   return (
-    <form id={CREATION_FORM_ID} onSubmit={submit} noValidate className="flex flex-col">
+    <form
+      id={CREATION_FORM_ID}
+      onSubmit={submit}
+      onKeyDown={(event) => submitWithEnter(event, event.currentTarget, next.current)}
+      noValidate
+      className="flex flex-col"
+    >
       <h2 className="text-lk-h2 font-bold text-wide text-lk-ink">{t.title}</h2>
       <p className="mt-2 text-lk-compact text-lk-ink-3">{t.lead}</p>
 
@@ -259,7 +267,7 @@ export function AddressStep({
       </div>
 
       <FormActionBar>
-        <Button type="submit" name="intent" value="next" loading={saving}>
+        <Button ref={next} type="submit" name="intent" value="next" loading={saving}>
           {common.next}
         </Button>
       </FormActionBar>

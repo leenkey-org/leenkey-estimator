@@ -106,8 +106,10 @@ test("créer un bien en mobile : adresse, caractéristiques, reprise depuis Ma v
   await page.getByLabel("Étage", { exact: true }).fill("3");
   await page.getByRole("radio", { name: "DPE classe C" }).click();
   await page.getByRole("button", { name: "Balcon" }).click();
-  await page.getByLabel("Charges").fill("180");
-  await next.click();
+  const charges = page.getByLabel("Charges", { exact: true });
+  await charges.fill("180");
+  // Enter in a field means « Continuer », never the back button of the header.
+  await charges.press("Enter");
   await expect(page).toHaveURL(`/vendeur/biens/${id}/prix`);
   await expect(page.getByText("La suite de votre annonce arrive")).toBeVisible();
 
@@ -124,7 +126,7 @@ test("créer un bien en mobile : adresse, caractéristiques, reprise depuis Ma v
     "aria-pressed",
     "true",
   );
-  await expect(page.getByLabel("Charges")).toHaveValue("180");
+  await expect(page.getByLabel("Charges", { exact: true })).toHaveValue("180");
 
   // A house has no floor: the field goes, and is saved empty.
   await page.getByLabel("Type de bien").selectOption("maison");

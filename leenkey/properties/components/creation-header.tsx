@@ -79,6 +79,23 @@ export function CreationHeader({
 /** Intent of a submit of the step: the button that sent it. */
 export type StepIntent = "save" | "previous" | "next";
 
+/**
+ * Enter in a field of the step means « Continuer ». Without this, the browser
+ * would use the first submit button of the form in the page, which is in the
+ * header (« Étape précédente » or « Enregistrer »). A field that handles
+ * Enter itself (a list of suggestions) prevents the default first.
+ */
+export function submitWithEnter(
+  event: { key: string; target: EventTarget; defaultPrevented: boolean; preventDefault(): void },
+  form: HTMLFormElement,
+  next: HTMLButtonElement | null,
+) {
+  if (event.key !== "Enter" || event.defaultPrevented) return;
+  if (!(event.target instanceof HTMLInputElement)) return;
+  event.preventDefault();
+  form.requestSubmit(next ?? undefined);
+}
+
 export function intentOf(event: { nativeEvent: Event }): StepIntent {
   const submitter = (event.nativeEvent as SubmitEvent).submitter;
   const value = submitter instanceof HTMLButtonElement ? submitter.value : "";
