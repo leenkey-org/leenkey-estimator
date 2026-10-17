@@ -33,8 +33,8 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [ ] **L1-12** Photos : upload, conversion WebP 3 tailles, réordonnancement, couverture, route `/img` · PR : · Testé en préprod : ☐
 - [ ] **L1-13** Étape 4 prix et description, rappel de l’analyse de valeur, reprise depuis l’estimateur (`?estimation=`),… · PR : · Testé en préprod : ☐
 - [ ] **L1-14** Fiche du bien (onglets Infos, Photos, Annonce), actions de statut · PR : · Testé en préprod : ☐
-- [ ] **L1-36** Pages légales (CGU et mentions reprises de la V1, autres « En cours de rédaction ») · PR : · Testé en préprod : ☐
-- [ ] **L1-37** Bandeau de consentement cookies, Google Consent Mode (Q23) · PR : · Testé en préprod : ☐
+- [x] **L1-36** Pages légales (CGU et mentions reprises de la V1, autres « En cours de rédaction ») · PR : #? · Testé en préprod : ☐
+- [x] **L1-37** Bandeau de consentement cookies, Google Consent Mode (Q23) · PR : #? · Testé en préprod : ☐
 
 ## S3 · semaine du 26 oct. · Recherche, annonce, back office minimum
 

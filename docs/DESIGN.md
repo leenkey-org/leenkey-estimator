@@ -640,6 +640,10 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 **EndOfFlow** (« C'est envoyé », « C'est activé ») : `BrandPanel blue` plein écran (mobile) ou 60 % de la hauteur (desktop), `facade.svg`, titre display, texte 15 px `--lk-on-blue-2`, bouton blanc à texte `--lk-blue` 600 (variante `inverse` du bouton, réservée aux aplats bleus).
 
+**ConsentBanner** (bandeau cookies, L1-37) : non modal, la page reste utilisable. Mobile : feuille basse pleine largeur (rayon 6 en haut, bordure haute `--lk-line`, `shadow-sheet`, padding 20, zone de sécurité iOS) ; à partir de `md` : carte de 420 px en bas à gauche (marge 24, rayon 6, bordure). Couche 50 (feuilles). Titre 15 px 600, texte 13 px `--lk-ink-2` avec lien « Politique cookies ». « Refuser » et « Accepter » côte à côte, **même forme** (`outline-ink`, deux colonnes) : refuser est aussi simple qu'accepter (CNIL). « Personnaliser » en `ghost sm` dessous. Vue « Vos préférences » (Personnaliser, « Gérer mes cookies ») : « Nécessaires » toujours actifs, case « Mesure d'audience » décochée par défaut, « Refuser » (`outline-ink`) et « Enregistrer mes choix » (`primary`) ; à l'ouverture depuis le pied de page, le focus va au titre.
+
+**SiteFooter** (pied de page des pages V2, L1-36) : fond `--lk-bg`, bordure haute `--lk-line`, conteneur 1200 px, padding 32 × 20 (40 en `md`). Liens légaux 13 px `--lk-ink-2` en ligne qui passe à la ligne (écart 20 × 10), soulignés au survol, puis « Gérer mes cookies » (bouton à l'allure d'un lien). Dessous : « © 2026 Leenkey · SAS LEENKEY · RCS Évry … · adresse légale » 12 px `--lk-ink-3`. Le pied V1 des pages marketing reprend la même liste de liens.
+
 ---
 
 ## 11. Gabarits d'écran
@@ -657,7 +661,7 @@ Tout écran de la V2 relève d'un de ces gabarits.
 | **G7 Back office** | `AdminMobileHeader`, `FilterPill`, cartes d'action, `BottomNav` admin | `AdminShell`, titre, `FilterPill`, `DataTable` |
 | **G8 Fin de parcours** | `EndOfFlow` plein écran | `EndOfFlow` sur 60 % + récapitulatif dessous |
 | **G9 Réglages / compte** | `AppHeader`, sections en cartes blanches sur `--lk-bg`, lignes de 56 px | colonne de 720 px centrée, sommaire à gauche (200 px) |
-| **G10 Page légale** | texte 15 px / 1,6, largeur 640, titres H2 | idem, centré |
+| **G10 Page légale** | texte 15 px / 1,6, largeur 640, titres H2, encart « en cours de rédaction » tant que le texte définitif manque, adresse légale, `SiteFooter` | idem, centré |
 
 ---
 

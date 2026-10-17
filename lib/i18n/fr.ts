@@ -158,13 +158,112 @@ export const fr = {
     },
   },
   legal: {
+    // Legal pages (L1-36, G10). Final texts from Cédric's lawyer (Q34);
+    // identity and address from the V1 legal notice (Q10, Q35).
+    draft: "Cette page est en cours de rédaction.",
+    contactEmail: "contact.leenkey@gmail.com",
+    company: "SAS LEENKEY · RCS Évry 107 616 211",
+    address: "36 rue Pierre Brossolette, 91360 Épinay-sur-Orge",
     privacy: {
       metaTitle: "Politique de confidentialité · Leenkey",
       title: "Politique de confidentialité",
-      draft: "Cette page est en cours de rédaction.",
       contact: "Pour toute question sur vos données, écrivez-nous à",
-      contactEmail: "contact.leenkey@gmail.com",
     },
+    salesTerms: {
+      metaTitle: "Conditions générales de vente · Leenkey",
+      title: "Conditions générales de vente",
+      lead: "Elles s'appliquent aux formules Accompagné et Sérénité, payées à la souscription.",
+      contact: "Pour toute question sur une commande, écrivez-nous à",
+    },
+    cookies: {
+      metaTitle: "Politique cookies · Leenkey",
+      title: "Politique cookies",
+      lead: "Les cookies déposés par leenkey.fr, à quoi ils servent, et comment changer d'avis.",
+      tableCaption: "Liste provisoire des cookies du site",
+      columns: { name: "Cookie", purpose: "À quoi il sert", kind: "Catégorie", duration: "Durée" },
+      necessary: "Nécessaire",
+      optional: "Avec votre accord",
+      rows: [
+        {
+          name: "sb-…-auth-token",
+          purpose: "Garder votre session ouverte quand vous êtes connecté",
+          kind: "necessary",
+          duration: "Le temps de la session",
+        },
+        {
+          name: "lk_lien",
+          purpose: "Terminer la confirmation de votre email ou le choix d'un nouveau mot de passe",
+          kind: "necessary",
+          duration: "1 heure",
+        },
+        {
+          name: "lk_consent",
+          purpose: "Mémoriser vos choix sur les cookies",
+          kind: "necessary",
+          duration: "6 mois",
+        },
+        {
+          name: "lk_vues",
+          purpose: "Compter une seule visite par jour et par annonce, sans donnée personnelle",
+          kind: "necessary",
+          duration: "24 heures",
+        },
+        {
+          name: "_ga, _ga_…",
+          purpose: "Mesure d'audience avec Google Analytics, par Google Tag Manager",
+          kind: "optional",
+          duration: "13 mois",
+        },
+      ],
+      noCookie: "La mesure de performance de Vercel, notre hébergeur, ne dépose aucun cookie.",
+      manageText: "Vous pouvez changer d'avis à tout moment :",
+      contact: "Pour toute question sur les cookies, écrivez-nous à",
+    },
+    ai: {
+      metaTitle: "Intelligence artificielle · Leenkey",
+      title: "Intelligence artificielle",
+      lead: "Comment l'assistant Leenkey utilise l'intelligence artificielle, et ce qu'il ne fait jamais seul.",
+      contact: "Pour toute question sur l'assistant, écrivez-nous à",
+    },
+    reporting: {
+      metaTitle: "Signalement et modération · Leenkey",
+      title: "Signalement et modération",
+      lead: "Comment signaler une annonce ou un message, et comment nous traitons les signalements.",
+      contact: "Pour signaler un contenu dès maintenant, écrivez-nous à",
+    },
+  },
+  // Footer of the V2 pages and of the V1 marketing pages (L1-36).
+  footer: {
+    label: "Informations légales",
+    links: {
+      notice: "Mentions légales",
+      terms: "Conditions d'utilisation",
+      salesTerms: "Conditions générales de vente",
+      privacy: "Confidentialité",
+      cookies: "Cookies",
+      reporting: "Signalement et modération",
+      ai: "Intelligence artificielle",
+      contact: "Contact",
+    },
+    manageCookies: "Gérer mes cookies",
+    rights: "© 2026 Leenkey",
+  },
+  // Cookie consent banner (L1-37, Q23).
+  consent: {
+    regionLabel: "Consentement aux cookies",
+    title: "Cookies",
+    text: "Nous utilisons des cookies de mesure d'audience (Google Analytics) pour comprendre comment le site est utilisé et l'améliorer, uniquement si vous l'acceptez. Les cookies nécessaires au fonctionnement du site restent actifs.",
+    policy: "Politique cookies",
+    accept: "Accepter",
+    refuse: "Refuser",
+    customize: "Personnaliser",
+    panelTitle: "Vos préférences",
+    necessaryTitle: "Nécessaires",
+    necessaryText:
+      "Connexion à votre compte, sécurité, mémorisation de vos choix. Toujours actifs.",
+    analyticsLabel: "Mesure d'audience",
+    analyticsText: "Statistiques de visite avec Google Analytics, par Google Tag Manager.",
+    save: "Enregistrer mes choix",
   },
   // Labels of SPEC-V2 section 7 (StatusBadge mapping), colours in DESIGN.md 10.2.
   listingStatus: {

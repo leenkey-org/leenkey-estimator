@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 // L1-01: the V1 site (marketing pages, valuation wizard, contact forms,
 // analytics) must behave the same once ported to Next.js.
@@ -48,7 +48,18 @@ test("l'estimateur affiche sa première étape", async ({ page }) => {
   await expect(page.getByText("Quel type de bien souhaitez-vous vendre ?")).toBeVisible();
 });
 
-test("GA4 et GTM ne chargent que en production", async ({ page }) => {
+// Audience measurement accepted (L1-37): GA4 and GTM may load.
+async function acceptAudience(page: Page, baseURL: string | undefined) {
+  await page
+    .context()
+    .addCookies([{ name: "lk_consent", value: "v1.1.2026-10-17", url: baseURL ?? "" }]);
+}
+
+test("GA4 et GTM ne chargent qu'en production, une fois la mesure d'audience acceptée", async ({
+  page,
+  baseURL,
+}) => {
+  await acceptAudience(page, baseURL);
   await page.goto("/");
   // The tags are `afterInteractive` scripts: they run after hydration, which
   // can come after the load event that `goto` waits for.
@@ -63,11 +74,12 @@ test("GA4 et GTM ne chargent que en production", async ({ page }) => {
   }
 });
 
-test("GA4 reçoit un page_view à chaque navigation", async ({ page, isMobile }) => {
+test("GA4 reçoit un page_view à chaque navigation", async ({ page, isMobile, baseURL }) => {
   test.skip(isMobile, "lien de navigation dans le menu desktop");
   test.skip(process.env.NEXT_PUBLIC_ENV !== "production", "GA4 actif en production uniquement");
+  await acceptAudience(page, baseURL);
   await page.goto("/");
-  await page.waitForFunction(() => Array.isArray((window as { dataLayer?: unknown[] }).dataLayer));
+  await page.waitForFunction(() => typeof (window as { gtag?: unknown }).gtag === "function");
   await page.locator('nav a[href="/tarifs"]').first().click();
   await page.waitForURL("**/tarifs");
   const views = await page.evaluate(() =>
