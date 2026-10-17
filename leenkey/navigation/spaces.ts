@@ -13,6 +13,7 @@ export const ROUTES = {
   valuation: "/estimer",
   sellerSignUp: "/inscription?role=seller",
   seller: "/vendeur",
+  newProperty: "/vendeur/biens/nouveau",
   sellerFile: "/vendeur/dossier",
   buyer: "/acquereur",
   favourites: "/acquereur/favoris",

@@ -39,7 +39,7 @@ Trois lots contractuels. **Le périmètre à construire est celui de `docs/SPEC-
 | Paiement | Stripe Checkout + webhooks | Mode test en dev et preprod, live en prod uniquement |
 | IA | Anthropic API (SDK `@anthropic-ai/sdk`) | Tool use pour les actions, voir section 8 |
 | Emails | Resend + React Email | Templates dans `emails/` |
-| Cartes et géocodage | Mapbox GL JS + Mapbox Geocoding | Clé publique côté client restreinte par domaine |
+| Cartes et géocodage | Mapbox GL JS (cartes) ; adresses et géocodage : Base Adresse Nationale (Géoplateforme de l'IGN, `core/geo/`) | Clé Mapbox publique côté client restreinte par domaine. Géocodage sans clé, appelé côté serveur, résultats stockables (provisoire, `docs/DECISIONS.md` Q46) |
 | Images | `sharp` côté serveur | Redimensionnement à l'upload, jamais d'image brute servie |
 | Validation | Zod | Tout input utilisateur passe par un schéma Zod, côté serveur |
 | Hébergement | Vercel Pro (compte Nebula Creativ) | Preview par PR (build seulement), préprod sur la branche `v2` (projet `leenkey-v2`), prod sur `main` (projet `leenkey-estimator-main`) |
@@ -167,6 +167,8 @@ PREPROD_PASSWORD=               # préprod uniquement ; absentes en prod = pas d
 AI_MODEL_FAST=                  # facultatif, surcharge de core/ai/models.ts
 AI_MODEL_SMART=                 # facultatif
 AI_MOCK=                        # 1 en tests E2E : réponses IA déterministes
+GEOCODER=                       # facultatif : fixtures = adresses de démonstration (tests E2E, environnement sans accès à la Base Adresse Nationale)
+GEOCODER_URL=                   # facultatif, surcharge du service de géocodage (core/geo/address-search.ts)
 E2E_SEED=                       # 1 : tests E2E sur une base chargée par npm run db:seed (local, préprod)
 SEED_PASSWORD=                  # mot de passe commun des comptes de seed (local et staging uniquement)
 ```

@@ -48,6 +48,7 @@ export const sections = {
   drawing: "Dessin de marque",
   emptyState: "État vide",
   comingSoon: "Écran à venir",
+  stepForm: "Formulaire à étapes",
   navigation: "Navigation",
   notifications: "Notifications et menu du compte",
   alerts: "Alertes",
@@ -477,6 +478,17 @@ export const notifications = {
   unread: 3,
   menuCaption:
     "AccountMenu : avatar de la barre haute, puis avatar d'en-tête sombre ; Mon espace, Mon compte, Se déconnecter (qui déconnecte vraiment)",
+};
+
+export const stepForm = {
+  caption:
+    "AppHeader (retour, titre, « Enregistrer ») et ProgressBar, puis FormActionBar : collée en bas de l'écran en mobile, à la fin du formulaire à partir de 768 px (G5, création du bien).",
+  title: "Mon bien",
+  back: "Retour",
+  save: "Enregistrer",
+  progress: "Étape 2 sur 4 · Caractéristiques",
+  previous: "Précédent",
+  next: "Continuer",
 };
 
 export const comingSoon = {

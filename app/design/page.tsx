@@ -7,6 +7,7 @@ import * as content from "./_content";
 import { ConsentDemo } from "./_consent-demo";
 import { FilterSelectDemo } from "./_filter-select-demo";
 import { AccountMenu } from "@/components/shared/account-menu";
+import { AppHeader } from "@/components/shared/app-header";
 import { AdminMobileHeader } from "@/components/shared/admin-mobile-header";
 import { AdminSidebar } from "@/components/shared/admin-sidebar";
 import { BottomNav } from "@/components/shared/bottom-nav";
@@ -20,6 +21,7 @@ import { DPE_CLASSES, DpeBadge } from "@/components/shared/dpe-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FacadeDrawing } from "@/components/shared/facade-drawing";
 import { FacadeRoot } from "@/components/shared/facade-root";
+import { FormActionBar } from "@/components/shared/form-action-bar";
 import { Gallery } from "@/components/shared/gallery";
 import { IconButton } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
@@ -28,6 +30,7 @@ import { KeyFactsTable } from "@/components/shared/key-facts-table";
 import { KeyFigures } from "@/components/shared/key-figures";
 import { NotificationBell } from "@/components/shared/notification-bell";
 import { PriceBlock } from "@/components/shared/price-block";
+import { ProgressBar } from "@/components/shared/progress-bar";
 import { PropertyCard } from "@/components/shared/property-card";
 import { RoleCards } from "@/components/shared/role-cards";
 import { SectionTitle } from "@/components/shared/section-title";
@@ -786,6 +789,29 @@ export default function DesignPage() {
               />
             </div>
             <Caption>{content.comingSoon.caption}</Caption>
+          </Section>
+
+          <Section id="formulaire-a-etapes" title={content.sections.stepForm} level="h3">
+            <div className="overflow-hidden rounded-lk-md border border-lk-line bg-lk-bg">
+              <AppHeader
+                titleAs="h4"
+                title={content.stepForm.title}
+                back={<IconButton icon={ChevronLeft} aria-label={content.stepForm.back} />}
+                action={
+                  <Button variant="ghost" size="sm">
+                    {content.stepForm.save}
+                  </Button>
+                }
+                progress={<ProgressBar label={content.stepForm.progress} value={50} />}
+              />
+              <div className="px-5 pb-5">
+                <FormActionBar className="static mx-0 px-0 pb-0">
+                  <Button variant="secondary">{content.stepForm.previous}</Button>
+                  <Button>{content.stepForm.next}</Button>
+                </FormActionBar>
+              </div>
+            </div>
+            <Caption>{content.stepForm.caption}</Caption>
           </Section>
 
           <Section id="navigation" title={content.sections.navigation} level="h3">
