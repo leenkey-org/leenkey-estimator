@@ -47,6 +47,9 @@ export const sections = {
   brandPanel: "Aplat de marque",
   drawing: "Dessin de marque",
   emptyState: "État vide",
+  comingSoon: "Écran à venir",
+  navigation: "Navigation",
+  notifications: "Notifications et menu du compte",
   alerts: "Alertes",
   skeleton: "Chargement",
   formats: "Formats des nombres et des dates",
@@ -433,6 +436,47 @@ export const emptyStates = {
     text: "Nous relisons votre annonce sous 24 h et vous prévenons par email.",
     action: "Voir mon annonce",
   },
+};
+
+// L1-10: navigation shells, with a forced current item (activeHref).
+export const navigation = {
+  topSignedInCaption:
+    "TopNav connectée, à partir de 768 px : action principale, cloche, favoris et avatar du menu du compte ; lien courant en bleu",
+  topSignedOutCaption:
+    "TopNav sans session : « Mon compte » mène à la connexion, qui revient ensuite à la page",
+  bottomCaptions: {
+    seller: "BottomNav vendeur, sous 768 px",
+    buyer: "BottomNav acquéreur, aussi sur la recherche",
+    admin: "BottomNav du back office",
+  },
+  sidebarCaption:
+    "AdminShell à partir de 768 px : barre latérale de 240 px ; pastilles de compteurs avec les données du back office",
+  headerCaption: "AdminMobileHeader sous 768 px : titre de la page et avatar du menu du compte",
+  labels: {
+    topSignedIn: "Exemple de barre haute, connecté",
+    topSignedOut: "Exemple de barre haute, sans session",
+    seller: "Exemple de barre basse, vendeur",
+    buyer: "Exemple de barre basse, acquéreur",
+    admin: "Exemple de barre basse, back office",
+    sidebar: "Exemple de barre latérale du back office",
+  },
+  buyer: { firstName: "Thomas", roles: ["buyer"] },
+  admin: { firstName: "Cédric", roles: ["admin"] },
+  /** Counts of the AdminDesktop mockup, for the pills. */
+  counts: { "/admin/annonces": 3, "/admin/dossiers": 5 } as Record<string, number>,
+};
+
+export const notifications = {
+  bellCaption:
+    "NotificationBell : rien de non lu, puis 3 non lues (point bleu) ; sur en-tête sombre, variante on-dark. Elle ouvre le panneau, vide jusqu'aux notifications (L1-22)",
+  unread: 3,
+  menuCaption:
+    "AccountMenu : avatar de la barre haute, puis avatar d'en-tête sombre ; Mon espace, Mon compte, Se déconnecter (qui déconnecte vraiment)",
+};
+
+export const comingSoon = {
+  caption:
+    "ComingSoon : page dont l'écran arrive avec une tâche suivante, sous le titre de la page",
 };
 
 export const formats = {

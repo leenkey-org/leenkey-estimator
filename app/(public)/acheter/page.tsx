@@ -1,10 +1,14 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BottomNav } from "@/components/shared/bottom-nav";
 import { Button } from "@/components/shared/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { InlineAlert } from "@/components/shared/inline-alert";
+import { BOTTOM_NAV_OFFSET } from "@/components/shared/nav-items";
+import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
+import { bottomTabs } from "@/leenkey/navigation/config";
 import { FiltersDialog } from "@/leenkey/search/components/filters-dialog";
 import { LoadMore } from "@/leenkey/search/components/load-more";
 import { ResultsList } from "@/leenkey/search/components/results-list";
@@ -16,6 +20,7 @@ import { searchListings } from "@/leenkey/search/queries";
 import { formatInteger } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { absoluteUrl } from "@/lib/site";
+import { cn } from "@/lib/utils";
 import {
   countActiveFilters,
   parseSearchParams,
@@ -25,7 +30,10 @@ import {
 
 // L1-15: search of the published listings (SPEC-V2 8.4, docs/DESIGN.md 12.5,
 // 12.6). Server-rendered from the URL; the controls change the URL.
-// The map (L1-16) and « Créer une alerte » (L3-06) come later.
+// The map (L1-16) and « Créer une alerte » (L3-06) come later. Navigation
+// (L1-10): TopNav from 768 px, buyer tabs below for every visitor (the
+// middleware sends a signed-out visitor from Favoris, Messages or Compte to
+// the login page).
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -117,7 +125,8 @@ export default async function SearchPage({ searchParams }: Props) {
   }
 
   return (
-    <FacadeRoot className="min-h-screen bg-lk-surface">
+    <FacadeRoot className={cn("min-h-screen bg-lk-surface", BOTTOM_NAV_OFFSET)}>
+      <SiteTopNav />
       <SearchProvider
         query={query}
         total={result.ok ? result.data.total : null}
@@ -131,6 +140,7 @@ export default async function SearchPage({ searchParams }: Props) {
         </main>
         <FiltersDialog />
       </SearchProvider>
+      <BottomNav label={fr.nav.label} items={bottomTabs("buyer")} />
     </FacadeRoot>
   );
 }

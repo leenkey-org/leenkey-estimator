@@ -5,10 +5,15 @@ import { notFound } from "next/navigation";
 import { Bell, ChevronLeft, Heart, Plus, Settings, Sparkles, X } from "lucide-react";
 import * as content from "./_content";
 import { FilterSelectDemo } from "./_filter-select-demo";
+import { AccountMenu } from "@/components/shared/account-menu";
+import { AdminMobileHeader } from "@/components/shared/admin-mobile-header";
+import { AdminSidebar } from "@/components/shared/admin-sidebar";
+import { BottomNav } from "@/components/shared/bottom-nav";
 import { BrandPanel } from "@/components/shared/brand-panel";
 import { Button } from "@/components/shared/button";
 import { Checkbox } from "@/components/shared/checkbox";
 import { ChipButton, ChipToggle } from "@/components/shared/chip-toggle";
+import { ComingSoon } from "@/components/shared/coming-soon";
 import { ContactCard } from "@/components/shared/contact-card";
 import { DPE_CLASSES, DpeBadge } from "@/components/shared/dpe-badge";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -20,6 +25,7 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
 import { KeyFactsTable } from "@/components/shared/key-facts-table";
 import { KeyFigures } from "@/components/shared/key-figures";
+import { NotificationBell } from "@/components/shared/notification-bell";
 import { PriceBlock } from "@/components/shared/price-block";
 import { PropertyCard } from "@/components/shared/property-card";
 import { RoleCards } from "@/components/shared/role-cards";
@@ -28,7 +34,19 @@ import { SegmentedPicker } from "@/components/shared/segmented-picker";
 import { Select } from "@/components/shared/select";
 import { Skeleton } from "@/components/shared/skeleton";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { TopNav } from "@/components/shared/top-nav";
 import { UnitInput } from "@/components/shared/unit-input";
+import { signOut } from "@/leenkey/auth/actions";
+import {
+  accountMenu,
+  ADMIN_NAV_ITEMS,
+  bottomTabs,
+  FAVOURITES_LINK,
+  notificationBell,
+  sellCta,
+  signInLink,
+  TOP_NAV_LINKS,
+} from "@/leenkey/navigation/config";
 import { isProduction } from "@/lib/env";
 import {
   formatDate,
@@ -40,6 +58,7 @@ import {
   formatRooms,
   formatSurface,
 } from "@/lib/format";
+import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 
 // Living catalogue of the Façade design system (docs/DESIGN.md 12.14): the
@@ -61,6 +80,7 @@ const LISTING_STATUSES = [
   "rejected",
 ] as const;
 const PLANS = ["autonomie", "accompagne", "serenite"] as const;
+const SPACES = ["seller", "buyer", "admin"] as const;
 const BUTTON_VARIANTS = [
   "primary",
   "secondary",
@@ -723,6 +743,123 @@ export default function DesignPage() {
                 />
               </BlueFlat>
             </div>
+          </Section>
+
+          <Section id="a-venir" title={content.sections.comingSoon} level="h3">
+            <div className="rounded-lk-md bg-lk-bg px-5">
+              <ComingSoon
+                titleAs="h4"
+                title={fr.placeholders.messages.comingTitle}
+                text={fr.placeholders.messages.comingText}
+              />
+            </div>
+            <Caption>{content.comingSoon.caption}</Caption>
+          </Section>
+
+          <Section id="navigation" title={content.sections.navigation} level="h3">
+            <div className="overflow-x-auto rounded-lk-md border border-lk-line">
+              <TopNav
+                className="flex min-w-4xl border-b-0"
+                homeHref="/design#navigation"
+                label={content.navigation.labels.topSignedIn}
+                links={TOP_NAV_LINKS}
+                activeHref={TOP_NAV_LINKS[0].href}
+                cta={sellCta(true)}
+                account={{
+                  signedIn: true,
+                  notifications: notificationBell("buyer"),
+                  favourites: FAVOURITES_LINK,
+                  menu: { ...accountMenu(content.navigation.buyer), signOut },
+                }}
+              />
+            </div>
+            <Caption>{content.navigation.topSignedInCaption}</Caption>
+            <div className="overflow-x-auto rounded-lk-md border border-lk-line">
+              <TopNav
+                className="flex min-w-4xl border-b-0"
+                homeHref="/design#navigation"
+                label={content.navigation.labels.topSignedOut}
+                links={TOP_NAV_LINKS}
+                activeHref={TOP_NAV_LINKS[0].href}
+                cta={sellCta(false)}
+                account={{ signedIn: false, ...signInLink("/design") }}
+              />
+            </div>
+            <Caption>{content.navigation.topSignedOutCaption}</Caption>
+            <div className="grid gap-4 md:grid-cols-3">
+              {SPACES.map((space) => {
+                const tabs = bottomTabs(space);
+                return (
+                  <div key={space} className="flex flex-col gap-2">
+                    <BottomNav
+                      inline
+                      className="rounded-lk-md border md:block"
+                      label={content.navigation.labels[space]}
+                      items={tabs}
+                      activeHref={tabs[0].href}
+                    />
+                    <Caption>{content.navigation.bottomCaptions[space]}</Caption>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="grid items-start gap-4 md:grid-cols-[15rem_minmax(0,1fr)]">
+              <div className="flex flex-col gap-2">
+                <AdminSidebar
+                  className="h-140 rounded-lk-md"
+                  label={content.navigation.labels.sidebar}
+                  homeHref="/design#navigation"
+                  items={ADMIN_NAV_ITEMS.map((item) => ({
+                    ...item,
+                    count: content.navigation.counts[item.href],
+                  }))}
+                  activeHref={ADMIN_NAV_ITEMS[1].href}
+                  account={{
+                    ...accountMenu(content.navigation.admin),
+                    signOut,
+                    name: content.navigation.admin.firstName,
+                    role: fr.nav.admin.role,
+                  }}
+                />
+                <Caption>{content.navigation.sidebarCaption}</Caption>
+              </div>
+              <div className="flex flex-col gap-2">
+                <AdminMobileHeader
+                  className="max-w-97.5 rounded-lk-md md:flex"
+                  items={ADMIN_NAV_ITEMS}
+                  title={ADMIN_NAV_ITEMS[1].label}
+                  fallbackTitle={fr.nav.backOffice}
+                  account={{ ...accountMenu(content.navigation.admin), signOut }}
+                />
+                <Caption>{content.navigation.headerCaption}</Caption>
+              </div>
+            </div>
+          </Section>
+
+          <Section id="notifications" title={content.sections.notifications} level="h3">
+            <div className="flex flex-wrap items-center gap-4">
+              <NotificationBell {...notificationBell("buyer")} size="nav" />
+              <NotificationBell
+                {...notificationBell("seller")}
+                count={content.notifications.unread}
+                size="nav"
+              />
+              <div className="rounded-lk-md bg-lk-navy p-3">
+                <NotificationBell {...notificationBell("seller")} tone="dark" />
+              </div>
+            </div>
+            <Caption>{content.notifications.bellCaption}</Caption>
+            <div className="flex flex-wrap items-center gap-4">
+              <AccountMenu {...accountMenu(content.navigation.buyer)} signOut={signOut} />
+              <div className="rounded-lk-md bg-lk-ink p-3">
+                <AccountMenu
+                  {...accountMenu(content.navigation.admin)}
+                  signOut={signOut}
+                  variant="header"
+                />
+              </div>
+            </div>
+            <Caption>{content.notifications.menuCaption}</Caption>
           </Section>
 
           <Section id="alertes" title={content.sections.alerts} level="h3">
