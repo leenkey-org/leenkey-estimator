@@ -560,12 +560,14 @@ export const fr = {
     },
     errors: {
       invalid: "Le motif doit faire au moins 3 caractères.",
-      conflict: "Cette annonce a changé de statut entre-temps. Rechargez la page.",
+      conflict:
+        "Cette annonce a changé de statut entre-temps : la page montre maintenant son statut.",
       notFound: "Cette annonce n'existe plus.",
       forbidden: "Cette action est réservée à l'équipe Leenkey.",
       unavailable: "La décision n'a pas pu être enregistrée. Réessayez.",
       network:
-        "Pas de réponse du serveur : la décision a peut-être été enregistrée. Vérifiez le statut de l'annonce avant de recommencer.",
+        "Pas de réponse du serveur : la décision a peut-être été enregistrée. Rechargez la page pour vérifier le statut de l'annonce avant de recommencer.",
+      reload: "Recharger la page",
     },
   },
   // Transactional emails (SPEC-V2 section 18, DESIGN.md 14), texts of emails/.

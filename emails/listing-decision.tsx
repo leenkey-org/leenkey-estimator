@@ -66,7 +66,7 @@ export function ListingDecisionEmail({
       >
         <Text style={emailText}>{t.greeting(firstName)}</Text>
         <Text style={emailText}>{copy.text(title)}</Text>
-        <EmailQuote label={copy.reason}>{reason}</EmailQuote>
+        <EmailQuote label={copy.reason} text={reason ?? ""} />
         <Text style={emailText}>{copy.next}</Text>
       </EmailLayout>
     );
@@ -81,7 +81,7 @@ export function ListingDecisionEmail({
     >
       <Text style={emailText}>{t.greeting(firstName)}</Text>
       <Text style={emailText}>{copy.text(title)}</Text>
-      <EmailQuote label={copy.reason}>{reason}</EmailQuote>
+      <EmailQuote label={copy.reason} text={reason ?? ""} />
       <Text style={emailText}>
         {copy.contest.before}
         <Link href={`mailto:${contactEmail}`} style={emailLink}>

@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import { flushSync } from "react-dom";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ChevronLeft, X } from "lucide-react";
 import { Button } from "@/components/shared/button";
@@ -37,7 +38,8 @@ import { moderateListing, type ModerationResult } from "../actions";
 // the button clicked has left with its row, or changed with the status.
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
-type Feedback = { tone: "success" | "warning" | "danger"; text: string };
+/** reload: no answer from the server, the page may be out of date. */
+type Feedback = { tone: "success" | "warning" | "danger"; text: string; reload?: boolean };
 
 const t = fr.adminListings;
 
@@ -46,10 +48,11 @@ const FeedbackContext = createContext<(feedback: Feedback) => void>(() => {});
 /**
  * Outcome of the last decision, above the list or the listing. Its live
  * region stays in the page, empty until a decision (a region inserted with
- * its text is not always read); the outcome then takes the focus. Empty, it
- * takes no room: -mt-6 cancels the gap of AdminPage.
+ * its text is not always read), out of the layout while empty (sr-only); the
+ * outcome then takes the focus.
  */
 export function ModerationFeedback({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [feedback, setFeedback] = useState<(Feedback & { id: number }) | null>(null);
   const region = useRef<HTMLDivElement>(null);
   const report = useCallback(
@@ -65,10 +68,25 @@ export function ModerationFeedback({ children }: { children: ReactNode }) {
         ref={region}
         tabIndex={-1}
         role="status"
-        className={cn("scroll-mt-24 outline-none", !feedback && "-mt-6")}
+        className={cn("scroll-mt-24 outline-none", !feedback && "sr-only")}
       >
         {feedback ? (
-          <InlineAlert key={feedback.id} tone={feedback.tone} live={false}>
+          <InlineAlert
+            key={feedback.id}
+            tone={feedback.tone}
+            live={false}
+            action={
+              feedback.reload ? (
+                <button
+                  type="button"
+                  onClick={() => router.refresh()}
+                  className="font-semibold underline underline-offset-2 hover:no-underline"
+                >
+                  {t.errors.reload}
+                </button>
+              ) : undefined
+            }
+          >
             {feedback.text}
           </InlineAlert>
         ) : null}
@@ -95,7 +113,7 @@ const ERROR = {
 
 /** null: no answer (network, timeout, a deployment in between). */
 function feedbackFor(action: ModerationAction, result: ModerationResult | null): Feedback {
-  if (!result) return { tone: "danger", text: t.errors.network };
+  if (!result) return { tone: "danger", text: t.errors.network, reload: true };
   if (!result.ok) return { tone: "danger", text: t.errors[ERROR[result.error]] };
   const { email } = result.data;
   if (email === null) return { tone: "success", text: DONE[action] };
@@ -149,11 +167,15 @@ export function ListingModeration({
         console.error("[admin] moderation request failed", error);
       }
       const feedback = feedbackFor(input.action, result);
-      // The page no longer shows the listing as it is: read it again.
+      // The listing changed meanwhile: the page reads it again. Without an
+      // answer, nothing is read again: the network may be down, and a reload
+      // would leave the page (« Recharger la page » is offered instead).
       const stale =
-        !result || (!result.ok && (result.error === "conflict" || result.error === "not_found"));
+        result?.ok === false && (result.error === "conflict" || result.error === "not_found");
       if (stale) router.refresh();
-      if (dialog && result && !result.ok && !stale) {
+      // In the dialog, the motive stays: sent again, a decision already saved
+      // comes back as a conflict.
+      if (dialog && !result?.ok && !stale) {
         setDialogError(feedback.text);
         return;
       }
@@ -280,8 +302,8 @@ function ReasonDialog({
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (reasonLength(reason) < REASON_MIN) {
-      setInvalid(true);
-      // The field gives its error with it (aria-describedby).
+      // The error in the page first: the field gives it with its name.
+      flushSync(() => setInvalid(true));
       field.current?.focus();
       return;
     }
@@ -298,7 +320,7 @@ function ReasonDialog({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay
           className={cn(
-            "fixed inset-0 z-50 bg-lk-ink/40 duration-220",
+            "fixed inset-0 z-60 bg-lk-ink/40 duration-220",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0",
             "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
           )}
@@ -307,12 +329,13 @@ function ReasonDialog({
           onCloseAutoFocus={onCloseAutoFocus}
           className={cn(
             facadeScope,
-            "fixed inset-0 z-50 flex flex-col overflow-y-auto bg-lk-surface outline-none",
+            "fixed inset-0 z-60 flex flex-col overflow-y-auto bg-lk-surface outline-none",
             "md:top-1/2 md:right-auto md:bottom-auto md:left-1/2 md:max-h-[85vh] md:w-130 md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-lk-md md:shadow-float",
             "duration-220 ease-out-lk data-[state=open]:animate-in data-[state=open]:fade-in-0 motion-reduce:animate-none",
           )}
         >
-          <div className="flex items-center gap-2 border-b border-lk-line px-3 py-2 md:border-0 md:px-6 md:pt-6 md:pb-0">
+          {/* Phone: the AppHeader (back, title 15 px 600 centred); dialog: title 20 px 700 and a cross. */}
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-lk-line px-5 pt-5 pb-3.5 md:flex md:border-0 md:px-6 md:pt-6 md:pb-0">
             <DialogPrimitive.Close asChild>
               <IconButton
                 icon={ChevronLeft}
@@ -322,7 +345,7 @@ function ReasonDialog({
                 className="md:hidden"
               />
             </DialogPrimitive.Close>
-            <DialogPrimitive.Title className="min-w-0 flex-1 text-lk-h2 font-bold text-wide text-lk-ink">
+            <DialogPrimitive.Title className="min-w-0 flex-1 truncate text-center text-lk-title font-semibold text-lk-ink md:whitespace-normal md:text-left md:text-lk-h2 md:font-bold md:text-wide">
               {kind === "suspend" ? copy.suspendTitle : copy.rejectTitle}
             </DialogPrimitive.Title>
             <DialogPrimitive.Close asChild>
@@ -335,6 +358,7 @@ function ReasonDialog({
                 className="hidden md:inline-flex"
               />
             </DialogPrimitive.Close>
+            <span aria-hidden="true" className="size-11 md:hidden" />
           </div>
           <div className="flex flex-col gap-4 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:px-6 md:pb-6">
             <DialogPrimitive.Description className="text-lk-secondary text-lk-ink-2">
@@ -355,7 +379,7 @@ function ReasonDialog({
                       setInvalid(false);
                     }}
                     className={cn(
-                      "rounded-lk-sm border-[1.5px] px-3.5 py-2.5 text-left text-lk-secondary transition-colors duration-140 ease-out-lk",
+                      "min-h-11 rounded-lk-sm border-[1.5px] px-3.5 py-2.5 text-left text-lk-secondary transition-colors duration-140 ease-out-lk",
                       reason === template
                         ? "border-lk-blue bg-lk-blue-tint text-lk-navy"
                         : "border-lk-line bg-lk-surface text-lk-ink hover:bg-lk-stone-2",
@@ -378,8 +402,8 @@ function ReasonDialog({
                   if (invalid) setInvalid(false);
                 }}
               />
-              {/* In the page from the opening, so that the error is read; empty, -mt-4 cancels the gap. */}
-              <div aria-live="polite" className={cn(!error && "-mt-4")}>
+              {/* In the page from the opening, so that the error is read; out of the layout while empty. */}
+              <div aria-live="polite" className={cn(!error && "sr-only")}>
                 {error ? (
                   <InlineAlert tone="danger" live={false}>
                     {error}

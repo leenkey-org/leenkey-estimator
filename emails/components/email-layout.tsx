@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import {
   Body,
   Button,
@@ -128,8 +128,12 @@ export function EmailLayout({ preview, title, siteUrl, action, children }: Email
   );
 }
 
-/** The motive of a decision, set apart in the email, its line breaks kept. */
-export function EmailQuote({ label, children }: { label: string; children: ReactNode }) {
+/**
+ * The motive of a decision, set apart in the email. Its line breaks become
+ * <br />: every mail client shows them, and the plain text keeps them.
+ */
+export function EmailQuote({ label, text }: { label: string; text: string }) {
+  const lines = text.split(/\r?\n/);
   return (
     <Section
       style={{
@@ -143,16 +147,13 @@ export function EmailQuote({ label, children }: { label: string; children: React
       <Text style={{ margin: "0 0 4px", fontSize: "13px", fontWeight: 600, color: INK }}>
         {label}
       </Text>
-      <Text
-        style={{
-          margin: 0,
-          fontSize: "15px",
-          lineHeight: "1.6",
-          color: INK,
-          whiteSpace: "pre-line",
-        }}
-      >
-        {children}
+      <Text style={{ margin: 0, fontSize: "15px", lineHeight: "1.6", color: INK }}>
+        {lines.map((line, index) => (
+          <Fragment key={index}>
+            {index > 0 ? <br /> : null}
+            {line}
+          </Fragment>
+        ))}
       </Text>
     </Section>
   );

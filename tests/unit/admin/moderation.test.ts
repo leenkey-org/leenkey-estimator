@@ -68,11 +68,18 @@ describe("moderationError", () => {
 });
 
 describe("isInLaunchZone", () => {
-  it("knows the postal codes around Épinay-sur-Orge, the others are flagged", () => {
-    expect(isInLaunchZone("91360")).toBe(true);
-    expect(isInLaunchZone(" 91620 ")).toBe(true);
-    expect(isInLaunchZone("91300")).toBe(false);
-    expect(isInLaunchZone("75011")).toBe(false);
+  it("knows the communes around Épinay-sur-Orge, whatever the accents and the case", () => {
+    expect(isInLaunchZone("91360", "Épinay-sur-Orge")).toBe(true);
+    expect(isInLaunchZone("91360", "EPINAY SUR ORGE")).toBe(true);
+    expect(isInLaunchZone(" 91620 ", "La Ville-du-Bois")).toBe(true);
+  });
+
+  it("flags the others, also those that share a postal code of the zone", () => {
+    expect(isInLaunchZone("91300", "Massy")).toBe(false);
+    expect(isInLaunchZone("75011", "Paris")).toBe(false);
+    expect(isInLaunchZone("91160", "Champlan")).toBe(false);
+    expect(isInLaunchZone("91310", "Leuville-sur-Orge")).toBe(false);
+    expect(isInLaunchZone("91000", "Épinay-sur-Orge")).toBe(false);
   });
 });
 
@@ -152,7 +159,7 @@ describe("moderation emails", () => {
     const reason = "La description est incomplète : précisez l'état du bien.";
     const rejected = await render(
       ListingDecisionEmail({ ...props, decision: "rejected", reason }),
-      { plainText: true },
+      EMAIL_PLAIN_TEXT,
     );
     expect(rejected).toContain(reason);
     expect(rejected).toContain("sous 24\u00A0h");
@@ -162,7 +169,7 @@ describe("moderation emails", () => {
 
     const suspended = await render(
       ListingDecisionEmail({ ...props, decision: "suspended", reason, firstName: null }),
-      { plainText: true },
+      EMAIL_PLAIN_TEXT,
     );
     expect(suspended).toContain("Bonjour,");
     expect(suspended).toContain(reason);
@@ -176,7 +183,19 @@ describe("moderation emails", () => {
       ListingDecisionEmail({ ...props, decision: "suspended", reason: "Ligne 1\nLigne 2" }),
     );
     expect(html).toContain(`href="mailto:${props.contactEmail}"`);
-    expect(html).toContain("white-space:pre-line");
+    expect(html).toMatch(/Ligne 1<br\s*\/?>Ligne 2/);
+  });
+
+  it("keeps the line breaks of the motive in the plain text", async () => {
+    const text = await render(
+      ListingDecisionEmail({
+        ...props,
+        decision: "rejected",
+        reason: "Ligne 1\nLigne 2\n\nLigne 4",
+      }),
+      EMAIL_PLAIN_TEXT,
+    );
+    expect(text).toMatch(/Ligne 1\nLigne 2\n\s*\nLigne 4/);
   });
 
   it("plain text: the title keeps its case", async () => {

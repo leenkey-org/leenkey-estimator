@@ -8,6 +8,8 @@
 // environment. Centres are approximate (town centres, about 500 m), enough
 // for a radius of 2 to 20 km. Listings outside the zone stay accepted.
 
+import { slugify } from "@/lib/slug";
+
 export type LaunchZoneCommune = {
   name: string;
   postalCodes: readonly string[];
@@ -56,12 +58,20 @@ export const LAUNCH_ZONE: readonly LaunchZoneCommune[] = COMMUNES.map(
   }),
 );
 
-const POSTAL_CODES = new Set(LAUNCH_ZONE.flatMap((commune) => commune.postalCodes));
+/** « 91360 epinay-sur-orge »: a commune by its postal code and its name. */
+const zoneKey = (postalCode: string, city: string) => `${postalCode.trim()} ${slugify(city)}`;
+const ZONE_KEYS = new Set(
+  LAUNCH_ZONE.flatMap((commune) =>
+    commune.postalCodes.map((postalCode) => zoneKey(postalCode, commune.name)),
+  ),
+);
 
 /**
- * Whether a postal code is in the launch zone. A listing outside stays
- * accepted; the back office flags it « Hors zone » (SPEC-V2 section 20).
+ * Whether a town is in the launch zone, by its name and its postal code: a
+ * postal code alone covers other communes too (91160 is also Champlan). A
+ * listing outside stays accepted; the back office flags it « Hors zone »
+ * (SPEC-V2 section 20).
  */
-export function isInLaunchZone(postalCode: string): boolean {
-  return POSTAL_CODES.has(postalCode.trim());
+export function isInLaunchZone(postalCode: string, city: string): boolean {
+  return ZONE_KEYS.has(zoneKey(postalCode, city));
 }

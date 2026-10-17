@@ -54,7 +54,8 @@ export async function sendEmail(email: OutgoingEmail): Promise<EmailDelivery> {
         subject: route.subject,
         html: email.html,
         text: email.text,
-        ...(email.replyTo ? { reply_to: email.replyTo } : {}),
+        // Outside production, an answer goes back to the test inbox too.
+        ...(email.replyTo ? { reply_to: env === "production" ? email.replyTo : route.to } : {}),
       }),
       // Short: the caller waits (a decision of the back office).
       signal: AbortSignal.timeout(5_000),

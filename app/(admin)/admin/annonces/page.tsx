@@ -153,7 +153,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                     city={row.city}
                     reference={row.reference}
                     postalCode={row.postalCode}
-                    className="truncate text-lk-caption text-lk-ink-3"
+                    className="text-lk-caption text-lk-ink-3"
                   />
                   <p className="truncate text-lk-caption text-lk-ink-3">
                     {[

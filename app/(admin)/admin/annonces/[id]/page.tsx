@@ -13,8 +13,8 @@ import {
   ListingModeration,
   ModerationFeedback,
 } from "@/leenkey/admin/components/listing-moderation";
+import { OutOfZoneFlag } from "@/leenkey/admin/components/listing-place";
 import { adminListing } from "@/leenkey/admin/queries";
-import { isInLaunchZone } from "@/lib/config/launch-zone";
 import { ListingDescription } from "@/leenkey/listings/components/listing-description";
 import { listingKeyFacts } from "@/leenkey/listings/key-facts";
 import { listingKeyFigures } from "@/leenkey/listings/presentation";
@@ -110,12 +110,7 @@ export default async function AdminListingPage({ params }: Props) {
             </span>
             <span className="text-lk-secondary text-lk-ink-3">
               {listing.city} · {listing.postalCode}
-              {isInLaunchZone(listing.postalCode) ? null : (
-                <>
-                  {" · "}
-                  <span className="font-semibold text-lk-warning-fg">{t.outOfZone}</span>
-                </>
-              )}
+              <OutOfZoneFlag postalCode={listing.postalCode} city={listing.city} />
             </span>
           </div>
           <dl className="grid grid-cols-2 gap-x-6 gap-y-3 md:grid-cols-4">

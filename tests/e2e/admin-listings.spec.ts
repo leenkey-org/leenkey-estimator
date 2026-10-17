@@ -177,7 +177,9 @@ test.describe("bureau", () => {
     ).toBeFocused();
   });
 
-  test("recherche par ville, référence ou vendeur ; aucune violation d'accessibilité @a11y", async ({
+  // Not tagged @a11y: npm run a11y would also run every test of the projects
+  // this one depends on (playwright.config.ts).
+  test("recherche par ville, référence ou vendeur ; aucune violation d'accessibilité", async ({
     page,
   }) => {
     await signIn(page, "/admin/annonces?q=Villiers-sur-Orge");
