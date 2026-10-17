@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-17 · L1-18, L1-20 · PR #? · Favoris, sitemap et robots
+### 2026-10-17 · L1-18, L1-20 · PR #18 · Favoris, sitemap et robots
 - Ajouté : cœur des favoris sur l'annonce (en haut de la galerie en mobile, à droite du prix en desktop), état affiché tout de suite et annulé si l'enregistrement échoue ; sans session, il mène à l'inscription acquéreur avec retour à l'annonce. Page `/acquereur/favoris` : biens sauvegardés du plus récent au plus ancien (`PropertyCard compact` avec le cœur), nombre de favoris qui ne sont plus en ligne, état vide « Voir les biens ». Action `setFavorite` (Zod, session, RLS existantes de `favorites`).
 - Ajouté : `/sitemap.xml` construit par `app/sitemap.ts` (pages de la V1, recherche, annonces publiées ; reconstruit au plus toutes les heures, pages seules si la base est indisponible), à la place de `public/sitemap.xml`.
 - Modifié : `robots.txt` de production, qui ferme les espaces connectés, le back office et les routes techniques (`/api/`, `/auth/`, `/confirmation`, `/conditions`, `/reinitialiser`) ; toujours tout fermé hors production.
