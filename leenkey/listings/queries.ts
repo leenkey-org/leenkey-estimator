@@ -1,9 +1,12 @@
 import "server-only";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
 import { cache } from "react";
 import type { DpeClass } from "@/components/shared/dpe-badge";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createPublicClient } from "@/lib/supabase/public";
 import { DPE_CLASSES } from "@/lib/validations/search";
 import type { Database } from "@/types/database";
+import type { SitemapListing } from "./sitemap";
 
 // Public listing page (SPEC-V2 8.5): reads public_listings only (published
 // listings, public columns), with the visitor's session. Anything else is
@@ -143,3 +146,52 @@ export const getPublicListing = cache(
     }
   },
 );
+
+// PostgREST answers 1 000 rows at most per request (max_rows of Supabase).
+const SITEMAP_PAGE = 1000;
+const SITEMAP_MAX = 10_000;
+
+/**
+ * Published listings for /sitemap.xml (L1-20), most recent first, by pages
+ * until the count read with the first one (a lower max_rows only adds pages),
+ * each slug once (a listing published between two pages shifts them).
+ * Without Supabase, or when the database cannot be read in time during the
+ * build: none, the sitemap goes out with its other pages. At runtime, the
+ * error goes up: Next keeps serving the last sitemap built (ISR) instead of
+ * one without listings for an hour.
+ */
+export async function sitemapListings(): Promise<SitemapListing[]> {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const client = createPublicClient();
+    const listings: SitemapListing[] = [];
+    const slugs = new Set<string>();
+    let total = SITEMAP_MAX;
+    for (let from = 0; from < Math.min(total, SITEMAP_MAX); ) {
+      const { data, error, count } = await client
+        .from("public_listings")
+        .select("slug, published_at", { count: from === 0 ? "exact" : undefined })
+        .order("published_at", { ascending: false })
+        .order("slug")
+        .range(from, from + SITEMAP_PAGE - 1)
+        .abortSignal(AbortSignal.timeout(5_000));
+      if (error) throw new Error(`public_listings: ${error.code} ${error.message}`);
+      if (from === 0 && count !== null) total = count;
+      if (data.length === 0) break;
+      for (const row of data) {
+        if (row.slug && !slugs.has(row.slug)) {
+          slugs.add(row.slug);
+          listings.push({ slug: row.slug, publishedAt: row.published_at });
+        }
+      }
+      from += data.length;
+    }
+    return listings;
+  } catch (error) {
+    console.error("[sitemap] listings read failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    if (process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD) return [];
+    throw error;
+  }
+}

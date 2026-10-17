@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Calendar } from "lucide-react";
 import type { PublicListing } from "../queries";
@@ -10,8 +11,8 @@ const t = fr.listing.actions;
 
 // Contact and visit (SPEC-V2 8.5): a buyer account is needed, so both lead
 // to the sign-up with the return to the listing until the messaging (L1-21)
-// and the visits (L3) exist. « Faire une offre » comes with L2, the
-// favourite with L1-18.
+// and the visits (L3) exist. « Faire une offre » comes with L2; the
+// favourite (L1-18) is over the mobile gallery and next to the desktop price.
 
 /** Mobile action bar, fixed at the bottom (docs/DESIGN.md 10.3). */
 export function ActionBar({ signUpHref }: { signUpHref: string }) {
@@ -35,13 +36,19 @@ export function ActionBar({ signUpHref }: { signUpHref: string }) {
 export function PriceColumn({
   listing,
   signUpHref,
+  favorite,
 }: {
   listing: PublicListing;
   signUpHref: string;
+  /** The heart (FavoriteButton), on the right of the price. */
+  favorite?: ReactNode;
 }) {
   return (
     <div className="sticky top-24 flex flex-col gap-4 rounded-lk-md border border-lk-line bg-lk-surface p-5.5">
-      <PriceBlock priceCents={listing.priceCents} surfaceM2={listing.surfaceM2} size="lg" />
+      <div className="flex items-start justify-between gap-3">
+        <PriceBlock priceCents={listing.priceCents} surfaceM2={listing.surfaceM2} size="lg" />
+        {favorite}
+      </div>
       <ContactCard
         variant="tile"
         firstName={listing.sellerFirstName}
