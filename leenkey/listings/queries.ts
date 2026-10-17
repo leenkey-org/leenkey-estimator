@@ -1,9 +1,11 @@
 import "server-only";
 import { cache } from "react";
 import type { DpeClass } from "@/components/shared/dpe-badge";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createPublicClient } from "@/lib/supabase/public";
 import { DPE_CLASSES } from "@/lib/validations/search";
 import type { Database } from "@/types/database";
+import type { SitemapListing } from "./sitemap";
 
 // Public listing page (SPEC-V2 8.5): reads public_listings only (published
 // listings, public columns), with the visitor's session. Anything else is
@@ -143,3 +145,28 @@ export const getPublicListing = cache(
     }
   },
 );
+
+/**
+ * Published listings for /sitemap.xml (L1-20), most recent first. An empty
+ * list when the database cannot be read (build without Supabase, outage):
+ * the sitemap keeps its other pages.
+ */
+export async function sitemapListings(): Promise<SitemapListing[]> {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const { data, error } = await createPublicClient()
+      .from("public_listings")
+      .select("slug, published_at")
+      .order("published_at", { ascending: false })
+      .limit(10_000);
+    if (error) throw new Error(`public_listings: ${error.code} ${error.message}`);
+    return data.flatMap((row) =>
+      row.slug ? [{ slug: row.slug, publishedAt: row.published_at }] : [],
+    );
+  } catch (error) {
+    console.error("[sitemap] listings read failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return [];
+  }
+}

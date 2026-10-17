@@ -368,10 +368,8 @@ test.describe("comptes connectés (base de seed)", () => {
       await page.getByRole("link", { name: "Favoris" }).click();
       await expect(page).toHaveURL("/acquereur/favoris");
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Favoris");
-      await expect(page.getByRole("link", { name: "Voir les biens" })).toHaveAttribute(
-        "href",
-        "/acheter",
-      );
+      // The seed saves three listings for buyer_c (L1-18).
+      await expect(page.getByRole("list", { name: "Biens sauvegardés" })).toBeVisible();
     }
   });
 

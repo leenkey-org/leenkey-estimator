@@ -215,6 +215,28 @@ export const fr = {
     },
   },
   // L1-10: pages whose screen comes with a later task (ComingSoon).
+  favorites: {
+    add: "Ajouter aux favoris",
+    added: "Ajouté à vos favoris.",
+    removed: "Retiré de vos favoris.",
+    error: "Le favori n'a pas pu être enregistré. Réessayez.",
+    page: {
+      metaTitle: "Favoris · Leenkey",
+      title: "Favoris",
+      list: "Biens sauvegardés",
+      count: (count: number) =>
+        count === 1 ? "1 bien sauvegardé" : `${count}\u00A0biens sauvegardés`,
+      offline: (count: number) =>
+        count === 1
+          ? "1 bien de vos favoris n'est plus en ligne."
+          : `${count}\u00A0biens de vos favoris ne sont plus en ligne.`,
+      emptyTitle: "Aucun favori pour l'instant",
+      emptyText: "Sauvegardez une annonce avec le cœur pour la retrouver ici.",
+      action: "Voir les biens",
+      error: "Vos favoris n'ont pas pu être chargés.",
+      retry: "Réessayer",
+    },
+  },
   placeholders: {
     messages: {
       metaTitle: "Messages · Leenkey",
@@ -229,13 +251,6 @@ export const fr = {
       comingTitle: "Vos réglages arrivent",
       comingText:
         "Nous préparons l'écran de vos informations personnelles, de votre mot de passe et de vos notifications.",
-    },
-    favourites: {
-      metaTitle: "Favoris · Leenkey",
-      title: "Favoris",
-      comingTitle: "Vos favoris arrivent",
-      comingText: "Nous préparons la liste des biens que vous sauvegarderez depuis les annonces.",
-      action: "Voir les biens",
     },
     sellerFile: {
       metaTitle: "Dossier de vente · Leenkey",

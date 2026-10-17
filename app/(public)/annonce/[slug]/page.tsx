@@ -9,6 +9,8 @@ import { KeyFactsTable } from "@/components/shared/key-facts-table";
 import { KeyFigures } from "@/components/shared/key-figures";
 import { PriceBlock } from "@/components/shared/price-block";
 import { SectionTitle } from "@/components/shared/section-title";
+import { FavoriteButton } from "@/leenkey/favorites/components/favorite-button";
+import { favoriteState } from "@/leenkey/favorites/queries";
 import { BackLink } from "@/leenkey/listings/components/back-link";
 import { ActionBar, PriceColumn } from "@/leenkey/listings/components/listing-actions";
 import { ListingBreadcrumb } from "@/leenkey/listings/components/listing-breadcrumb";
@@ -35,10 +37,11 @@ import { absoluteUrl } from "@/lib/site";
 // L1-17: public listing page (SPEC-V2 8.5, docs/DESIGN.md 12.7, 12.8).
 // Published listings only: any other status, or an unknown address, is a 404.
 // Not yet here: photos (L1-12, facade.svg meanwhile), map of the area (with
-// Mapbox), assistant summary (L2-05), offer (L2), favourite (L1-18),
-// documents (L3). Navigation (L1-10): TopNav from 768 px only; on mobile the
-// gallery and the action bar stay alone, without bottom tabs. SiteFooter at
-// the end (L1-36), with room below it for the fixed action bar.
+// Mapbox), assistant summary (L2-05), offer (L2), documents (L3). Favourite
+// (L1-18): over the mobile gallery, next to the desktop price. Navigation
+// (L1-10): TopNav from 768 px only; on mobile the gallery and the action bar
+// stay alone, without bottom tabs. SiteFooter at the end (L1-36), with room
+// below it for the fixed action bar.
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -81,6 +84,15 @@ export default async function ListingPage({ params }: Props) {
 
   const { place, detail } = listingPlace(listing);
   const signUpHref = buyerSignUpHref(listing.slug);
+  const favorite = await favoriteState(listing.id);
+  const heart = (variant: "white-float" | "stone") => (
+    <FavoriteButton
+      listingId={listing.id}
+      favorite={favorite}
+      signUpHref={signUpHref}
+      variant={variant}
+    />
+  );
   const url = absoluteUrl(`/annonce/${listing.slug}`);
   const jsonLd = listingJsonLd(listing, url, absoluteUrl(`/api/og/${listing.slug}`));
 
@@ -94,7 +106,12 @@ export default async function ListingPage({ params }: Props) {
           title={listing.title}
           className="hidden pt-5 lg:block"
         />
-        <Gallery photos={[]} topLeft={<BackLink />} className="lg:mt-4" />
+        <Gallery
+          photos={[]}
+          topLeft={<BackLink />}
+          topRight={heart("white-float")}
+          className="lg:mt-4"
+        />
 
         <div className="px-5 pt-5 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-10 lg:px-0 lg:pt-6">
           <div className="flex min-w-0 flex-col gap-3.5 lg:gap-5.5">
@@ -136,7 +153,7 @@ export default async function ListingPage({ params }: Props) {
           </div>
 
           <aside className="hidden lg:block">
-            <PriceColumn listing={listing} signUpHref={signUpHref} />
+            <PriceColumn listing={listing} signUpHref={signUpHref} favorite={heart("stone")} />
           </aside>
         </div>
       </main>

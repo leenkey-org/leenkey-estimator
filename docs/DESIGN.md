@@ -546,6 +546,8 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 - Mobile : une photo pleine largeur 280 px, défilement horizontal à l'aimant (`scroll-snap`), compteur « 1 / 12 » en bas à droite, boutons retour et favori en haut. Toucher = plein écran.
 - Desktop : mosaïque (section 7.1). Clic = visionneuse plein écran (fond `--lk-ink` 95 %, flèches 44 px, compteur, `Échap` pour fermer, focus piégé).
 
+**FavoriteButton** (L1-18, `leenkey/favorites/components/favorite-button.tsx` : il appelle une action serveur, il n'est donc pas dans `components/shared`) : `IconButton` 44 × 44, cœur `Heart` `--lk-blue`, plein quand le bien est sauvegardé. `white-float` sur une photo (galerie mobile en haut à droite, `PropertyCard` de la page Favoris), `stone` à droite du prix dans la `PriceColumn` desktop (`AnnonceDesktop` n'en dessine pas). Bouton bascule : nom constant « Ajouter aux favoris », `aria-pressed`, état affiché tout de suite puis annulé si le serveur refuse, message pour les lecteurs d'écran (« Ajouté à vos favoris. »). Sans session : lien vers l'inscription acquéreur avec retour à l'annonce. Pas de cœur sur les cartes de la recherche (absent des maquettes `Recherche` et `RechercheDesktop`).
+
 **ContactCard** (vendeur sur l'annonce) : avatar initiales 40 px navy, « Camille, propriétaire » 14 px 600, « Vente accompagnée par Leenkey · répond sous 24 h » 12 px `--lk-ink-3`, icône de vérification `--lk-success` à droite. Carte bordure `--lk-line` rayon 6 (mobile) ou tuile `--lk-stone-2` (desktop, dans la colonne prix).
 
 **ActionBar annonce mobile** (collée en bas) : fond blanc, bordure haute `--lk-line`, padding 14 × 20 × 24. « Contacter le vendeur » `primary lg` (flex 1) + bouton icône calendrier 52 × 52 `secondary`.

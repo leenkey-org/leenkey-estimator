@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-17 · L1-18, L1-20 · PR #? · Favoris, sitemap et robots
+- Ajouté : cœur des favoris sur l'annonce (en haut de la galerie en mobile, à droite du prix en desktop), état affiché tout de suite et annulé si l'enregistrement échoue ; sans session, il mène à l'inscription acquéreur avec retour à l'annonce. Page `/acquereur/favoris` : biens sauvegardés du plus récent au plus ancien (`PropertyCard compact` avec le cœur), nombre de favoris qui ne sont plus en ligne, état vide « Voir les biens ». Action `setFavorite` (Zod, session, RLS existantes de `favorites`).
+- Ajouté : `/sitemap.xml` construit par `app/sitemap.ts` (pages de la V1, recherche, annonces publiées ; reconstruit au plus toutes les heures, pages seules si la base est indisponible), à la place de `public/sitemap.xml`.
+- Modifié : `robots.txt` de production, qui ferme les espaces connectés, le back office et les routes techniques (`/api/`, `/auth/`, `/confirmation`, `/conditions`, `/reinitialiser`) ; toujours tout fermé hors production.
+- Tests : unitaires (schéma de l'action, entrées du sitemap, règles de robots) ; E2E sans base (sitemap valide, robots selon l'environnement) et sur la pile de seed (cœur sans session, ajout, rechargement, page Favoris, retrait annulable, accessibilité).
+
 ### 2026-10-17 · L1-10 · PR #17 · Navigation
 - Ajouté : `TopNav` à partir de 768 px (Acheter, Vendre, Valoriser mon bien ; « Vendre mon bien » ; connecté : cloche, favoris et menu du compte ; sans session : « Mon compte » vers la connexion avec retour à la page), `BottomNav` sous 768 px par espace (vendeur, acquéreur, back office), `AdminShell` (barre latérale, en-tête mobile, onglets), `NotificationBell` et son panneau vide, `AccountMenu` (Mon espace, Mon compte, Se déconnecter), `ComingSoon` ; tous dans `/design`. Configuration de Leenkey dans `leenkey/navigation/config.ts`.
 - Ajouté : pages d'attente `/messages`, `/compte` (avec « Se déconnecter »), `/acquereur/favoris`, `/vendeur/dossier` et, dans le back office, `/admin/annonces`, `/admin/utilisateurs`, `/admin/dossiers`, `/admin/offres`, `/admin/signalements`, `/admin/assistant`.
