@@ -1,16 +1,19 @@
 import type { ReactNode } from "react";
+import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 
 /**
- * Page of a signed-in area until its screen exists: H1, an optional element
- * on its right (the mobile bell of a home page), then the content.
+ * Page of a signed-in area until its screen exists: H1, the bell on its right
+ * below 768 px (DECISIONS Q26; in the TopNav from there), then the content.
+ * The bell is on every page of the areas: the buyer home is not a tab.
  */
 export function SpacePage({
   title,
-  aside,
+  roles,
   children,
 }: {
   title: string;
-  aside?: ReactNode;
+  /** Roles of the account: the bell takes the sentence of the current space. */
+  roles: readonly string[];
   children: ReactNode;
 }) {
   return (
@@ -19,7 +22,7 @@ export function SpacePage({
         <h1 className="min-w-0 text-lk-h1 font-bold text-wide text-lk-ink lg:text-lk-h1-lg">
           {title}
         </h1>
-        {aside}
+        <SpaceNotificationBell roles={roles} className="md:hidden" />
       </div>
       {children}
     </div>

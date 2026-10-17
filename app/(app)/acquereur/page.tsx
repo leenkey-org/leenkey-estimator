@@ -3,8 +3,6 @@ import Link from "next/link";
 import { requireProfile } from "@/core/auth/session";
 import { Button } from "@/components/shared/button";
 import { EmptyState } from "@/components/shared/empty-state";
-import { NotificationBell } from "@/components/shared/notification-bell";
-import { notificationBell } from "@/leenkey/navigation/config";
 import { fr } from "@/lib/i18n/fr";
 import { SpacePage } from "../_components/space-page";
 
@@ -17,10 +15,7 @@ export default async function BuyerHomePage() {
   const profile = await requireProfile();
   const t = fr.spaces.buyer;
   return (
-    <SpacePage
-      title={fr.spaces.greeting(profile.firstName)}
-      aside={<NotificationBell {...notificationBell("buyer")} className="md:hidden" />}
-    >
+    <SpacePage title={fr.spaces.greeting(profile.firstName)} roles={profile.roles}>
       <EmptyState
         className="mt-12"
         title={t.title}

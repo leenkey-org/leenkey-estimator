@@ -164,6 +164,8 @@ test("mot de passe oublié, nouveau mot de passe", async ({ page }) => {
 
 // seller_b and buyer_d: no other test signs them in (navigation.spec.ts uses
 // seller_a, buyer_c and admin), so a fresh stack always shows them the gate.
+// The gate shows once per database: run this file on a stack just made by
+// `scripts/local-stack.sh up`, which resets it.
 for (const [account, home] of [
   ["seller_b", "/vendeur"],
   ["buyer_d", "/acquereur"],
@@ -173,18 +175,7 @@ for (const [account, home] of [
     await page.getByLabel("Email").fill(`${account}@test.leenkey.fr`);
     await page.getByLabel("Mot de passe").fill(SEED_PASSWORD ?? "");
     await page.getByRole("button", { name: "Se connecter" }).click();
-    const gate = new RegExp(`/conditions\\?next=${encodeURIComponent(home)}$`);
-    // The gate shows once per database: a stack reused from an earlier run
-    // has already recorded the acceptance (`scripts/local-stack.sh up` resets it).
-    const gated = await page.waitForURL(gate, { timeout: 5_000 }).then(
-      () => true,
-      () => false,
-    );
-    test.skip(
-      !gated && new URL(page.url()).pathname === home,
-      "conditions déjà acceptées sur cette base",
-    );
-    await expect(page).toHaveURL(gate);
+    await expect(page).toHaveURL(new RegExp(`/conditions\\?next=${encodeURIComponent(home)}$`));
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Continuer" }).click();
     await expect(page).toHaveURL(new RegExp(`${home}$`));

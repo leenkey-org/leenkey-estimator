@@ -144,11 +144,14 @@ test("retirer son accord recharge la page sans Google", async ({ page }) => {
   await consentValue(page).toMatch(/^v1\.0\./);
 });
 
-test("« Gérer mes cookies » est aussi sous les écrans de connexion", async ({ page }) => {
+test("« Gérer mes cookies » est aussi sous la connexion et la recherche", async ({ page }) => {
   await page.goto("/connexion");
   await banner(page).getByRole("button", { name: "Refuser" }).click();
-  await page.getByRole("contentinfo").getByRole("button", { name: "Gérer mes cookies" }).click();
-  await expect(preferences(page)).toBeVisible();
+  for (const path of ["/connexion", "/acheter"]) {
+    await page.goto(path);
+    await page.getByRole("contentinfo").getByRole("button", { name: "Gérer mes cookies" }).click();
+    await expect(preferences(page), path).toBeVisible();
+  }
 });
 
 test("le bandeau n'a aucune violation sérieuse ou critique @a11y", async ({ page }) => {

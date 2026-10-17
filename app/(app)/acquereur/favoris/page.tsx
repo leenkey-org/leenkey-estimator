@@ -14,9 +14,9 @@ export const metadata: Metadata = { title: t.metaTitle };
 // Placeholder until the favourites (L1-18), reached from the bottom tabs and
 // the TopNav.
 export default async function FavouritesPage() {
-  await requireProfile();
+  const profile = await requireProfile();
   return (
-    <SpacePage title={t.title}>
+    <SpacePage title={t.title} roles={profile.roles}>
       <ComingSoon
         className="mt-6"
         title={t.comingTitle}

@@ -14,7 +14,9 @@ import {
   ADMIN_NAV_ITEMS,
   bottomTabs,
   FAVOURITES_LINK,
+  followSpace,
   notificationBell,
+  ownSpace,
   ROUTES,
   sellCta,
   signInLink,
@@ -61,6 +63,23 @@ describe("spaceFor", () => {
     expect(spaceFor("/vendeurs", ["buyer"])).toBe("buyer");
     expect(spaceFor("/acheteur", ["seller"])).toBe("seller");
     expect(spaceFor("/vendeur/", ["buyer"])).toBe("seller");
+  });
+});
+
+describe("followSpace (client navigation, SpaceProvider)", () => {
+  it("takes the space of a page that has one", () => {
+    expect(ownSpace("/vendeur/dossier")).toBe("seller");
+    expect(ownSpace("/acheter?ville=savigny-sur-orge")).toBe("buyer");
+    expect(followSpace("seller", "/acquereur/favoris")).toBe("buyer");
+    expect(followSpace("buyer", "/vendeur")).toBe("seller");
+    expect(followSpace("seller", "/admin/annonces")).toBe("admin");
+  });
+
+  it("keeps the previous space on the shared pages", () => {
+    for (const path of ["/messages", "/messages/42", "/compte", "/assistant"]) {
+      expect(ownSpace(path), path).toBeNull();
+      for (const space of SPACES) expect(followSpace(space, path), path).toBe(space);
+    }
   });
 });
 

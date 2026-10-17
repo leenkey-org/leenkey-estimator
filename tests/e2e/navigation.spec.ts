@@ -31,6 +31,33 @@ async function seriousViolations(page: Page) {
 /** The navigation shown at this width (the other one is display: none). */
 const mainNav = (page: Page) => page.getByRole("navigation", { name: MAIN_NAV });
 
+/** SiteFooter (L1-36): legal links and « Gérer mes cookies » under every V2 page. */
+async function expectFooter(page: Page) {
+  const footer = page.getByRole("contentinfo");
+  await expect(footer.getByRole("link", { name: "Mentions légales" })).toBeVisible();
+  await expect(footer.getByRole("button", { name: "Gérer mes cookies" })).toBeVisible();
+}
+
+/**
+ * At 768 px, the narrowest TopNav (DESIGN.md 10.6, criterion of L1-10): the
+ * links end before the buttons on the right, nothing leaves the screen.
+ */
+async function expectTopNavFitsAt768(page: Page) {
+  await page.setViewportSize({ width: 768, height: 900 });
+  const lastLink = await mainNav(page).getByRole("link").last().boundingBox();
+  const cta = await page.getByRole("link", { name: "Vendre mon bien" }).boundingBox();
+  expect(lastLink && cta && lastLink.x + lastLink.width).toBeLessThanOrEqual(cta?.x ?? 0);
+  const right = await page
+    .getByRole("banner")
+    .evaluate((header) =>
+      Math.max(
+        ...[...header.querySelectorAll("a, button")].map((el) => el.getBoundingClientRect().right),
+      ),
+    );
+  expect(right).toBeLessThanOrEqual(768);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
+}
+
 /** The four tabs of the BottomNav, in order. */
 async function expectTabs(page: Page, labels: string[], current: string | null) {
   const nav = mainNav(page);
@@ -66,9 +93,11 @@ test.describe("visiteur sans session", () => {
     await page.evaluate(() =>
       window.scrollTo({ top: document.body.scrollHeight, behavior: "instant" }),
     );
-    const main = await page.getByRole("main").boundingBox();
     const barAfterScroll = await mainNav(page).boundingBox();
-    expect(main && barAfterScroll && main.y + main.height).toBeLessThanOrEqual(
+    // The footer comes last: nothing of it either goes under the bar.
+    await expectFooter(page);
+    const footer = await page.getByRole("contentinfo").boundingBox();
+    expect(footer && barAfterScroll && footer.y + footer.height).toBeLessThanOrEqual(
       (barAfterScroll?.y ?? 0) + 1,
     );
   });
@@ -110,8 +139,18 @@ test.describe("visiteur sans session", () => {
     // 72 px, white, from the top.
     const bar = await page.getByRole("banner").boundingBox();
     expect(bar?.height).toBe(72);
+    await expectFooter(page);
     await account.click();
     await expect(page).toHaveURL(/\/connexion\?next=%2Facheter%3Fville%3Dsavigny-sur-orge/);
+  });
+
+  test("/acheter à 768 px : la barre haute tient sans chevauchement", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "barre haute à partir de 768 px");
+    await page.goto("/acheter");
+    await expectTopNavFitsAt768(page);
   });
 
   test("un onglet d'espace connecté mène à la connexion, qui y ramènera", async ({
@@ -180,9 +219,23 @@ test.describe("page annonce (base de seed)", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     // No bottom tabs on a listing, at any width.
     await expect(page.getByRole("link", { name: "Chercher" })).toHaveCount(0);
+    await expectFooter(page);
     if (isMobile) {
       await expect(page.getByRole("banner")).toBeHidden();
-      await expect(page.getByRole("link", { name: "Contacter le vendeur" })).toBeVisible();
+      const contact = page.getByRole("link", { name: "Contacter le vendeur" });
+      await expect(contact).toBeVisible();
+      // At the bottom of the page, the fixed action bar hides nothing of the footer.
+      await page.evaluate(() =>
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "instant" }),
+      );
+      const manage = await page
+        .getByRole("contentinfo")
+        .getByRole("button", { name: "Gérer mes cookies" })
+        .boundingBox();
+      const actions = await contact.boundingBox();
+      expect(manage && actions && manage.y + manage.height).toBeLessThanOrEqual(
+        (actions?.y ?? 0) - 1,
+      );
     } else {
       // « Acheter » stays current on a listing (AnnonceDesktop).
       await expect(mainNav(page).getByRole("link", { name: "Acheter" })).toHaveAttribute(
@@ -237,6 +290,7 @@ test.describe("comptes connectés (base de seed)", () => {
   }) => {
     await signIn(page, "seller_a", "/vendeur");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bonjour Alice");
+    await expectFooter(page);
     const bell = page.getByRole("button", { name: "Notifications", exact: true });
     // One bell at each width: next to the title in mobile, in the TopNav after.
     await expect(bell).toHaveCount(1);
@@ -248,6 +302,8 @@ test.describe("comptes connectés (base de seed)", () => {
       await expect(page).toHaveURL("/vendeur/dossier");
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dossier de vente");
       await expectTabs(page, ["Ma vente", "Dossier", "Messages", "Compte"], "Dossier");
+      // The bell is on every page of the area, not only on its home (Q26).
+      await expect(bell).toBeVisible();
     } else {
       await expect(mainNav(page).getByRole("link")).toHaveText([
         "Acheter",
@@ -265,6 +321,8 @@ test.describe("comptes connectés (base de seed)", () => {
       await expect(page.getByRole("button", { name: "Menu du compte" })).toHaveText("A");
       await expect(page.getByRole("link", { name: "Ma vente" })).toBeHidden();
       await expect(page.getByRole("link", { name: "Mon compte" })).toHaveCount(0);
+      // Signed in, the TopNav is at its widest: bell, favourites and avatar.
+      await expectTopNavFitsAt768(page);
     }
     expect(await seriousViolations(page)).toEqual([]);
   });
@@ -272,12 +330,15 @@ test.describe("comptes connectés (base de seed)", () => {
   test("acquéreur : onglets de l'acquéreur", async ({ page, isMobile }) => {
     await signIn(page, "buyer_c", "/acquereur");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bonjour Chloé");
+    await expectFooter(page);
     if (isMobile) {
       // The buyer home is not one of the tabs (DESIGN.md 10.6).
       await expectTabs(page, ["Chercher", "Favoris", "Messages", "Compte"], null);
       await mainNav(page).getByRole("link", { name: "Favoris" }).click();
       await expect(page).toHaveURL("/acquereur/favoris");
       await expectTabs(page, ["Chercher", "Favoris", "Messages", "Compte"], "Favoris");
+      // The buyer home is not a tab: the bell is on this page too (Q26).
+      await expect(page.getByRole("button", { name: "Notifications", exact: true })).toBeVisible();
       // On the search too, the buyer keeps the same tabs.
       await mainNav(page).getByRole("link", { name: "Chercher" }).click();
       await expect(page).toHaveURL("/acheter");
@@ -299,6 +360,7 @@ test.describe("comptes connectés (base de seed)", () => {
   }) => {
     await signIn(page, "admin", "/admin");
     const nav = page.getByRole("navigation", { name: ADMIN_NAV });
+    await expectFooter(page);
     if (isMobile) {
       await expect(page.getByRole("banner")).toContainText("Back office");
       await expect(page.getByRole("banner")).toContainText("Tableau de bord");
@@ -349,7 +411,32 @@ test.describe("comptes connectés (base de seed)", () => {
     expect(await seriousViolations(page)).toEqual([]);
   });
 
+  test("l'espace suit la page sans rechargement : la phrase de la cloche change", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "cloche et favoris de la barre haute à partir de 768 px");
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await signIn(page, "seller_a", "/vendeur");
+    const bell = page.getByRole("button", { name: "Notifications", exact: true });
+    const panel = page.getByRole("dialog", { name: "Notifications" });
+    // Kept by a client navigation, lost by a full load.
+    await page.evaluate(() => Object.assign(window, { lkSameDocument: true }));
+    await page.getByRole("link", { name: "Favoris" }).click();
+    await expect(page).toHaveURL("/acquereur/favoris");
+    await bell.click();
+    await expect(panel).toContainText("des réponses des vendeurs");
+    await page.keyboard.press("Escape");
+    await page.getByRole("link", { name: "Vendre mon bien" }).click();
+    await expect(page).toHaveURL("/vendeur");
+    await bell.click();
+    await expect(panel).toContainText("des offres reçus pour votre bien");
+    expect(await page.evaluate(() => "lkSameDocument" in window)).toBe(true);
+  });
+
   test("la cloche ouvre le panneau vide, Échap le referme", async ({ page }) => {
+    // No 220 ms entrance (DESIGN.md 2.2): axe measures the panel in place.
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await signIn(page, "seller_a", "/vendeur");
     const bell = page.getByRole("button", { name: "Notifications", exact: true });
     await bell.click();
@@ -361,8 +448,6 @@ test.describe("comptes connectés (base de seed)", () => {
       "href",
       "/compte",
     );
-    // Opened from the right in 220 ms: contrasts are measured once in place.
-    await page.waitForTimeout(300);
     expect(await seriousViolations(page)).toEqual([]);
     await page.keyboard.press("Escape");
     await expect(panel).toBeHidden();
@@ -382,6 +467,7 @@ test.describe("comptes connectés (base de seed)", () => {
     const [account, home] = isMobile
       ? (["admin", "/admin"] as const)
       : (["seller_a", "/vendeur"] as const);
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await signIn(page, account, home);
     const trigger = page.getByRole("button", { name: "Menu du compte" });
     await trigger.focus();
@@ -398,7 +484,6 @@ test.describe("comptes connectés (base de seed)", () => {
       "href",
       "/compte",
     );
-    await page.waitForTimeout(300);
     expect(await seriousViolations(page)).toEqual([]);
     await page.keyboard.press("Escape");
     await expect(menu).toBeHidden();

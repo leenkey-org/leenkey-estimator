@@ -31,19 +31,38 @@ export const ROUTES = {
 } as const;
 
 /**
- * Space of a page, which picks the bottom tabs and the notifications text:
- * the back office, the seller and the buyer areas by their path; the pages
- * shared by both (messages, account, assistant) by the roles of the account:
- * seller when it sells, otherwise buyer, admin for an admin-only account.
+ * Space a path belongs to: the back office, the seller and the buyer areas
+ * (the search with them). Null for the pages shared by all (messages,
+ * account, assistant) and the other public pages.
  */
-export function spaceFor(path: string, roles: readonly string[]): Space {
+export function ownSpace(path: string): Space | null {
   const pathname = pathnameOf(path);
   if (matchesPath(pathname, ROUTES.admin)) return "admin";
   if (matchesPath(pathname, ROUTES.seller)) return "seller";
   if (matchesPath(pathname, ROUTES.buyer) || matchesPath(pathname, ROUTES.search)) return "buyer";
+  return null;
+}
+
+/**
+ * Space of a page, which picks the bottom tabs and the notifications text:
+ * its own (ownSpace), otherwise the roles of the account: seller when it
+ * sells, otherwise buyer, admin for an admin-only account. In the signed-in
+ * areas, a shared page keeps the space the visitor came from (SpaceProvider).
+ */
+export function spaceFor(path: string, roles: readonly string[]): Space {
+  const own = ownSpace(path);
+  if (own) return own;
   if (roles.includes("seller")) return "seller";
   if (roles.includes("admin") && !roles.includes("buyer")) return "admin";
   return "buyer";
+}
+
+/**
+ * Space after a client navigation to `path` (SpaceProvider): its own, or for
+ * a shared page the one the visitor came from.
+ */
+export function followSpace(previous: Space, path: string): Space {
+  return ownSpace(path) ?? previous;
 }
 
 const tabs = fr.nav.tabs;

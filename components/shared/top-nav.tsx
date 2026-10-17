@@ -1,10 +1,10 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Heart, Plus } from "lucide-react";
 import { AccountMenu, type AccountMenuProps } from "./account-menu";
 import { Button } from "./button";
 import { iconButtonVariants } from "./icon-button";
 import type { NavItem } from "./nav-items";
-import { NotificationBell, type NotificationBellProps } from "./notification-bell";
 import { TopNavLinks } from "./top-nav-links";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,8 @@ export type TopNavAccount =
     }
   | {
       signedIn: true;
-      notifications: Omit<NotificationBellProps, "size" | "tone" | "className">;
+      /** The NotificationBell, size « nav » (its panel sentence depends on the space). */
+      notifications: ReactNode;
       favourites: { href: string; label: string };
       menu: Omit<AccountMenuProps, "variant" | "className">;
     };
@@ -63,7 +64,7 @@ export function TopNav({
     >
       <Link
         href={homeHref}
-        className="shrink-0 rounded-lk-sm text-lk-h2 font-bold text-wide text-lk-ink"
+        className="inline-flex h-11 shrink-0 items-center rounded-lk-sm text-lk-h2 font-bold text-wide text-lk-ink"
       >
         {fr.nav.brand}
       </Link>
@@ -76,7 +77,7 @@ export function TopNav({
         ) : null}
         {account.signedIn ? (
           <>
-            <NotificationBell {...account.notifications} size="nav" />
+            {account.notifications}
             <Link
               href={account.favourites.href}
               aria-label={account.favourites.label}

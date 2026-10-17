@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { BOTTOM_NAV_OFFSET } from "@/components/shared/nav-items";
+import { SiteFooter } from "@/components/shared/site-footer";
 import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
 import { bottomTabs } from "@/leenkey/navigation/config";
 import { FiltersDialog } from "@/leenkey/search/components/filters-dialog";
@@ -33,7 +34,7 @@ import {
 // The map (L1-16) and « Créer une alerte » (L3-06) come later. Navigation
 // (L1-10): TopNav from 768 px, buyer tabs below for every visitor (the
 // middleware sends a signed-out visitor from Favoris, Messages or Compte to
-// the login page).
+// the login page), SiteFooter at the end (L1-36).
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -140,6 +141,7 @@ export default async function SearchPage({ searchParams }: Props) {
         </main>
         <FiltersDialog />
       </SearchProvider>
+      <SiteFooter />
       <BottomNav label={fr.nav.label} items={bottomTabs("buyer")} />
     </FacadeRoot>
   );

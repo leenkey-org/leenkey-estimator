@@ -13,9 +13,9 @@ export const metadata: Metadata = { title: t.metaTitle };
 // Placeholder until the account page (L1-39). On mobile, the « Compte » tab
 // is the only way to sign out: the account menu sits in the TopNav.
 export default async function AccountPage() {
-  await requireProfile();
+  const profile = await requireProfile();
   return (
-    <SpacePage title={t.title}>
+    <SpacePage title={t.title} roles={profile.roles}>
       <ComingSoon
         className="mt-6"
         title={t.comingTitle}

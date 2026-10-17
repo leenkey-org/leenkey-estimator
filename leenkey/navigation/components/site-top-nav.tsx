@@ -1,18 +1,16 @@
 import { TopNav, type TopNavAccount } from "@/components/shared/top-nav";
-import { pathnameOf } from "@/components/shared/nav-items";
 import { currentPath, getProfile } from "@/core/auth/session";
 import { signOut } from "@/leenkey/auth/actions";
 import { fr } from "@/lib/i18n/fr";
 import {
   accountMenu,
   FAVOURITES_LINK,
-  notificationBell,
   ROUTES,
   sellCta,
   signInLink,
-  spaceFor,
   TOP_NAV_LINKS,
 } from "../config";
+import { SpaceNotificationBell } from "./space";
 
 /**
  * TopNav of the public pages and the signed-in areas (docs/DESIGN.md 10.6),
@@ -24,7 +22,7 @@ export async function SiteTopNav() {
   const account: TopNavAccount = profile
     ? {
         signedIn: true,
-        notifications: notificationBell(spaceFor(pathnameOf(path), profile.roles)),
+        notifications: <SpaceNotificationBell roles={profile.roles} size="nav" />,
         favourites: FAVOURITES_LINK,
         menu: { ...accountMenu(profile), signOut },
       }

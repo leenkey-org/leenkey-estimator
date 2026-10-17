@@ -18,6 +18,8 @@ export type AdminShellProps = {
   /** Mobile title of a page that no item covers. */
   fallbackTitle: string;
   account: Omit<AccountMenuProps, "variant" | "className">;
+  /** Under the content, beside the sidebar (SiteFooter). */
+  footer?: ReactNode;
   children: ReactNode;
   className?: string;
 };
@@ -34,6 +36,7 @@ export function AdminShell({
   tabs,
   fallbackTitle,
   account,
+  footer,
   children,
   className,
 }: AdminShellProps) {
@@ -55,6 +58,7 @@ export function AdminShell({
       <div className="flex min-w-0 flex-col">
         <AdminMobileHeader items={items} fallbackTitle={fallbackTitle} account={account} />
         <main className="flex-1 px-5 pt-5 pb-8 md:px-8 md:py-7">{children}</main>
+        {footer}
       </div>
       <BottomNav label={label} items={tabs} />
     </div>

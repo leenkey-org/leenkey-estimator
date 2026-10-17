@@ -769,7 +769,7 @@ export default function DesignPage() {
                 cta={sellCta(true)}
                 account={{
                   signedIn: true,
-                  notifications: notificationBell("buyer"),
+                  notifications: <NotificationBell {...notificationBell("buyer")} size="nav" />,
                   favourites: FAVOURITES_LINK,
                   menu: { ...accountMenu(content.navigation.buyer), signOut },
                 }}
