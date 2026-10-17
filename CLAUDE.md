@@ -159,6 +159,7 @@ STRIPE_PRICE_SERENITE=
 STRIPE_PRICE_UPGRADE=           # Accompagné → Sérénité, 510 €
 ADMIN_NOTIFICATION_EMAIL=       # admin@leenkey.fr en prod
 EMAIL_TEST_INBOX=               # destinataire unique des emails hors prod
+EMAIL_FROM=                     # facultatif : expéditeur des emails (Leenkey <bonjour@leenkey.fr> par défaut)
 ANTHROPIC_API_KEY=
 RESEND_API_KEY=
 CRON_SECRET=                    # vérifié sur chaque route /api/cron/*

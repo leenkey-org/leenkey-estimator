@@ -1,0 +1,133 @@
+import type { ReactNode } from "react";
+import {
+  Body,
+  Button,
+  Container,
+  Head,
+  Heading,
+  Hr,
+  Html,
+  Link,
+  Preview,
+  Section,
+  Text,
+} from "@react-email/components";
+import { fr } from "@/lib/i18n/fr";
+
+// Common template of the emails (docs/DESIGN.md 14, SPEC-V2 section 18):
+// stone background, white card of 560 px, 8 px blue band, « Leenkey » in
+// text, Archivo titles with an Arial fallback (mail clients ignore
+// font-stretch), one blue button, footer with the notification settings and
+// the legal identity. Inline styles only: mail clients drop style sheets.
+
+const t = fr.emails;
+
+const FONT = "Archivo, Arial, Helvetica, sans-serif";
+const INK = "#0F1E35";
+const MUTED = "#5B6474";
+const BLUE = "#1156FC";
+
+export const emailText = { margin: "0 0 16px", fontSize: "15px", lineHeight: "1.6", color: INK };
+
+export type EmailLayoutProps = {
+  /** Line shown by the inbox after the subject. */
+  preview: string;
+  title: string;
+  /** Address of the site, for the links of the footer. */
+  siteUrl: string;
+  action?: { href: string; label: string };
+  children: ReactNode;
+};
+
+export function EmailLayout({ preview, title, siteUrl, action, children }: EmailLayoutProps) {
+  return (
+    <Html lang="fr">
+      <Head />
+      <Preview>{preview}</Preview>
+      <Body
+        style={{ margin: 0, padding: "24px 12px", backgroundColor: "#F4F4F1", fontFamily: FONT }}
+      >
+        <Container
+          style={{
+            maxWidth: "560px",
+            backgroundColor: "#FFFFFF",
+            borderRadius: "6px",
+            overflow: "hidden",
+          }}
+        >
+          <Section style={{ height: "8px", backgroundColor: BLUE }} />
+          <Section style={{ padding: "28px 32px 32px" }}>
+            <Text style={{ margin: "0 0 24px", fontSize: "20px", fontWeight: 700, color: INK }}>
+              {t.brand}
+            </Text>
+            <Heading
+              as="h1"
+              style={{
+                margin: "0 0 16px",
+                fontSize: "24px",
+                lineHeight: "1.25",
+                fontWeight: 700,
+                color: INK,
+              }}
+            >
+              {title}
+            </Heading>
+            {children}
+            {action ? (
+              <Button
+                href={action.href}
+                style={{
+                  display: "inline-block",
+                  margin: "8px 0 24px",
+                  padding: "14px 24px",
+                  borderRadius: "4px",
+                  backgroundColor: BLUE,
+                  color: "#FFFFFF",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                  textDecoration: "none",
+                }}
+              >
+                {action.label}
+              </Button>
+            ) : null}
+            <Text style={{ ...emailText, margin: 0 }}>{t.signature}</Text>
+          </Section>
+        </Container>
+        <Container style={{ maxWidth: "560px", padding: "16px 32px 0" }}>
+          <Text style={{ margin: "0 0 8px", fontSize: "12px", lineHeight: "1.5", color: MUTED }}>
+            {t.footer.why}{" "}
+            <Link href={`${siteUrl}/compte`} style={{ color: MUTED, textDecoration: "underline" }}>
+              {t.footer.preferences}
+            </Link>
+          </Text>
+          <Hr style={{ margin: "8px 0", borderColor: "#E4E3DE" }} />
+          <Text style={{ margin: 0, fontSize: "12px", lineHeight: "1.5", color: MUTED }}>
+            {fr.legal.company} · {fr.legal.address}
+          </Text>
+        </Container>
+      </Body>
+    </Html>
+  );
+}
+
+/** The motive of a decision, set apart in the email. */
+export function EmailQuote({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <Section
+      style={{
+        margin: "0 0 16px",
+        padding: "12px 16px",
+        borderLeft: `4px solid ${BLUE}`,
+        backgroundColor: "#F0F4FF",
+        borderRadius: "4px",
+      }}
+    >
+      <Text style={{ margin: "0 0 4px", fontSize: "13px", fontWeight: 600, color: INK }}>
+        {label}
+      </Text>
+      <Text style={{ margin: 0, fontSize: "15px", lineHeight: "1.6", color: INK }}>{children}</Text>
+    </Section>
+  );
+}

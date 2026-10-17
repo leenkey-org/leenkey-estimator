@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-17 · L1-19 · PR #? · Back office des annonces
+- Ajouté : `/admin/annonces` (résumé, recherche, filtres par statut, cartes en mobile, tableau en desktop) et `/admin/annonces/[id]` (statut, vendeur, formule, motif, aperçu, historique) ; décisions « Valider et publier », « Refuser avec motif », « Suspendre », « Remettre en ligne », motif obligatoire choisi parmi des motifs fréquents ou écrit ; résultat affiché en haut de page. Composants `FilterPills`, `DataTable` et `Textarea` dans `/design`.
+- Ajouté : premiers emails de la V2 (annonce publiée, à corriger, suspendue) en React Email (`emails/`), envoyés par Resend (`core/notifications/email.ts`), vers `EMAIL_TEST_INBOX` seulement hors production ; variable facultative `EMAIL_FROM`.
+- Migration : `20261017120000_admin_listings.sql` (`admin_listings`, `admin_listing_counts`, `admin_listing_seller_contact`, réservées à l'admin, sans table).
+- Tests : 28 tests de permissions (l'admin seul, les quatre autres comptes et un visiteur refusés) ; unitaires (schéma des décisions, adresse de la liste, routage des emails, rendu des trois emails, voix « nous ») ; E2E sur la pile de seed (publication, refus avec motif obligatoire, suspension puis remise en ligne, recherche, cartes mobiles, accessibilité).
+
 ### 2026-10-17 · L1-10 · PR #17 · Navigation
 - Ajouté : `TopNav` à partir de 768 px (Acheter, Vendre, Valoriser mon bien ; « Vendre mon bien » ; connecté : cloche, favoris et menu du compte ; sans session : « Mon compte » vers la connexion avec retour à la page), `BottomNav` sous 768 px par espace (vendeur, acquéreur, back office), `AdminShell` (barre latérale, en-tête mobile, onglets), `NotificationBell` et son panneau vide, `AccountMenu` (Mon espace, Mon compte, Se déconnecter), `ComingSoon` ; tous dans `/design`. Configuration de Leenkey dans `leenkey/navigation/config.ts`.
 - Ajouté : pages d'attente `/messages`, `/compte` (avec « Se déconnecter »), `/acquereur/favoris`, `/vendeur/dossier` et, dans le back office, `/admin/annonces`, `/admin/utilisateurs`, `/admin/dossiers`, `/admin/offres`, `/admin/signalements`, `/admin/assistant`.

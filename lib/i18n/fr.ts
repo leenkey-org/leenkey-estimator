@@ -244,13 +244,6 @@ export const fr = {
       comingText: "Nous préparons l'écran qui réunira la fiche de votre bien et ses documents.",
     },
     admin: {
-      listings: {
-        metaTitle: "Annonces · Back office · Leenkey",
-        title: "Annonces",
-        comingTitle: "La validation des annonces arrive",
-        comingText:
-          "Nous préparons l'écran où vous validerez, refuserez ou suspendrez les annonces des vendeurs.",
-      },
       users: {
         metaTitle: "Utilisateurs · Back office · Leenkey",
         title: "Utilisateurs",
@@ -426,6 +419,162 @@ export const fr = {
     analyticsLabel: "Mesure d'audience",
     analyticsText: "Statistiques de visite avec Google Analytics, par Google Tag Manager.",
     save: "Enregistrer mes choix",
+  },
+  // L1-19: back office v0 of the listings (SPEC-V2 section 17, DESIGN.md 12.12, 12.13).
+  adminListings: {
+    metaTitle: "Annonces · Back office · Leenkey",
+    detailMetaTitle: (reference: string) => `${reference} · Annonces · Back office · Leenkey`,
+    title: "Annonces",
+    summary: {
+      pending: (count: number) => `${count}\u00A0en attente de validation`,
+      published: (count: number) => `${count}\u00A0en ligne`,
+      suspended: (count: number) =>
+        count <= 1 ? `${count}\u00A0suspendue` : `${count}\u00A0suspendues`,
+    },
+    filters: {
+      label: "Statut des annonces",
+      all: "Toutes",
+      count: (label: string, count: number) => `${label} · ${count}`,
+    },
+    search: {
+      label: "Rechercher une annonce",
+      placeholder: "Référence, ville ou vendeur",
+      submit: "Rechercher",
+    },
+    table: {
+      label: "Annonces",
+      property: "Bien",
+      seller: "Vendeur",
+      price: "Prix",
+      plan: "Formule",
+      received: "Reçue",
+      status: "Statut",
+    },
+    notReceived: "Pas envoyée",
+    empty: {
+      title: "Aucune annonce",
+      text: "Aucune annonce ne correspond à ce filtre.",
+      search: (query: string) => `Aucune annonce ne correspond à « ${query} ».`,
+      action: "Voir toutes les annonces",
+    },
+    error: "Les annonces n'ont pas pu être chargées.",
+    retry: "Réessayer",
+    open: "Aperçu",
+    openLabel: (reference: string) => `Aperçu de l'annonce ${reference}`,
+    sellerUnknown: "Vendeur",
+    back: "Toutes les annonces",
+    detail: {
+      seller: "Vendeur",
+      plan: "Formule",
+      received: "Reçue",
+      published: "En ligne depuis",
+      rejection: "Motif du refus",
+      suspension: "Motif de la suspension",
+      preview: "Aperçu de l'annonce",
+      history: "Historique",
+      historyEmpty: "Aucune décision pour l'instant.",
+      publicPage: "Voir la page publique",
+      notFound: "Cette annonce n'existe pas ou a été supprimée.",
+    },
+    history: {
+      actions: {
+        "listing.publish": "Validée et publiée",
+        "listing.reject": "Refusée",
+        "listing.suspend": "Suspendue",
+        "listing.unsuspend": "Remise en ligne",
+      } as Record<string, string>,
+      other: "Modifiée",
+      by: (name: string) => `par ${name}`,
+      reason: (reason: string) => `Motif : ${reason}`,
+    },
+    actions: {
+      label: (reference: string) => `Décisions sur l'annonce ${reference}`,
+      publish: "Valider et publier",
+      reject: "Refuser avec motif",
+      suspend: "Suspendre",
+      unsuspend: "Remettre en ligne",
+      // Mobile cards (AdminAnnonces): the motive is asked in the dialog anyway.
+      publishShort: "Valider",
+      rejectShort: "Refuser",
+    },
+    reasonDialog: {
+      rejectTitle: "Refuser l'annonce",
+      rejectText: "Le vendeur reçoit ce motif par email, corrige son annonce et nous la renvoie.",
+      suspendTitle: "Suspendre l'annonce",
+      suspendText:
+        "L'annonce n'est plus visible des acquéreurs. Le vendeur reçoit ce motif par email ; il ne peut pas la remettre en ligne lui-même.",
+      templates: "Motifs fréquents",
+      reason: "Motif envoyé au vendeur",
+      reasonHint: "Au moins 3 caractères, envoyé tel quel.",
+      cancel: "Annuler",
+      confirmReject: "Refuser l'annonce",
+      confirmSuspend: "Suspendre l'annonce",
+    },
+    // Provisional wording, to be validated by Cédric (DECISIONS 2026-10-17).
+    rejectTemplates: [
+      "La description est incomplète : précisez l'état du bien, ses pièces et ses points forts.",
+      "Le prix ne correspond pas au bien décrit : vérifiez-le ou expliquez-le dans la description.",
+      "Une information obligatoire manque : classe énergie (DPE), surface ou nombre de pièces.",
+      "L'annonce contient des coordonnées personnelles : retirez-les, les échanges passent par la messagerie Leenkey.",
+    ],
+    suspendTemplates: [
+      "Un signalement d'acquéreur est en cours de vérification.",
+      "Des informations de l'annonce semblent inexactes.",
+      "Le bien semble déjà vendu ou n'est plus disponible.",
+      "Le contenu de l'annonce ne respecte pas nos conditions d'utilisation.",
+    ],
+    result: {
+      published: "Annonce publiée.",
+      rejected: "Annonce refusée.",
+      suspended: "Annonce suspendue.",
+      unsuspended: "Annonce remise en ligne.",
+      emailSent: "Le vendeur est prévenu par email.",
+      emailLogged: "Email non envoyé : environnement local.",
+      emailFailed: "L'email au vendeur n'a pas pu partir : prévenez-le autrement.",
+    },
+    errors: {
+      invalid: "Le motif doit faire au moins 3 caractères.",
+      conflict: "Cette annonce a changé de statut entre-temps. Rechargez la page.",
+      notFound: "Cette annonce n'existe plus.",
+      forbidden: "Cette action est réservée à l'équipe Leenkey.",
+      unavailable: "La décision n'a pas pu être enregistrée. Réessayez.",
+    },
+  },
+  // Transactional emails (SPEC-V2 section 18, DESIGN.md 14), texts of emails/.
+  emails: {
+    brand: "Leenkey",
+    greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName},` : "Bonjour,"),
+    signature: "L'équipe Leenkey",
+    footer: {
+      why: "Vous recevez cet email parce que vous vendez un bien sur Leenkey.",
+      preferences: "Gérer mes notifications",
+    },
+    listingPublished: {
+      subject: "Votre annonce est en ligne",
+      title: "Votre annonce est en ligne",
+      text: (title: string) =>
+        `Nous avons relu « ${title} » : elle est maintenant visible des acquéreurs sur Leenkey.`,
+      tips: "Les premiers jours comptent : répondez vite aux messages et proposez des visites.",
+      action: "Voir mon annonce",
+    },
+    listingRejected: {
+      subject: "Votre annonce est à corriger",
+      title: "Votre annonce est à corriger",
+      text: (title: string) =>
+        `Nous avons relu « ${title} » : elle ne peut pas encore être publiée.`,
+      reason: "Ce qu'il faut corriger",
+      next: "Corrigez-la depuis votre espace vendeur et renvoyez-la : nous la relisons sous 24 h.",
+      action: "Corriger mon annonce",
+    },
+    listingSuspended: {
+      subject: "Votre annonce est suspendue",
+      title: "Votre annonce est suspendue",
+      text: (title: string) => `« ${title} » n'est plus visible des acquéreurs pour le moment.`,
+      reason: "Motif",
+      contest: (email: string) =>
+        `Si vous n'êtes pas d'accord ou si vous avez corrigé le problème, écrivez-nous à ${email} : nous vous répondons sous 24 h.`,
+      action: "Voir mon espace vendeur",
+    },
   },
   // Labels of SPEC-V2 section 7 (StatusBadge mapping), colours in DESIGN.md 10.2.
   listingStatus: {
