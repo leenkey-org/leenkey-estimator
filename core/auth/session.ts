@@ -65,6 +65,10 @@ export async function missingAcceptances(profileId: string): Promise<LegalDocume
   return (await acceptanceStatus(profileId)).missing;
 }
 
+// requireProfile only, read once per request: a page and each of its reads
+// check the session. Not shared with acceptTerms, which writes in between.
+const sessionAcceptances = cache(acceptanceStatus);
+
 /**
  * Signed-in area: a session, a profile and the current CGU and privacy
  * versions accepted (otherwise /conditions, then back here).
@@ -73,7 +77,7 @@ export async function requireProfile(): Promise<SessionProfile> {
   const path = await currentPath();
   const profile = await getProfile();
   if (!profile) redirect(loginPath(path));
-  if ((await missingAcceptances(profile.id)).length > 0) {
+  if ((await sessionAcceptances(profile.id)).missing.length > 0) {
     redirect(`/conditions?next=${encodeURIComponent(path)}`);
   }
   return profile;

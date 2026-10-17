@@ -7,6 +7,11 @@ export type InlineAlertProps = {
   children: ReactNode;
   /** A link or a button after the text (« Réessayer »). */
   action?: ReactNode;
+  /**
+   * false: no role, inside a live region already in the page (an alert
+   * inserted with its text is not always read).
+   */
+  live?: boolean;
   className?: string;
 };
 
@@ -21,11 +26,17 @@ const tones = {
  * Inline alert (docs/DESIGN.md 10.8): tinted box, 6 px, icon 14 px, text in
  * the -fg colour of its tone. role="alert" for an error, status otherwise.
  */
-export function InlineAlert({ tone = "info", children, action, className }: InlineAlertProps) {
+export function InlineAlert({
+  tone = "info",
+  children,
+  action,
+  live = true,
+  className,
+}: InlineAlertProps) {
   const { box, icon: Icon } = tones[tone];
   return (
     <div
-      role={tone === "danger" ? "alert" : "status"}
+      role={live ? (tone === "danger" ? "alert" : "status") : undefined}
       className={cn(
         "flex items-start gap-2 rounded-lk-md px-3 py-2.5 text-lk-secondary",
         box,

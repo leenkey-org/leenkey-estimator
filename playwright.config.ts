@@ -5,6 +5,13 @@ import { defineConfig, devices } from "@playwright/test";
 const baseURL = process.env.BASE_URL ?? "http://localhost:3100";
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH;
 
+// Specs that change the seed for good (a decision of the back office does not
+// go back): in their own project, after the two others, so that no spec reads
+// the seed while they change it. They also need E2E_MUTATE=1 and a local
+// stack (see each file). `--no-deps` runs one of them alone.
+const MUTATING = /admin-listings\.spec\.ts$/;
+const desktop = { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } };
+
 // Cookie consent already answered (refused) so that the banner of L1-37
 // never covers what a test clicks; tests/e2e/consent.spec.ts starts without it.
 const consentRefused = {
@@ -38,10 +45,17 @@ export default defineConfig({
     launchOptions: executablePath ? { executablePath } : undefined,
   },
   projects: [
-    { name: "mobile", use: { ...devices["Pixel 7"], viewport: { width: 390, height: 844 } } },
     {
-      name: "desktop",
-      use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } },
+      name: "mobile",
+      testIgnore: MUTATING,
+      use: { ...devices["Pixel 7"], viewport: { width: 390, height: 844 } },
+    },
+    { name: "desktop", testIgnore: MUTATING, use: desktop },
+    {
+      name: "seed-mutations",
+      testMatch: MUTATING,
+      dependencies: ["mobile", "desktop"],
+      use: desktop,
     },
   ],
   webServer: process.env.BASE_URL

@@ -482,6 +482,8 @@ Pour chaque composant : anatomie, dimensions, variantes, états. Les composants 
 
 **FilterPill** (onglets de statut du back office et du panneau de notifications) : hauteur 34–36 px, padding 0 14 px, 12 px, rayon 4. Actif : fond `--lk-navy` (`--lk-ink` dans les notifications), texte blanc 600. Inactif : fond blanc, bordure 1,5 px `--lk-line`, texte `--lk-ink` 500. Compteur intégré au libellé : « En attente · 3 ».
 
+> **Mise en œuvre (L1-19).** `components/shared/filter-pills.tsx` : des liens (le filtre est dans l'adresse), `aria-current="page"` sur l'actif, zone tactile de 44 px (5 px de marge au-dessus et au-dessous de la liste qui défile, pour ne pas la couper) ; la liste défile de côté en mobile et passe à la ligne à partir de 768 px. Dans le back office, un statut sans annonce n'a pas de pastille, sauf « En attente de validation » et le filtre actif. `components/shared/textarea.tsx` : champ multiligne sur le modèle d'`Input` (libellé, aide, erreur), 120 px de haut au moins. `InlineAlert` accepte `live={false}` : sans rôle, dans une région annoncée déjà présente dans la page.
+
 ### 10.2 Affichage de données
 
 **StatusBadge** : pastille, padding 4–5 × 8–10 px, 11 px 600. Libellés : ceux de `SPEC-V2` section 7 (table des statuts) ; la couleur est celle d'ici.
@@ -521,6 +523,8 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 **StatTile** : carte blanche, bordure 1 px `--lk-line`, rayon 6, padding 14 × 12. Chiffre 22 px 700 large ; libellé 11 px `--lk-ink-3`. Par 3 en grille, écart 10.
 
 **DataTable** (back office) : conteneur rayon 6, bordure `--lk-line`. En-tête : fond `--lk-stone-2`, 12 px 600 `--lk-ink-3`, casse normale, padding 12 × 20. Lignes : padding 14 × 20, 13 px, séparateur `--lk-line`, hauteur minimale 56 px. Actions de ligne alignées à droite sous la ligne (boutons `sm`). Indicateur de pré-analyse : pastille 8 px (`--lk-success` ou `--lk-warning`) + texte 12 px.
+
+> **Mise en œuvre (L1-19).** `components/shared/data-table.tsx` : `DataTable` (nom accessible obligatoire), `DataTableHeader`, `DataTableRow`, `DataTableCell`, et `DataTableActions`, une ligne sous la ligne de données, sans séparateur entre les deux ; `DataTableRowHeader` (`<th scope="row">`) pour la cellule qui nomme la ligne ; texte des lignes en 13 px ; chaque annonce est un `<tbody>`. Indicateur de pré-analyse avec L1-30.
 
 ### 10.3 Biens et recherche
 
@@ -735,6 +739,8 @@ Voir 10.7. Deux états dessinés : liste et vide.
 
 ### 12.13 Back office mobile (`AdminAnnonces.png`, G7)
 `AdminMobileHeader` ; `FilterPill` ; cartes d'annonce (vignette 72 × 64, prix 15 px 700 large + statut, titre 13 px 600, vendeur · formule · délai 12 px) ; encart de pré-analyse (`--lk-blue-tint` si conforme, `--lk-warning-bg` si points d'attention) ; actions Valider (`success`) / Refuser (`secondary`) / Aperçu (`IconButton`). `BottomNav` admin.
+
+> **Mise en œuvre (L1-19).** `/admin/annonces` : résumé (« 3 en attente de validation · 12 en ligne »), recherche (référence, ville, code postal, vendeur), `FilterPills` des statuts, puis cartes sous 1024 px (prix 15 px 700 large ; ville et référence ajoutées sous le titre, avec « Hors zone » en dehors de la zone de lancement ; « Refuser » et « Valider » côte à côte, Aperçu en `IconButton`) et `DataTable` à partir de 1024 px (Aperçu `ghost sm`, « Refuser avec motif » `secondary sm`, « Valider et publier » `success sm` ; « Suspendre » `danger sm` sur une annonce en ligne ou en pause, « Remettre en ligne » `secondary sm` sur une annonce suspendue). Refus et suspension : écran plein en mobile, avec l'en-tête de l'`AppHeader` (retour, titre 15 px 600 centré), dialogue de 520 px au centre ensuite (titre 20 px 700 large, « Fermer » en croix), comme DESIGN 10.8, couche 60 (section 5), avec les motifs fréquents en boutons qui remplissent le champ, motif obligatoire (le focus va au champ s'il manque), « Annuler » `outline-ink` et confirmation `primary` (refus) ou `danger` (suspension) avec son état de chargement ; un nouveau dialogue à chaque ouverture, et le focus revient au bouton qui l'a ouvert. Le résultat s'affiche en `InlineAlert` en haut de la liste, dans une région annoncée toujours présente (hors de la mise en page tant qu'elle est vide), et prend le focus ; sans réponse du serveur, rien n'est rechargé d'office (« Recharger la page » est proposé) et, dans le dialogue, le motif reste ; y compris quand l'annonce quitte la liste filtrée ; il ne suit pas vers un autre filtre. Liste coupée à 200 annonces, dite en `InlineAlert` info. Détail `/admin/annonces/[id]` : lien « Toutes les annonces » au-dessus du titre (visible aussi en mobile, où l'en-tête donne la rubrique), carte de statut (référence, vendeur, formule, date de réception, motif), décisions, aperçu (prix, chiffres clés, description, caractéristiques), historique. Pas encore : panneau de détail de 420 px en desktop, pré-analyse, export CSV, « Modifier » (L1-30).
 
 ### 12.14 Planche design system (`Main.png`)
 Référence de la page `/design` à construire en `L1-07` : palette, typographie, boutons, champs (dont état d'erreur), statuts, carte de bien. La page `/design` reprend cette planche avec les vrais composants et ajoute tous les composants de la section 10. Elle n'est accessible qu'en local et en préprod.
