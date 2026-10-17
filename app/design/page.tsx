@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Bell, ChevronLeft, Heart, Plus, Settings, Sparkles, X } from "lucide-react";
 import * as content from "./_content";
+import { ConsentDemo } from "./_consent-demo";
 import { FilterSelectDemo } from "./_filter-select-demo";
 import { BrandPanel } from "@/components/shared/brand-panel";
 import { Button } from "@/components/shared/button";
@@ -25,6 +26,7 @@ import { PropertyCard } from "@/components/shared/property-card";
 import { RoleCards } from "@/components/shared/role-cards";
 import { SectionTitle } from "@/components/shared/section-title";
 import { SegmentedPicker } from "@/components/shared/segmented-picker";
+import { SiteFooter } from "@/components/shared/site-footer";
 import { Select } from "@/components/shared/select";
 import { Skeleton } from "@/components/shared/skeleton";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -764,6 +766,24 @@ export default function DesignPage() {
               ))}
             </div>
             <Caption>{content.skeleton.caption}</Caption>
+          </Section>
+
+          <Section id="consentement" title={content.sections.consent} level="h3">
+            <div className="flex flex-wrap items-start gap-6">
+              <div className="flex flex-col gap-2">
+                <ConsentDemo view="banner" />
+                <Caption>{content.consent.bannerCaption}</Caption>
+              </div>
+              <div className="flex flex-col gap-2">
+                <ConsentDemo view="panel" />
+                <Caption>{content.consent.panelCaption}</Caption>
+              </div>
+            </div>
+          </Section>
+
+          <Section id="pied-de-page" title={content.sections.footer} level="h3">
+            <SiteFooter className="rounded-lk-md border border-lk-line" />
+            <Caption>{content.footer.caption}</Caption>
           </Section>
 
           <Section id="formats" title={content.sections.formats} level="h3">

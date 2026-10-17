@@ -1,0 +1,64 @@
+import type { ReactNode } from "react";
+import Link from "next/link";
+import { FacadeRoot } from "@/components/shared/facade-root";
+import { InlineAlert } from "@/components/shared/inline-alert";
+import { SiteFooter } from "@/components/shared/site-footer";
+import { fr } from "@/lib/i18n/fr";
+
+/**
+ * Legal page (G10, docs/DESIGN.md 11): 640 px column, 15 px text. Until the
+ * lawyer's final texts (Q34), each page says it is being written.
+ */
+export function LegalPage({
+  title,
+  lead,
+  contact,
+  draft = true,
+  children,
+}: {
+  title: string;
+  lead?: string;
+  /** « Pour toute question …, écrivez-nous à » */
+  contact: string;
+  draft?: boolean;
+  children?: ReactNode;
+}) {
+  return (
+    <FacadeRoot className="flex min-h-dvh flex-col bg-lk-surface">
+      <main className="mx-auto w-full max-w-lk-prose flex-1 px-5 py-10">
+        <Link
+          href="/"
+          className="rounded-lk-sm text-lk-h2 font-bold text-wide text-lk-ink focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
+        >
+          {fr.auth.brand}
+        </Link>
+        <h1 className="mt-10 text-lk-h1 font-bold text-wide text-balance text-lk-ink lg:text-lk-h1-lg">
+          {title}
+        </h1>
+        {lead ? <p className="mt-3 text-lk-body text-pretty text-lk-ink-2">{lead}</p> : null}
+        {draft ? (
+          <InlineAlert tone="info" className="mt-6">
+            {fr.legal.draft}
+          </InlineAlert>
+        ) : null}
+        {children ? <div className="mt-8 flex flex-col gap-6">{children}</div> : null}
+        <p className="mt-8 text-lk-body text-lk-ink-2">
+          {contact}{" "}
+          <a
+            href={`mailto:${fr.legal.contactEmail}`}
+            className="text-lk-blue underline underline-offset-2"
+          >
+            {fr.legal.contactEmail}
+          </a>
+          .
+        </p>
+        <address className="mt-4 text-lk-secondary not-italic text-lk-ink-3">
+          {fr.legal.company}
+          <br />
+          {fr.legal.address}
+        </address>
+      </main>
+      <SiteFooter />
+    </FacadeRoot>
+  );
+}

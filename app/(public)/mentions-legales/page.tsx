@@ -148,9 +148,10 @@ export default function MentionsLegales() {
 
         <h2 id="cookies">6. Cookies</h2>
         <p>
-          Le site utilise uniquement des cookies <strong>strictement nécessaires</strong> au bon
-          fonctionnement de la plateforme (préférences, session). Aucun cookie publicitaire ou de
-          traçage tiers n'est utilisé sans votre consentement préalable.
+          Le site dépose des cookies <strong>nécessaires</strong> à son fonctionnement (session,
+          sécurité, mémorisation de vos choix) et, seulement avec votre accord, des cookies de
+          mesure d&apos;audience. Aucun cookie publicitaire n&apos;est utilisé. Le détail et vos
+          choix : <a href="/cookies">politique cookies</a>.
         </p>
 
         <h2>7. Limitation de responsabilité</h2>

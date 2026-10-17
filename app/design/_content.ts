@@ -49,6 +49,8 @@ export const sections = {
   emptyState: "État vide",
   alerts: "Alertes",
   skeleton: "Chargement",
+  consent: "Consentement aux cookies",
+  footer: "Pied de page",
   formats: "Formats des nombres et des dates",
   shapes: "Rayons, ombres et bordures",
   spacing: "Espacements, points de rupture et conteneurs",
@@ -582,4 +584,15 @@ export const alerts = {
 export const skeleton = {
   caption:
     "Skeleton · bloc pierre au rayon de l'élément remplacé, opacité 0,6 → 1 en 1,2 s, immobile si le mouvement est réduit",
+};
+
+export const consent = {
+  bannerCaption:
+    "Premier passage : Refuser et Accepter côte à côte, de même forme ; en bas sur mobile, en bas à gauche à partir de 768 px",
+  panelCaption: "Personnaliser ou « Gérer mes cookies » : mesure d'audience décochée par défaut",
+};
+
+export const footer = {
+  caption:
+    "SiteFooter · liens légaux, « Gérer mes cookies », identité et adresse légale (pages V2 ; même liste dans le pied V1)",
 };

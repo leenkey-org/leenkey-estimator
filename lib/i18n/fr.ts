@@ -158,13 +158,144 @@ export const fr = {
     },
   },
   legal: {
+    // Legal pages (L1-36, G10). Final texts from Cédric's lawyer (Q34);
+    // identity and address from the V1 legal notice (Q10, Q35).
+    draft: "Cette page est en cours de rédaction.",
+    contactEmail: "contact.leenkey@gmail.com",
+    company: "SAS LEENKEY, RCS Évry 107 616 211",
+    address: "36 rue Pierre Brossolette, 91360 Épinay-sur-Orge",
     privacy: {
       metaTitle: "Politique de confidentialité · Leenkey",
       title: "Politique de confidentialité",
-      draft: "Cette page est en cours de rédaction.",
       contact: "Pour toute question sur vos données, écrivez-nous à",
-      contactEmail: "contact.leenkey@gmail.com",
     },
+    salesTerms: {
+      metaTitle: "Conditions générales de vente · Leenkey",
+      title: "Conditions générales de vente",
+      lead: "Elles s'appliquent aux formules Accompagné et Sérénité, payées à la souscription.",
+      contact: "Pour toute question sur une commande, écrivez-nous à",
+    },
+    cookies: {
+      metaTitle: "Politique cookies · Leenkey",
+      title: "Politique cookies",
+      lead: "Les cookies déposés par leenkey.fr, à quoi ils servent, et comment changer d'avis.",
+      listTitle: "Liste provisoire des cookies et du stockage du site",
+      labels: {
+        provider: "Fournisseur",
+        purpose: "À quoi il sert",
+        kind: "Catégorie",
+        duration: "Durée",
+      },
+      necessary: "Nécessaire",
+      optional: "Avec votre accord",
+      rows: [
+        {
+          name: "sb-…-auth-token",
+          provider: "Leenkey (Supabase, notre fournisseur de base de données)",
+          purpose: "Garder votre session ouverte quand vous êtes connecté",
+          kind: "necessary",
+          duration: "400 jours, effacé à la déconnexion",
+        },
+        {
+          name: "sb-…-auth-token-code-verifier",
+          provider: "Leenkey (Supabase, notre fournisseur de base de données)",
+          purpose:
+            "Sécuriser le lien envoyé par email à l'inscription ou pour un nouveau mot de passe",
+          kind: "necessary",
+          duration: "Jusqu'à l'utilisation du lien",
+        },
+        {
+          name: "lk_lien",
+          provider: "Leenkey",
+          purpose: "Terminer la confirmation de votre email ou le choix d'un nouveau mot de passe",
+          kind: "necessary",
+          duration: "1 heure",
+        },
+        {
+          name: "lk_consent",
+          provider: "Leenkey",
+          purpose: "Mémoriser vos choix sur les cookies",
+          kind: "necessary",
+          duration: "6 mois",
+        },
+        {
+          name: "lk_vues",
+          provider: "Leenkey",
+          purpose: "Compter une seule visite par jour et par annonce, sans donnée personnelle",
+          kind: "necessary",
+          duration: "24 heures",
+        },
+        {
+          name: "leenkey_form_v1, leenkey_dashboard_v1",
+          provider: "Leenkey (stockage de votre navigateur)",
+          purpose: "Reprendre votre analyse de valeur là où vous l'avez laissée",
+          kind: "necessary",
+          duration: "Jusqu'à une nouvelle analyse",
+        },
+        {
+          name: "lk_rappel_…",
+          provider: "Leenkey (stockage de votre navigateur)",
+          purpose: "Ne pas envoyer deux fois votre demande de rappel",
+          kind: "necessary",
+          duration: "Jusqu'à son effacement dans votre navigateur",
+        },
+        {
+          name: "_ga, _ga_…",
+          provider: "Google",
+          purpose: "Mesure d'audience avec Google Analytics, par Google Tag Manager",
+          kind: "optional",
+          duration: "13 mois au plus",
+        },
+      ],
+      noCookie:
+        "Vercel Web Analytics, la mesure d'audience de notre hébergeur, ne dépose ni cookie ni stockage dans votre navigateur.",
+      manageText: "Vous pouvez changer d'avis à tout moment :",
+      contact: "Pour toute question sur les cookies, écrivez-nous à",
+    },
+    ai: {
+      metaTitle: "Intelligence artificielle · Leenkey",
+      title: "Intelligence artificielle",
+      lead: "Comment l'assistant Leenkey utilise l'intelligence artificielle, et ce qu'il ne fait jamais seul.",
+      contact: "Pour toute question sur l'assistant, écrivez-nous à",
+    },
+    reporting: {
+      metaTitle: "Signalement et modération · Leenkey",
+      title: "Signalement et modération",
+      lead: "Comment signaler une annonce ou un message, et comment nous traitons les signalements.",
+      contact: "Pour signaler un contenu dès maintenant, écrivez-nous à",
+    },
+  },
+  // Footer of the V2 pages and of the V1 marketing pages (L1-36).
+  footer: {
+    label: "Informations légales",
+    links: {
+      notice: "Mentions légales",
+      terms: "Conditions d'utilisation",
+      salesTerms: "Conditions générales de vente",
+      privacy: "Confidentialité",
+      cookies: "Cookies",
+      reporting: "Signalement et modération",
+      ai: "Intelligence artificielle",
+      contact: "Contact",
+    },
+    manageCookies: "Gérer mes cookies",
+    rights: "© 2026 Leenkey",
+  },
+  // Cookie consent banner (L1-37, Q23).
+  consent: {
+    title: "Cookies",
+    text: "Nous utilisons des cookies de mesure d'audience (Google Analytics) pour comprendre comment le site est utilisé et l'améliorer, uniquement si vous l'acceptez. Les cookies nécessaires au fonctionnement du site restent actifs. Vous pouvez changer d'avis à tout moment avec « Gérer mes cookies », en bas de page.",
+    policy: "Politique cookies",
+    accept: "Accepter",
+    refuse: "Refuser",
+    customize: "Personnaliser",
+    panelTitle: "Vos préférences",
+    necessaryTitle: "Nécessaires",
+    necessaryText:
+      "Connexion à votre compte, sécurité, mémorisation de vos choix, reprise de votre analyse de valeur, comptage des visites des annonces. Toujours actifs.",
+    analyticsLabel: "Mesure d'audience",
+    analyticsText: "Statistiques de visite avec Google Analytics, par Google Tag Manager.",
+    save: "Enregistrer mes choix",
   },
   // Labels of SPEC-V2 section 7 (StatusBadge mapping), colours in DESIGN.md 10.2.
   listingStatus: {
