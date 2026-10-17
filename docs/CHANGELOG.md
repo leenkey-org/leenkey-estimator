@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-17 · L1-19 · PR #? · Back office des annonces
+### 2026-10-17 · L1-19 · PR #19 · Back office des annonces
 - Ajouté : `/admin/annonces` (résumé, recherche, filtres par statut, cartes en mobile, tableau en desktop) et `/admin/annonces/[id]` (statut, vendeur, formule, motif, aperçu, historique) ; décisions « Valider et publier », « Refuser avec motif », « Suspendre », « Remettre en ligne », motif obligatoire choisi parmi des motifs fréquents ou écrit ; résultat affiché en haut de page. Composants `FilterPills`, `DataTable` et `Textarea` dans `/design`.
 - Ajouté : premiers emails de la V2 (annonce publiée, à corriger, suspendue) en React Email (`emails/`), envoyés par Resend (`core/notifications/email.ts`), vers `EMAIL_TEST_INBOX` seulement hors production ; variable facultative `EMAIL_FROM`.
 - Migration : `20261017120000_admin_listings.sql` (`admin_listings`, `admin_listing_counts`, `admin_listing_seller_contact`, réservées à l'admin, sans table).

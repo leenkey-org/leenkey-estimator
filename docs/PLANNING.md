@@ -42,7 +42,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [ ] **L1-16** Carte Mapbox avec les marqueurs de prix (regroupement, synchronisation liste/carte et recherche dans la zone : S6) · PR : · Testé en préprod : ☐
 - [x] **L1-17** Page annonce complète (galerie photo, KeyFigures, KeyFacts, carte approximative, barre d'action), métadonnées,… · PR : #15 (carte de l'annonce avec L1-16, `DECISIONS.md`) · Testé en préprod : ☐
 - [ ] **L1-18** Favoris · PR : · Testé en préprod : ☐
-- [x] **L1-19** Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`suspended`) / remettre en ligne, audit, emails · PR : #? (partie vendeur avec L1-14, `DECISIONS.md`) · Testé en préprod : ☐
+- [x] **L1-19** Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`suspended`) / remettre en ligne, audit, emails · PR : #19 (partie vendeur avec L1-14, `DECISIONS.md`) · Testé en préprod : ☐
 - [ ] **L1-20** Sitemap et robots (pages SEO par ville reportées en V3) · PR : · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
