@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-17 · L1-10 · PR #? · Navigation
+### 2026-10-17 · L1-10 · PR #17 · Navigation
 - Ajouté : `TopNav` à partir de 768 px (Acheter, Vendre, Valoriser mon bien ; « Vendre mon bien » ; connecté : cloche, favoris et menu du compte ; sans session : « Mon compte » vers la connexion avec retour à la page), `BottomNav` sous 768 px par espace (vendeur, acquéreur, back office), `AdminShell` (barre latérale, en-tête mobile, onglets), `NotificationBell` et son panneau vide, `AccountMenu` (Mon espace, Mon compte, Se déconnecter), `ComingSoon` ; tous dans `/design`. Configuration de Leenkey dans `leenkey/navigation/config.ts`.
 - Ajouté : pages d'attente `/messages`, `/compte` (avec « Se déconnecter »), `/acquereur/favoris`, `/vendeur/dossier` et, dans le back office, `/admin/annonces`, `/admin/utilisateurs`, `/admin/dossiers`, `/admin/offres`, `/admin/signalements`, `/admin/assistant`.
 - Modifié : espaces connectés et back office dans leurs coques de navigation ; `/acheter` avec la `TopNav` et les onglets acquéreur ; page annonce avec la `TopNav` (desktop) ; cloche en haut de `/vendeur` et `/acquereur` en mobile. Pied de page V2 (liens légaux, « Gérer mes cookies ») sous la recherche, l'annonce, les espaces connectés et le back office. Supprimé : l'en-tête provisoire `SpaceHeader`.
