@@ -1,8 +1,11 @@
-import { FacadeDrawing } from "@/components/shared/facade-drawing";
+import { FacadeDrawing } from "./facade-drawing";
 import { cn } from "@/lib/utils";
 
-/** Thumbnail of a listing in the back office: facade.svg on stone until the photos (L1-12). */
-export function ListingThumb({ className }: { className?: string }) {
+/**
+ * Thumbnail of a property (docs/DESIGN.md 7.1: dashboard 56 × 56, admin
+ * 56 × 44, radius 4): facade.svg on stone until the photos (L1-12).
+ */
+export function PropertyThumb({ className }: { className?: string }) {
   return (
     <div
       aria-hidden="true"

@@ -2,8 +2,10 @@
 -- is saved from the first step, its address, as a draft: the type, the
 -- surface and the rooms come with the second step, and the seller may leave
 -- before. They stay required to send a listing for review: listing_submit
--- checks them (the admin only publishes a pending listing). No new table and
--- no new right: the RLS and the column grants of L1-04 apply.
+-- checks them, and a property whose listing has been sent (pending, then
+-- published, paused, suspended, sold) cannot lose them again, whoever writes
+-- it, so listing_publish and the public pages can rely on them. No new table
+-- and no new right: the RLS and the column grants of L1-04 apply.
 
 alter table public.properties
   alter column type drop not null,
@@ -33,3 +35,25 @@ begin
   return 'pending';
 end;
 $$;
+
+-- Back to a draft (cancelled submission, rejection), the property may be
+-- incomplete again: listing_submit checks it at the next sending. Security
+-- definer: the check sees the listing whatever the RLS of the writer.
+create function public.properties_keep_complete() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if (new.type is null or new.surface_m2 is null or new.rooms is null)
+     and exists (select 1 from public.listings l
+                  where l.property_id = new.id and l.deleted_at is null
+                    and l.status not in ('draft', 'rejected')) then
+    raise exception 'the property of a listing sent for review keeps its type, surface and rooms'
+      using errcode = '22023';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger properties_keep_complete before update of type, surface_m2, rooms on public.properties
+  for each row execute function public.properties_keep_complete();
+
+revoke execute on function public.properties_keep_complete() from public, anon, authenticated;

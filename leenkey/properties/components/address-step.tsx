@@ -10,6 +10,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useRouter } from "next/navigation";
+import { flushSync } from "react-dom";
 import { MapPin } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { FormActionBar } from "@/components/shared/form-action-bar";
@@ -25,7 +26,7 @@ const common = fr.properties.creation;
 
 // Step 1 of the creation (SPEC-V2 section 8.3): the address, typed then
 // chosen among the suggestions of the national address base (combobox,
-// docs/DESIGN.md 12 « Création du bien, étapes 1, 3, 4 »: list of radius 6,
+// docs/DESIGN.md 13.1 « Création du bien, étapes 1, 3, 4 »: list of radius 6,
 // shadow-float). Saved with « Continuer » or « Enregistrer ».
 
 type Search =
@@ -56,6 +57,8 @@ export function AddressStep({
   const [error, setError] = useState<string | null>(null);
   const [saving, startSaving] = useTransition();
   const request = useRef(0);
+  // A second click before the first answer would create a second property.
+  const submitting = useRef(false);
 
   // Suggestions 250 ms after the last key; an answer older than the last
   // request is dropped.
@@ -72,8 +75,9 @@ export function AddressStep({
         // Network, or a new deployment: said as unavailable.
       }
       if (id !== request.current) return;
-      if (result?.ok) {
-        setSearch({ state: "done", suggestions: result.data });
+      if (result?.ok || result?.error === "invalid") {
+        // invalid: punctuation only, nothing to search.
+        setSearch({ state: "done", suggestions: result.ok ? result.data : [] });
         setOpen(true);
         setActive(-1);
       } else {
@@ -86,18 +90,31 @@ export function AddressStep({
 
   const suggestions = search.state === "done" ? search.suggestions : [];
 
-  function choose(suggestion: AddressSuggestion) {
-    setChosen(suggestion.label);
+  const listOpen = open && suggestions.length > 0;
+
+  function close() {
     setOpen(false);
-    setError(null);
+    setActive(-1);
+  }
+
+  function choose(suggestion: AddressSuggestion) {
+    // The card replaces the field: the focus goes to « Continuer », the next
+    // action, and the live region says the address chosen.
+    flushSync(() => {
+      setChosen(suggestion.label);
+      close();
+      setError(null);
+    });
+    next.current?.focus();
   }
 
   function change() {
-    setChosen(null);
-    setText("");
-    setSearch({ state: "idle" });
-    // After the render that shows the field again.
-    window.setTimeout(() => field.current?.focus(), 0);
+    flushSync(() => {
+      setChosen(null);
+      setText("");
+      setSearch({ state: "idle" });
+    });
+    field.current?.focus();
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -107,19 +124,21 @@ export function AddressStep({
       setActive((index) => (index + 1) % suggestions.length);
     } else if (event.key === "ArrowUp" && suggestions.length > 0) {
       event.preventDefault();
+      setOpen(true);
       setActive((index) => (index <= 0 ? suggestions.length - 1 : index - 1));
-    } else if (event.key === "Enter" && open && active >= 0) {
+    } else if (event.key === "Enter" && listOpen && suggestions[active]) {
       // Chooses the address instead of sending the form.
       event.preventDefault();
       choose(suggestions[active]);
-    } else if (event.key === "Escape" && open) {
+    } else if (event.key === "Escape" && listOpen) {
       event.preventDefault();
-      setOpen(false);
+      close();
     }
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
     const intent = intentOf(event);
     if (!chosen) {
       setError(t.required);
@@ -127,6 +146,7 @@ export function AddressStep({
       return;
     }
     setError(null);
+    submitting.current = true;
     startSaving(async () => {
       let result: Awaited<ReturnType<typeof saveAddress>> | null = null;
       try {
@@ -135,35 +155,40 @@ export function AddressStep({
         console.error("[properties] address save failed", caught);
       }
       if (!result?.ok) {
+        submitting.current = false;
         setError(
           !result
             ? common.error
             : result.error === "auth"
               ? common.signedOut
               : result.error === "not_found"
-                ? propertyId
-                  ? common.notFound
-                  : t.notFound
-                : common.error,
+                ? common.notFound
+                : result.error === "address_not_found"
+                  ? t.notFound
+                  : common.error,
         );
         return;
       }
-      router.push(
-        intent === "save" ? "/vendeur" : `/vendeur/biens/${result.data.id}/caracteristiques`,
-      );
+      const target =
+        intent === "save" ? "/vendeur" : `/vendeur/biens/${result.data.id}/caracteristiques`;
+      // From « nouveau »: back would open the empty form again, for a second property.
+      if (propertyId) router.push(target);
+      else router.replace(target);
     });
   }
 
   const status =
-    search.state === "searching"
-      ? t.searching
-      : search.state === "error"
-        ? t.unavailable
-        : search.state === "done"
-          ? suggestions.length > 0
-            ? t.count(suggestions.length)
-            : t.noResult
-          : "";
+    chosen !== null
+      ? t.chosenStatus(chosen)
+      : search.state === "searching"
+        ? t.searching
+        : search.state === "error"
+          ? t.unavailable
+          : search.state === "done"
+            ? suggestions.length > 0
+              ? t.count(suggestions.length)
+              : t.noResult
+            : "";
 
   return (
     <form
@@ -171,7 +196,7 @@ export function AddressStep({
       onSubmit={submit}
       onKeyDown={(event) => submitWithEnter(event, event.currentTarget, next.current)}
       noValidate
-      className="flex flex-col"
+      className="flex flex-1 flex-col"
     >
       <h2 className="text-lk-h2 font-bold text-wide text-lk-ink">{t.title}</h2>
       <p className="mt-2 text-lk-compact text-lk-ink-3">{t.lead}</p>
@@ -199,32 +224,35 @@ export function AddressStep({
               autoComplete="off"
               role="combobox"
               aria-autocomplete="list"
-              aria-expanded={open && suggestions.length > 0}
+              aria-expanded={listOpen}
               aria-controls={listId}
-              aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
+              aria-activedescendant={
+                listOpen && suggestions[active] ? `${listId}-${active}` : undefined
+              }
               error={error ?? undefined}
               onChange={(event) => {
                 setText(event.target.value);
                 setError(null);
+                setActive(-1);
                 if (event.target.value.trim().length < 3) {
                   setSearch({ state: "idle" });
                   setOpen(false);
                 }
               }}
               onKeyDown={onKeyDown}
-              onBlur={() => setOpen(false)}
+              onBlur={close}
               onFocus={() => setOpen(suggestions.length > 0)}
             />
             <ul
               id={listId}
               role="listbox"
               aria-label={t.suggestions}
-              hidden={!open || suggestions.length === 0}
+              hidden={!listOpen}
               className="absolute inset-x-0 top-full z-30 mt-1 overflow-hidden rounded-lk-md border border-lk-line bg-lk-surface shadow-float"
             >
               {suggestions.map((suggestion, index) => (
                 <li
-                  key={suggestion.label}
+                  key={`${index}-${suggestion.label}`}
                   id={`${listId}-${index}`}
                   role="option"
                   aria-selected={index === active}
@@ -248,17 +276,16 @@ export function AddressStep({
           </div>
         )}
         {chosen === null ? (
-          <>
-            <p id={helpId} className="mt-1.5 text-lk-caption text-lk-ink-3">
-              {search.state === "error" || (search.state === "done" && suggestions.length === 0)
-                ? status
-                : t.help}
-            </p>
-            <p role="status" className="sr-only">
-              {status}
-            </p>
-          </>
+          <p id={helpId} className="mt-1.5 text-lk-caption text-lk-ink-3">
+            {search.state === "error" || (search.state === "done" && suggestions.length === 0)
+              ? status
+              : t.help}
+          </p>
         ) : null}
+        {/* Always in the page: a live region added with its text is not read. */}
+        <p role="status" className="sr-only">
+          {status}
+        </p>
         {chosen !== null && error ? (
           <InlineAlert tone="danger" className="mt-3">
             {error}

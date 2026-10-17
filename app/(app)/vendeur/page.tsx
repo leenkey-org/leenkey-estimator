@@ -5,10 +5,12 @@ import { requireProfile } from "@/core/auth/session";
 import { Button } from "@/components/shared/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InlineAlert } from "@/components/shared/inline-alert";
+import { PropertyThumb } from "@/components/shared/property-thumb";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { listingSummary } from "@/leenkey/listings/presentation";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { creationStep, sellerProperties, type SellerProperty } from "@/leenkey/properties/queries";
+import { creationStep, inCreation } from "@/leenkey/properties/creation";
+import { sellerProperties, type SellerProperty } from "@/leenkey/properties/queries";
 import { fr } from "@/lib/i18n/fr";
 import { SpacePage } from "../_components/space-page";
 
@@ -23,9 +25,8 @@ function summary(property: SellerProperty): string {
 
 /** A draft resumes at its step; a listing sent or online opens from its page (L1-14). */
 function resumeHref(property: SellerProperty): string | null {
-  const status = property.listingStatus;
-  if (status !== null && status !== "draft" && status !== "rejected") return null;
-  return `/vendeur/biens/${property.id}/${creationStep(property)}`;
+  if (!inCreation(property.listingStatus)) return null;
+  return `/vendeur/biens/${property.id}/${creationStep(property.characteristics)}`;
 }
 
 // Until the seller dashboard (L1-24): the properties of the seller, a draft
@@ -71,6 +72,7 @@ export default async function SellerHomePage() {
               const name = summary(property);
               const content = (
                 <>
+                  <PropertyThumb className="size-14" />
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <p className="truncate text-lk-compact font-semibold text-lk-ink">
                       {href ? <span className="sr-only">{`${list.resume} : `}</span> : null}
@@ -91,12 +93,12 @@ export default async function SellerHomePage() {
                   {href ? (
                     <Link
                       href={href}
-                      className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-lk-stone-2"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-lk-stone-2"
                     >
                       {content}
                     </Link>
                   ) : (
-                    <div className="flex min-h-16 items-center gap-3 px-4 py-3">{content}</div>
+                    <div className="flex items-center gap-3 px-4 py-3">{content}</div>
                   )}
                 </li>
               );

@@ -815,7 +815,7 @@ export default function DesignPage() {
                 progress={<ProgressBar label={content.stepForm.progress} value={50} />}
               />
               <div className="px-5 pb-5">
-                <FormActionBar className="static mx-0 px-0 pb-0">
+                <FormActionBar className="static mx-0 mt-8 px-0 pb-0">
                   <Button variant="secondary">{content.stepForm.previous}</Button>
                   <Button>{content.stepForm.next}</Button>
                 </FormActionBar>

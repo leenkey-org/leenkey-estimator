@@ -9,7 +9,9 @@ import { fr } from "@/lib/i18n/fr";
 
 const t = fr.properties;
 
-export const metadata: Metadata = { title: t.creation.metaTitle };
+export const metadata: Metadata = {
+  title: t.creation.metaTitle(t.creation.steps.price),
+};
 
 type Props = { params: Promise<{ id: string }> };
 

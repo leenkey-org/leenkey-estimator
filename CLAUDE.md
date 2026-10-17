@@ -80,6 +80,7 @@ leenkey/
 │   ├── auth/                  ← session, rôles, guards
 │   ├── steps/                 ← moteur d'étapes et de tâches
 │   ├── documents/             ← upload, classement, partage, extraction de texte
+│   ├── geo/                   ← recherche d'adresses et géocodage (Base Adresse Nationale)
 │   ├── ai/                    ← client Anthropic, outils, base de connaissances, quotas
 │   ├── billing/               ← Stripe : checkout, webhooks, plans
 │   ├── messaging/             ← conversations, messages, notifications

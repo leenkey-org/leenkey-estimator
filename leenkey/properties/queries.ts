@@ -4,7 +4,6 @@ import { requireProfile } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import {
   HEATING_OPTIONS,
-  missingCharacteristics,
   PROPERTY_FEATURES,
   type Characteristics,
   type PropertyFeature,
@@ -27,9 +26,6 @@ export type SellerProperty = {
   listingStatus: ListingStatus | null;
   createdAt: string;
 };
-
-/** Where a draft resumes: the step after the last one filled. */
-export type CreationStep = "caracteristiques" | "prix";
 
 const COLUMNS =
   "id, type, address_line, postal_code, city, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, build_year, is_new_build, dpe_class, ges_class, heating, has_balcony, has_terrace, has_garden, has_parking, has_cellar, has_elevator, charges_monthly_cents, property_tax_yearly_cents, copro_lots, created_at, listing:listings(status)";
@@ -59,7 +55,7 @@ const FEATURE_COLUMNS: Record<PropertyFeature, keyof Row> = {
 
 const oneOf = <T extends string>(values: readonly T[], value: string | null): T | null =>
   values.find((candidate) => candidate === value) ?? null;
-const euros = (cents: number | null) => (cents === null ? null : Math.round(cents / 100));
+const euros = (cents: number | null) => (cents === null ? null : cents / 100);
 
 function toSellerProperty(row: Row): SellerProperty {
   const listing = Array.isArray(row.listing) ? row.listing[0] : row.listing;
@@ -87,11 +83,6 @@ function toSellerProperty(row: Row): SellerProperty {
     listingStatus: listing?.status ?? null,
     createdAt: row.created_at,
   };
-}
-
-/** Step where the creation of a draft resumes. */
-export function creationStep(property: SellerProperty): CreationStep {
-  return missingCharacteristics(property.characteristics).length > 0 ? "caracteristiques" : "prix";
 }
 
 /** A property of the seller; null when unknown, deleted or someone else's. */

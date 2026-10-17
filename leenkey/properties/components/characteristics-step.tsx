@@ -13,18 +13,17 @@ import { Select } from "@/components/shared/select";
 import { UnitInput } from "@/components/shared/unit-input";
 import { fr } from "@/lib/i18n/fr";
 import {
+  forType,
   HEATING_OPTIONS,
+  NOT_FOR_TYPE,
   parseFrenchNumber,
   PROPERTY_FEATURES,
   type Characteristics,
+  type CharacteristicsField,
   type PropertyFeature,
 } from "@/lib/validations/property";
 import { DPE_CLASSES, PROPERTY_TYPES } from "@/lib/validations/search";
-import {
-  saveCharacteristics,
-  type CharacteristicsField,
-  type SaveCharacteristicsResult,
-} from "../actions";
+import { saveCharacteristics, type SaveCharacteristicsResult } from "../actions";
 import { CREATION_FORM_ID, intentOf, submitWithEnter } from "./creation-header";
 
 const t = fr.properties.characteristics;
@@ -34,8 +33,8 @@ const errors = fr.properties.errors;
 // Step 2 of the creation (SPEC-V2 section 8.3, docs/DESIGN.md 12.2): type,
 // surface, rooms, bedrooms, floor, DPE, features, then the details. Numbers
 // are typed in French (« 68,5 »). The fields that do not apply to the type
-// are hidden and saved empty (a floor for a house, rooms for land). Photos:
-// L1-12.
+// are hidden and saved empty (NOT_FOR_TYPE: a floor for a house, rooms for
+// land), here and on the server. Photos: L1-12.
 
 type NumberField = Exclude<CharacteristicsField, "type" | "dpe" | "ges" | "heating">;
 type PropertyType = (typeof PROPERTY_TYPES)[number];
@@ -52,32 +51,6 @@ const NUMBER_FIELDS: readonly NumberField[] = [
   "propertyTaxYearlyEuros",
   "coproLots",
 ];
-
-/** Fields and features that a type of property does not have. */
-const HIDDEN: Partial<
-  Record<
-    PropertyType,
-    { fields: readonly CharacteristicsField[]; features: readonly PropertyFeature[] }
-  >
-> = {
-  maison: { fields: ["carrezM2", "floor", "floorsTotal", "coproLots"], features: ["elevator"] },
-  terrain: {
-    fields: [
-      "carrezM2",
-      "rooms",
-      "bedrooms",
-      "floor",
-      "floorsTotal",
-      "buildYear",
-      "dpe",
-      "ges",
-      "heating",
-      "chargesMonthlyEuros",
-      "coproLots",
-    ],
-    features: PROPERTY_FEATURES,
-  },
-};
 
 const text = (value: number | null) => (value === null ? "" : String(value).replace(".", ","));
 
@@ -106,8 +79,10 @@ export function CharacteristicsStep({
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<CharacteristicsField, string>>>({});
   const [error, setError] = useState<string | null>(null);
   const [saving, startSaving] = useTransition();
+  // One save at a time: a second click would only race the first.
+  const submitting = useRef(false);
 
-  const hidden = (type && HIDDEN[type]) || { fields: [], features: [] };
+  const hidden = (type && NOT_FOR_TYPE[type]) || { fields: [], features: [] };
   const shows = (field: CharacteristicsField) => !hidden.fields.includes(field);
   const shownFeatures = PROPERTY_FEATURES.filter((feature) => !hidden.features.includes(feature));
 
@@ -124,6 +99,7 @@ export function CharacteristicsStep({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
     const intent = intentOf(event);
     const typed: Partial<Record<NumberField, number | null>> = {};
     const invalid: Partial<Record<CharacteristicsField, string>> = {};
@@ -136,27 +112,28 @@ export function CharacteristicsStep({
       showErrors(invalid);
       return;
     }
-    const payload: Characteristics = {
+    // As the server saves it: the hidden fields empty, no rooms for land.
+    const payload = forType({
       propertyId,
       type,
       surfaceM2: typed.surfaceM2 ?? null,
       carrezM2: typed.carrezM2 ?? null,
-      // Land has no rooms: 0, which a listing needs.
-      rooms: type === "terrain" ? 0 : (typed.rooms ?? null),
+      rooms: typed.rooms ?? null,
       bedrooms: typed.bedrooms ?? null,
       floor: typed.floor ?? null,
       floorsTotal: typed.floorsTotal ?? null,
       buildYear: typed.buildYear ?? null,
       isNewBuild: initial.isNewBuild,
-      dpe: shows("dpe") ? dpe : null,
-      ges: shows("ges") ? ges : null,
-      heating: shows("heating") ? heating : null,
-      features: features.filter((feature) => shownFeatures.includes(feature)),
+      dpe,
+      ges,
+      heating,
+      features,
       chargesMonthlyEuros: typed.chargesMonthlyEuros ?? null,
       propertyTaxYearlyEuros: typed.propertyTaxYearlyEuros ?? null,
       coproLots: typed.coproLots ?? null,
-    };
+    });
     setError(null);
+    submitting.current = true;
     startSaving(async () => {
       let result: SaveCharacteristicsResult | null = null;
       try {
@@ -165,6 +142,7 @@ export function CharacteristicsStep({
         console.error("[properties] characteristics save failed", caught);
       }
       if (!result?.ok) {
+        submitting.current = false;
         if (result?.fieldErrors) {
           showErrors(
             Object.fromEntries(
@@ -183,7 +161,9 @@ export function CharacteristicsStep({
               : result.error === "not_found"
                 ? common.notFound
                 : result.error === "incomplete"
-                  ? t.required
+                  ? type === "terrain"
+                    ? t.requiredLand
+                    : t.required
                   : result.error === "invalid"
                     ? null
                     : common.error,
@@ -228,7 +208,7 @@ export function CharacteristicsStep({
       onSubmit={submit}
       onKeyDown={(event) => submitWithEnter(event, event.currentTarget, next.current)}
       noValidate
-      className="flex flex-col gap-5"
+      className="flex flex-1 flex-col gap-5"
     >
       <h2 className="text-lk-h2 font-bold text-wide text-lk-ink">{t.title}</h2>
       {error ? <InlineAlert tone="danger">{error}</InlineAlert> : null}
@@ -245,7 +225,7 @@ export function CharacteristicsStep({
       >
         {PROPERTY_TYPES.map((value) => (
           <option key={value} value={value}>
-            {fr.propertyType[value]}
+            {fr.search.types[value]}
           </option>
         ))}
       </Select>
@@ -293,7 +273,12 @@ export function CharacteristicsStep({
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-4">
         {shows("carrezM2") ? unitInput("carrezM2", t.carrez, "m²") : null}
-        {shows("floorsTotal") ? numberInput("floorsTotal", t.floorsTotal) : null}
+        {shows("floorsTotal")
+          ? numberInput(
+              "floorsTotal",
+              type === "appartement" || type === null ? t.floorsTotal : t.levels,
+            )
+          : null}
         {shows("buildYear") ? numberInput("buildYear", t.buildYear) : null}
         {shows("heating") ? (
           <Select
@@ -337,7 +322,7 @@ export function CharacteristicsStep({
         </div>
       </fieldset>
 
-      <FormActionBar className="mt-3">
+      <FormActionBar className="md:mt-3">
         <Button type="submit" name="intent" value="previous" variant="secondary" disabled={saving}>
           {common.previous}
         </Button>

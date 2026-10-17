@@ -14,10 +14,11 @@ export type { Address, AddressQuery, AddressResult } from "./address-search";
 // served by the Géoplateforme of IGN. Free, without key, and its results may
 // be stored (the free geocoding of Mapbox forbids it). GEOCODER_URL changes
 // the service, GEOCODER=fixtures answers from a short list instead
-// (address-fixtures.ts): end-to-end tests, environment without access.
+// (address-fixtures.ts): end-to-end tests, environment without access; never
+// in production.
 
 export async function searchAddresses(query: AddressQuery): Promise<AddressResult> {
-  if (process.env.GEOCODER === "fixtures") {
+  if (process.env.GEOCODER === "fixtures" && process.env.NEXT_PUBLIC_ENV !== "production") {
     return { ok: true, data: searchFixtures(query.text, query.limit ?? 5) };
   }
   const url = addressSearchUrl(process.env.GEOCODER_URL || DEFAULT_GEOCODER_URL, query);

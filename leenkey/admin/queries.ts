@@ -14,7 +14,6 @@ import type { Database } from "@/types/database";
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
 type PlanCode = Database["public"]["Enums"]["plan_code"];
-type PropertyType = Database["public"]["Enums"]["property_type"];
 
 export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavailable" };
 
@@ -27,11 +26,8 @@ export type AdminListingRow = {
   priceCents: number;
   submittedAt: string | null;
   publishedAt: string | null;
-  type: PropertyType;
   city: string;
   postalCode: string;
-  rooms: number;
-  surfaceM2: number;
   sellerName: string | null;
   plan: PlanCode;
 };
@@ -111,11 +107,8 @@ export async function adminListings(
       // Generated types declare the columns of a function result as never null.
       submittedAt: (row.submitted_at as string | null) ?? null,
       publishedAt: (row.published_at as string | null) ?? null,
-      type: row.type,
       city: row.city,
       postalCode: row.postal_code,
-      rooms: row.rooms,
-      surfaceM2: Number(row.surface_m2),
       sellerName: fullName(row.seller_first_name, row.seller_last_name),
       plan: row.plan,
     }));

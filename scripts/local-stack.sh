@@ -91,6 +91,8 @@ case "${1:-}" in
     echo "export NEXT_PUBLIC_SUPABASE_URL=http://localhost:$GATEWAY"
     echo "export NEXT_PUBLIC_SUPABASE_ANON_KEY=$(cat $DIR/anon_key)"
     echo "export NEXT_PUBLIC_SITE_URL=$APP_URL NEXT_PUBLIC_ENV=local"
+    # Addresses from core/geo/address-fixtures.ts: the tests know them.
+    echo "export GEOCODER=fixtures"
     echo "export SEED_PASSWORD=$(cat $DIR/seed_password) MAILPIT_URL=http://127.0.0.1:$MAIL_UI BASE_URL=$APP_URL"
     ;;
   down)

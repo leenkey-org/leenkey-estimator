@@ -1,5 +1,6 @@
 import "server-only";
 import { notFound, redirect } from "next/navigation";
+import { inCreation } from "./creation";
 import { sellerProperty, type SellerProperty } from "./queries";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -14,7 +15,6 @@ export async function propertyForCreation(id: string): Promise<SellerProperty | 
   const result = await sellerProperty(id);
   if (!result.ok) return null;
   if (!result.data) notFound();
-  const status = result.data.listingStatus;
-  if (status !== null && status !== "draft" && status !== "rejected") redirect("/vendeur");
+  if (!inCreation(result.data.listingStatus)) redirect("/vendeur");
   return result.data;
 }

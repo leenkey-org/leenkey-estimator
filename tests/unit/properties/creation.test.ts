@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { addressSearchUrl, readAddresses, searchFixtures } from "@/core/geo/address-search";
+import {
+  addressSearchUrl,
+  readAddresses,
+  sameAddressLabel,
+  searchFixtures,
+} from "@/core/geo/address-search";
+import { addressLabel, creationStep, inCreation } from "@/leenkey/properties/creation";
 import {
   addressChoiceSchema,
   addressQuerySchema,
+  characteristicsIntentSchema,
   characteristicsSchema,
+  forType,
   missingCharacteristics,
   parseFrenchNumber,
   type Characteristics,
@@ -95,6 +103,43 @@ describe("characteristicsSchema", () => {
     }
   });
 
+  it("asks a home for one room at least, not land nor another property", () => {
+    const rooms = (type: Characteristics["type"], value: number) =>
+      characteristicsSchema.safeParse({ ...empty, type, rooms: value });
+    for (const type of ["appartement", "maison"] as const) {
+      const result = rooms(type, 0);
+      expect(result.success, type).toBe(false);
+      expect(result.error?.issues[0]).toMatchObject({
+        path: ["rooms"],
+        message: "roomsAtLeastOne",
+      });
+      expect(rooms(type, 1).success, type).toBe(true);
+    }
+    expect(rooms("autre", 0).success).toBe(true);
+    expect(rooms("terrain", 0).success).toBe(true);
+  });
+
+  it("takes amounts in euros with cents at most", () => {
+    const amount = (chargesMonthlyEuros: number) =>
+      characteristicsSchema.safeParse({ ...empty, chargesMonthlyEuros });
+    expect(amount(120.5).success).toBe(true);
+    expect(amount(0.07).success).toBe(true);
+    expect(amount(1234.56).success).toBe(true);
+    const result = amount(120.505);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]).toMatchObject({
+      path: ["chargesMonthlyEuros"],
+      message: "cents",
+    });
+    expect(amount(-1).success).toBe(false);
+  });
+
+  it("knows the intents of a save of the step", () => {
+    expect(characteristicsIntentSchema.safeParse("save").success).toBe(true);
+    expect(characteristicsIntentSchema.safeParse("next").success).toBe(true);
+    expect(characteristicsIntentSchema.safeParse("publish").success).toBe(false);
+  });
+
   it("only knows the values of the lists", () => {
     for (const values of [
       { type: "chateau" },
@@ -108,10 +153,95 @@ describe("characteristicsSchema", () => {
   });
 });
 
+describe("fields of a type", () => {
+  const filled: Characteristics = {
+    ...empty,
+    surfaceM2: 120,
+    carrezM2: 110,
+    rooms: 5,
+    bedrooms: 3,
+    floor: 2,
+    floorsTotal: 2,
+    buildYear: 1975,
+    dpe: "D",
+    ges: "E",
+    heating: "Individuel gaz",
+    features: ["garden", "elevator", "parking"],
+    chargesMonthlyEuros: 40,
+    propertyTaxYearlyEuros: 1500,
+    coproLots: 12,
+  };
+
+  it("keeps the levels, lots and charges of a house, not its floor, Carrez nor lift", () => {
+    for (const type of ["maison", "autre"] as const) {
+      expect(forType({ ...filled, type }), type).toEqual({
+        ...filled,
+        type,
+        carrezM2: null,
+        floor: null,
+        features: ["garden", "parking"],
+      });
+    }
+  });
+
+  it("keeps the surface and the tax of land, with 0 rooms", () => {
+    expect(forType({ ...filled, type: "terrain" })).toEqual({
+      ...empty,
+      type: "terrain",
+      surfaceM2: 120,
+      rooms: 0,
+      propertyTaxYearlyEuros: 1500,
+    });
+  });
+
+  it("changes nothing for a flat or an unknown type", () => {
+    expect(forType({ ...filled, type: "appartement" })).toEqual({ ...filled, type: "appartement" });
+    expect(forType(filled)).toEqual(filled);
+  });
+
+  it("is applied by the schema before its checks: a hidden field never stops the form", () => {
+    const house = { ...empty, type: "maison" as const, rooms: 4, floor: 6, floorsTotal: 2 };
+    expect(characteristicsSchema.parse(house)).toEqual({ ...house, floor: null });
+    expect(
+      characteristicsSchema.parse({ ...empty, type: "terrain", surfaceM2: 800, bedrooms: 3 }),
+    ).toEqual({ ...empty, type: "terrain", surfaceM2: 800, rooms: 0 });
+  });
+});
+
+describe("steps of the creation", () => {
+  it("changes a property until its listing is sent, and again once rejected", () => {
+    expect(inCreation(null)).toBe(true);
+    expect(inCreation("draft")).toBe(true);
+    expect(inCreation("rejected")).toBe(true);
+    for (const status of ["pending", "published", "paused", "suspended", "sold"] as const) {
+      expect(inCreation(status), status).toBe(false);
+    }
+  });
+
+  it("resumes a draft at the step after the last one filled", () => {
+    expect(creationStep(empty)).toBe("caracteristiques");
+    expect(creationStep({ type: "appartement", surfaceM2: 48, rooms: null })).toBe(
+      "caracteristiques",
+    );
+    expect(creationStep({ type: "appartement", surfaceM2: 48, rooms: 2 })).toBe("prix");
+    expect(creationStep({ type: "terrain", surfaceM2: 800, rooms: 0 })).toBe("prix");
+  });
+
+  it("writes the address as the national base labels it", () => {
+    expect(
+      addressLabel({ line: "12 Rue de la Gare", postalCode: "91360", city: "Épinay-sur-Orge" }),
+    ).toBe("12 Rue de la Gare 91360 Épinay-sur-Orge");
+  });
+});
+
 describe("address of step 1", () => {
   it("asks for 3 characters to search, a label to choose", () => {
     expect(addressQuerySchema.safeParse("12").success).toBe(false);
     expect(addressQuerySchema.parse("  12 rue  ")).toBe("12 rue");
+    // The national base refuses a query that starts with a sign.
+    expect(addressQuerySchema.parse(", 12 rue")).toBe("12 rue");
+    expect(addressQuerySchema.parse("« Épinay")).toBe("Épinay");
+    expect(addressQuerySchema.safeParse(",,,ab").success).toBe(false);
     expect(
       addressChoiceSchema.safeParse({ label: "12 Rue de la Gare 91360 Épinay-sur-Orge" }).success,
     ).toBe(true);
@@ -123,7 +253,7 @@ describe("address of step 1", () => {
 });
 
 describe("national address base", () => {
-  it("asks for addresses near the launch zone, completed as typed", () => {
+  it("asks for addresses near the launch zone", () => {
     const url = addressSearchUrl("https://data.geopf.fr/geocodage/search", {
       text: "12 rue de la gare",
       near: { lat: 48.6736, lng: 2.3256 },
@@ -133,7 +263,6 @@ describe("national address base", () => {
     expect(Object.fromEntries(url.searchParams)).toEqual({
       q: "12 rue de la gare",
       index: "address",
-      autocomplete: "1",
       limit: "5",
       lat: "48.6736",
       lon: "2.3256",
@@ -170,6 +299,18 @@ describe("national address base", () => {
           },
         },
         { type: "Feature", geometry: null, properties: { label: "Sans point" } },
+        {
+          // A name the base cannot store (3 characters at least).
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [2.33, 48.67] },
+          properties: {
+            label: "B 91360 Épinay-sur-Orge",
+            name: "B",
+            postcode: "91360",
+            city: "Épinay-sur-Orge",
+            type: "street",
+          },
+        },
       ],
     };
     expect(readAddresses(answer)).toEqual([
@@ -183,6 +324,21 @@ describe("national address base", () => {
       },
     ]);
     expect(() => readAddresses({ error: "bad request" })).toThrow();
+  });
+
+  it("compares the labels whatever the case and the spaces", () => {
+    expect(
+      sameAddressLabel(
+        "12 Rue de la Gare 91360 Épinay-sur-Orge",
+        " 12 rue de la gare  91360 ÉPINAY-SUR-ORGE ",
+      ),
+    ).toBe(true);
+    expect(
+      sameAddressLabel(
+        "12 Rue de la Gare 91360 Épinay-sur-Orge",
+        "4 Rue de la Gare 91360 Épinay-sur-Orge",
+      ),
+    ).toBe(false);
   });
 
   it("finds the fixtures whatever the accents and the case", () => {

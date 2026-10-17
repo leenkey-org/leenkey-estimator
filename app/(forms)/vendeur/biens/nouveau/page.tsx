@@ -6,7 +6,7 @@ import { fr } from "@/lib/i18n/fr";
 
 const t = fr.properties.creation;
 
-export const metadata: Metadata = { title: t.metaTitle };
+export const metadata: Metadata = { title: t.metaTitle(t.steps.address) };
 
 // L1-11, step 1 of 4: the address of a new property (SPEC-V2 section 8.3).
 // The property is saved as a draft with « Continuer » or « Enregistrer ».

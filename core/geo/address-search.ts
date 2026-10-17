@@ -33,10 +33,11 @@ const featureSchema = z.object({
     coordinates: z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]),
   }),
   properties: z.object({
-    label: z.string().min(1),
-    name: z.string().min(1),
+    // The bounds of the columns of properties and of addressChoiceSchema.
+    label: z.string().min(5).max(200),
+    name: z.string().min(3).max(200),
     postcode: z.string().regex(/^[0-9]{5}$/),
-    city: z.string().min(1),
+    city: z.string().min(1).max(100),
     type: z.string(),
   }),
 });
@@ -44,7 +45,16 @@ const responseSchema = z.object({ features: z.array(z.unknown()) });
 
 /** Letters without accents nor case, to compare what is typed and the fixtures. */
 function fold(value: string): string {
-  return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+/** Same address label, whatever the case and the spaces. */
+export function sameAddressLabel(a: string, b: string): boolean {
+  const compact = (label: string) => label.replace(/\s+/g, " ").trim().toLocaleLowerCase("fr-FR");
+  return compact(a) === compact(b);
 }
 
 export function searchFixtures(text: string, limit: number): Address[] {
@@ -57,12 +67,14 @@ export function searchFixtures(text: string, limit: number): Address[] {
   }).slice(0, limit);
 }
 
-/** Query of the Géoplateforme (same parameters as the former api-adresse). */
+/**
+ * Query of the Géoplateforme (same parameters as the former api-adresse;
+ * the search completes the last word by default).
+ */
 export function addressSearchUrl(base: string, { text, near, limit = 5 }: AddressQuery): URL {
   const url = new URL(base);
   url.searchParams.set("q", text);
   url.searchParams.set("index", "address");
-  url.searchParams.set("autocomplete", "1");
   url.searchParams.set("limit", String(limit));
   if (near) {
     url.searchParams.set("lat", String(near.lat));
@@ -71,7 +83,10 @@ export function addressSearchUrl(base: string, { text, near, limit = 5 }: Addres
   return url;
 }
 
-/** Addresses of an answer (GeoJSON): an unreadable entry or a town alone is left out. */
+/**
+ * Addresses of an answer (GeoJSON): an unreadable entry, one that the base
+ * cannot store, or a town alone is left out.
+ */
 export function readAddresses(body: unknown): Address[] {
   const { features } = responseSchema.parse(body);
   return features.flatMap((feature) => {

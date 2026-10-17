@@ -2,19 +2,27 @@
 
 import { revalidatePath } from "next/cache";
 import { getProfile } from "@/core/auth/session";
+import { sameAddressLabel } from "@/core/geo/address-search";
 import { searchAddresses } from "@/core/geo/addresses";
 import { LAUNCH_ZONE_CENTRE } from "@/lib/config/launch-zone";
 import { createClient } from "@/lib/supabase/server";
 import {
   addressChoiceSchema,
   addressQuerySchema,
+  characteristicsIntentSchema,
   characteristicsSchema,
   missingCharacteristics,
+  type CharacteristicsField,
   type PropertyFeature,
 } from "@/lib/validations/property";
+import { addressLabel, inCreation } from "./creation";
 
 // Server actions of the creation of a property (L1-11), with the seller's
 // session: RLS and the column grants of L1-04 decide what they may write.
+// Here, as on the pages, only the seller's own property, while the steps of
+// the creation change it (inCreation).
+
+type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 export type AddressSuggestion = { label: string; line: string; postalCode: string; city: string };
 
@@ -40,14 +48,48 @@ export async function suggestAddresses(text: unknown): Promise<SuggestResult> {
   };
 }
 
+type DraftResult = { ok: true; label: string } | { ok: false; error: "not_found" | "unavailable" };
+
+/** The property of the seller, while the creation changes it, and its address. */
+async function readDraft(supabase: Supabase, id: string, ownerId: string): Promise<DraftResult> {
+  const { data, error } = await supabase
+    .from("properties")
+    .select("address_line, postal_code, city, listing:listings(status)")
+    .eq("id", id)
+    .eq("owner_id", ownerId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (error) {
+    console.error("[properties] draft read failed", {
+      user_id: ownerId,
+      entity_id: id,
+      code: error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  if (!data) return { ok: false, error: "not_found" };
+  const listing = Array.isArray(data.listing) ? data.listing[0] : data.listing;
+  // Sent for review or online: it changes from its page (L1-14), not here.
+  if (!inCreation(listing?.status ?? null)) return { ok: false, error: "not_found" };
+  return {
+    ok: true,
+    label: addressLabel({ line: data.address_line, postalCode: data.postal_code, city: data.city }),
+  };
+}
+
 export type SaveAddressResult =
   | { ok: true; data: { id: string } }
-  | { ok: false; error: "auth" | "invalid" | "not_found" | "unavailable" };
+  | {
+      ok: false;
+      /** not_found: the property; address_not_found: the address chosen. */
+      error: "auth" | "invalid" | "not_found" | "address_not_found" | "unavailable";
+    };
 
 /**
  * Step 1: creates the draft, or changes its address. The address is geocoded
  * again here: the point stored comes from the national base, never from the
- * browser. Creating a property makes the account a seller.
+ * browser, and it is the address chosen (same label), never a neighbour.
+ * Creating a property makes the account a seller.
  */
 export async function saveAddress(input: unknown): Promise<SaveAddressResult> {
   const profile = await getProfile();
@@ -55,13 +97,19 @@ export async function saveAddress(input: unknown): Promise<SaveAddressResult> {
   const parsed = addressChoiceSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
   const { propertyId, label } = parsed.data;
+  const supabase = await createClient();
+
+  if (propertyId) {
+    const draft = await readDraft(supabase, propertyId, profile.id);
+    if (!draft.ok) return draft;
+    // Unchanged: nothing to geocode nor to write.
+    if (sameAddressLabel(draft.label, label)) return { ok: true, data: { id: propertyId } };
+  }
 
   const search = await searchAddresses({ text: label, near: LAUNCH_ZONE_CENTRE, limit: 5 });
   if (!search.ok) return { ok: false, error: "unavailable" };
-  const address =
-    search.data.find((candidate) => candidate.label.toLowerCase() === label.toLowerCase()) ??
-    search.data[0];
-  if (!address) return { ok: false, error: "not_found" };
+  const address = search.data.find((candidate) => sameAddressLabel(candidate.label, label));
+  if (!address) return { ok: false, error: "address_not_found" };
 
   const values = {
     address_line: address.line,
@@ -69,12 +117,12 @@ export async function saveAddress(input: unknown): Promise<SaveAddressResult> {
     city: address.city,
     location: `SRID=4326;POINT(${address.lng} ${address.lat})`,
   };
-  const supabase = await createClient();
   const { data, error } = propertyId
     ? await supabase
         .from("properties")
         .update(values)
         .eq("id", propertyId)
+        .eq("owner_id", profile.id)
         .is("deleted_at", null)
         .select("id")
         .maybeSingle()
@@ -91,7 +139,7 @@ export async function saveAddress(input: unknown): Promise<SaveAddressResult> {
     });
     return { ok: false, error: "unavailable" };
   }
-  // Nothing updated: someone else's property, deleted, or suspended.
+  // Nothing updated: deleted or suspended in the meantime.
   if (!data) return { ok: false, error: "not_found" };
 
   if (!propertyId && !profile.roles.includes("seller")) {
@@ -106,22 +154,6 @@ export async function saveAddress(input: unknown): Promise<SaveAddressResult> {
   revalidatePath("/vendeur");
   return { ok: true, data: { id: data.id } };
 }
-
-export type CharacteristicsField =
-  | "type"
-  | "surfaceM2"
-  | "carrezM2"
-  | "rooms"
-  | "bedrooms"
-  | "floor"
-  | "floorsTotal"
-  | "buildYear"
-  | "dpe"
-  | "ges"
-  | "heating"
-  | "chargesMonthlyEuros"
-  | "propertyTaxYearlyEuros"
-  | "coproLots";
 
 export type SaveCharacteristicsResult =
   | { ok: true; data: { complete: boolean } }
@@ -141,22 +173,26 @@ const FEATURE_COLUMNS: Record<PropertyFeature, string> = {
   elevator: "has_elevator",
 };
 
+const NOT_A_FIELD = new Set(["propertyId", "isNewBuild", "features"]);
+
 /**
  * Step 2, saved as a draft at any time (« Enregistrer », « Précédent »);
- * `next` also asks for what a listing needs: type, surface, rooms.
+ * `next` also asks for what a listing needs: type, surface, rooms. The
+ * fields that do not apply to the type are saved empty (forType).
  */
 export async function saveCharacteristics(
   input: unknown,
-  intent: "save" | "next",
+  intent: unknown,
 ): Promise<SaveCharacteristicsResult> {
   const profile = await getProfile();
   if (!profile) return { ok: false, error: "auth" };
+  const step = characteristicsIntentSchema.safeParse(intent);
   const parsed = characteristicsSchema.safeParse(input);
-  if (!parsed.success) {
+  if (!step.success || !parsed.success) {
     const fieldErrors: Partial<Record<CharacteristicsField, string>> = {};
-    for (const issue of parsed.error.issues) {
+    for (const issue of parsed.error?.issues ?? []) {
       const field = issue.path[0];
-      if (typeof field === "string" && field !== "propertyId" && field !== "features") {
+      if (typeof field === "string" && !NOT_A_FIELD.has(field)) {
         fieldErrors[field as CharacteristicsField] ??=
           issue.code === "custom" ? issue.message : "outOfRange";
       }
@@ -165,7 +201,7 @@ export async function saveCharacteristics(
   }
   const value = parsed.data;
   const missing = missingCharacteristics(value);
-  if (intent === "next" && missing.length > 0) {
+  if (step.data === "next" && missing.length > 0) {
     return {
       ok: false,
       error: "incomplete",
@@ -173,14 +209,17 @@ export async function saveCharacteristics(
     };
   }
 
+  const supabase = await createClient();
+  const draft = await readDraft(supabase, value.propertyId, profile.id);
+  if (!draft.ok) return draft;
+
   const features = Object.fromEntries(
     Object.entries(FEATURE_COLUMNS).map(([feature, column]) => [
       column,
       value.features.includes(feature as PropertyFeature),
     ]),
   );
-  const cents = (euros: number | null) => (euros === null ? null : euros * 100);
-  const supabase = await createClient();
+  const cents = (euros: number | null) => (euros === null ? null : Math.round(euros * 100));
   const { data, error } = await supabase
     .from("properties")
     .update({
@@ -202,6 +241,7 @@ export async function saveCharacteristics(
       ...features,
     })
     .eq("id", value.propertyId)
+    .eq("owner_id", profile.id)
     .is("deleted_at", null)
     .select("id")
     .maybeSingle();

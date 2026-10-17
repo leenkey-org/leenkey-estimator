@@ -245,7 +245,7 @@ export const fr = {
   // L1-11: creation of a property in steps (SPEC-V2 section 8.3, DESIGN.md 12.2).
   properties: {
     creation: {
-      metaTitle: "Mon bien · Leenkey",
+      metaTitle: (step: string) => `${step} · Mon bien · Leenkey`,
       title: "Mon bien",
       leave: "Retour à Ma vente",
       previousStep: "Étape précédente",
@@ -279,12 +279,14 @@ export const fr = {
       unavailable: "La recherche d'adresse ne répond pas. Réessayez dans un instant.",
       required: "Choisissez l'adresse dans la liste.",
       chosen: "Adresse choisie",
+      chosenStatus: (label: string) => `Adresse choisie : ${label}.`,
       change: "Changer d'adresse",
       notFound: "Cette adresse n'a pas été retrouvée. Choisissez-la de nouveau dans la liste.",
     },
     characteristics: {
       title: "Décrivez votre bien",
       required: "Le type, la surface et le nombre de pièces sont nécessaires pour continuer.",
+      requiredLand: "Le type et la surface sont nécessaires pour continuer.",
       type: "Type de bien",
       typePlaceholder: "Choisir le type",
       surface: "Surface habitable",
@@ -295,6 +297,7 @@ export const fr = {
       floor: "Étage",
       floorHelp: "0 pour un rez-de-chaussée.",
       floorsTotal: "Étages de l'immeuble",
+      levels: "Niveaux",
       buildYear: "Année de construction",
       dpe: "DPE",
       ges: "GES",
@@ -324,6 +327,8 @@ export const fr = {
       carrezAboveSurface: "La surface Carrez ne peut pas dépasser la surface habitable.",
       bedroomsAboveRooms: "Il ne peut pas y avoir plus de chambres que de pièces.",
       floorAboveTotal: "L'étage ne peut pas dépasser le nombre d'étages.",
+      roomsAtLeastOne: "Un logement compte au moins une pièce.",
+      cents: "Deux chiffres après la virgule au plus.",
     } as Record<string, string>,
     nextStep: {
       title: "La suite de votre annonce arrive",
@@ -334,7 +339,6 @@ export const fr = {
       title: "Vos biens",
       create: "Créer mon annonce",
       untitled: "Bien à compléter",
-      draft: "Brouillon",
       resume: "Continuer",
       error: "Vos biens n'ont pas pu être chargés.",
     },
