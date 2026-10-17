@@ -34,35 +34,19 @@ export type CreationStep = "caracteristiques" | "prix";
 const COLUMNS =
   "id, type, address_line, postal_code, city, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, build_year, is_new_build, dpe_class, ges_class, heating, has_balcony, has_terrace, has_garden, has_parking, has_cellar, has_elevator, charges_monthly_cents, property_tax_yearly_cents, copro_lots, created_at, listing:listings(status)";
 
-type Row = {
-  id: string;
-  type: Database["public"]["Enums"]["property_type"] | null;
-  address_line: string;
-  postal_code: string;
-  city: string;
-  surface_m2: number | null;
-  carrez_m2: number | null;
-  rooms: number | null;
-  bedrooms: number | null;
-  floor: number | null;
-  floors_total: number | null;
-  build_year: number | null;
-  is_new_build: boolean;
-  dpe_class: string | null;
-  ges_class: string | null;
-  heating: string | null;
-  has_balcony: boolean | null;
-  has_terrace: boolean | null;
-  has_garden: boolean | null;
-  has_parking: boolean | null;
-  has_cellar: boolean | null;
-  has_elevator: boolean | null;
-  charges_monthly_cents: number | null;
-  property_tax_yearly_cents: number | null;
-  copro_lots: number | null;
-  created_at: string;
-  listing: { status: ListingStatus } | { status: ListingStatus }[] | null;
-};
+type Row = NonNullable<Awaited<ReturnType<typeof readOne>>["data"]>;
+
+/** Typed by the select (types/database.ts): the row of one property. */
+async function readOne(id: string, ownerId: string) {
+  const supabase = await createClient();
+  return supabase
+    .from("properties")
+    .select(COLUMNS)
+    .eq("id", id)
+    .eq("owner_id", ownerId)
+    .is("deleted_at", null)
+    .maybeSingle();
+}
 
 const FEATURE_COLUMNS: Record<PropertyFeature, keyof Row> = {
   balcony: "has_balcony",
@@ -116,14 +100,7 @@ export const sellerProperty = cache(async function sellerProperty(
 ): Promise<QueryResult<SellerProperty | null>> {
   const profile = await requireProfile();
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("properties")
-      .select(COLUMNS)
-      .eq("id", id)
-      .eq("owner_id", profile.id)
-      .is("deleted_at", null)
-      .maybeSingle<Row>();
+    const { data, error } = await readOne(id, profile.id);
     if (error) throw new Error(`properties: ${error.code} ${error.message}`);
     return { ok: true, data: data ? toSellerProperty(data) : null };
   } catch (error) {
@@ -146,8 +123,7 @@ export async function sellerProperties(profileId: string): Promise<QueryResult<S
       .eq("owner_id", profileId)
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
-      .limit(50)
-      .returns<Row[]>();
+      .limit(50);
     if (error) throw new Error(`properties: ${error.code} ${error.message}`);
     return { ok: true, data: data.map(toSellerProperty) };
   } catch (error) {

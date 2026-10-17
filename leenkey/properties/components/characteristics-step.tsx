@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { flushSync } from "react-dom";
 import { Button } from "@/components/shared/button";
 import { ChipToggle } from "@/components/shared/chip-toggle";
 import { FormActionBar } from "@/components/shared/form-action-bar";
@@ -115,13 +116,10 @@ export function CharacteristicsStep({
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
   }
 
-  function focusFirstError(fields: Partial<Record<CharacteristicsField, string>>) {
-    // After the render that shows the errors.
-    window.setTimeout(() => {
-      const invalid = form.current?.querySelector<HTMLElement>("[aria-invalid=true]");
-      invalid?.focus();
-    }, 0);
-    return fields;
+  /** The errors in the page first, then the focus on the first field in error. */
+  function showErrors(fields: Partial<Record<CharacteristicsField, string>>) {
+    flushSync(() => setFieldErrors(fields));
+    form.current?.querySelector<HTMLElement>("[aria-invalid=true]")?.focus();
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -135,7 +133,7 @@ export function CharacteristicsStep({
       else typed[field] = value;
     }
     if (Object.keys(invalid).length > 0) {
-      setFieldErrors(focusFirstError(invalid));
+      showErrors(invalid);
       return;
     }
     const payload: Characteristics = {
@@ -168,14 +166,12 @@ export function CharacteristicsStep({
       }
       if (!result?.ok) {
         if (result?.fieldErrors) {
-          setFieldErrors(
-            focusFirstError(
-              Object.fromEntries(
-                Object.entries(result.fieldErrors).map(([field, key]) => [
-                  field,
-                  errors[key ?? "outOfRange"] ?? errors.outOfRange,
-                ]),
-              ),
+          showErrors(
+            Object.fromEntries(
+              Object.entries(result.fieldErrors).map(([field, key]) => [
+                field,
+                errors[key ?? "outOfRange"] ?? errors.outOfRange,
+              ]),
             ),
           );
         }
