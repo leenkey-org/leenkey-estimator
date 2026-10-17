@@ -3,67 +3,12 @@
 // data for the bars of components/shared, which know no route of the site.
 
 import { loginPath } from "@/core/auth/next-path";
-import { matchesPath, pathnameOf, type NavItem } from "@/components/shared/nav-items";
+import type { NavItem } from "@/components/shared/nav-items";
 import { homePathForRoles } from "@/leenkey/auth/routes";
 import { fr } from "@/lib/i18n/fr";
+import { ROUTES, type Space } from "./spaces";
 
-export type Space = "seller" | "buyer" | "admin";
-
-export const ROUTES = {
-  home: "/",
-  search: "/acheter",
-  listing: "/annonce",
-  valuation: "/estimer",
-  sellerSignUp: "/inscription?role=seller",
-  seller: "/vendeur",
-  sellerFile: "/vendeur/dossier",
-  buyer: "/acquereur",
-  favourites: "/acquereur/favoris",
-  messages: "/messages",
-  account: "/compte",
-  admin: "/admin",
-  adminListings: "/admin/annonces",
-  adminUsers: "/admin/utilisateurs",
-  adminCases: "/admin/dossiers",
-  adminOffers: "/admin/offres",
-  adminReports: "/admin/signalements",
-  adminAssistant: "/admin/assistant",
-} as const;
-
-/**
- * Space a path belongs to: the back office, the seller and the buyer areas
- * (the search with them). Null for the pages shared by all (messages,
- * account, assistant) and the other public pages.
- */
-export function ownSpace(path: string): Space | null {
-  const pathname = pathnameOf(path);
-  if (matchesPath(pathname, ROUTES.admin)) return "admin";
-  if (matchesPath(pathname, ROUTES.seller)) return "seller";
-  if (matchesPath(pathname, ROUTES.buyer) || matchesPath(pathname, ROUTES.search)) return "buyer";
-  return null;
-}
-
-/**
- * Space of a page, which picks the bottom tabs and the notifications text:
- * its own (ownSpace), otherwise the roles of the account: seller when it
- * sells, otherwise buyer, admin for an admin-only account. In the signed-in
- * areas, a shared page keeps the space the visitor came from (SpaceProvider).
- */
-export function spaceFor(path: string, roles: readonly string[]): Space {
-  const own = ownSpace(path);
-  if (own) return own;
-  if (roles.includes("seller")) return "seller";
-  if (roles.includes("admin") && !roles.includes("buyer")) return "admin";
-  return "buyer";
-}
-
-/**
- * Space after a client navigation to `path` (SpaceProvider): its own, or for
- * a shared page the one the visitor came from.
- */
-export function followSpace(previous: Space, path: string): Space {
-  return ownSpace(path) ?? previous;
-}
+export { followSpace, ownSpace, ROUTES, spaceFor, type Space } from "./spaces";
 
 const tabs = fr.nav.tabs;
 

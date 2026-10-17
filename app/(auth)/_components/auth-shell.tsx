@@ -44,10 +44,11 @@ export function AuthShell({
         <div className="mt-6 flex flex-1 flex-col">{children}</div>
       </main>
       {privacyNote ? (
-        <footer className="mt-8 flex items-start gap-2.5 text-lk-caption text-lk-ink-2">
+        // Not a <footer>: the SiteFooter of the layout is the page's contentinfo.
+        <div className="mt-8 flex items-start gap-2.5 text-lk-caption text-lk-ink-2">
           <Lock aria-hidden="true" className="mt-px size-4 shrink-0 text-lk-success" />
           <p>{fr.auth.signup.privacyNote}</p>
-        </footer>
+        </div>
       ) : null}
     </div>
   );

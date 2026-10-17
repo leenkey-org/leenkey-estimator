@@ -28,6 +28,7 @@ export type AdminShellProps = {
  * Back office frame (docs/DESIGN.md 10.6, template G7). From 768 px: sticky
  * 240 px sidebar and content on --lk-bg, padding 28 × 32. Below: the
  * AdminMobileHeader, the content with 20 px gutters and the admin BottomNav.
+ * The footer slot ends the content column, at the bottom of a short page.
  */
 export function AdminShell({
   label,
@@ -43,7 +44,7 @@ export function AdminShell({
   return (
     <div
       className={cn(
-        "min-h-dvh bg-lk-bg md:grid md:grid-cols-[15rem_minmax(0,1fr)]",
+        "flex min-h-dvh flex-col bg-lk-bg md:grid md:grid-cols-[15rem_minmax(0,1fr)]",
         BOTTOM_NAV_OFFSET,
         className,
       )}
@@ -55,7 +56,7 @@ export function AdminShell({
         account={account}
         className="hidden md:sticky md:top-0 md:flex md:h-dvh"
       />
-      <div className="flex min-w-0 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <AdminMobileHeader items={items} fallbackTitle={fallbackTitle} account={account} />
         <main className="flex-1 px-5 pt-5 pb-8 md:px-8 md:py-7">{children}</main>
         {footer}

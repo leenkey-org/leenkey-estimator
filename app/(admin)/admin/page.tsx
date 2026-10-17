@@ -6,12 +6,15 @@ import { AdminPage } from "./_components/admin-page";
 
 export const metadata: Metadata = { title: fr.spaces.admin.metaTitle };
 
-// Placeholder until the back office dashboard (L1-30). Below 768 px, the
-// AdminMobileHeader shows « Tableau de bord » and the H1 is for screen readers.
+// Placeholder until the back office dashboard (L1-30). The title is the one
+// of the sidebar and of the AdminMobileHeader, which shows it below 768 px.
 export default async function AdminHomePage() {
   const profile = await requireAdmin();
   return (
-    <AdminPage title={fr.spaces.greeting(profile.firstName)}>
+    <AdminPage title={fr.nav.admin.dashboard}>
+      <p className="text-lk-title font-semibold text-lk-ink">
+        {fr.spaces.greeting(profile.firstName)}
+      </p>
       <EmptyState
         className="mt-6"
         title={fr.spaces.admin.title}

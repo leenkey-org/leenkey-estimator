@@ -75,11 +75,22 @@ describe("followSpace (client navigation, SpaceProvider)", () => {
     expect(followSpace("seller", "/admin/annonces")).toBe("admin");
   });
 
-  it("keeps the previous space on the shared pages", () => {
-    for (const path of ["/messages", "/messages/42", "/compte", "/assistant"]) {
+  it("keeps the previous space on the pages without one, listings included", () => {
+    for (const path of [
+      "/messages",
+      "/messages/42",
+      "/compte",
+      "/assistant",
+      "/annonce/x-lk0001",
+    ]) {
       expect(ownSpace(path), path).toBeNull();
       for (const space of SPACES) expect(followSpace(space, path), path).toBe(space);
+      // Opened first: no space yet, the roles decide (spaceFor).
+      expect(followSpace(null, path), path).toBeNull();
     }
+    // The search belongs to the buyer area: a seller who goes from it to the
+    // messages keeps the buyer tabs.
+    expect(followSpace(followSpace("seller", "/acheter"), "/messages")).toBe("buyer");
   });
 });
 

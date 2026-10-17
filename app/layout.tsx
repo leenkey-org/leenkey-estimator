@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { ConsentManager } from "@/components/analytics/consent-manager";
 import { EnvBanner } from "@/components/shared/env-banner";
+import { SpaceProvider } from "@/leenkey/navigation/components/space-context";
 import { isProduction } from "@/lib/env";
 // V1 fonts (Sora, DM Sans, Poppins), self-hosted: no request to Google before
 // consent (L1-37). Façade uses Archivo through next/font.
@@ -51,7 +52,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <EnvBanner />
-        {children}
+        {/* Space of the navigation, kept across client navigations (L1-10). */}
+        <SpaceProvider>{children}</SpaceProvider>
         <Analytics />
         <ConsentManager analyticsEnabled={analytics} gaId={GA_ID} gtmId={GTM_ID} />
       </body>

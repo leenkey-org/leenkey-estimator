@@ -44,6 +44,8 @@ async function expectFooter(page: Page) {
  */
 async function expectTopNavFitsAt768(page: Page) {
   await page.setViewportSize({ width: 768, height: 900 });
+  // Measured with Archivo and its width axis, not with the fallback font.
+  await page.evaluate(() => document.fonts.ready);
   const lastLink = await mainNav(page).getByRole("link").last().boundingBox();
   const cta = await page.getByRole("link", { name: "Vendre mon bien" }).boundingBox();
   expect(lastLink && cta && lastLink.x + lastLink.width).toBeLessThanOrEqual(cta?.x ?? 0);
@@ -224,17 +226,18 @@ test.describe("page annonce (base de seed)", () => {
       await expect(page.getByRole("banner")).toBeHidden();
       const contact = page.getByRole("link", { name: "Contacter le vendeur" });
       await expect(contact).toBeVisible();
-      // At the bottom of the page, the fixed action bar hides nothing of the footer.
+      // At the bottom of the page, the fixed action bar hides nothing of the
+      // footer, down to its last line.
       await page.evaluate(() =>
         window.scrollTo({ top: document.body.scrollHeight, behavior: "instant" }),
       );
-      const manage = await page
+      const lastLine = await page
         .getByRole("contentinfo")
-        .getByRole("button", { name: "Gérer mes cookies" })
+        .getByText("© 2026 Leenkey")
         .boundingBox();
-      const actions = await contact.boundingBox();
-      expect(manage && actions && manage.y + manage.height).toBeLessThanOrEqual(
-        (actions?.y ?? 0) - 1,
+      const bar = await contact.locator("xpath=..").boundingBox();
+      expect(lastLine && bar && lastLine.y + lastLine.height).toBeLessThanOrEqual(
+        (bar?.y ?? 0) - 1,
       );
     } else {
       // « Acheter » stays current on a listing (AnnonceDesktop).
@@ -321,10 +324,28 @@ test.describe("comptes connectés (base de seed)", () => {
       await expect(page.getByRole("button", { name: "Menu du compte" })).toHaveText("A");
       await expect(page.getByRole("link", { name: "Ma vente" })).toBeHidden();
       await expect(page.getByRole("link", { name: "Mon compte" })).toHaveCount(0);
-      // Signed in, the TopNav is at its widest: bell, favourites and avatar.
-      await expectTopNavFitsAt768(page);
     }
     expect(await seriousViolations(page)).toEqual([]);
+    // Signed in, the TopNav is at its widest: bell, favourites and avatar.
+    if (!isMobile) await expectTopNavFitsAt768(page);
+  });
+
+  test("une page commune garde l'espace d'où l'on vient, recherche comprise", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, "onglets sous 768 px");
+    // seller_a only sells: on /messages opened first, the seller tabs.
+    await signIn(page, "seller_a", "/acheter");
+    await expectTabs(page, ["Chercher", "Favoris", "Messages", "Compte"], "Chercher");
+    await mainNav(page).getByRole("link", { name: "Messages" }).click();
+    await expect(page).toHaveURL("/messages");
+    await expectTabs(page, ["Chercher", "Favoris", "Messages", "Compte"], "Messages");
+    await expect(page.getByRole("button", { name: "Notifications", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Notifications", exact: true }).click();
+    await expect(page.getByRole("dialog", { name: "Notifications" })).toContainText(
+      "des réponses des vendeurs",
+    );
   });
 
   test("acquéreur : onglets de l'acquéreur", async ({ page, isMobile }) => {
@@ -541,6 +562,11 @@ test.describe("comptes connectés (base de seed)", () => {
       await expect(page.getByRole("heading", { level: 1 }), path).toHaveText(title);
       await expect(page, path).toHaveTitle(`${title} · Back office · Leenkey`);
     }
+    // No bell for the back office yet (DECISIONS 2026-10-17), nor on the
+    // account page of an admin-only account.
+    await page.goto("/compte");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Mon compte");
+    await expect(page.getByRole("button", { name: /^Notifications/ })).toHaveCount(0);
   });
 
   test("« Compte » déconnecte en mobile (jusqu'à la page compte)", async ({ page, isMobile }) => {
