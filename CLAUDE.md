@@ -429,7 +429,7 @@ Plateforme PropTech française de vente immobilière sans agence, développée p
 2. Estimateur porté en composants client (`"use client"`) sous `app/(public)/estimer`, moteur dans `leenkey/estimator/` sans modification de logique.
 3. Les 4 endpoints deviennent des route handlers aux **mêmes chemins** (`/api/estimate`, `/api/contact`, `/api/send-report`, `/api/dvf-comparables`), même format de requête et de réponse, CORS de `send-report` conservé.
 4. Pages marketing `public/pages/*.html` conservées, avec le comportement de `HtmlPage.tsx` (interception des `<form>`) et l'en-tête `Cache-Control: max-age=0, must-revalidate` sur `/pages/*`.
-5. GA4, GTM (avec le `noscript`), Vercel Analytics et le `page_view` à chaque changement de route.
+5. GA4, GTM, Vercel Analytics et le `page_view` à chaque changement de route. GA4 et GTM ne se chargent qu'après l'accord du visiteur (bandeau de L1-37) ; le `noscript` de GTM est retiré, un visiteur sans JavaScript ne pouvant pas consentir (`DECISIONS.md` 2026-10-17).
 6. Redirections 301 : `leenkey.com` et `www.leenkey.fr` → `leenkey.fr` (hors `/api`). URLs, `sitemap.xml` et `robots.txt` conservés.
 
 ### Règles éditoriales (décisions client, ne pas régresser)

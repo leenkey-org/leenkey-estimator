@@ -195,7 +195,7 @@ Resend ◄────────── core/notifications (file notifications 
   /acheter                  recherche liste + carte
   /annonce/[slug]           page annonce publique
   /vendre                   page vendeur : en V2, la page d'accueil V1 (/), lien « Vendre » (DECISIONS 2026-10-17)
-  /mentions-legales, /cgu, /confidentialite, /cgv
+  /mentions-legales, /cgu, /confidentialite, /cgv, /cookies, /signalement, /intelligence-artificielle
 (auth)
   /inscription, /connexion, /mot-de-passe-oublie, /reinitialiser, /confirmation (lien des emails), /conditions
 (app)  — connecté

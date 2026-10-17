@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { CookieSettingsButton } from "@/components/shared/cookie-settings-button";
+import { FOOTER_LINKS } from "@/leenkey/legal/footer-links";
+import { fr } from "@/lib/i18n/fr";
 
 export function Footer() {
   return (
@@ -82,6 +85,17 @@ export function Footer() {
           transition: color .2s;
         }
         .lk-foot-col ul li a:hover { color: #F8FAFC; }
+        .lk-foot-col ul li button {
+          font: inherit;
+          font-size: 0.9rem;
+          color: rgba(248,250,252,.65);
+          background: none;
+          border: 0;
+          padding: 0;
+          cursor: pointer;
+          transition: color .2s;
+        }
+        .lk-foot-col ul li button:hover { color: #F8FAFC; }
         .lk-foot-bottom {
           border-top: 1px solid #1e293b;
           padding-top: 24px;
@@ -170,31 +184,28 @@ export function Footer() {
               </ul>
             </div>
 
-            {/* Colonne 3 — Légal */}
+            {/* Colonne 3 — Légal (L1-36 : mêmes liens que le pied de page V2) */}
             <div className="lk-foot-col">
               <h4>Légal</h4>
               <ul>
+                {/* Plain links: a full load, so that the V1 global styles of
+                    this page never apply to a Façade page. */}
+                {FOOTER_LINKS.map((link) => (
+                  <li key={link.href}>
+                    <a href={link.href}>{link.label}</a>
+                  </li>
+                ))}
                 <li>
-                  <Link href="/mentions-legales">Mentions légales</Link>
-                </li>
-                <li>
-                  <Link href="/mentions-legales#rgpd">RGPD & données personnelles</Link>
-                </li>
-                <li>
-                  <Link href="/mentions-legales#cookies">Cookies</Link>
-                </li>
-                <li>
-                  <Link href="/cgu">Conditions d'utilisation</Link>
-                </li>
-                <li>
-                  <a href="mailto:contact.leenkey@gmail.com">Contact</a>
+                  <CookieSettingsButton />
                 </li>
               </ul>
             </div>
           </div>
 
           <div className="lk-foot-bottom">
-            <p>© 2026 Leenkey. Tous droits réservés.</p>
+            <p>
+              © 2026 Leenkey. Tous droits réservés. {fr.legal.company}, {fr.legal.address}.
+            </p>
             <p>
               Fait en France · Données hébergées en France · Conçu par{" "}
               <a
