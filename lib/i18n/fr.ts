@@ -157,6 +157,136 @@ export const fr = {
       text: "La validation des annonces arrive avec la prochaine étape.",
     },
   },
+  // L1-10: navigation shells (docs/DESIGN.md 10.6 to 10.8).
+  nav: {
+    label: "Navigation principale",
+    adminLabel: "Navigation du back office",
+    brand: "Leenkey",
+    backOffice: "Back office",
+    links: {
+      buy: "Acheter",
+      sell: "Vendre",
+      // Never « Estimer mon bien » (CLAUDE.md section 16, DESIGN.md 17).
+      valuation: "Valoriser mon bien",
+    },
+    sellCta: "Vendre mon bien",
+    signIn: "Mon compte",
+    favourites: "Favoris",
+    tabs: {
+      sale: "Ma vente",
+      file: "Dossier",
+      messages: "Messages",
+      account: "Compte",
+      search: "Chercher",
+      favourites: "Favoris",
+      listings: "Annonces",
+      cases: "Dossiers",
+      users: "Utilisateurs",
+      assistant: "Assistant",
+    },
+    admin: {
+      dashboard: "Tableau de bord",
+      listings: "Annonces",
+      users: "Utilisateurs",
+      cases: "Dossiers",
+      offers: "Offres",
+      reports: "Signalements",
+      assistant: "Assistant",
+      role: "Administrateur",
+    },
+    menu: {
+      trigger: "Menu du compte",
+      home: "Mon espace",
+      account: "Mon compte",
+      signOut: "Se déconnecter",
+    },
+    notifications: {
+      bell: "Notifications",
+      bellUnread: (count: number) =>
+        count === 1 ? "Notifications, 1 nouvelle" : `Notifications, ${count} nouvelles`,
+      title: "Notifications",
+      close: "Fermer les notifications",
+      settings: "Réglages des notifications",
+      emptyTitle: "Aucune notification",
+      emptySeller:
+        "Nous vous prévenons ici des messages, des visites et des offres reçus pour votre bien.",
+      emptyBuyer:
+        "Nous vous prévenons ici des réponses des vendeurs et des nouveaux biens de vos recherches.",
+    },
+  },
+  // L1-10: pages whose screen comes with a later task (ComingSoon).
+  placeholders: {
+    messages: {
+      metaTitle: "Messages · Leenkey",
+      title: "Messages",
+      comingTitle: "Votre messagerie arrive",
+      comingText:
+        "Nous préparons l'écran de vos conversations avec les acquéreurs et les vendeurs.",
+    },
+    account: {
+      metaTitle: "Mon compte · Leenkey",
+      title: "Mon compte",
+      comingTitle: "Vos réglages arrivent",
+      comingText:
+        "Nous préparons l'écran de vos informations personnelles, de votre mot de passe et de vos notifications.",
+    },
+    favourites: {
+      metaTitle: "Favoris · Leenkey",
+      title: "Favoris",
+      comingTitle: "Vos favoris arrivent",
+      comingText: "Nous préparons la liste des biens que vous sauvegarderez depuis les annonces.",
+      action: "Voir les biens",
+    },
+    sellerFile: {
+      metaTitle: "Dossier de vente · Leenkey",
+      title: "Dossier de vente",
+      comingTitle: "Votre dossier de vente arrive",
+      comingText: "Nous préparons l'écran qui réunira la fiche de votre bien et ses documents.",
+    },
+    admin: {
+      listings: {
+        metaTitle: "Annonces · Back office · Leenkey",
+        title: "Annonces",
+        comingTitle: "La validation des annonces arrive",
+        comingText:
+          "Nous préparons l'écran où vous validerez, refuserez ou suspendrez les annonces des vendeurs.",
+      },
+      users: {
+        metaTitle: "Utilisateurs · Back office · Leenkey",
+        title: "Utilisateurs",
+        comingTitle: "La liste des comptes arrive",
+        comingText:
+          "Nous préparons l'écran des vendeurs et des acquéreurs, avec leurs biens et leur financement.",
+      },
+      cases: {
+        metaTitle: "Dossiers · Back office · Leenkey",
+        title: "Dossiers",
+        comingTitle: "Le suivi des dossiers arrive",
+        comingText:
+          "Nous préparons l'écran des dossiers d'accompagnement : formules payantes et demandes de conseiller.",
+      },
+      offers: {
+        metaTitle: "Offres · Back office · Leenkey",
+        title: "Offres",
+        comingTitle: "Le suivi des offres arrive",
+        comingText: "Nous préparons l'écran qui réunira les offres d'achat et leur historique.",
+      },
+      reports: {
+        metaTitle: "Signalements · Back office · Leenkey",
+        title: "Signalements",
+        comingTitle: "Le traitement des signalements arrive",
+        comingText:
+          "Nous préparons l'écran des signalements, avec leur motif et les suites données.",
+      },
+      assistant: {
+        metaTitle: "Assistant · Back office · Leenkey",
+        title: "Assistant",
+        comingTitle: "Le suivi de l'assistant arrive",
+        comingText:
+          "Nous préparons l'écran de la base de connaissances et du journal des conversations de l'assistant.",
+      },
+    },
+  },
   legal: {
     // Legal pages (L1-36, G10). Final texts from Cédric's lawyer (Q34);
     // identity and address from the V1 legal notice (Q10, Q35).

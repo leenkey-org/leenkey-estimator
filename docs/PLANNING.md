@@ -28,7 +28,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 ## S2 · semaine du 19 oct. · Comptes et biens
 
 - [x] **L1-09** Auth : inscription (choix du rôle), connexion, mot de passe oublié, confirmation, middleware de protection, acceptation datée des CGU… · PR : #14 · Testé en préprod : ☐
-- [ ] **L1-10** Shells de navigation : `TopNav`, `BottomNav` par rôle, `AdminShell`, cloche de notifications (vide) · PR : · Testé en préprod : ☐
+- [x] **L1-10** Shells de navigation : `TopNav`, `BottomNav` par rôle, `AdminShell`, cloche de notifications (vide) · PR : #17 · Testé en préprod : ☐
 - [ ] **L1-11** Création de bien étapes 1 et 2 (Mapbox autocomplétion, géocodage, `public_location`, caractéristiques)… · PR : · Testé en préprod : ☐
 - [ ] **L1-12** Photos : upload, conversion WebP 3 tailles, réordonnancement, couverture, route `/img` · PR : · Testé en préprod : ☐
 - [ ] **L1-13** Étape 4 prix et description, rappel de l’analyse de valeur, reprise depuis l’estimateur (`?estimation=`),… · PR : · Testé en préprod : ☐

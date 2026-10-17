@@ -2,22 +2,24 @@ import type { Metadata } from "next";
 import { requireAdmin } from "@/core/auth/session";
 import { EmptyState } from "@/components/shared/empty-state";
 import { fr } from "@/lib/i18n/fr";
+import { AdminPage } from "./_components/admin-page";
 
 export const metadata: Metadata = { title: fr.spaces.admin.metaTitle };
 
-// Placeholder until the back office (L1-19).
+// Placeholder until the back office dashboard (L1-30). The title is the one
+// of the sidebar and of the AdminMobileHeader, which shows it below 768 px.
 export default async function AdminHomePage() {
   const profile = await requireAdmin();
   return (
-    <div className="mx-auto w-full max-w-lk-settings px-5 py-10">
-      <h1 className="text-lk-h1 font-bold text-wide text-lk-ink lg:text-lk-h1-lg">
+    <AdminPage title={fr.nav.admin.dashboard}>
+      <p className="text-lk-title font-semibold text-lk-ink">
         {fr.spaces.greeting(profile.firstName)}
-      </h1>
+      </p>
       <EmptyState
-        className="mt-12"
+        className="mt-6"
         title={fr.spaces.admin.title}
         description={fr.spaces.admin.text}
       />
-    </div>
+    </AdminPage>
   );
 }

@@ -33,6 +33,9 @@ async function emailLink(to: string, subject: string): Promise<string> {
 }
 
 async function signOut(page: Page) {
+  // Mobile: the account page holds the sign-out button until L1-39 (the
+  // account menu of the TopNav is desktop only, tests/e2e/navigation.spec.ts).
+  await page.goto("/compte");
   await page.getByRole("button", { name: "Se déconnecter" }).click();
   await page.waitForURL((url) => url.pathname === "/");
 }
@@ -159,9 +162,13 @@ test("mot de passe oublié, nouveau mot de passe", async ({ page }) => {
   await signOut(page);
 });
 
+// seller_b and buyer_d: no other test signs them in (navigation.spec.ts uses
+// seller_a, buyer_c and admin), so a fresh stack always shows them the gate.
+// The gate shows once per database: run this file on a stack just made by
+// `scripts/local-stack.sh up`, which resets it.
 for (const [account, home] of [
-  ["seller_a", "/vendeur"],
-  ["admin", "/admin"],
+  ["seller_b", "/vendeur"],
+  ["buyer_d", "/acquereur"],
 ] as const) {
   test(`${account} : conditions à accepter, puis ${home}`, async ({ page }) => {
     await page.goto("/connexion");
@@ -172,7 +179,7 @@ for (const [account, home] of [
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Continuer" }).click();
     await expect(page).toHaveURL(new RegExp(`${home}$`));
-    if (account === "seller_a") {
+    if (account === "seller_b") {
       const response = await page.goto("/admin");
       expect(response?.status()).toBe(404);
       await page.goto(home);

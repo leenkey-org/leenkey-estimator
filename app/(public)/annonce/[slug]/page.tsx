@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DpeBadge } from "@/components/shared/dpe-badge";
 import { FacadeRoot } from "@/components/shared/facade-root";
+import { SiteFooter } from "@/components/shared/site-footer";
 import { Gallery } from "@/components/shared/gallery";
 import { ContactCard } from "@/components/shared/contact-card";
 import { KeyFactsTable } from "@/components/shared/key-facts-table";
@@ -26,6 +27,7 @@ import {
   serializeJsonLd,
 } from "@/leenkey/listings/presentation";
 import { getPublicListing } from "@/leenkey/listings/queries";
+import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
 import { NBSP } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { absoluteUrl } from "@/lib/site";
@@ -34,7 +36,9 @@ import { absoluteUrl } from "@/lib/site";
 // Published listings only: any other status, or an unknown address, is a 404.
 // Not yet here: photos (L1-12, facade.svg meanwhile), map of the area (with
 // Mapbox), assistant summary (L2-05), offer (L2), favourite (L1-18),
-// documents (L3).
+// documents (L3). Navigation (L1-10): TopNav from 768 px only; on mobile the
+// gallery and the action bar stay alone, without bottom tabs. SiteFooter at
+// the end (L1-36), with room below it for the fixed action bar.
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -81,8 +85,9 @@ export default async function ListingPage({ params }: Props) {
   const jsonLd = listingJsonLd(listing, url, absoluteUrl(`/api/og/${listing.slug}`));
 
   return (
-    <FacadeRoot className="min-h-screen bg-lk-surface pb-32 lg:pb-16">
-      <main className="mx-auto max-w-lk-page lg:px-10">
+    <FacadeRoot className="min-h-screen bg-lk-surface">
+      <SiteTopNav />
+      <main className="mx-auto max-w-lk-page pb-10 lg:px-10 lg:pb-16">
         <ListingBreadcrumb
           city={listing.city}
           cityHref={communeSearchHref(listing.city)}
@@ -135,6 +140,7 @@ export default async function ListingPage({ params }: Props) {
           </aside>
         </div>
       </main>
+      <SiteFooter className="pb-24 lg:pb-0" />
 
       <ActionBar signUpHref={signUpHref} />
       <ListingViewTracker listingId={listing.id} />
