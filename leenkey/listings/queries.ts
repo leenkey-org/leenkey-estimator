@@ -146,23 +146,35 @@ export const getPublicListing = cache(
   },
 );
 
+// PostgREST answers 1 000 rows at most per request (max_rows of Supabase).
+const SITEMAP_PAGE = 1000;
+const SITEMAP_MAX = 10_000;
+
 /**
- * Published listings for /sitemap.xml (L1-20), most recent first. An empty
- * list when the database cannot be read (build without Supabase, outage):
- * the sitemap keeps its other pages.
+ * Published listings for /sitemap.xml (L1-20), most recent first, by pages of
+ * 1 000. An empty list when the database cannot be read in time (build
+ * without Supabase, outage): the sitemap keeps its other pages.
  */
 export async function sitemapListings(): Promise<SitemapListing[]> {
   if (!isSupabaseConfigured()) return [];
   try {
-    const { data, error } = await createPublicClient()
-      .from("public_listings")
-      .select("slug, published_at")
-      .order("published_at", { ascending: false })
-      .limit(10_000);
-    if (error) throw new Error(`public_listings: ${error.code} ${error.message}`);
-    return data.flatMap((row) =>
-      row.slug ? [{ slug: row.slug, publishedAt: row.published_at }] : [],
-    );
+    const client = createPublicClient();
+    const listings: SitemapListing[] = [];
+    for (let from = 0; from < SITEMAP_MAX; from += SITEMAP_PAGE) {
+      const { data, error } = await client
+        .from("public_listings")
+        .select("slug, published_at")
+        .order("published_at", { ascending: false })
+        .order("slug")
+        .range(from, from + SITEMAP_PAGE - 1)
+        .abortSignal(AbortSignal.timeout(5_000));
+      if (error) throw new Error(`public_listings: ${error.code} ${error.message}`);
+      for (const row of data) {
+        if (row.slug) listings.push({ slug: row.slug, publishedAt: row.published_at });
+      }
+      if (data.length < SITEMAP_PAGE) break;
+    }
+    return listings;
   } catch (error) {
     console.error("[sitemap] listings read failed", {
       error: error instanceof Error ? error.message : String(error),

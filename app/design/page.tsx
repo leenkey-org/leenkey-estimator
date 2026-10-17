@@ -37,6 +37,7 @@ import { Select } from "@/components/shared/select";
 import { Skeleton } from "@/components/shared/skeleton";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TopNav } from "@/components/shared/top-nav";
+import { FavoriteButton } from "@/leenkey/favorites/components/favorite-button";
 import { UnitInput } from "@/components/shared/unit-input";
 import { signOut } from "@/leenkey/auth/actions";
 import {
@@ -660,10 +661,10 @@ export default function DesignPage() {
                 variant="tile"
                 {...content.exampleCards.juvisy}
                 action={
-                  <IconButton
-                    icon={Heart}
-                    variant="white-float"
-                    aria-label={content.cardCaptions.favourite}
+                  <FavoriteButton
+                    listingId={content.cardCaptions.favouriteListingId}
+                    favorite={false}
+                    signUpHref="/design#cartes"
                   />
                 }
               />
@@ -671,6 +672,30 @@ export default function DesignPage() {
               <PropertyCard variant="tile" {...content.exampleCards.epinay} />
             </div>
             <Caption>{content.cardCaptions.noPhoto}</Caption>
+            <div className="flex flex-wrap items-center gap-3 rounded-lk-md bg-lk-stone-2 p-3">
+              <FavoriteButton
+                listingId={content.cardCaptions.favouriteListingId}
+                favorite={null}
+                signUpHref="/design#cartes"
+              />
+              <FavoriteButton
+                listingId={content.cardCaptions.favouriteListingId}
+                favorite={false}
+                signUpHref="/design#cartes"
+              />
+              <FavoriteButton
+                listingId={`${content.cardCaptions.favouriteListingId.slice(0, -1)}1`}
+                favorite
+                signUpHref="/design#cartes"
+              />
+              <FavoriteButton
+                listingId={`${content.cardCaptions.favouriteListingId.slice(0, -1)}1`}
+                favorite
+                signUpHref="/design#cartes"
+                variant="stone"
+              />
+            </div>
+            <Caption>{content.cardCaptions.favourite}</Caption>
           </Section>
 
           <Section id="aplat" title={content.sections.brandPanel} level="h3">

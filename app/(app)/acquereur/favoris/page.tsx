@@ -5,9 +5,10 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { PropertyCard } from "@/components/shared/property-card";
 import { requireProfile } from "@/core/auth/session";
+import { ClearOfflineFavorites } from "@/leenkey/favorites/components/clear-offline-favorites";
 import { FavoriteButton } from "@/leenkey/favorites/components/favorite-button";
 import { listFavorites } from "@/leenkey/favorites/queries";
-import { buyerSignUpHref } from "@/leenkey/listings/presentation";
+import { buyerSignUpHref, listingSummary } from "@/leenkey/listings/presentation";
 import { ROUTES } from "@/leenkey/navigation/config";
 import { toPropertyCard } from "@/leenkey/search/cards";
 import { fr } from "@/lib/i18n/fr";
@@ -19,7 +20,8 @@ export const metadata: Metadata = { title: t.metaTitle };
 
 // L1-18: the listings saved with the heart, most recent first (G2 without the
 // map, PropertyCard compact, docs/DESIGN.md 11). A card unsaved here stays
-// until the next visit, so that a mistaken tap can be undone.
+// until the next visit, so that a mistaken tap can be undone. The saved
+// listings no longer online are counted, and can be removed in one go.
 export default async function FavouritesPage() {
   const profile = await requireProfile();
   const result = await listFavorites(profile.id);
@@ -45,8 +47,8 @@ export default async function FavouritesPage() {
       ) : result.data.items.length === 0 ? (
         <EmptyState
           className="mt-12"
-          title={t.emptyTitle}
-          description={t.emptyText}
+          title={result.data.offline > 0 ? t.offlineTitle : t.emptyTitle}
+          description={result.data.offline > 0 ? t.offline(result.data.offline) : t.emptyText}
           action={
             <Button asChild>
               <Link href={ROUTES.search}>{t.action}</Link>
@@ -69,6 +71,7 @@ export default async function FavouritesPage() {
                       listingId={item.id}
                       favorite
                       signUpHref={buyerSignUpHref(item.slug)}
+                      property={`${listingSummary(item)}, ${item.city}`}
                     />
                   }
                 />
@@ -78,7 +81,12 @@ export default async function FavouritesPage() {
         </>
       )}
       {result.ok && result.data.offline > 0 ? (
-        <p className="mt-5 text-lk-secondary text-lk-ink-3">{t.offline(result.data.offline)}</p>
+        <div className="mt-5 flex flex-col items-start gap-1">
+          {result.data.items.length > 0 ? (
+            <p className="text-lk-secondary text-lk-ink-3">{t.offline(result.data.offline)}</p>
+          ) : null}
+          <ClearOfflineFavorites />
+        </div>
       ) : null}
     </SpacePage>
   );

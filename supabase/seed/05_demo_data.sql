@@ -275,11 +275,13 @@ where sp.property_id in (select property_id from seed_new)
                                                 where c.property_id = p.id and c.kind = 'listing')))
 on conflict do nothing;
 
--- Favorites
+-- Favorites. buyer_c also kept the listing 16, refused since: a favourite
+-- that is no longer online, counted on the favourites page (L1-18).
 insert into public.favorites (buyer_id, listing_id)
 select f.buyer_id, l.id
 from (values ('5eed0000-0000-4000-8000-00000000000c'::uuid, 1), ('5eed0000-0000-4000-8000-00000000000c'::uuid, 2),
-             ('5eed0000-0000-4000-8000-00000000000c'::uuid, 5), ('5eed0000-0000-4000-8000-00000000000d'::uuid, 8),
+             ('5eed0000-0000-4000-8000-00000000000c'::uuid, 5), ('5eed0000-0000-4000-8000-00000000000c'::uuid, 16),
+             ('5eed0000-0000-4000-8000-00000000000d'::uuid, 8),
              ('5eed0000-0000-4000-8000-00000000000d'::uuid, 10)) as f(buyer_id, n)
 join seed_ids i using (n)
 join public.listings l on l.property_id = i.property_id

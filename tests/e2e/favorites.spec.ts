@@ -16,12 +16,13 @@ test.skip(!seeded || !SEED_PASSWORD, "comptes de seed requis (E2E_SEED=1 et SEED
 const LISTINGS = {
   mobile: "/annonce/appartement-3-pieces-viry-chatillon-lk0009",
   desktop: "/annonce/appartement-3-pieces-chilly-mazarin-lk0011",
+  failure: "/annonce/appartement-2-pieces-athis-mons-lk0012",
 } as const;
 
-/** Signs seller_a in and lands on `path` (terms gate as in navigation.spec.ts). */
-async function signIn(page: Page, path: string) {
+/** Signs a seed account in and lands on `path` (terms gate as in navigation.spec.ts). */
+async function signIn(page: Page, path: string, account = "seller_a") {
   await page.goto(`/connexion?next=${encodeURIComponent(path)}`);
-  await page.getByLabel("Email").fill("seller_a@test.leenkey.fr");
+  await page.getByLabel("Email").fill(`${account}@test.leenkey.fr`);
   await page.getByLabel("Mot de passe").fill(SEED_PASSWORD ?? "");
   await page.getByRole("button", { name: "Se connecter" }).click();
   await page.waitForURL((url) => url.pathname !== "/connexion");
@@ -95,4 +96,46 @@ test("ajouter une annonce aux favoris, la retrouver, puis la retirer", async ({
   await expect(card).toHaveCount(1);
   await page.reload();
   await expect(page.locator(`a[href="${href}"]`)).toHaveCount(0);
+});
+
+test("un échec d'enregistrement laisse la page en place et remet le cœur", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, "un seul passage suffit");
+  await signIn(page, "/acquereur/favoris");
+  await page.goto(LISTINGS.failure);
+  const heart = page.getByRole("button", { name: "Ajouter aux favoris" });
+  const before = (await heart.getAttribute("aria-pressed")) ?? "false";
+  // The server action posts to the page: cut it, as a lost network would.
+  await page.route(`**${LISTINGS.failure}`, (route) =>
+    route.request().method() === "POST" ? route.abort() : route.continue(),
+  );
+  await heart.click();
+  await expect(
+    page.getByText("Le changement n'a pas pu être enregistré. Réessayez."),
+  ).toBeAttached();
+  await expect(heart).toHaveAttribute("aria-pressed", before);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+});
+
+test("les favoris qui ne sont plus en ligne sont comptés, puis retirés", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, "un seul passage suffit (le seed change)");
+  // The seed keeps the refused listing LK-0016 in the favourites of buyer_c.
+  await signIn(page, "/acquereur/favoris", "buyer_c");
+  const offline = page.getByText("1\u00A0bien de vos favoris n'est plus en ligne", {
+    exact: false,
+  });
+  await expect(offline).toBeVisible();
+  await expect(
+    page.getByRole("list", { name: "Biens sauvegardés" }).getByRole("listitem"),
+  ).toHaveCount(3);
+  await page.getByRole("button", { name: "Les retirer de mes favoris" }).click();
+  await expect(offline).toHaveCount(0);
+  await expect(
+    page.getByRole("list", { name: "Biens sauvegardés" }).getByRole("listitem"),
+  ).toHaveCount(3);
 });

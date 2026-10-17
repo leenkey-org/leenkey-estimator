@@ -56,9 +56,20 @@ describe("robots", () => {
     const result = robots();
     expect(result.sitemap).toBe("https://leenkey.fr/sitemap.xml");
     const rules = Array.isArray(result.rules) ? result.rules[0] : result.rules;
-    expect(rules.allow).toBe("/");
+    // The share images of the listings (og:image) stay readable by social networks.
+    expect(rules.allow).toEqual(["/", "/api/og/"]);
     expect(rules.disallow).toEqual(
-      expect.arrayContaining(["/vendeur", "/acquereur", "/messages", "/compte", "/admin", "/api/"]),
+      expect.arrayContaining([
+        "/vendeur",
+        "/acquereur",
+        "/messages",
+        "/offres",
+        "/visites",
+        "/compte",
+        "/admin",
+        "/api/",
+        "/conditions",
+      ]),
     );
     // The public pages stay open.
     for (const open of ["/acheter", "/annonce", "/estimer", "/connexion", "/inscription"]) {

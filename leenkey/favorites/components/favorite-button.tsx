@@ -6,7 +6,8 @@ import { Heart } from "lucide-react";
 import { iconButtonVariants } from "@/components/shared/icon-button";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
-import { setFavorite } from "../actions";
+import { setFavorite, type FavoriteResult } from "../actions";
+import { rememberFavorite, useFavorite } from "./favorite-store";
 
 const t = fr.favorites;
 
@@ -16,6 +17,8 @@ export type FavoriteButtonProps = {
   favorite: boolean | null;
   /** Without a session: the buyer sign-up, back to the listing (an account is needed). */
   signUpHref: string;
+  /** The property, in the name of the button when several hearts share a page (favourites). */
+  property?: string;
   /** white-float over a photo (gallery, card, DESIGN.md 7.1); stone in the price column. */
   variant?: "white-float" | "stone";
   className?: string;
@@ -24,19 +27,23 @@ export type FavoriteButtonProps = {
 /**
  * Heart of a listing (L1-18): a toggle button with a constant name and
  * aria-pressed, filled when saved. The change shows at once and is undone if
- * the server refuses it; a status message tells screen readers the outcome.
+ * it cannot be saved (refusal, network, new deployment); a status message
+ * tells screen readers the outcome. Hearts of the same listing agree
+ * (favorite-store.ts).
  */
 export function FavoriteButton({
   listingId,
   favorite,
   signUpHref,
+  property,
   variant = "white-float",
   className,
 }: FavoriteButtonProps) {
-  const [saved, setSaved] = useState(favorite === true);
+  const saved = useFavorite(listingId, favorite === true);
   const [shown, setShown] = useOptimistic(saved);
   const [, startTransition] = useTransition();
   const [message, setMessage] = useState("");
+  const label = property ? t.addProperty(property) : t.add;
   const classes = cn(
     iconButtonVariants({ variant }),
     "inline-flex items-center justify-center text-lk-blue",
@@ -45,7 +52,7 @@ export function FavoriteButton({
 
   if (favorite === null) {
     return (
-      <Link href={signUpHref} prefetch={false} aria-label={t.add} className={classes}>
+      <Link href={signUpHref} prefetch={false} aria-label={label} className={classes}>
         <Heart aria-hidden="true" />
       </Link>
     );
@@ -55,16 +62,32 @@ export function FavoriteButton({
     <>
       <button
         type="button"
-        aria-label={t.add}
+        aria-label={label}
         aria-pressed={shown}
         className={classes}
         onClick={() => {
           const next = !shown;
+          // Emptied first: the same message twice in a row is read again.
+          setMessage("");
           startTransition(async () => {
             setShown(next);
-            const result = await setFavorite({ listingId, favorite: next });
-            if (result.ok) setSaved(next);
-            setMessage(result.ok ? (next ? t.added : t.removed) : t.error);
+            let result: FavoriteResult | null = null;
+            try {
+              result = await setFavorite({ listingId, favorite: next });
+            } catch (error) {
+              // Network, server error or an action unknown since a deployment.
+              console.error("[favorites] action failed", error);
+            }
+            if (result?.ok) rememberFavorite(listingId, next);
+            setMessage(
+              result?.ok
+                ? next
+                  ? t.added
+                  : t.removed
+                : result?.error === "auth"
+                  ? t.signedOut
+                  : t.error,
+            );
           });
         }}
       >
