@@ -48,6 +48,7 @@ export const sections = {
   drawing: "Dessin de marque",
   emptyState: "État vide",
   comingSoon: "Écran à venir",
+  stepForm: "Formulaire à étapes",
   navigation: "Navigation",
   notifications: "Notifications et menu du compte",
   alerts: "Alertes",
@@ -480,6 +481,17 @@ export const notifications = {
     "AccountMenu : avatar de la barre haute, puis avatar d'en-tête sombre ; Mon espace, Mon compte, Se déconnecter (qui déconnecte vraiment)",
 };
 
+export const stepForm = {
+  caption:
+    "AppHeader (retour, titre, « Enregistrer ») et ProgressBar, puis FormActionBar : collée en bas de l'écran en mobile, à la fin du formulaire à partir de 768 px (G5, création du bien).",
+  title: "Mon bien",
+  back: "Retour",
+  save: "Enregistrer",
+  progress: "Étape 2 sur 4 · Caractéristiques",
+  previous: "Précédent",
+  next: "Continuer",
+};
+
 export const comingSoon = {
   caption:
     "ComingSoon : page dont l'écran arrive avec une tâche suivante, sous le titre de la page",
@@ -588,6 +600,8 @@ export const gallery = {
     "Mobile : une photo sur la largeur, 280 px, défilement, compteur. À partir de 1024 px : une grande photo et les suivantes. Toucher ou cliquer agrandit en plein écran.",
   back: "Retour",
   noPhotoCaption: "Sans photo : le dessin de marque sur pierre, jusqu'aux photos (L1-12)",
+  thumbsCaption:
+    "PropertyThumb : vignettes d'un bien sans photo, 56 × 56 (Ma vente), 56 × 44 (back office), 44 × 44 (conversation)",
 };
 
 export const price = {

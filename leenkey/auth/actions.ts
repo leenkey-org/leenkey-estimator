@@ -24,6 +24,7 @@ import {
   EXPIRED_LINK_PATH,
   pathAfterEmailLink,
 } from "./landing";
+import { ROUTES } from "@/leenkey/navigation/spaces";
 import { homePathForRoles } from "./routes";
 
 const t = fr.auth.errors;
@@ -127,7 +128,8 @@ export async function signUp(
   }
   const input = parsed.data;
   const { firstName, lastName } = splitFullName(input.fullName);
-  const fallback = homePathForRoles([input.role]);
+  // SPEC-V2 8.2: a new seller starts with the creation of the property.
+  const fallback = input.role === "seller" ? ROUTES.newProperty : homePathForRoles([input.role]);
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email: input.email,

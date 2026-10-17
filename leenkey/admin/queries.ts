@@ -14,7 +14,6 @@ import type { Database } from "@/types/database";
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
 type PlanCode = Database["public"]["Enums"]["plan_code"];
-type PropertyType = Database["public"]["Enums"]["property_type"];
 
 export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavailable" };
 
@@ -27,11 +26,8 @@ export type AdminListingRow = {
   priceCents: number;
   submittedAt: string | null;
   publishedAt: string | null;
-  type: PropertyType;
   city: string;
   postalCode: string;
-  rooms: number;
-  surfaceM2: number;
   sellerName: string | null;
   plan: PlanCode;
 };
@@ -111,11 +107,8 @@ export async function adminListings(
       // Generated types declare the columns of a function result as never null.
       submittedAt: (row.submitted_at as string | null) ?? null,
       publishedAt: (row.published_at as string | null) ?? null,
-      type: row.type,
       city: row.city,
       postalCode: row.postal_code,
-      rooms: row.rooms,
-      surfaceM2: Number(row.surface_m2),
       sellerName: fullName(row.seller_first_name, row.seller_last_name),
       plan: row.plan,
     }));
@@ -220,13 +213,14 @@ export const adminListing = cache(async function adminListing(
           description: row.description,
           priceCents: Number(row.price_cents),
           publishedAt: row.published_at,
-          type: property.type,
+          // A draft may still miss them (L1-11); listing_submit requires them.
+          type: property.type ?? "autre",
           city: property.city,
           postalCode: property.postal_code,
           district: property.district,
-          surfaceM2: Number(property.surface_m2),
+          surfaceM2: Number(property.surface_m2 ?? 0),
           carrezM2: property.carrez_m2 === null ? null : Number(property.carrez_m2),
-          rooms: property.rooms,
+          rooms: property.rooms ?? 0,
           bedrooms: property.bedrooms,
           floor: property.floor,
           floorsTotal: property.floors_total,

@@ -206,6 +206,9 @@ describe("Ce que vous savez avant de visiter", () => {
     expect(house).not.toHaveProperty("Travaux votés");
     expect(house).not.toHaveProperty("Ascenseur");
     expect(house.Niveaux).toBe("4");
+    // A lot of a co-ownership, house or flat, has a Carrez surface.
+    expect(house["Surface Carrez"]).toBe("66,5 m²");
+    expect(facts({ ...flat, type: "maison", carrezM2: null })).not.toHaveProperty("Surface Carrez");
   });
 
   it("keeps a plot of land short", () => {

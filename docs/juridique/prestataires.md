@@ -9,11 +9,12 @@ Demandée par le dossier juridique (« liste nominative, localisation et rôle e
 | Stripe (Stripe Payments Europe Ltd, Irlande) | Paiement des formules, factures | Nom, e-mail, montant, références de paiement ; les numéros de carte restent chez Stripe | Union européenne, avec transferts possibles | DPA, entité contractante, compte au nom de SAS LEENKEY (Q33) |
 | Anthropic PBC (États-Unis) | Assistant IA, rédaction de l'analyse de valeur, analyse des documents du dossier de vente | Messages adressés à l'assistant, textes d'annonce, documents du dossier de vente. Jamais de justificatif de financement ni de pièce d'identité (SPEC section 12) | États-Unis | Durée de conservation des données de l'API, absence d'usage pour l'entraînement à confirmer contractuellement avant toute mention publique |
 | Resend (États-Unis) | Envoi des e-mails transactionnels | Adresse e-mail, prénom, contenu des notifications | États-Unis | DPA, mécanisme de transfert |
-| Mapbox (États-Unis) | Cartes, suggestions d'adresses et géocodage | Adresses saisies, position approximative des biens, adresse IP des visiteurs (tuiles de carte) | États-Unis | DPA, mécanisme de transfert |
+| Mapbox (États-Unis) | Cartes | Position approximative des biens, adresse IP des visiteurs (tuiles de carte) | États-Unis | DPA, mécanisme de transfert |
+| IGN, Géoplateforme (France) | Suggestions d'adresses et géocodage du bien (Base Adresse Nationale, `DECISIONS.md` Q46) | Texte de l'adresse saisie par le vendeur, envoyé par le serveur de Leenkey : ni nom, ni e-mail, ni adresse IP du vendeur | France | Conditions d'utilisation du service (gratuit, sans clé) |
 | Google (Google Analytics 4, Google Tag Manager) | Mesure d'audience, en production uniquement et après consentement (L1-37) | Identifiants de cookies, pages vues | Union européenne et États-Unis | Paramétrage du consentement, durée de conservation |
 | Vercel Analytics | Mesure d'audience sans cookie | Pages vues, données agrégées | Voir Vercel | À confirmer dans la politique de cookies |
 | GitHub (Microsoft) | Code source | Aucune donnée d'utilisateur (comptes de test uniquement) | États-Unis | — |
 | IONOS | Noms de domaine `leenkey.fr` et `leenkey.com` (compte de Cédric) | Aucune donnée d'utilisateur | Union européenne | — |
 | Etalab (data.gouv.fr) | Fichiers publics des ventes immobilières (DVF) pour les comparables | Aucune donnée personnelle envoyée | France | — |
 
-Comptes à ouvrir au nom de Leenkey pour la production (Q36) : Supabase, Stripe, Anthropic, Resend, Mapbox.
+Comptes à ouvrir au nom de Leenkey pour la production (Q36) : Supabase, Stripe, Anthropic, Resend, Mapbox. La Géoplateforme n'a pas de compte.

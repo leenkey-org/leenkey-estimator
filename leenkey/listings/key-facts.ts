@@ -70,7 +70,10 @@ export function listingKeyFacts(listing: PublicListing): KeyFact[] {
     fact(t.heating, listing.heating),
     fact(t.type, fr.search.types[listing.type]),
     fact(t.surface, formatSurface(listing.surfaceM2)),
-    flat ? fact(t.carrez, listing.carrezM2 ? formatSurface(listing.carrezM2) : null) : null,
+    // Any lot of a co-ownership has one, a house too: then shown when given.
+    flat || listing.carrezM2 !== null
+      ? fact(t.carrez, listing.carrezM2 ? formatSurface(listing.carrezM2) : null)
+      : null,
     listing.rooms > 0 ? fact(t.rooms, String(listing.rooms)) : null,
     fact(t.bedrooms, listing.bedrooms === null ? null : String(listing.bedrooms)),
     flat
