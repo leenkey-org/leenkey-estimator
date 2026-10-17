@@ -67,7 +67,7 @@ describe("spaceFor", () => {
 describe("bottom tabs (DESIGN.md 10.6)", () => {
   it("seller: Ma vente, Dossier, Messages, Compte", () => {
     expect(summary(bottomTabs("seller"))).toEqual([
-      { href: "/vendeur", label: "Ma vente", icon: "home" },
+      { href: "/vendeur", label: "Ma vente", icon: "dashboard" },
       { href: "/vendeur/dossier", label: "Dossier", icon: "file" },
       { href: "/messages", label: "Messages", icon: "message" },
       { href: "/compte", label: "Compte", icon: "user" },
@@ -85,7 +85,7 @@ describe("bottom tabs (DESIGN.md 10.6)", () => {
 
   it("admin: Annonces, Dossiers, Utilisateurs, Assistant", () => {
     expect(summary(bottomTabs("admin"))).toEqual([
-      { href: "/admin/annonces", label: "Annonces", icon: "home" },
+      { href: "/admin/annonces", label: "Annonces", icon: "listings" },
       { href: "/admin/dossiers", label: "Dossiers", icon: "folder" },
       { href: "/admin/utilisateurs", label: "Utilisateurs", icon: "users" },
       { href: "/admin/assistant", label: "Assistant", icon: "sparkles" },
@@ -145,7 +145,7 @@ describe("back office sidebar", () => {
   it("follows the order of AdminDesktop", () => {
     expect(summary(ADMIN_NAV_ITEMS)).toEqual([
       { href: "/admin", label: "Tableau de bord", icon: "layout-grid" },
-      { href: "/admin/annonces", label: "Annonces", icon: "home" },
+      { href: "/admin/annonces", label: "Annonces", icon: "listings" },
       { href: "/admin/utilisateurs", label: "Utilisateurs", icon: "users" },
       { href: "/admin/dossiers", label: "Dossiers", icon: "folder" },
       { href: "/admin/offres", label: "Offres", icon: "file" },

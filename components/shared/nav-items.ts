@@ -4,7 +4,8 @@
 // the server/client boundary. No route of the site here: they come as props.
 
 export const NAV_ICONS = [
-  "home",
+  "dashboard",
+  "listings",
   "file",
   "message",
   "user",

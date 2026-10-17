@@ -50,7 +50,7 @@ const tabs = fr.nav.tabs;
 
 const TABS: Record<Space, readonly NavItem[]> = {
   seller: [
-    { href: ROUTES.seller, label: tabs.sale, icon: "home" },
+    { href: ROUTES.seller, label: tabs.sale, icon: "dashboard" },
     { href: ROUTES.sellerFile, label: tabs.file, icon: "file" },
     { href: ROUTES.messages, label: tabs.messages, icon: "message" },
     { href: ROUTES.account, label: tabs.account, icon: "user" },
@@ -62,7 +62,7 @@ const TABS: Record<Space, readonly NavItem[]> = {
     { href: ROUTES.account, label: tabs.account, icon: "user" },
   ],
   admin: [
-    { href: ROUTES.adminListings, label: tabs.listings, icon: "home" },
+    { href: ROUTES.adminListings, label: tabs.listings, icon: "listings" },
     { href: ROUTES.adminCases, label: tabs.cases, icon: "folder" },
     { href: ROUTES.adminUsers, label: tabs.users, icon: "users" },
     { href: ROUTES.adminAssistant, label: tabs.assistant, icon: "sparkles" },
@@ -90,7 +90,7 @@ const admin = fr.nav.admin;
 /** Back office sidebar, in the order of AdminDesktop (/admin/messages comes with L1-34). */
 export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
   { href: ROUTES.admin, label: admin.dashboard, icon: "layout-grid", exact: true },
-  { href: ROUTES.adminListings, label: admin.listings, icon: "home" },
+  { href: ROUTES.adminListings, label: admin.listings, icon: "listings" },
   { href: ROUTES.adminUsers, label: admin.users, icon: "users" },
   { href: ROUTES.adminCases, label: admin.cases, icon: "folder" },
   { href: ROUTES.adminOffers, label: admin.offers, icon: "file" },

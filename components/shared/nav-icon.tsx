@@ -3,7 +3,8 @@ import {
   Flag,
   Folder,
   Heart,
-  House,
+  ClipboardList,
+  LayoutDashboard,
   LayoutGrid,
   MessageSquare,
   Search,
@@ -15,9 +16,11 @@ import {
 import type { NavIconName } from "./nav-items";
 
 // Lucide icons of the navigation (docs/DESIGN.md 6): the star of the mockups
-// is the assistant's Sparkles, the document is FileText.
+// is the assistant's Sparkles, the document is FileText. No house icon outside
+// the logo (DESIGN 1): « Ma vente » is a dashboard, « Annonces » a list.
 const ICONS: Record<NavIconName, LucideIcon> = {
-  home: House,
+  dashboard: LayoutDashboard,
+  listings: ClipboardList,
   file: FileText,
   message: MessageSquare,
   user: User,
