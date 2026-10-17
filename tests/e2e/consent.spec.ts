@@ -1,14 +1,15 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { fakeGoogle, GOOGLE } from "./google";
 
 // L1-37: cookie consent (Q23). Nothing from Google before an explicit
 // « Accepter »; refusing is as easy as accepting and is kept six months;
 // « Gérer mes cookies » reopens the choice. These tests start without the
 // consent cookie the other suites get from playwright.config.ts.
 test.use({ storageState: { cookies: [], origins: [] } });
+test.beforeEach(async ({ context }) => fakeGoogle(context));
 
 const production = process.env.NEXT_PUBLIC_ENV === "production";
-const GOOGLE = /googletagmanager\.com|google-analytics\.com/;
 
 function watchGoogle(page: Page): string[] {
   const requests: string[] = [];
@@ -20,6 +21,11 @@ function watchGoogle(page: Page): string[] {
 
 async function consentCookie(page: Page) {
   return (await page.context().cookies()).find((cookie) => cookie.name === "lk_consent");
+}
+
+/** Value of the consent cookie once the server has answered (it sets the lasting one). */
+function consentValue(page: Page) {
+  return expect.poll(async () => (await consentCookie(page))?.value ?? "");
 }
 
 async function analyticsCookies(page: Page) {
@@ -35,6 +41,7 @@ test("premier passage : le bandeau demande l'accord, rien de Google avant", asyn
   const google = watchGoogle(page);
   await page.goto("/");
   await expect(banner(page)).toBeVisible();
+  await expect(banner(page)).toContainText("Vous pouvez changer d'avis à tout moment");
   await page.waitForLoadState("networkidle");
   expect(await page.evaluate(() => typeof (window as { gtag?: unknown }).gtag)).toBe("undefined");
   expect(await analyticsCookies(page)).toEqual([]);
@@ -46,8 +53,8 @@ test("Refuser : rien ne se charge, et le choix est gardé six mois", async ({ pa
   await page.goto("/acheter");
   await banner(page).getByRole("button", { name: "Refuser" }).click();
   await expect(banner(page)).toBeHidden();
+  await consentValue(page).toMatch(/^v1\.0\.\d{4}-\d{2}-\d{2}$/);
   const cookie = await consentCookie(page);
-  expect(cookie?.value).toMatch(/^v1\.0\.\d{4}-\d{2}-\d{2}$/);
   const days = ((cookie?.expires ?? 0) - Date.now() / 1000) / 86_400;
   expect(days).toBeGreaterThan(179);
   expect(days).toBeLessThan(184);
@@ -64,7 +71,7 @@ test("Accepter : la mesure d'audience démarre (en production seulement)", async
   await page.goto("/");
   await banner(page).getByRole("button", { name: "Accepter" }).click();
   await expect(banner(page)).toBeHidden();
-  expect((await consentCookie(page))?.value).toMatch(/^v1\.1\./);
+  await consentValue(page).toMatch(/^v1\.1\./);
   if (production) {
     await page.waitForFunction(() => typeof (window as { gtag?: unknown }).gtag === "function");
   } else {
@@ -80,7 +87,7 @@ test("Personnaliser : la mesure d'audience est décochée par défaut", async ({
   await expect(panel.getByRole("checkbox", { name: /Mesure d'audience/ })).not.toBeChecked();
   await panel.getByRole("button", { name: "Enregistrer mes choix" }).click();
   await expect(panel).toBeHidden();
-  expect((await consentCookie(page))?.value).toMatch(/^v1\.0\./);
+  await consentValue(page).toMatch(/^v1\.0\./);
 });
 
 test("« Gérer mes cookies » rouvre les choix, depuis le pied de page V2 et V1", async ({
@@ -88,13 +95,16 @@ test("« Gérer mes cookies » rouvre les choix, depuis le pied de page V2 et V1
 }) => {
   await page.goto("/cookies");
   await banner(page).getByRole("button", { name: "Refuser" }).click();
-  await page.getByRole("contentinfo").getByRole("button", { name: "Gérer mes cookies" }).click();
+  const manage = page.getByRole("contentinfo").getByRole("button", { name: "Gérer mes cookies" });
+  await manage.click();
   const panel = preferences(page);
   await expect(panel).toBeVisible();
   await expect(panel.getByRole("heading", { name: "Vos préférences" })).toBeFocused();
   await panel.getByRole("checkbox", { name: /Mesure d'audience/ }).check();
   await panel.getByRole("button", { name: "Enregistrer mes choix" }).click();
-  expect((await consentCookie(page))?.value).toMatch(/^v1\.1\./);
+  await consentValue(page).toMatch(/^v1\.1\./);
+  // Keyboard users come back where they were.
+  await expect(manage).toBeFocused();
 
   await page.goto("/");
   await page.locator("footer").getByRole("button", { name: "Gérer mes cookies" }).click();
@@ -108,7 +118,8 @@ test("retirer son accord recharge la page sans Google", async ({ page }) => {
   test.skip(!production, "GA4 actif en production uniquement");
   await page.goto("/cookies");
   await banner(page).getByRole("button", { name: "Accepter" }).click();
-  await page.waitForFunction(() => typeof (window as { gtag?: unknown }).gtag === "function");
+  // gtag.js has run and set its cookies: there is something to withdraw.
+  await expect.poll(() => analyticsCookies(page)).not.toEqual([]);
   await page.getByRole("contentinfo").getByRole("button", { name: "Gérer mes cookies" }).click();
   await Promise.all([
     page.waitForEvent("load"),
@@ -117,7 +128,14 @@ test("retirer son accord recharge la page sans Google", async ({ page }) => {
   await page.waitForLoadState("networkidle");
   expect(await page.evaluate(() => typeof (window as { gtag?: unknown }).gtag)).toBe("undefined");
   expect(await analyticsCookies(page)).toEqual([]);
-  expect((await consentCookie(page))?.value).toMatch(/^v1\.0\./);
+  await consentValue(page).toMatch(/^v1\.0\./);
+});
+
+test("« Gérer mes cookies » est aussi sous les écrans de connexion", async ({ page }) => {
+  await page.goto("/connexion");
+  await banner(page).getByRole("button", { name: "Refuser" }).click();
+  await page.getByRole("contentinfo").getByRole("button", { name: "Gérer mes cookies" }).click();
+  await expect(preferences(page)).toBeVisible();
 });
 
 test("le bandeau n'a aucune violation sérieuse ou critique @a11y", async ({ page }) => {

@@ -57,7 +57,8 @@ export function ConsentBanner({
           : [
               "fixed inset-x-0 bottom-0 z-50 rounded-t-lk-md border-t border-lk-line shadow-sheet",
               "pb-[calc(1.25rem+env(safe-area-inset-bottom))]",
-              "md:inset-x-auto md:bottom-6 md:left-6 md:w-105 md:rounded-lk-md md:border md:pb-5",
+              "md:inset-x-auto md:bottom-6 md:left-6 md:w-105 md:rounded-lk-md md:border md:pb-5 md:shadow-float",
+              "duration-220 ease-out-lk motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-4",
             ],
         className,
       )}
@@ -122,7 +123,7 @@ export function ConsentBanner({
           </div>
           <a
             href="/cookies"
-            className="self-center text-lk-secondary font-semibold text-lk-blue! underline! underline-offset-2"
+            className="inline-flex min-h-11 items-center self-center text-lk-secondary font-semibold text-lk-blue! underline! underline-offset-2"
           >
             {t.policy}
           </a>

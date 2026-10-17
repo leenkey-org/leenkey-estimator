@@ -31,7 +31,7 @@ test("le pied de page des pages V1 a les mêmes liens et l'adresse légale", asy
   await page.goto("/tarifs");
   const footer = page.locator("footer").last();
   for (const [path] of PAGES) await expect(footer.locator(`a[href="${path}"]`)).toHaveCount(1);
-  await expect(footer).toContainText("SAS LEENKEY · RCS Évry 107 616 211");
+  await expect(footer).toContainText("SAS LEENKEY, RCS Évry 107 616 211");
   await expect(footer).toContainText("36 rue Pierre Brossolette, 91360 Épinay-sur-Orge");
 });
 
@@ -45,11 +45,32 @@ test("les pages en cours de rédaction le disent et donnent l'adresse légale", 
   }
 });
 
-test("la politique cookies liste les cookies du site", async ({ page }) => {
+test("la politique cookies liste les cookies et le stockage du site", async ({ page }) => {
   await page.goto("/cookies");
-  const table = page.getByRole("table", { name: "Liste provisoire des cookies du site" });
-  for (const name of ["lk_consent", "lk_lien", "lk_vues", "_ga, _ga_…"]) {
-    await expect(table.getByRole("rowheader", { name })).toBeVisible();
+  const list = page.getByRole("region", {
+    name: "Liste provisoire des cookies et du stockage du site",
+  });
+  for (const name of [
+    "sb-…-auth-token",
+    "lk_consent",
+    "lk_lien",
+    "lk_vues",
+    "leenkey_form_v1, leenkey_dashboard_v1",
+    "lk_rappel_…",
+    "_ga, _ga_…",
+  ]) {
+    await expect(list.getByRole("heading", { level: 3, name })).toBeVisible();
+  }
+  await expect(list).toContainText("Fournisseur");
+});
+
+test("les pages légales ont leur contenu principal et un pied de page", async ({ page }) => {
+  for (const path of ["/cgv", "/cookies", "/confidentialite"]) {
+    await page.goto(path);
+    await expect(page.getByRole("main"), path).toBeVisible();
+    await expect(page.getByRole("contentinfo"), path).toContainText(
+      "SAS LEENKEY, RCS Évry 107 616 211 · 36 rue Pierre Brossolette, 91360 Épinay-sur-Orge",
+    );
   }
 });
 

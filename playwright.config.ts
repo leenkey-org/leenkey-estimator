@@ -11,7 +11,7 @@ const consentRefused = {
   cookies: [
     {
       name: "lk_consent",
-      value: "v1.0.2026-10-17",
+      value: `v1.0.${new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date())}`,
       domain: new URL(baseURL).hostname,
       path: "/",
       expires: -1,

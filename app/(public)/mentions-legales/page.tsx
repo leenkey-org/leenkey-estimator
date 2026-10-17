@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { SiteLayout } from "@/components/site/SiteLayout";
 
 export default function MentionsLegales() {
@@ -152,7 +151,7 @@ export default function MentionsLegales() {
           Le site dépose des cookies <strong>nécessaires</strong> à son fonctionnement (session,
           sécurité, mémorisation de vos choix) et, seulement avec votre accord, des cookies de
           mesure d&apos;audience. Aucun cookie publicitaire n&apos;est utilisé. Le détail et vos
-          choix : <Link href="/cookies">politique cookies</Link>.
+          choix : <a href="/cookies">politique cookies</a>.
         </p>
 
         <h2>7. Limitation de responsabilité</h2>

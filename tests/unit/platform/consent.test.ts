@@ -10,10 +10,12 @@ import {
 import { FOOTER_LINKS } from "@/leenkey/legal/footer-links";
 
 describe("consent cookie", () => {
+  const now = new Date("2026-10-17T12:00:00Z");
+
   it("round-trips the choice and its day", () => {
     for (const analytics of [true, false]) {
       const consent = { analytics, date: "2026-10-17" };
-      expect(parseConsent(serializeConsent(consent))).toEqual(consent);
+      expect(parseConsent(serializeConsent(consent), now)).toEqual(consent);
     }
     expect(serializeConsent({ analytics: true, date: "2026-10-17" })).toBe("v1.1.2026-10-17");
   });
@@ -28,8 +30,14 @@ describe("consent cookie", () => {
       "v2.1.2026-10-17",
       "v1.1",
     ]) {
-      expect(parseConsent(value)).toBeNull();
+      expect(parseConsent(value, now)).toBeNull();
     }
+  });
+
+  it("asks again once the choice is older than six months", () => {
+    expect(parseConsent("v1.0.2026-04-20", now)).not.toBeNull();
+    expect(parseConsent("v1.0.2026-04-10", now)).toBeNull();
+    expect(parseConsent("v1.1.2026-02-31", now)).toBeNull();
   });
 
   it("lasts six months", () => {

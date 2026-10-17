@@ -188,13 +188,11 @@ export function Footer() {
             <div className="lk-foot-col">
               <h4>Légal</h4>
               <ul>
+                {/* Plain links: a full load, so that the V1 global styles of
+                    this page never apply to a Façade page. */}
                 {FOOTER_LINKS.map((link) => (
                   <li key={link.href}>
-                    {link.href.startsWith("mailto:") ? (
-                      <a href={link.href}>{link.label}</a>
-                    ) : (
-                      <Link href={link.href}>{link.label}</Link>
-                    )}
+                    <a href={link.href}>{link.label}</a>
                   </li>
                 ))}
                 <li>
@@ -206,7 +204,7 @@ export function Footer() {
 
           <div className="lk-foot-bottom">
             <p>
-              © 2026 Leenkey. Tous droits réservés. {fr.legal.company} · {fr.legal.address}
+              © 2026 Leenkey. Tous droits réservés. {fr.legal.company}, {fr.legal.address}.
             </p>
             <p>
               Fait en France · Données hébergées en France · Conçu par{" "}

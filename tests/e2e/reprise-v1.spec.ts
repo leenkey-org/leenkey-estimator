@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { consentValue, fakeGoogle } from "./google";
 
 // L1-01: the V1 site (marketing pages, valuation wizard, contact forms,
 // analytics) must behave the same once ported to Next.js.
@@ -48,11 +49,13 @@ test("l'estimateur affiche sa première étape", async ({ page }) => {
   await expect(page.getByText("Quel type de bien souhaitez-vous vendre ?")).toBeVisible();
 });
 
-// Audience measurement accepted (L1-37): GA4 and GTM may load.
+// Audience measurement accepted (L1-37): GA4 and GTM may load, through the
+// stand-ins of ./google (no real hit).
 async function acceptAudience(page: Page, baseURL: string | undefined) {
+  await fakeGoogle(page.context());
   await page
     .context()
-    .addCookies([{ name: "lk_consent", value: "v1.1.2026-10-17", url: baseURL ?? "" }]);
+    .addCookies([{ name: "lk_consent", value: consentValue(true), url: baseURL ?? "" }]);
 }
 
 test("GA4 et GTM ne chargent qu'en production, une fois la mesure d'audience acceptée", async ({

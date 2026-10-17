@@ -15,9 +15,18 @@ export type Consent = { analytics: boolean; date: string };
 
 const FORMAT = /^v1\.([01])\.(\d{4}-\d{2}-\d{2})$/;
 
-export function parseConsent(value: string | null | undefined): Consent | null {
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** The choice, or null when absent, malformed or older than six months (asked again). */
+export function parseConsent(
+  value: string | null | undefined,
+  now: Date = new Date(),
+): Consent | null {
   const match = value ? FORMAT.exec(value) : null;
-  return match ? { analytics: match[1] === "1", date: match[2] } : null;
+  if (!match) return null;
+  const day = Date.parse(`${match[2]}T00:00:00Z`);
+  if (Number.isNaN(day) || now.getTime() - day > CONSENT_MAX_AGE * 1000 + DAY_MS) return null;
+  return { analytics: match[1] === "1", date: match[2] };
 }
 
 export function serializeConsent(consent: Consent): string {

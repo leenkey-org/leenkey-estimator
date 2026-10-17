@@ -25,7 +25,7 @@ export function LegalPage({
 }) {
   return (
     <FacadeRoot className="flex min-h-dvh flex-col bg-lk-surface">
-      <div className="mx-auto w-full max-w-lk-prose flex-1 px-5 py-10">
+      <main className="mx-auto w-full max-w-lk-prose flex-1 px-5 py-10">
         <Link
           href="/"
           className="rounded-lk-sm text-lk-h2 font-bold text-wide text-lk-ink focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
@@ -57,7 +57,7 @@ export function LegalPage({
           <br />
           {fr.legal.address}
         </address>
-      </div>
+      </main>
       <SiteFooter />
     </FacadeRoot>
   );

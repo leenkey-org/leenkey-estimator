@@ -7,49 +7,38 @@ const t = fr.legal.cookies;
 
 export const metadata: Metadata = { title: t.metaTitle };
 
-// L1-36, L1-37. The list is the one of the code (consent, session, links,
-// views, GA4 after consent). TODO(client): final text from Cédric's lawyer
-// (Q34), who also confirms the exemption of the functional cookies.
+// L1-36, L1-37. Every cookie and browser storage of the code (consent,
+// session, email links, listing views, valuation tool, GA4 after consent),
+// with the fields of the legal file (name, provider, purpose, category,
+// lifetime). TODO(client): final text from Cédric's lawyer (Q34), who also
+// confirms the exemption of the functional ones.
 export default function CookiesPage() {
   return (
     <LegalPage title={t.title} lead={t.lead} contact={t.contact}>
-      <div>
-        <table className="w-full border-collapse text-left text-lk-secondary">
-          <caption className="mb-2 text-left text-lk-label font-semibold text-lk-ink">
-            {t.tableCaption}
-          </caption>
-          <thead className="text-lk-ink-3">
-            <tr className="border-b border-lk-line">
-              <th scope="col" className="py-2 pr-3 font-semibold">
-                {t.columns.name}
-              </th>
-              <th scope="col" className="py-2 pr-3 font-semibold">
-                {t.columns.purpose}
-              </th>
-              <th scope="col" className="py-2 pr-3 font-semibold">
-                {t.columns.kind}
-              </th>
-              <th scope="col" className="py-2 font-semibold">
-                {t.columns.duration}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="text-lk-ink-2">
-            {t.rows.map((row) => (
-              <tr key={row.name} className="border-b border-lk-line align-top">
-                <th scope="row" className="py-2.5 pr-3 font-mono text-lk-caption text-lk-ink">
-                  {row.name}
-                </th>
-                <td className="py-2.5 pr-3">{row.purpose}</td>
-                <td className="py-2.5 pr-3">
+      <section aria-labelledby="liste-des-cookies" className="flex flex-col gap-3">
+        <h2 id="liste-des-cookies" className="text-lk-h3 font-semibold text-lk-ink">
+          {t.listTitle}
+        </h2>
+        <ul className="flex flex-col gap-3">
+          {t.rows.map((row) => (
+            <li key={row.name} className="rounded-lk-md border border-lk-line p-4">
+              <h3 className="text-lk-label font-semibold break-words text-lk-ink">{row.name}</h3>
+              <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-lk-secondary">
+                <dt className="text-lk-ink-3">{t.labels.provider}</dt>
+                <dd className="text-lk-ink-2">{row.provider}</dd>
+                <dt className="text-lk-ink-3">{t.labels.purpose}</dt>
+                <dd className="text-lk-ink-2">{row.purpose}</dd>
+                <dt className="text-lk-ink-3">{t.labels.kind}</dt>
+                <dd className="text-lk-ink-2">
                   {row.kind === "optional" ? t.optional : t.necessary}
-                </td>
-                <td className="py-2.5">{row.duration}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </dd>
+                <dt className="text-lk-ink-3">{t.labels.duration}</dt>
+                <dd className="text-lk-ink-2">{row.duration}</dd>
+              </dl>
+            </li>
+          ))}
+        </ul>
+      </section>
       <p className="text-lk-body text-lk-ink-2">{t.noCookie}</p>
       <p className="text-lk-body text-lk-ink-2">
         {t.manageText}{" "}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   CONSENT_COOKIE,
@@ -13,6 +13,7 @@ import {
   serializeConsent,
   type Consent,
 } from "@/lib/consent";
+import { saveConsent } from "./actions";
 import { AnalyticsTags } from "./analytics-tags";
 
 const ConsentDialog = dynamic(() => import("./consent-dialog"), { ssr: false });
@@ -27,21 +28,30 @@ function readConsent(): Consent | null {
   }
 }
 
+/** At once, for this page; saveConsent then makes it last six months. */
 function writeConsent(consent: Consent) {
-  const secure = window.location.protocol === "https:" ? "; secure" : "";
-  document.cookie = `${CONSENT_COOKIE}=${serializeConsent(consent)}; path=/; max-age=${CONSENT_MAX_AGE}; samesite=lax${secure}`;
+  try {
+    const secure = window.location.protocol === "https:" ? "; secure" : "";
+    document.cookie = `${CONSENT_COOKIE}=${serializeConsent(consent)}; path=/; max-age=${CONSENT_MAX_AGE}; samesite=lax${secure}`;
+  } catch {
+    // Storage refused (sandboxed frame): the choice applies to this page only.
+  }
 }
 
-/** Google Analytics cookies are set on the site's domain and its parent domain. */
+/** Google Analytics cookies are set on the site's host or its parent domain. */
 function clearAnalyticsCookies() {
-  const host = window.location.hostname;
-  const domains = ["", host, `.${host.split(".").slice(-2).join(".")}`];
-  for (const entry of document.cookie.split(";")) {
-    const name = entry.split("=")[0]?.trim();
-    if (!name || !isAnalyticsCookie(name)) continue;
-    for (const domain of domains) {
-      document.cookie = `${name}=; path=/; max-age=0${domain ? `; domain=${domain}` : ""}`;
+  try {
+    const host = window.location.hostname;
+    const domains = ["", host, `.${host.split(".").slice(-2).join(".")}`];
+    for (const entry of document.cookie.split(";")) {
+      const name = entry.split("=")[0]?.trim();
+      if (!name || !isAnalyticsCookie(name)) continue;
+      for (const domain of domains) {
+        document.cookie = `${name}=; path=/; max-age=0${domain ? `; domain=${domain}` : ""}`;
+      }
     }
+  } catch {
+    // Nothing to clear without cookie access.
   }
 }
 
@@ -61,46 +71,61 @@ export function ConsentManager({
 }) {
   const [consent, setConsent] = useState<Consent | null>(null);
   const [view, setView] = useState<View>("hidden");
+  // Button that opened the preferences: focus goes back to it afterwards.
+  const opener = useRef<HTMLElement | null>(null);
+  const tagsMounted = analyticsEnabled && consent?.analytics === true;
 
   useEffect(() => {
     const saved = readConsent();
     setConsent(saved);
     setView(saved ? "hidden" : "banner");
-    const open = () => setView("panel");
+    const open = () => {
+      opener.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      setView("panel");
+    };
     window.addEventListener(CONSENT_OPEN_EVENT, open);
     return () => window.removeEventListener(CONSENT_OPEN_EVENT, open);
   }, []);
 
   const choose = useCallback(
-    (analytics: boolean) => {
+    async (analytics: boolean) => {
       const next = { analytics, date: consentDay() };
       writeConsent(next);
       setView("hidden");
-      if (consent?.analytics && !analytics) {
-        // Withdrawal: Google stops at once, its cookies go, and the page
-        // reloads without the scripts.
+      opener.current?.focus();
+      opener.current = null;
+      const saved = saveConsent(analytics).catch(() => null);
+      if (analytics) {
+        setConsent(next);
+        return;
+      }
+      // Refusal: Google's cookies go, whatever was chosen before (a choice
+      // that expired, another tab). Scripts already running stop with a reload.
+      clearAnalyticsCookies();
+      if (tagsMounted) {
         window.gtag?.("consent", "update", { analytics_storage: "denied" });
-        clearAnalyticsCookies();
+        await saved;
         window.location.reload();
         return;
       }
       setConsent(next);
     },
-    [consent],
+    [tagsMounted],
   );
 
   return (
     <>
-      {analyticsEnabled && consent?.analytics ? <AnalyticsTags gaId={gaId} gtmId={gtmId} /> : null}
+      {tagsMounted ? <AnalyticsTags gaId={gaId} gtmId={gtmId} /> : null}
       {view === "hidden" ? null : (
         <ConsentDialog
           key={view}
           view={view}
           analytics={consent?.analytics ?? false}
-          onAccept={() => choose(true)}
-          onRefuse={() => choose(false)}
+          onAccept={() => void choose(true)}
+          onRefuse={() => void choose(false)}
           onCustomize={() => setView("panel")}
-          onSave={choose}
+          onSave={(analytics) => void choose(analytics)}
         />
       )}
     </>

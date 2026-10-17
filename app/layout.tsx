@@ -41,14 +41,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* V1 fonts, kept until the "Façade" design system (L1-07) */}
+        {/* V1 fonts (Sora, DM Sans, Poppins), self-hosted: no request to Google
+            before consent (L1-37). Façade uses Archivo through next/font. */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=DM+Sans:wght@400;500;600&family=Poppins:wght@400;600;700;800&display=swap"
-          rel="stylesheet"
-        />
+        <link href="/fonts/v1-fonts.css" rel="stylesheet" />
         <link rel="preload" href="/pages/landing.html" as="fetch" crossOrigin="anonymous" />
         <link rel="preload" href="/pages/leenkey.css" as="style" />
         <link rel="prefetch" href="/pages/concept.html" />
