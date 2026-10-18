@@ -30,7 +30,7 @@ type Font = { name: string; data: ArrayBuffer; weight: 500 | 700; style: "normal
 const LOGO = { width: 124, height: 32 };
 let whiteLogo: Promise<string | null> | null = null;
 
-/** The white logo as a data URL, read once; null without the file: the word instead. */
+/** The white logo as a data URL, read once; null without the file: the word instead, read again next time. */
 function logoImage(): Promise<string | null> {
   whiteLogo ??= readFile(join(process.cwd(), "public/brand/logo-white.svg")).then(
     (file) => `data:image/svg+xml;base64,${file.toString("base64")}`,
@@ -38,6 +38,7 @@ function logoImage(): Promise<string | null> {
       console.error("[listings] share logo not read", {
         error: error instanceof Error ? error.message : String(error),
       });
+      whiteLogo = null;
       return null;
     },
   );

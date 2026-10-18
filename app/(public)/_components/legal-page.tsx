@@ -29,7 +29,7 @@ export function LegalPage({
       <main className="mx-auto w-full max-w-lk-prose flex-1 px-5 py-10">
         <Link
           href="/"
-          className="inline-flex rounded-lk-sm focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
+          className="inline-flex min-h-11 items-center rounded-lk-sm focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
         >
           <Logo className="h-8" />
         </Link>

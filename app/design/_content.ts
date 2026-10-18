@@ -429,7 +429,7 @@ export const brandPanel = {
 
 export const logo = {
   colorCaption:
-    "Le logo de leenkey.fr, recadré sur son dessin (public/brand/logo.svg) : barre de navigation 32 px de haut, connexion et inscription 28 px",
+    "Le logo de leenkey.fr, recadré sur son dessin (public/brand/logo.svg) : barre de navigation et pages légales 32 px de haut, connexion et inscription 28 px",
   whiteCaption: "En blanc sur fond sombre (public/brand/logo-white.svg) : back office, 28 px",
 };
 
