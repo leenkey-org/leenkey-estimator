@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { FacadeDrawing } from "./facade-drawing";
+import { Photo } from "./photo";
 import { cn } from "@/lib/utils";
 
 /**
@@ -17,7 +17,7 @@ export function PropertyThumb({ src, className }: { src?: string | null; classNa
       )}
     >
       {src ? (
-        <Image src={src} alt="" fill sizes="72px" className="object-cover" />
+        <Photo src={src} alt="" sizes="72px" />
       ) : (
         <FacadeDrawing className="w-2/5 text-lk-ink-3" />
       )}

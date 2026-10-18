@@ -334,12 +334,12 @@ export const fr = {
     photos: {
       title: "Photos",
       count: (count: number, max: number) => `${count} / ${max}`,
-      countLabel: (count: number, max: number) => `${count} photos sur ${max}`,
+      countLabel: (count: number, max: number) =>
+        `${count} ${count > 1 ? "photos" : "photo"} sur ${max}`,
       add: "Ajouter des photos",
       full: (max: number) => `${max} photos au maximum`,
       help: "JPEG, PNG ou WebP, 10 Mo au plus. La première photo est la photo principale de l'annonce.",
       hint: "Entrée pour les options de la photo, flèches gauche et droite pour la déplacer.",
-      drop: "Déposez vos photos ici",
       main: "Principale",
       sending: "Envoi…",
       tile: (index: number, total: number, caption: string | null, main: boolean) =>
@@ -357,7 +357,10 @@ export const fr = {
         format: (name: string) =>
           `« ${name} » : ce format n'est pas accepté. Choisissez une photo JPEG, PNG ou WebP.`,
         tooLarge: (name: string) => `« ${name} » dépasse 10 Mo.`,
-        tooSmall: (name: string) => `« ${name} » est trop petite : 800 × 600 pixels au minimum.`,
+        tooSmall: (name: string, long: number, short: number) =>
+          `« ${name} » est trop petite : ${long} × ${short} pixels au minimum.`,
+        tooHeavy: (name: string) =>
+          `« ${name} » est trop lourde, même réduite. Essayez une autre photo.`,
         unreadable: (name: string) => `« ${name} » n'a pas pu être lue. Essayez une autre photo.`,
         full: (name: string, max: number) =>
           `${max} photos au maximum : « ${name} » n'a pas été ajoutée.`,
@@ -371,9 +374,10 @@ export const fr = {
         close: "Fermer",
         caption: "Légende",
         captionPlaceholder: "Séjour, cuisine, jardin…",
-        captionHelp: "Elle accompagne la photo sur l'annonce.",
+        captionHelp: "Elle décrit la photo pour les personnes qui ne la voient pas.",
         saveCaption: "Enregistrer la légende",
         makeMain: "En faire la photo principale",
+        isMain: "C'est la photo principale",
         before: "Déplacer avant",
         after: "Déplacer après",
         delete: "Supprimer la photo",
@@ -958,6 +962,9 @@ export const fr = {
       counter: (index: number, total: number) => `${index} / ${total}`,
       open: (index: number, total: number) => `Agrandir la photo ${index} sur ${total}`,
       more: (count: number) => `+ ${count}\u00A0${count === 1 ? "photo" : "photos"}`,
+      /** The tile that shows « + 2 photos »: its name starts with what it shows. */
+      openMore: (count: number, index: number, total: number) =>
+        `+ ${count}\u00A0${count === 1 ? "photo" : "photos"}, agrandir la photo ${index} sur ${total}`,
       viewer: "Photos du bien",
       close: "Fermer",
       previous: "Photo précédente",

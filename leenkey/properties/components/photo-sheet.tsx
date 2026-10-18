@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import Image from "next/image";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ChevronLeft, X } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { facadeScope } from "@/components/shared/facade-root";
 import { IconButton } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
+import { Photo } from "@/components/shared/photo";
 import { Input } from "@/components/shared/input";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -131,18 +131,24 @@ function SheetBody({
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    onCaption(caption);
+    if (!working) onCaption(caption);
+  };
+
+  // Unavailable while a change is sent, or at the end of the row, but never
+  // disabled: the button used keeps the keyboard focus (aria-disabled).
+  const unavailable = "aria-disabled:cursor-not-allowed aria-disabled:opacity-45";
+  const move = (to: number, possible: boolean) => () => {
+    if (!working && possible) onMove(to);
   };
 
   return (
     <div className="flex flex-col gap-5 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:px-6 md:pb-6">
       <div className="relative aspect-[4/3] overflow-hidden rounded-lk-sm bg-lk-stone-2">
-        <Image
+        <Photo
           src={photoUrl(photo.path)}
           alt={photo.caption ?? ""}
-          fill
           sizes="(min-width: 768px) 472px, 100vw"
-          className="object-contain"
+          fit="contain"
         />
       </div>
 
@@ -156,30 +162,42 @@ function SheetBody({
           maxLength={photoCaptionMax}
           onChange={(event) => setCaption(event.target.value)}
         />
-        <Button type="submit" variant="secondary" size="sm" disabled={working}>
+        <Button
+          type="submit"
+          variant="secondary"
+          size="sm"
+          aria-disabled={working}
+          className={unavailable}
+        >
           {t.saveCaption}
         </Button>
       </form>
 
       {total > 1 ? (
         <div className="flex flex-col gap-2.5">
-          {index > 0 ? (
-            <Button variant="outline-ink" disabled={working} onClick={() => onMove(0)}>
-              {t.makeMain}
-            </Button>
-          ) : null}
+          {/* Stays once used, saying so: the focus is not lost. */}
+          <Button
+            variant="outline-ink"
+            aria-disabled={working || index === 0}
+            onClick={move(0, index > 0)}
+            className={unavailable}
+          >
+            {index === 0 ? t.isMain : t.makeMain}
+          </Button>
           <div className="grid grid-cols-2 gap-2.5">
             <Button
               variant="outline-ink"
-              disabled={working || index === 0}
-              onClick={() => onMove(index - 1)}
+              aria-disabled={working || index === 0}
+              onClick={move(index - 1, index > 0)}
+              className={unavailable}
             >
               {t.before}
             </Button>
             <Button
               variant="outline-ink"
-              disabled={working || index === total - 1}
-              onClick={() => onMove(index + 1)}
+              aria-disabled={working || index === total - 1}
+              onClick={move(index + 1, index < total - 1)}
+              className={unavailable}
             >
               {t.after}
             </Button>

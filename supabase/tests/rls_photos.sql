@@ -1,14 +1,18 @@
--- L1-12: photos of a property. Rows (public.photos): added at the end, 15
--- at most, the first is the cover, reordered by the owner only. Files
--- (storage.objects, bucket photos): uploaded and deleted by the owner of an
--- editable property, under `{property_id}/{uuid}-{size}.webp` only; read by
--- the owner and the admin, by anyone once the listing is published, and then
--- only for a declared photo. Fixtures in postal code 99994: the file passes
--- on an empty and on a seeded database.
+-- L1-12: photos of a property. Rows (public.photos): added at the end,
+-- during the creation only, 15 at most, the first is the cover, reordered
+-- by the owner only, through photos_reorder. Files (storage.objects, bucket
+-- photos): uploaded by the owner during the creation only, deleted by the
+-- owner of an editable property, under `{property_id}/{uuid}-{size}.webp`
+-- only; read by the owner and the admin, by anyone once the listing is
+-- published, and then only for a declared photo. Fixtures in postal code
+-- 99994: the file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(26);
+select plan(31);
 \ir _plan.psql
+-- The storage service deletes a file this way (storage.protect_delete): as
+-- the user, under the RLS.
+select set_config('storage.allow_delete_query', 'true', false) \gset
 
 \set who seller_b
 \ir _as.psql
@@ -57,14 +61,21 @@ select lives_ok(format($$select photos_reorder(%L, array[%L, %L]::uuid[])$$, :'p
 select is((select array_agg(id::text || ':' || is_cover order by position) from photos where property_id = :'prop_a'),
           array[:'p2' || ':true', :'p1' || ':false'],
           'the first one of the order is the cover');
-select throws_ok(format($$select photos_reorder(%L, array[%L]::uuid[])$$, :'prop_a', :'p1'),
-                 '22023', null, 'an order lists every photo once');
+-- A photo added meanwhile keeps its place after those named; an unknown one is ignored.
+select photos_reorder(:'prop_a', array[:'p1', gen_random_uuid()]::uuid[]) \gset
+select is((select array_agg(id::text || ':' || is_cover order by position) from photos where property_id = :'prop_a'),
+          array[:'p1' || ':true', :'p2' || ':false'],
+          'the photos named first, the others after them');
+select photos_reorder(:'prop_a', array[:'p2', :'p1']::uuid[]) \gset
+select throws_ok(format($$update photos set is_cover = true where id = %L$$, :'p1'),
+                 '42501', null, 'seller_a: the cover changes through the order only');
 
 -- ===========================================================================
 -- Everyone else, on the draft
 -- ===========================================================================
 \set who seller_b
 \ir _as.psql
+delete from storage.objects where bucket_id = 'photos' and name like :'prop_a' || '/%';
 select is((select count(*) from photos where property_id = :'prop_a')::int, 0,
           'seller_b: does not see the photos of seller_a');
 select is((select count(*) from storage.objects where bucket_id = 'photos' and name like :'prop_a' || '/%')::int, 0,
@@ -76,22 +87,30 @@ select throws_ok(format($$insert into storage.objects (bucket_id, name, owner) v
                  '42501', null, 'seller_b: uploads nothing for seller_a');
 \set who buyer_c
 \ir _as.psql
+delete from storage.objects where bucket_id = 'photos' and name like :'prop_a' || '/%';
 select is((select count(*) from storage.objects where bucket_id = 'photos' and name like :'prop_a' || '/%')::int, 0,
           'buyer_c: does not see the files of a draft');
 \set who anon
 \ir _as.psql
+delete from storage.objects where bucket_id = 'photos' and name like :'prop_a' || '/%';
 select is((select count(*) from storage.objects where bucket_id = 'photos' and name like :'prop_a' || '/%')::int, 0,
           'anon: does not see the files of a draft');
 \set who admin
 \ir _as.psql
 select is((select count(*) from storage.objects where bucket_id = 'photos' and name like :'prop_a' || '/%')::int, 2,
-          'admin: sees the files of the draft');
+          'admin: sees the files of the draft, none deleted by seller_b, buyer_c nor anon');
 
 -- ===========================================================================
 -- seller_a: 15 at most, the cover kept
 -- ===========================================================================
 \set who seller_a
 \ir _as.psql
+delete from storage.objects where bucket_id = 'photos' and name = :'prop_a' || '/' || :'stray_file' || '-400.webp';
+select is((select count(*) from storage.objects
+            where bucket_id = 'photos' and name like :'prop_a' || '/%')::int, 1,
+          'seller_a: deletes a file of its draft');
+insert into storage.objects (bucket_id, name, owner)
+values ('photos', :'prop_a' || '/' || :'stray_file' || '-400.webp', tests.uid('seller_a'));
 insert into photos (property_id, storage_path)
 select :'prop_a', :'prop_a' || '/' || gen_random_uuid() from generate_series(1, 13);
 select is((select count(*) from photos where property_id = :'prop_a')::int, 15, 'seller_a: 15 photos');
@@ -110,9 +129,17 @@ insert into listings (property_id, title, description, price_cents)
 values (:'prop_a', 'Appartement en photos', 'Description.', 21000000)
 returning id as listing_a \gset
 select listing_submit(:'listing_a') \gset
+select throws_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('photos', %L, %L)$$,
+                        :'prop_a' || '/' || gen_random_uuid() || '-400.webp', tests.uid('seller_a')),
+                 '42501', null, 'seller_a: no new file once the listing is sent, the server converts them');
 \set who admin
 \ir _as.psql
 select listing_publish(:'listing_a') \gset
+\set who seller_a
+\ir _as.psql
+select throws_ok(format($$insert into photos (property_id, storage_path) values (%L, %L)$$,
+                        :'prop_a', :'prop_a' || '/' || :'stray_file'),
+                 '42501', null, 'seller_a: declares no photo once the listing is sent, not even a file uploaded before');
 \set who anon
 \ir _as.psql
 select is((select count(*) from storage.objects
@@ -140,6 +167,12 @@ select throws_ok(format($$insert into storage.objects (bucket_id, name, owner) v
                  '42501', null, 'seller_a: uploads nothing for a suspended listing');
 select throws_ok(format($$select photos_reorder(%L, array[]::uuid[])$$, :'prop_a'),
                  '42501', null, 'seller_a: nor reorders its photos');
+delete from storage.objects where bucket_id = 'photos' and name = :'prop_a' || '/' || :'p1_file' || '-400.webp';
+\set who admin
+\ir _as.psql
+select is((select count(*) from storage.objects
+            where bucket_id = 'photos' and name = :'prop_a' || '/' || :'p1_file' || '-400.webp')::int, 1,
+          'seller_a: nor deletes its files');
 \set who anon
 \ir _as.psql
 select is((select count(*) from public_listing_photos(array[:'listing_a']::uuid[]))::int, 0,

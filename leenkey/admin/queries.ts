@@ -4,6 +4,7 @@ import { requireAdmin } from "@/core/auth/session";
 import type { DpeClass } from "@/components/shared/dpe-badge";
 import type { PublicListing } from "@/leenkey/listings/queries";
 import { createClient } from "@/lib/supabase/server";
+import { chunk } from "@/lib/utils";
 import type { AdminListingsQuery } from "@/lib/validations/admin";
 import { DPE_CLASSES } from "@/lib/validations/search";
 import type { Database } from "@/types/database";
@@ -115,27 +116,32 @@ export async function adminListings(
       plan: row.plan,
       coverPath: null,
     }));
-    // Main photos: the admin reads every photo (RLS). Without them, the drawing.
-    if (rows.length > 0) {
-      const covers = await supabase
-        .from("listings")
-        .select("id, property:properties!inner(photos(storage_path, is_cover))")
-        .in(
-          "id",
-          rows.map((row) => row.id),
-        );
-      if (covers.error) {
-        logFailure("covers", covers.error, { user_id: admin.id });
-      } else {
-        const byListing = new Map(
-          covers.data.map((entry) => [
-            entry.id,
-            entry.property.photos.find((photo) => photo.is_cover)?.storage_path ?? null,
-          ]),
-        );
-        for (const row of rows) row.coverPath = byListing.get(row.id) ?? null;
+    // Main photos, 100 listings per read (length of the address): the admin
+    // reads every photo (RLS). Without them, the drawing.
+    const covers = await Promise.all(
+      chunk(
+        rows.map((row) => row.id),
+        100,
+      ).map((ids) =>
+        supabase
+          .from("listings")
+          .select("id, property:properties!inner(photos(storage_path))")
+          .eq("property.photos.is_cover", true)
+          .in("id", ids),
+      ),
+    );
+    const byListing = new Map<string, string>();
+    for (const answer of covers) {
+      if (answer.error) {
+        logFailure("covers", answer.error, { user_id: admin.id });
+        continue;
+      }
+      for (const entry of answer.data) {
+        const cover = entry.property.photos[0]?.storage_path;
+        if (cover) byListing.set(entry.id, cover);
       }
     }
+    for (const row of rows) row.coverPath = byListing.get(row.id) ?? null;
     return { ok: true, data: { rows, limited: data.length > ADMIN_LISTINGS_LIMIT } };
   } catch (error) {
     // Not the search itself: it may be the name of a person.

@@ -27,7 +27,7 @@ export type WebpResult =
   | { ok: false; error: "unsupported" | "too_small" };
 
 /** A small file may hold a huge image: refused beyond 60 million pixels. */
-const MAX_PIXELS = 60_000_000;
+export const MAX_PIXELS = 60_000_000;
 
 export async function toWebp(input: Buffer, options: WebpOptions): Promise<WebpResult> {
   let width: number;

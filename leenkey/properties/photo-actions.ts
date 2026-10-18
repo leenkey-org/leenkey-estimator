@@ -1,13 +1,13 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { revalidatePath } from "next/cache";
 import { getProfile } from "@/core/auth/session";
 import { toWebp } from "@/core/images/webp";
 import { createClient } from "@/lib/supabase/server";
 import {
   addPhotoSchema,
   captionPhotoSchema,
+  photoListSchema,
   photoRefSchema,
   reorderPhotosSchema,
 } from "@/lib/validations/photos";
@@ -24,7 +24,9 @@ import { readPhotos, type SellerPhoto } from "./photos";
 // Server actions of the photos of a property (L1-12), during its creation,
 // with the seller's session: the RLS of public.photos and the policies of
 // the bucket photos decide what they may write. Each one answers with the
-// photos of the property, in their order.
+// photos of the property, in their order. No revalidatePath: it would render
+// the step again for each photo; « Ma vente », dynamic, is read again when
+// it opens.
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -54,10 +56,17 @@ async function draftOfSeller(
   return { ok: true, supabase, userId: profile.id };
 }
 
-async function photosOf(supabase: Supabase, propertyId: string): Promise<PhotoActionResult> {
-  const photos = await readPhotos(supabase, propertyId);
-  if (photos.ok) revalidatePath("/vendeur");
-  return photos;
+function photosOf(supabase: Supabase, propertyId: string): Promise<PhotoActionResult> {
+  return readPhotos(supabase, propertyId);
+}
+
+/** The photos of the property as they are (after a failed change). */
+export async function listPhotos(input: unknown): Promise<PhotoActionResult> {
+  const parsed = photoListSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const draft = await draftOfSeller(parsed.data.propertyId);
+  if (!draft.ok) return draft;
+  return photosOf(draft.supabase, parsed.data.propertyId);
 }
 
 /** Files of a photo, deleted quietly: a file left behind is never shown (storage policies). */
@@ -115,7 +124,8 @@ export async function addPhoto(formData: FormData): Promise<PhotoActionResult> {
       if (!data) return { name, ok: false };
       const { error } = await supabase.storage.from("photos").upload(name, data, {
         contentType: "image/webp",
-        cacheControl: "31536000",
+        // As long as a signed URL lasts: a private photo does not stay in a browser.
+        cacheControl: "3600",
         upsert: false,
       });
       return { name, ok: !error };

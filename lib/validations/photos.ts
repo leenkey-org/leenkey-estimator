@@ -10,6 +10,8 @@ export const addPhotoSchema = z.object({
   file: z.instanceof(Blob),
 });
 
+export const photoListSchema = z.object({ propertyId: z.string().uuid() });
+
 export const photoRefSchema = z.object({
   propertyId: z.string().uuid(),
   photoId: z.string().uuid(),

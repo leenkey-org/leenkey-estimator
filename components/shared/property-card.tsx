@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { DpeBadge, type DpeClass } from "./dpe-badge";
 import { FacadeDrawing } from "./facade-drawing";
+import { Photo as PhotoImage } from "./photo";
 import { NBSP, formatPrice, formatRooms, formatSurface } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -70,7 +70,7 @@ function Photo({
   return (
     <div className={cn("relative shrink-0 overflow-hidden bg-lk-stone-2", className)}>
       {photo ? (
-        <Image src={photo.src} alt={photo.alt} fill sizes={sizes} className="object-cover" />
+        <PhotoImage src={photo.src} alt={photo.alt} sizes={sizes} />
       ) : (
         <div className="flex h-full items-center justify-center">
           <FacadeDrawing className="w-2/5 text-lk-ink-3" />

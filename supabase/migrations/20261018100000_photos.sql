@@ -59,13 +59,25 @@ begin
 end;
 $$;
 
--- Who uploads or deletes a file: the owner, while the property is editable
--- (not suspended), with an active account.
-create or replace function public.photo_file_writable(p_name text) returns boolean
+-- Who deletes a file: the owner, while the property is editable (not
+-- suspended), with an active account.
+create or replace function public.photo_file_removable(p_name text) returns boolean
 language sql stable security definer set search_path = '' as $$
   select public.photo_file_property(p_name) is not null
      and public.property_is_editable(public.photo_file_property(p_name))
      and public.is_active_user();
+$$;
+
+-- Who uploads a file: the same, and only during the creation (no listing,
+-- a draft, a rejected one), when the server converts every photo; a
+-- listing sent or online gets new files with the sheet of the property
+-- (L1-14), never a file put there without the conversion.
+create or replace function public.photo_file_writable(p_name text) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select public.photo_file_removable(p_name)
+     and not exists (select 1 from public.listings l
+                      where l.property_id = public.photo_file_property(p_name)
+                        and l.deleted_at is null and l.status not in ('draft', 'rejected'));
 $$;
 
 drop policy if exists photos_files_select on storage.objects;
@@ -81,7 +93,7 @@ create policy photos_files_insert on storage.objects
 drop policy if exists photos_files_delete on storage.objects;
 create policy photos_files_delete on storage.objects
   for delete to authenticated
-  using (bucket_id = 'photos' and public.photo_file_writable(name));
+  using (bucket_id = 'photos' and public.photo_file_removable(name));
 -- No update policy: a file is never replaced, a new photo has a new name.
 
 -- A photo is `{property_id}/{uuid}`, the base of its files (L1-04 only asked
@@ -102,7 +114,20 @@ language plpgsql security definer set search_path = '' as $$
 declare
   taken int;
 begin
+  -- Someone else's property: the RLS refuses it, nothing to lock nor count.
+  if auth.uid() is not null and not public.property_is_editable(new.property_id) then
+    return new;
+  end if;
   perform 1 from public.properties where id = new.property_id for update;
+  -- Added during the creation only (no listing, a draft, a rejected one),
+  -- as their files: once sent, a photo would skip the review of Leenkey.
+  -- After the lock, which listing_submit takes too.
+  if auth.uid() is not null and exists (
+       select 1 from public.listings l
+        where l.property_id = new.property_id and l.deleted_at is null
+          and l.status not in ('draft', 'rejected')) then
+    raise exception 'photos are added during the creation only' using errcode = '42501';
+  end if;
   select count(*) into taken from public.photos where property_id = new.property_id;
   if taken >= 15 then
     raise exception 'a property has 15 photos at most' using errcode = '23514';
@@ -118,11 +143,13 @@ drop trigger if exists photos_before_insert on public.photos;
 create trigger photos_before_insert before insert on public.photos
   for each row execute function public.photos_before_insert();
 
--- The cover deleted, the next photo takes its place.
+-- The cover deleted, the next photo takes its place; under the lock of the
+-- property, as an insert: a photo added at the same moment is seen.
 create or replace function public.photos_after_delete() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
   if old.is_cover then
+    perform 1 from public.properties where id = old.property_id for update;
     update public.photos set is_cover = true
      where id = (select id from public.photos
                   where property_id = old.property_id order by position limit 1);
@@ -135,31 +162,39 @@ drop trigger if exists photos_after_delete on public.photos;
 create trigger photos_after_delete after delete on public.photos
   for each row execute function public.photos_after_delete();
 
--- The order chosen by the seller: every photo of the property, once; the
--- first one becomes the cover.
+-- The order chosen by the seller: the photos named come first, in that
+-- order; a photo added meanwhile (another tab, a sending in progress) keeps
+-- its place after them, an unknown one is ignored. The first one becomes the
+-- cover. The only way to change the places: no column right (below).
 create or replace function public.photos_reorder(p_property_id uuid, p_photo_ids uuid[])
 returns void
 language plpgsql security definer set search_path = '' as $$
-declare
-  given int := coalesce(array_length(p_photo_ids, 1), 0);
 begin
   if not public.property_is_editable(p_property_id) or not public.is_active_user() then
     raise exception 'property not found' using errcode = '42501';
   end if;
   perform 1 from public.properties where id = p_property_id for update;
-  if given <> (select count(*) from public.photos where property_id = p_property_id)
-     or given <> (select count(distinct id) from unnest(p_photo_ids) as id)
-     or exists (select 1 from public.photos
-                 where property_id = p_property_id and not (id = any (p_photo_ids))) then
-    raise exception 'the order lists every photo of the property once' using errcode = '22023';
-  end if;
-  update public.photos ph set position = array_position(p_photo_ids, ph.id) - 1
-   where ph.property_id = p_property_id;
+  with wanted as (
+    select id, min(rank) as rank
+      from unnest(coalesce(p_photo_ids, '{}')) with ordinality as named(id, rank)
+     group by id
+  ), places as (
+    select ph.id, row_number() over (order by w.rank nulls last, ph.position) - 1 as place
+      from public.photos ph
+      left join wanted w on w.id = ph.id
+     where ph.property_id = p_property_id
+  )
+  update public.photos ph set position = places.place from places where ph.id = places.id;
   update public.photos set is_cover = false
-   where property_id = p_property_id and is_cover and id <> p_photo_ids[1];
-  update public.photos set is_cover = true where id = p_photo_ids[1] and not is_cover;
+   where property_id = p_property_id and is_cover and position <> 0;
+  update public.photos set is_cover = true
+   where property_id = p_property_id and position = 0 and not is_cover;
 end;
 $$;
+
+-- The place and the cover change through photos_reorder only (L1-04 gave the
+-- columns to the owner): the first photo is always the main one.
+revoke update (position, is_cover) on public.photos from authenticated;
 
 -- Photos of published listings, in order (the cover only for the search
 -- results), with the number of photos of each.
@@ -186,4 +221,6 @@ grant execute on function public.photo_file_property(text) to anon, authenticate
 grant execute on function public.photo_file_readable(text) to anon, authenticated;
 revoke execute on function public.photo_file_writable(text) from public, anon;
 grant execute on function public.photo_file_writable(text) to authenticated;
+revoke execute on function public.photo_file_removable(text) from public, anon;
+grant execute on function public.photo_file_removable(text) to authenticated;
 grant execute on function public.public_listing_photos(uuid[], boolean) to anon, authenticated;

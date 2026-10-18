@@ -9,21 +9,23 @@ import {
   type DragEvent,
   type KeyboardEvent,
 } from "react";
-import Image from "next/image";
 import { flushSync } from "react-dom";
 import { GripVertical, Loader2, Plus } from "lucide-react";
 import { InlineAlert } from "@/components/shared/inline-alert";
+import { Photo } from "@/components/shared/photo";
+import { NBSP } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import {
   addPhoto,
   captionPhoto,
   deletePhoto,
+  listPhotos,
   reorderPhotos,
   type PhotoActionResult,
   type PhotoError,
 } from "../photo-actions";
-import { MAX_PHOTOS, PHOTO_MAX_BYTES, PHOTO_TYPES, photoUrl } from "../photo-files";
+import { MAX_PHOTOS, PHOTO_MAX_BYTES, PHOTO_MINIMUM, PHOTO_TYPES, photoUrl } from "../photo-files";
 import type { SellerPhoto } from "../photos";
 import { PhotoSheet } from "./photo-sheet";
 import { reducePhoto } from "./reduce-photo";
@@ -37,11 +39,13 @@ const common = fr.properties.creation;
 // as chosen (or dropped), reduced beforehand in the browser when heavy, and
 // saved at once: the form of the step does not carry them. Moved with the
 // mouse (drag), the keyboard (arrows on a photo) or from the sheet of a
-// photo (touch), which also gives its caption and deletes it.
+// photo (touch), which also gives its caption and deletes it. The server runs
+// the changes one after the other: only the answer of the last one is shown,
+// and a failure shows the photos as the server has them.
 
 type Pending = { key: number; name: string };
 
-function failure(error: PhotoError, name: string): string {
+function failure(error: PhotoError | "too_heavy", name: string): string {
   switch (error) {
     case "auth":
       return common.signedOut;
@@ -52,7 +56,9 @@ function failure(error: PhotoError, name: string): string {
     case "unsupported":
       return t.errors.unreadable(name);
     case "too_small":
-      return t.errors.tooSmall(name);
+      return t.errors.tooSmall(name, PHOTO_MINIMUM.long, PHOTO_MINIMUM.short);
+    case "too_heavy":
+      return t.errors.tooHeavy(name);
     case "full":
       return t.errors.full(name, MAX_PHOTOS);
     default:
@@ -88,30 +94,67 @@ export function PhotoUploader({
   const queue = useRef<{ key: number; file: File }[]>([]);
   const running = useRef(false);
   const lastKey = useRef(0);
+  // Number of the last change sent: an older answer is not shown.
+  const latest = useRef(0);
   // Where the focus goes once the sheet is closed (a deleted photo is gone).
   const afterSheet = useRef<HTMLElement | null>(null);
 
   const busy = pending.length > 0 || working;
   useEffect(() => onBusyChange?.(busy), [busy, onBusyChange]);
 
+  // A photo dropped beside the block would open in the tab, and the photos
+  // still to send would be lost.
+  useEffect(() => {
+    const keep = (event: globalThis.DragEvent) => {
+      if (event.dataTransfer?.types.includes("Files")) event.preventDefault();
+    };
+    window.addEventListener("dragover", keep);
+    window.addEventListener("drop", keep);
+    return () => {
+      window.removeEventListener("dragover", keep);
+      window.removeEventListener("drop", keep);
+    };
+  }, []);
+
+  /** The same message twice is read twice: a space added the second time. */
+  function announce(message: string) {
+    setStatus((current) => (current === message ? `${message}${NBSP}` : message));
+  }
+
+  /** On a failure: the photos as the server has them, the place of each one. */
+  async function reload() {
+    try {
+      const result = await listPhotos({ propertyId });
+      if (result.ok) setPhotos(result.data);
+    } catch (caught) {
+      console.error("[properties] photos reload failed", caught);
+    }
+  }
+
   const full = photos.length + pending.length >= MAX_PHOTOS;
   const open = sheet ? photos.findIndex((photo) => photo.id === sheet.id) : -1;
 
   async function send(file: File): Promise<string | null> {
-    const blob = await reducePhoto(file);
-    if (!blob) return t.errors.unreadable(file.name);
+    const reduced = await reducePhoto(file);
+    if (!reduced.ok)
+      return failure(reduced.error === "unreadable" ? "unsupported" : "too_heavy", file.name);
     const data = new FormData();
     data.set("propertyId", propertyId);
-    data.set("file", blob, file.name);
+    data.set("file", reduced.blob, file.name);
+    const mine = ++latest.current;
     let result: PhotoActionResult | null = null;
     try {
       result = await addPhoto(data);
     } catch (caught) {
       console.error("[properties] photo upload failed", caught);
     }
-    if (!result?.ok) return failure(result?.error ?? "unavailable", file.name);
-    setPhotos(result.data);
-    setStatus(t.added(result.data.length, MAX_PHOTOS));
+    if (!result?.ok) {
+      if (mine === latest.current) await reload();
+      return failure(result?.error ?? "unavailable", file.name);
+    }
+    // A change sent meanwhile answers after this one, with this photo.
+    if (mine === latest.current) setPhotos(result.data);
+    announce(t.added(result.data.length, MAX_PHOTOS));
     return null;
   }
 
@@ -154,14 +197,14 @@ export function PhotoUploader({
     void run();
   }
 
-  /** A change of the photos, saved at once; on failure, the previous ones come back. */
+  /** A change of the photos, shown at once (next) and saved. */
   function change(
     next: SellerPhoto[] | null,
     action: () => Promise<PhotoActionResult>,
     onDone?: (photos: SellerPhoto[]) => void,
   ) {
-    const previous = photos;
     if (next) setPhotos(next);
+    const mine = ++latest.current;
     startWorking(async () => {
       let result: PhotoActionResult | null = null;
       try {
@@ -170,11 +213,11 @@ export function PhotoUploader({
         console.error("[properties] photo change failed", caught);
       }
       if (result?.ok) {
-        setPhotos(result.data);
+        if (mine === latest.current) setPhotos(result.data);
         onDone?.(result.data);
         return;
       }
-      setPhotos(previous);
+      if (mine === latest.current) await reload();
       const message =
         result?.error === "auth"
           ? common.signedOut
@@ -197,7 +240,7 @@ export function PhotoUploader({
     // The tile keeps the focus where it lands.
     flushSync(() => setPhotos(next));
     if (focus) tiles.current.get(photo.id)?.focus();
-    setStatus(t.moved(to + 1, next.length));
+    announce(t.moved(to + 1, next.length));
     change(next, () => reorderPhotos({ propertyId, photoIds: next.map((entry) => entry.id) }));
   }
 
@@ -293,13 +336,7 @@ export function PhotoUploader({
                   dragged === index && "opacity-45",
                 )}
               >
-                <Image
-                  src={photoUrl(photo.path)}
-                  alt=""
-                  fill
-                  sizes="(min-width: 768px) 132px, 25vw"
-                  className="object-cover"
-                />
+                <Photo src={photoUrl(photo.path)} alt="" sizes="(min-width: 768px) 132px, 25vw" />
                 {index === 0 ? (
                   <span
                     aria-hidden="true"
@@ -357,19 +394,11 @@ export function PhotoUploader({
         }}
       />
 
-      {errors.length > 0 ? (
-        <InlineAlert tone="danger">
-          {errors.length === 1 ? (
-            errors[0]
-          ) : (
-            <ul className="flex list-disc flex-col gap-1 pl-4">
-              {errors.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          )}
+      {errors.map((error, index) => (
+        <InlineAlert key={`${index}-${error}`} tone="danger">
+          {error}
         </InlineAlert>
-      ) : null}
+      ))}
       {/* Always in the page: a live region added with its text is not read. */}
       <p role="status" className="sr-only">
         {status}
@@ -397,7 +426,7 @@ export function PhotoUploader({
             null,
             () => captionPhoto({ propertyId, photoId: photo.id, caption }),
             () => {
-              setStatus(t.captionSaved);
+              announce(t.captionSaved);
               setNotice(t.captionSaved);
             },
           );
@@ -419,7 +448,7 @@ export function PhotoUploader({
             () => {
               afterSheet.current = neighbour ? (tiles.current.get(neighbour.id) ?? null) : null;
               setSheet(null);
-              setStatus(t.deleted);
+              announce(t.deleted);
             },
           );
         }}

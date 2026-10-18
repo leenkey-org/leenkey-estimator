@@ -347,10 +347,17 @@ export function CharacteristicsStep({
       <PhotoUploader propertyId={propertyId} initial={photos} onBusyChange={setPhotosBusy} />
 
       <FormActionBar className="md:mt-3">
-        <Button type="submit" name="intent" value="previous" variant="secondary" disabled={saving}>
+        {/* While photos are sent, the step waits: « Continuer » says it. */}
+        <Button
+          type="submit"
+          name="intent"
+          value="previous"
+          variant="secondary"
+          disabled={saving || photosBusy}
+        >
           {common.previous}
         </Button>
-        <Button ref={next} type="submit" name="intent" value="next" loading={saving}>
+        <Button ref={next} type="submit" name="intent" value="next" loading={saving || photosBusy}>
           {common.next}
         </Button>
       </FormActionBar>

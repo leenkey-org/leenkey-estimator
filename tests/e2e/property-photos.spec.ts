@@ -162,6 +162,14 @@ test("photos de l'étape 2 : envoi, refus propres, ordre, légende, suppression,
   await expect(
     moved.getByText("Photo déplacée en position 1 sur 2 : c'est la photo principale."),
   ).toBeVisible();
+  // The button used stays, says so and keeps the focus.
+  const main = moved.getByRole("button", { name: "C'est la photo principale" });
+  await expect(main).toBeFocused();
+  await expect(main).toHaveAttribute("aria-disabled", "true");
+  await expect(moved.getByRole("button", { name: "Déplacer avant" })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
   await page.getByRole("button", { name: "Supprimer la photo" }).click();
   await page.getByRole("button", { name: "Supprimer définitivement" }).click();
   await expect(status).toHaveText("Photo supprimée.");
