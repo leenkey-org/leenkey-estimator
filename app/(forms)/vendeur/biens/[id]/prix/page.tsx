@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Button } from "@/components/shared/button";
-import { ComingSoon } from "@/components/shared/coming-soon";
+import { redirect } from "next/navigation";
 import { CreationHeader } from "@/leenkey/properties/components/creation-header";
 import { CreationBody, CreationLoadError } from "@/leenkey/properties/components/creation-page";
+import { PriceStep, type Valuation } from "@/leenkey/properties/components/price-step";
+import { suggestedTitle } from "@/leenkey/properties/creation";
 import { propertyForCreation } from "@/leenkey/properties/load";
+import type { SellerEstimation } from "@/leenkey/properties/queries";
+import { formatDate, formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
+import { missingCharacteristics } from "@/lib/validations/property";
 
 const t = fr.properties;
 
@@ -15,38 +18,55 @@ export const metadata: Metadata = {
 
 type Props = { params: Promise<{ id: string }> };
 
-// L1-11: step 3 of 4 comes with L1-13 (price, description, preview, review).
-// Until then, the property stays a draft, resumed from « Ma vente ».
+function valuationOf(estimation: SellerEstimation | null): Valuation | null {
+  if (!estimation) return null;
+  const range = (cents: number | null) => (cents === null ? null : formatPrice(cents));
+  return {
+    title: t.price.valuation(estimation.madeAt ? formatDate(estimation.madeAt) : null),
+    text: t.price.valuationValue(
+      formatPrice(estimation.valueCents),
+      range(estimation.lowCents),
+      range(estimation.highCents),
+    ),
+    valueCents: estimation.valueCents,
+  };
+}
+
+// L1-13, step 3 of 4: price, title and description (SPEC-V2 8.3). The
+// characteristics come first: without them, back to step 2.
 export default async function PropertyPricePage({ params }: Props) {
   const { id } = await params;
   const property = await propertyForCreation(id);
-  const header = (
-    <CreationHeader
-      step="price"
-      back={{ href: `/vendeur/biens/${id}/caracteristiques`, label: t.creation.previousStep }}
-      save={false}
-    />
-  );
   if (!property) {
     return (
       <>
-        {header}
+        <CreationHeader
+          step="price"
+          back={{ href: `/vendeur/biens/${id}/caracteristiques`, label: t.creation.previousStep }}
+          save={false}
+        />
         <CreationLoadError href={`/vendeur/biens/${id}/prix`} />
       </>
     );
   }
+  if (missingCharacteristics(property.characteristics).length > 0) {
+    redirect(`/vendeur/biens/${id}/caracteristiques`);
+  }
+  const { listing } = property;
   return (
     <>
-      {header}
+      <CreationHeader step="price" back="previous" />
       <CreationBody>
-        <ComingSoon
-          title={t.nextStep.title}
-          text={t.nextStep.text}
-          action={
-            <Button asChild>
-              <Link href="/vendeur">{t.nextStep.action}</Link>
-            </Button>
-          }
+        <PriceStep
+          propertyId={property.id}
+          initial={{
+            priceEuros: listing ? Math.round(listing.priceCents / 100) : null,
+            title:
+              listing?.title ?? suggestedTitle(property.characteristics, property.address.city),
+            description: listing?.description ?? "",
+          }}
+          saved={listing !== null}
+          valuation={valuationOf(property.estimation)}
         />
       </CreationBody>
     </>

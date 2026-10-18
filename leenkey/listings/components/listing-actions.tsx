@@ -39,7 +39,8 @@ export function PriceColumn({
   favorite,
 }: {
   listing: PublicListing;
-  signUpHref: string;
+  /** null: the preview of the seller before sending (L1-13), buttons inactive. */
+  signUpHref: string | null;
   /** The heart (FavoriteButton), on the right of the price. */
   favorite?: ReactNode;
 }) {
@@ -54,17 +55,32 @@ export function PriceColumn({
         firstName={listing.sellerFirstName}
         accompanied={listing.accompanied}
       />
-      <Button asChild size="lg">
-        <Link href={signUpHref} prefetch={false}>
-          {t.contact}
-        </Link>
-      </Button>
-      <Button asChild variant="secondary">
-        <Link href={signUpHref} prefetch={false}>
-          {t.visit}
-        </Link>
-      </Button>
-      <p className="text-center text-lk-micro text-lk-ink-3">{t.accountRequired}</p>
+      {signUpHref ? (
+        <>
+          <Button asChild size="lg">
+            <Link href={signUpHref} prefetch={false}>
+              {t.contact}
+            </Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link href={signUpHref} prefetch={false}>
+              {t.visit}
+            </Link>
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button size="lg" disabled>
+            {t.contact}
+          </Button>
+          <Button variant="secondary" disabled>
+            {t.visit}
+          </Button>
+        </>
+      )}
+      <p className="text-center text-lk-micro text-lk-ink-3">
+        {signUpHref ? t.accountRequired : t.inactive}
+      </p>
     </div>
   );
 }

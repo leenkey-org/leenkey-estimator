@@ -53,10 +53,19 @@ export type EmailLayoutProps = {
   /** Address of the site, for the links of the footer. */
   siteUrl: string;
   action?: { href: string; label: string };
+  /** A notification for the team of Leenkey: its own footer, no preferences. */
+  internal?: boolean;
   children: ReactNode;
 };
 
-export function EmailLayout({ preview, title, siteUrl, action, children }: EmailLayoutProps) {
+export function EmailLayout({
+  preview,
+  title,
+  siteUrl,
+  action,
+  internal = false,
+  children,
+}: EmailLayoutProps) {
   return (
     <Html lang="fr">
       <Head />
@@ -113,10 +122,19 @@ export function EmailLayout({ preview, title, siteUrl, action, children }: Email
         </Container>
         <Container style={{ maxWidth: "560px", padding: "16px 32px 0" }}>
           <Text style={{ margin: "0 0 8px", fontSize: "12px", lineHeight: "1.5", color: MUTED }}>
-            {t.footer.why}{" "}
-            <Link href={`${siteUrl}/compte`} style={{ color: MUTED, textDecoration: "underline" }}>
-              {t.footer.preferences}
-            </Link>
+            {internal ? (
+              t.footer.internal
+            ) : (
+              <>
+                {t.footer.why}{" "}
+                <Link
+                  href={`${siteUrl}/compte`}
+                  style={{ color: MUTED, textDecoration: "underline" }}
+                >
+                  {t.footer.preferences}
+                </Link>
+              </>
+            )}
           </Text>
           <Hr style={{ margin: "8px 0", borderColor: LINE }} />
           <Text style={{ margin: 0, fontSize: "12px", lineHeight: "1.5", color: MUTED }}>

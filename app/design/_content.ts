@@ -46,6 +46,7 @@ export const sections = {
   cards: "Cartes de bien",
   logo: "Logo",
   brandPanel: "Aplat de marque",
+  endOfFlow: "Fin de parcours",
   drawing: "Dessin de marque",
   emptyState: "État vide",
   comingSoon: "Écran à venir",
@@ -53,6 +54,7 @@ export const sections = {
   navigation: "Navigation",
   notifications: "Notifications et menu du compte",
   alerts: "Alertes",
+  infoNote: "Note d'information",
   backOffice: "Back office : filtres, tableau, motif",
   skeleton: "Chargement",
   consent: "Consentement aux cookies",
@@ -425,6 +427,19 @@ export const brandPanel = {
   heroCaption: "titleSize hero · 36 puis 56 px, accueil public et fins de parcours",
   heroTitle: "Vous gardez les clés.",
   heroText: "Vendez votre bien sans agence, accompagné à chaque étape.",
+};
+
+export const endOfFlow = {
+  caption:
+    "EndOfFlow : tout l'écran sur un téléphone, 60 % de sa hauteur à partir de 768 px ; le dessin apparaît en fondu (360 ms), le seul moment orchestré",
+};
+
+export const infoNote = {
+  title: "Votre analyse de valeur du mardi 6 octobre",
+  text: "342 000 €, dans une fourchette de 325 000 € à 360 000 €.",
+  gap: "Votre prix est 3 % au-dessus de cette valeur.",
+  caption:
+    "InfoNote : à côté d'un champ, qui la lit au focus (aria-describedby) ; sans rôle, elle n'annonce rien",
 };
 
 export const logo = {

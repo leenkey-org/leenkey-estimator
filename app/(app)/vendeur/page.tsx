@@ -27,7 +27,7 @@ function summary(property: SellerProperty): string {
 /** A draft resumes at its step; a listing sent or online opens from its page (L1-14). */
 function resumeHref(property: SellerProperty): string | null {
   if (!inCreation(property.listingStatus)) return null;
-  return `/vendeur/biens/${property.id}/${creationStep(property.characteristics)}`;
+  return `/vendeur/biens/${property.id}/${creationStep(property.characteristics, property.listing)}`;
 }
 
 // Until the seller dashboard (L1-24): the properties of the seller, a draft

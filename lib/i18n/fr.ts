@@ -385,10 +385,59 @@ export const fr = {
         cancel: "Annuler",
       },
     },
-    nextStep: {
-      title: "La suite de votre annonce arrive",
-      text: "Votre bien est enregistré. Le prix, la description et l'aperçu de l'annonce arrivent avec la prochaine version.",
+    // L1-13: step 3 (SPEC-V2 8.3). « Rédiger avec l'assistant » comes with L1-29.
+    price: {
+      title: "Votre prix et votre annonce",
+      price: "Prix de vente",
+      priceHelp: "Le prix affiché sur votre annonce.",
+      valuation: (date: string | null) =>
+        date ? `Votre analyse de valeur du ${date}` : "Votre analyse de valeur",
+      valuationValue: (value: string, low: string | null, high: string | null) =>
+        low && high ? `${value}, dans une fourchette de ${low} à ${high}.` : `${value}.`,
+      gap: (percent: number) =>
+        percent === 0
+          ? "Votre prix correspond à cette valeur."
+          : `Votre prix est ${Math.abs(percent)}\u00A0% ${percent > 0 ? "au-dessus" : "en dessous"} de cette valeur.`,
+      listingTitle: "Titre de l'annonce",
+      titleHelp: "Proposé d'après votre bien : modifiez-le si vous le souhaitez.",
+      description: "Description",
+      descriptionPlaceholder:
+        "La lumière, l'agencement, les travaux récents, le quartier, les écoles, les transports…",
+      count: (count: string, max: string) => `${count} / ${max} caractères`,
+      required: "Le prix et la description sont nécessaires pour continuer.",
+      priceToSave: "Indiquez le prix pour enregistrer votre annonce.",
+      errors: {
+        required: "À renseigner pour continuer.",
+        price: "Saisissez un prix en euros, sans centimes.",
+        priceTooHigh: "Ce prix semble trop élevé : vérifiez le nombre de zéros.",
+        titleLength: "Le titre compte de 3 à 120 caractères.",
+        descriptionLength: "La description compte 1\u00A0200 caractères au plus.",
+      } as Record<string, string>,
+    },
+    // Step 4: the listing as buyers will see it, then « Envoyer en validation ».
+    preview: {
+      title: "Aperçu de votre annonce",
+      lead: "Voici votre annonce telle que les acquéreurs la verront. Vérifiez-la, puis envoyez-la : nous la relisons sous 24\u00A0h.",
+      submit: "Envoyer en validation",
+      errors: {
+        characteristics:
+          "Il manque le type, la surface ou les pièces de votre bien : complétez l'étape 2.",
+        listing: "Il manque le prix ou la description : complétez l'étape 3.",
+        notFound: "Cette annonce a déjà été envoyée, ou ne peut plus être modifiée.",
+        unavailable: "L'envoi n'a pas pu se faire. Réessayez.",
+      },
+      fix: "Compléter",
+      // A listing refused by Leenkey, corrected through the steps (L1-19).
+      rejected: "Votre annonce est à corriger",
+      rejectedNext: "Corrigez-la à l'étape qui convient, puis envoyez-la de nouveau.",
+    },
+    // End of the flow (SPEC-V2 8.3, docs/DESIGN.md 10.8, G8).
+    sent: {
+      metaTitle: "Annonce envoyée · Leenkey",
+      title: "C'est envoyé.",
+      text: "Nous relisons votre annonce sous 24\u00A0h et vous prévenons par email.",
       action: "Retour à Ma vente",
+      recap: "Votre annonce",
     },
     list: {
       title: "Vos biens",
@@ -733,8 +782,26 @@ export const fr = {
     footer: {
       why: "Vous recevez cet email parce que vous vendez un bien sur Leenkey.",
       preferences: "Gérer mes notifications",
+      internal: "Notification interne du back office de Leenkey.",
     },
     // The reference in the subjects: one thread per listing in the inbox.
+    // L1-13: a listing sent for review (SPEC-V2 section 18).
+    listingReceived: {
+      subject: (reference: string) => `Votre annonce est bien reçue (${reference})`,
+      title: "Votre annonce est bien reçue",
+      text: (title: string) => `Nous avons bien reçu « ${title} ».`,
+      next: "Nous la relisons sous 24\u00A0h et vous prévenons par email dès qu'elle est en ligne, ou s'il faut la corriger.",
+      action: "Voir ma vente",
+    },
+    listingToReview: {
+      subject: (reference: string) => `Annonce à valider (${reference})`,
+      title: "Une annonce attend votre relecture",
+      text: (title: string) => `« ${title} » vient d'être envoyée en validation.`,
+      details: (reference: string, place: string, price: string, seller: string | null) =>
+        [reference, place, price, seller].filter(Boolean).join(" · "),
+      deadline: "Objectif : une réponse au vendeur sous 24\u00A0h.",
+      action: "Relire l'annonce",
+    },
     listingPublished: {
       subject: (reference: string) => `Votre annonce est en ligne (${reference})`,
       title: "Votre annonce est en ligne",
@@ -1036,6 +1103,8 @@ export const fr = {
       visit: "Demander une visite",
       accountRequired:
         "Un compte acquéreur est nécessaire pour contacter le vendeur ou demander une visite.",
+      // The preview of the seller before sending (L1-13).
+      inactive: "Dans l'aperçu, ces boutons sont inactifs.",
     },
     notFound: {
       metaTitle: "Annonce introuvable · Leenkey",
