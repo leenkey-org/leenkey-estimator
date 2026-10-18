@@ -124,6 +124,16 @@ describe("share image", () => {
     expect(pixel(10, 10)).toEqual(near(RED));
     expect(pixel(710, 620)).toEqual(near(RED));
     expect(pixel(1190, 315)).toEqual(near(BLUE));
+    // The white logo at the bottom of the band: the roof of its house, above
+    // where the word « Leenkey » would start.
+    let roof = 0;
+    for (let x = 772; x <= 792; x++) {
+      for (let y = 542; y <= 548; y++) {
+        const { r, g, b } = pixel(x, y);
+        if (r > 200 && g > 200 && b > 200) roof++;
+      }
+    }
+    expect(roof).toBeGreaterThan(0);
   });
 
   it("keeps the drawing when the photo cannot be read, a minute in the caches", async () => {

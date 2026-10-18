@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import {
   FACADE_DIMENSION,
@@ -11,8 +13,9 @@ import { NBSP, NNBSP, formatPrice } from "@/lib/format";
 
 // Open Graph image of a listing (SPEC-V2 8.5, docs/DESIGN.md 14): 1200 × 630,
 // main photo on the left (60 %), blue band on the right with the price in
-// wide Archivo, the summary, the town and « Leenkey ». Without a photo, or
-// when it cannot be read in time, facade.svg on stone. Colours of
+// wide Archivo, the summary, the town and the logo in white (the word
+// « Leenkey » without its file). Without a photo, or when it cannot be read
+// in time, facade.svg on stone. Colours of
 // docs/DESIGN.md 2.1 and 14, written out because the image is drawn outside
 // the CSS of the site.
 
@@ -22,6 +25,24 @@ const STONE_2 = "#ECEDE8"; // --lk-stone-2
 const INK_3 = "#5B6474"; // --lk-ink-3
 
 type Font = { name: string; data: ArrayBuffer; weight: 500 | 700; style: "normal" };
+
+/** The white logo at the bottom of the band, 32 px high (public/brand, 309 × 80). */
+const LOGO = { width: 124, height: 32 };
+let whiteLogo: Promise<string | null> | null = null;
+
+/** The white logo as a data URL, read once; null without the file: the word instead. */
+function logoImage(): Promise<string | null> {
+  whiteLogo ??= readFile(join(process.cwd(), "public/brand/logo-white.svg")).then(
+    (file) => `data:image/svg+xml;base64,${file.toString("base64")}`,
+    (error: unknown) => {
+      console.error("[listings] share logo not read", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    },
+  );
+  return whiteLogo;
+}
 
 /**
  * Archivo from Google Fonts, limited to the characters drawn: semi-expanded
@@ -59,10 +80,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
   const summary = listingSummary(listing).replaceAll(NNBSP, NBSP);
   const brand = "Leenkey";
   const cover = listing.photos[0];
-  const [wide, regular, photo] = await Promise.all([
+  const [wide, regular, photo, logo] = await Promise.all([
     loadFont("wdth,wght@112.5,700", `${price}${brand}`),
     loadFont("wght@500", `${summary}${listing.city}`),
     cover ? sharePhoto(cover.path) : null,
+    logoImage(),
   ]);
   const fonts: Font[] = [];
   if (wide) fonts.push({ name: "Archivo Wide", data: wide, weight: 700, style: "normal" });
@@ -139,7 +161,19 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
           <div style={{ fontSize: 28, lineHeight: 1.25 }}>{summary}</div>
           <div style={{ fontSize: 24, lineHeight: 1.3, color: ON_BLUE_2 }}>{listing.city}</div>
         </div>
-        <div style={{ fontFamily: "Archivo Wide", fontWeight: 700, fontSize: 24 }}>{brand}</div>
+        {logo ? (
+          <div
+            style={{
+              display: "flex",
+              width: LOGO.width,
+              height: LOGO.height,
+              backgroundImage: `url(${logo})`,
+              backgroundSize: `${LOGO.width}px ${LOGO.height}px`,
+            }}
+          />
+        ) : (
+          <div style={{ fontFamily: "Archivo Wide", fontWeight: 700, fontSize: 24 }}>{brand}</div>
+        )}
       </div>
     </div>,
     {

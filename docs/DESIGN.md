@@ -614,7 +614,7 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 ### 10.6 Navigation et structure
 
-**TopNav desktop** : hauteur 72, fond blanc, bordure basse `--lk-line`, padding 0 40, écart 32. Logo « Leenkey » 20 px 700 large. Liens 14 px 500 `--lk-ink` (actif `--lk-blue`), écart 24. À droite, écart 6 : « Vendre mon bien » (`primary md` avec `Plus`, marge droite 10) ; cloche (`IconButton tint`, point bleu 9 px bordé de blanc si non lu) ; favoris (`IconButton` transparent) ; avatar 42 px fond `--lk-ink` initiale blanche 14 px 600 (ou « Mon compte » `secondary` si non connecté).
+**TopNav desktop** : hauteur 72, fond blanc, bordure basse `--lk-line`, padding 0 40, écart 32. Logo officiel (`Logo` : la maison et sa clé, « leenkey », `public/brand/logo.svg`, `DECISIONS.md` 2026-10-18), 32 px de haut. Liens 14 px 500 `--lk-ink` (actif `--lk-blue`), écart 24. À droite, écart 6 : « Vendre mon bien » (`primary md` avec `Plus`, marge droite 10) ; cloche (`IconButton tint`, point bleu 9 px bordé de blanc si non lu) ; favoris (`IconButton` transparent) ; avatar 42 px fond `--lk-ink` initiale blanche 14 px 600 (ou « Mon compte » `secondary` si non connecté).
 
 > **Mise en œuvre (L1-10).** `components/shared/top-nav.tsx`, collante en haut (couche 20), masquée sous 768 px. De 768 à 1023 px, padding 0 20 et écart 24 pour tenir dans 768 px ; 0 40 et 32 à partir de 1024 px. Cloche, favoris et avatar de 42 px, zone tactile de 44 px. Lien courant (`aria-current="page"`) : le plus long préfixe de l'adresse ; « Acheter » l'est aussi sur une annonce (`AnnonceDesktop`). Sans session : « Vendre mon bien », puis « Mon compte » (connexion, avec retour à la page et à ses filtres) ; ni cloche, ni favoris. L'avatar ouvre l'`AccountMenu`. Liens de Leenkey : « Acheter », « Vendre » (la page d'accueil actuelle, écrite pour les vendeurs), « Valoriser mon bien » ; pas de « Guides » (`DECISIONS.md`, 2026-10-17).
 
@@ -696,7 +696,7 @@ Tout écran de la V2 relève d'un de ces gabarits.
 Capture de référence entre parenthèses. Les valeurs non citées suivent les composants de la section 10.
 
 ### 12.1 Inscription `/inscription` (`Inscription.png`, G5 simplifié)
-Fond blanc. En-tête : retour `stone` / « Leenkey » 18 px 700 large / espace 44. Bloc titre (padding 28 × 24 × 0) : H1 « Créez votre compte » 26 px ; « Un seul compte pour vendre votre bien ou pour chercher le vôtre. » 14 px `--lk-ink-3`. `RoleCard` ×2. Champs (écart 14) : Prénom et nom, Email, Téléphone (facultatif), Mot de passe. Case CGU avec liens. « Créer mon compte » `primary lg` plein largeur ; « Déjà un compte ? Se connecter ». Pied collé en bas : cadenas `--lk-success` + « Vos données restent confidentielles. Aucune diffusion à des tiers. » 12 px.
+Fond blanc. En-tête : retour `stone` / logo 28 px de haut / espace 44. Bloc titre (padding 28 × 24 × 0) : H1 « Créez votre compte » 26 px ; « Un seul compte pour vendre votre bien ou pour chercher le vôtre. » 14 px `--lk-ink-3`. `RoleCard` ×2. Champs (écart 14) : Prénom et nom, Email, Téléphone (facultatif), Mot de passe. Case CGU avec liens. « Créer mon compte » `primary lg` plein largeur ; « Déjà un compte ? Se connecter ». Pied collé en bas : cadenas `--lk-success` + « Vos données restent confidentielles. Aucune diffusion à des tiers. » 12 px.
 
 ### 12.2 Création du bien, étape 2 `/vendeur/biens/nouveau` (`Bien.png`, G5)
 Fond `--lk-bg`. `AppHeader` « Mon bien » + « Enregistrer » + `ProgressBar` « Étape 2 sur 4 · Caractéristiques / 50 % ». `InfoNote` de reprise d'estimation. Type de bien (select). Grille 2 × 2 : Surface (`UnitInput` m²), Pièces, Chambres, Étage. DPE (`SegmentedPicker` A–G). Atouts (`ChipToggle` en flex-wrap, écart 8). `PhotoUploader`. Barre d'actions collée Précédent / Continuer.
@@ -807,11 +807,11 @@ Contenu et textes : `SPEC-V2` section 13 (modèle de Cédric). Mise en forme :
 
 ## 14. Supports hors interface
 
-**Emails (React Email)** : fond `#F4F4F1`, carte blanche 560 px, rayon 6, bandeau haut 8 px `#1156FC`, logo « Leenkey » texte 20 px 700, titres Archivo avec repli Arial gras (les clients mail ignorent `font-stretch` : prévoir le rendu en Arial), corps 15 px / 1,6 `#0F1E35`, bouton principal `#1156FC` 48 px rayon 4 texte blanc 600, pied 12 px `#5B6474`. Préfixe `[PREPROD]` hors prod.
+**Emails (React Email)** : fond `#F4F4F1`, carte blanche 560 px, rayon 6, bandeau haut 8 px `#1156FC`, logo « Leenkey » texte 20 px 700 (le logo en image viendra avec les emails de L1-22 : la plupart des clients mail n'affichent pas un SVG), titres Archivo avec repli Arial gras (les clients mail ignorent `font-stretch` : prévoir le rendu en Arial), corps 15 px / 1,6 `#0F1E35`, bouton principal `#1156FC` 48 px rayon 4 texte blanc 600, pied 12 px `#5B6474`. Préfixe `[PREPROD]` hors prod.
 
 **PDF de l'offre** (`@react-pdf/renderer`) : A4, marges 20 mm, police Archivo embarquée (fichiers TTF dans `public/fonts/`), titre « OFFRE D'ACHAT LEENKEY » 18 pt 700 (seul texte en majuscules autorisé, car c'est le titre juridique fourni par Cédric), sections numérotées 1 à 7 (séquence réelle du document), corps 10 pt / 1,5, filet bleu 2 pt sous l'en-tête, pied avec référence, version et pagination. Aucun statut de qualification (`SPEC-V2` section 13).
 
-**Image de partage (Open Graph)** `/api/og/[slug]` : 1200 × 630, photo principale à gauche (60 %), bandeau `#1156FC` à droite : prix 64 px 700 large blanc, « Appartement 3 pièces · 68 m² » 28 px, ville 24 px `#F0F4FF`, « Leenkey » 24 px en bas. Image par défaut : `facade.svg` blanc sur bleu + « Leenkey ».
+**Image de partage (Open Graph)** `/api/og/[slug]` : 1200 × 630, photo principale à gauche (60 %), bandeau `#1156FC` à droite : prix 64 px 700 large blanc, « Appartement 3 pièces · 68 m² » 28 px, ville 24 px `#F0F4FF`, logo blanc de 32 px de haut en bas (`public/brand/logo-white.svg`, le mot « Leenkey » 24 px sans son fichier). Image par défaut : `facade.svg` blanc sur bleu + « Leenkey ».
 
 ---
 

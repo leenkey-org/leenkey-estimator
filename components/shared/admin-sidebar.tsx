@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AccountMenu, type AccountMenuProps } from "./account-menu";
+import { Logo } from "./logo";
 import { NavIcon } from "./nav-icon";
 import { currentHref, type NavItem } from "./nav-items";
 import { fr } from "@/lib/i18n/fr";
@@ -51,7 +52,7 @@ export function AdminSidebar({
         href={homeHref}
         className={cn("flex flex-col gap-0.5 self-start rounded-lk-sm px-2", darkFocus)}
       >
-        <span className="text-lk-logo font-bold text-wide">{fr.nav.brand}</span>
+        <Logo tone="white" />
         <span className="text-lk-micro text-white/60">{fr.nav.backOffice}</span>
       </Link>
       <nav aria-label={label}>

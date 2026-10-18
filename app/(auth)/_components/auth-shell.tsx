@@ -2,11 +2,12 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronLeft, Lock } from "lucide-react";
 import { iconButtonVariants } from "@/components/shared/icon-button";
+import { Logo } from "@/components/shared/logo";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 
 /**
- * Header (back on stone, « Leenkey » 18 px, 44 px spacer), title block and
+ * Header (back on stone, logo 28 px high, 44 px spacer), title block and
  * 560 px column of DESIGN.md 12.1; optional privacy note at the bottom.
  */
 export function AuthShell({
@@ -33,7 +34,7 @@ export function AuthShell({
         >
           <ChevronLeft aria-hidden="true" />
         </Link>
-        <span className="text-lk-logo font-bold text-wide text-lk-ink">{fr.auth.brand}</span>
+        <Logo />
         <span aria-hidden="true" className="size-11" />
       </header>
       <main className="flex flex-1 flex-col pt-7">
