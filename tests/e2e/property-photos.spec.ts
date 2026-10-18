@@ -94,7 +94,7 @@ test("photos de l'étape 2 : envoi, refus propres, ordre, légende, suppression,
   const id = new URL(page.url()).pathname.split("/")[3];
 
   const photos = page.getByRole("region", { name: "Photos" });
-  await expect(photos.getByText("0 photos sur 15")).toBeAttached();
+  await expect(photos.getByText("0 photo sur 15")).toBeAttached();
   const upload = page.locator('input[type="file"]');
   const status = photos.getByRole("status");
 
@@ -109,28 +109,33 @@ test("photos de l'étape 2 : envoi, refus propres, ordre, légende, suppression,
   await expectNoSeriousViolation(page);
 
   // Its files: signed for the owner, never cached; nothing for a visitor.
-  const src = await tiles.nth(0).locator("img").getAttribute("src");
-  // next/image gives the largest file as src, the others in srcset (lib/images/loader.ts).
+  // next/image gives the largest file as src, the others in srcset (lib/images/loader.ts);
+  // with an error handler (Photo), it writes the src again, absolute, after hydration.
+  const written = await tiles.nth(0).locator("img").getAttribute("src");
+  const src = new URL(written ?? "", page.url()).pathname;
   expect(src).toMatch(new RegExp(`^/img/${id}/[0-9a-f-]{36}-1600\\.webp$`));
   expect(await tiles.nth(0).locator("img").getAttribute("srcset")).toContain("-400.webp 400w");
-  const own = await page.request.get(src ?? "", { maxRedirects: 0 });
+  const own = await page.request.get(src, { maxRedirects: 0 });
   expect(own.status()).toBe(302);
   expect(own.headers()["cache-control"]).toBe("private, no-store");
   expect(own.headers().location).toContain("/storage/v1/object/sign/photos/");
   const image = await page.request.get(own.headers().location);
   expect(image.headers()["content-type"]).toBe("image/webp");
   const visitor = await browser.newContext();
-  expect((await visitor.request.get(new URL(src ?? "", page.url()).href)).status()).toBe(404);
+  expect((await visitor.request.get(new URL(src, page.url()).href)).status()).toBe(404);
   await visitor.close();
 
-  // Refused cleanly, each with its reason; the others stay.
+  // Refused cleanly, one alert per file with its reason; the others stay.
   await upload.setInputFiles([files.pdf, files.small, files.fake]);
-  const alert = photos.getByRole("alert");
-  await expect(alert).toContainText("« notes.pdf » : ce format n'est pas accepté");
-  await expect(alert).toContainText(
+  const alerts = photos.getByRole("alert");
+  for (const reason of [
+    "« notes.pdf » : ce format n'est pas accepté",
     "« petite.jpg » est trop petite : 800 × 600 pixels au minimum.",
-  );
-  await expect(alert).toContainText("« fausse.jpg » n'a pas pu être lue.");
+    "« fausse.jpg » n'a pas pu être lue.",
+  ]) {
+    await expect(alerts.filter({ hasText: reason })).toHaveCount(1);
+  }
+  await expect(alerts).toHaveCount(3);
   await expect(tiles).toHaveCount(2);
 
   // A caption, from the sheet of the photo.
@@ -179,7 +184,9 @@ test("photos de l'étape 2 : envoi, refus propres, ordre, légende, suppression,
 
   // 15 at most: the 15th fills the grid, the 16th is refused.
   await upload.setInputFiles(files.more);
-  await expect(alert).toContainText("15 photos au maximum : « piece-15.jpg » n'a pas été ajoutée.");
+  await expect(
+    alerts.filter({ hasText: "15 photos au maximum : « piece-15.jpg » n'a pas été ajoutée." }),
+  ).toHaveCount(1);
   await expect(status).toHaveText("Photo ajoutée : 15 sur 15.", { timeout: 60_000 });
   await expect(tiles).toHaveCount(15);
   await expect(photos.getByRole("button", { name: "15 photos au maximum" })).toBeDisabled();
@@ -188,8 +195,9 @@ test("photos de l'étape 2 : envoi, refus propres, ordre, légende, suppression,
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page).toHaveURL("/vendeur");
   const row = page.locator(`a[href^="/vendeur/biens/${id}/"]`);
+  // Absolute once hydrated (Photo, as above).
   await expect(row.locator("img")).toHaveAttribute(
     "src",
-    new RegExp(`^/img/${id}/[0-9a-f-]{36}-1600\\.webp$`),
+    new RegExp(`^(?:https?://[^/]+)?/img/${id}/[0-9a-f-]{36}-1600\\.webp$`),
   );
 });
