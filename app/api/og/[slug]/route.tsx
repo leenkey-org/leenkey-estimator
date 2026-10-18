@@ -6,13 +6,15 @@ import {
 } from "@/components/shared/facade-drawing-shapes";
 import { listingSummary } from "@/leenkey/listings/presentation";
 import { getPublicListing } from "@/leenkey/listings/queries";
+import { SHARE_PHOTO, sharePhoto } from "@/leenkey/listings/share-photo";
 import { NBSP, NNBSP, formatPrice } from "@/lib/format";
 
 // Open Graph image of a listing (SPEC-V2 8.5, docs/DESIGN.md 14): 1200 × 630,
 // main photo on the left (60 %), blue band on the right with the price in
-// wide Archivo, the summary, the town and « Leenkey ». No photo before L1-12:
-// facade.svg on stone. Colours of docs/DESIGN.md 2.1 and 14, written out
-// because the image is drawn outside the CSS of the site.
+// wide Archivo, the summary, the town and « Leenkey ». Without a photo, or
+// when it cannot be read in time, facade.svg on stone. Colours of
+// docs/DESIGN.md 2.1 and 14, written out because the image is drawn outside
+// the CSS of the site.
 
 const BLUE = "#1156FC"; // --lk-blue
 const ON_BLUE_2 = "#F0F4FF"; // --lk-on-blue-2
@@ -25,7 +27,8 @@ type Font = { name: string; data: ArrayBuffer; weight: 500 | 700; style: "normal
  * Archivo from Google Fonts, limited to the characters drawn: semi-expanded
  * bold (the closest static instance to the 116 % width of the site) for the
  * price and the brand, normal width for the rest. Without the network, the
- * default font of next/og is used.
+ * default font of next/og is used, for both (a font of the list without the
+ * characters of the other text would leave them blank; an empty list, none).
  */
 async function loadFont(axes: string, text: string): Promise<ArrayBuffer | null> {
   try {
@@ -55,9 +58,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
   const price = formatPrice(listing.priceCents).replaceAll(NNBSP, NBSP);
   const summary = listingSummary(listing).replaceAll(NNBSP, NBSP);
   const brand = "Leenkey";
-  const [wide, regular] = await Promise.all([
+  const cover = listing.photos[0];
+  const [wide, regular, photo] = await Promise.all([
     loadFont("wdth,wght@112.5,700", `${price}${brand}`),
     loadFont("wght@500", `${summary}${listing.city}`),
+    cover ? sharePhoto(cover.path) : null,
   ]);
   const fonts: Font[] = [];
   if (wide) fonts.push({ name: "Archivo Wide", data: wide, weight: 700, style: "normal" });
@@ -65,33 +70,46 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
 
   return new ImageResponse(
     <div style={{ display: "flex", width: "100%", height: "100%" }}>
-      <div
-        style={{
-          display: "flex",
-          width: 720,
-          height: "100%",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: STONE_2,
-        }}
-      >
-        <svg width={288} height={159} viewBox={FACADE_VIEWBOX} fill="none">
-          {FACADE_OUTLINE.paths.map((d) => (
-            <path key={d} d={d} stroke={INK_3} strokeWidth={FACADE_OUTLINE.strokeWidth} />
-          ))}
-          {FACADE_OUTLINE.rects.map((rect) => (
-            <rect
-              key={`${rect.x}-${rect.y}`}
-              {...rect}
-              stroke={INK_3}
-              strokeWidth={FACADE_OUTLINE.strokeWidth}
-            />
-          ))}
-          {FACADE_DIMENSION.paths.map((d) => (
-            <path key={d} d={d} stroke={INK_3} strokeWidth={FACADE_DIMENSION.strokeWidth} />
-          ))}
-        </svg>
-      </div>
+      {photo ? (
+        // Already cropped to the area: drawn as it is.
+        <div
+          style={{
+            display: "flex",
+            width: SHARE_PHOTO.width,
+            height: SHARE_PHOTO.height,
+            backgroundImage: `url(${photo})`,
+            backgroundSize: `${SHARE_PHOTO.width}px ${SHARE_PHOTO.height}px`,
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            width: SHARE_PHOTO.width,
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: STONE_2,
+          }}
+        >
+          <svg width={288} height={159} viewBox={FACADE_VIEWBOX} fill="none">
+            {FACADE_OUTLINE.paths.map((d) => (
+              <path key={d} d={d} stroke={INK_3} strokeWidth={FACADE_OUTLINE.strokeWidth} />
+            ))}
+            {FACADE_OUTLINE.rects.map((rect) => (
+              <rect
+                key={`${rect.x}-${rect.y}`}
+                {...rect}
+                stroke={INK_3}
+                strokeWidth={FACADE_OUTLINE.strokeWidth}
+              />
+            ))}
+            {FACADE_DIMENSION.paths.map((d) => (
+              <path key={d} d={d} stroke={INK_3} strokeWidth={FACADE_DIMENSION.strokeWidth} />
+            ))}
+          </svg>
+        </div>
+      )}
       <div
         style={{
           display: "flex",
@@ -127,10 +145,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     {
       width: 1200,
       height: 630,
-      fonts,
+      ...(wide && regular ? { fonts } : {}),
       headers: {
         // The price can change: an hour in browsers, a day at most in the CDN.
-        "cache-control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=82800",
+        // A photo that could not be read is tried again within a minute.
+        "cache-control":
+          cover && !photo
+            ? "public, max-age=60, s-maxage=60"
+            : "public, max-age=3600, s-maxage=3600, stale-while-revalidate=82800",
       },
     },
   );

@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { listingSummary } from "@/leenkey/listings/presentation";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { creationStep, inCreation } from "@/leenkey/properties/creation";
+import { photoUrl } from "@/leenkey/properties/photo-files";
 import { sellerProperties, type SellerProperty } from "@/leenkey/properties/queries";
 import { fr } from "@/lib/i18n/fr";
 import { SpacePage } from "../_components/space-page";
@@ -73,7 +74,10 @@ export default async function SellerHomePage() {
               const status = property.listingStatus ?? "draft";
               const content = (
                 <>
-                  <PropertyThumb className="size-14" />
+                  <PropertyThumb
+                    src={property.coverPath ? photoUrl(property.coverPath) : null}
+                    className="size-14"
+                  />
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <p className="truncate text-lk-compact font-semibold text-lk-ink">
                       {href ? <span className="sr-only">{`${list.resume} : `}</span> : null}

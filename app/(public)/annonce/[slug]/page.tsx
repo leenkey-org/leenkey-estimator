@@ -18,6 +18,7 @@ import { ListingDescription } from "@/leenkey/listings/components/listing-descri
 import { ListingViewTracker } from "@/leenkey/listings/components/listing-view-tracker";
 import { listingKeyFacts } from "@/leenkey/listings/key-facts";
 import {
+  galleryPhotos,
   buyerSignUpHref,
   communeSearchHref,
   listingJsonLd,
@@ -36,8 +37,8 @@ import { absoluteUrl } from "@/lib/site";
 
 // L1-17: public listing page (SPEC-V2 8.5, docs/DESIGN.md 12.7, 12.8).
 // Published listings only: any other status, or an unknown address, is a 404.
-// Not yet here: photos (L1-12, facade.svg meanwhile), map of the area (with
-// Mapbox), assistant summary (L2-05), offer (L2), documents (L3). Favourite
+// Photos (L1-12): the gallery, facade.svg without them. Not yet here: map of
+// the area (with Mapbox), assistant summary (L2-05), offer (L2), documents (L3). Favourite
 // (L1-18): over the mobile gallery, next to the desktop price. Navigation
 // (L1-10): TopNav from 768 px only; on mobile the gallery and the action bar
 // stay alone, without bottom tabs. SiteFooter at the end (L1-36), with room
@@ -110,7 +111,7 @@ export default async function ListingPage({ params }: Props) {
           className="hidden pt-5 lg:block"
         />
         <Gallery
-          photos={[]}
+          photos={galleryPhotos(listing)}
           topLeft={<BackLink />}
           topRight={heart("white-float")}
           className="lg:mt-4"

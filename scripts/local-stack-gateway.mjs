@@ -1,14 +1,16 @@
-// Gateway of scripts/local-stack.sh: serves /auth/v1 (Supabase Auth) and
-// /rest/v1 (PostgREST) under one origin, like a Supabase project, and the
-// email templates of supabase/templates/ to Supabase Auth.
+// Gateway of scripts/local-stack.sh: serves /auth/v1 (Supabase Auth),
+// /rest/v1 (PostgREST) and /storage/v1 (Supabase Storage) under one origin,
+// like a Supabase project, and the email templates of supabase/templates/ to
+// Supabase Auth.
 import { createReadStream, existsSync } from "node:fs";
 import http from "node:http";
 import { basename, join } from "node:path";
 
-const [port, authPort, restPort, templatesDir, hostIp] = process.argv.slice(2);
+const [port, authPort, restPort, templatesDir, hostIp, storagePort] = process.argv.slice(2);
 const routes = [
   ["/auth/v1", Number(authPort)],
   ["/rest/v1", Number(restPort)],
+  ["/storage/v1", Number(storagePort)],
 ];
 
 function handle(req, res) {

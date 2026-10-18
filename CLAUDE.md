@@ -81,6 +81,7 @@ leenkey/
 │   ├── steps/                 ← moteur d'étapes et de tâches
 │   ├── documents/             ← upload, classement, partage, extraction de texte
 │   ├── geo/                   ← recherche d'adresses et géocodage (Base Adresse Nationale)
+│   ├── images/                ← conversion des images reçues (WebP, sans métadonnées)
 │   ├── ai/                    ← client Anthropic, outils, base de connaissances, quotas
 │   ├── billing/               ← Stripe : checkout, webhooks, plans
 │   ├── messaging/             ← conversations, messages, notifications
@@ -284,7 +285,7 @@ Chaque migration qui touche aux permissions est accompagnée d'un test dans `sup
 - TypeScript strict, pas de `any`, pas de `as unknown as`. Types de base de données depuis `types/database.ts`.
 - Server Components par défaut. `"use client"` uniquement pour l'interactivité (formulaires, carte, chat, realtime).
 - Tout écran V2 est rendu dans `<FacadeRoot>` (design system Façade) ; les jetons Façade portent le préfixe `lk` tant que les pages V1 sont en ligne (`docs/DESIGN.md` 2.2).
-- Mutations via server actions dans `*/actions.ts`, chacune : vérification de session → validation Zod → requête → `revalidatePath` → retour typé `{ ok: true, data } | { ok: false, error }`. Pas de `throw` vers le client.
+- Mutations via server actions dans `*/actions.ts`, chacune : vérification de session → validation Zod → requête → `revalidatePath` → retour typé `{ ok: true, data } | { ok: false, error }`. Pas de `throw` vers le client. Exception : une action dont le composant client garde l'état et reçoit la donnée à jour dans sa réponse (photos du bien, L1-12) n'appelle pas `revalidatePath`, qui rejouerait tout l'écran à chaque appel ; elle le dit en commentaire.
 - Lecture de données dans des fonctions `*/queries.ts`, appelées depuis les Server Components.
 - Nommage : fichiers `kebab-case.tsx`, composants `PascalCase`, fonctions et variables `camelCase`, tables et colonnes `snake_case`.
 - Libellés d'interface en français, code, commentaires et commits en anglais. Textes utilisateur centralisés dans `lib/i18n/fr.ts` (pas de multi-langue prévu, mais pas de chaîne en dur dans les composants).

@@ -10,6 +10,7 @@ import {
 } from "@/lib/validations/property";
 import { DPE_CLASSES, PROPERTY_TYPES } from "@/lib/validations/search";
 import type { Database } from "@/types/database";
+import { readPhotos, type SellerPhoto } from "./photos";
 
 // Properties of the signed-in seller (L1-11), with their session: RLS only
 // shows their own, not deleted.
@@ -24,11 +25,13 @@ export type SellerProperty = {
   /** Values of the form of step 2 (amounts in euros). */
   characteristics: Omit<Characteristics, "propertyId">;
   listingStatus: ListingStatus | null;
+  /** Base of the files of the main photo (photo-files.ts), null without photos. */
+  coverPath: string | null;
   createdAt: string;
 };
 
 const COLUMNS =
-  "id, type, address_line, postal_code, city, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, build_year, is_new_build, dpe_class, ges_class, heating, has_balcony, has_terrace, has_garden, has_parking, has_cellar, has_elevator, charges_monthly_cents, property_tax_yearly_cents, copro_lots, created_at, listing:listings(status)";
+  "id, type, address_line, postal_code, city, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, build_year, is_new_build, dpe_class, ges_class, heating, has_balcony, has_terrace, has_garden, has_parking, has_cellar, has_elevator, charges_monthly_cents, property_tax_yearly_cents, copro_lots, created_at, listing:listings(status), photos(storage_path, is_cover)";
 
 type Row = NonNullable<Awaited<ReturnType<typeof readOne>>["data"]>;
 
@@ -81,6 +84,7 @@ function toSellerProperty(row: Row): SellerProperty {
       coproLots: row.copro_lots,
     },
     listingStatus: listing?.status ?? null,
+    coverPath: row.photos.find((photo) => photo.is_cover)?.storage_path ?? null,
     createdAt: row.created_at,
   };
 }
@@ -124,4 +128,10 @@ export async function sellerProperties(profileId: string): Promise<QueryResult<S
     });
     return { ok: false, error: "unavailable" };
   }
+}
+
+/** The photos of a property of the seller (step 2), in their order. */
+export async function sellerPhotos(propertyId: string): Promise<QueryResult<SellerPhoto[]>> {
+  await requireProfile();
+  return readPhotos(await createClient(), propertyId);
 }

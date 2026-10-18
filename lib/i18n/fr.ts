@@ -287,6 +287,7 @@ export const fr = {
       title: "Décrivez votre bien",
       required: "Le type, la surface et le nombre de pièces sont nécessaires pour continuer.",
       requiredLand: "Le type et la surface sont nécessaires pour continuer.",
+      photosBusy: "Vos photos sont en cours d'envoi : patientez un instant, puis réessayez.",
       type: "Type de bien",
       typePlaceholder: "Choisir le type",
       surface: "Surface habitable",
@@ -330,6 +331,61 @@ export const fr = {
       roomsAtLeastOne: "Un logement compte au moins une pièce.",
       cents: "Deux chiffres après la virgule au plus.",
     } as Record<string, string>,
+    photos: {
+      title: "Photos",
+      count: (count: number, max: number) => `${count} / ${max}`,
+      countLabel: (count: number, max: number) =>
+        `${count} ${count > 1 ? "photos" : "photo"} sur ${max}`,
+      add: "Ajouter des photos",
+      full: (max: number) => `${max} photos au maximum`,
+      help: "JPEG, PNG ou WebP, 10 Mo au plus. La première photo est la photo principale de l'annonce.",
+      hint: "Entrée pour les options de la photo, flèches gauche et droite pour la déplacer.",
+      main: "Principale",
+      sending: "Envoi…",
+      tile: (index: number, total: number, caption: string | null, main: boolean) =>
+        [`Photo ${index} sur ${total}`, caption, main ? "photo principale" : null]
+          .filter(Boolean)
+          .join(", "),
+      added: (count: number, max: number) => `Photo ajoutée : ${count} sur ${max}.`,
+      moved: (index: number, total: number) =>
+        index === 1
+          ? `Photo déplacée en position 1 sur ${total} : c'est la photo principale.`
+          : `Photo déplacée en position ${index} sur ${total}.`,
+      deleted: "Photo supprimée.",
+      captionSaved: "Légende enregistrée.",
+      errors: {
+        format: (name: string) =>
+          `« ${name} » : ce format n'est pas accepté. Choisissez une photo JPEG, PNG ou WebP.`,
+        tooLarge: (name: string) => `« ${name} » dépasse 10 Mo.`,
+        tooSmall: (name: string, long: number, short: number) =>
+          `« ${name} » est trop petite : ${long} × ${short} pixels au minimum.`,
+        tooHeavy: (name: string) =>
+          `« ${name} » est trop lourde, même réduite. Essayez une autre photo.`,
+        unreadable: (name: string) => `« ${name} » n'a pas pu être lue. Essayez une autre photo.`,
+        full: (name: string, max: number) =>
+          `${max} photos au maximum : « ${name} » n'a pas été ajoutée.`,
+        unavailable: (name: string) => `« ${name} » n'a pas pu être envoyée. Réessayez.`,
+        order: "L'ordre des photos n'a pas pu être enregistré. Réessayez.",
+        change: "La photo n'a pas pu être modifiée. Réessayez.",
+      },
+      sheet: {
+        title: (index: number, total: number) => `Photo ${index} sur ${total}`,
+        back: "Retour aux caractéristiques",
+        close: "Fermer",
+        caption: "Légende",
+        captionPlaceholder: "Séjour, cuisine, jardin…",
+        captionHelp: "Elle décrit la photo pour les personnes qui ne la voient pas.",
+        saveCaption: "Enregistrer la légende",
+        makeMain: "En faire la photo principale",
+        isMain: "C'est la photo principale",
+        before: "Déplacer avant",
+        after: "Déplacer après",
+        delete: "Supprimer la photo",
+        confirmDelete: "Supprimer définitivement",
+        deleteWarning: "La photo sera supprimée de votre annonce.",
+        cancel: "Annuler",
+      },
+    },
     nextStep: {
       title: "La suite de votre annonce arrive",
       text: "Votre bien est enregistré. Le prix, la description et l'aperçu de l'annonce arrivent avec la prochaine version.",
@@ -891,6 +947,8 @@ export const fr = {
   },
   // L1-17: listing page /annonce/[slug] (SPEC-V2 8.5, docs/DESIGN.md 10.2, 10.3, 12.7, 12.8).
   listing: {
+    photoAlt: (index: number, total: number, subject: string) =>
+      `Photo ${index} sur ${total}, ${subject}`,
     metaTitle: (summary: string, place: string, price: string) =>
       `${summary} ${place} · ${price} · Leenkey`,
     breadcrumb: "Fil d'Ariane",
@@ -903,7 +961,10 @@ export const fr = {
       none: "Pas encore de photo pour ce bien.",
       counter: (index: number, total: number) => `${index} / ${total}`,
       open: (index: number, total: number) => `Agrandir la photo ${index} sur ${total}`,
-      more: (count: number) => `+ ${count}\u00A0photos`,
+      more: (count: number) => `+ ${count}\u00A0${count === 1 ? "photo" : "photos"}`,
+      /** The tile that shows « + 2 photos »: its name starts with what it shows. */
+      openMore: (count: number, index: number, total: number) =>
+        `+ ${count}\u00A0${count === 1 ? "photo" : "photos"}, agrandir la photo ${index} sur ${total}`,
       viewer: "Photos du bien",
       close: "Fermer",
       previous: "Photo précédente",

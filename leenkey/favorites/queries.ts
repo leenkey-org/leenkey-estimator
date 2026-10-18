@@ -3,7 +3,7 @@ import { getProfile } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { chunk } from "@/lib/utils";
 import { DPE_CLASSES } from "@/lib/validations/search";
-import type { SearchListing } from "@/leenkey/search/queries";
+import { withCovers, type SearchListing } from "@/leenkey/search/queries";
 
 // Favourites of the signed-in account (L1-18), with the visitor's session:
 // RLS only shows their own rows, and public_listings only published ones.
@@ -110,9 +110,10 @@ export async function listFavorites(profileId: string): Promise<QueryResult<Favo
         hasParking: row.has_parking,
         hasCellar: row.has_cellar,
         dpe: DPE_CLASSES.find((letter) => letter === row.dpe_class) ?? null,
+        cover: null,
       });
     }
-    const items = ids.flatMap((id) => byId.get(id) ?? []);
+    const items = await withCovers(ids.flatMap((id) => byId.get(id) ?? []));
     return { ok: true, data: { items, offline: ids.length - items.length } };
   } catch (error) {
     console.error("[favorites] list failed", {

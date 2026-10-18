@@ -4,6 +4,7 @@ import { requireAdmin } from "@/core/auth/session";
 import type { DpeClass } from "@/components/shared/dpe-badge";
 import type { PublicListing } from "@/leenkey/listings/queries";
 import { createClient } from "@/lib/supabase/server";
+import { chunk } from "@/lib/utils";
 import type { AdminListingsQuery } from "@/lib/validations/admin";
 import { DPE_CLASSES } from "@/lib/validations/search";
 import type { Database } from "@/types/database";
@@ -30,6 +31,8 @@ export type AdminListingRow = {
   postalCode: string;
   sellerName: string | null;
   plan: PlanCode;
+  /** Base of the files of the main photo, null without photos (L1-12). */
+  coverPath: string | null;
 };
 
 /** The rows, and whether more listings match than the page shows. */
@@ -97,7 +100,7 @@ export async function adminListings(
       p_limit: ADMIN_LISTINGS_LIMIT + 1,
     });
     if (error) throw new Error(`admin_listings: ${error.code} ${error.message}`);
-    const rows = data.slice(0, ADMIN_LISTINGS_LIMIT).map((row) => ({
+    const rows: AdminListingRow[] = data.slice(0, ADMIN_LISTINGS_LIMIT).map((row) => ({
       id: row.id,
       reference: row.reference,
       slug: row.slug,
@@ -111,7 +114,34 @@ export async function adminListings(
       postalCode: row.postal_code,
       sellerName: fullName(row.seller_first_name, row.seller_last_name),
       plan: row.plan,
+      coverPath: null,
     }));
+    // Main photos, 100 listings per read (length of the address): the admin
+    // reads every photo (RLS). Without them, the drawing.
+    const covers = await Promise.all(
+      chunk(
+        rows.map((row) => row.id),
+        100,
+      ).map((ids) =>
+        supabase
+          .from("listings")
+          .select("id, property:properties!inner(photos(storage_path))")
+          .eq("property.photos.is_cover", true)
+          .in("id", ids),
+      ),
+    );
+    const byListing = new Map<string, string>();
+    for (const answer of covers) {
+      if (answer.error) {
+        logFailure("covers", answer.error, { user_id: admin.id });
+        continue;
+      }
+      for (const entry of answer.data) {
+        const cover = entry.property.photos[0]?.storage_path;
+        if (cover) byListing.set(entry.id, cover);
+      }
+    }
+    for (const row of rows) row.coverPath = byListing.get(row.id) ?? null;
     return { ok: true, data: { rows, limited: data.length > ADMIN_LISTINGS_LIMIT } };
   } catch (error) {
     // Not the search itself: it may be the name of a person.
@@ -141,7 +171,7 @@ export async function adminListingCounts(): Promise<QueryResult<AdminListingCoun
 }
 
 const DETAIL_COLUMNS =
-  "id, reference, slug, title, description, price_cents, status, created_at, submitted_at, published_at, suspended_at, rejection_reason, suspension_reason, property:properties!inner(owner_id, type, city, postal_code, district, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, has_elevator, has_balcony, has_terrace, has_garden, has_parking, has_cellar, orientation, build_year, is_new_build, dpe_class, ges_class, heating, charges_monthly_cents, property_tax_yearly_cents, copro_lots, deleted_at, owner:profiles!properties_owner_id_fkey(first_name, last_name), progress:sale_progress(plan))";
+  "id, reference, slug, title, description, price_cents, status, created_at, submitted_at, published_at, suspended_at, rejection_reason, suspension_reason, property:properties!inner(owner_id, type, city, postal_code, district, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, has_elevator, has_balcony, has_terrace, has_garden, has_parking, has_cellar, orientation, build_year, is_new_build, dpe_class, ges_class, heating, charges_monthly_cents, property_tax_yearly_cents, copro_lots, deleted_at, owner:profiles!properties_owner_id_fkey(first_name, last_name), progress:sale_progress(plan), photos(storage_path, width, height, caption, position))";
 
 const energyClass = (value: string | null): DpeClass | null =>
   DPE_CLASSES.find((letter) => letter === value) ?? null;
@@ -241,6 +271,14 @@ export const adminListing = cache(async function adminListing(
           coproLots: property.copro_lots,
           sellerFirstName: property.owner?.first_name ?? null,
           accompanied: advisorPlans.data.some((entitlement) => entitlement.plan === plan),
+          photos: [...property.photos]
+            .sort((a, b) => a.position - b.position)
+            .map((photo) => ({
+              path: photo.storage_path,
+              width: photo.width,
+              height: photo.height,
+              caption: photo.caption,
+            })),
         },
         status: row.status,
         createdAt: row.created_at,

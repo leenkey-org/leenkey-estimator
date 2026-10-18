@@ -121,6 +121,7 @@ describe("chip labels", () => {
 });
 
 const flat: SearchListing = {
+  cover: null,
   id: "623efc8b-97d4-4902-ac43-406417498893",
   slug: "appartement-3-pieces-savigny-sur-orge-lk0005",
   title: "Appartement 3 pièces avec balcon, proche gare",

@@ -50,6 +50,16 @@ export type PublicListing = {
   sellerFirstName: string | null;
   /** The plan of the sale includes a Leenkey adviser (plan_entitlements). */
   accompanied: boolean;
+  /** In their order, the first is the main one (L1-12). */
+  photos: ListingPhoto[];
+};
+
+export type ListingPhoto = {
+  /** Base of its files (leenkey/properties/photo-files.ts). */
+  path: string;
+  width: number | null;
+  height: number | null;
+  caption: string | null;
 };
 
 export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavailable" };
@@ -98,6 +108,14 @@ export const getPublicListing = cache(
       ) {
         return { ok: true, data: null };
       }
+      // Without its photos the page still shows: the gallery keeps the drawing.
+      const photos = await supabase.rpc("public_listing_photos", { p_listing_ids: [row.id] });
+      if (photos.error) {
+        console.error("[listings] photos read failed", {
+          entity_id: row.id,
+          code: photos.error.code,
+        });
+      }
       return {
         ok: true,
         data: {
@@ -135,6 +153,13 @@ export const getPublicListing = cache(
           coproLots: row.copro_lots,
           sellerFirstName: row.seller_first_name,
           accompanied: (advisorPlans.data ?? []).some((entry) => entry.plan === row.plan),
+          photos: (photos.data ?? []).map((photo) => ({
+            path: photo.path,
+            // Generated types declare the columns of a function result as never null.
+            width: (photo.width as number | null) ?? null,
+            height: (photo.height as number | null) ?? null,
+            caption: (photo.caption as string | null) ?? null,
+          })),
         },
       };
     } catch (error) {

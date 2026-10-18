@@ -6,7 +6,7 @@
 -- file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(26);
+select plan(28);
 \ir _plan.psql
 
 -- ===========================================================================
@@ -75,6 +75,12 @@ select throws_ok($$insert into properties (owner_id, address_line, postal_code, 
 \set who buyer_c
 \ir _as.psql
 select is((select count(*) from properties where id = :'draft')::int, 0, 'buyer_c: does not see the draft');
+\set who buyer_d
+\ir _as.psql
+select is((select count(*) from properties where id = :'draft')::int, 0, 'buyer_d: does not see the draft');
+select throws_ok($$insert into properties (owner_id, address_line, postal_code, city)
+                   values (tests.uid('seller_a'), '1 rue X', '99995', 'Brouillonville')$$,
+                 '42501', null, 'buyer_d: cannot create a draft for seller_a');
 \set who anon
 \ir _as.psql
 select throws_ok($$insert into properties (owner_id, address_line, postal_code, city)

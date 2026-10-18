@@ -11,11 +11,12 @@
 - [ ] Clé service utilisée uniquement dans `lib/supabase/admin.ts`, importé seulement par les webhooks, les crons et `leenkey/admin/actions.ts` (jamais dans `core/ai/`)
 - [ ] Fonctions `security definer` (`create_case`, transitions de statut, `financing_document_check`) : `search_path` fixé, contrôle de `auth.uid()` et des paramètres, testées
 - [ ] Statut `suspended` : aucune fonction ni politique ne permet au vendeur d'en sortir (test)
-- [ ] Buckets Storage privés, URLs signées de courte durée, aucune URL permanente
+- [ ] Buckets Storage privés, URLs signées de courte durée, aucune URL permanente (photos : route `/img`, politiques `photos_files_*`, test `supabase/tests/rls_photos.sql`)
+- [ ] Modération d'une annonce en ligne (L1-14) : aucune modification sans relecture de Leenkey. Aujourd'hui, le vendeur peut encore changer directement, par l'API, le titre, la description, le prix, les caractéristiques et les légendes d'une annonce en ligne (droits de L1-04) ; et une URL d'envoi signée de Supabase Storage (valable 2 h, les politiques ne sont contrôlées qu'à sa création) obtenue pendant la création permet de remplacer un fichier de photo après l'envoi. À fermer avec `listing_revisions`, et pour les photos par une lecture publique limitée aux fichiers inchangés depuis la publication (test dans `rls_photos.sql`)
 
 ## Entrées et abus
 - [ ] Validation Zod sur toutes les Server Actions et routes API
-- [ ] Uploads : type MIME vérifié côté serveur, taille maximale, conversion des images
+- [ ] Uploads : type MIME vérifié côté serveur, taille maximale, conversion des images (photos : format lu dans le contenu, 60 millions de pixels au plus, métadonnées retirées, `core/images/webp.ts`)
 - [ ] Limites de débit : connexion, inscription, messages, assistant IA, offres
 - [ ] Quotas IA par utilisateur actifs, journalisation dans `ai_*`
 
@@ -24,7 +25,7 @@
 - [ ] Variables par environnement dans Vercel, clés prod différentes des clés staging
 - [ ] Webhook Stripe : signature vérifiée, idempotence testée (même événement envoyé deux fois)
 - [ ] Routes `/api/cron/*` protégées par `CRON_SECRET`
-- [ ] En-têtes : CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy
+- [ ] En-têtes : CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy (la CSP autorise l'origine du stockage Supabase dans `img-src` : les photos signées en viennent)
 - [ ] Clés Mapbox restreintes au domaine
 - [ ] Préprod : mot de passe du middleware actif, `X-Robots-Tag: noindex`, aucune variable de prod dans le projet Vercel `leenkey-v2`
 

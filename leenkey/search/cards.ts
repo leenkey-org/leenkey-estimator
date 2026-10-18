@@ -1,10 +1,11 @@
 import type { SearchListing } from "./queries";
 import type { PropertyCardData } from "@/components/shared/property-card";
+import { photoUrl } from "@/leenkey/properties/photo-files";
 import { NBSP, formatDateShort, parisDaysAgo } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 
-// Search result → PropertyCard (docs/DESIGN.md 10.3). Without photos until
-// L1-12: the card shows facade.svg on stone.
+// Search result → PropertyCard (docs/DESIGN.md 10.3): its main photo, or
+// facade.svg on stone without one.
 
 const t = fr.search.card;
 const SEPARATOR = `${NBSP}· `;
@@ -61,7 +62,9 @@ export function toPropertyCard(listing: SearchListing, now: Date = new Date()): 
     location: placeLabel(listing.city, listing.district),
     locationDetail: floorLabel(listing),
     dpe: listing.dpe,
-    photo: null,
+    // Decorative: the card says what the photo shows.
+    photo: listing.cover ? { src: photoUrl(listing.cover.path), alt: "" } : null,
+    photoCount: listing.cover?.total,
     highlights: highlights(listing),
     note: note ? { text: note } : undefined,
   };

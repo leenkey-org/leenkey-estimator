@@ -1,10 +1,10 @@
 "use client";
 
 import { useRef, useState, type ReactNode, type TouchEvent } from "react";
-import Image from "next/image";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { FacadeDrawing } from "./facade-drawing";
+import { Photo } from "./photo";
 import { facadeScope } from "./facade-root";
 import { IconButton } from "./icon-button";
 import { fr } from "@/lib/i18n/fr";
@@ -66,14 +66,7 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
                 onClick={() => setViewer(index)}
                 className="relative h-full w-full shrink-0 snap-center"
               >
-                <Image
-                  src={photo.src}
-                  alt={photo.alt}
-                  fill
-                  sizes="100vw"
-                  priority={index === 0}
-                  className="object-cover"
-                />
+                <Photo src={photo.src} alt={photo.alt} sizes="100vw" priority={index === 0} />
               </button>
             ))}
           </div>
@@ -113,13 +106,11 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
               onClick={() => setViewer(0)}
               className="relative row-span-full overflow-hidden rounded-lk-md"
             >
-              <Image
+              <Photo
                 src={photo.src}
                 alt={photo.alt}
-                fill
                 sizes="(min-width: 1280px) 600px, 50vw"
                 priority
-                className="object-cover"
               />
             </button>
           ))}
@@ -129,17 +120,11 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
               <button
                 key={photo.src}
                 type="button"
-                aria-label={t.open(index + 2, total)}
+                aria-label={more ? t.openMore(more, index + 2, total) : t.open(index + 2, total)}
                 onClick={() => setViewer(index + 1)}
                 className="relative overflow-hidden rounded-lk-sm"
               >
-                <Image
-                  src={photo.src}
-                  alt={photo.alt}
-                  fill
-                  sizes="300px"
-                  className="object-cover"
-                />
+                <Photo src={photo.src} alt={photo.alt} sizes="300px" />
                 {more ? (
                   <span className="absolute inset-0 flex items-center justify-center bg-lk-ink/55 text-lk-label font-semibold text-white">
                     {t.more(more)}
@@ -214,12 +199,13 @@ function Viewer({
               go(end < start ? 1 : -1);
             }}
           >
-            <Image
+            {/* One per photo: its own loading, its own failure. */}
+            <Photo
+              key={photos[current].src}
               src={photos[current].src}
               alt={photos[current].alt}
-              fill
               sizes="100vw"
-              className="object-contain"
+              fit="contain"
             />
           </div>
           {total > 1 ? (
