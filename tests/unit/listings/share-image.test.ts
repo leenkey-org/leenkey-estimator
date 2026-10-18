@@ -7,6 +7,14 @@ import type { PublicListing } from "@/leenkey/listings/queries";
 
 vi.mock("server-only", () => ({}));
 
+// The white logo of the band, read from public/: the real file, unless a test fails it.
+const readFile = vi.hoisted(() => vi.fn());
+vi.mock("node:fs/promises", async (original) => {
+  const actual = await original<typeof import("node:fs/promises")>();
+  readFile.mockImplementation(actual.readFile);
+  return { ...actual, readFile };
+});
+
 const path = "623efc8b-97d4-4902-ac43-406417498893/0b7d4c1e-5f3a-4b8e-9c2d-1a6e8f4b3c27";
 
 const listing: PublicListing = {
@@ -83,8 +91,11 @@ function network(photo: () => Promise<Response>) {
   );
 }
 
-async function render(cache = "public, max-age=3600, s-maxage=3600, stale-while-revalidate=82800") {
-  const response = await GET(new Request(`http://localhost/api/og/${listing.slug}`), {
+async function render(
+  cache = "public, max-age=3600, s-maxage=3600, stale-while-revalidate=82800",
+  get = GET,
+) {
+  const response = await get(new Request(`http://localhost/api/og/${listing.slug}`), {
     params: Promise.resolve({ slug: listing.slug }),
   });
   expect(response.status).toBe(200);
@@ -98,6 +109,21 @@ async function render(cache = "public, max-age=3600, s-maxage=3600, stale-while-
     const at = (y * info.width + x) * info.channels;
     return { r: data[at], g: data[at + 1], b: data[at + 2] };
   };
+}
+
+/**
+ * White pixels where the roof of the house of the white logo is, at the
+ * bottom of the band, above where the word « Leenkey » would start.
+ */
+function roof(pixel: (x: number, y: number) => { r: number; g: number; b: number }) {
+  let count = 0;
+  for (let x = 772; x <= 792; x++) {
+    for (let y = 542; y <= 548; y++) {
+      const { r, g, b } = pixel(x, y);
+      if (r > 200 && g > 200 && b > 200) count++;
+    }
+  }
+  return count;
 }
 
 const near = (colour: { r: number; g: number; b: number }) => ({
@@ -124,6 +150,18 @@ describe("share image", () => {
     expect(pixel(10, 10)).toEqual(near(RED));
     expect(pixel(710, 620)).toEqual(near(RED));
     expect(pixel(1190, 315)).toEqual(near(BLUE));
+    expect(roof(pixel)).toBeGreaterThan(0);
+  });
+
+  it("writes the word without the logo file, and reads the file again next time", async () => {
+    network(async () => new Response(null, { status: 500 }));
+    read.mockResolvedValue({ ok: true, data: { ...listing, photos: [] } });
+    // A route never run: the logo not read yet.
+    vi.resetModules();
+    const { GET: fresh } = await import("@/app/api/og/[slug]/route");
+    readFile.mockRejectedValueOnce(new Error("ENOENT"));
+    expect(roof(await render(undefined, fresh))).toBe(0);
+    expect(roof(await render(undefined, fresh))).toBeGreaterThan(0);
   });
 
   it("keeps the drawing when the photo cannot be read, a minute in the caches", async () => {

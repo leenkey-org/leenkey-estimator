@@ -28,6 +28,7 @@ import {
 import { DPE_CLASSES, DpeBadge } from "@/components/shared/dpe-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FacadeDrawing } from "@/components/shared/facade-drawing";
+import { Logo } from "@/components/shared/logo";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { FilterPills } from "@/components/shared/filter-pills";
 import { FormActionBar } from "@/components/shared/form-action-bar";
@@ -721,6 +722,19 @@ export default function DesignPage() {
               />
             </div>
             <Caption>{content.cardCaptions.favourite}</Caption>
+          </Section>
+
+          <Section id="logo" title={content.sections.logo} level="h3">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="flex flex-col gap-3 rounded-lk-md border border-lk-line p-6">
+                <Logo className="h-8" />
+                <Caption>{content.logo.colorCaption}</Caption>
+              </div>
+              <div className="flex flex-col gap-3 rounded-lk-md bg-lk-ink p-6">
+                <Logo tone="white" />
+                <p className="text-lk-caption text-white/70">{content.logo.whiteCaption}</p>
+              </div>
+            </div>
           </Section>
 
           <Section id="aplat" title={content.sections.brandPanel} level="h3">

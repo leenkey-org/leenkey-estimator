@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { InlineAlert } from "@/components/shared/inline-alert";
+import { Logo } from "@/components/shared/logo";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { fr } from "@/lib/i18n/fr";
 
@@ -28,9 +29,9 @@ export function LegalPage({
       <main className="mx-auto w-full max-w-lk-prose flex-1 px-5 py-10">
         <Link
           href="/"
-          className="rounded-lk-sm text-lk-h2 font-bold text-wide text-lk-ink focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
+          className="inline-flex min-h-11 items-center rounded-lk-sm focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
         >
-          {fr.auth.brand}
+          <Logo className="h-8" />
         </Link>
         <h1 className="mt-10 text-lk-h1 font-bold text-wide text-balance text-lk-ink lg:text-lk-h1-lg">
           {title}

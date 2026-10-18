@@ -22,7 +22,6 @@ export const fr = {
   },
   // L1-09: sign-up, login, password, terms (SPEC 8.2, DESIGN.md 12.1 and 13.1).
   auth: {
-    brand: "Leenkey",
     back: "Retour",
     email: "Email",
     emailPlaceholder: "vous@exemple.fr",

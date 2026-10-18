@@ -4,6 +4,7 @@ import { Heart, Plus } from "lucide-react";
 import { AccountMenu, type AccountMenuProps } from "./account-menu";
 import { Button } from "./button";
 import { iconButtonVariants } from "./icon-button";
+import { Logo } from "./logo";
 import type { NavItem } from "./nav-items";
 import { TopNavLinks } from "./top-nav-links";
 import { fr } from "@/lib/i18n/fr";
@@ -25,7 +26,7 @@ export type TopNavAccount =
     };
 
 export type TopNavProps = {
-  /** Destination of the « Leenkey » logo. */
+  /** Destination of the logo. */
   homeHref: string;
   /** Accessible name of the <nav> of the links. */
   label: string;
@@ -40,7 +41,7 @@ export type TopNavProps = {
 
 /**
  * Desktop navigation (docs/DESIGN.md 10.6), from 768 px: 72 px, white, bottom
- * border, sticky. Logo 20 px 700 wide, links, then on the right (gap 6): the
+ * border, sticky. Logo 32 px high, links, then on the right (gap 6): the
  * primary action, and when signed in the bell, the favourites and the avatar
  * of the account menu; when signed out, « Mon compte ». Padding 0 40 and gap
  * 32 from 1024 px, tighter below so that it fits in 768 px.
@@ -62,11 +63,8 @@ export function TopNav({
         className,
       )}
     >
-      <Link
-        href={homeHref}
-        className="inline-flex h-11 shrink-0 items-center rounded-lk-sm text-lk-h2 font-bold text-wide text-lk-ink"
-      >
-        {fr.nav.brand}
+      <Link href={homeHref} className="inline-flex h-11 shrink-0 items-center rounded-lk-sm">
+        <Logo className="h-8" />
       </Link>
       <TopNavLinks label={label} links={links} activeHref={activeHref} />
       <div className="ml-auto flex shrink-0 items-center gap-1.5">

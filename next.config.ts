@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
     // takes 4.5 MB per request.
     serverActions: { bodySizeLimit: "4mb" },
   },
+  // The share image draws the white logo, read from public/ on the server.
+  outputFileTracingIncludes: { "/api/og/**": ["./public/brand/logo-white.svg"] },
   // V1 marketing pages are static HTML fetched at runtime by HtmlPage:
   // never cache them, so a content change is visible on the next visit.
   async headers() {

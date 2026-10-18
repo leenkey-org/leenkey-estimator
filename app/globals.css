@@ -396,8 +396,6 @@ html {
   --text-lk-h3--line-height: 1.3;
   --text-lk-h3-lg: 1.0625rem; /* 17 px */
   --text-lk-h3-lg--line-height: 1.3;
-  --text-lk-logo: 1.125rem; /* 18 px, « Leenkey » in the simplified header (DESIGN.md 12.1) */
-  --text-lk-logo--line-height: 1;
   --text-lk-title: 0.9375rem; /* 15 px, bar and card titles */
   --text-lk-title--line-height: 1.3;
   --text-lk-price: 1.625rem; /* 26 px, main price */
