@@ -25,6 +25,12 @@ describe("gallery", () => {
     expect(html).toContain(">+ 2 photos</span>");
   });
 
+  it("shows the photos sent by the server without waiting for the JavaScript", () => {
+    const html = renderToStaticMarkup(createElement(Gallery, { photos }));
+    expect(html).toContain("opacity-100");
+    expect(html).not.toContain("opacity-0");
+  });
+
   it("names the last tile as the others when every photo is shown", () => {
     const html = renderToStaticMarkup(createElement(Gallery, { photos: photos.slice(0, 5) }));
     expect(html).toContain('aria-label="Agrandir la photo 5 sur 5"');

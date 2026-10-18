@@ -81,6 +81,8 @@ export function PhotoUploader({
   const [photos, setPhotos] = useState(initial);
   const [pending, setPending] = useState<Pending[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
+  // A change not saved (order, caption…), under the refusals of the files.
+  const [changeError, setChangeError] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   // The sheet hides the page from screen readers: its own messages.
   const [notice, setNotice] = useState("");
@@ -98,6 +100,11 @@ export function PhotoUploader({
   const latest = useRef(0);
   // Where the focus goes once the sheet is closed (a deleted photo is gone).
   const afterSheet = useRef<HTMLElement | null>(null);
+  // Whether a sheet is open when an answer comes back, not when it was sent.
+  const sheetOpen = useRef(false);
+  useEffect(() => {
+    sheetOpen.current = sheet !== null;
+  }, [sheet]);
 
   const busy = pending.length > 0 || working;
   useEffect(() => onBusyChange?.(busy), [busy, onBusyChange]);
@@ -121,11 +128,12 @@ export function PhotoUploader({
     setStatus((current) => (current === message ? `${message}${NBSP}` : message));
   }
 
-  /** On a failure: the photos as the server has them, the place of each one. */
+  /** On a failure: the photos as the server has them, unless a change was sent since. */
   async function reload() {
+    const mine = latest.current;
     try {
       const result = await listPhotos({ propertyId });
-      if (result.ok) setPhotos(result.data);
+      if (result.ok && mine === latest.current) setPhotos(result.data);
     } catch (caught) {
       console.error("[properties] photos reload failed", caught);
     }
@@ -214,6 +222,7 @@ export function PhotoUploader({
       }
       if (result?.ok) {
         if (mine === latest.current) setPhotos(result.data);
+        setChangeError(null);
         onDone?.(result.data);
         return;
       }
@@ -226,8 +235,9 @@ export function PhotoUploader({
             : next
               ? t.errors.order
               : t.errors.change;
-      if (sheet) setSheet((current) => current && { ...current, error: message });
-      else setErrors([message]);
+      // Where it is read: in the sheet if one is open now, else under the grid.
+      if (sheetOpen.current) setSheet((current) => current && { ...current, error: message });
+      else setChangeError(message);
     });
   }
 
@@ -399,6 +409,7 @@ export function PhotoUploader({
           {error}
         </InlineAlert>
       ))}
+      {changeError ? <InlineAlert tone="danger">{changeError}</InlineAlert> : null}
       {/* Always in the page: a live region added with its text is not read. */}
       <p role="status" className="sr-only">
         {status}

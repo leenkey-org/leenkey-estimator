@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ChevronLeft, X } from "lucide-react";
 import { Button } from "@/components/shared/button";
@@ -128,6 +128,17 @@ function SheetBody({
 }: Omit<SheetProps, "photo" | "onClose" | "onCloseAutoFocus"> & { photo: SellerPhoto }) {
   const [caption, setCaption] = useState(photo.caption ?? "");
   const [confirming, setConfirming] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const confirmButton = useRef<HTMLButtonElement>(null);
+  const wasWorking = useRef(working);
+
+  // A deletion that failed: its button, disabled while it was sent, takes the
+  // focus back (on success the sheet closes).
+  useEffect(() => {
+    const lost = !root.current?.contains(document.activeElement);
+    if (wasWorking.current && !working && confirming && lost) confirmButton.current?.focus();
+    wasWorking.current = working;
+  }, [working, confirming]);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -142,7 +153,10 @@ function SheetBody({
   };
 
   return (
-    <div className="flex flex-col gap-5 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:px-6 md:pb-6">
+    <div
+      ref={root}
+      className="flex flex-col gap-5 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:px-6 md:pb-6"
+    >
       <div className="relative aspect-[4/3] overflow-hidden rounded-lk-sm bg-lk-stone-2">
         <Photo
           src={photoUrl(photo.path)}
@@ -228,7 +242,7 @@ function SheetBody({
             <Button variant="outline-ink" disabled={working} onClick={() => setConfirming(false)}>
               {t.cancel}
             </Button>
-            <Button variant="danger" loading={working} onClick={onDelete}>
+            <Button ref={confirmButton} variant="danger" loading={working} onClick={onDelete}>
               {t.confirmDelete}
             </Button>
           </div>

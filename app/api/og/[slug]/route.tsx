@@ -27,7 +27,8 @@ type Font = { name: string; data: ArrayBuffer; weight: 500 | 700; style: "normal
  * Archivo from Google Fonts, limited to the characters drawn: semi-expanded
  * bold (the closest static instance to the 116 % width of the site) for the
  * price and the brand, normal width for the rest. Without the network, the
- * default font of next/og is used (an empty list would leave none).
+ * default font of next/og is used, for both (a font of the list without the
+ * characters of the other text would leave them blank; an empty list, none).
  */
 async function loadFont(axes: string, text: string): Promise<ArrayBuffer | null> {
   try {
@@ -144,7 +145,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     {
       width: 1200,
       height: 630,
-      ...(fonts.length > 0 ? { fonts } : {}),
+      ...(wide && regular ? { fonts } : {}),
       headers: {
         // The price can change: an hour in browsers, a day at most in the CDN.
         // A photo that could not be read is tried again within a minute.

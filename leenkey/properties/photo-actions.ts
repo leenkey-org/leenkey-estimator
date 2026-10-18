@@ -146,8 +146,10 @@ export async function addPhoto(formData: FormData): Promise<PhotoActionResult> {
   });
   if (error) {
     await removeFiles(supabase, uploaded, userId);
-    // 23514: a 16th photo added at the same moment (photos_before_insert).
+    // photos_before_insert. 23514: a 16th photo added at the same moment;
+    // 42501: the listing sent for review meanwhile, as readDraft says.
     if (error.code === "23514") return { ok: false, error: "full" };
+    if (error.code === "42501") return { ok: false, error: "not_found" };
     console.error("[properties] photo insert failed", {
       user_id: userId,
       entity_id: propertyId,
@@ -191,7 +193,7 @@ export async function deletePhoto(input: unknown): Promise<PhotoActionResult> {
   return photosOf(supabase, propertyId);
 }
 
-/** The order of the photos: all of them, once; the first becomes the cover. */
+/** The order of the photos: those named first, the others after them; the first is the cover. */
 export async function reorderPhotos(input: unknown): Promise<PhotoActionResult> {
   const parsed = reorderPhotosSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
@@ -205,15 +207,12 @@ export async function reorderPhotos(input: unknown): Promise<PhotoActionResult> 
     p_photo_ids: photoIds,
   });
   if (error) {
-    // 22023: the list is not the photos of the property (another tab).
-    if (error.code !== "22023") {
-      console.error("[properties] photo reorder failed", {
-        user_id: userId,
-        entity_id: propertyId,
-        code: error.code,
-      });
-    }
-    return { ok: false, error: error.code === "22023" ? "invalid" : "unavailable" };
+    console.error("[properties] photo reorder failed", {
+      user_id: userId,
+      entity_id: propertyId,
+      code: error.code,
+    });
+    return { ok: false, error: "unavailable" };
   }
   return photosOf(supabase, propertyId);
 }

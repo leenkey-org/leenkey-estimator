@@ -11,13 +11,23 @@ export type ReducedPhoto =
   | { ok: true; blob: Blob }
   | { ok: false; error: "unreadable" | "too_heavy" };
 
+/** Upright: the JPEG drawn here keeps no EXIF orientation. */
+async function upright(file: File): Promise<ImageBitmap> {
+  try {
+    return await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch (error) {
+    // Older browsers know « none » and « flipY » only: their own default then.
+    if (error instanceof TypeError) return createImageBitmap(file);
+    throw error;
+  }
+}
+
 /** The file to send: as chosen when light enough, else redrawn. */
 export async function reducePhoto(file: File): Promise<ReducedPhoto> {
   if (file.size <= PHOTO_UPLOAD_MAX_BYTES) return { ok: true, blob: file };
   let bitmap: ImageBitmap;
   try {
-    // Upright: the JPEG drawn here keeps no EXIF orientation.
-    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    bitmap = await upright(file);
   } catch {
     return { ok: false, error: "unreadable" };
   }

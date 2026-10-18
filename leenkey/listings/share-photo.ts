@@ -10,9 +10,24 @@ export const SHARE_PHOTO = { width: 720, height: 630 } as const;
  * The main photo of a published listing for its share image: its largest
  * file, read as a visitor, cropped to the photo area and turned into JPEG
  * (next/og does not read WebP), as a data URL. Null when it cannot be read
- * within 3 seconds: the image keeps the drawing.
+ * within 3 seconds, signature included: the image keeps the drawing.
  */
 export async function sharePhoto(path: string): Promise<string | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<null>((resolve) => {
+    timer = setTimeout(() => {
+      console.error("[listings] share photo too slow", { entity_id: path });
+      resolve(null);
+    }, 3_000);
+  });
+  try {
+    return await Promise.race([readPhoto(path), late]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function readPhoto(path: string): Promise<string | null> {
   try {
     const signed = await createPublicClient()
       .storage.from("photos")

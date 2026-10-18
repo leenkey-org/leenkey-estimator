@@ -114,9 +114,10 @@ language plpgsql security definer set search_path = '' as $$
 declare
   taken int;
 begin
-  -- Someone else's property: the RLS refuses it, nothing to lock nor count.
+  -- Someone else's property, or a suspended one: refused here, with the
+  -- error of the RLS, whatever changes before the RLS checks it.
   if auth.uid() is not null and not public.property_is_editable(new.property_id) then
-    return new;
+    raise exception 'property not found' using errcode = '42501';
   end if;
   perform 1 from public.properties where id = new.property_id for update;
   -- Added during the creation only (no listing, a draft, a rejected one),

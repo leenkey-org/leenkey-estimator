@@ -1,14 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { FacadeDrawing } from "./facade-drawing";
 import { cn } from "@/lib/utils";
 
+const noSubscription = () => () => {};
+
 /**
  * A photo filling its frame (docs/DESIGN.md 7.1): on stone while it loads,
  * then a fade of 160 ms; facade.svg if it fails (a listing withdrawn while
- * the page was open). The frame is the parent, positioned.
+ * the page was open). The frame is the parent, positioned. A photo of the
+ * page sent by the server shows as soon as it arrives, without waiting for
+ * the JavaScript (the largest paint of the listing and of the search): only
+ * a photo shown later fades in.
  */
 export function Photo({
   src,
@@ -25,6 +30,13 @@ export function Photo({
   fit?: "cover" | "contain";
   className?: string;
 }) {
+  // True while the page sent by the server is hydrated, kept by the photos it holds.
+  const hydrating = useSyncExternalStore(
+    noSubscription,
+    () => false,
+    () => true,
+  );
+  const [fromServer] = useState(hydrating);
   const [state, setState] = useState<"loading" | "loaded" | "failed">("loading");
   if (state === "failed") {
     return (
@@ -45,8 +57,8 @@ export function Photo({
       onError={() => setState("failed")}
       className={cn(
         fit === "cover" ? "object-cover" : "object-contain",
-        "transition-opacity duration-160 ease-linear motion-reduce:transition-none",
-        state === "loaded" ? "opacity-100" : "opacity-0",
+        !fromServer && "transition-opacity duration-160 ease-linear motion-reduce:transition-none",
+        fromServer || state === "loaded" ? "opacity-100" : "opacity-0",
         className,
       )}
     />

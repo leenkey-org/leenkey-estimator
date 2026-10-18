@@ -58,6 +58,7 @@ vi.mock("@/lib/supabase/public", () => ({
 
 const { GET } = await import("@/app/api/og/[slug]/route");
 const { coverJpeg } = await import("@/core/images/cover");
+const { sharePhoto } = await import("@/leenkey/listings/share-photo");
 
 const RED = { r: 200, g: 30, b: 40 };
 const STONE_2 = { r: 0xec, g: 0xed, b: 0xe8 };
@@ -140,6 +141,18 @@ describe("share image", () => {
     read.mockResolvedValue({ ok: true, data: { ...listing, photos: [] } });
     expect((await render())(10, 10)).toEqual(near(STONE_2));
     expect(sign).not.toHaveBeenCalled();
+  });
+
+  it("gives up after 3 seconds, signature included", async () => {
+    vi.useFakeTimers();
+    try {
+      sign.mockReturnValue(new Promise(() => {}));
+      const photo = sharePhoto(path);
+      await vi.advanceTimersByTimeAsync(3_000);
+      expect(await photo).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("crops a portrait photo to the area, in JPEG", async () => {

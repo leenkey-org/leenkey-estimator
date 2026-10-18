@@ -12,6 +12,7 @@
 - [ ] Fonctions `security definer` (`create_case`, transitions de statut, `financing_document_check`) : `search_path` fixé, contrôle de `auth.uid()` et des paramètres, testées
 - [ ] Statut `suspended` : aucune fonction ni politique ne permet au vendeur d'en sortir (test)
 - [ ] Buckets Storage privés, URLs signées de courte durée, aucune URL permanente (photos : route `/img`, politiques `photos_files_*`, test `supabase/tests/rls_photos.sql`)
+- [ ] Modération d'une annonce en ligne (L1-14) : aucune modification sans relecture de Leenkey. Aujourd'hui, le vendeur peut encore changer directement, par l'API, le titre, la description, le prix, les caractéristiques et les légendes d'une annonce en ligne (droits de L1-04) ; et une URL d'envoi signée de Supabase Storage (valable 2 h, les politiques ne sont contrôlées qu'à sa création) obtenue pendant la création permet de remplacer un fichier de photo après l'envoi. À fermer avec `listing_revisions`, et pour les photos par une lecture publique limitée aux fichiers inchangés depuis la publication (test dans `rls_photos.sql`)
 
 ## Entrées et abus
 - [ ] Validation Zod sur toutes les Server Actions et routes API
