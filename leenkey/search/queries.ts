@@ -2,6 +2,7 @@ import "server-only";
 import { SQL_SORT, toSqlFilters } from "./sql-filters";
 import type { DpeClass } from "@/components/shared/dpe-badge";
 import { createClient } from "@/lib/supabase/server";
+import { chunk } from "@/lib/utils";
 import {
   DPE_CLASSES,
   SEARCH_PAGE_SIZE,
@@ -40,6 +41,8 @@ export type SearchListing = {
   hasParking: boolean | null;
   hasCellar: boolean | null;
   dpe: DpeClass | null;
+  /** Main photo (base of its files, photo-files.ts) and number of photos; null without. */
+  cover: { path: string; total: number } | null;
 };
 
 export type SearchResults = { items: SearchListing[]; total: number };
@@ -90,7 +93,35 @@ function toListing(row: Row): SearchListing {
     hasParking: row.has_parking,
     hasCellar: row.has_cellar,
     dpe,
+    cover: null,
   };
+}
+
+/**
+ * Main photos of listings shown as cards (L1-12), 100 listings per call (the
+ * bound of public_listing_photos). Without them the cards keep their
+ * drawing: a list never fails for a photo.
+ */
+export async function withCovers(items: SearchListing[]): Promise<SearchListing[]> {
+  if (items.length === 0) return items;
+  const supabase = await createClient();
+  const answers = await Promise.all(
+    chunk(
+      items.map((item) => item.id),
+      100,
+    ).map((ids) =>
+      supabase.rpc("public_listing_photos", { p_listing_ids: ids, p_cover_only: true }),
+    ),
+  );
+  const covers = new Map<string, { path: string; total: number }>();
+  for (const { data, error } of answers) {
+    if (error) {
+      console.error("[search] covers failed", { code: error.code });
+      return items;
+    }
+    for (const row of data) covers.set(row.listing_id, { path: row.path, total: row.total });
+  }
+  return items.map((item) => ({ ...item, cover: covers.get(item.id) ?? null }));
 }
 
 async function fetchPage(filters: SearchFilters, sort: SearchQuery["sort"], page: number) {
@@ -119,7 +150,7 @@ export async function searchListings(query: SearchQuery): Promise<QueryResult<Se
         fetchPage(query.filters, query.sort, index + 2),
       ),
     );
-    const items = [first, ...others].flat().map(toListing);
+    const items = await withCovers([first, ...others].flat().map(toListing));
     return { ok: true, data: { items, total } };
   } catch (error) {
     console.error("[search] searchListings failed", {

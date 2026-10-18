@@ -55,6 +55,7 @@ const flat: PublicListing = {
   coproLots: 48,
   sellerFirstName: "Alice",
   accompanied: true,
+  photos: [],
 };
 
 const land: PublicListing = {

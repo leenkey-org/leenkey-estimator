@@ -18,6 +18,7 @@ import { ListingDescription } from "@/leenkey/listings/components/listing-descri
 import { ListingViewTracker } from "@/leenkey/listings/components/listing-view-tracker";
 import { listingKeyFacts } from "@/leenkey/listings/key-facts";
 import {
+  galleryPhotos,
   buyerSignUpHref,
   communeSearchHref,
   listingJsonLd,
@@ -110,7 +111,7 @@ export default async function ListingPage({ params }: Props) {
           className="hidden pt-5 lg:block"
         />
         <Gallery
-          photos={[]}
+          photos={galleryPhotos(listing)}
           topLeft={<BackLink />}
           topRight={heart("white-float")}
           className="lg:mt-4"

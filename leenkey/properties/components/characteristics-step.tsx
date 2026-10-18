@@ -24,6 +24,8 @@ import {
 } from "@/lib/validations/property";
 import { DPE_CLASSES, PROPERTY_TYPES } from "@/lib/validations/search";
 import { saveCharacteristics, type SaveCharacteristicsResult } from "../actions";
+import type { SellerPhoto } from "../photos";
+import { PhotoUploader } from "./photo-uploader";
 import { CREATION_FORM_ID, intentOf, submitWithEnter } from "./creation-header";
 
 const t = fr.properties.characteristics;
@@ -34,7 +36,8 @@ const errors = fr.properties.errors;
 // surface, rooms, bedrooms, floor, DPE, features, then the details. Numbers
 // are typed in French (« 68,5 »). The fields that do not apply to the type
 // are hidden and saved empty (NOT_FOR_TYPE: a floor for a house, rooms for
-// land), here and on the server. Photos: L1-12.
+// land), here and on the server. Then the photos (L1-12), saved as soon as
+// they are added: the step waits for them before going on.
 
 type NumberField = Exclude<CharacteristicsField, "type" | "dpe" | "ges" | "heating">;
 type PropertyType = (typeof PROPERTY_TYPES)[number];
@@ -61,9 +64,11 @@ const AMOUNT_FIELDS: readonly NumberField[] = ["chargesMonthlyEuros", "propertyT
 export function CharacteristicsStep({
   propertyId,
   initial,
+  photos,
 }: {
   propertyId: string;
   initial: Omit<Characteristics, "propertyId">;
+  photos: SellerPhoto[];
 }) {
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
@@ -87,6 +92,7 @@ export function CharacteristicsStep({
   const [saving, startSaving] = useTransition();
   // One save at a time: a second click would only race the first.
   const submitting = useRef(false);
+  const [photosBusy, setPhotosBusy] = useState(false);
 
   const hidden = (type && NOT_FOR_TYPE[type]) || { fields: [], features: [] };
   const land = type === "terrain";
@@ -107,6 +113,10 @@ export function CharacteristicsStep({
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting.current) return;
+    if (photosBusy) {
+      setError(t.photosBusy);
+      return;
+    }
     const intent = intentOf(event);
     const typed: Partial<Record<NumberField, number | null>> = {};
     const invalid: Partial<Record<CharacteristicsField, string>> = {};
@@ -333,6 +343,8 @@ export function CharacteristicsStep({
           </div>
         </fieldset>
       )}
+
+      <PhotoUploader propertyId={propertyId} initial={photos} onBusyChange={setPhotosBusy} />
 
       <FormActionBar className="md:mt-3">
         <Button type="submit" name="intent" value="previous" variant="secondary" disabled={saving}>

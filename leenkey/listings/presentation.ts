@@ -1,5 +1,7 @@
 import type { PublicListing } from "./queries";
+import type { GalleryPhoto } from "@/components/shared/gallery";
 import type { KeyFigure } from "@/components/shared/key-figures";
+import { photoUrl } from "@/leenkey/properties/photo-files";
 import { floorLabel, placeLabel } from "@/leenkey/search/cards";
 import { NBSP, formatPrice, formatSurface } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
@@ -22,6 +24,32 @@ function kindLabel(listing: Pick<PublicListing, "type" | "rooms">): string {
 /** « Appartement 3 pièces · 68 m² » (Open Graph image, alt texts). */
 export function listingSummary(listing: Pick<PublicListing, "type" | "rooms" | "surfaceM2">) {
   return `${kindLabel(listing)}${SEPARATOR}${formatSurface(listing.surfaceM2)}`;
+}
+
+/**
+ * Alternative text of a photo (docs/DESIGN.md 7.1): « Séjour, appartement 3
+ * pièces à Savigny-sur-Orge », or « Photo 2 sur 12, appartement 3 pièces à
+ * Savigny-sur-Orge » without a caption.
+ */
+export function photoAlt(
+  listing: Pick<PublicListing, "type" | "rooms" | "city">,
+  caption: string | null,
+  index: number,
+  total: number,
+): string {
+  const kind = kindLabel(listing);
+  const subject = `${kind.charAt(0).toLocaleLowerCase("fr-FR")}${kind.slice(1)} ${fr.search.place.at(listing.city)}`;
+  return caption ? `${caption}, ${subject}` : t.photoAlt(index + 1, total, subject);
+}
+
+/** The photos of the gallery, in their order, with their alternative text. */
+export function galleryPhotos(
+  listing: Pick<PublicListing, "type" | "rooms" | "city" | "photos">,
+): GalleryPhoto[] {
+  return listing.photos.map((photo, index) => ({
+    src: photoUrl(photo.path),
+    alt: photoAlt(listing, photo.caption, index, listing.photos.length),
+  }));
 }
 
 /** SPEC 8.5: « Appartement 3 pièces 68 m² à Savigny-sur-Orge · 350 000 € · Leenkey ». */

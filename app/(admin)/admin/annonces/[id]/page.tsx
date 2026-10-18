@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
+import { Gallery } from "@/components/shared/gallery";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { KeyFactsTable } from "@/components/shared/key-facts-table";
 import { KeyFigures } from "@/components/shared/key-figures";
@@ -17,7 +18,7 @@ import { OutOfZoneFlag } from "@/leenkey/admin/components/listing-place";
 import { adminListing } from "@/leenkey/admin/queries";
 import { ListingDescription } from "@/leenkey/listings/components/listing-description";
 import { listingKeyFacts } from "@/leenkey/listings/key-facts";
-import { listingKeyFigures } from "@/leenkey/listings/presentation";
+import { galleryPhotos, listingKeyFigures } from "@/leenkey/listings/presentation";
 import { capitalize, formatDateShort, formatDateTime, formatRelative } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { adminListingsHref } from "@/lib/validations/admin";
@@ -147,6 +148,8 @@ export default async function AdminListingPage({ params }: Props) {
 
         <section aria-labelledby="apercu" className="flex flex-col gap-4">
           <SectionTitle id="apercu">{t.detail.preview}</SectionTitle>
+          {/* The photos first: « Photos trompeuses » is a frequent reason (Q44). */}
+          <Gallery photos={galleryPhotos(listing)} className="overflow-hidden rounded-lk-md" />
           <div className="flex flex-col gap-4 rounded-lk-md border border-lk-line bg-lk-surface p-5">
             <PriceBlock priceCents={listing.priceCents} surfaceM2={listing.surfaceM2} />
             <KeyFigures items={listingKeyFigures(listing)} />

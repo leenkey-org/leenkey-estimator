@@ -86,7 +86,7 @@ select is((select count(*) from estimations where id = :'est_id')::int, 1, 'sell
 select lives_ok(format($$update properties set estimation_id = %L where id = %L$$, :'est_id', :'prop_a'),
                 'seller_a: links the estimation to the property');
 select lives_ok(format($$insert into photos (property_id, storage_path, position, is_cover) values (%L, %L, 0, true)$$,
-                       :'prop_a', :'prop_a' || '/p1-800.webp'),
+                       :'prop_a', :'prop_a' || '/' || gen_random_uuid()),
                 'seller_a: adds a photo');
 select throws_ok(format($$insert into photos (property_id, storage_path, position) values (%L, 'elsewhere/p2.webp', 1)$$,
                         :'prop_a'),
@@ -159,7 +159,7 @@ select throws_ok(format($$select listing_pause(%L)$$, :'listing_a'), '42501', nu
 select throws_ok(format($$select listing_unsuspend(%L)$$, :'listing_a'), '42501', null, 'seller_a: cannot lift a suspension');
 update listings set title = 'Titre modifié pendant la suspension' where id = :'listing_a';
 select throws_ok(format($$insert into photos (property_id, storage_path, position) values (%L, %L, 1)$$,
-                        :'prop_a', :'prop_a' || '/p2-800.webp'),
+                        :'prop_a', :'prop_a' || '/' || gen_random_uuid()),
                  '42501', null, 'seller_a: cannot add photos while suspended');
 select is((select suspension_reason from listings where id = :'listing_a'), 'Photos trompeuses', 'seller_a: reads the suspension reason');
 

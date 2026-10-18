@@ -24,6 +24,7 @@ import {
   ModerationFeedback,
 } from "@/leenkey/admin/components/listing-moderation";
 import { ListingPlace } from "@/leenkey/admin/components/listing-place";
+import { photoUrl } from "@/leenkey/properties/photo-files";
 import {
   ADMIN_LISTINGS_LIMIT,
   adminListingCounts,
@@ -135,7 +136,10 @@ export default async function AdminListingsPage({ searchParams }: Props) {
           {rows.map((row) => (
             <li key={row.id} className="rounded-lk-md border border-lk-line bg-lk-surface p-3">
               <div className="flex gap-3">
-                <PropertyThumb className="h-16 w-18" />
+                <PropertyThumb
+                  src={row.coverPath ? photoUrl(row.coverPath) : null}
+                  className="h-16 w-18"
+                />
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-lk-title font-bold text-wide tabular text-lk-ink">
@@ -193,7 +197,10 @@ export default async function AdminListingsPage({ searchParams }: Props) {
               <DataTableRow className="border-t-0">
                 <DataTableRowHeader>
                   <div className="flex items-center gap-3">
-                    <PropertyThumb className="h-11 w-14" />
+                    <PropertyThumb
+                      src={row.coverPath ? photoUrl(row.coverPath) : null}
+                      className="h-11 w-14"
+                    />
                     <div className="flex min-w-0 flex-col">
                       <Link
                         href={detailHref(row)}

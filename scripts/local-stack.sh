@@ -2,8 +2,9 @@
 # Local Supabase-like stack to test signed-in features end to end when no
 # hosted project is reachable (docker images only, nothing to install):
 #   Postgres (supabase/postgres), Supabase Auth (supabase/gotrue) with the
-#   templates of supabase/templates/, PostgREST, Mailpit (catches the emails)
-#   and a gateway serving /auth/v1 and /rest/v1 on one origin.
+#   templates of supabase/templates/, PostgREST, Supabase Storage (files on
+#   the container's disk), Mailpit (catches the emails) and a gateway serving
+#   /auth/v1, /rest/v1 and /storage/v1 on one origin.
 # Usage: scripts/local-stack.sh up | env | down
 #   up    starts the stack, applies the migrations and the seed (keys and seed
 #         password generated in .local-stack/, never committed)
@@ -15,11 +16,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 DIR=.local-stack
-DB_PORT=54326 GATEWAY=54331 REST=54332 AUTH=54333 SMTP=54327 MAIL_UI=54328
+DB_PORT=54326 GATEWAY=54331 REST=54332 AUTH=54333 STORAGE=54334 SMTP=54327 MAIL_UI=54328
 APP_URL=http://localhost:3200
 HOST_IP=172.17.0.1 # docker host seen from the containers
 DB_URL="postgresql://postgres:postgres@127.0.0.1:$DB_PORT/postgres"
-CONTAINERS="lk-stack-db lk-stack-auth lk-stack-rest lk-stack-mail"
+CONTAINERS="lk-stack-db lk-stack-auth lk-stack-rest lk-stack-storage lk-stack-mail"
 
 jwt() { # role -> HS256 token signed with the stack secret
   node -e '
@@ -48,10 +49,10 @@ case "${1:-}" in
     done
     # supabase_admin is the image's superuser: it alone can set these passwords.
     psql "postgresql://supabase_admin:postgres@127.0.0.1:$DB_PORT/postgres" -q \
-      -c "alter role supabase_auth_admin with password 'postgres'; alter role authenticator with password 'postgres';"
+      -c "alter role supabase_auth_admin with password 'postgres'; alter role authenticator with password 'postgres'; alter role supabase_storage_admin with password 'postgres';"
 
     docker run -d --name lk-stack-mail -p $HOST_IP:$SMTP:1025 -p 127.0.0.1:$MAIL_UI:8025 axllent/mailpit:v1.27 >/dev/null
-    node scripts/local-stack-gateway.mjs $GATEWAY $AUTH $REST "$PWD/supabase/templates" $HOST_IP > $DIR/gateway.log 2>&1 &
+    node scripts/local-stack-gateway.mjs $GATEWAY $AUTH $REST "$PWD/supabase/templates" $HOST_IP $STORAGE > $DIR/gateway.log 2>&1 &
     echo $! > $DIR/gateway.pid
     sleep 1
     kill -0 "$(cat $DIR/gateway.pid)" 2>/dev/null || { echo "Gateway not started (port $GATEWAY taken?): $DIR/gateway.log"; exit 1; }
@@ -73,9 +74,20 @@ case "${1:-}" in
       -e "GOTRUE_MAILER_SUBJECTS_RECOVERY=Choisissez un nouveau mot de passe" \
       -e GOTRUE_RATE_LIMIT_EMAIL_SENT=1000 -e GOTRUE_SMTP_MAX_FREQUENCY=1s \
       supabase/gotrue:v2.177.0 >/dev/null
+    # As on the platform, the storage service brings its schema up to date
+    # (bucket limits, L1-12) before our migrations.
+    docker run -d --name lk-stack-storage -p 127.0.0.1:$STORAGE:5000 \
+      -e ANON_KEY="$(cat $DIR/anon_key)" -e SERVICE_KEY="$(jwt service_role)" \
+      -e AUTH_JWT_SECRET="$(cat $DIR/jwt_secret)" -e PGRST_JWT_SECRET="$(cat $DIR/jwt_secret)" \
+      -e "DATABASE_URL=postgres://supabase_storage_admin:postgres@$HOST_IP:$DB_PORT/postgres" \
+      -e POSTGREST_URL="http://$HOST_IP:$REST" -e FILE_SIZE_LIMIT=52428800 \
+      -e STORAGE_BACKEND=file -e FILE_STORAGE_BACKEND_PATH=/var/lib/storage \
+      -e TENANT_ID=stub -e REGION=local -e GLOBAL_S3_BUCKET=stub -e ENABLE_IMAGE_TRANSFORMATION=false \
+      supabase/storage-api:v1.79.31 >/dev/null
     # Supabase Auth migrates the auth schema first, then our migrations and seed.
     for _ in $(seq 1 60); do
-      curl -sf --noproxy '*' "http://127.0.0.1:$AUTH/health" >/dev/null && break
+      curl -sf --noproxy '*' "http://127.0.0.1:$AUTH/health" >/dev/null \
+        && curl -sf --noproxy '*' "http://127.0.0.1:$STORAGE/status" >/dev/null && break
       sleep 1
     done
     DATABASE_URL="$DB_URL" scripts/db-migrate.sh local

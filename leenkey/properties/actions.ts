@@ -16,14 +16,12 @@ import {
   type CharacteristicsField,
   type PropertyFeature,
 } from "@/lib/validations/property";
-import { addressLabel, inCreation } from "./creation";
+import { readDraft } from "./drafts";
 
 // Server actions of the creation of a property (L1-11), with the seller's
 // session: RLS and the column grants of L1-04 decide what they may write.
 // Here, as on the pages, only the seller's own property, while the steps of
 // the creation change it (inCreation).
-
-type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 export type AddressSuggestion = { label: string; line: string; postalCode: string; city: string };
 
@@ -46,35 +44,6 @@ export async function suggestAddresses(text: unknown): Promise<SuggestResult> {
       postalCode,
       city,
     })),
-  };
-}
-
-type DraftResult = { ok: true; label: string } | { ok: false; error: "not_found" | "unavailable" };
-
-/** The property of the seller, while the creation changes it, and its address. */
-async function readDraft(supabase: Supabase, id: string, ownerId: string): Promise<DraftResult> {
-  const { data, error } = await supabase
-    .from("properties")
-    .select("address_line, postal_code, city, listing:listings(status)")
-    .eq("id", id)
-    .eq("owner_id", ownerId)
-    .is("deleted_at", null)
-    .maybeSingle();
-  if (error) {
-    console.error("[properties] draft read failed", {
-      user_id: ownerId,
-      entity_id: id,
-      code: error.code,
-    });
-    return { ok: false, error: "unavailable" };
-  }
-  if (!data) return { ok: false, error: "not_found" };
-  const listing = Array.isArray(data.listing) ? data.listing[0] : data.listing;
-  // Sent for review or online: it changes from its page (L1-14), not here.
-  if (!inCreation(listing?.status ?? null)) return { ok: false, error: "not_found" };
-  return {
-    ok: true,
-    label: addressLabel({ line: data.address_line, postalCode: data.postal_code, city: data.city }),
   };
 }
 
