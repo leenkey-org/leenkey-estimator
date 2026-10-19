@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export type BottomNavProps = {
   /** Accessible name of the <nav>. */
   label: string;
-  /** The four tabs of the space (docs/DESIGN.md 10.6). */
+  /** The tabs of the space, four or five (docs/DESIGN.md 10.6). */
   items: readonly NavItem[];
   /** Current tab instead of the one of the address (catalogue); null: none. */
   activeHref?: string | null;
@@ -21,8 +21,8 @@ export type BottomNavProps = {
 /**
  * Mobile navigation (docs/DESIGN.md 10.6): fixed at the bottom below 768 px,
  * white with a top border, padding 10 × 20 × 22 with the iOS safe area, four
- * tabs (icon 22 and 11 px label). The current tab is the longest prefix of
- * the address, in blue with aria-current. A page that shows it adds
+ * or five tabs (icon 22 and 11 px label). The current tab is the longest
+ * prefix of the address, in blue with aria-current. A page that shows it adds
  * BOTTOM_NAV_OFFSET (nav-items.ts) so that its end stays visible.
  */
 export function BottomNav({ label, items, activeHref, inline = false, className }: BottomNavProps) {
@@ -37,7 +37,7 @@ export function BottomNav({ label, items, activeHref, inline = false, className 
         className,
       )}
     >
-      <ul className="grid grid-cols-4">
+      <ul className={cn("grid", items.length > 4 ? "grid-cols-5" : "grid-cols-4")}>
         {items.map((item) => {
           const active = item.href === current;
           return (

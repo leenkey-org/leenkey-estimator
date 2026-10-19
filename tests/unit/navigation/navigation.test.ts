@@ -95,22 +95,40 @@ describe("followSpace (client navigation, SpaceProvider)", () => {
 });
 
 describe("bottom tabs (DESIGN.md 10.6)", () => {
-  it("seller: Ma vente, Dossier, Messages, Compte", () => {
+  it("seller: Ma vente, Dossier, Acheter, Messages, Compte", () => {
     expect(summary(bottomTabs("seller"))).toEqual([
       { href: "/vendeur", label: "Ma vente", icon: "dashboard" },
       { href: "/vendeur/dossier", label: "Dossier", icon: "file" },
+      { href: "/acheter", label: "Acheter", icon: "search" },
       { href: "/messages", label: "Messages", icon: "message" },
       { href: "/compte", label: "Compte", icon: "user" },
     ]);
   });
 
-  it("buyer: Chercher, Favoris, Messages, Compte", () => {
+  it("buyer: Chercher, Favoris, Vendre, Messages, Compte", () => {
     expect(summary(bottomTabs("buyer"))).toEqual([
       { href: "/acheter", label: "Chercher", icon: "search" },
       { href: "/acquereur/favoris", label: "Favoris", icon: "heart" },
+      { href: "/vendeur", label: "Vendre", icon: "square-plus" },
       { href: "/messages", label: "Messages", icon: "message" },
       { href: "/compte", label: "Compte", icon: "user" },
     ]);
+  });
+
+  it("every account buys and sells: the other side in the middle (DECISIONS 2026-10-19)", () => {
+    expect(bottomTabs("seller")[2]).toMatchObject({ href: "/acheter", label: "Acheter" });
+    expect(bottomTabs("buyer")[2]).toMatchObject({ href: "/vendeur", label: "Vendre" });
+    // Signed out, on the search: the landing page written for the sellers.
+    expect(bottomTabs("buyer", false)[2]).toMatchObject({ href: "/", label: "Vendre" });
+    expect(bottomTabs("buyer", false).map((tab) => tab.href)).toEqual([
+      "/acheter",
+      "/acquereur/favoris",
+      "/",
+      "/messages",
+      "/compte",
+    ]);
+    // Messages and Compte stay in place from one side to the other.
+    expect(bottomTabs("seller").slice(3)).toEqual(bottomTabs("buyer").slice(3));
   });
 
   it("admin: Annonces, Dossiers, Utilisateurs, Assistant", () => {
@@ -122,10 +140,11 @@ describe("bottom tabs (DESIGN.md 10.6)", () => {
     ]);
   });
 
-  it("always four tabs, with a known icon", () => {
-    for (const space of SPACES) {
-      const tabs = bottomTabs(space);
-      expect(tabs).toHaveLength(4);
+  it("five tabs for the seller and the buyer, four in the back office, a known icon each", () => {
+    expect(bottomTabs("seller")).toHaveLength(5);
+    expect(bottomTabs("buyer")).toHaveLength(5);
+    expect(bottomTabs("admin")).toHaveLength(4);
+    for (const tabs of [...SPACES.map((space) => bottomTabs(space)), bottomTabs("buyer", false)]) {
       for (const tab of tabs) expect(NAV_ICONS).toContain(tab.icon);
     }
   });
@@ -306,6 +325,7 @@ describe("every link of the navigation leads to a page", () => {
     ...TOP_NAV_LINKS.map((link) => link.href),
     ...ADMIN_NAV_ITEMS.map((item) => item.href),
     ...SPACES.flatMap((space) => bottomTabs(space).map((tab) => tab.href)),
+    ...bottomTabs("buyer", false).map((tab) => tab.href),
     sellCta(false).href,
     sellCta(true).href,
     FAVOURITES_LINK.href,

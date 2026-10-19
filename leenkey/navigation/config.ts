@@ -12,30 +12,48 @@ export { followSpace, ownSpace, ROUTES, spaceFor, type Space } from "./spaces";
 
 const tabs = fr.nav.tabs;
 
-const TABS: Record<Space, readonly NavItem[]> = {
-  seller: [
-    { href: ROUTES.seller, label: tabs.sale, icon: "dashboard" },
-    { href: ROUTES.sellerFile, label: tabs.file, icon: "file" },
-    { href: ROUTES.messages, label: tabs.messages, icon: "message" },
-    { href: ROUTES.account, label: tabs.account, icon: "user" },
-  ],
-  buyer: [
-    { href: ROUTES.search, label: tabs.search, icon: "search" },
-    { href: ROUTES.favourites, label: tabs.favourites, icon: "heart" },
-    { href: ROUTES.messages, label: tabs.messages, icon: "message" },
-    { href: ROUTES.account, label: tabs.account, icon: "user" },
-  ],
-  admin: [
-    { href: ROUTES.adminListings, label: tabs.listings, icon: "listings" },
-    { href: ROUTES.adminCases, label: tabs.cases, icon: "folder" },
-    { href: ROUTES.adminUsers, label: tabs.users, icon: "users" },
-    { href: ROUTES.adminAssistant, label: tabs.assistant, icon: "sparkles" },
-  ],
-};
+const SHARED_TABS: readonly NavItem[] = [
+  { href: ROUTES.messages, label: tabs.messages, icon: "message" },
+  { href: ROUTES.account, label: tabs.account, icon: "user" },
+];
 
-/** The four tabs of the BottomNav of a space (DESIGN.md 10.6). */
-export function bottomTabs(space: Space): readonly NavItem[] {
-  return TABS[space];
+const ADMIN_TABS: readonly NavItem[] = [
+  { href: ROUTES.adminListings, label: tabs.listings, icon: "listings" },
+  { href: ROUTES.adminCases, label: tabs.cases, icon: "folder" },
+  { href: ROUTES.adminUsers, label: tabs.users, icon: "users" },
+  { href: ROUTES.adminAssistant, label: tabs.assistant, icon: "sparkles" },
+];
+
+/**
+ * Tabs of the BottomNav of a space (DESIGN.md 10.6). Every account buys and
+ * sells (DECISIONS 2026-10-19): in the middle of the seller and buyer bars,
+ * the way to the other side. « Acheter » opens the search; « Vendre » the
+ * seller area once signed in, otherwise the landing page written for the
+ * sellers (the search shows the buyer tabs to every visitor).
+ */
+export function bottomTabs(space: Space, signedIn = true): readonly NavItem[] {
+  switch (space) {
+    case "seller":
+      return [
+        { href: ROUTES.seller, label: tabs.sale, icon: "dashboard" },
+        { href: ROUTES.sellerFile, label: tabs.file, icon: "file" },
+        { href: ROUTES.search, label: tabs.buy, icon: "search" },
+        ...SHARED_TABS,
+      ];
+    case "buyer":
+      return [
+        { href: ROUTES.search, label: tabs.search, icon: "search" },
+        { href: ROUTES.favourites, label: tabs.favourites, icon: "heart" },
+        {
+          href: signedIn ? ROUTES.seller : ROUTES.home,
+          label: tabs.sell,
+          icon: "square-plus",
+        },
+        ...SHARED_TABS,
+      ];
+    case "admin":
+      return ADMIN_TABS;
+  }
 }
 
 /**
