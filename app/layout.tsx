@@ -4,9 +4,7 @@ import { ConsentManager } from "@/components/analytics/consent-manager";
 import { EnvBanner } from "@/components/shared/env-banner";
 import { SpaceProvider } from "@/leenkey/navigation/components/space-context";
 import { isProduction } from "@/lib/env";
-// V1 fonts (Sora, DM Sans, Poppins), self-hosted: no request to Google before
-// consent (L1-37). Façade uses Archivo through next/font.
-import "./v1-fonts.css";
+import { archivo } from "@/lib/fonts";
 import "./globals.css";
 
 const GA_ID = "G-27N3E3WP2D";
@@ -43,7 +41,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // and only after they accept audience measurement (L1-37).
   const analytics = isProduction();
   return (
-    <html lang="fr">
+    // Archivo, self-hosted by next/font (no request to Google before
+    // consent, L1-37), for every page and the portals outside <FacadeRoot>.
+    <html lang="fr" className={archivo.variable}>
       <body>
         <EnvBanner />
         {/* Space of the navigation, kept across client navigations (L1-10). */}

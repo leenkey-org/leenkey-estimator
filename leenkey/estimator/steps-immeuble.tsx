@@ -1,3 +1,4 @@
+import { chipClassName } from "@/components/shared/chip-toggle";
 import {
   Field,
   OptionCard,
@@ -10,6 +11,7 @@ import {
   ToggleCard,
 } from "./ui";
 import { DpeRow, type P } from "./steps";
+import { Checkbox } from "@/components/shared/checkbox";
 import { RentabilitePanel } from "./RentabilitePanel";
 import { CHAUFFAGE_MODES, CHAUFFAGE_OPTS } from "./energie";
 import type { DpeLetter, LeenkeyForm, Lot } from "./types";
@@ -35,33 +37,29 @@ function toggleIn(list: string[], v: string): string[] {
 
 /* ============ ÉTAPE 1 — Identification ============ */
 
-const IMMEUBLE_TYPES: { value: string; icon: string; label: string; desc: string }[] = [
+const IMMEUBLE_TYPES: { value: string; label: string; desc: string }[] = [
   {
     value: "rapport",
-    icon: "🏘",
     label: "Immeuble de rapport",
     desc: "Entièrement composé de logements loués",
   },
   {
     value: "mixte",
-    icon: "🏢",
     label: "Immeuble mixte",
     desc: "Commerces en pied d'immeuble, logements au-dessus",
   },
   {
     value: "commercial",
-    icon: "🏬",
     label: "Immeuble commercial",
     desc: "Exclusivement des locaux commerciaux",
   },
-  { value: "bureaux", icon: "💼", label: "Immeuble de bureaux", desc: "Tertiaire" },
+  { value: "bureaux", label: "Immeuble de bureaux", desc: "Tertiaire" },
   {
     value: "petit_collectif",
-    icon: "🏠",
     label: "Petit collectif",
     desc: "2 à 6 logements, souvent une maison divisée",
   },
-  { value: "autre", icon: "🏗", label: "Autre", desc: "Autre configuration" },
+  { value: "autre", label: "Autre", desc: "Autre configuration" },
 ];
 
 const ANNEES = [
@@ -78,7 +76,6 @@ export function ImmeubleStep1({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="L'immeuble"
         title="Parlez-nous de votre immeuble"
         subtitle="La composition et les surfaces posent la base du calcul de rendement."
       />
@@ -90,7 +87,6 @@ export function ImmeubleStep1({ form, set, errors }: P) {
                 key={o.value}
                 selected={form.immeuble_type === o.value}
                 onClick={() => set({ immeuble_type: o.value })}
-                icon={o.icon}
                 title={o.label}
                 description={o.desc}
               />
@@ -198,7 +194,6 @@ export function ImmeubleStep2({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Composition"
         title="Comment l'immeuble est-il découpé ?"
         subtitle="Indiquez le nombre de lots par typologie, puis précisez lesquels sont occupés."
       />
@@ -216,14 +211,14 @@ export function ImmeubleStep2({ form, set, errors }: P) {
             ))}
           </div>
           {errors?.lots && (
-            <p className="mt-3 text-xs font-medium text-destructive">{errors.lots}</p>
+            <p className="mt-3 text-lk-caption font-medium text-lk-danger">{errors.lots}</p>
           )}
         </div>
 
         {form.lots.length > 0 && (
           <>
             <SectionTitle>Occupation de chaque lot</SectionTitle>
-            <p className="text-sm text-sub">
+            <p className="text-lk-compact text-lk-ink-2">
               {stats.nbLots} lot{stats.nbLots > 1 ? "s" : ""} · {stats.nbOccupes} occupé
               {stats.nbOccupes > 1 ? "s" : ""} · taux d'occupation {stats.tauxOccupation} %
             </p>
@@ -231,9 +226,9 @@ export function ImmeubleStep2({ form, set, errors }: P) {
               {form.lots.map((lot, i) => (
                 <div
                   key={lot.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border-2 border-border bg-card px-4 py-3"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-lk-md border-[1.5px] border-lk-line bg-lk-surface px-4 py-3"
                 >
-                  <span className="font-display text-sm font-semibold text-navy">
+                  <span className="text-lk-compact font-semibold text-lk-ink">
                     {lot.typologie} n°
                     {form.lots.slice(0, i + 1).filter((l) => l.typologie === lot.typologie).length}
                   </span>
@@ -243,12 +238,9 @@ export function ImmeubleStep2({ form, set, errors }: P) {
                         key={s}
                         type="button"
                         onClick={() => setStatut(lot.id, s)}
-                        className={
-                          "rounded-full border-2 px-4 py-1.5 text-sm font-medium transition " +
-                          (lot.statut === s
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border bg-card text-navy hover:border-primary/60")
-                        }
+                        aria-pressed={lot.statut === s}
+                        data-state={lot.statut === s ? "on" : "off"}
+                        className={chipClassName()}
                       >
                         {s === "occupe" ? "Occupé" : "Libre"}
                       </button>
@@ -278,7 +270,6 @@ export function ImmeubleStep3({ form, set }: P) {
     return (
       <div className="space-y-8">
         <StepHeader
-          label="Situation locative"
           title="Détail des lots"
           subtitle="Revenez à l'étape précédente pour déclarer les lots de l'immeuble."
         />
@@ -289,7 +280,6 @@ export function ImmeubleStep3({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Situation locative"
         title="Quels sont les revenus de l'immeuble ?"
         subtitle="C'est le revenu net qui fixe le prix d'un immeuble de rapport — bien plus que la surface."
       />
@@ -305,17 +295,20 @@ export function ImmeubleStep3({ form, set }: P) {
               .slice(0, i + 1)
               .filter((l) => l.typologie === lot.typologie).length;
             return (
-              <div key={lot.id} className="rounded-[14px] border-2 border-border bg-card p-5">
+              <div
+                key={lot.id}
+                className="rounded-lk-md border-[1.5px] border-lk-line bg-lk-surface p-5"
+              >
                 <div className="mb-4 flex items-center justify-between">
-                  <span className="font-display text-base font-semibold text-navy">
+                  <span className="text-lk-body font-semibold text-lk-ink">
                     {lot.typologie} n°{rang}
                   </span>
                   <span
                     className={
-                      "rounded-full px-3 py-1 text-xs font-semibold " +
+                      "rounded-full px-3 py-1 text-lk-caption font-semibold " +
                       (lot.statut === "occupe"
-                        ? "bg-success/15 text-success"
-                        : "bg-amber-100 text-amber-700")
+                        ? "bg-lk-success-bg text-lk-success-fg"
+                        : "bg-lk-warning-bg text-lk-warning-fg")
                     }
                   >
                     {lot.statut === "occupe" ? "Occupé" : "Libre"}
@@ -414,7 +407,6 @@ export function ImmeubleStep4({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Charges"
         title="Quelles charges supportez-vous ?"
         subtitle="Ce sont elles qui transforment un revenu brut en revenu net — la seule base sur laquelle un investisseur calcule."
       />
@@ -431,29 +423,23 @@ export function ImmeubleStep4({ form, set }: P) {
         ))}
       </div>
 
-      <div className="rounded-[14px] border-2 border-sky-mid bg-sky/40 p-5">
+      <div className="rounded-lk-md border-[1.5px] border-lk-blue-line bg-lk-blue-tint p-5">
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-sub">
-              Revenus bruts
-            </div>
-            <div className="mt-1 font-display text-xl font-bold text-navy">
+            <div className="text-lk-caption font-semibold text-lk-ink-2">Revenus bruts</div>
+            <div className="mt-1 text-wide text-lk-h2 font-bold text-lk-ink">
               {stats.revenusAnnuels.toLocaleString("fr-FR")} €
             </div>
           </div>
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-sub">
-              Charges annuelles
-            </div>
-            <div className="mt-1 font-display text-xl font-bold text-navy">
+            <div className="text-lk-caption font-semibold text-lk-ink-2">Charges annuelles</div>
+            <div className="mt-1 text-wide text-lk-h2 font-bold text-lk-ink">
               −{total.toLocaleString("fr-FR")} €
             </div>
           </div>
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-primary">
-              Revenu net
-            </div>
-            <div className="mt-1 font-display text-xl font-bold text-primary">
+            <div className="text-lk-caption font-semibold text-lk-blue">Revenu net</div>
+            <div className="mt-1 text-wide text-lk-h2 font-bold text-lk-blue">
               {net.toLocaleString("fr-FR")} €
             </div>
           </div>
@@ -474,7 +460,6 @@ export function ImmeubleStep5({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="État technique"
         title="Dans quel état est l'immeuble ?"
         subtitle="Toiture et façade sont les deux postes qui pèsent le plus lourd : un acquéreur en déduit le coût de son offre."
       />
@@ -490,7 +475,7 @@ export function ImmeubleStep5({ form, set }: P) {
         ))}
       </div>
       <SectionTitle>Diagnostic de performance énergétique</SectionTitle>
-      <p className="text-sm text-sub">
+      <p className="text-lk-compact text-lk-ink-2">
         Le DPE de chaque lot se renseigne à l'étape « Situation locative ». Indiquez ici le DPE
         global de l'immeuble s'il en existe un, ainsi que le mode de chauffage.
       </p>
@@ -532,38 +517,33 @@ export function ImmeubleStep5({ form, set }: P) {
 
 /* ============ ÉTAPE 6 — Potentiel de développement ============ */
 
-const POTENTIEL: { v: string; i: string; l: string; d: string }[] = [
+const POTENTIEL: { v: string; l: string; d: string }[] = [
   {
     v: "division",
-    i: "✂️",
     l: "Division de lots",
     d: "Découper les grands logements augmente le rendement",
   },
-  { v: "surelevation", i: "⬆️", l: "Surélévation", d: "Ajouter un niveau si le PLU l'autorise" },
-  { v: "extension", i: "➕", l: "Extension", d: "Agrandissement du bâti existant" },
+  { v: "surelevation", l: "Surélévation", d: "Ajouter un niveau si le PLU l'autorise" },
+  { v: "extension", l: "Extension", d: "Agrandissement du bâti existant" },
   {
     v: "construction_arriere",
-    i: "🏗",
     l: "Construction en fond de parcelle",
     d: "Bâtiment supplémentaire",
   },
   {
     v: "nouveaux_lots",
-    i: "🔑",
     l: "Création de nouveaux lots",
     d: "À partir des volumes existants",
   },
-  { v: "combles", i: "🪜", l: "Combles aménageables", d: "Surface à gagner sous toiture" },
-  { v: "sous_sol", i: "🕳", l: "Sous-sol exploitable", d: "Caves transformables ou louables" },
+  { v: "combles", l: "Combles aménageables", d: "Surface à gagner sous toiture" },
+  { v: "sous_sol", l: "Sous-sol exploitable", d: "Caves transformables ou louables" },
   {
     v: "changement_destination",
-    i: "🔄",
     l: "Changement de destination",
     d: "Bureaux en logements, ou l'inverse",
   },
   {
     v: "commercial_transformable",
-    i: "🏬",
     l: "Local commercial transformable",
     d: "En logement si le PLU le permet",
   },
@@ -573,7 +553,6 @@ export function ImmeubleStep6({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Potentiel"
         title="Que peut-on encore tirer de l'immeuble ?"
         subtitle="Le potentiel de développement est ce qui distingue un immeuble de rapport banal d'un actif recherché par les investisseurs."
       />
@@ -585,21 +564,16 @@ export function ImmeubleStep6({ form, set }: P) {
             onClick={() =>
               set({ potentiel_developpement: toggleIn(form.potentiel_developpement, o.v) })
             }
-            icon={o.i}
             title={o.l}
             desc={o.d}
           />
         ))}
       </div>
-      <label className="flex cursor-pointer items-center gap-2 text-sm text-sub">
-        <input
-          type="checkbox"
-          checked={form.potentiel_developpement.length === 0}
-          onChange={() => set({ potentiel_developpement: [] })}
-          className="h-4 w-4 accent-primary"
-        />
-        Aucun potentiel identifié
-      </label>
+      <Checkbox
+        label="Aucun potentiel identifié"
+        checked={form.potentiel_developpement.length === 0}
+        onChange={() => set({ potentiel_developpement: [] })}
+      />
     </div>
   );
 }
@@ -639,7 +613,6 @@ export function ImmeubleStep7({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Urbanisme"
         title="Que dit le PLU sur votre parcelle ?"
         subtitle="Ces règles conditionnent tout le potentiel de développement. Si vous ne les connaissez pas, laissez vide : elles se vérifient en mairie."
       />

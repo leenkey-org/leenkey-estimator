@@ -611,6 +611,11 @@ export const fr = {
       text: "Créez votre annonce : nous reprenons l'adresse, les caractéristiques et la valeur de cette analyse.",
       action: "Créer mon annonce",
     },
+    // Names without visible text (L1-44): the buttons of the dialog
+    // « Prendre contact », the surface slider, the state of a next step.
+    contactDialog: { back: "Retour", close: "Fermer" },
+    surfaceSlider: "Surface habitable",
+    nextStep: { done: "Fait :", todo: "À faire :" },
   },
   // L1-10: pages whose screen comes with a later task (ComingSoon).
   placeholders: {

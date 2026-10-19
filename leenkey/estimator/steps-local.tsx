@@ -26,29 +26,27 @@ function toggleIn(list: string[], v: string): string[] {
 
 /* ============ ÉTAPE 1 — Identification ============ */
 
-const LOCAL_TYPES: { value: string; icon: string; label: string; desc: string }[] = [
-  { value: "boutique", icon: "🛍", label: "Boutique", desc: "Commerce de détail avec vitrine" },
-  { value: "bureau", icon: "💼", label: "Bureau", desc: "Tertiaire, profession libérale" },
-  { value: "restaurant", icon: "🍽", label: "Restaurant", desc: "Avec extraction et cuisine" },
-  { value: "bar", icon: "🍸", label: "Bar", desc: "Débit de boissons, licence IV" },
-  { value: "coiffure", icon: "💇", label: "Salon de coiffure", desc: "Ou institut de beauté" },
-  { value: "medical", icon: "🩺", label: "Cabinet médical", desc: "Médical ou paramédical" },
-  { value: "activite", icon: "🔧", label: "Local d'activité", desc: "Artisanat, atelier" },
-  { value: "entrepot", icon: "📦", label: "Entrepôt", desc: "Stockage, logistique" },
+const LOCAL_TYPES: { value: string; label: string; desc: string }[] = [
+  { value: "boutique", label: "Boutique", desc: "Commerce de détail avec vitrine" },
+  { value: "bureau", label: "Bureau", desc: "Tertiaire, profession libérale" },
+  { value: "restaurant", label: "Restaurant", desc: "Avec extraction et cuisine" },
+  { value: "bar", label: "Bar", desc: "Débit de boissons, licence IV" },
+  { value: "coiffure", label: "Salon de coiffure", desc: "Ou institut de beauté" },
+  { value: "medical", label: "Cabinet médical", desc: "Médical ou paramédical" },
+  { value: "activite", label: "Local d'activité", desc: "Artisanat, atelier" },
+  { value: "entrepot", label: "Entrepôt", desc: "Stockage, logistique" },
   {
     value: "alimentaire",
-    icon: "🥖",
     label: "Commerce alimentaire",
     desc: "Boulangerie, primeur…",
   },
-  { value: "autre", icon: "🏬", label: "Autre", desc: "Autre destination commerciale" },
+  { value: "autre", label: "Autre", desc: "Autre destination commerciale" },
 ];
 
 export function LocalStep1({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Le local"
         title="Quel local souhaitez-vous vendre ?"
         subtitle="La destination et la répartition des surfaces déterminent la clientèle d'acquéreurs."
       />
@@ -60,7 +58,6 @@ export function LocalStep1({ form, set, errors }: P) {
                 key={o.value}
                 selected={form.local_type === o.value}
                 onClick={() => set({ local_type: o.value })}
-                icon={o.icon}
                 title={o.label}
                 description={o.desc}
               />
@@ -114,26 +111,25 @@ export function LocalStep1({ form, set, errors }: P) {
 
 /* ============ ÉTAPE 2 — Caractéristiques ============ */
 
-const CONFIGS: { v: string; i: string; l: string; d: string }[] = [
-  { v: "angle", i: "📐", l: "Local d'angle", d: "Deux façades — visibilité très supérieure" },
-  { v: "traversant", i: "↔️", l: "Traversant", d: "Deux accès sur rues différentes" },
-  { v: "plain_pied", i: "🚪", l: "De plain-pied", d: "Sans marche depuis la rue" },
-  { v: "plusieurs_niveaux", i: "🪜", l: "Sur plusieurs niveaux", d: "Étage ou sous-sol exploités" },
+const CONFIGS: { v: string; l: string; d: string }[] = [
+  { v: "angle", l: "Local d'angle", d: "Deux façades — visibilité très supérieure" },
+  { v: "traversant", l: "Traversant", d: "Deux accès sur rues différentes" },
+  { v: "plain_pied", l: "De plain-pied", d: "Sans marche depuis la rue" },
+  { v: "plusieurs_niveaux", l: "Sur plusieurs niveaux", d: "Étage ou sous-sol exploités" },
 ];
 
-const EQUIPEMENTS: { v: string; i: string; l: string; d: string }[] = [
-  { v: "pmr", i: "♿", l: "Accès PMR", d: "Conforme à l'accessibilité handicapés" },
-  { v: "clim", i: "❄️", l: "Climatisation", d: "Installation en place" },
-  { v: "extraction", i: "💨", l: "Extraction", d: "Indispensable pour la restauration" },
-  { v: "rideau", i: "🛡", l: "Rideau métallique", d: "Protection de la devanture" },
-  { v: "vitrine_securisee", i: "🔒", l: "Vitrine sécurisée", d: "Vitrage anti-effraction" },
+const EQUIPEMENTS: { v: string; l: string; d: string }[] = [
+  { v: "pmr", l: "Accès PMR", d: "Conforme à l'accessibilité handicapés" },
+  { v: "clim", l: "Climatisation", d: "Installation en place" },
+  { v: "extraction", l: "Extraction", d: "Indispensable pour la restauration" },
+  { v: "rideau", l: "Rideau métallique", d: "Protection de la devanture" },
+  { v: "vitrine_securisee", l: "Vitrine sécurisée", d: "Vitrage anti-effraction" },
 ];
 
 export function LocalStep2({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Caractéristiques"
         title="Comment le local est-il configuré ?"
         subtitle="Un local d'angle avec une grande vitrine peut valoir 20 à 30 % de plus que le même local en linéaire."
       />
@@ -145,7 +141,6 @@ export function LocalStep2({ form, set }: P) {
               key={o.v}
               selected={form.local_config.includes(o.v)}
               onClick={() => set({ local_config: toggleIn(form.local_config, o.v) })}
-              icon={o.i}
               title={o.l}
               desc={o.d}
             />
@@ -159,7 +154,6 @@ export function LocalStep2({ form, set }: P) {
               key={o.v}
               selected={form.local_equipements.includes(o.v)}
               onClick={() => set({ local_equipements: toggleIn(form.local_equipements, o.v) })}
-              icon={o.i}
               title={o.l}
               desc={o.d}
             />
@@ -206,34 +200,29 @@ export function LocalStep2({ form, set }: P) {
 
 /* ============ ÉTAPE 3 — Emplacement ============ */
 
-const ENVIRONNEMENTS: { value: string; icon: string; label: string; desc: string }[] = [
+const ENVIRONNEMENTS: { value: string; label: string; desc: string }[] = [
   {
     value: "tres_commercante",
-    icon: "🌟",
     label: "Rue très commerçante",
     desc: "Artère n°1, enseignes nationales, flux permanent",
   },
   {
     value: "passante",
-    icon: "🚶",
     label: "Rue passante",
     desc: "Commerces de proximité, bon flux quotidien",
   },
   {
     value: "secondaire",
-    icon: "🔀",
     label: "Rue secondaire",
     desc: "Flux irrégulier, activité de destination",
   },
   {
     value: "residentielle",
-    icon: "🏘",
     label: "Zone résidentielle",
     desc: "Clientèle de quartier uniquement",
   },
   {
     value: "artisanale",
-    icon: "🏭",
     label: "Zone artisanale / activité",
     desc: "Périphérie, accès voiture indispensable",
   },
@@ -245,7 +234,6 @@ export function LocalStep3({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Emplacement"
         title="Où se situe le local ?"
         subtitle="C'est le premier facteur de valeur d'un commerce, loin devant l'état ou la surface."
       />
@@ -257,7 +245,6 @@ export function LocalStep3({ form, set, errors }: P) {
                 key={o.value}
                 selected={form.environnement === o.value}
                 onClick={() => set({ environnement: o.value })}
-                icon={o.icon}
                 title={o.label}
                 description={o.desc}
               />
@@ -300,7 +287,6 @@ export function LocalStep4({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Accessibilité"
         title="Comment accède-t-on au local ?"
         subtitle="Le stationnement et les livraisons conditionnent une bonne partie des activités possibles."
       />
@@ -342,7 +328,6 @@ export function LocalStep5({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Données commerciales"
         title="Le local est-il loué ?"
         subtitle="Un local occupé s'évalue d'abord à son rendement : le loyer en place détermine le prix qu'un investisseur acceptera."
       />
@@ -428,45 +413,40 @@ export function LocalStep5({ form, set, errors }: P) {
 
 /* ============ ÉTAPE 6 — État du local ============ */
 
-const ETATS: { v: EtatGeneral; i: string; t: string; d: string }[] = [
+const ETATS: { v: EtatGeneral; t: string; d: string }[] = [
   {
     v: "excellent",
-    i: "✨",
     t: "Excellent — exploitable immédiatement",
     d: "Aménagé et conforme, un repreneur peut ouvrir sans travaux.",
   },
   {
     v: "bon",
-    i: "👍",
     t: "Bon état",
     d: "Fonctionnel, quelques rafraîchissements de décoration à prévoir.",
   },
   {
     v: "moyen",
-    i: "🔧",
     t: "État moyen — travaux à prévoir",
     d: "Mise aux normes ou réaménagement nécessaire avant exploitation.",
   },
   {
     v: "a_renover",
-    i: "🏚",
     t: "À rénover entièrement",
     d: "Local brut ou vétuste : électricité, sanitaires et devanture à reprendre.",
   },
 ];
 
 const ETATS_TECHNIQUES = ["Neuf / refait", "Correct", "Vétuste", "À reprendre entièrement"];
-const COMMODITES: { v: string; i: string; l: string; d: string }[] = [
-  { v: "sanitaires", i: "🚻", l: "Sanitaires", d: "Obligatoires pour un ERP recevant du public" },
-  { v: "cuisine", i: "🍳", l: "Cuisine équipée", d: "Point d'eau et raccordements en place" },
-  { v: "fibre", i: "🌐", l: "Fibre optique", d: "Raccordement effectif du local" },
+const COMMODITES: { v: string; l: string; d: string }[] = [
+  { v: "sanitaires", l: "Sanitaires", d: "Obligatoires pour un ERP recevant du public" },
+  { v: "cuisine", l: "Cuisine équipée", d: "Point d'eau et raccordements en place" },
+  { v: "fibre", l: "Fibre optique", d: "Raccordement effectif du local" },
 ];
 
 export function LocalStep6({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="État du local"
         title="Dans quel état se trouve le local ?"
         subtitle="Un local aux normes et exploitable tout de suite se vend nettement plus cher qu'un local à reprendre."
       />
@@ -478,7 +458,6 @@ export function LocalStep6({ form, set, errors }: P) {
                 key={o.v}
                 selected={form.etat === o.v}
                 onClick={() => set({ etat: o.v })}
-                icon={o.i}
                 title={o.t}
                 description={o.d}
               />
@@ -500,7 +479,7 @@ export function LocalStep6({ form, set, errors }: P) {
           />
         </Field>
         <SectionTitle>Diagnostic de performance énergétique</SectionTitle>
-        <p className="text-sm text-sub">
+        <p className="text-lk-compact text-lk-ink-2">
           Le DPE est obligatoire à la vente d'un local commercial comme d'un logement. Sur du
           tertiaire, il conditionne aussi les obligations du décret tertiaire.
         </p>
@@ -525,7 +504,6 @@ export function LocalStep6({ form, set, errors }: P) {
               key={o.v}
               selected={form.local_commodites.includes(o.v)}
               onClick={() => set({ local_commodites: toggleIn(form.local_commodites, o.v) })}
-              icon={o.i}
               title={o.l}
               desc={o.d}
             />
@@ -538,30 +516,27 @@ export function LocalStep6({ form, set, errors }: P) {
 
 /* ============ ÉTAPE 7 — Potentiel ============ */
 
-const POTENTIEL: { v: string; i: string; l: string; d: string }[] = [
-  { v: "divisible", i: "✂️", l: "Local divisible", d: "Deux cellules plus petites, plus liquides" },
-  { v: "reunifiable", i: "🔗", l: "Réunifiable", d: "Regroupable avec le local voisin" },
+const POTENTIEL: { v: string; l: string; d: string }[] = [
+  { v: "divisible", l: "Local divisible", d: "Deux cellules plus petites, plus liquides" },
+  { v: "reunifiable", l: "Réunifiable", d: "Regroupable avec le local voisin" },
   {
     v: "changement_destination",
-    i: "🔄",
     l: "Changement de destination possible",
     d: "Autorisé par le PLU",
   },
-  { v: "terrasse", i: "☀️", l: "Terrasse", d: "Autorisation d'occupation du domaine public" },
+  { v: "terrasse", l: "Terrasse", d: "Autorisation d'occupation du domaine public" },
   {
     v: "extraction_possible",
-    i: "💨",
     l: "Extraction réalisable",
     d: "Ouvre l'activité restauration",
   },
-  { v: "erp", i: "🏛", l: "Classé ERP", d: "Recevant du public, conforme" },
+  { v: "erp", l: "Classé ERP", d: "Recevant du public, conforme" },
   {
     v: "pmr_conforme",
-    i: "♿",
     l: "Conforme PMR",
     d: "Accessibilité en règle, pas de mise aux normes",
   },
-  { v: "enseigne", i: "🪧", l: "Autorisation d'enseigne", d: "Enseigne déclarée et autorisée" },
+  { v: "enseigne", l: "Autorisation d'enseigne", d: "Enseigne déclarée et autorisée" },
 ];
 
 const TRANSFORMATIONS = [
@@ -577,7 +552,6 @@ export function LocalStep7({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Potentiel"
         title="Que peut-on faire du local ?"
         subtitle="Plus les usages possibles sont nombreux, plus la clientèle d'acquéreurs est large — et le prix élevé."
       />
@@ -589,7 +563,6 @@ export function LocalStep7({ form, set }: P) {
               key={o.v}
               selected={form.local_potentiel.includes(o.v)}
               onClick={() => set({ local_potentiel: toggleIn(form.local_potentiel, o.v) })}
-              icon={o.i}
               title={o.l}
               desc={o.d}
             />
