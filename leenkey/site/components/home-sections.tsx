@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { ContactForm } from "./contact-form";
 import { CtaPanel } from "./cta-panel";
 import { RichText } from "./rich-text";
+import { card, cardText, cardTitle } from "./site-styles";
 import { StagePicker } from "./stage-picker";
 
 // Sections of the home page after the hero and the latest listings, in the
@@ -16,9 +17,6 @@ import { StagePicker } from "./stage-picker";
 // the Façade components (DECISIONS 2026-10-19). Texts: fr.site.home.
 
 const home = fr.site.home;
-const card = "rounded-lk-md border border-lk-line bg-lk-surface p-5 lg:p-6";
-const cardTitle = "text-lk-h3 font-semibold text-lk-ink lg:text-lk-h3-lg";
-const cardText = "text-lk-body text-pretty text-lk-ink-2";
 
 /** « Où en êtes-vous dans votre vente ? » (#etape). */
 export function StagesSection() {

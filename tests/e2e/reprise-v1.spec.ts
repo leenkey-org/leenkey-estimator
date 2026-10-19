@@ -1,40 +1,23 @@
 import { expect, test, type Page } from "@playwright/test";
 import { consentValue, fakeGoogle } from "./google";
 
-// L1-01: the V1 site (marketing pages, valuation wizard, contact forms,
-// analytics) must behave the same once ported to Next.js. The home page is in
-// V2 since L1-41 (home.spec.ts), /concept, /tarifs and /faq since L1-42
-// (site-pages.spec.ts); the contact form of the home keeps the V1 contract.
+// L1-01: the V1 site (valuation wizard, contact forms, analytics) must behave
+// the same once ported to Next.js. Its pages are in V2 since L1-41 to L1-43
+// (home.spec.ts, site-pages.spec.ts); the contact forms keep the V1 contract
+// and the wizard its V1 engine, in the V2 header and footer.
 
-const pages = ["/investir", "/cgu", "/mentions-legales", "/qui-sommes-nous"];
-
-for (const path of pages) {
-  test(`page ${path} s'affiche`, async ({ page }) => {
-    const response = await page.goto(path);
-    expect(response?.status()).toBe(200);
-    await expect(page.locator(".lk-nav-logo").first()).toBeVisible();
-    await expect(page.locator("main").first()).not.toBeEmpty();
-  });
-}
-
-// The menu of the marketing pages leads to the listings and to the account
-// (DECISIONS 2026-10-19): /connexion takes a signed-in account to its space.
-test("le menu des pages marketing mène aux annonces et au compte", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/investir");
-  const nav = page.locator("nav.lk-nav");
-  await expect(nav.getByRole("link", { name: "Acheter", exact: true })).toHaveAttribute(
-    "href",
-    "/acheter",
-  );
-  await expect(nav.getByRole("link", { name: "Mon compte" })).toHaveAttribute("href", "/connexion");
-
-  // Below 1 240 px, in the menu.
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "Menu" }).click();
-  const menu = page.locator(".lk-nav-mobile-overlay");
-  await menu.getByRole("link", { name: "Mon compte" }).click();
-  await expect(page).toHaveURL("/connexion");
+test("les adresses des pages HTML de la V1 mènent à leur page V2", async ({ request }) => {
+  for (const [page, destination] of [
+    ["landing", "/"],
+    ["concept", "/concept"],
+    ["tarifs", "/tarifs"],
+    ["faq", "/faq"],
+    ["investir", "/investir"],
+  ]) {
+    const response = await request.get(`/pages/${page}.html`, { maxRedirects: 0 });
+    expect(response.status()).toBe(308);
+    expect(response.headers().location).toBe(destination);
+  }
 });
 
 test("le formulaire de contact de l'accueil part vers /api/contact", async ({ page }) => {
@@ -57,9 +40,28 @@ test("le formulaire de contact de l'accueil part vers /api/contact", async ({ pa
   expect(body.data?.email).toBe("test@example.com");
 });
 
-test("l'estimateur affiche sa première étape", async ({ page }) => {
+test("l'estimateur affiche sa première étape, dans l'en-tête et le pied V2", async ({
+  page,
+  isMobile,
+}) => {
   await page.goto("/estimer");
   await expect(page.getByText("Quel type de bien souhaitez-vous vendre ?")).toBeVisible();
+  await expect(page.getByRole("main")).toHaveCount(1);
+  if (isMobile) await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
+  else
+    await expect(
+      page.getByRole("banner").getByRole("link", { name: "Acheter", exact: true }),
+    ).toBeVisible();
+  // At the bottom of the page, the footer shows above the bar of the wizard.
+  await page.evaluate(() =>
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" }),
+  );
+  await page.waitForFunction(
+    () => Math.ceil(window.scrollY + window.innerHeight) >= document.documentElement.scrollHeight,
+  );
+  const footer = await page.getByRole("contentinfo").boundingBox();
+  const bar = await page.locator("[data-wizard-bar]").boundingBox();
+  expect(footer && bar && footer.y + footer.height <= bar.y + 1).toBe(true);
 });
 
 // L1-13b: the result of the wizard (restored from this browser, as after a

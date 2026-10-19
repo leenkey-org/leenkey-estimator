@@ -9,8 +9,8 @@ export type MarketingSectionProps = {
   title: string;
   /** HTML level of the title: h1 for the first section of a page without a hero, h2 after one. */
   titleAs?: "h1" | "h2" | "h3" | "h4";
-  /** Body text under the title, 640 px wide at most. */
-  lead?: string;
+  /** Body text under the title, 640 px wide at most (bold parts allowed). */
+  lead?: ReactNode;
   /** Link on the right of the title from 768 px, under it before. */
   action?: ReactNode;
   children?: ReactNode;

@@ -156,11 +156,11 @@ describe("editorial rules of the site (CLAUDE.md section 16, DESIGN.md 1)", () =
     }
   });
 
-  it("no arrow after a label, no emoji, no portals (exclusive listings)", () => {
+  it("no arrow after a label, no emoji, no portals but Leenkey's (exclusive listings)", () => {
     for (const text of all) {
       expect(text).not.toContain("→");
       expect(text).not.toMatch(/\p{Extended_Pictographic}/u);
-      expect(text).not.toMatch(/portail/i);
+      expect(text).not.toMatch(/portails|portail(?! Leenkey)/i);
     }
   });
 

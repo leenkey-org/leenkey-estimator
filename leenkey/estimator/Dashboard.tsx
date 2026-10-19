@@ -246,8 +246,9 @@ export function EstimationDashboard({
   };
   const fiab = fiabiliteLabel[r.fiabilite];
 
+  // The main content of /estimer once the analysis is done (L1-43).
   return (
-    <div className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-background/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
@@ -264,7 +265,7 @@ export function EstimationDashboard({
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-5 py-10">
+      <div className="mx-auto max-w-6xl px-5 py-10">
         {/* Demande de rappel : la case cochée à l'étape coordonnées ne
             produisait aucun retour visible. */}
         {form.contact_conseiller && (
@@ -913,8 +914,8 @@ export function EstimationDashboard({
             évaluation officielle opposable, consultez un expert immobilier agréé ou un notaire.
           </p>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
 

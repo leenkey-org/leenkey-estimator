@@ -73,6 +73,7 @@ import {
   signInLink,
   TOP_NAV_LINKS,
 } from "@/leenkey/navigation/config";
+import { StagePill } from "@/leenkey/site/components/stage-pill";
 import { isProduction } from "@/lib/env";
 import {
   formatDate,
@@ -1155,6 +1156,12 @@ export default function DesignPage() {
             <Caption>{content.publicPages.menuCaption}</Caption>
             <FaqList className="max-w-lk-settings" items={content.publicPages.faq} />
             <Caption>{content.publicPages.faqCaption}</Caption>
+            <div className="flex flex-wrap items-center gap-2">
+              <StagePill stage="done" />
+              <StagePill stage="ongoing" />
+              <StagePill stage="next" />
+            </div>
+            <Caption>{content.publicPages.stageCaption}</Caption>
           </Section>
 
           <Section id="pied-de-page" title={content.sections.footer} level="h3">

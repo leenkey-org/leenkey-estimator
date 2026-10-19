@@ -299,12 +299,12 @@ html {
 /* ═══════════════════════════════════════════════════════════════════════
    Façade design system (L1-07): docs/DESIGN.md sections 2 to 5 and 9.
 
-   The V1 pages ported in L1-01 keep the theme above until they are restyled
-   (DECISIONS Q25 c), so Façade is added next to it without changing it:
-   - no Façade token reuses a V1 name: public/pages/leenkey.css declares
-     unlayered :root variables (--radius-sm, --radius-md, --font-display,
-     --color-navy, --color-border, --ease-out…) that would override a shared
-     name on the marketing pages. Colours keep their DESIGN.md names
+   The valuation wizard ported in L1-01 keeps the theme above until it is
+   restyled (DESIGN.md 13.1; the V1 pages were rebuilt in L1-41 to L1-43), so
+   Façade is added next to it without changing it:
+   - no Façade token reuses a V1 name: the V1 pages declared unlayered :root
+     variables (--radius-sm, --radius-md, --font-display, --color-navy,
+     --color-border, --ease-out…) that overrode a shared name. Colours keep their DESIGN.md names
      (bg-lk-blue…); radii are rounded-lk-sm / rounded-lk-md and font sizes
      text-lk-* instead of rounded-sm / rounded-md / text-[13px];
    - base styles (Archivo, colours, shadcn/ui variables, focus ring, reduced

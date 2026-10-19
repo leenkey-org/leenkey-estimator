@@ -1,4 +1,5 @@
 // User-facing texts (CLAUDE.md section 9): no string literal in components.
+import { legalNotice, terms } from "./legal-texts";
 import { site } from "./site";
 
 export const fr = {
@@ -535,6 +536,8 @@ export const fr = {
       title: "Politique de confidentialité",
       contact: "Pour toute question sur vos données, écrivez-nous à",
     },
+    notice: legalNotice,
+    terms,
     salesTerms: {
       metaTitle: "Conditions générales de vente · Leenkey",
       title: "Conditions générales de vente",

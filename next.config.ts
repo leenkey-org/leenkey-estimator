@@ -1,5 +1,15 @@
 import type { NextConfig } from "next";
 
+// The V1 marketing pages (public/pages/*.html, removed with L1-41 to L1-43)
+// and their V2 page.
+const V1_PAGES = [
+  ["landing", "/"],
+  ["concept", "/concept"],
+  ["tarifs", "/tarifs"],
+  ["faq", "/faq"],
+  ["investir", "/investir"],
+] as const;
+
 const nextConfig: NextConfig = {
   // Photos of the properties (L1-12): already WebP in three widths, served by
   // the route /img; the loader picks the width, without the optimiser.
@@ -16,15 +26,14 @@ const nextConfig: NextConfig = {
   },
   // The share image draws the white logo, read from public/ on the server.
   outputFileTracingIncludes: { "/api/og/**": ["./public/brand/logo-white.svg"] },
-  // V1 marketing pages are static HTML fetched at runtime by HtmlPage:
-  // never cache them, so a content change is visible on the next visit.
-  async headers() {
-    return [
-      {
-        source: "/pages/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
-      },
-    ];
+  // The addresses of the V1 pages are kept, as permanent redirects
+  // (CLAUDE.md section 16).
+  async redirects() {
+    return V1_PAGES.map(([page, destination]) => ({
+      source: `/pages/${page}.html`,
+      destination,
+      permanent: true,
+    }));
   },
 };
 

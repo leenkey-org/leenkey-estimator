@@ -693,6 +693,8 @@ export const publicPages = {
     "Vous choisissez votre niveau d'accompagnement. Le prix ne dépend jamais de la valeur de votre bien.",
   more: "Voir le détail des formules",
   moreCaption: "MoreLink · bleu sur blanc, encre sur pierre (le bleu n'y atteint que 4,4:1)",
+  stageCaption:
+    "StagePill · étape d'un jalon de /investir, en toutes lettres : « Fait » (succès), « En cours » (bleu clair), « À venir » (pierre)",
   planCaption:
     "PlanCard · nom, prix et « TTC », accroche, liste à coches, action ; formule recommandée bordée de bleu avec sa pastille",
   plans: [

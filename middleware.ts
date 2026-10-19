@@ -10,7 +10,7 @@ const PATH_HEADER = "x-lk-path";
 
 /** Static files and APIs: no session to refresh. */
 function needsSession(pathname: string): boolean {
-  if (pathname.startsWith("/api/") || pathname.startsWith("/pages/")) return false;
+  if (pathname.startsWith("/api/")) return false;
   return !/\.[a-z0-9]+$/i.test(pathname);
 }
 
