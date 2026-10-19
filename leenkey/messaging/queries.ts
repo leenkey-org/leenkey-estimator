@@ -6,7 +6,7 @@ import type { ContactListing, ConversationSummary } from "./types";
 
 // Reads of the messaging (L1-21, SPEC-V2 8.6), with the session of the
 // participant: conversation_summaries() gives a participant their listing
-// conversations only (supabase/migrations/20261020100000_messaging.sql).
+// conversations only (supabase/migrations/20261019220000_messaging.sql).
 
 export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavailable" };
 

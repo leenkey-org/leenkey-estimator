@@ -43,8 +43,18 @@ export function ConversationMenu({
   const confirm = async () => {
     setWorking(true);
     setError(null);
-    const result = await reportConversation({ conversationId, reason });
+    let result: Awaited<ReturnType<typeof reportConversation>> | null = null;
+    try {
+      result = await reportConversation({ conversationId, reason });
+    } catch (caught) {
+      // Network lost, or a page older than the last deployment.
+      console.error("[messaging] report not sent", caught);
+    }
     setWorking(false);
+    if (!result) {
+      setError(t.report.unavailable);
+      return;
+    }
     if (result.ok) {
       setOpen(false);
       setReason("");

@@ -1,8 +1,10 @@
 -- L1-21: the first message opens the conversation (atomically), the summaries
--- of a participant, the anti-abuse limits, Realtime publication.
+-- of a participant, a closed conversation, the reports, the anti-abuse
+-- limits, Realtime publication. Simultaneous requests against the limits:
+-- the lock of the triggers, checked by hand (DECISIONS L1-21).
 begin;
 \ir _helpers.psql
-select plan(34);
+select plan(41);
 \ir _plan.psql
 
 -- seller_a: a published listing with a cover photo; seller_b: a published
@@ -147,6 +149,63 @@ select is((select count(*) from conversation_summaries())::int, 0, 'seller_b: no
 \set who buyer_d
 \ir _as.psql
 select is((select count(*) from conversation_summaries())::int, 0, 'buyer_d: no access to the conversation');
+\set who admin
+\ir _as.psql
+select is((select count(*) from conversation_summaries())::int, 0,
+          'admin: not a participant, no summaries (the back office reads conversations, L1-34)');
+
+-- The advisor conversation of a paid plan (made by the payment webhook)
+-- stays out of the list until L1-34.
+reset role;
+insert into conversations (kind, property_id, seller_id)
+values ('advisor', :'prop_a', tests.uid('seller_a'))
+returning id as conv_advisor \gset
+insert into messages (conversation_id, sender_id, body, kind)
+values (:'conv_advisor', tests.uid('admin'), 'Bonjour, je suis votre conseiller Leenkey.', 'system');
+\set who seller_a
+\ir _as.psql
+select is((select count(*) from conversation_summaries())::int, 1,
+          'seller_a: the advisor conversation is not listed before L1-34');
+
+-- ===========================================================================
+-- A closed conversation takes no new message
+-- ===========================================================================
+reset role;
+update conversations set closed_at = now() where id = :'conv';
+\set who buyer_c
+\ir _as.psql
+select throws_ok(format($$select conversation_open(%L, 'Encore une question')$$, :'listing_a'),
+                 '42501', 'conversation closed', 'buyer_c: a closed conversation takes no new message');
+reset role;
+update conversations set closed_at = null where id = :'conv';
+
+-- ===========================================================================
+-- Reports: one open report per participant and conversation
+-- ===========================================================================
+\set who buyer_c
+\ir _as.psql
+select lives_ok(format($$insert into reports (conversation_id, reporter_id, reason)
+                         values (%L, tests.uid('buyer_c'), 'Demande d''acompte hors plateforme')$$, :'conv'),
+                'buyer_c: reports the conversation');
+select throws_ok(format($$insert into reports (conversation_id, reporter_id, reason)
+                          values (%L, tests.uid('buyer_c'), 'Encore')$$, :'conv'),
+                 '23505', null, 'buyer_c: one open report per conversation');
+\set who admin
+\ir _as.psql
+\o /dev/null
+update reports set resolved_at = now(), resolved_by = tests.uid('admin')
+ where conversation_id = :'conv' and reporter_id = tests.uid('buyer_c');
+\o
+\set who buyer_c
+\ir _as.psql
+select lives_ok(format($$insert into reports (conversation_id, reporter_id, reason)
+                         values (%L, tests.uid('buyer_c'), 'De nouveau')$$, :'conv'),
+                'buyer_c: a new report once the first is dealt with');
+\set who seller_a
+\ir _as.psql
+select lives_ok(format($$insert into reports (conversation_id, reporter_id, reason)
+                         values (%L, tests.uid('seller_a'), 'Propos insistants')$$, :'conv'),
+                'seller_a: the other participant reports it too');
 
 -- ===========================================================================
 -- Anti-abuse: 20 messages an hour per sender

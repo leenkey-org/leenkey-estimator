@@ -28,6 +28,9 @@ $$;
 -- a day per buyer, over sliding windows. Checked on every insert, whatever
 -- the way in; never for the Leenkey team (advisor replies) nor without a
 -- user (the payment webhook, the seed). Error 54000, with the limit as message.
+-- One sender (one buyer) at a time, under a lock held until the end of the
+-- transaction: simultaneous requests would otherwise each count without the
+-- others and all pass.
 -- ---------------------------------------------------------------------------
 create index messages_sender_idx on public.messages (sender_id, created_at desc);
 create index conversations_buyer_created_idx on public.conversations (buyer_id, created_at desc)
@@ -39,6 +42,7 @@ begin
   if auth.uid() is null or public.is_admin() then
     return new;
   end if;
+  perform pg_advisory_xact_lock(hashtextextended('messages_rate_limit:' || new.sender_id::text, 0));
   if (select count(*) from public.messages
        where sender_id = new.sender_id and created_at > now() - interval '1 hour') >= 20 then
     raise exception 'messages_per_hour' using errcode = '54000';
@@ -55,6 +59,7 @@ begin
   if new.kind <> 'listing' or auth.uid() is null or public.is_admin() then
     return new;
   end if;
+  perform pg_advisory_xact_lock(hashtextextended('conversations_rate_limit:' || new.buyer_id::text, 0));
   if (select count(*) from public.conversations
        where kind = 'listing' and buyer_id = new.buyer_id
          and created_at > now() - interval '24 hours') >= 5 then
@@ -65,6 +70,14 @@ end;
 $$;
 create trigger conversations_rate_limit before insert on public.conversations
   for each row execute function public.conversations_rate_limit();
+
+-- ---------------------------------------------------------------------------
+-- Reports (SPEC 8.6 and 17): one open report per participant and
+-- conversation, so that a conversation cannot fill the queue of the team; a
+-- new one once the team has dealt with it.
+-- ---------------------------------------------------------------------------
+create unique index reports_open_once on public.reports (conversation_id, reporter_id)
+  where resolved_at is null;
 
 -- ---------------------------------------------------------------------------
 -- The first message of a buyer opens the conversation (SPEC 8.6): both in one

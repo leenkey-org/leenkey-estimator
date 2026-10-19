@@ -22,7 +22,8 @@ export type SendError =
   | "closed"
   /** The account may no longer write (suspended by the Leenkey team). */
   | "inactive"
-  | "listingUnavailable"
+  /** What the conversation is about is no longer open to it (a listing offline, one's own). */
+  | "subjectUnavailable"
   | "unavailable";
 
 /** A row of public.messages, as PostgREST and Realtime give it. */

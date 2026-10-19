@@ -37,6 +37,7 @@ export default async function NewConversationPage({ searchParams }: Props) {
     ownedPropertyId(profile.id, listingId),
   ]);
   if (ownProperty) redirect(sheetHref(ownProperty));
+  // The error boundary of the group (error.tsx) shows « Ça n'a pas fonctionné. ».
   if (!list.ok || !listing.ok) throw new Error("The listing could not be read.");
   const existing = list.data.find(
     (conversation) => conversation.role === "buyer" && conversation.listingId === listingId,

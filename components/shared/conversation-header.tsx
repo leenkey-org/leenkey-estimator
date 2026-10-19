@@ -40,7 +40,8 @@ export function ConversationHeader({
       )}
     >
       {back}
-      {/* The link covers the thumbnail and the texts: a 44 px target. */}
+      {/* The link covers the thumbnail and the texts: a 44 px target, and its
+          focus ring is drawn around them (the cut title would hide it). */}
       <div className="relative flex min-w-0 flex-1 items-center gap-3">
         <PropertyThumb src={thumbSrc} className="size-11" />
         <div className="flex min-w-0 flex-col">
@@ -48,7 +49,10 @@ export function ConversationHeader({
             {href ? (
               <Link
                 href={href}
-                className="rounded-lk-sm after:absolute after:inset-0 hover:underline"
+                className={cn(
+                  "after:absolute after:inset-0 after:rounded-lk-sm hover:underline",
+                  "focus-visible:outline-none focus-visible:after:outline-solid focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-lk-blue",
+                )}
               >
                 {title}
               </Link>

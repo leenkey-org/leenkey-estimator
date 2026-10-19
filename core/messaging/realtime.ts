@@ -98,8 +98,12 @@ export function useThreadMessages(
   useEffect(() => {
     let active = true;
     const catchUp = async () => {
-      const result = await messagesSince(conversationId, afterRef.current() ?? EPOCH);
-      if (active && result.ok && result.data.length > 0) onMessagesRef.current(result.data);
+      try {
+        const result = await messagesSince(conversationId, afterRef.current() ?? EPOCH);
+        if (active && result.ok && result.data.length > 0) onMessagesRef.current(result.data);
+      } catch {
+        // Network lost: the next subscription or showing of the page catches up.
+      }
     };
     const end = subscribe(
       `messages:${conversationId}`,
@@ -129,9 +133,11 @@ export function useThreadMessages(
 }
 
 /**
- * A conversation of the account changed (new message, read by the other
- * party, closed): `onChange` is called, also when the subscription comes back
- * after a lost connection and when the page is shown again.
+ * A conversation of the account changed (new, new message, read, closed):
+ * `onChange` is called; also each time the subscription is ready (the page
+ * may come from the cache of the router, on a back navigation, or a change
+ * may have come before the subscription) and when the page is shown again.
+ * New and changed rows only: Realtime does not check the RLS of a deletion.
  */
 export function useConversationChanges(profileId: string, onChange: () => void) {
   const onChangeRef = useRef(onChange);
@@ -140,11 +146,10 @@ export function useConversationChanges(profileId: string, onChange: () => void) 
   });
 
   useEffect(() => {
-    let ready = 0;
     const changed = () => onChangeRef.current();
-    const changes = (column: "seller_id" | "buyer_id") =>
+    const changes = (event: "INSERT" | "UPDATE", column: "seller_id" | "buyer_id") =>
       ({
-        event: "*",
+        event,
         schema: "public",
         table: "conversations",
         filter: `${column}=eq.${profileId}`,
@@ -153,12 +158,11 @@ export function useConversationChanges(profileId: string, onChange: () => void) 
       `conversations:${profileId}`,
       (channel) =>
         channel
-          .on("postgres_changes", changes("seller_id"), changed)
-          .on("postgres_changes", changes("buyer_id"), changed),
-      () => {
-        // The page was read just before the first subscription.
-        if (++ready > 1) changed();
-      },
+          .on("postgres_changes", changes("INSERT", "seller_id"), changed)
+          .on("postgres_changes", changes("UPDATE", "seller_id"), changed)
+          .on("postgres_changes", changes("INSERT", "buyer_id"), changed)
+          .on("postgres_changes", changes("UPDATE", "buyer_id"), changed),
+      changed,
     );
     const onVisible = () => {
       if (document.visibilityState === "visible") changed();

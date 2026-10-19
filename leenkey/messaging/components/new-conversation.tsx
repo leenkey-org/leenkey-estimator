@@ -46,10 +46,16 @@ export function NewConversation({
   const send = async () => {
     setSending(true);
     setError(null);
-    const result = await startConversation({ listingId, body: draft });
-    if (!result.ok) {
+    let result: Awaited<ReturnType<typeof startConversation>> | null = null;
+    try {
+      result = await startConversation({ listingId, body: draft });
+    } catch (caught) {
+      // Network lost, or a page older than the last deployment: the text stays.
+      console.error("[messaging] first message not sent", caught);
+    }
+    if (!result?.ok) {
       setSending(false);
-      setError(result.error);
+      setError(result ? result.error : "unavailable");
       return;
     }
     // Still sending until the conversation is shown.

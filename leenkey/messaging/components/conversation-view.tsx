@@ -87,14 +87,20 @@ export function ConversationView({
 
   useEffect(() => setIsClosed(closed), [closed]);
 
+  // Best effort: a read mark lost on the way is made again at the next
+  // message received or opening.
+  const sendReadMark = useCallback(() => {
+    markConversationRead(conversationId).catch(() => {});
+  }, [conversationId]);
+
   const markRead = useCallback(() => {
     if (readTimer.current !== null) return;
     readTimer.current = window.setTimeout(() => {
       readTimer.current = null;
       readPending.current = false;
-      void markConversationRead(conversationId);
+      sendReadMark();
     }, 500);
-  }, [conversationId]);
+  }, [sendReadMark]);
 
   useEffect(() => {
     if (unread) markRead();
@@ -111,10 +117,10 @@ export function ConversationView({
       if (readTimer.current !== null) {
         window.clearTimeout(readTimer.current);
         readTimer.current = null;
-        void markConversationRead(conversationId);
+        sendReadMark();
       }
     };
-  }, [markRead, conversationId]);
+  }, [markRead, sendReadMark]);
 
   useThreadMessages(
     conversationId,
@@ -157,16 +163,24 @@ export function ConversationView({
   const send = async () => {
     setSending(true);
     setError(null);
-    const result = await sendMessage({ conversationId, body: draft });
+    let result: Awaited<ReturnType<typeof sendMessage>> | null = null;
+    try {
+      result = await sendMessage({ conversationId, body: draft });
+    } catch (caught) {
+      // Network lost, or a page older than the last deployment: the text stays.
+      console.error("[messaging] message not sent", caught);
+    }
     setSending(false);
-    if (!result.ok) {
-      if (result.error === "closed") setIsClosed(true);
-      else setError(result.error);
+    if (!result?.ok) {
+      if (result?.error === "closed") setIsClosed(true);
+      else setError(result ? result.error : "unavailable");
       return;
     }
     atEnd.current = true;
     setDraft("");
     addMessages([result.data]);
+    // Realtime may have brought it first: the thread does not change then.
+    scrollToEnd();
     fieldRef.current?.focus();
   };
 

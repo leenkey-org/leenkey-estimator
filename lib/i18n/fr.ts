@@ -683,11 +683,18 @@ export const fr = {
       closed: "Cette conversation est close : vous ne pouvez plus y écrire.",
       inactive:
         "Votre compte ne permet plus d'envoyer de messages : écrivez-nous depuis le formulaire de contact.",
-      listingUnavailable:
+      subjectUnavailable:
         "Cette annonce n'est plus en ligne : son vendeur ne peut plus être contacté.",
       unavailable: "Votre message n'est pas parti. Vérifiez votre connexion et réessayez.",
     },
     dialog: { back: "Retour", close: "Fermer", cancel: "Annuler" },
+    // A conversation that could not be read (SPEC-V2 section 6, « Erreur »).
+    error: {
+      title: "Ça n'a pas fonctionné.",
+      text: "Vos messages n'ont pas pu être chargés. Réessayez dans un instant ; si le problème continue, écrivez-nous.",
+      retry: "Réessayer",
+      back: "Toutes les conversations",
+    },
   },
   // L1-10: pages whose screen comes with a later task (ComingSoon).
   placeholders: {

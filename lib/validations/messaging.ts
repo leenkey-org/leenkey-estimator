@@ -36,6 +36,12 @@ export const reportSchema = z.object({
 
 export const conversationIdSchema = z.string().uuid();
 
+/** The messages of a conversation after the last one known (an ISO date). */
+export const messagesSinceSchema = z.object({
+  conversationId: z.string().uuid(),
+  after: z.string().datetime({ offset: true }),
+});
+
 export type MessageInput = z.infer<typeof messageSchema>;
 export type FirstMessageInput = z.infer<typeof firstMessageSchema>;
 export type ReportInput = z.infer<typeof reportSchema>;

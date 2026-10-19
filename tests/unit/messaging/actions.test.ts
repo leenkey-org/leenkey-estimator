@@ -114,7 +114,7 @@ describe("the first message from a listing", () => {
     const cases: [Answer, string][] = [
       [refused("54000", "conversations_per_day"), "conversationsPerDay"],
       [refused("54000", "messages_per_hour"), "messagesPerHour"],
-      [refused("22023", "listing not available"), "listingUnavailable"],
+      [refused("22023", "listing not available"), "subjectUnavailable"],
       [refused("42501", "conversation closed"), "closed"],
       [refused("42501", "not authenticated"), "inactive"],
       [refused("08006"), "unavailable"],
@@ -194,10 +194,19 @@ describe("read marks, catching up and reports", () => {
 
   it("reads the messages after a date only", async () => {
     expect(await messagesSince(CONVERSATION, "hier")).toEqual({ ok: false, error: "invalid" });
+    // Date.parse would take it: an ISO date only.
+    expect(await messagesSince(CONVERSATION, "1")).toEqual({ ok: false, error: "invalid" });
     expect(await messagesSince("x", "2026-10-19T21:24:22.382Z")).toEqual({
       ok: false,
       error: "invalid",
     });
+  });
+
+  it("says an open report of the same conversation is already sent", async () => {
+    mocks.answers.push(refused("23505", "duplicate key value violates unique constraint"));
+    expect(
+      await reportConversation({ conversationId: CONVERSATION, reason: "Propos insultants" }),
+    ).toEqual({ ok: true, data: null });
   });
 
   it("asks a reason, then writes the report for its author", async () => {

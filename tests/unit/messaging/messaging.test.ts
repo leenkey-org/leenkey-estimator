@@ -230,7 +230,7 @@ describe("what the database refuses", () => {
     expect(sendErrorOf({ code: "42501", message: "conversation closed" })).toBe("closed");
     // RLS, or conversation_start for a suspended account.
     expect(sendErrorOf({ code: "42501", message: "not authenticated" })).toBe("inactive");
-    expect(sendErrorOf({ code: "22023" })).toBe("listingUnavailable");
+    expect(sendErrorOf({ code: "22023" })).toBe("subjectUnavailable");
     expect(sendErrorOf({ code: "23514" })).toBe("tooLong");
     expect(sendErrorOf({ code: "08006" })).toBe("unavailable");
   });

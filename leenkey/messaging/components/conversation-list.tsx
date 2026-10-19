@@ -84,6 +84,8 @@ function ConversationLine({
         aria-current={current ? "page" : undefined}
         className={cn(
           "flex items-start gap-3 px-4 py-3 transition-colors duration-140 ease-out-lk",
+          // Inside the line: the card clips what goes beyond it.
+          "focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-lk-blue",
           current ? "bg-lk-blue-tint" : "hover:bg-lk-stone-2",
         )}
       >

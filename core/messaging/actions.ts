@@ -2,7 +2,12 @@
 
 import { getProfile } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { conversationIdSchema, messageSchema, reportSchema } from "@/lib/validations/messaging";
+import {
+  conversationIdSchema,
+  messageSchema,
+  messagesSinceSchema,
+  reportSchema,
+} from "@/lib/validations/messaging";
 import { sendErrorOf } from "./errors";
 import { listThreadMessages } from "./queries";
 import { toThreadMessage, type SendError, type ThreadMessage } from "./types";
@@ -93,15 +98,18 @@ export async function messagesSince(
 ): Promise<
   { ok: true; data: ThreadMessage[] } | { ok: false; error: "invalid" | "auth" | "unavailable" }
 > {
-  const parsedId = conversationIdSchema.safeParse(conversationId);
-  const parsedAfter = typeof after === "string" && !Number.isNaN(Date.parse(after)) ? after : null;
-  if (!parsedId.success || parsedAfter === null) return { ok: false, error: "invalid" };
+  const parsed = messagesSinceSchema.safeParse({ conversationId, after });
+  if (!parsed.success) return { ok: false, error: "invalid" };
   const profile = await getProfile();
   if (!profile) return { ok: false, error: "auth" };
-  return listThreadMessages(parsedId.data, { after: parsedAfter });
+  return listThreadMessages(parsed.data.conversationId, { after: parsed.data.after });
 }
 
-/** A participant reports the conversation, with a reason (SPEC-V2 8.6 and 17). */
+/**
+ * A participant reports the conversation, with a reason (SPEC-V2 8.6 and 17).
+ * One open report per participant and conversation: a second one, while the
+ * team has not dealt with the first, is already sent.
+ */
 export async function reportConversation(
   input: unknown,
 ): Promise<
@@ -119,7 +127,8 @@ export async function reportConversation(
   const { error } = await supabase
     .from("reports")
     .insert({ conversation_id: conversationId, reporter_id: profile.id, reason });
-  if (error) {
+  // 23505: their open report of this conversation is already with the team.
+  if (error && error.code !== "23505") {
     console.error("[messaging] report not saved", {
       user_id: profile.id,
       entity_id: conversationId,

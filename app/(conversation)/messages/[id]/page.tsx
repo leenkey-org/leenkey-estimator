@@ -44,7 +44,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
   const { id } = await params;
   if (!isUuid(id)) notFound();
   const [list, thread] = await Promise.all([listConversations(), listThreadMessages(id)]);
-  // The error boundary of the page shows « Ça n'a pas fonctionné » (500).
+  // The error boundary of the group (error.tsx) shows « Ça n'a pas fonctionné. ».
   if (!list.ok || !thread.ok) throw new Error("The conversation could not be read.");
   const conversation = list.data.find((item) => item.id === id);
   if (!conversation) notFound();

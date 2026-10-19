@@ -51,7 +51,10 @@ async function signIn(page: Page, email: string, path: string) {
   await page.getByLabel("Mot de passe").fill(SEED_PASSWORD ?? "");
   await page.getByRole("button", { name: "Se connecter" }).click();
   await page.waitForURL((url) => url.pathname !== "/connexion");
-  await page.goto(path);
+  // Already on the page after the sign-in: opened again, it would claim the
+  // analysis a second time while the first claim runs (token then used).
+  const here = new URL(page.url());
+  if (`${here.pathname}${here.search}` !== path) await page.goto(path);
   if (new URL(page.url()).pathname === "/conditions") {
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Continuer" }).click();
