@@ -2,8 +2,19 @@ import type { CSSProperties, ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bell, ChevronLeft, Heart, Plus, Settings, Sparkles, X } from "lucide-react";
+import {
+  Bell,
+  CalendarCheck,
+  ChevronLeft,
+  Heart,
+  MoreVertical,
+  Plus,
+  Settings,
+  Sparkles,
+  X,
+} from "lucide-react";
 import * as content from "./_content";
+import { ComposerDemo } from "./_composer-demo";
 import { ConfirmDemo } from "./_confirm-demo";
 import { ConsentDemo } from "./_consent-demo";
 import { FilterSelectDemo } from "./_filter-select-demo";
@@ -18,6 +29,7 @@ import { Checkbox } from "@/components/shared/checkbox";
 import { ChipButton, ChipToggle } from "@/components/shared/chip-toggle";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { ContactCard } from "@/components/shared/contact-card";
+import { ConversationHeader } from "@/components/shared/conversation-header";
 import {
   DataTable,
   DataTableActions,
@@ -41,6 +53,7 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { FaqList } from "@/components/shared/faq-list";
 import { LinkTabs } from "@/components/shared/link-tabs";
 import { MarketingSection } from "@/components/shared/marketing-section";
+import { MessageBubble, MessageDate, SystemMessage } from "@/components/shared/message-bubble";
 import { MoreLink } from "@/components/shared/more-link";
 import { PlanCard } from "@/components/shared/plan-card";
 import { SiteMenu } from "@/components/shared/site-menu";
@@ -840,8 +853,8 @@ export default function DesignPage() {
             <div className="rounded-lk-md bg-lk-bg px-5">
               <ComingSoon
                 titleAs="h4"
-                title={fr.placeholders.messages.comingTitle}
-                text={fr.placeholders.messages.comingText}
+                title={fr.placeholders.account.comingTitle}
+                text={fr.placeholders.account.comingText}
               />
             </div>
             <Caption>{content.comingSoon.caption}</Caption>
@@ -1178,6 +1191,42 @@ export default function DesignPage() {
               <ConfirmDemo open={content.propertySheet.open} />
             </div>
             <Caption>{content.propertySheet.dialogCaption}</Caption>
+          </Section>
+
+          <Section id="messagerie" title={content.sections.messaging} level="h3">
+            <div className="flex max-w-97.5 flex-col overflow-hidden rounded-lk-md border border-lk-line bg-lk-bg">
+              <ConversationHeader
+                back={
+                  <IconButton
+                    icon={ChevronLeft}
+                    variant="stone"
+                    aria-label={fr.messaging.thread.back}
+                  />
+                }
+                title={content.messaging.header.title}
+                subtitle={content.messaging.header.subtitle}
+                menu={
+                  <IconButton
+                    icon={MoreVertical}
+                    variant="transparent"
+                    aria-label={fr.messaging.thread.menu}
+                  />
+                }
+                titleAs="h4"
+              />
+              <div className="flex flex-col gap-3 p-4">
+                <MessageDate>{content.messaging.date}</MessageDate>
+                <MessageBubble mine={false} meta={content.messaging.receivedMeta}>
+                  {content.messaging.received}
+                </MessageBubble>
+                <MessageBubble mine meta={content.messaging.sentMeta}>
+                  {content.messaging.sent}
+                </MessageBubble>
+                <SystemMessage icon={CalendarCheck}>{content.messaging.system}</SystemMessage>
+              </div>
+              <ComposerDemo />
+            </div>
+            <Caption>{content.messaging.caption}</Caption>
           </Section>
 
           <Section id="pied-de-page" title={content.sections.footer} level="h3">

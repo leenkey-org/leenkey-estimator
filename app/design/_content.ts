@@ -61,6 +61,7 @@ export const sections = {
   footer: "Pied de page",
   publicPages: "Pages publiques",
   propertySheet: "Fiche du bien : onglets et confirmation",
+  messaging: "Messagerie",
   formats: "Formats des nombres et des dates",
   shapes: "Rayons, ombres et bordures",
   spacing: "Espacements, points de rupture et conteneurs",
@@ -785,6 +786,22 @@ export const backOffice = {
       "La description est incomplète : précisez l'état du bien, ses pièces et ses points forts.",
   },
 } as const;
+
+// L1-21: a conversation (DESIGN.md 10.5), with the messages of Messagerie.png.
+export const messaging = {
+  header: {
+    title: "Appartement 3\u00A0p\u00A0· Savigny-sur-Orge",
+    subtitle: "Avec Thomas\u00A0· Justificatif vérifié",
+  },
+  date: "Mardi 22 septembre",
+  received: "Bonjour, votre appartement m'intéresse beaucoup. Le balcon est-il bien exposé sud ?",
+  receivedMeta: "Thomas\u00A0· 9:12",
+  sent: "Bonjour Thomas, oui plein sud, ensoleillé de midi au coucher.",
+  sentMeta: "Vous\u00A0· 9:40",
+  system: "Visite confirmée le samedi 26 septembre à 10\u00A0h.",
+  caption:
+    "ConversationHeader (retour, vignette 44 × 44, titre 14 px 600, sous-titre 12 px, menu), séparateur de date, MessageBubble reçue (blanche, coin 2 px en bas à gauche) et envoyée (bleue, coin 2 px en bas à droite), SystemMessage (pierre, pleine largeur), puis le Composer : champ de 44 px qui grandit jusqu'à cinq lignes, Entrée envoie au clavier",
+};
 
 // L1-14: the tabs of the page of a property and the confirmation dialog.
 export const propertySheet = {

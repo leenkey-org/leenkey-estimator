@@ -617,15 +617,87 @@ export const fr = {
     surfaceSlider: "Surface habitable",
     nextStep: { done: "Fait :", todo: "À faire :" },
   },
+  // L1-21: messaging (SPEC-V2 8.6, DESIGN.md 10.5 and 12.9).
+  messaging: {
+    metaTitle: "Messages · Leenkey",
+    title: "Messages",
+    conversationMetaTitle: (title: string) => `${title} · Messages · Leenkey`,
+    newMetaTitle: "Contacter le vendeur · Leenkey",
+    // The other party without a first name.
+    someone: { buyer: "l'acquéreur", seller: "le vendeur" },
+    list: {
+      label: "Vos conversations",
+      unread: "Non lu",
+      you: "Vous :",
+      // Group of the conversations of an account that also sells.
+      buying: "Annonces contactées",
+      error: "Vos conversations n'ont pas pu être chargées. Réessayez dans un instant.",
+      empty: {
+        title: "Aucune conversation pour l'instant",
+        buyer: "Écrivez à un vendeur depuis son annonce : votre échange apparaîtra ici.",
+        seller: "Les acquéreurs qui vous écrivent depuis votre annonce apparaîtront ici.",
+        action: "Voir les annonces",
+      },
+      choose: {
+        title: "Choisissez une conversation",
+        text: "Ses messages s'affichent ici, à côté de la liste.",
+      },
+    },
+    thread: {
+      back: "Toutes les conversations",
+      label: "Messages de la conversation",
+      with: (name: string) => `Avec ${name}`,
+      withFinancing: (name: string, financing: string) => `Avec ${name}\u00A0· ${financing}`,
+      you: "Vous",
+      menu: "Plus d'actions",
+      report: "Signaler la conversation",
+      reported: "Votre signalement est transmis à l'équipe Leenkey.",
+      closed: "Cette conversation est close : vous ne pouvez plus y écrire.",
+    },
+    composer: {
+      label: "Votre message",
+      send: "Envoyer",
+    },
+    start: {
+      back: "Retour à l'annonce",
+      intro: (name: string) => `Présentez-vous et posez vos questions : ${name} vous répond ici.`,
+      visit: "Bonjour, je souhaiterais visiter votre bien. Quelles sont vos disponibilités ?",
+    },
+    report: {
+      title: "Signaler la conversation",
+      text: "Dites-nous ce qui ne va pas : l'équipe Leenkey examine chaque signalement.",
+      reason: "Motif du signalement",
+      confirm: "Envoyer le signalement",
+      tooShort: "Indiquez le motif du signalement, en 3 caractères au moins.",
+      tooLong: "Le motif dépasse 2\u00A0000 caractères.",
+      unavailable: "Le signalement n'est pas parti. Réessayez dans un instant.",
+    },
+    errors: {
+      empty: "Écrivez votre message.",
+      tooLong: "Votre message dépasse 4\u00A0000 caractères.",
+      auth: "Votre session a expiré : reconnectez-vous pour envoyer votre message.",
+      messagesPerHour:
+        "Vous avez envoyé 20 messages en une heure : c'est la limite. Réessayez un peu plus tard.",
+      conversationsPerDay:
+        "Vous avez contacté 5 nouveaux vendeurs en 24\u00A0h : c'est la limite. Réessayez demain.",
+      closed: "Cette conversation est close : vous ne pouvez plus y écrire.",
+      inactive:
+        "Votre compte ne permet plus d'envoyer de messages : écrivez-nous depuis le formulaire de contact.",
+      subjectUnavailable:
+        "Cette annonce n'est plus en ligne : son vendeur ne peut plus être contacté.",
+      unavailable: "Votre message n'est pas parti. Vérifiez votre connexion et réessayez.",
+    },
+    dialog: { back: "Retour", close: "Fermer", cancel: "Annuler" },
+    // A conversation that could not be read (SPEC-V2 section 6, « Erreur »).
+    error: {
+      title: "Ça n'a pas fonctionné.",
+      text: "Vos messages n'ont pas pu être chargés. Réessayez dans un instant ; si le problème continue, écrivez-nous.",
+      retry: "Réessayer",
+      back: "Toutes les conversations",
+    },
+  },
   // L1-10: pages whose screen comes with a later task (ComingSoon).
   placeholders: {
-    messages: {
-      metaTitle: "Messages · Leenkey",
-      title: "Messages",
-      comingTitle: "Votre messagerie arrive",
-      comingText:
-        "Nous préparons l'écran de vos conversations avec les acquéreurs et les vendeurs.",
-    },
     account: {
       metaTitle: "Mon compte · Leenkey",
       title: "Mon compte",
@@ -1004,6 +1076,13 @@ export const fr = {
     },
   },
   // Labels of SPEC-V2 section 7 (StatusBadge mapping), colours in DESIGN.md 10.2.
+  // Exact labels of FinancingBadge (DESIGN.md 10.2, SPEC-V2 13): never « validé ».
+  financingStatus: {
+    not_provided: "Financement non renseigné",
+    declared: "Informations déclarées",
+    document_provided: "Justificatif fourni",
+    document_checked: "Justificatif vérifié",
+  },
   listingStatus: {
     draft: "Brouillon",
     pending: "En attente de validation",

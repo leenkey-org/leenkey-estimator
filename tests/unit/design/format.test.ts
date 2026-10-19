@@ -3,10 +3,12 @@ import {
   NBSP,
   NNBSP,
   capitalize,
+  formatClock,
   formatDate,
   formatDateShort,
   formatDateTime,
   formatHour,
+  formatMessageTime,
   formatPrice,
   formatPricePerSquareMetre,
   formatPriceShort,
@@ -92,6 +94,26 @@ describe("dates in Europe/Paris", () => {
   it("never prints a numeric date", () => {
     expect(formatDate("2026-09-22T10:00:00Z", now)).not.toMatch(/\d+\/\d+/);
     expect(formatDateTime("2026-09-22T10:00:00Z", now)).not.toMatch(/\d+\/\d+/);
+  });
+});
+
+describe("times of the messages", () => {
+  const now = new Date("2026-10-15T12:00:00Z");
+
+  it("writes the time of a message as 9:12, in Paris", () => {
+    expect(formatClock("2026-10-15T07:12:00Z")).toBe("9:12");
+    expect(formatClock("2026-10-15T12:05:00Z")).toBe("14:05");
+    expect(formatClock("2026-11-15T08:00:00Z")).toBe("9:00");
+  });
+
+  it("dates the last message of a conversation in the list", () => {
+    expect(formatMessageTime("2026-10-15T07:12:00Z", now)).toBe("9:12");
+    // 23:30 UTC on 14 October is 01:30 on 15 October in Paris: today.
+    expect(formatMessageTime("2026-10-14T23:30:00Z", now)).toBe("1:30");
+    expect(formatMessageTime("2026-10-14T08:00:00Z", now)).toBe("hier");
+    expect(formatMessageTime("2026-10-12T08:00:00Z", now)).toBe("lun.");
+    expect(formatMessageTime("2026-10-08T08:00:00Z", now)).toBe("8 oct.");
+    expect(formatMessageTime("2025-10-15T08:00:00Z", now)).toBe("15 oct. 2025");
   });
 });
 

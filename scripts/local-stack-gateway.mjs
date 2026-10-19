@@ -1,12 +1,14 @@
 // Gateway of scripts/local-stack.sh: serves /auth/v1 (Supabase Auth),
-// /rest/v1 (PostgREST) and /storage/v1 (Supabase Storage) under one origin,
-// like a Supabase project, and the email templates of supabase/templates/ to
-// Supabase Auth.
+// /rest/v1 (PostgREST), /storage/v1 (Supabase Storage) and the WebSocket of
+// /realtime/v1 (Supabase Realtime) under one origin, like a Supabase
+// project, and the email templates of supabase/templates/ to Supabase Auth.
 import { createReadStream, existsSync } from "node:fs";
 import http from "node:http";
+import net from "node:net";
 import { basename, join } from "node:path";
 
-const [port, authPort, restPort, templatesDir, hostIp, storagePort] = process.argv.slice(2);
+const [port, authPort, restPort, templatesDir, hostIp, storagePort, realtimePort] =
+  process.argv.slice(2);
 const routes = [
   ["/auth/v1", Number(authPort)],
   ["/rest/v1", Number(restPort)],
@@ -40,8 +42,28 @@ function handle(req, res) {
   req.pipe(upstream);
 }
 
+// /realtime/v1/websocket → the socket of Realtime. Its self-hosted tenant is
+// named by the first label of the host: « realtime-dev ».
+function upgrade(req, socket, head) {
+  if (!realtimePort || !req.url.startsWith("/realtime/v1/")) return socket.destroy();
+  const upstream = net.connect(Number(realtimePort), "127.0.0.1", () => {
+    const lines = [`${req.method} /socket${req.url.slice("/realtime/v1".length)} HTTP/1.1`];
+    for (let i = 0; i < req.rawHeaders.length; i += 2) {
+      const name = req.rawHeaders[i];
+      if (name.toLowerCase() === "host") continue;
+      lines.push(`${name}: ${req.rawHeaders[i + 1]}`);
+    }
+    lines.push(`Host: realtime-dev.localhost:${realtimePort}`);
+    upstream.write(`${lines.join("\r\n")}\r\n\r\n`);
+    if (head.length) upstream.write(head);
+    socket.pipe(upstream).pipe(socket);
+  });
+  upstream.on("error", () => socket.destroy());
+  socket.on("error", () => upstream.destroy());
+}
+
 // Local machine (browser, app) and docker host address (Supabase Auth fetches
 // the templates): never every interface.
 for (const host of ["127.0.0.1", hostIp].filter(Boolean)) {
-  http.createServer(handle).listen(Number(port), host);
+  http.createServer(handle).on("upgrade", upgrade).listen(Number(port), host);
 }

@@ -82,6 +82,9 @@ describe("cn() knows the Façade classes", () => {
     expect(cn("text-lk-h1", "text-lk-h2")).toBe("text-lk-h2");
     expect(cn("text-base", "text-lk-body")).toBe("text-lk-body");
     expect(cn("rounded-md", "rounded-lk-sm")).toBe("rounded-lk-sm");
+    // The corner of a message bubble on the side of its sender (DESIGN.md 5).
+    expect(cn("rounded-lk-md", "rounded-br-lk-xs")).toBe("rounded-lk-md rounded-br-lk-xs");
+    expect(cn("rounded-br-lk-sm", "rounded-br-lk-xs")).toBe("rounded-br-lk-xs");
     expect(cn("shadow", "shadow-float")).toBe("shadow-float");
     expect(cn("tabular-nums", "tabular")).toBe("tabular");
     expect(cn("bg-primary", "bg-lk-blue")).toBe("bg-lk-blue");

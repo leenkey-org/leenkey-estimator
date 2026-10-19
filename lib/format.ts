@@ -143,6 +143,27 @@ export function formatHour(value: DateInput): string {
   return `${hour}${NBSP}h${minutes}`;
 }
 
+/** « 9:12 », « 14:05 »: the time of a message (docs/DESIGN.md 10.5). */
+export function formatClock(value: DateInput): string {
+  const { hour, minute } = parisParts(toDate(value));
+  return `${hour}:${String(minute).padStart(2, "0")}`;
+}
+
+/**
+ * Time of the last message of a conversation in the list: « 9:12 » today,
+ * « hier », the day of the week within six days (« lun. »), then the short date.
+ */
+export function formatMessageTime(value: DateInput, now: DateInput = new Date()): string {
+  const date = toDate(value);
+  const days = parisDayNumber(toDate(now)) - parisDayNumber(date);
+  if (days <= 0) return formatClock(date);
+  if (days === 1) return fr.format.yesterday;
+  if (days < 7) {
+    return new Intl.DateTimeFormat(LOCALE, { timeZone: TIME_ZONE, weekday: "short" }).format(date);
+  }
+  return formatDateShort(date, now);
+}
+
 /** « 3 oct. à 10 h ». */
 export function formatDateTime(value: DateInput, now: DateInput = new Date()): string {
   return `${formatDateShort(value, now)} ${fr.format.at} ${formatHour(value)}`;

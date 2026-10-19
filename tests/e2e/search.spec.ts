@@ -292,7 +292,9 @@ test.describe("recherche /acheter (base de seed)", () => {
 test.describe("page annonce (base de seed)", () => {
   test.skip(!seeded, SEED_REQUIRED);
 
-  test("montre le bien et ses actions, qui mènent à l'inscription acquéreur", async ({ page }) => {
+  test("montre le bien et ses actions, qui mènent à l'inscription acquéreur puis au premier message", async ({
+    page,
+  }) => {
     const path = await firstListingPath(page);
     const response = await page.goto(path);
     expect(response?.status()).toBe(200);
@@ -302,14 +304,18 @@ test.describe("page annonce (base de seed)", () => {
     ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Le bien" })).toBeVisible();
 
-    const signUp = `/inscription?role=buyer&next=${encodeURIComponent(path)}`;
+    // The sign-up, then the first message to the seller (L1-21).
+    const signUp = (visit: boolean) =>
+      new RegExp(
+        `^/inscription\\?role=buyer&next=${encodeURIComponent("/messages/nouveau?annonce=")}[0-9a-f-]{36}${visit ? encodeURIComponent("&visite=1") : ""}$`,
+      );
     await expect(page.getByRole("link", { name: "Contacter le vendeur" })).toHaveAttribute(
       "href",
-      signUp,
+      signUp(false),
     );
     await expect(page.getByRole("link", { name: "Demander une visite" })).toHaveAttribute(
       "href",
-      signUp,
+      signUp(true),
     );
     // Offer (L2) and favourite (L1-18) come later; never « Prix ferme ».
     await expect(page.getByText(/faire une offre/i)).toHaveCount(0);

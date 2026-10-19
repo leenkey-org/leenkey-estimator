@@ -3,8 +3,9 @@
 # hosted project is reachable (docker images only, nothing to install):
 #   Postgres (supabase/postgres), Supabase Auth (supabase/gotrue) with the
 #   templates of supabase/templates/, PostgREST, Supabase Storage (files on
-#   the container's disk), Mailpit (catches the emails) and a gateway serving
-#   /auth/v1, /rest/v1 and /storage/v1 on one origin.
+#   the container's disk), Supabase Realtime, Mailpit (catches the emails)
+#   and a gateway serving /auth/v1, /rest/v1, /storage/v1 and /realtime/v1
+#   (WebSocket) on one origin.
 # Usage: scripts/local-stack.sh up | env | down
 #   up    starts the stack, applies the migrations and the seed (keys and seed
 #         password generated in .local-stack/, never committed)
@@ -16,11 +17,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 DIR=.local-stack
-DB_PORT=54326 GATEWAY=54331 REST=54332 AUTH=54333 STORAGE=54334 SMTP=54327 MAIL_UI=54328
+DB_PORT=54326 GATEWAY=54331 REST=54332 AUTH=54333 STORAGE=54334 REALTIME=54335 SMTP=54327 MAIL_UI=54328
 APP_URL=http://localhost:3200
 HOST_IP=172.17.0.1 # docker host seen from the containers
 DB_URL="postgresql://postgres:postgres@127.0.0.1:$DB_PORT/postgres"
-CONTAINERS="lk-stack-db lk-stack-auth lk-stack-rest lk-stack-storage lk-stack-mail"
+CONTAINERS="lk-stack-db lk-stack-auth lk-stack-rest lk-stack-storage lk-stack-realtime lk-stack-mail"
 
 jwt() { # role -> HS256 token signed with the stack secret
   node -e '
@@ -38,6 +39,7 @@ case "${1:-}" in
     mkdir -p $DIR
     [ -f $DIR/jwt_secret ] || openssl rand -hex 32 > $DIR/jwt_secret
     [ -f $DIR/seed_password ] || openssl rand -hex 12 > $DIR/seed_password
+    [ -f $DIR/realtime_secret ] || openssl rand -hex 32 > $DIR/realtime_secret
     jwt anon > $DIR/anon_key
     docker rm -f $CONTAINERS >/dev/null 2>&1 || true
 
@@ -52,7 +54,7 @@ case "${1:-}" in
       -c "alter role supabase_auth_admin with password 'postgres'; alter role authenticator with password 'postgres'; alter role supabase_storage_admin with password 'postgres';"
 
     docker run -d --name lk-stack-mail -p $HOST_IP:$SMTP:1025 -p 127.0.0.1:$MAIL_UI:8025 axllent/mailpit:v1.27 >/dev/null
-    node scripts/local-stack-gateway.mjs $GATEWAY $AUTH $REST "$PWD/supabase/templates" $HOST_IP $STORAGE > $DIR/gateway.log 2>&1 &
+    node scripts/local-stack-gateway.mjs $GATEWAY $AUTH $REST "$PWD/supabase/templates" $HOST_IP $STORAGE $REALTIME > $DIR/gateway.log 2>&1 &
     echo $! > $DIR/gateway.pid
     sleep 1
     kill -0 "$(cat $DIR/gateway.pid)" 2>/dev/null || { echo "Gateway not started (port $GATEWAY taken?): $DIR/gateway.log"; exit 1; }
@@ -97,6 +99,26 @@ case "${1:-}" in
       -e "PGRST_DB_URI=postgres://authenticator:postgres@$HOST_IP:$DB_PORT/postgres" -e PGRST_DB_SCHEMAS=public \
       -e PGRST_DB_ANON_ROLE=anon -e PGRST_JWT_SECRET="$(cat $DIR/jwt_secret)" -e PGRST_DB_USE_LEGACY_GUCS=false \
       postgrest/postgrest:v12.2.12 >/dev/null
+    # Realtime (L1-21) once the publication holds the tables of our migrations:
+    # its self-hosted tenant « realtime-dev », reached by the gateway; its own
+    # schema first, as the self-hosted setup of Supabase does.
+    psql "postgresql://supabase_admin:postgres@127.0.0.1:$DB_PORT/postgres" -q \
+      -c "create schema if not exists _realtime; alter schema _realtime owner to supabase_admin;"
+    # Its endpoint listens in IPv6 only: in IPv4 here, for a machine without IPv6.
+    docker run --rm --entrypoint cat supabase/realtime:v2.34.47 /app/releases/2.34.47/runtime.exs \
+      | sed 's/socket_opts: \[:inet6\]/socket_opts: [:inet]/' > $DIR/realtime-runtime.exs
+    docker run -d --name lk-stack-realtime -p 127.0.0.1:$REALTIME:4000 \
+      -v "$PWD/$DIR/realtime-runtime.exs:/app/releases/2.34.47/runtime.exs:ro" -e DB_IP_VERSION=ipv4 \
+      -e PORT=4000 -e DB_HOST=$HOST_IP -e DB_PORT=$DB_PORT -e DB_USER=supabase_admin -e DB_PASSWORD=postgres \
+      -e DB_NAME=postgres -e "DB_AFTER_CONNECT_QUERY=SET search_path TO _realtime" -e DB_ENC_KEY=supabaserealtime \
+      -e API_JWT_SECRET="$(cat $DIR/jwt_secret)" -e SECRET_KEY_BASE="$(cat $DIR/realtime_secret)$(cat $DIR/realtime_secret)" \
+      -e "ERL_AFLAGS=-proto_dist inet_tcp" -e "DNS_NODES=''" -e RLIMIT_NOFILE=10000 -e APP_NAME=realtime \
+      -e SEED_SELF_HOST=true -e RUN_JANITOR=true \
+      supabase/realtime:v2.34.47 >/dev/null
+    for _ in $(seq 1 60); do
+      (echo > /dev/tcp/127.0.0.1/$REALTIME) 2>/dev/null && break
+      sleep 1
+    done
     echo "Stack up. Emails: http://localhost:$MAIL_UI. Seed password: $DIR/seed_password. Then: eval \"\$(scripts/local-stack.sh env)\""
     ;;
   env)
