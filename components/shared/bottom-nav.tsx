@@ -21,8 +21,8 @@ export type BottomNavProps = {
 /**
  * Mobile navigation (docs/DESIGN.md 10.6): fixed at the bottom below 768 px,
  * white with a top border, padding 10 × 20 × 22 with the iOS safe area, four
- * or five tabs (icon 22 and 11 px label). The current tab is the longest prefix of
- * the address, in blue with aria-current. A page that shows it adds
+ * or five tabs (icon 22 and 11 px label). The current tab is the longest
+ * prefix of the address, in blue with aria-current. A page that shows it adds
  * BOTTOM_NAV_OFFSET (nav-items.ts) so that its end stays visible.
  */
 export function BottomNav({ label, items, activeHref, inline = false, className }: BottomNavProps) {
