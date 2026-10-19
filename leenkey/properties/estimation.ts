@@ -47,15 +47,15 @@ export async function estimationStart(estimationId: string): Promise<EstimationS
   if (!estimation.data) return { state: "claim" };
   if (existing.data) {
     const property = await sellerProperty(existing.data.id);
-    if (property.ok && property.data) {
-      const { id, characteristics, listing, listingStatus } = property.data;
-      return {
-        state: "resume",
-        href: inCreation(listingStatus)
-          ? `/vendeur/biens/${id}/${creationStep(characteristics, listing)}`
-          : "/vendeur",
-      };
-    }
+    // Unreadable: the creation without the analysis, never a second property from it.
+    if (!property.ok || !property.data) return null;
+    const { id, characteristics, listing, listingStatus } = property.data;
+    return {
+      state: "resume",
+      href: inCreation(listingStatus)
+        ? `/vendeur/biens/${id}/${creationStep(characteristics, listing)}`
+        : "/vendeur",
+    };
   }
   return {
     state: "new",

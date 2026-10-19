@@ -29,7 +29,8 @@ export function EstimationClaim({ estimationId }: { estimationId: string }) {
     }
     claimEstimation({ estimationId, token })
       .then((result) => {
-        forgetClaim();
+        // Kept after a passing failure (signed out, database): it may serve again.
+        if (result.ok || result.error === "used" || result.error === "invalid") forgetClaim();
         if (result.ok) router.refresh();
         else withoutAnswers();
       })
