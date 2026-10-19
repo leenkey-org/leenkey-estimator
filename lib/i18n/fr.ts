@@ -177,6 +177,9 @@ export const fr = {
       account: "Compte",
       search: "Chercher",
       favourites: "Favoris",
+      // The way to the other side, for every account (DECISIONS 2026-10-19).
+      buy: "Acheter",
+      sell: "Vendre",
       listings: "Annonces",
       cases: "Dossiers",
       users: "Utilisateurs",

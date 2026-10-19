@@ -8,6 +8,7 @@ import { FacadeRoot } from "@/components/shared/facade-root";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { BOTTOM_NAV_OFFSET } from "@/components/shared/nav-items";
 import { SiteFooter } from "@/components/shared/site-footer";
+import { getProfile } from "@/core/auth/session";
 import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
 import { bottomTabs } from "@/leenkey/navigation/config";
 import { FiltersDialog } from "@/leenkey/search/components/filters-dialog";
@@ -34,7 +35,8 @@ import {
 // The map (L1-16) and « Créer une alerte » (L3-06) come later. Navigation
 // (L1-10): TopNav from 768 px, buyer tabs below for every visitor (the
 // middleware sends a signed-out visitor from Favoris, Messages or Compte to
-// the login page), SiteFooter at the end (L1-36).
+// the login page; « Vendre » opens the landing page for the sellers),
+// SiteFooter at the end (L1-36).
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -67,7 +69,8 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 export default async function SearchPage({ searchParams }: Props) {
   const query = parseSearchParams(await searchParams);
   const place = query.filters.location ? resolveLocation(query.filters.location) : null;
-  const result = await searchListings(query);
+  // The profile is read once per request (cache), by the TopNav too.
+  const [result, profile] = await Promise.all([searchListings(query), getProfile()]);
   const now = new Date();
 
   let content: ReactNode;
@@ -142,7 +145,7 @@ export default async function SearchPage({ searchParams }: Props) {
         <FiltersDialog />
       </SearchProvider>
       <SiteFooter />
-      <BottomNav label={fr.nav.label} items={bottomTabs("buyer")} />
+      <BottomNav label={fr.nav.label} items={bottomTabs("buyer", Boolean(profile))} />
     </FacadeRoot>
   );
 }

@@ -60,7 +60,10 @@ async function expectTopNavFitsAt768(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
 }
 
-/** The four tabs of the BottomNav, in order. */
+const BUYER_TABS = ["Chercher", "Favoris", "Vendre", "Messages", "Compte"];
+const SELLER_TABS = ["Ma vente", "Dossier", "Acheter", "Messages", "Compte"];
+
+/** The tabs of the BottomNav, in order, each label whole (never cut). */
 async function expectTabs(page: Page, labels: string[], current: string | null) {
   const nav = mainNav(page);
   await expect(nav.getByRole("link")).toHaveText(labels);
@@ -69,6 +72,12 @@ async function expectTabs(page: Page, labels: string[], current: string | null) 
     if (label === current) await expect(link).toHaveAttribute("aria-current", "page");
     else await expect(link).not.toHaveAttribute("aria-current", /.+/);
   }
+  const cut = await nav
+    .locator("a span")
+    .evaluateAll((spans) =>
+      spans.filter((span) => span.scrollWidth > span.clientWidth).map((span) => span.textContent),
+    );
+  expect(cut).toEqual([]);
 }
 
 test.describe("visiteur sans session", () => {
@@ -79,11 +88,13 @@ test.describe("visiteur sans session", () => {
     test.skip(!isMobile, "navigation basse sous 768 px");
     const response = await page.goto("/acheter");
     expect(response?.status()).toBe(200);
-    await expectTabs(page, ["Chercher", "Favoris", "Messages", "Compte"], "Chercher");
+    await expectTabs(page, BUYER_TABS, "Chercher");
     await expect(mainNav(page).getByRole("link", { name: "Favoris" })).toHaveAttribute(
       "href",
       "/acquereur/favoris",
     );
+    // Every visitor may sell (DECISIONS 2026-10-19): the landing page for the sellers.
+    await expect(mainNav(page).getByRole("link", { name: "Vendre" })).toHaveAttribute("href", "/");
     // TopNav, its call to action and « Mon compte » are not displayed.
     await expect(page.getByRole("link", { name: "Valoriser mon bien" })).toBeHidden();
     await expect(page.getByRole("link", { name: "Vendre mon bien" })).toBeHidden();
@@ -299,14 +310,22 @@ test.describe("comptes connectés (base de seed)", () => {
     await expect(bell).toHaveCount(1);
     await expect(bell).toBeVisible();
     if (isMobile) {
-      await expectTabs(page, ["Ma vente", "Dossier", "Messages", "Compte"], "Ma vente");
+      await expectTabs(page, SELLER_TABS, "Ma vente");
       await expect(page.getByRole("button", { name: "Menu du compte" })).toBeHidden();
       await mainNav(page).getByRole("link", { name: "Dossier" }).click();
       await expect(page).toHaveURL("/vendeur/dossier");
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dossier de vente");
-      await expectTabs(page, ["Ma vente", "Dossier", "Messages", "Compte"], "Dossier");
+      await expectTabs(page, SELLER_TABS, "Dossier");
       // The bell is on every page of the area, not only on its home (Q26).
       await expect(bell).toBeVisible();
+      // The seller buys too (DECISIONS 2026-10-19): the listings, then back.
+      await mainNav(page).getByRole("link", { name: "Acheter" }).click();
+      await expect(page).toHaveURL("/acheter");
+      await expect(page.getByRole("list", { name: "Résultats" })).toBeVisible();
+      await expectTabs(page, BUYER_TABS, "Chercher");
+      await mainNav(page).getByRole("link", { name: "Vendre" }).click();
+      await expect(page).toHaveURL("/vendeur");
+      await expectTabs(page, SELLER_TABS, "Ma vente");
     } else {
       await expect(mainNav(page).getByRole("link")).toHaveText([
         "Acheter",
@@ -337,10 +356,10 @@ test.describe("comptes connectés (base de seed)", () => {
     test.skip(!isMobile, "onglets sous 768 px");
     // seller_a only sells: on /messages opened first, the seller tabs.
     await signIn(page, "seller_a", "/acheter");
-    await expectTabs(page, ["Chercher", "Favoris", "Messages", "Compte"], "Chercher");
+    await expectTabs(page, BUYER_TABS, "Chercher");
     await mainNav(page).getByRole("link", { name: "Messages" }).click();
     await expect(page).toHaveURL("/messages");
-    await expectTabs(page, ["Chercher", "Favoris", "Messages", "Compte"], "Messages");
+    await expectTabs(page, BUYER_TABS, "Messages");
     await expect(page.getByRole("button", { name: "Notifications", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Notifications", exact: true }).click();
     await expect(page.getByRole("dialog", { name: "Notifications" })).toContainText(
@@ -354,16 +373,24 @@ test.describe("comptes connectés (base de seed)", () => {
     await expectFooter(page);
     if (isMobile) {
       // The buyer home is not one of the tabs (DESIGN.md 10.6).
-      await expectTabs(page, ["Chercher", "Favoris", "Messages", "Compte"], null);
+      await expectTabs(page, BUYER_TABS, null);
       await mainNav(page).getByRole("link", { name: "Favoris" }).click();
       await expect(page).toHaveURL("/acquereur/favoris");
-      await expectTabs(page, ["Chercher", "Favoris", "Messages", "Compte"], "Favoris");
+      await expectTabs(page, BUYER_TABS, "Favoris");
       // The buyer home is not a tab: the bell is on this page too (Q26).
       await expect(page.getByRole("button", { name: "Notifications", exact: true })).toBeVisible();
       // On the search too, the buyer keeps the same tabs.
       await mainNav(page).getByRole("link", { name: "Chercher" }).click();
       await expect(page).toHaveURL("/acheter");
-      await expectTabs(page, ["Chercher", "Favoris", "Messages", "Compte"], "Chercher");
+      await expectTabs(page, BUYER_TABS, "Chercher");
+      // The buyer sells too (DECISIONS 2026-10-19): the seller area, empty.
+      await mainNav(page).getByRole("link", { name: "Vendre" }).click();
+      await expect(page).toHaveURL("/vendeur");
+      await expectTabs(page, SELLER_TABS, "Ma vente");
+      await expect(page.getByRole("link", { name: "Créer mon annonce" })).toHaveAttribute(
+        "href",
+        "/vendeur/biens/nouveau",
+      );
     } else {
       await page.getByRole("link", { name: "Favoris" }).click();
       await expect(page).toHaveURL("/acquereur/favoris");

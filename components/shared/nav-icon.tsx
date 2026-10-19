@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Search,
   Sparkles,
+  SquarePlus,
   User,
   Users,
   type LucideIcon,
@@ -17,7 +18,8 @@ import type { NavIconName } from "./nav-items";
 
 // Lucide icons of the navigation (docs/DESIGN.md 6): the star of the mockups
 // is the assistant's Sparkles, the document is FileText. No house icon outside
-// the logo (DESIGN 1): « Ma vente » is a dashboard, « Annonces » a list.
+// the logo (DESIGN 1): « Ma vente » is a dashboard, « Annonces » a list,
+// « Vendre » the plus of « Vendre mon bien ».
 const ICONS: Record<NavIconName, LucideIcon> = {
   dashboard: LayoutDashboard,
   listings: ClipboardList,
@@ -31,6 +33,7 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   sparkles: Sparkles,
   "layout-grid": LayoutGrid,
   flag: Flag,
+  "square-plus": SquarePlus,
 };
 
 /** Icon of a navigation item, decorative: the label names the link. */

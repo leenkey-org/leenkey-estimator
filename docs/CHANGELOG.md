@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-19 · Navigation · PR #26 · Acheter et vendre avec un même compte
+- Modifié : en mobile, les barres d'onglets vendeur et acquéreur passent à 5 onglets, celui du milieu menant à l'autre côté : vendeur « Ma vente / Dossier / Acheter / Messages / Compte », acquéreur « Chercher / Favoris / Vendre / Messages / Compte » (« Vendre » : l'espace vendeur une fois connecté, la page d'accueil sans session). Un vendeur consulte les annonces depuis son espace, un acquéreur met en vente depuis le sien ; rien ne change en desktop ni dans le back office (`DECISIONS.md` 2026-10-19, DESIGN 10.6, SPEC section 6).
+- Tests : unitaires (onglets de chaque espace, connecté ou non, routes existantes) ; E2E sur la pile de seed (vendeur vers les annonces puis retour, acquéreur vers « Ma vente », libellés entiers à 390 px).
+
 ### 2026-10-19 · L1-13b · PR #25 · Reprise depuis l'estimateur
 - Ajouté : `/api/estimate` garde l'analyse de valeur (`estimation_record`, session de l'appelant) et ajoute `estimationId` et `claimToken` à sa réponse V1. Le résultat de l'estimateur propose « Créer mon annonce » : création du bien avec `?estimation=`, par l'inscription vendeur pour un visiteur sans compte, puis rattachement de l'analyse avec le jeton gardé dans ce navigateur (`estimation_claim`). Étape 1 : adresse de l'analyse cherchée de nouveau ; brouillon créé avec les caractéristiques reprises (vérifiées comme à l'étape 2), l'analyse et sa valeur (rappel de l'étape 3) ; `InfoNote` « Repris de votre analyse de valeur du [date]. Vérifiez et complétez. » aux étapes 1 et 2 ; une même analyse ne crée jamais deux biens. Question Q49 (mention de conservation de l'analyse).
 - Modifié : les caractéristiques de l'étape 2 s'écrivent par `leenkey/properties/columns.ts`, partagé avec la création depuis l'analyse.
