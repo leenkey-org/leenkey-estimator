@@ -48,6 +48,8 @@ export type SellerProperty = {
   listingStatus: ListingStatus | null;
   listing: SellerListing | null;
   estimation: SellerEstimation | null;
+  /** When the analysis of value it was created from was made (L1-13b). */
+  fromEstimation: string | null;
   /** Base of the files of the main photo (photo-files.ts), null without photos. */
   coverPath: string | null;
   createdAt: string;
@@ -130,6 +132,7 @@ function toSellerProperty(row: Row): SellerProperty {
               row.estimation_high_cents === null ? null : Number(row.estimation_high_cents),
             madeAt: estimation?.created_at ?? null,
           },
+    fromEstimation: estimation?.created_at ?? null,
     coverPath: row.photos.find((photo) => photo.is_cover)?.storage_path ?? null,
     createdAt: row.created_at,
   };

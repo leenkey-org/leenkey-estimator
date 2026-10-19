@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import { computeEstimation, formatEUR, type EstimationResult } from "./estimation";
 import type { LeenkeyForm } from "./types";
@@ -78,12 +80,15 @@ export function EstimationDashboard({
   ref_,
   aiAnalyse,
   dvfData,
+  listingHref,
   onRestart,
 }: {
   form: LeenkeyForm;
   ref_: string;
   aiAnalyse?: string;
   dvfData?: DvfResult | null;
+  /** The creation of the listing from this analysis (L1-13b). */
+  listingHref: string;
   onRestart: () => void;
 }) {
   // Même règle que le wizard : sans échantillon fiable, DVF ne pilote rien.
@@ -603,6 +608,24 @@ export function EstimationDashboard({
           className="fade-up mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2"
           style={{ animationDelay: "0.3s" }}
         >
+          {/* L1-13b: the analysis becomes the listing (SPEC-V2 8.3), first. */}
+          <Card className="lg:col-span-2">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="mb-2 font-display text-lg font-bold text-navy">
+                  {fr.estimator.listing.title}
+                </h2>
+                <p className="text-sm text-sub">{fr.estimator.listing.text}</p>
+              </div>
+              <Link
+                href={listingHref}
+                className="block shrink-0 rounded-[12px] bg-primary px-8 py-3.5 text-center font-display text-sm font-semibold text-primary-foreground shadow-[0_10px_24px_-8px_rgba(17,86,252,0.5)] transition hover:translate-y-[-1px]"
+              >
+                {fr.estimator.listing.action}
+              </Link>
+            </div>
+          </Card>
+
           <Card>
             <h2 className="mb-4 font-display text-lg font-bold text-navy">Prochaines étapes</h2>
             <ol className="space-y-3">

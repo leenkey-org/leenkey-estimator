@@ -4,6 +4,7 @@ import { CreationHeader } from "@/leenkey/properties/components/creation-header"
 import { CreationBody, CreationLoadError } from "@/leenkey/properties/components/creation-page";
 import { propertyForCreation } from "@/leenkey/properties/load";
 import { sellerPhotos } from "@/leenkey/properties/queries";
+import { formatDate } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 
 const t = fr.properties.creation;
@@ -38,6 +39,11 @@ export default async function PropertyCharacteristicsPage({ params }: Props) {
           propertyId={property.id}
           initial={property.characteristics}
           photos={photos.data}
+          note={
+            property.fromEstimation
+              ? fr.properties.fromEstimation(formatDate(property.fromEstimation))
+              : undefined
+          }
         />
       </CreationBody>
     </>

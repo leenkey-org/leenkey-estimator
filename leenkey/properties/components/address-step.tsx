@@ -15,6 +15,7 @@ import { MapPin } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { FormActionBar } from "@/components/shared/form-action-bar";
 import { InlineAlert } from "@/components/shared/inline-alert";
+import { InfoNote } from "@/components/shared/info-note";
 import { Input } from "@/components/shared/input";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -38,18 +39,27 @@ type Search =
 export function AddressStep({
   propertyId,
   initial,
+  estimationId,
+  initialText,
+  note,
 }: {
   /** Absent for a new property. */
   propertyId?: string;
   /** The address already saved. */
   initial?: AddressSuggestion;
+  /** A new property from this analysis of value (L1-13b). */
+  estimationId?: string;
+  /** Searched at once: the address of the analysis, chosen again here. */
+  initialText?: string;
+  /** « Repris de votre analyse de valeur du … » (InfoNote). */
+  note?: string;
 }) {
   const router = useRouter();
   const listId = useId();
   const helpId = useId();
   const field = useRef<HTMLInputElement>(null);
   const next = useRef<HTMLButtonElement>(null);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText ?? "");
   const [chosen, setChosen] = useState<AddressSuggestion | null>(initial ?? null);
   const [search, setSearch] = useState<Search>({ state: "idle" });
   const [open, setOpen] = useState(false);
@@ -150,7 +160,7 @@ export function AddressStep({
     startSaving(async () => {
       let result: Awaited<ReturnType<typeof saveAddress>> | null = null;
       try {
-        result = await saveAddress({ propertyId, label: chosen.label });
+        result = await saveAddress({ propertyId, label: chosen.label, estimationId });
       } catch (caught) {
         console.error("[properties] address save failed", caught);
       }
@@ -201,6 +211,11 @@ export function AddressStep({
     >
       <h2 className="text-lk-h2 font-bold text-wide text-lk-ink">{t.title}</h2>
       <p className="mt-2 text-lk-compact text-lk-ink-3">{t.lead}</p>
+      {note ? (
+        <InfoNote className="mt-4">
+          <p>{note}</p>
+        </InfoNote>
+      ) : null}
 
       <div className="mt-6">
         {chosen !== null ? (

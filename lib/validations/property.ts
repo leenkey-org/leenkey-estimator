@@ -21,6 +21,8 @@ export const addressQuerySchema = z
 export const addressChoiceSchema = z.object({
   propertyId: z.string().uuid().optional(),
   label: z.string().trim().min(5).max(200),
+  /** A new property from this analysis of value of the seller (L1-13b). */
+  estimationId: z.string().uuid().optional(),
 });
 
 export type AddressChoice = z.infer<typeof addressChoiceSchema>;

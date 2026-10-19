@@ -6,6 +6,7 @@ import { flushSync } from "react-dom";
 import { Button } from "@/components/shared/button";
 import { ChipToggle } from "@/components/shared/chip-toggle";
 import { FormActionBar } from "@/components/shared/form-action-bar";
+import { InfoNote } from "@/components/shared/info-note";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
 import { SegmentedPicker } from "@/components/shared/segmented-picker";
@@ -65,10 +66,13 @@ export function CharacteristicsStep({
   propertyId,
   initial,
   photos,
+  note,
 }: {
   propertyId: string;
   initial: Omit<Characteristics, "propertyId">;
   photos: SellerPhoto[];
+  /** « Repris de votre analyse de valeur du … » (L1-13b, docs/DESIGN.md 12.2). */
+  note?: string;
 }) {
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
@@ -229,6 +233,11 @@ export function CharacteristicsStep({
       className="flex flex-1 flex-col gap-5"
     >
       <h2 className="text-lk-h2 font-bold text-wide text-lk-ink">{t.title}</h2>
+      {note ? (
+        <InfoNote>
+          <p>{note}</p>
+        </InfoNote>
+      ) : null}
       {error ? <InlineAlert tone="danger">{error}</InlineAlert> : null}
 
       <Select

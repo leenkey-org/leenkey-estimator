@@ -385,6 +385,10 @@ export const fr = {
         cancel: "Annuler",
       },
     },
+    // L1-13b: a property created from an analysis of value (SPEC-V2 8.3).
+    fromEstimation: (date: string) =>
+      `Repris de votre analyse de valeur du ${date}. Vérifiez et complétez.`,
+    claimingEstimation: "Nous reprenons votre analyse de valeur…",
     // L1-13: step 3 (SPEC-V2 8.3). « Rédiger avec l'assistant » comes with L1-29.
     price: {
       title: "Votre prix et votre annonce",
@@ -445,6 +449,14 @@ export const fr = {
       untitled: "Bien à compléter",
       resume: "Continuer",
       error: "Vos biens n'ont pas pu être chargés.",
+    },
+  },
+  // L1-13b: from the result of the wizard to the creation of the listing.
+  estimator: {
+    listing: {
+      title: "Mettre votre bien en vente",
+      text: "Créez votre annonce : nous reprenons l'adresse, les caractéristiques et la valeur de cette analyse.",
+      action: "Créer mon annonce",
     },
   },
   // L1-10: pages whose screen comes with a later task (ComingSoon).
