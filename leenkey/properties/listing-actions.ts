@@ -14,13 +14,16 @@ import {
 } from "@/lib/validations/listing";
 import { missingCharacteristics } from "@/lib/validations/property";
 import type { TablesInsert } from "@/types/database";
+import { inCreation } from "./creation";
 import { readDraft } from "./drafts";
 import { emailListingSubmitted } from "./listing-emails";
 
 // Server actions of steps 3 and 4 of the creation (L1-13), with the seller's
 // session: RLS and the column grants of L1-04 decide what they may write
 // (price, title and description; the status through listing_submit only).
-// As the other steps, only a draft or a rejected listing of the seller.
+// As the other steps, only a draft or a rejected listing of the seller; its
+// price, title and description also once it is sent, from the page of the
+// property (L1-14b): it stays in review, online or paused.
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -55,7 +58,7 @@ async function listingOf(supabase: Supabase, propertyId: string) {
  * Step 3, saved as a draft at any time (« Enregistrer », « Précédent »). The
  * first save creates the listing, which needs its price (a required column
  * of listings, with the title and the description); `next` also asks for the
- * description.
+ * description, and so does a listing already sent (L1-14b).
  */
 export async function saveListingDraft(
   input: unknown,
@@ -88,8 +91,15 @@ export async function saveListingDraft(
   }
 
   const supabase = await createClient();
-  const draft = await readDraft(supabase, value.propertyId, profile.id);
+  const draft = await readDraft(supabase, value.propertyId, profile.id, { sent: true });
   if (!draft.ok) return draft;
+  if (!inCreation(draft.status) && missing.length > 0) {
+    return {
+      ok: false,
+      error: "incomplete",
+      fieldErrors: Object.fromEntries(missing.map((field) => [field, "required"])),
+    };
+  }
 
   const values = {
     title: value.title,
@@ -122,7 +132,8 @@ export async function saveListingDraft(
   }
   // Nothing written: suspended in the meantime (RLS of the update).
   if (!write.data) return { ok: false, error: "not_found" };
-  revalidatePath("/vendeur");
+  // The page of the property too (L1-14b), under /vendeur.
+  revalidatePath("/vendeur", "layout");
   return { ok: true, data: { complete: missing.length === 0 } };
 }
 

@@ -75,6 +75,9 @@ export function ListingStatusActions({
   const [priceError, setPriceError] = useState<string | undefined>(undefined);
   const opener = useRef<HTMLButtonElement | null>(null);
   const feedbackRef = useRef<HTMLDivElement>(null);
+  // A decision taken in a dialog: its outcome takes the focus once the
+  // dialog has let it go (onCloseAutoFocus), never before.
+  const outcomeAfterDialog = useRef(false);
   const actions = statusActions(status);
   // Sold: no action left, the outcome stays until the next visit.
   if (actions.length === 0 && !feedback) return null;
@@ -126,9 +129,10 @@ export function ListingStatusActions({
     startTransition(async () => {
       const result = await markListingSold({ listingId, soldPriceEuros: value }).catch(() => null);
       if (result?.ok) {
+        outcomeAfterDialog.current = true;
+        setFeedback({ tone: "success", text: t.done.sold });
         setDialog(null);
         router.refresh();
-        report({ tone: "success", text: t.done.sold });
         return;
       }
       setDialogError(failed(result?.ok === false ? result.error : null));
@@ -229,10 +233,12 @@ export function ListingStatusActions({
         onConfirm={confirmSold}
         onClose={() => setDialog(null)}
         onCloseAutoFocus={(event) => {
-          // After a decision, the outcome takes the focus.
-          if (feedback) event.preventDefault();
-          else if (opener.current?.isConnected) {
-            event.preventDefault();
+          // After a decision, its outcome; without one, the button that opened it.
+          event.preventDefault();
+          if (outcomeAfterDialog.current) {
+            outcomeAfterDialog.current = false;
+            feedbackRef.current?.focus();
+          } else if (opener.current?.isConnected) {
             opener.current.focus();
           }
         }}

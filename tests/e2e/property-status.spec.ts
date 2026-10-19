@@ -90,6 +90,10 @@ test("marquer comme vendu : confirmation, prix final facultatif et vérifié", a
   // Amounts keep their no-break spaces: \s matches them.
   await expect(page.getByText(/^Vendu le .+, au prix de 231\s000\s€\.$/)).toBeVisible();
   await expect(actions(page)).toHaveCount(0);
+  // Sold: nothing changes any more (L1-14b).
+  await expect(page.getByRole("main").getByRole("link", { name: /^Modifier/ })).toHaveCount(0);
+  await page.goto(`${sheet(5)}/modifier/caracteristiques`);
+  await expect(page).toHaveURL(sheet(5));
 });
 
 test("une annonce suspendue par Leenkey : en lecture seule, avec son motif", async ({
@@ -125,9 +129,15 @@ test("une annonce suspendue par Leenkey : en lecture seule, avec son motif", asy
   );
   await expect(actions(page)).toHaveCount(0);
   await expect(main.getByRole("link", { name: /^Modifier/ })).toHaveCount(0);
-  // The steps of the creation do not change it either.
+  // The steps of the creation do not change it either, nor its pages of
+  // change (L1-14b), nor its photos.
   await page.goto(`${sheet(13)}/caracteristiques`);
   await expect(page).toHaveURL(sheet(13));
+  await page.goto(`${sheet(13)}/modifier/annonce`);
+  await expect(page).toHaveURL(sheet(13));
+  await page.goto(`${sheet(13)}/photos`);
+  await expect(main.getByText("Votre bien n'a pas encore de photo.")).toBeVisible();
+  await expect(main.getByRole("button", { name: "Ajouter des photos" })).toHaveCount(0);
   await page.close();
 });
 

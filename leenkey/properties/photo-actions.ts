@@ -21,12 +21,12 @@ import {
 } from "./photo-files";
 import { readPhotos, type SellerPhoto } from "./photos";
 
-// Server actions of the photos of a property (L1-12), during its creation,
-// with the seller's session: the RLS of public.photos and the policies of
-// the bucket photos decide what they may write. Each one answers with the
-// photos of the property, in their order. No revalidatePath: it would render
-// the step again for each photo; « Ma vente », dynamic, is read again when
-// it opens.
+// Server actions of the photos of a property (L1-12), during its creation
+// and once its listing is sent, from its page (L1-14b), with the seller's
+// session: the RLS of public.photos and the policies of the bucket photos
+// decide what they may write. Each one answers with the photos of the
+// property, in their order. No revalidatePath: it would render the step
+// again for each photo; « Ma vente », dynamic, is read again when it opens.
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -44,14 +44,14 @@ export type PhotoActionResult =
   | { ok: true; data: SellerPhoto[] }
   | { ok: false; error: PhotoError };
 
-/** Session, then the property of the seller, still in its creation. */
+/** Session, then the property of the seller: in its creation, in review, online or paused. */
 async function draftOfSeller(
   propertyId: string,
 ): Promise<{ ok: true; supabase: Supabase; userId: string } | { ok: false; error: PhotoError }> {
   const profile = await getProfile();
   if (!profile) return { ok: false, error: "auth" };
   const supabase = await createClient();
-  const draft = await readDraft(supabase, propertyId, profile.id);
+  const draft = await readDraft(supabase, propertyId, profile.id, { sent: true });
   if (!draft.ok) return draft;
   return { ok: true, supabase, userId: profile.id };
 }
@@ -147,7 +147,7 @@ export async function addPhoto(formData: FormData): Promise<PhotoActionResult> {
   if (error) {
     await removeFiles(supabase, uploaded, userId);
     // photos_before_insert. 23514: a 16th photo added at the same moment;
-    // 42501: the listing sent for review meanwhile, as readDraft says.
+    // 42501: the listing sold or suspended meanwhile, as readDraft says.
     if (error.code === "23514") return { ok: false, error: "full" };
     if (error.code === "42501") return { ok: false, error: "not_found" };
     console.error("[properties] photo insert failed", {

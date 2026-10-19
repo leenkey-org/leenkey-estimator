@@ -55,7 +55,10 @@ function StatusNotice({ property }: { property: SellerProperty }) {
         "danger",
         s.suspended.title,
         <>
-          {listing?.suspensionReason ? <>{s.suspended.text(listing.suspensionReason)} </> : null}
+          {/* The reason on its own line: Leenkey writes it without a full stop. */}
+          {listing?.suspensionReason ? (
+            <span className="block">{s.suspended.text(listing.suspensionReason)}</span>
+          ) : null}
           {s.suspended.readOnly}{" "}
           <a
             href={`mailto:${fr.legal.contactEmail}`}

@@ -6,7 +6,7 @@ import { formatPrice, formatSurface } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { missingCharacteristics } from "@/lib/validations/property";
 import type { Database } from "@/types/database";
-import { creationStep } from "./creation";
+import { creationStep, editableOnceSent, inCreation } from "./creation";
 import type { SellerProperty } from "./queries";
 
 // Rules of the page of a property (L1-14, SPEC-V2 8.3): its tabs, its key
@@ -29,6 +29,36 @@ export function sheetTabs(propertyId: string): { href: string; label: string }[]
     { href: sheetHref(propertyId, "photos"), label: t.photos },
     { href: sheetHref(propertyId, "annonce"), label: t.listing },
   ];
+}
+
+/** The tab after a change made from it (L1-14b): `?modifie=1` says it is saved. */
+export function savedHref(propertyId: string, tab: SheetTab = "infos"): string {
+  return `${sheetHref(propertyId, tab)}?modifie=1`;
+}
+
+/**
+ * Where a part of the property changes from its page: the step of the
+ * creation for a draft or a rejected listing; once sent (in review, online,
+ * paused), its page of change (L1-14b), except the address, which no longer
+ * changes; nowhere once suspended by Leenkey or sold.
+ */
+const CREATION_STEP = { address: "adresse", characteristics: "caracteristiques", listing: "prix" };
+const CHANGE_PAGE = { characteristics: "caracteristiques", listing: "annonce" };
+
+export function editHref(
+  property: Pick<SellerProperty, "id" | "listingStatus">,
+  part: "address" | "characteristics" | "listing",
+): string | null {
+  const base = `/vendeur/biens/${property.id}`;
+  const status = property.listingStatus;
+  if (inCreation(status)) return `${base}/${CREATION_STEP[part]}`;
+  if (part === "address" || !editableOnceSent(status)) return null;
+  return `${base}/modifier/${CHANGE_PAGE[part]}`;
+}
+
+/** The photos change in their tab while the listing does (L1-14b); read only once suspended or sold. */
+export function photosEditable(status: ListingStatus | null): boolean {
+  return inCreation(status) || editableOnceSent(status);
 }
 
 /**

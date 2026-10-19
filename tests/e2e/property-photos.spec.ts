@@ -201,8 +201,8 @@ test("photos de l'étape 2 : envoi, refus propres, ordre, légende, suppression,
     new RegExp(`^(?:https?://[^/]+)?/img/${id}/[0-9a-f-]{36}-1600\\.webp$`),
   );
 
-  // Its page (L1-14), tab Photos: the 15 in their order, the main one first
-  // and marked, each one shown to its owner.
+  // Its page (L1-14), tab Photos: the same 15, which change there too
+  // (L1-14b), the main one first, each one shown to its owner.
   await row.click();
   await expect(page).toHaveURL(`/vendeur/biens/${id}`);
   await page
@@ -211,20 +211,15 @@ test("photos de l'étape 2 : envoi, refus propres, ordre, légende, suppression,
     .click();
   await expect(page).toHaveURL(`/vendeur/biens/${id}/photos`);
   const tab = page.getByRole("main").getByRole("region", { name: "Photos" });
-  await expect(tab.getByText("15 photos", { exact: true })).toBeVisible();
-  const items = tab.getByRole("listitem");
-  await expect(items).toHaveCount(15);
-  await expect(tab.getByText("Photo principale", { exact: true })).toHaveCount(1);
-  await expect(items.nth(0).getByText("Photo principale", { exact: true })).toBeVisible();
-  const first = items.nth(0).locator("img");
+  await expect(tab.getByRole("heading", { level: 2 })).toHaveText("Photos");
+  const sheetTiles = tab.getByRole("button", { name: /^Photo \d+ sur 15/ });
+  await expect(sheetTiles).toHaveCount(15);
+  await expect(sheetTiles.nth(0)).toHaveAccessibleName("Photo 1 sur 15, photo principale");
+  const first = sheetTiles.nth(0).locator("img");
   await expect(first).toHaveAttribute("src", new RegExp(`/img/${id}/[0-9a-f-]{36}-\\d+\\.webp$`));
   await expect
     .poll(() => first.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0))
     .toBe(true);
-  // A draft: its photos change at step 2.
-  await expect(tab.getByRole("link", { name: "Gérer les photos" })).toHaveAttribute(
-    "href",
-    `/vendeur/biens/${id}/caracteristiques`,
-  );
+  await expect(tab.getByRole("button", { name: "15 photos au maximum" })).toBeDisabled();
   await expectNoSeriousViolation(page);
 });

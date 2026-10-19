@@ -16,13 +16,15 @@ import {
   type CharacteristicsField,
 } from "@/lib/validations/property";
 import { characteristicsColumns } from "./columns";
+import { inCreation } from "./creation";
 import { readDraft } from "./drafts";
 import { answersFromEstimation } from "./from-estimation";
 
 // Server actions of the creation of a property (L1-11), with the seller's
 // session: RLS and the column grants of L1-04 decide what they may write.
 // Here, as on the pages, only the seller's own property, while the steps of
-// the creation change it (inCreation).
+// the creation change it (inCreation); its characteristics also once its
+// listing is sent, from its page (L1-14b), never its address.
 
 export type AddressSuggestion = { label: string; line: string; postalCode: string; city: string };
 
@@ -181,7 +183,9 @@ const NOT_A_FIELD = new Set(["propertyId", "isNewBuild", "features"]);
 /**
  * Step 2, saved as a draft at any time (« Enregistrer », « Précédent »);
  * `next` also asks for what a listing needs: type, surface, rooms. The
- * fields that do not apply to the type are saved empty (forType).
+ * fields that do not apply to the type are saved empty (forType). Once the
+ * listing is sent (L1-14b), always complete: it stays as it is, in review,
+ * online or paused (properties_keep_complete checks it too).
  */
 export async function saveCharacteristics(
   input: unknown,
@@ -213,8 +217,15 @@ export async function saveCharacteristics(
   }
 
   const supabase = await createClient();
-  const draft = await readDraft(supabase, value.propertyId, profile.id);
+  const draft = await readDraft(supabase, value.propertyId, profile.id, { sent: true });
   if (!draft.ok) return draft;
+  if (!inCreation(draft.status) && missing.length > 0) {
+    return {
+      ok: false,
+      error: "incomplete",
+      fieldErrors: Object.fromEntries(missing.map((field) => [field, "required"])),
+    };
+  }
 
   const { data, error } = await supabase
     .from("properties")
@@ -233,6 +244,7 @@ export async function saveCharacteristics(
     return { ok: false, error: "unavailable" };
   }
   if (!data) return { ok: false, error: "not_found" };
-  revalidatePath("/vendeur");
+  // The page of the property too (L1-14b), under /vendeur.
+  revalidatePath("/vendeur", "layout");
   return { ok: true, data: { complete: missing.length === 0 } };
 }

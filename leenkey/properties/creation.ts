@@ -20,6 +20,19 @@ export function inCreation(status: ListingStatus | null): boolean {
   return status === null || status === "draft" || status === "rejected";
 }
 
+/**
+ * Once sent (in review, online or paused), a listing still changes from the
+ * page of its property, and stays as it is (L1-14b, SPEC-V2 8.3): its
+ * characteristics, photos, price, title and description; never its address.
+ * Never once suspended by Leenkey (read only) or sold.
+ */
+export function editableOnceSent(status: ListingStatus | null): status is SentStatus {
+  return status === "pending" || status === "published" || status === "paused";
+}
+
+/** The status of a listing sent that still changes (L1-14b). */
+export type SentStatus = Extract<ListingStatus, "pending" | "published" | "paused">;
+
 /** The listing of a draft as step 3 saves it (L1-13): a price, perhaps a description. */
 export type DraftListing = { description: string } | null;
 
