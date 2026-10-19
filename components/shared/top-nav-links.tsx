@@ -27,7 +27,7 @@ export function TopNavLinks({
         {links.map((link) => {
           const active = link.href === current;
           return (
-            <li key={link.href}>
+            <li key={link.href} className={cn(link.wide && "hidden lg:list-item")}>
               <Link
                 href={link.href}
                 aria-current={active ? "page" : undefined}

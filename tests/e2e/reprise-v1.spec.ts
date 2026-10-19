@@ -2,10 +2,10 @@ import { expect, test, type Page } from "@playwright/test";
 import { consentValue, fakeGoogle } from "./google";
 
 // L1-01: the V1 site (marketing pages, valuation wizard, contact forms,
-// analytics) must behave the same once ported to Next.js.
+// analytics) must behave the same once ported to Next.js. The home page is in
+// V2 since L1-41 (home.spec.ts); its contact form keeps the V1 contract below.
 
 const pages = [
-  "/",
   "/concept",
   "/investir",
   "/tarifs",

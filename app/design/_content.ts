@@ -59,6 +59,7 @@ export const sections = {
   skeleton: "Chargement",
   consent: "Consentement aux cookies",
   footer: "Pied de page",
+  publicPages: "Pages publiques",
   formats: "Formats des nombres et des dates",
   shapes: "Rayons, ombres et bordures",
   spacing: "Espacements, points de rupture et conteneurs",
@@ -234,13 +235,14 @@ export const buttons = {
     success: "Valider et publier",
     danger: "Retirer mon offre",
     inverse: "Voir mon annonce",
+    "outline-inverse": "J'achète",
   },
   sizes: { lg: "Grand · 52 px", md: "Moyen · 44 px", sm: "Petit · 40 px" },
   withIcon: "Vendre mon bien",
   disabled: "Désactivé",
   loading: "Envoi en cours",
   link: "Lien avec le style bouton",
-  onBlueCaption: "Variante inverse, sur aplat bleu uniquement",
+  onBlueCaption: "Variantes inverse et outline-inverse (contour blanc), sur aplat bleu uniquement",
 };
 
 export const iconButtons = {
@@ -679,7 +681,47 @@ export const consent = {
 
 export const footer = {
   caption:
-    "SiteFooter · liens légaux, « Gérer mes cookies », identité et adresse légale (pages V2 ; même liste dans le pied V1)",
+    "SiteFooter · pages du site, liens légaux, « Gérer mes cookies », identité et adresse légale (pages V2 ; mêmes liens légaux dans le pied V1)",
+};
+
+// L1-41: public pages in V2 (MarketingSection, PlanCard, MoreLink, SiteMenu).
+export const publicPages = {
+  sectionCaption:
+    "MarketingSection · fond blanc ou pierre, titre h2 au rôle H1 (26 puis 32 px), texte 640 px, lien à droite à partir de 768 px",
+  sectionTitle: "Un forfait fixe. Jamais de commission.",
+  sectionLead:
+    "Vous choisissez votre niveau d'accompagnement. Le prix ne dépend jamais de la valeur de votre bien.",
+  more: "Voir le détail des formules",
+  moreCaption: "MoreLink · bleu sur blanc, encre sur pierre (le bleu n'y atteint que 4,4:1)",
+  planCaption:
+    "PlanCard · nom, prix et « TTC », accroche, liste à coches, action ; formule recommandée bordée de bleu avec sa pastille",
+  plans: [
+    {
+      name: "Autonomie",
+      price: "Gratuit",
+      tagline: "Pour piloter votre vente en toute autonomie.",
+      note: "Sans engagement · sans carte bancaire",
+    },
+    {
+      name: "Accompagné",
+      price: formatPrice(99000),
+      tagline: "Un conseiller dédié à vos côtés, du prix à la signature.",
+      features: ["Conseiller Leenkey dédié", "Stratégie de prix et de mise en vente"],
+      action: "Choisir Accompagné",
+    },
+    {
+      name: "Sérénité",
+      price: formatPrice(150000),
+      tagline: "Nous nous occupons de presque tout, vous gardez la décision.",
+      features: ["Tout Accompagné", "Visites organisées par Leenkey"],
+      badge: "Le plus complet",
+      action: "Choisir Sérénité",
+    },
+  ],
+  taxes: "TTC",
+  menuLabel: "Navigation du site (exemple)",
+  menuCaption:
+    "SiteMenu · en-tête mobile des pages publiques (sous 768 px) : logo et « Menu », panneau plein écran avec les liens du site",
 };
 
 // L1-19: FilterPills, DataTable and Textarea (back office).

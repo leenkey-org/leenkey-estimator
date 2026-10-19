@@ -15,11 +15,13 @@ import {
   bottomTabs,
   FAVOURITES_LINK,
   followSpace,
+  MENU_LINKS,
   notificationBell,
   ownSpace,
   ROUTES,
   sellCta,
   signInLink,
+  SITE_LINKS,
   spaceFor,
   TOP_NAV_LINKS,
   type Space,
@@ -151,12 +153,35 @@ describe("bottom tabs (DESIGN.md 10.6)", () => {
 });
 
 describe("TopNav", () => {
-  it("links: Acheter, Vendre (the V1 landing page), Valoriser mon bien; no Guides", () => {
-    expect(TOP_NAV_LINKS.map(({ href, label }) => ({ href, label }))).toEqual([
-      { href: "/acheter", label: "Acheter" },
-      { href: "/", label: "Vendre" },
-      { href: "/estimer", label: "Valoriser mon bien" },
+  it("links: Acheter, Vendre (the home page), Tarifs from 1024 px, Valoriser mon bien; no Guides", () => {
+    expect(TOP_NAV_LINKS.map(({ href, label, wide }) => ({ href, label, wide }))).toEqual([
+      { href: "/acheter", label: "Acheter", wide: undefined },
+      { href: "/", label: "Vendre", wide: undefined },
+      { href: "/tarifs", label: "Tarifs", wide: true },
+      { href: "/estimer", label: "Valoriser mon bien", wide: undefined },
     ]);
+  });
+
+  it("pages of the site: in the footer, and in the mobile menu after the TopNav", () => {
+    expect(SITE_LINKS.map((link) => link.label)).toEqual([
+      "Concept",
+      "Tarifs",
+      "FAQ",
+      "Investir",
+      "Qui sommes-nous",
+    ]);
+    expect(MENU_LINKS.map((link) => link.label)).toEqual([
+      "Acheter",
+      "Vendre",
+      "Tarifs",
+      "Valoriser mon bien",
+      "Concept",
+      "FAQ",
+      "Investir",
+      "Qui sommes-nous",
+    ]);
+    // Each page once.
+    expect(new Set(MENU_LINKS.map((link) => link.href)).size).toBe(MENU_LINKS.length);
   });
 
   it("never says « estimer » nor « estimation » (CLAUDE.md section 16)", () => {
@@ -323,6 +348,7 @@ describe("every link of the navigation leads to a page", () => {
 
   it.each([
     ...TOP_NAV_LINKS.map((link) => link.href),
+    ...SITE_LINKS.map((link) => link.href),
     ...ADMIN_NAV_ITEMS.map((item) => item.href),
     ...SPACES.flatMap((space) => bottomTabs(space).map((tab) => tab.href)),
     ...bottomTabs("buyer", false).map((tab) => tab.href),

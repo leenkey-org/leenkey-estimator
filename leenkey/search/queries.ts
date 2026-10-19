@@ -1,6 +1,9 @@
 import "server-only";
+import { unstable_rethrow } from "next/navigation";
+import { latestOf } from "./latest";
 import { SQL_SORT, toSqlFilters } from "./sql-filters";
 import type { DpeClass } from "@/components/shared/dpe-badge";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { chunk } from "@/lib/utils";
 import {
@@ -171,6 +174,29 @@ export async function countListings(filters: SearchFilters): Promise<QueryResult
   } catch (error) {
     console.error("[search] countListings failed", {
       filters,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { ok: false, error: "unavailable" };
+  }
+}
+
+/**
+ * « Les derniers biens » of the home page (SPEC-V2 8.1): the three listings
+ * most recently published, with their main photo, and the number online for
+ * « Voir les 12 biens ». None below three.
+ */
+export async function latestListings(): Promise<QueryResult<SearchResults>> {
+  // No database (CI build, PR previews): the block is simply left out.
+  if (!isSupabaseConfigured()) return { ok: false, error: "unavailable" };
+  try {
+    const rows = await fetchPage({}, "recent", 1);
+    const total = Number(rows[0]?.total_count ?? 0);
+    const latest = latestOf(rows.map(toListing));
+    return { ok: true, data: { items: await withCovers(latest), total } };
+  } catch (error) {
+    // The signals of Next.js (a page rendered at request time) go through.
+    unstable_rethrow(error);
+    console.error("[search] latestListings failed", {
       error: error instanceof Error ? error.message : String(error),
     });
     return { ok: false, error: "unavailable" };

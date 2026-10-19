@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-19 · L1-41 · PR #27 · Accueil en V2
+- Ajouté : accueil refait en composants « Façade » (décision du 2026-10-19, « V2 finale ») : hero `BrandPanel` avec « Je vends » (estimateur) et « J'achète » (annonces), « Les derniers biens » (3 dernières annonces publiées, masqué sous 3), puis les sections de la V1 dans leur ordre et avec leurs ancres : situation (« Où en êtes-vous dans votre vente ? »), trois étapes, valorisation, aperçu de l'espace vendeur, comparatif, formules (noms et prix lus dans `plans`), questions, formulaire de contact (même contrat que la V1 vers `/api/contact`), appel final. En-tête mobile des pages publiques (logo et « Menu » plein écran avec toutes les pages du site) ; « Tarifs » dans la barre haute à partir de 1 024 px ; pages du site (« Découvrir Leenkey ») dans le pied de toutes les pages V2. Composants : `MarketingSection`, `PlanCard`, `MoreLink`, `SiteMenu`, bouton `outline-inverse`, au catalogue `/design`.
+- Modifié : textes V1 repris mot pour mot, sauf les chiffres inventés, la numérotation décorative, les flèches et emojis, « sous 24 h » devenu « sous 48 h, 7 j/7 » pour le formulaire de contact et « portails » devenu « Leenkey » (liste dans `DECISIONS.md`). La tâche de l'accueil, numérotée L1-40 par erreur (déjà la vente conforme), devient L1-41 ; L1-42 et L1-43 ajoutées (reste du site public en V2). CLAUDE.md section 10 et `/tache` : livraisons vérifiées par Claude Code, plus de liste de tests manuels en préprod. Question Q50 (appel de 30 minutes dans la FAQ).
+- Supprimé : `public/pages/landing.html` et ses préchargements dans `app/layout.tsx`.
+- Tests : unitaires (derniers biens, formulaire de contact, situations, règles éditoriales de tous les textes du site, liens de navigation) ; E2E (`home.spec.ts`, avec et sans base : hero, ancres, situations, formulaire avec erreurs, envoi et refus, menu mobile au clavier, barre haute, pied de page, accessibilité, derniers biens et formules du seed).
+
 ### 2026-10-19 · Navigation · PR #26 · Acheter et vendre avec un même compte
 - Modifié : en mobile, les barres d'onglets vendeur et acquéreur passent à 5 onglets, celui du milieu menant à l'autre côté : vendeur « Ma vente / Dossier / Acheter / Messages / Compte », acquéreur « Chercher / Favoris / Vendre / Messages / Compte » (« Vendre » : l'espace vendeur une fois connecté, la page d'accueil sans session). Un vendeur consulte les annonces depuis son espace, un acquéreur met en vente depuis le sien ; rien ne change en desktop ni dans le back office (`DECISIONS.md` 2026-10-19, DESIGN 10.6, SPEC section 6).
 - Tests : unitaires (onglets de chaque espace, connecté ou non, routes existantes) ; E2E sur la pile de seed (vendeur vers les annonces puis retour, acquéreur vers « Ma vente », libellés entiers à 390 px).
@@ -22,7 +28,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Tests : unitaires (réponses du wizard vers le bien pour chaque type, valeurs refusées laissées vides, arguments de l'enregistrement, réponse de la route, lien du résultat, jeton gardé dans le navigateur) ; E2E sur la pile de seed (analyse d'un vendeur connecté jusqu'à l'annonce en validation, critère de L1-13 ; analyse sans compte reprise après la connexion dans ce navigateur, pas dans un autre ; bouton du résultat de l'estimateur).
 
 ### 2026-10-19 · Accueil · PR #24 · Accès aux annonces et à l'espace depuis les pages marketing
-- Ajouté : « Acheter » et « Mon compte » dans le menu des pages marketing et de l'estimateur (bouton « Menu » sous 1 240 px). Tâche L1-40 (accueil enrichi de SPEC 8.1) ajoutée au plan.
+- Ajouté : « Acheter » et « Mon compte » dans le menu des pages marketing et de l'estimateur (bouton « Menu » sous 1 240 px). Tâche de l'accueil enrichi (SPEC 8.1) ajoutée au plan (numérotée L1-40 par erreur, devenue L1-41).
 - Tests : E2E du menu en desktop et en mobile.
 
 ### 2026-10-18 · L1-13a · PR #23 · Prix, description, aperçu et envoi en validation

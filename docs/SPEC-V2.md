@@ -1127,13 +1127,14 @@ Pour toute question d'UX, `docs/DESIGN.md` fait foi (décision du 2026-10-08) ; 
 
 Pour chaque écran : route, contenu dans l'ordre, états (chargement, vide, erreur), règles. Tous les écrans sont conçus d'abord à 390 px (largeur des maquettes) puis étendus à 768 et 1280 px.
 
-### 8.1 Accueil `/` (enrichissement de l'existant)
+### 8.1 Accueil `/` (refait en V2)
 
-Garder la page actuelle. Ajouter :
+Page refaite avec les composants « Façade » (décision de Younes du 2026-10-19, « V2 finale ») : les sections de la page V1, dans son ordre, avec ses ancres (`#valoriser`, `#etape`, `#comment`, `#fonctionnalites`, `#comparatif`, `#tarifs`, `#faq`, `#contact`) et les textes de Cédric repris mot pour mot, sauf les corrections listées dans `docs/DECISIONS.md` (2026-10-19). En plus :
 - Hero sur `BrandPanel` avec le dessin `facade.svg` à droite.
 - Deux entrées égales dans le hero, en boutons blancs sur l'aplat bleu (`docs/DESIGN.md` 13.1) : « Je vends » (→ `/estimer`) et « J'achète » (→ `/acheter`).
 - Bloc « Les derniers biens » : 3 `PropertyCard` (variante `tile`) publiées les plus récentes (masqué s'il y en a moins de 3).
-- Ne pas toucher au reste du contenu marketing sans validation.
+- Formules : noms et prix lus dans la table `plans`.
+- Formulaire de contact : mêmes champs, mêmes noms et même envoi vers `/api/contact` qu'en V1.
 
 ### 8.2 Inscription `/inscription`
 
@@ -2023,6 +2024,9 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-18 | Favoris | L1-17 | Ajout / retrait, liste dans l'espace acquéreur |
 | L1-19 | Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`listing_suspend`, motif obligatoire) / remettre en ligne, audit, emails | L1-14 | Parcours vendeur → admin → publication de bout en bout ; le vendeur ne peut pas lever une suspension (test RLS) |
 | L1-20 | Sitemap et robots (pages SEO par ville reportées en V3) | L1-17 | Sitemap valide, robots bloque hors prod |
+| L1-41 | Accueil en V2 (section 8.1, décision du 2026-10-19) : hero sur `BrandPanel` avec « Je vends » (→ `/estimer`) et « J'achète » (→ `/acheter`), « Les derniers biens » (3 `PropertyCard` `tile`, masqué sous 3), sections de la V1 en composants Façade, formulaire de contact, en-tête mobile avec menu, pages du site dans le pied de page | L1-17 | Les deux entrées et les derniers biens sur `/`, en mobile et en desktop ; formulaire de contact au même contrat que la V1 (E2E de L1-01) ; ancres V1 conservées ; aucune violation d'accessibilité sérieuse |
+| L1-42 | `/concept`, `/tarifs`, `/faq` en V2 (décision du 2026-10-19) : mêmes textes et ancres, formules de `/tarifs` lues dans `plans`, FAQ dépliable | L1-41 | Les trois pages sans HTML V1, en mobile et en desktop ; formulaires au même contrat que la V1 |
+| L1-43 | `/investir`, `/qui-sommes-nous` en V2, mentions légales et CGU dans `LegalPage`, `/estimer` dans l'en-tête et le pied V2 ; retrait de `SiteLayout`, du menu et du pied V1, de `HtmlPage` et des HTML V1 (décision du 2026-10-19) | L1-42 | Plus aucune page V1 hors moteur de l'estimateur ; formulaire investir au même contrat que la V1 |
 | L1-35 | `listing_revisions` simplifié : trigger sur les champs prix, titre, description d'une annonce publiée, historique chronologique côté vendeur et admin, notification `listing.revised` à l'admin | L1-14 | Changement de prix tracé avec ancienne et nouvelle valeur |
 
 ### Semaine 4 : messagerie, notifications, dashboard
@@ -2036,7 +2040,6 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-25 | Espace acquéreur v1 (accueil, profil projet et financement déclaratif, `FinancingBadge` côté vendeur) | L1-21 | Le vendeur voit le statut, jamais les montants (test) |
 | L1-38 | Sécurité transverse : en-têtes (CSP, HSTS, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) dans `next.config.ts`, `lib/rate-limit.ts` sur table Postgres (inscription, connexion, contact, messages, assistant) | L1-21 | En-têtes présents (test), 429 au-delà des seuils (test) |
 | L1-39 | Page `/compte` : informations personnelles, changement d'e-mail avec confirmation, mot de passe, préférences de notification, rôles (« Je vends » / « J'achète ») | L1-22 | Changement d'e-mail confirmé par lien ; préférences respectées par `notify()` |
-| L1-40 | Accueil enrichi (section 8.1) : hero sur `BrandPanel` avec « Je vends » (→ `/estimer`) et « J'achète » (→ `/acheter`), bloc « Les derniers biens » (3 `PropertyCard` `tile`, masqué sous 3), reste du contenu marketing inchangé | L1-17 | Les deux entrées et les derniers biens sur `/`, en mobile et en desktop ; formulaires et événements GA4 de l'accueil inchangés (E2E de L1-01) |
 | L1-27 | Embeddings (Edge Function `embed`), import KB, `search_knowledge` | L1-05 | Recherche test pertinente sur les fiches de `faq-cedric-v2.md` |
 
 ### Semaine 5 : paiement, assistant, back office → livraison lot 1

@@ -303,7 +303,7 @@ Chaque migration qui touche aux permissions est accompagnée d'un test dans `sup
 Une fonctionnalité est finie quand :
 1. La migration et ses RLS sont jouées sur local et staging, avec le test de permissions qui passe.
 2. `npm run lint`, `npm run typecheck`, `npm run test` passent.
-3. Le parcours est testé à la main sur la préprod (`leenkey-v2.vercel.app`) après fusion, avec les comptes de seed, en mobile et en desktop.
+3. Le parcours est vérifié par Claude Code avant fusion : E2E sur la pile locale avec les comptes de seed, en mobile et en desktop, et captures à 390, 768 et 1 280 px. La V2 se construit comme la version finale (décision de Younes du 2026-10-19) : pas de liste de tests manuels « à faire en préprod » dans les PR ; `leenkey-v2.vercel.app` garde sa protection jusqu'à la bascule (mot de passe, `noindex`, données de test, emails vers la boîte de test).
 4. Les emails déclenchés sont vérifiés dans la boîte de test.
 5. Une ligne est ajoutée à `docs/CHANGELOG.md`.
 6. Elle est démontrable à Cédric le vendredi.
@@ -434,7 +434,7 @@ Plateforme PropTech française de vente immobilière sans agence, développée p
 1. **Avant tout déplacement** : tests de non-régression Vitest sur `estimation.ts`, au moins 20 cas réels couvrant tous les types de bien, avec les résultats actuels figés. Ces tests doivent passer avant et après le portage, à l'identique.
 2. Estimateur porté en composants client (`"use client"`) sous `app/(public)/estimer`, moteur dans `leenkey/estimator/` sans modification de logique.
 3. Les 4 endpoints deviennent des route handlers aux **mêmes chemins** (`/api/estimate`, `/api/contact`, `/api/send-report`, `/api/dvf-comparables`), même format de requête et de réponse, CORS de `send-report` conservé.
-4. Pages marketing `public/pages/*.html` conservées, avec le comportement de `HtmlPage.tsx` (interception des `<form>`) et l'en-tête `Cache-Control: max-age=0, must-revalidate` sur `/pages/*`.
+4. Pages marketing `public/pages/*.html` conservées, avec le comportement de `HtmlPage.tsx` (interception des `<form>`) et l'en-tête `Cache-Control: max-age=0, must-revalidate` sur `/pages/*`. **Remplacé** par le site public en V2 (décision du 2026-10-19) : accueil refait en composants Façade (L1-41), puis concept, tarifs, FAQ (L1-42), investir, qui sommes-nous et pages légales (L1-43), textes de Cédric repris mot pour mot ; `HtmlPage.tsx` ne sert plus que les pages pas encore refaites, et disparaît avec L1-43.
 5. GA4, GTM, Vercel Analytics et le `page_view` à chaque changement de route. GA4 et GTM ne se chargent qu'après l'accord du visiteur (bandeau de L1-37) ; le `noscript` de GTM est retiré, un visiteur sans JavaScript ne pouvant pas consentir (`DECISIONS.md` 2026-10-17).
 6. Redirections 301 : `leenkey.com` et `www.leenkey.fr` → `leenkey.fr` (hors `/api`). URLs, `sitemap.xml` et `robots.txt` conservés.
 

@@ -122,7 +122,12 @@ test.describe("visiteur sans session", () => {
     test.skip(isMobile, "navigation haute à partir de 768 px");
     await page.goto("/acheter?ville=savigny-sur-orge&rayon=5");
     const nav = mainNav(page);
-    await expect(nav.getByRole("link")).toHaveText(["Acheter", "Vendre", "Valoriser mon bien"]);
+    await expect(nav.getByRole("link")).toHaveText([
+      "Acheter",
+      "Vendre",
+      "Tarifs",
+      "Valoriser mon bien",
+    ]);
     await expect(nav.getByRole("link", { name: "Acheter" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -330,6 +335,7 @@ test.describe("comptes connectés (base de seed)", () => {
       await expect(mainNav(page).getByRole("link")).toHaveText([
         "Acheter",
         "Vendre",
+        "Tarifs",
         "Valoriser mon bien",
       ]);
       await expect(page.getByRole("link", { name: "Vendre mon bien" })).toHaveAttribute(

@@ -57,14 +57,36 @@ export function bottomTabs(space: Space, signedIn = true): readonly NavItem[] {
 }
 
 /**
- * Links of the TopNav. « Vendre » is the V1 landing page, written for the
- * sellers; « Acheter » stays current on a listing (AnnonceDesktop). No
- * « Guides »: no such page in the SPEC.
+ * Links of the TopNav. « Vendre » is the home page, written for the sellers;
+ * « Acheter » stays current on a listing (AnnonceDesktop); « Tarifs » joins
+ * them with the public site in V2 (DECISIONS 2026-10-19). No « Guides »: no
+ * such page in the SPEC.
  */
 export const TOP_NAV_LINKS: readonly NavItem[] = [
   { href: ROUTES.search, label: fr.nav.links.buy, match: [ROUTES.listing] },
   { href: ROUTES.home, label: fr.nav.links.sell },
+  // From 1024 px: at 768 px it would run into « Vendre mon bien » (footer and
+  // mobile menu below).
+  { href: ROUTES.pricing, label: fr.site.links.pricing, wide: true },
   { href: ROUTES.valuation, label: fr.nav.links.valuation },
+];
+
+/**
+ * Pages of the public site (DECISIONS 2026-10-19, « V2 finale »): in the
+ * footer of every V2 page and in the mobile menu, after the TopNav links.
+ */
+export const SITE_LINKS: readonly NavItem[] = [
+  { href: ROUTES.concept, label: fr.site.links.concept },
+  { href: ROUTES.pricing, label: fr.site.links.pricing },
+  { href: ROUTES.faq, label: fr.site.links.faq },
+  { href: ROUTES.invest, label: fr.site.links.invest },
+  { href: ROUTES.about, label: fr.site.links.about },
+];
+
+/** Links of the mobile menu of the public pages (G1): the TopNav, then the site. */
+export const MENU_LINKS: readonly NavItem[] = [
+  ...TOP_NAV_LINKS,
+  ...SITE_LINKS.filter((link) => !TOP_NAV_LINKS.some((top) => top.href === link.href)),
 ];
 
 const admin = fr.nav.admin;

@@ -44,7 +44,9 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-18** Favoris · PR : #18 · Testé en préprod : ☐
 - [x] **L1-19** Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`suspended`) / remettre en ligne, audit, emails · PR : #19 (partie vendeur avec L1-14, `DECISIONS.md`) · Testé en préprod : ☐
 - [x] **L1-20** Sitemap et robots (pages SEO par ville reportées en V3) · PR : #18 · Testé en préprod : ☐
-- [ ] **L1-40** Accueil enrichi (SPEC 8.1) : « Je vends » / « J'achète » sur `BrandPanel`, « Les derniers biens » (tâche ajoutée le 19 octobre : la section 8.1 n'en avait pas) · PR : · Testé en préprod : ☐
+- [x] **L1-41** Accueil en V2 (SPEC 8.1, décision du 19 octobre « V2 finale ») : « Je vends » / « J'achète » sur `BrandPanel`, « Les derniers biens », sections de la V1 en composants Façade, formulaire de contact, en-tête mobile et pied de page du site (tâche ajoutée le 19 octobre, d'abord numérotée L1-40 par erreur) · PR : #27 · Testé en préprod : ☐
+- [ ] **L1-42** `/concept`, `/tarifs`, `/faq` en V2 (décision du 19 octobre) · PR : · Testé en préprod : ☐
+- [ ] **L1-43** `/investir`, `/qui-sommes-nous`, mentions légales et CGU en V2, `/estimer` dans l'en-tête V2, retrait du site V1 porté (décision du 19 octobre) · PR : · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
 
