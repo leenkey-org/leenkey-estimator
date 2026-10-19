@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Calendar, Check } from "lucide-react";
-import { BrandPanel } from "@/components/shared/brand-panel";
 import { Button } from "@/components/shared/button";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { MoreLink } from "@/components/shared/more-link";
@@ -8,6 +7,8 @@ import { ROUTES } from "@/leenkey/navigation/spaces";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import { ContactForm } from "./contact-form";
+import { CtaPanel } from "./cta-panel";
+import { RichText } from "./rich-text";
 import { StagePicker } from "./stage-picker";
 
 // Sections of the home page after the hero and the latest listings, in the
@@ -185,24 +186,6 @@ export function ComparisonSection() {
   );
 }
 
-type Rich = readonly (string | { readonly strong: string })[];
-
-function RichText({ parts }: { parts: Rich }) {
-  return (
-    <>
-      {parts.map((part, index) =>
-        typeof part === "string" ? (
-          part
-        ) : (
-          <strong key={index} className="font-semibold text-lk-ink">
-            {part.strong}
-          </strong>
-        ),
-      )}
-    </>
-  );
-}
-
 /** « Les trois questions essentielles. » (#faq), answers shown. */
 export function HomeFaqSection() {
   const t = home.faq;
@@ -241,17 +224,16 @@ export function ContactSection() {
   );
 }
 
-/** Last call to action: the blue flat, one inverse button. */
+/** Last call to action of the home page. */
 export function FinalCta() {
   const t = home.final;
   return (
-    <BrandPanel title={t.title} titleAs="h2" titleSize="page" description={t.text} illustration>
-      <div className="flex flex-col items-start gap-3">
-        <Button asChild variant="inverse" size="lg">
-          <Link href={ROUTES.valuation}>{t.action}</Link>
-        </Button>
-        <p className="text-lk-caption text-lk-on-blue-2">{t.note}</p>
-      </div>
-    </BrandPanel>
+    <CtaPanel
+      title={t.title}
+      text={t.text}
+      action={t.action}
+      href={ROUTES.valuation}
+      note={t.note}
+    />
   );
 }

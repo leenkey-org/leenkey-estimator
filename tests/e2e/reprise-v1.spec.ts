@@ -3,17 +3,10 @@ import { consentValue, fakeGoogle } from "./google";
 
 // L1-01: the V1 site (marketing pages, valuation wizard, contact forms,
 // analytics) must behave the same once ported to Next.js. The home page is in
-// V2 since L1-41 (home.spec.ts); its contact form keeps the V1 contract below.
+// V2 since L1-41 (home.spec.ts), /concept, /tarifs and /faq since L1-42
+// (site-pages.spec.ts); the contact form of the home keeps the V1 contract.
 
-const pages = [
-  "/concept",
-  "/investir",
-  "/tarifs",
-  "/faq",
-  "/cgu",
-  "/mentions-legales",
-  "/qui-sommes-nous",
-];
+const pages = ["/investir", "/cgu", "/mentions-legales", "/qui-sommes-nous"];
 
 for (const path of pages) {
   test(`page ${path} s'affiche`, async ({ page }) => {
@@ -28,7 +21,7 @@ for (const path of pages) {
 // (DECISIONS 2026-10-19): /connexion takes a signed-in account to its space.
 test("le menu des pages marketing mène aux annonces et au compte", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/tarifs");
+  await page.goto("/investir");
   const nav = page.locator("nav.lk-nav");
   await expect(nav.getByRole("link", { name: "Acheter", exact: true })).toHaveAttribute(
     "href",

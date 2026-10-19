@@ -7,8 +7,8 @@ export type MarketingSectionProps = {
   /** surface: white; stone: the neutral flat of the marketing pages (DESIGN.md 2.1). */
   tone?: "surface" | "stone";
   title: string;
-  /** HTML level of the title, set by the page outline (h2 on a page). */
-  titleAs?: "h2" | "h3" | "h4";
+  /** HTML level of the title: h1 for the first section of a page without a hero, h2 after one. */
+  titleAs?: "h1" | "h2" | "h3" | "h4";
   /** Body text under the title, 640 px wide at most. */
   lead?: string;
   /** Link on the right of the title from 768 px, under it before. */

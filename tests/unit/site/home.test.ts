@@ -176,3 +176,49 @@ describe("editorial rules of the site (CLAUDE.md section 16, DESIGN.md 1)", () =
     expect(site.home.plans.items.serenite.note).toContain("payé à la souscription");
   });
 });
+
+describe("pages of the site (L1-42)", () => {
+  it("splits the text of a plan around its list", async () => {
+    const { splitDescription } = await import("@/core/billing/plan-text");
+    expect(splitDescription("Sans engagement.")).toEqual({
+      intro: "Sans engagement.",
+      outro: null,
+    });
+    expect(
+      splitDescription(
+        "Tout Autonomie, plus :\nLe propriétaire continue de gérer sa vente et réalise ses visites.",
+      ),
+    ).toEqual({
+      intro: "Tout Autonomie, plus :",
+      outro: "Le propriétaire continue de gérer sa vente et réalise ses visites.",
+    });
+    expect(splitDescription("")).toEqual({ intro: null, outro: null });
+  });
+
+  it("« Mon économie vs agence »: the fee of the example minus the price", async () => {
+    const { savingCents, EXAMPLE_AGENCY_FEE_CENTS } = await import("@/leenkey/site/pricing");
+    expect(savingCents(99_000)).toBe(1_401_000);
+    expect(savingCents(150_000)).toBe(1_350_000);
+    expect(savingCents(0)).toBeNull();
+    expect(savingCents(EXAMPLE_AGENCY_FEE_CENTS + 1)).toBe(0);
+    expect(site.pricing.savings("14 010 €")).toBe("−14 010 € vs agence");
+  });
+
+  it("the prices written in the texts are those of the plans table (seed)", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { formatPrice } = await import("@/lib/format");
+    const seed = readFileSync("supabase/seed/01_plans.sql", "utf8");
+    const price = (code: string) => {
+      const match = seed.match(new RegExp(`\\('${code}', '[^']+', '(?:[^']|'')+', (\\d+),`));
+      if (!match) throw new Error(`no price for ${code} in the seed`);
+      return Number(match[1]);
+    };
+    const accompagne = formatPrice(price("accompagne"));
+    const serenite = formatPrice(price("serenite"));
+    const faq = texts(site.faqPage.items[0].answer).join("");
+    expect(faq).toContain(`Accompagné à ${accompagne} TTC`);
+    expect(faq).toContain(`Sérénité à ${serenite} TTC`);
+    const leenkey = site.home.comparison.columns.find((column) => column.key === "leenkey");
+    expect(leenkey?.values[0]).toBe(`${accompagne.replace(" €", "")} à ${serenite}`);
+  });
+});
