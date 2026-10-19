@@ -203,6 +203,7 @@ Resend ◄────────── core/notifications (file notifications 
   /vendeur                  dashboard vendeur
   /vendeur/biens/nouveau    création de bien (étapes)
   /vendeur/biens/[id]       fiche du bien (onglets : infos, photos, annonce, documents, visites, offres) ; /photos, /annonce
+  /vendeur/biens/[id]/modifier/caracteristiques, /modifier/annonce   modification d'une annonce envoyée, en ligne ou en pause (L1-14b)
   /vendeur/dossier          dossier de vente : fiche du bien et documents (onglet « Dossier », L1-14a et L3-04)
   /vendeur/formule          choix et gestion de la formule
   /acquereur                accueil acquéreur (favoris, conversations, visites, offres)
@@ -2030,7 +2031,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-42 | `/concept`, `/tarifs`, `/faq` en V2 (décision du 2026-10-19) : mêmes textes et ancres, formules de `/tarifs` lues dans `plans`, FAQ dépliable | L1-41 | Les trois pages sans HTML V1, en mobile et en desktop ; formulaires au même contrat que la V1 |
 | L1-43 | `/investir`, `/qui-sommes-nous` en V2, mentions légales et CGU dans `LegalPage`, `/estimer` dans l'en-tête et le pied V2 ; retrait de `SiteLayout`, du menu et du pied V1, de `HtmlPage` et des HTML V1 (décision du 2026-10-19) | L1-42 | Plus aucune page V1 hors moteur de l'estimateur ; formulaire investir au même contrat que la V1 |
 | L1-44 | Estimateur re-stylé (`docs/DESIGN.md` 13.1, décision du 2026-10-19) : wizard et tableau de résultat en Archivo, tokens et rayons « Façade », dans la portée `FacadeRoot` ; aucune modification de logique ni de texte | L1-43 | Les tests de non-régression de `estimation.ts` passent à l'identique ; plus de police V1 chargée sur le site ; aucune violation d'accessibilité sérieuse sur `/estimer`, en mobile et en desktop |
-| L1-35 | `listing_revisions` simplifié : trigger sur les champs prix, titre, description d'une annonce publiée, historique chronologique côté vendeur et admin, notification `listing.revised` à l'admin | L1-14b | Changement de prix tracé avec ancienne et nouvelle valeur |
+| L1-35 | `listing_revisions` simplifié : trigger sur les champs prix, titre, description d'une annonce publiée, et ajout ou retrait d'une photo (8.3, `DECISIONS.md` 2026-10-19), historique chronologique côté vendeur et admin, notification `listing.revised` à l'admin | L1-14b | Changement de prix tracé avec ancienne et nouvelle valeur |
 
 ### Semaine 4 : messagerie, notifications, dashboard
 

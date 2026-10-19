@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { flushSync } from "react-dom";
 import { Button } from "@/components/shared/button";
@@ -27,18 +28,21 @@ import { DPE_CLASSES, PROPERTY_TYPES } from "@/lib/validations/search";
 import { saveCharacteristics, type SaveCharacteristicsResult } from "../actions";
 import type { SellerPhoto } from "../photos";
 import { PhotoUploader } from "./photo-uploader";
-import { CREATION_FORM_ID, intentOf, submitWithEnter } from "./creation-header";
+import { CREATION_FORM_ID, intentOf, submitWithEnter, type StepEdit } from "./creation-header";
 
 const t = fr.properties.characteristics;
 const common = fr.properties.creation;
 const errors = fr.properties.errors;
+const edits = fr.properties.edit;
 
 // Step 2 of the creation (SPEC-V2 section 8.3, docs/DESIGN.md 12.2): type,
 // surface, rooms, bedrooms, floor, DPE, features, then the details. Numbers
 // are typed in French (« 68,5 »). The fields that do not apply to the type
 // are hidden and saved empty (NOT_FOR_TYPE: a floor for a house, rooms for
 // land), here and on the server. Then the photos (L1-12), saved as soon as
-// they are added: the step waits for them before going on.
+// they are added: the step waits for them before going on. Once the listing
+// is sent (L1-14b, `edit`), the same fields without the photos (their own
+// tab), « Annuler » and « Enregistrer », always complete.
 
 type NumberField = Exclude<CharacteristicsField, "type" | "dpe" | "ges" | "heating">;
 type PropertyType = (typeof PROPERTY_TYPES)[number];
@@ -67,12 +71,17 @@ export function CharacteristicsStep({
   initial,
   photos,
   note,
+  edit,
 }: {
   propertyId: string;
   initial: Omit<Characteristics, "propertyId">;
   photos: SellerPhoto[];
-  /** « Repris de votre analyse de valeur du … » (L1-13b, docs/DESIGN.md 12.2). */
+  /**
+   * « Repris de votre analyse de valeur du … » (L1-13b, docs/DESIGN.md 12.2);
+   * once sent, what a change means for the listing (L1-14b).
+   */
   note?: string;
+  edit?: StepEdit;
 }) {
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
@@ -169,7 +178,9 @@ export function CharacteristicsStep({
             Object.fromEntries(
               Object.entries(result.fieldErrors).map(([field, key]) => [
                 field,
-                errors[key ?? "outOfRange"] ?? errors.outOfRange,
+                edit && key === "required"
+                  ? edits.required.field
+                  : (errors[key ?? "outOfRange"] ?? errors.outOfRange),
               ]),
             ),
           );
@@ -182,23 +193,29 @@ export function CharacteristicsStep({
               : result.error === "not_found"
                 ? common.notFound
                 : result.error === "incomplete"
-                  ? land
-                    ? t.requiredLand
-                    : t.required
+                  ? edit
+                    ? land
+                      ? edits.required.land
+                      : edits.required.characteristics
+                    : land
+                      ? t.requiredLand
+                      : t.required
                   : result.error === "invalid"
                     ? null
                     : common.error,
         );
         return;
       }
-      const target =
-        intent === "save"
+      const target = edit
+        ? edit.doneHref
+        : intent === "save"
           ? "/vendeur"
           : intent === "previous"
             ? `/vendeur/biens/${propertyId}/adresse`
             : `/vendeur/biens/${propertyId}/prix`;
       // In the transition: the buttons stay busy until the next page shows.
-      startSaving(() => router.push(target));
+      // A change made (edit) leaves no form behind it in the history.
+      startSaving(() => (edit ? router.replace(target) : router.push(target)));
     });
   }
 
@@ -232,7 +249,9 @@ export function CharacteristicsStep({
       noValidate
       className="flex flex-1 flex-col gap-5"
     >
-      <h2 className="text-lk-h2 font-bold text-wide text-lk-ink">{t.title}</h2>
+      <h2 className="text-lk-h2 font-bold text-wide text-lk-ink">
+        {edit ? edits.parts.characteristics : t.title}
+      </h2>
       {note ? (
         <InfoNote>
           <p>{note}</p>
@@ -353,21 +372,29 @@ export function CharacteristicsStep({
         </fieldset>
       )}
 
-      <PhotoUploader propertyId={propertyId} initial={photos} onBusyChange={setPhotosBusy} />
+      {edit ? null : (
+        <PhotoUploader propertyId={propertyId} initial={photos} onBusyChange={setPhotosBusy} />
+      )}
 
       <FormActionBar className="md:mt-3">
-        {/* While photos are sent, the step waits: « Continuer » says it. */}
-        <Button
-          type="submit"
-          name="intent"
-          value="previous"
-          variant="secondary"
-          disabled={saving || photosBusy}
-        >
-          {common.previous}
-        </Button>
+        {edit ? (
+          <Button asChild variant="secondary">
+            <Link href={edit.cancelHref}>{edits.cancel}</Link>
+          </Button>
+        ) : (
+          // While photos are sent, the step waits: « Continuer » says it.
+          <Button
+            type="submit"
+            name="intent"
+            value="previous"
+            variant="secondary"
+            disabled={saving || photosBusy}
+          >
+            {common.previous}
+          </Button>
+        )}
         <Button ref={next} type="submit" name="intent" value="next" loading={saving || photosBusy}>
-          {common.next}
+          {edit ? edits.save : common.next}
         </Button>
       </FormActionBar>
     </form>

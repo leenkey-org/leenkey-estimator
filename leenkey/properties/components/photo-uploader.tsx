@@ -11,6 +11,7 @@ import {
 } from "react";
 import { flushSync } from "react-dom";
 import { GripVertical, Loader2, Plus } from "lucide-react";
+import { InfoNote } from "@/components/shared/info-note";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Photo } from "@/components/shared/photo";
 import { NBSP } from "@/lib/format";
@@ -41,7 +42,9 @@ const common = fr.properties.creation;
 // mouse (drag), the keyboard (arrows on a photo) or from the sheet of a
 // photo (touch), which also gives its caption and deletes it. The server runs
 // the changes one after the other: only the answer of the last one is shown,
-// and a failure shows the photos as the server has them.
+// and a failure shows the photos as the server has them. Also the tab Photos
+// of the page of the property (L1-14b, `inSheet`), its title the one of the
+// tab.
 
 type Pending = { key: number; name: string };
 
@@ -70,11 +73,17 @@ export function PhotoUploader({
   propertyId,
   initial,
   onBusyChange,
+  inSheet = false,
+  note,
 }: {
   propertyId: string;
   initial: SellerPhoto[];
   /** Photos are being sent or changed: the step waits before going on. */
   onBusyChange?: (busy: boolean) => void;
+  /** In the tab Photos of the page of the property: an h2 of 16 then 17 px 600. */
+  inSheet?: boolean;
+  /** What a change means for a listing already sent (L1-14b). */
+  note?: string;
 }) {
   const titleId = useId();
   const hintId = useId();
@@ -289,16 +298,32 @@ export function PhotoUploader({
         dropping && "outline-2 outline-offset-4 outline-lk-blue outline-dashed",
       )}
     >
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 id={titleId} className="text-lk-label font-medium text-lk-ink">
-          {t.title}
-        </h3>
+      <div
+        className={cn(
+          "flex items-baseline justify-between gap-3",
+          inSheet && "min-h-11 items-center",
+        )}
+      >
+        {inSheet ? (
+          <h2 id={titleId} className="text-lk-h3 font-semibold text-lk-ink lg:text-lk-h3-lg">
+            {t.title}
+          </h2>
+        ) : (
+          <h3 id={titleId} className="text-lk-label font-medium text-lk-ink">
+            {t.title}
+          </h3>
+        )}
         <p className="text-lk-label text-lk-ink-3 tabular">
           <span aria-hidden="true">{t.count(photos.length, MAX_PHOTOS)}</span>
           <span className="sr-only">{t.countLabel(photos.length, MAX_PHOTOS)}</span>
         </p>
       </div>
       <p className="text-lk-caption text-lk-ink-3">{t.help}</p>
+      {note ? (
+        <InfoNote className="mt-1">
+          <p>{note}</p>
+        </InfoNote>
+      ) : null}
       <p id={hintId} className="sr-only">
         {t.hint}
       </p>

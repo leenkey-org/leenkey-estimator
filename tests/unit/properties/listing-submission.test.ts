@@ -126,7 +126,7 @@ describe("saveListingDraft (step 3)", () => {
       description: "Traversant, au calme.",
       price_cents: 23_900_000,
     });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/vendeur");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/vendeur", "layout");
   });
 
   it("updates the listing afterwards, and again when a second tab created it", async () => {
@@ -199,11 +199,52 @@ describe("saveListingDraft (step 3)", () => {
     expect(await saveListingDraft(input, "publish")).toMatchObject({ error: "invalid" });
   });
 
-  it("changes nothing once the listing is sent, nor when nothing is written", async () => {
+  it("changes a listing sent, which stays as it is, always complete (L1-14b)", async () => {
     const { saveListingDraft } = await import("@/leenkey/properties/listing-actions");
-    mocks.answers.push({ data: { ...draftRow.data, listing: { status: "pending" } }, error: null });
-    expect(await saveListingDraft(input, "save")).toEqual({ ok: false, error: "not_found" });
-    expect(mocks.writes).toHaveLength(1);
+    for (const status of ["pending", "published", "paused"]) {
+      mocks.writes.length = 0;
+      mocks.answers.push(
+        { data: { ...draftRow.data, listing: { status } }, error: null },
+        { data: { id: listingId }, error: null },
+        { data: { id: listingId }, error: null },
+      );
+      expect(await saveListingDraft(input, "save"), status).toEqual({
+        ok: true,
+        data: { complete: true },
+      });
+      // Price, title and description only: never the status.
+      expect(mocks.writes[2]).toMatchObject({
+        table: "listings",
+        op: "update",
+        values: {
+          price_cents: 23_900_000,
+          title: input.title,
+          description: "Traversant, au calme.",
+        },
+      });
+    }
+    mocks.answers.push({
+      data: { ...draftRow.data, listing: { status: "published" } },
+      error: null,
+    });
+    expect(await saveListingDraft({ ...input, description: " " }, "save")).toEqual({
+      ok: false,
+      error: "incomplete",
+      fieldErrors: { description: "required" },
+    });
+  });
+
+  it("changes nothing once suspended or sold, nor when nothing is written", async () => {
+    const { saveListingDraft } = await import("@/leenkey/properties/listing-actions");
+    for (const status of ["suspended", "sold"]) {
+      mocks.writes.length = 0;
+      mocks.answers.push({ data: { ...draftRow.data, listing: { status } }, error: null });
+      expect(await saveListingDraft(input, "save"), status).toEqual({
+        ok: false,
+        error: "not_found",
+      });
+      expect(mocks.writes).toHaveLength(1);
+    }
 
     // Suspended in the meantime: the RLS of the update leaves no row.
     mocks.answers.push(

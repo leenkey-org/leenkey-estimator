@@ -557,8 +557,6 @@ export const fr = {
           count === 0 ? "Aucune photo" : count === 1 ? "1 photo" : `${count} photos`,
         cover: "Photo principale",
         empty: "Votre bien n'a pas encore de photo.",
-        add: "Ajouter des photos",
-        manage: "Gérer les photos",
       },
       listing: {
         title: "Titre",
@@ -572,6 +570,38 @@ export const fr = {
       },
       loadError: "Votre bien n'a pas pu être chargé.",
       retry: "Réessayer",
+    },
+    // L1-14b: a listing sent for review, online or paused, changed from the
+    // page of its property; it stays as it is.
+    edit: {
+      metaTitle: (part: string) => `${part} · Modifier votre bien · Leenkey`,
+      title: "Modifier votre bien",
+      back: "Retour à votre bien",
+      cancel: "Annuler",
+      save: "Enregistrer",
+      parts: { characteristics: "Caractéristiques", listing: "Prix et description" },
+      note: {
+        pending: "Nous relisons votre annonce : nous tiendrons compte de vos modifications.",
+        published:
+          "Votre annonce reste en ligne : vos modifications sont visibles dès leur enregistrement.",
+        paused:
+          "Votre annonce est en pause : vos modifications seront visibles quand vous la remettrez en ligne.",
+      },
+      saved: {
+        pending: "Vos modifications sont enregistrées. Nous en tenons compte dans notre relecture.",
+        published: "Vos modifications sont enregistrées et visibles sur votre annonce.",
+        paused:
+          "Vos modifications sont enregistrées. Elles seront visibles quand vous remettrez votre annonce en ligne.",
+      },
+      addressLocked:
+        "Elle ne change plus une fois l'annonce envoyée. Pour la corriger, écrivez-nous à",
+      required: {
+        characteristics:
+          "Le type, la surface et le nombre de pièces restent nécessaires à votre annonce.",
+        land: "Le type et la surface restent nécessaires à votre annonce.",
+        listing: "Le prix et la description restent nécessaires à votre annonce.",
+        field: "À renseigner.",
+      },
     },
   },
   // L1-13b: from the result of the wizard to the creation of the listing.

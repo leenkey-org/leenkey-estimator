@@ -81,17 +81,22 @@ test("une annonce en ligne : statut, chiffres clés, actions et onglets @a11y", 
   await expect(actions.getByRole("button", { name: "Marquer comme vendu" })).toBeVisible();
   await expect(actions.getByRole("button", { name: "Supprimer le brouillon" })).toHaveCount(0);
 
-  // Infos: the private address and the table of the characteristics, read
-  // only once sent (changed from L1-14b).
+  // Infos: the private address, which no longer changes once sent, and the
+  // table of the characteristics, which change from their page (L1-14b).
   await expect(tabs(page).getByRole("link", { name: "Infos" })).toHaveAttribute(
     "aria-current",
     "page",
   );
   await expect(main.getByText("Votre adresse exacte n'est jamais publiée")).toBeVisible();
+  await expect(main.getByText(/^Elle ne change plus une fois l'annonce envoyée/)).toBeVisible();
+  await expect(main.getByRole("link", { name: "Modifier l'adresse" })).toHaveCount(0);
   const characteristics = main.getByRole("region", { name: "Caractéristiques" });
   await expect(characteristics).toContainText("Collectif gaz");
   await expect(characteristics).not.toContainText("Travaux votés");
-  await expect(main.getByRole("link", { name: /^Modifier/ })).toHaveCount(0);
+  await expect(main.getByRole("link", { name: "Modifier les caractéristiques" })).toHaveAttribute(
+    "href",
+    `${sheet(1)}/modifier/caracteristiques`,
+  );
   if (isMobile) {
     // The page of a property is the file of the sale: « Dossier » is current.
     await expect(
@@ -114,9 +119,10 @@ test("une annonce en ligne : statut, chiffres clés, actions et onglets @a11y", 
     "page",
   );
   await expect(main.getByRole("heading", { level: 2 })).toHaveText("Photos");
-  // The seed has no photo yet (Q48): the empty state, without « Ajouter » once sent.
-  await expect(main.getByText("Votre bien n'a pas encore de photo.")).toBeVisible();
-  await expect(main.getByRole("link", { name: "Ajouter des photos" })).toHaveCount(0);
+  // The seed has no photo yet (Q48): they are added here, the listing online (L1-14b).
+  await expect(main.getByText("0 photo sur 15")).toBeAttached();
+  await expect(main.getByRole("button", { name: "Ajouter des photos" })).toBeVisible();
+  await expect(main.getByText(/^Votre annonce reste en ligne/)).toBeVisible();
   await tabs(page).getByRole("link", { name: "Annonce" }).click();
   await expect(page).toHaveURL(`${sheet(1)}/annonce`);
   await expect(page).toHaveTitle(`Annonce · ${name} · Ma vente · Leenkey`);
@@ -124,6 +130,10 @@ test("une annonce en ligne : statut, chiffres clés, actions et onglets @a11y", 
   await expect(listing).toContainText("239 000 €");
   await expect(listing).toContainText("soit 3 515 € le m²");
   await expect(listing).toContainText("LK-0001");
+  await expect(listing.getByRole("link", { name: "Modifier l'annonce" })).toHaveAttribute(
+    "href",
+    `${sheet(1)}/modifier/annonce`,
+  );
   expect(await seriousViolations(page)).toEqual([]);
 });
 

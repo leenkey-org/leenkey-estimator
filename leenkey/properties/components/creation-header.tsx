@@ -101,3 +101,10 @@ export function intentOf(event: { nativeEvent: Event }): StepIntent {
   const value = submitter instanceof HTMLButtonElement ? submitter.value : "";
   return value === "save" || value === "previous" ? value : "next";
 }
+
+/**
+ * A step changed from the page of the property once its listing is sent
+ * (L1-14b): « Annuler » goes back to it, a save leads to it, where it is
+ * said (`?modifie=1`).
+ */
+export type StepEdit = { cancelHref: string; doneHref: string };

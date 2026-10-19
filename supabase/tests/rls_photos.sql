@@ -1,11 +1,13 @@
 -- L1-12: photos of a property. Rows (public.photos): added at the end,
--- during the creation only, 15 at most, the first is the cover, reordered
--- by the owner only, through photos_reorder. Files (storage.objects, bucket
--- photos): uploaded by the owner during the creation only, deleted by the
--- owner of an editable property, under `{property_id}/{uuid}-{size}.webp`
--- only; read by the owner and the admin, by anyone once the listing is
--- published, and then only for a declared photo. Fixtures in postal code
--- 99994: the file passes on an empty and on a seeded database.
+-- during the creation and once the listing is sent (L1-14b), 15 at most,
+-- the first is the cover, reordered by the owner only, through
+-- photos_reorder. Files (storage.objects, bucket photos): uploaded by the
+-- owner as the rows, deleted by the owner of an editable property, under
+-- `{property_id}/{uuid}-{size}.webp` only; read by the owner and the admin,
+-- by anyone once the listing is published, and then only for a declared
+-- photo. A sold or suspended listing: no new photo (rls_listing_edits.sql
+-- for the sold one). Fixtures in postal code 99994: the file passes on an
+-- empty and on a seeded database.
 begin;
 \ir _helpers.psql
 select plan(38);
@@ -140,9 +142,10 @@ insert into listings (property_id, title, description, price_cents)
 values (:'prop_a', 'Appartement en photos', 'Description.', 21000000)
 returning id as listing_a \gset
 select listing_submit(:'listing_a') \gset
-select throws_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('photos', %L, %L)$$,
-                        :'prop_a' || '/' || gen_random_uuid() || '-400.webp', tests.uid('seller_a')),
-                 '42501', null, 'seller_a: no new file once the listing is sent, the server converts them');
+select gen_random_uuid() as sent_file \gset
+select lives_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('photos', %L, %L)$$,
+                       :'prop_a' || '/' || :'sent_file' || '-400.webp', tests.uid('seller_a')),
+                'seller_a: uploads a file once the listing is sent for review (L1-14b)');
 \set who admin
 \ir _as.psql
 select listing_reject(:'listing_a', 'Photos à reprendre') \gset
@@ -161,9 +164,14 @@ select listing_submit(:'listing_a') \gset
 select listing_publish(:'listing_a') \gset
 \set who seller_a
 \ir _as.psql
-select throws_ok(format($$insert into photos (property_id, storage_path) values (%L, %L)$$,
-                        :'prop_a', :'prop_a' || '/' || :'stray_file'),
-                 '42501', null, 'seller_a: declares no photo once the listing is sent, not even a file uploaded before');
+-- Online, 15 photos: one deleted (not the cover), then the one of the file
+-- uploaded while it was in review.
+delete from photos
+ where id = (select id from photos where property_id = :'prop_a' and not is_cover
+              order by position desc limit 1);
+select lives_ok(format($$insert into photos (property_id, storage_path) values (%L, %L)$$,
+                       :'prop_a', :'prop_a' || '/' || :'sent_file'),
+                'seller_a: adds a photo to its listing online (L1-14b)');
 \set who anon
 \ir _as.psql
 select is((select count(*) from storage.objects
@@ -188,7 +196,7 @@ select is((select count(*) from storage.objects
 delete from storage.objects where bucket_id = 'photos' and name = :'prop_a' || '/' || :'stray_file' || '-400.webp';
 select is((select count(*) from storage.objects
             where bucket_id = 'photos' and name = :'prop_a' || '/' || :'stray_file' || '-400.webp')::int, 0,
-          'seller_a: still deletes a file of its listing online, without adding any');
+          'seller_a: still deletes a file of its listing online');
 
 -- ===========================================================================
 -- Suspended: read-only for the seller

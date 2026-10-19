@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, useState, useTransition, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { flushSync } from "react-dom";
 import { Button } from "@/components/shared/button";
@@ -23,17 +24,19 @@ import {
 import { parseFrenchNumber } from "@/lib/validations/property";
 import { priceGap } from "../creation";
 import { saveListingDraft, type SaveListingResult } from "../listing-actions";
-import { CREATION_FORM_ID, intentOf, submitWithEnter } from "./creation-header";
+import { CREATION_FORM_ID, intentOf, submitWithEnter, type StepEdit } from "./creation-header";
 
 const t = fr.properties.price;
 const common = fr.properties.creation;
 const errors = t.errors;
+const edits = fr.properties.edit;
 
 // Step 3 of the creation (SPEC-V2 8.3): the price, the reminder of the
 // analysis of value with the gap to it, the title proposed from the property
 // and the description (1 200 characters). The first save creates the listing,
 // which needs its price: without anything typed yet, « Précédent » and
-// « Enregistrer » only leave the step.
+// « Enregistrer » only leave the step. Once the listing is sent (L1-14b,
+// `edit`), « Annuler » and « Enregistrer », the description required.
 
 export type Valuation = {
   /** « Votre analyse de valeur du 12 octobre 2026 ». */
@@ -48,6 +51,8 @@ export function PriceStep({
   initial,
   saved,
   valuation,
+  note,
+  edit,
 }: {
   propertyId: string;
   /** The listing as saved, or the title proposed and nothing else. */
@@ -55,6 +60,9 @@ export function PriceStep({
   /** Step 3 was saved once: the listing exists. */
   saved: boolean;
   valuation: Valuation | null;
+  /** Once sent, what a change means for the listing (L1-14b). */
+  note?: string;
+  edit?: StepEdit;
 }) {
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
@@ -100,8 +108,9 @@ export function PriceStep({
     event.preventDefault();
     if (submitting.current) return;
     const intent = intentOf(event);
-    const target =
-      intent === "save"
+    const target = edit
+      ? edit.doneHref
+      : intent === "save"
         ? "/vendeur"
         : intent === "previous"
           ? `/vendeur/biens/${propertyId}/caracteristiques`
@@ -136,10 +145,14 @@ export function PriceStep({
       return;
     }
     const missing: Partial<Record<ListingDraftField, string>> = {};
-    if (priceEuros === null) missing.priceEuros = errors.required;
-    if (intent === "next" && description.trim() === "") missing.description = errors.required;
+    const required = edit ? edits.required.field : errors.required;
+    if (priceEuros === null) missing.priceEuros = required;
+    if (intent === "next" && description.trim() === "") missing.description = required;
     if (priceEuros === null || Object.keys(missing).length > 0) {
-      showErrors(missing, intent === "next" ? t.required : t.priceToSave);
+      showErrors(
+        missing,
+        edit ? edits.required.listing : intent === "next" ? t.required : t.priceToSave,
+      );
       return;
     }
 
@@ -160,7 +173,9 @@ export function PriceStep({
         const fields = Object.fromEntries(
           Object.entries(result?.fieldErrors ?? {}).map(([field, key]) => [
             field,
-            errors[key ?? "price"] ?? common.error,
+            edit && key === "required"
+              ? edits.required.field
+              : (errors[key ?? "price"] ?? common.error),
           ]),
         );
         showErrors(
@@ -172,16 +187,19 @@ export function PriceStep({
               : result.error === "not_found"
                 ? common.notFound
                 : result.error === "incomplete"
-                  ? intent === "next"
-                    ? t.required
-                    : t.priceToSave
+                  ? edit
+                    ? edits.required.listing
+                    : intent === "next"
+                      ? t.required
+                      : t.priceToSave
                   : result.error === "invalid"
                     ? null
                     : common.error,
         );
         return;
       }
-      startSaving(() => router.push(target));
+      // A change made (edit) leaves no form behind it in the history.
+      startSaving(() => (edit ? router.replace(target) : router.push(target)));
     });
   }
 
@@ -195,7 +213,14 @@ export function PriceStep({
       noValidate
       className="flex flex-1 flex-col gap-5"
     >
-      <h2 className="text-lk-h2 font-bold text-wide text-lk-ink">{t.title}</h2>
+      <h2 className="text-lk-h2 font-bold text-wide text-lk-ink">
+        {edit ? edits.parts.listing : t.title}
+      </h2>
+      {note ? (
+        <InfoNote>
+          <p>{note}</p>
+        </InfoNote>
+      ) : null}
       {error ? <InlineAlert tone="danger">{error}</InlineAlert> : null}
 
       <UnitInput
@@ -248,11 +273,23 @@ export function PriceStep({
       />
 
       <FormActionBar className="md:mt-3">
-        <Button type="submit" name="intent" value="previous" variant="secondary" disabled={saving}>
-          {common.previous}
-        </Button>
+        {edit ? (
+          <Button asChild variant="secondary">
+            <Link href={edit.cancelHref}>{edits.cancel}</Link>
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            name="intent"
+            value="previous"
+            variant="secondary"
+            disabled={saving}
+          >
+            {common.previous}
+          </Button>
+        )}
         <Button ref={next} type="submit" name="intent" value="next" loading={saving}>
-          {common.next}
+          {edit ? edits.save : common.next}
         </Button>
       </FormActionBar>
     </form>

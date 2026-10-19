@@ -1,6 +1,6 @@
 import "server-only";
 import { notFound, redirect } from "next/navigation";
-import { inCreation } from "./creation";
+import { editableOnceSent, inCreation, type CreationStep, type SentStatus } from "./creation";
 import { sellerProperty, type SellerProperty } from "./queries";
 import { sheetHref } from "./sheet";
 
@@ -24,4 +24,22 @@ export async function propertyForSheet(id: string): Promise<SellerProperty | nul
   if (!result.ok) return null;
   if (!result.data) notFound();
   return result.data;
+}
+
+/**
+ * The property of a page that changes its listing once sent (L1-14b): a 404
+ * when it is not the seller's; a draft or a rejected listing changes at the
+ * step of the creation `step`, a suspended or sold one is read only (its
+ * page). null: it could not be read.
+ */
+export async function propertyForEdit(
+  id: string,
+  step: CreationStep,
+): Promise<(SellerProperty & { listingStatus: SentStatus }) | null> {
+  const property = await propertyForSheet(id);
+  if (!property) return null;
+  const status = property.listingStatus;
+  if (inCreation(status)) redirect(`/vendeur/biens/${property.id}/${step}`);
+  if (!editableOnceSent(status)) redirect(sheetHref(property.id));
+  return { ...property, listingStatus: status };
 }
