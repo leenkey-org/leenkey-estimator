@@ -37,6 +37,7 @@ import { Gallery } from "@/components/shared/gallery";
 import { IconButton } from "@/components/shared/icon-button";
 import { InfoNote } from "@/components/shared/info-note";
 import { InlineAlert } from "@/components/shared/inline-alert";
+import { FaqList } from "@/components/shared/faq-list";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { MoreLink } from "@/components/shared/more-link";
 import { PlanCard } from "@/components/shared/plan-card";
@@ -1116,6 +1117,8 @@ export default function DesignPage() {
                           plan.price === "Gratuit" ? undefined : content.publicPages.taxes
                         }
                         tagline={plan.tagline}
+                        priceNote={"priceNote" in plan ? plan.priceNote : undefined}
+                        featuresIntro={"intro" in plan ? plan.intro : undefined}
                         features={"features" in plan ? plan.features : undefined}
                         note={"note" in plan ? plan.note : undefined}
                         badge={"badge" in plan ? plan.badge : undefined}
@@ -1150,6 +1153,8 @@ export default function DesignPage() {
               />
             </div>
             <Caption>{content.publicPages.menuCaption}</Caption>
+            <FaqList className="max-w-lk-settings" items={content.publicPages.faq} />
+            <Caption>{content.publicPages.faqCaption}</Caption>
           </Section>
 
           <Section id="pied-de-page" title={content.sections.footer} level="h3">

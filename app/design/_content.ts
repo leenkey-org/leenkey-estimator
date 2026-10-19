@@ -706,6 +706,8 @@ export const publicPages = {
       name: "Accompagné",
       price: formatPrice(99000),
       tagline: "Un conseiller dédié à vos côtés, du prix à la signature.",
+      intro: "Tout Autonomie, plus :",
+      priceNote: "Forfait fixe TTC · payé à la souscription",
       features: ["Conseiller Leenkey dédié", "Stratégie de prix et de mise en vente"],
       action: "Choisir Accompagné",
     },
@@ -720,6 +722,18 @@ export const publicPages = {
   ],
   taxes: "TTC",
   menuLabel: "Navigation du site (exemple)",
+  faqCaption:
+    "FaqList · questions dépliables (<details>), ligne de 1 px entre elles, réponse de 640 px au plus",
+  faq: [
+    {
+      question: "Combien ça coûte, vraiment ?",
+      answer: "Trois formules transparentes à forfait fixe, jamais de commission au pourcentage.",
+    },
+    {
+      question: "Mes données et mes documents sont-ils en sécurité ?",
+      answer: "Vous seul décidez de ce qui est partagé, et avec qui.",
+    },
+  ],
   menuCaption:
     "SiteMenu · en-tête mobile des pages publiques (sous 768 px) : logo et « Menu », panneau plein écran avec les liens du site",
 };

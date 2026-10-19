@@ -4,14 +4,20 @@ import { cn } from "@/lib/utils";
 
 export type PlanCardProps = {
   name: string;
-  /** « 990 € » (formatPrice), or « Gratuit ». */
+  /** « 990 € » (formatPrice), « Gratuit », or « −14 010 € vs agence ». */
   price: string;
   /** « TTC » after a paid price. */
   priceSuffix?: string;
+  /** Under the head line: « Forfait fixe TTC · payé à la souscription ». */
+  priceNote?: string;
   /** Short text of the plan (Cédric's texts, SPEC-V2 section 11 bis). */
   tagline?: string;
+  /** First line of the list, in bold: « Tout Autonomie, plus : ». */
+  featuresIntro?: string;
   /** Checked list of what the plan includes. */
   features?: readonly string[];
+  /** After the list: « Le propriétaire continue de gérer sa vente… ». */
+  featuresOutro?: string;
   /** Last line: « Sans engagement · sans carte bancaire ». */
   note?: string;
   /** Recommended plan: 2 px blue border and this badge over the top edge. */
@@ -34,8 +40,11 @@ export function PlanCard({
   name,
   price,
   priceSuffix,
+  priceNote,
   tagline,
+  featuresIntro,
   features,
+  featuresOutro,
   note,
   badge,
   action,
@@ -55,16 +64,20 @@ export function PlanCard({
           {badge}
         </span>
       ) : null}
-      <div className="flex items-baseline justify-between gap-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <Name className="text-lk-h3 font-semibold text-lk-ink">{name}</Name>
-        <p className="shrink-0 whitespace-nowrap text-lk-ink">
+        <p className="whitespace-nowrap text-lk-ink">
           <span className="text-lk-h2 font-bold text-wide tabular-nums">{price}</span>
           {priceSuffix ? (
             <span className="ml-1 text-lk-micro font-medium text-lk-ink-3">{priceSuffix}</span>
           ) : null}
         </p>
       </div>
+      {priceNote ? <p className="-mt-1 text-lk-caption text-lk-ink-2">{priceNote}</p> : null}
       {tagline ? <p className="text-lk-secondary text-pretty text-lk-ink-3">{tagline}</p> : null}
+      {featuresIntro ? (
+        <p className="mt-1 text-lk-secondary font-semibold text-lk-ink">{featuresIntro}</p>
+      ) : null}
       {features && features.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {features.map((feature) => (
@@ -75,8 +88,11 @@ export function PlanCard({
           ))}
         </ul>
       ) : null}
+      {featuresOutro ? (
+        <p className="text-lk-secondary text-pretty text-lk-ink-2">{featuresOutro}</p>
+      ) : null}
       {note ? <p className="mt-auto pt-1 text-lk-caption text-lk-ink-2">{note}</p> : null}
-      {action ? <div className={cn("flex flex-col", !note && "mt-auto")}>{action}</div> : null}
+      {action ? <div className={cn("flex flex-col pt-2", !note && "mt-auto")}>{action}</div> : null}
     </article>
   );
 }
