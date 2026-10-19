@@ -84,6 +84,8 @@ export function ContactForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(contactRequest(source, checked.data)),
+        // Never a button busy for good: past 20 s, the failure message.
+        signal: AbortSignal.timeout(20_000),
       });
       ok = response.ok;
     } catch (error) {
