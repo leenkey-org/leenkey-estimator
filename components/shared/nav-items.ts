@@ -31,6 +31,8 @@ export type NavItem = {
   exact?: boolean;
   /** Count pill of the back office sidebar, hidden when absent or zero. */
   count?: number;
+  /** TopNav: shown from 1024 px only, no room for it at 768 px. */
+  wide?: boolean;
 };
 
 /** The path alone: no query, no hash, no trailing slash. */

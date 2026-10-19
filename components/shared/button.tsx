@@ -37,6 +37,10 @@ export const buttonVariants = cva(
         // On a blue flat only: the focus ring turns white to stay visible.
         inverse:
           "bg-lk-surface text-lk-blue not-disabled:hover:bg-lk-blue-tint not-disabled:active:bg-lk-blue-tint focus-visible:outline-white",
+        // White outline on a blue flat, beside an inverse button (hero of the
+        // home page, DESIGN.md 13.1).
+        "outline-inverse":
+          "border-[1.5px] border-white bg-transparent text-white not-disabled:hover:bg-white/12 not-disabled:active:bg-white/12 focus-visible:outline-white",
       },
       size: {
         lg: "h-13 px-5 text-lk-button-lg",

@@ -1,4 +1,6 @@
 // User-facing texts (CLAUDE.md section 9): no string literal in components.
+import { site } from "./site";
+
 export const fr = {
   env: {
     stagingBanner: "Environnement de test",
@@ -1133,4 +1135,6 @@ export const fr = {
       retry: "Réessayer",
     },
   },
+  // Public site in V2 (lib/i18n/site.ts).
+  site,
 } as const;

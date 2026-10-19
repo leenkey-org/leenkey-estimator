@@ -37,6 +37,10 @@ import { Gallery } from "@/components/shared/gallery";
 import { IconButton } from "@/components/shared/icon-button";
 import { InfoNote } from "@/components/shared/info-note";
 import { InlineAlert } from "@/components/shared/inline-alert";
+import { MarketingSection } from "@/components/shared/marketing-section";
+import { MoreLink } from "@/components/shared/more-link";
+import { PlanCard } from "@/components/shared/plan-card";
+import { SiteMenu } from "@/components/shared/site-menu";
 import { Input } from "@/components/shared/input";
 import { KeyFactsTable } from "@/components/shared/key-facts-table";
 import { KeyFigures } from "@/components/shared/key-figures";
@@ -62,6 +66,7 @@ import {
   ADMIN_NAV_ITEMS,
   bottomTabs,
   FAVOURITES_LINK,
+  MENU_LINKS,
   notificationBell,
   sellCta,
   signInLink,
@@ -336,6 +341,9 @@ export default function DesignPage() {
             </div>
             <BlueFlat className="flex flex-wrap items-center gap-4">
               <Button variant="inverse">{content.buttons.variants.inverse}</Button>
+              <Button variant="outline-inverse">
+                {content.buttons.variants["outline-inverse"]}
+              </Button>
               <p className="text-lk-secondary text-lk-on-blue-2">{content.buttons.onBlueCaption}</p>
             </BlueFlat>
           </Section>
@@ -1081,6 +1089,67 @@ export default function DesignPage() {
                 <Caption>{content.consent.panelCaption}</Caption>
               </div>
             </div>
+          </Section>
+
+          <Section id="pages-publiques" title={content.sections.publicPages} level="h3">
+            <div className="overflow-hidden rounded-lk-md border border-lk-line">
+              <MarketingSection
+                tone="stone"
+                titleAs="h4"
+                title={content.publicPages.sectionTitle}
+                lead={content.publicPages.sectionLead}
+                action={
+                  <MoreLink href="#pages-publiques" tone="ink">
+                    {content.publicPages.more}
+                  </MoreLink>
+                }
+              >
+                <ul className="grid gap-4 lg:grid-cols-3">
+                  {content.publicPages.plans.map((plan) => (
+                    <li key={plan.name} className="flex">
+                      <PlanCard
+                        className="flex-1"
+                        nameAs="h4"
+                        name={plan.name}
+                        price={plan.price}
+                        priceSuffix={
+                          plan.price === "Gratuit" ? undefined : content.publicPages.taxes
+                        }
+                        tagline={plan.tagline}
+                        features={"features" in plan ? plan.features : undefined}
+                        note={"note" in plan ? plan.note : undefined}
+                        badge={"badge" in plan ? plan.badge : undefined}
+                        action={
+                          "action" in plan ? (
+                            <Button variant={"badge" in plan ? "primary" : "secondary"}>
+                              {plan.action}
+                            </Button>
+                          ) : undefined
+                        }
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </MarketingSection>
+            </div>
+            <Caption>{content.publicPages.sectionCaption}</Caption>
+            <Caption>{content.publicPages.planCaption}</Caption>
+            <div className="flex flex-wrap items-center gap-6">
+              <MoreLink href="#pages-publiques">{content.publicPages.more}</MoreLink>
+              <Caption>{content.publicPages.moreCaption}</Caption>
+            </div>
+            <div className="max-w-sm overflow-hidden rounded-lk-md border border-lk-line">
+              <SiteMenu
+                className="static md:flex"
+                homeHref="/design"
+                label={content.publicPages.menuLabel}
+                links={MENU_LINKS}
+                cta={sellCta(false)}
+                account={{ href: "#pages-publiques", label: fr.site.menu.signIn }}
+                texts={{ open: fr.site.menu.open, close: fr.site.menu.close }}
+              />
+            </div>
+            <Caption>{content.publicPages.menuCaption}</Caption>
           </Section>
 
           <Section id="pied-de-page" title={content.sections.footer} level="h3">

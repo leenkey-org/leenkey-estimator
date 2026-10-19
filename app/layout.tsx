@@ -44,12 +44,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const analytics = isProduction();
   return (
     <html lang="fr">
-      <head>
-        <link rel="preload" href="/pages/landing.html" as="fetch" crossOrigin="anonymous" />
-        <link rel="preload" href="/pages/leenkey.css" as="style" />
-        <link rel="prefetch" href="/pages/concept.html" />
-        <link rel="prefetch" href="/pages/investir.html" />
-      </head>
       <body>
         <EnvBanner />
         {/* Space of the navigation, kept across client navigations (L1-10). */}
