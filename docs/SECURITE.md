@@ -17,7 +17,7 @@
 ## Entrées et abus
 - [ ] Validation Zod sur toutes les Server Actions et routes API
 - [ ] Uploads : type MIME vérifié côté serveur, taille maximale, conversion des images (photos : format lu dans le contenu, 60 millions de pixels au plus, métadonnées retirées, `core/images/webp.ts`)
-- [ ] Limites de débit : connexion, inscription, messages, assistant IA, offres
+- [ ] Limites de débit : connexion, inscription, messages, assistant IA, offres (messages : 20 par heure et par expéditeur, 5 nouvelles conversations par jour et par acquéreur, contrôlées par la base depuis L1-21, test `supabase/tests/rls_messaging.sql`)
 - [ ] Quotas IA par utilisateur actifs, journalisation dans `ai_*`
 
 ## Secrets et infrastructure
@@ -25,7 +25,7 @@
 - [ ] Variables par environnement dans Vercel, clés prod différentes des clés staging
 - [ ] Webhook Stripe : signature vérifiée, idempotence testée (même événement envoyé deux fois)
 - [ ] Routes `/api/cron/*` protégées par `CRON_SECRET`
-- [ ] En-têtes : CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy (la CSP autorise l'origine du stockage Supabase dans `img-src` : les photos signées en viennent)
+- [ ] En-têtes : CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy (la CSP autorise l'origine du stockage Supabase dans `img-src` : les photos signées en viennent ; et le WebSocket de Supabase Realtime dans `connect-src`, `wss://<projet>.supabase.co` : la messagerie en dépend, L1-21)
 - [ ] Clés Mapbox restreintes au domaine
 - [ ] Préprod : mot de passe du middleware actif, `X-Robots-Tag: noindex`, aucune variable de prod dans le projet Vercel `leenkey-v2`
 

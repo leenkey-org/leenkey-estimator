@@ -40,7 +40,7 @@ const twMerge = extendTailwindMerge<"lk-width">({
   extend: {
     theme: {
       text: [...FACADE_TEXT_SIZES],
-      radius: ["lk-sm", "lk-md"],
+      radius: ["lk-xs", "lk-sm", "lk-md"],
       shadow: ["float", "sheet"],
       ease: ["out-lk"],
       container: ["lk-page", "lk-home", "lk-settings", "lk-prose", "lk-form"],

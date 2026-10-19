@@ -212,6 +212,7 @@ Resend ◄────────── core/notifications (file notifications 
   /acquereur/alertes
   /messages                 liste des conversations (dont « Mon conseiller Leenkey » pour les formules payantes)
   /messages/[id]            conversation
+  /messages/nouveau?annonce= premier message d'un acquéreur depuis une annonce (« Contacter le vendeur », « Demander une visite » avec &visite=1, L1-21)
   /offres/nouvelle?listing= formulaire d'offre (L2)
   /offres/[id]              détail d'une offre
   /visites/reserver/[token] réservation d'un créneau sur invitation (L3)

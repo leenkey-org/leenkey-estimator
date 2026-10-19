@@ -346,7 +346,9 @@ html {
   --color-lk-dpe-g-bg: #fee2e2;
   --color-lk-dpe-g-fg: #991b1b;
 
-  /* Radii (DESIGN.md 5): 4 px controls, 6 px containers, rounded-full pills */
+  /* Radii (DESIGN.md 5): 4 px controls, 6 px containers, rounded-full pills;
+     2 px for the corner of a message bubble on the side of its sender */
+  --radius-lk-xs: 2px;
   --radius-lk-sm: 4px;
   --radius-lk-md: 6px;
 

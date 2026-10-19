@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { SiteFooter } from "@/components/shared/site-footer";
+import { getProfile } from "@/core/auth/session";
 import { FavoriteButton } from "@/leenkey/favorites/components/favorite-button";
 import { favoriteState } from "@/leenkey/favorites/queries";
 import { BackLink } from "@/leenkey/listings/components/back-link";
@@ -12,6 +13,7 @@ import { ListingViewTracker } from "@/leenkey/listings/components/listing-view-t
 import {
   buyerSignUpHref,
   communeSearchHref,
+  contactLinks,
   listingJsonLd,
   listingMetaDescription,
   listingMetaTitle,
@@ -27,7 +29,9 @@ import { absoluteUrl } from "@/lib/site";
 // Published listings only: any other status, or an unknown address, is a 404.
 // Photos (L1-12): the gallery, facade.svg without them. Not yet here: map of
 // the area (with Mapbox), assistant summary (L2-05), offer (L2), documents (L3). Favourite
-// (L1-18): over the mobile gallery, next to the desktop price. Navigation
+// (L1-18): over the mobile gallery, next to the desktop price. Contact and
+// visit (L1-21): the first message to the seller, after the sign-up without
+// a session. Navigation
 // (L1-10): TopNav from 768 px only; on mobile the gallery and the action bar
 // stay alone, without bottom tabs. SiteFooter at the end (L1-36), with room
 // below it for the fixed action bar.
@@ -74,7 +78,8 @@ export default async function ListingPage({ params }: Props) {
   const signUpHref = buyerSignUpHref(listing.slug);
   // Before the read: a heart changed since then wins (favorite-store.ts).
   const checkedAt = Date.now();
-  const favorite = await favoriteState(listing.id);
+  const [favorite, profile] = await Promise.all([favoriteState(listing.id), getProfile()]);
+  const links = contactLinks(listing, profile !== null);
   const heart = (variant: "white-float" | "stone") => (
     <FavoriteButton
       listingId={listing.id}
@@ -101,14 +106,12 @@ export default async function ListingPage({ params }: Props) {
           listing={listing}
           galleryTopLeft={<BackLink />}
           galleryTopRight={heart("white-float")}
-          aside={
-            <PriceColumn listing={listing} signUpHref={signUpHref} favorite={heart("stone")} />
-          }
+          aside={<PriceColumn listing={listing} links={links} favorite={heart("stone")} />}
         />
       </main>
       <SiteFooter className="pb-24 lg:pb-0" />
 
-      <ActionBar signUpHref={signUpHref} />
+      <ActionBar links={links} />
       <ListingViewTracker listingId={listing.id} />
       <script
         type="application/ld+json"

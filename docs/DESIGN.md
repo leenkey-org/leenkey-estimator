@@ -101,7 +101,7 @@ Règles :
 
 À créer tel quel en `L1-07` (Tailwind 4, configuration CSS-first). Les noms de classes Tailwind générés sont indiqués en commentaire.
 
-> **Mise en œuvre (L1-07, PR #12).** Tant que les pages V1 sont servies par la V2, les jetons Façade portent le préfixe `lk` pour ne pas modifier les pages V1 : couleurs `bg-lk-*` / `text-lk-*`, rayons `rounded-lk-sm` (4 px) et `rounded-lk-md` (6 px) au lieu de `rounded-sm` / `rounded-md`, échelle typographique en jetons de rôle `text-lk-*` (section 3.2). Les styles de base et les variables shadcn s'appliquent dans la portée `.facade`, posée par `<FacadeRoot>` (`components/shared/facade-root.tsx`). À l'arrêt des pages V1, un rechercher-remplacer ramène les noms de cette section.
+> **Mise en œuvre (L1-07, PR #12).** Tant que les pages V1 sont servies par la V2, les jetons Façade portent le préfixe `lk` pour ne pas modifier les pages V1 : couleurs `bg-lk-*` / `text-lk-*`, rayons `rounded-lk-sm` (4 px) et `rounded-lk-md` (6 px) au lieu de `rounded-sm` / `rounded-md` (et `rounded-*-lk-xs`, 2 px, pour le coin d'une bulle de message, L1-21), échelle typographique en jetons de rôle `text-lk-*` (section 3.2). Les styles de base et les variables shadcn s'appliquent dans la portée `.facade`, posée par `<FacadeRoot>` (`components/shared/facade-root.tsx`). À l'arrêt des pages V1, un rechercher-remplacer ramène les noms de cette section.
 
 ```css
 @import "tailwindcss";
@@ -316,7 +316,7 @@ Conception mobile d'abord, en 390 px.
 | Badge de statut, compteur, marqueur de prix sur carte, avatar, segments de progression | `rounded-full` | — | marqueur : `shadow-float` |
 | Bouton flottant (assistant), menu déroulant, panneau de notifications | 4–6 px | 1,5 px `--lk-ink` (bouton assistant) | `shadow-float` |
 | Feuille mobile (bottom sheet) | 6 px en haut | — | `shadow-sheet` |
-| Bulles de message | 6 px, coin côté expéditeur 2 px | reçues : 1 px `--lk-line` | aucune |
+| Bulles de message | 6 px, coin côté expéditeur 2 px (`rounded-*-lk-xs`) | reçues : 1 px `--lk-line` | aucune |
 | Bandeaux pleine largeur (`BrandPanel`, en-tête navy) | 0 | — | aucune |
 
 Couches (`z-index`) : contenu 0 · en-tête collant 20 · `BottomNav` 30 · bouton assistant 40 · panneau latéral et feuilles 50 · dialogue 60 · toast 70.
@@ -613,6 +613,8 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 **Composer** : fond blanc, bordure haute, padding 10 × 12 × 22. Bouton calendrier (inviter à une visite, `IconButton stone`), champ 44 px **rectangulaire rayon 4** bordure `--lk-field`, bouton envoyer 44 × 44 `primary` rayon 4.
 
+> **Mise en œuvre (L1-21).** `components/shared/conversation-header.tsx`, `message-bubble.tsx` (`MessageBubble`, `SystemMessage`, `MessageDate`) et `composer.tsx`, au catalogue `/design` (section « Messagerie »). `ConversationHeader` : le titre est le H1 de la page ; quand le bien a une page (fiche du bien pour le vendeur, annonce en ligne pour l'acquéreur), la vignette et le titre y mènent (lien étendu, cible de 44 px) ; sous-titre « Avec Chloé », et pour le vendeur seulement « Avec Chloé · Informations déclarées » (libellés de `FinancingBadge`). `MessageBubble` : coin de 2 px côté expéditeur (`rounded-bl-lk-xs` reçue, `rounded-br-lk-xs` envoyée, jeton `--radius-lk-xs`), sauts de ligne gardés, mot trop long coupé ; méta « Thomas · 9:12 » (heure de Paris). Fil : `role="log"` nommé « Messages de la conversation » (les nouveaux messages sont annoncés), un séparateur « Mardi 22 septembre » avant le premier message de chaque jour. `Composer` : libellé « Votre message » pour les lecteurs d'écran et en texte indicatif, champ de 44 px qui grandit jusqu'à cinq lignes puis défile, 4 000 caractères au plus ; bouton « Envoyer » (icône `Send`) inactif tant que le champ est vide, jamais pendant l'envoi (il garde le focus, une roue remplace l'icône) ; Entrée envoie au clavier et à la souris, Maj + Entrée passe à la ligne, Entrée passe à la ligne sur un écran tactile. Erreur d'envoi : `InlineAlert` danger au-dessus du champ, liée à lui ; conversation close : `InlineAlert` info à la place du champ. Bouton calendrier (L3) et `AssistantSuggestion` (L1-29) pas encore là. Menu `MoreVertical` (`IconButton` transparent) : menu Radix comme l'`AccountMenu`, « Signaler la conversation » ouvre le dialogue de 10.8 (motif), le focus revient au bouton ; la confirmation s'affiche sous l'en-tête.
+
 **AssistantNote** (« Résumé par l'assistant ») : fond `--lk-blue-tint`, rayon 6, padding 16 × 18, icône `Sparkles` 20 px bleu, titre 13 px 600 `--lk-navy`, texte 12 px.
 
 **AssistantFab** (bouton flottant) : en bas à droite à 24 px, hauteur 48, padding 0 18, fond blanc, bordure 1,5 px `--lk-ink`, rayon 4, `shadow-float`, icône `Sparkles` bleue + « Assistant Leenkey » 14 px 600. En mobile : masqué au profit de l'onglet ou du bouton d'en-tête.
@@ -663,7 +665,7 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 **Skeleton** : blocs `--lk-stone-2`, rayon identique à l'élément remplacé, pulsation d'opacité 0,6 → 1 en 1,2 s (désactivée en mouvement réduit). Jamais de spinner plein écran.
 
-**ComingSoon** (L1-10, `components/shared/coming-soon.tsx`) : page dont l'écran arrive avec une tâche suivante. Sous le H1 de la page, un `EmptyState` (marges de 40 puis 56 px en hauteur) : titre « Votre messagerie arrive », une phrase sur l'écran qui arrive, jamais une date ; au plus une action (« Se déconnecter » sur le compte jusqu'à L1-39). Textes : `lib/i18n/fr.ts`, `placeholders`.
+**ComingSoon** (L1-10, `components/shared/coming-soon.tsx`) : page dont l'écran arrive avec une tâche suivante. Sous le H1 de la page, un `EmptyState` (marges de 40 puis 56 px en hauteur) : titre « Vos réglages arrivent », une phrase sur l'écran qui arrive, jamais une date ; au plus une action (« Se déconnecter » sur le compte jusqu'à L1-39). Textes : `lib/i18n/fr.ts`, `placeholders`.
 
 **Toast** : en bas au centre (mobile, au-dessus de la `BottomNav`) ou en bas à droite (desktop). Fond `--lk-ink`, texte blanc 14 px, rayon 4, padding 12 × 16, action en `--lk-on-blue-2` 600. Durée 5 s, `role="status"`.
 
@@ -740,6 +742,8 @@ Galerie 280 px (retour, favori, compteur). Bloc padding 20 × 20 × 0, écart 14
 
 ### 12.9 Messagerie `/messages/[id]` (`Messagerie.png`, G6)
 Fond `--lk-bg`. `ConversationHeader`. Fil padding 16, écart 12. `AssistantSuggestion` collée en bas du fil. `Composer`.
+
+> **Mise en œuvre (L1-21).** La page défile : l'en-tête reste collé en haut (sous la `TopNav` à partir de 768 px) et le `Composer` en bas ; à l'ouverture, le fil montre son dernier message, puis un message qui arrive garde le lecteur en bas, sauf s'il est remonté lire. Sous 768 px : ni `BottomNav` ni pied de page (le champ resterait sous la barre), retour « Toutes les conversations » ; le clavier réduit la page (`interactive-widget=resizes-content`). À partir de 768 px, `TopNav` et pied de page (sous la conversation). À partir de 1 024 px (G6 desktop) : la liste à gauche (360 px, son propre défilement, la conversation ouverte en `--lk-blue-tint` avec `aria-current`), la conversation à droite, sans bouton retour ; `/messages` y montre « Choisissez une conversation » (`EmptyState`). Liste `/messages` (mobile, gabarit des espaces : H1 et cloche, `BottomNav`) : lignes dans une carte blanche bordée, vignette 44 × 44, prénom 14 px 600 et heure 11 px, le bien en 12 px `--lk-ink-3`, le dernier message en 13 px sur une ligne (`--lk-ink` 600 et point bleu de 10 px quand il est non lu), groupes titrés (`SectionTitle`) par bien pour un vendeur de plusieurs biens. Premier message `/messages/nouveau` : même gabarit, en-tête du bien (retour vers l'annonce), une `InfoNote` « Présentez-vous et posez vos questions : Bruno vous répond ici. », le `Composer`.
 
 ### 12.10 Accueil acquéreur connecté `/acquereur` (`AccueilDesktop.png`, G4)
 - `TopNav` connecté.
