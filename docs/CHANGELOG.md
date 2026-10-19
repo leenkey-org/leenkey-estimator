@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-18 · L1-13a · PR #23 · Prix, description, aperçu et envoi en validation
+- Ajouté : étape 3 de la création `/vendeur/biens/[id]/prix` : prix en euros, rappel de l'analyse de valeur avec l'écart du prix en pourcentage (`InfoNote`, dans `/design`), titre proposé d'après le bien et modifiable, description de 1 200 caractères avec compteur ; l'annonce est créée au premier enregistrement (son prix est alors demandé), « Continuer » demande le prix et la description. Étape 4 `/vendeur/biens/[id]/apercu` : la page annonce elle-même dans un cadre bordé, boutons de contact inactifs, motif du refus au-dessus d'une annonce refusée, puis « Envoyer en validation ». Écran de fin `/vendeur/biens/[id]/envoye` (`EndOfFlow`, dans `/design` : « C'est envoyé. », récapitulatif de l'annonce dessous à partir de 768 px). Emails « Annonce reçue » au vendeur et « Annonce à valider » à Leenkey (`ADMIN_NOTIFICATION_EMAIL`, pied de page interne), envoyés après la réponse. « Ma vente » reprend un brouillon à l'aperçu.
+- Modifié : la page annonce, l'aperçu du vendeur et la fiche du back office lisent l'annonce de la même façon (`leenkey/listings/listing-row.ts`) ; le corps de la page annonce devient `ListingBody`, partagé avec l'aperçu ; `PriceColumn` accepte des boutons inactifs.
+- Tests : unitaires (règles de l'étape 3, écart au prix, création puis mise à jour de l'annonce, conflit de deux onglets, champs refusés et leurs messages, envoi en validation et ses refus, emails et leurs destinataires, un échec qui reste isolé) ; E2E sur la pile de seed (création complète jusqu'à l'envoi en mobile, erreurs et focus, reprise à l'aperçu depuis « Ma vente », colonne de prix inactive en 1 280 px, écran de fin, étapes fermées après l'envoi, accessibilité).
+- Pas de migration.
+
 ### 2026-10-18 · Logo · PR #22 · Logo officiel
 - Modifié : le logo de leenkey.fr (maison et clé, « leenkey ») remplace le mot « Leenkey » en texte dans la barre de navigation, la barre du back office (en blanc), la connexion, l'inscription, les pages légales et l'image de partage des annonces (en blanc, le mot sans son fichier). Composant `Logo` dans `/design`, fichiers `public/brand/logo.svg` et `logo-white.svg` (recadrés sur le dessin). Jeton `text-lk-logo` retiré. `DESIGN.md` 10.6, 12.1 et 14.
 - Tests : unitaire de l'image de partage (le logo dessiné, absent sans son fichier) ; E2E et accessibilité des pages concernées.

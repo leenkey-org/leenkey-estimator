@@ -10,7 +10,7 @@ import { fr } from "@/lib/i18n/fr";
  */
 export function CreationBody({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto flex w-full max-w-lk-form flex-1 flex-col px-5 pt-6 md:pt-10 md:pb-16 [&_button]:scroll-mb-28 [&_input]:scroll-mb-28 [&_select]:scroll-mb-28">
+    <div className="mx-auto flex w-full max-w-lk-form flex-1 flex-col px-5 pt-6 md:pt-10 md:pb-16 [&_button]:scroll-mb-28 [&_input]:scroll-mb-28 [&_select]:scroll-mb-28 [&_textarea]:scroll-mb-28">
       {children}
     </div>
   );

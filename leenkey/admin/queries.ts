@@ -1,12 +1,11 @@
 import "server-only";
 import { cache } from "react";
 import { requireAdmin } from "@/core/auth/session";
-import type { DpeClass } from "@/components/shared/dpe-badge";
+import { LISTING_PROPERTY_COLUMNS, listingForPage, planOf } from "@/leenkey/listings/listing-row";
 import type { PublicListing } from "@/leenkey/listings/queries";
 import { createClient } from "@/lib/supabase/server";
 import { chunk } from "@/lib/utils";
 import type { AdminListingsQuery } from "@/lib/validations/admin";
-import { DPE_CLASSES } from "@/lib/validations/search";
 import type { Database } from "@/types/database";
 
 // Reads of the back office of the listings (L1-19), with the admin's session:
@@ -171,10 +170,7 @@ export async function adminListingCounts(): Promise<QueryResult<AdminListingCoun
 }
 
 const DETAIL_COLUMNS =
-  "id, reference, slug, title, description, price_cents, status, created_at, submitted_at, published_at, suspended_at, rejection_reason, suspension_reason, property:properties!inner(owner_id, type, city, postal_code, district, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, has_elevator, has_balcony, has_terrace, has_garden, has_parking, has_cellar, orientation, build_year, is_new_build, dpe_class, ges_class, heating, charges_monthly_cents, property_tax_yearly_cents, copro_lots, deleted_at, owner:profiles!properties_owner_id_fkey(first_name, last_name), progress:sale_progress(plan), photos(storage_path, width, height, caption, position))";
-
-const energyClass = (value: string | null): DpeClass | null =>
-  DPE_CLASSES.find((letter) => letter === value) ?? null;
+  `id, reference, slug, title, description, price_cents, status, created_at, submitted_at, published_at, suspended_at, rejection_reason, suspension_reason, property:properties!inner(${LISTING_PROPERTY_COLUMNS})` as const;
 
 /**
  * One listing with its seller, plan and decisions; null when unknown or
@@ -226,60 +222,16 @@ export const adminListing = cache(async function adminListing(
     }
 
     const property = row.property;
-    const progress = Array.isArray(property.progress) ? property.progress[0] : property.progress;
     const sellerName = fullName(
       property.owner?.first_name ?? null,
       property.owner?.last_name ?? null,
     );
-    const plan = progress?.plan ?? "autonomie";
+    const plan = planOf(property);
+    const accompanied = advisorPlans.data.some((entitlement) => entitlement.plan === plan);
     return {
       ok: true,
       data: {
-        listing: {
-          id: row.id,
-          slug: row.slug,
-          reference: row.reference,
-          title: row.title,
-          description: row.description,
-          priceCents: Number(row.price_cents),
-          publishedAt: row.published_at,
-          // A draft may still miss them (L1-11); listing_submit requires them.
-          type: property.type ?? "autre",
-          city: property.city,
-          postalCode: property.postal_code,
-          district: property.district,
-          surfaceM2: Number(property.surface_m2 ?? 0),
-          carrezM2: property.carrez_m2 === null ? null : Number(property.carrez_m2),
-          rooms: property.rooms ?? 0,
-          bedrooms: property.bedrooms,
-          floor: property.floor,
-          floorsTotal: property.floors_total,
-          hasElevator: property.has_elevator,
-          hasBalcony: property.has_balcony,
-          hasTerrace: property.has_terrace,
-          hasGarden: property.has_garden,
-          hasParking: property.has_parking,
-          hasCellar: property.has_cellar,
-          orientation: property.orientation,
-          buildYear: property.build_year,
-          isNewBuild: property.is_new_build,
-          dpe: energyClass(property.dpe_class),
-          ges: energyClass(property.ges_class),
-          heating: property.heating,
-          chargesMonthlyCents: property.charges_monthly_cents,
-          propertyTaxYearlyCents: property.property_tax_yearly_cents,
-          coproLots: property.copro_lots,
-          sellerFirstName: property.owner?.first_name ?? null,
-          accompanied: advisorPlans.data.some((entitlement) => entitlement.plan === plan),
-          photos: [...property.photos]
-            .sort((a, b) => a.position - b.position)
-            .map((photo) => ({
-              path: photo.storage_path,
-              width: photo.width,
-              height: photo.height,
-              caption: photo.caption,
-            })),
-        },
+        listing: listingForPage(row, property, accompanied),
         status: row.status,
         createdAt: row.created_at,
         submittedAt: row.submitted_at,

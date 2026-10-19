@@ -1,11 +1,13 @@
 import AxeBuilder from "@axe-core/playwright";
 import { devices, expect, test, type Page } from "@playwright/test";
 
-// L1-11: creation of a property, steps 1 (address) and 2 (characteristics),
-// on the seed, with the address fixtures of core/geo (GEOCODER=fixtures for
-// the server, exported by scripts/local-stack.sh env). Each run adds a draft
-// to seller_a for good: project « seed-mutations » (playwright.config.ts),
-// local stack and E2E_MUTATE=1 only, never on the preprod.
+// L1-11 and L1-13: creation of a property, steps 1 (address), 2
+// (characteristics), 3 (price and description) and 4 (preview, sending), on
+// the seed, with the address fixtures of core/geo (GEOCODER=fixtures for the
+// server, exported by scripts/local-stack.sh env). Each run adds a draft and
+// a listing waiting for review to seller_a for good: project
+// « seed-mutations » (playwright.config.ts), local stack and E2E_MUTATE=1
+// only, never on the preprod.
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
@@ -131,10 +133,12 @@ test("créer un bien en mobile : adresse, caractéristiques, reprise depuis Ma v
   // Enter in a field means « Continuer », never the back button of the header.
   await charges.press("Enter");
   await expect(page).toHaveURL(`/vendeur/biens/${id}/prix`);
-  await expect(page.getByText("La suite de votre annonce arrive")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 2, name: "Votre prix et votre annonce" }),
+  ).toBeVisible();
 
-  // Back to step 2: everything saved.
-  await page.getByRole("link", { name: "Étape précédente" }).click();
+  // Back to step 2 (nothing typed at step 3: it only leaves): everything saved.
+  await page.getByRole("button", { name: "Étape précédente" }).click();
   await expect(page).toHaveURL(`/vendeur/biens/${id}/caracteristiques`);
   await expect(page.getByLabel("Surface habitable")).toHaveValue("68,5");
   await expect(page.getByLabel("Chambres")).toHaveValue("2");
@@ -179,6 +183,98 @@ test("créer un bien en mobile : adresse, caractéristiques, reprise depuis Ma v
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page).toHaveURL("/vendeur");
   await expect(draft).toContainText("8 Avenue Carnot · Savigny-sur-Orge");
+});
+
+test("envoyer une annonce en validation en mobile : prix, description, aperçu", async ({
+  page,
+}) => {
+  await signIn(page, "/vendeur/biens/nouveau");
+  const next = page.getByRole("button", { name: "Continuer" });
+  await next.click();
+  const field = page.getByRole("combobox", { name: "Adresse du bien" });
+  await field.fill("12 rue de la gare");
+  await page.getByRole("option", { name: /12 Rue de la Gare/ }).click();
+  await next.click();
+  await expect(page).toHaveURL(/\/vendeur\/biens\/[0-9a-f-]{36}\/caracteristiques$/);
+  const id = new URL(page.url()).pathname.split("/")[3];
+  await page.getByLabel("Type de bien").selectOption("appartement");
+  await page.getByLabel("Surface habitable").fill("68,5");
+  await page.getByLabel("Pièces", { exact: true }).fill("3");
+  await next.click();
+
+  // Step 3: the title is proposed from the property; price and description
+  // are needed to see the preview.
+  await expect(page).toHaveURL(`/vendeur/biens/${id}/prix`);
+  await expect(page.getByRole("progressbar", { name: /Étape 3 sur 4/ })).toHaveAttribute(
+    "aria-valuenow",
+    "75",
+  );
+  await expect(page).toHaveTitle("Prix et description · Mon bien · Leenkey");
+  const title = page.getByLabel("Titre de l'annonce");
+  await expect(title).toHaveValue("Appartement 3 pièces 68,5 m² · Épinay-sur-Orge");
+  await next.click();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Le prix et la description sont nécessaires" }),
+  ).toBeVisible();
+  const price = page.getByLabel("Prix de vente");
+  await expect(price).toBeFocused();
+  await expectNoSeriousViolation(page);
+  await price.fill("320 000,50");
+  await next.click();
+  await expect(price).toHaveAccessibleDescription(/Saisissez un prix en euros, sans centimes\./);
+  await price.fill("320 000");
+  const description = page.getByRole("textbox", { name: "Description" });
+  await description.fill("Trois pièces lumineux, au calme, à cinq minutes de la gare.");
+  await expect(description).toHaveAccessibleDescription(/^59\s\/\s1\s200 caractères$/);
+
+  // « Enregistrer »: the listing is created, the draft resumes at step 4.
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page).toHaveURL("/vendeur");
+  await page.locator(`a[href^="/vendeur/biens/${id}/"]`).click();
+  await expect(page).toHaveURL(`/vendeur/biens/${id}/apercu`);
+
+  // Step 4: the listing as buyers will see it.
+  await expect(page.getByRole("progressbar", { name: /Étape 4 sur 4/ })).toHaveAttribute(
+    "aria-valuenow",
+    "100",
+  );
+  await expect(
+    page.getByRole("heading", { level: 3, name: "Appartement 3 pièces 68,5 m² · Épinay-sur-Orge" }),
+  ).toBeVisible();
+  // The price of the phone (the column of 1024 px is hidden).
+  await expect(page.getByText("320 000 €", { exact: true }).filter({ visible: true })).toHaveCount(
+    1,
+  );
+  await expect(page.getByText("Trois pièces lumineux, au calme")).toBeVisible();
+  await expectNoSeriousViolation(page);
+  // From 1024 px, the price column, its buttons inactive.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(page.getByRole("button", { name: "Contacter le vendeur" })).toBeDisabled();
+  await expect(page.getByText("Dans l'aperçu, ces boutons sont inactifs.")).toBeVisible();
+  await expectNoSeriousViolation(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  // Back to step 3, everything kept; then sent for review.
+  await page.getByRole("link", { name: "Précédent", exact: true }).click();
+  await expect(page).toHaveURL(`/vendeur/biens/${id}/prix`);
+  // Written back as French numbers are: « 320 000 », a narrow space.
+  await expect(price).toHaveValue("320\u202F000");
+  await next.click();
+  await expect(page).toHaveURL(`/vendeur/biens/${id}/apercu`);
+  await page.getByRole("button", { name: "Envoyer en validation" }).click();
+  await expect(page).toHaveURL(`/vendeur/biens/${id}/envoye`);
+  await expect(page.getByRole("heading", { level: 1, name: "C'est envoyé." })).toBeVisible();
+  await expect(
+    page.getByText("Nous relisons votre annonce sous 24 h et vous prévenons par email."),
+  ).toBeVisible();
+  await expectNoSeriousViolation(page);
+
+  // Sent: it waits for the review, and the steps no longer change it.
+  await page.getByRole("link", { name: "Retour à Ma vente" }).click();
+  await expect(page).toHaveURL("/vendeur");
+  await expect(page.locator(`a[href^="/vendeur/biens/${id}/"]`)).toHaveCount(0);
+  await page.goto(`/vendeur/biens/${id}/prix`);
+  await expect(page).toHaveURL("/vendeur");
 });
 
 test("le bien d'un autre vendeur répond 404, une annonce en ligne ne se reprend pas", async ({

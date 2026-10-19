@@ -19,19 +19,42 @@ type ListingStatus = Database["public"]["Enums"]["listing_status"];
 
 export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavailable" };
 
+/** The listing of the property, created by step 3 (L1-13) with its price. */
+export type SellerListing = {
+  id: string;
+  reference: string;
+  title: string;
+  description: string;
+  priceCents: number;
+  status: ListingStatus;
+  /** Why Leenkey refused it (rejected), until it is sent again. */
+  rejectionReason: string | null;
+};
+
+/** The analysis of value the property comes from (estimator, L1-13). */
+export type SellerEstimation = {
+  valueCents: number;
+  lowCents: number | null;
+  highCents: number | null;
+  /** When the analysis was made; null when it cannot be read. */
+  madeAt: string | null;
+};
+
 export type SellerProperty = {
   id: string;
   address: { line: string; postalCode: string; city: string };
   /** Values of the form of step 2 (amounts in euros). */
   characteristics: Omit<Characteristics, "propertyId">;
   listingStatus: ListingStatus | null;
+  listing: SellerListing | null;
+  estimation: SellerEstimation | null;
   /** Base of the files of the main photo (photo-files.ts), null without photos. */
   coverPath: string | null;
   createdAt: string;
 };
 
 const COLUMNS =
-  "id, type, address_line, postal_code, city, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, build_year, is_new_build, dpe_class, ges_class, heating, has_balcony, has_terrace, has_garden, has_parking, has_cellar, has_elevator, charges_monthly_cents, property_tax_yearly_cents, copro_lots, created_at, listing:listings(status), photos(storage_path, is_cover)";
+  "id, type, address_line, postal_code, city, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, build_year, is_new_build, dpe_class, ges_class, heating, has_balcony, has_terrace, has_garden, has_parking, has_cellar, has_elevator, charges_monthly_cents, property_tax_yearly_cents, copro_lots, created_at, estimation_value_cents, estimation_low_cents, estimation_high_cents, estimation:estimations(created_at), listing:listings(id, reference, title, description, price_cents, status, rejection_reason), photos(storage_path, is_cover)";
 
 type Row = NonNullable<Awaited<ReturnType<typeof readOne>>["data"]>;
 
@@ -62,6 +85,7 @@ const euros = (cents: number | null) => (cents === null ? null : cents / 100);
 
 function toSellerProperty(row: Row): SellerProperty {
   const listing = Array.isArray(row.listing) ? row.listing[0] : row.listing;
+  const estimation = Array.isArray(row.estimation) ? row.estimation[0] : row.estimation;
   return {
     id: row.id,
     address: { line: row.address_line, postalCode: row.postal_code, city: row.city },
@@ -84,6 +108,28 @@ function toSellerProperty(row: Row): SellerProperty {
       coproLots: row.copro_lots,
     },
     listingStatus: listing?.status ?? null,
+    listing: listing
+      ? {
+          id: listing.id,
+          reference: listing.reference,
+          title: listing.title,
+          description: listing.description,
+          priceCents: Number(listing.price_cents),
+          status: listing.status,
+          rejectionReason: listing.rejection_reason,
+        }
+      : null,
+    // An analysis at 0 € (Q29, the château of the V1) gives no value to recall.
+    estimation:
+      row.estimation_value_cents === null || Number(row.estimation_value_cents) <= 0
+        ? null
+        : {
+            valueCents: Number(row.estimation_value_cents),
+            lowCents: row.estimation_low_cents === null ? null : Number(row.estimation_low_cents),
+            highCents:
+              row.estimation_high_cents === null ? null : Number(row.estimation_high_cents),
+            madeAt: estimation?.created_at ?? null,
+          },
     coverPath: row.photos.find((photo) => photo.is_cover)?.storage_path ?? null,
     createdAt: row.created_at,
   };

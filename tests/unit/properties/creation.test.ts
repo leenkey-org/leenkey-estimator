@@ -5,7 +5,12 @@ import {
   sameAddressLabel,
   searchFixtures,
 } from "@/core/geo/address-search";
-import { addressLabel, creationStep, inCreation } from "@/leenkey/properties/creation";
+import {
+  addressLabel,
+  creationStep,
+  inCreation,
+  suggestedTitle,
+} from "@/leenkey/properties/creation";
 import {
   addressChoiceSchema,
   addressQuerySchema,
@@ -226,6 +231,35 @@ describe("steps of the creation", () => {
     );
     expect(creationStep({ type: "appartement", surfaceM2: 48, rooms: 2 })).toBe("prix");
     expect(creationStep({ type: "terrain", surfaceM2: 800, rooms: 0 })).toBe("prix");
+    // Step 3 saved with its price: the preview once the description is written.
+    const flat = { type: "appartement", surfaceM2: 48, rooms: 2 } as const;
+    expect(creationStep(flat, { description: "  " })).toBe("prix");
+    expect(creationStep(flat, { description: "Lumineux." })).toBe("apercu");
+    expect(creationStep({ ...flat, rooms: null }, { description: "Lumineux." })).toBe(
+      "caracteristiques",
+    );
+  });
+
+  it("proposes a title from the type, the rooms, the surface and the town", () => {
+    expect(
+      suggestedTitle({ type: "appartement", rooms: 3, surfaceM2: 68 }, "Savigny-sur-Orge"),
+    ).toBe("Appartement 3 pièces 68 m² · Savigny-sur-Orge");
+    expect(suggestedTitle({ type: "maison", rooms: 1, surfaceM2: 32.5 }, "Grigny")).toBe(
+      "Maison 1 pièce 32,5 m² · Grigny",
+    );
+    // Plain spaces, a thousands separator too: the back office searches the title as typed.
+    expect(suggestedTitle({ type: "terrain", rooms: 0, surfaceM2: 1250 }, "Morangis")).toBe(
+      "Terrain 1 250 m² · Morangis",
+    );
+    expect(suggestedTitle({ type: "autre", rooms: 2, surfaceM2: 90 }, "Juvisy-sur-Orge")).toBe(
+      "Bien 90 m² · Juvisy-sur-Orge",
+    );
+    expect(suggestedTitle({ type: null, rooms: null, surfaceM2: null }, "Grigny")).toBe(
+      "Bien · Grigny",
+    );
+    expect([
+      ...suggestedTitle({ type: "maison", rooms: 4, surfaceM2: 90 }, "x".repeat(200)),
+    ]).toHaveLength(120);
   });
 
   it("writes the address as the national base labels it", () => {

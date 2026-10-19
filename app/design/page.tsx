@@ -27,6 +27,7 @@ import {
 } from "@/components/shared/data-table";
 import { DPE_CLASSES, DpeBadge } from "@/components/shared/dpe-badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { EndOfFlow } from "@/components/shared/end-of-flow";
 import { FacadeDrawing } from "@/components/shared/facade-drawing";
 import { Logo } from "@/components/shared/logo";
 import { FacadeRoot } from "@/components/shared/facade-root";
@@ -34,6 +35,7 @@ import { FilterPills } from "@/components/shared/filter-pills";
 import { FormActionBar } from "@/components/shared/form-action-bar";
 import { Gallery } from "@/components/shared/gallery";
 import { IconButton } from "@/components/shared/icon-button";
+import { InfoNote } from "@/components/shared/info-note";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
 import { KeyFactsTable } from "@/components/shared/key-facts-table";
@@ -762,6 +764,17 @@ export default function DesignPage() {
             />
           </Section>
 
+          <Section id="fin-de-parcours" title={content.sections.endOfFlow} level="h3">
+            <EndOfFlow
+              titleAs="h4"
+              title={fr.properties.sent.title}
+              text={fr.properties.sent.text}
+              action={<Button variant="inverse">{fr.properties.sent.action}</Button>}
+              className="min-h-96 md:min-h-96"
+            />
+            <Caption>{content.endOfFlow.caption}</Caption>
+          </Section>
+
           <Section id="dessin" title={content.sections.drawing} level="h3">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="flex flex-col gap-3 rounded-lk-md border border-lk-line p-6">
@@ -971,6 +984,14 @@ export default function DesignPage() {
               <InlineAlert tone="success">{content.alerts.success}</InlineAlert>
             </div>
             <Caption>{content.alerts.caption}</Caption>
+          </Section>
+
+          <Section id="note-information" title={content.sections.infoNote} level="h3">
+            <InfoNote title={content.infoNote.title} className="max-w-lk-form">
+              <p>{content.infoNote.text}</p>
+              <p>{content.infoNote.gap}</p>
+            </InfoNote>
+            <Caption>{content.infoNote.caption}</Caption>
           </Section>
 
           <Section id="back-office" title={content.sections.backOffice} level="h3">
