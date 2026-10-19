@@ -221,7 +221,8 @@ export function PriceStep({
 
       <Input
         label={t.listingTitle}
-        help={t.titleHelp}
+        // Ours until the first save; then the seller's own title.
+        help={saved ? undefined : t.titleHelp}
         value={title}
         error={fieldErrors.title}
         onChange={(event) => {

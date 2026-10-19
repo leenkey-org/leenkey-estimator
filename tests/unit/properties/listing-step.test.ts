@@ -78,4 +78,8 @@ describe("gap of the price to the analysis of value", () => {
     // Within half a percent: the same value, never « -0 % ».
     expect(Object.is(priceGap(33_900_000, 34_000_000), 0)).toBe(true);
   });
+
+  it("gives no gap to an analysis without value (0 €, Q29)", () => {
+    expect(priceGap(30_000_000, 0)).toBeNull();
+  });
 });

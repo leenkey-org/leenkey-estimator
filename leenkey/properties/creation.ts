@@ -53,9 +53,11 @@ export function suggestedTitle(
 
 /**
  * Gap of a price to the value of the analysis of value, in whole percents
- * (SPEC-V2 8.3): 3 above it, -5 below, 0 within half a percent.
+ * (SPEC-V2 8.3): 3 above it, -5 below, 0 within half a percent; null without
+ * a value to compare with.
  */
-export function priceGap(priceCents: number, valueCents: number): number {
+export function priceGap(priceCents: number, valueCents: number): number | null {
+  if (valueCents <= 0) return null;
   const gap = Math.round(((priceCents - valueCents) / valueCents) * 100);
   return gap === 0 ? 0 : gap;
 }

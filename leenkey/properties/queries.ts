@@ -119,8 +119,9 @@ function toSellerProperty(row: Row): SellerProperty {
           rejectionReason: listing.rejection_reason,
         }
       : null,
+    // An analysis at 0 € (Q29, the château of the V1) gives no value to recall.
     estimation:
-      row.estimation_value_cents === null
+      row.estimation_value_cents === null || Number(row.estimation_value_cents) <= 0
         ? null
         : {
             valueCents: Number(row.estimation_value_cents),
