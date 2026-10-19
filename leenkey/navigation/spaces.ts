@@ -18,6 +18,7 @@ export const ROUTES = {
   about: "/qui-sommes-nous",
   sellerSignUp: "/inscription?role=seller",
   seller: "/vendeur",
+  sellerProperties: "/vendeur/biens",
   newProperty: "/vendeur/biens/nouveau",
   sellerFile: "/vendeur/dossier",
   buyer: "/acquereur",

@@ -245,6 +245,7 @@ describe("submitListing (step 4)", () => {
     expect(mocks.after).toHaveBeenCalledTimes(1);
     await mocks.after.mock.calls[0][0]();
     expect(mocks.emailListingSubmitted).toHaveBeenCalledWith({
+      propertyId,
       listingId,
       reference: "LK-0042",
       title: input.title,
@@ -285,6 +286,7 @@ describe("submitListing (step 4)", () => {
 
 describe("emails of the sending", () => {
   const listing = {
+    propertyId,
     listingId,
     reference: "LK-0042",
     title: "Appartement 3 pièces 68 m² · Épinay-sur-Orge",
@@ -343,6 +345,11 @@ describe("emails of the sending", () => {
     process.env.ADMIN_NOTIFICATION_EMAIL = "admin@exemple.test";
     mocks.sendEmail.mockResolvedValue("sent");
     expect(await emailListingSubmitted(listing)).toEqual({ seller: "sent", admin: "sent" });
+    // The seller follows the review from the page of the property (L1-14).
+    const toSeller = mocks.sendEmail.mock.calls.find(
+      ([email]) => email.to === "alice@exemple.test",
+    );
+    expect(toSeller?.[0].text).toContain(`https://leenkey.fr/vendeur/biens/${propertyId}`);
     expect(mocks.sendEmail.mock.calls.map(([email]) => [email.to, email.subject])).toEqual(
       expect.arrayContaining([
         ["alice@exemple.test", "Votre annonce est bien reçue (LK-0042)"],

@@ -194,7 +194,7 @@ test("photos de l'étape 2 : envoi, refus propres, ordre, légende, suppression,
   // Then on « Ma vente », the main photo in the thumbnail of the draft.
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page).toHaveURL("/vendeur");
-  const row = page.locator(`a[href^="/vendeur/biens/${id}/"]`);
+  const row = page.locator(`a[href="/vendeur/biens/${id}"]`);
   // Absolute once hydrated (Photo, as above).
   await expect(row.locator("img")).toHaveAttribute(
     "src",

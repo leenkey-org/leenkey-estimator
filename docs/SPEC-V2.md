@@ -202,8 +202,8 @@ Resend ◄────────── core/notifications (file notifications 
 (app)  — connecté
   /vendeur                  dashboard vendeur
   /vendeur/biens/nouveau    création de bien (étapes)
-  /vendeur/biens/[id]       fiche du bien (onglets : infos, photos, annonce, documents, visites, offres)
-  /vendeur/dossier          dossier de vente : fiche du bien et documents (onglet « Dossier », L1-14 et L3-04)
+  /vendeur/biens/[id]       fiche du bien (onglets : infos, photos, annonce, documents, visites, offres) ; /photos, /annonce
+  /vendeur/dossier          dossier de vente : fiche du bien et documents (onglet « Dossier », L1-14a et L3-04)
   /vendeur/formule          choix et gestion de la formule
   /acquereur                accueil acquéreur (favoris, conversations, visites, offres)
   /acquereur/favoris        biens sauvegardés (onglet « Favoris », L1-18)
@@ -2011,7 +2011,8 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-11 | Création de bien étapes 1 et 2 (Mapbox autocomplétion, géocodage, `public_location`, caractéristiques) avec sauvegarde auto | L1-04, L1-09 | Un bien brouillon complet se crée en mobile |
 | L1-12 | Photos (dans l'étape 2) : upload, conversion WebP 3 tailles, réordonnancement, couverture, route `/img` | L1-11 | 15 photos max, rejets propres, aucune URL permanente |
 | L1-13 | Étape 3 prix et description, rappel de l'analyse de valeur, reprise depuis l'estimateur (`?estimation=`), étape 4 aperçu, envoi en validation | L1-12 | Parcours estimateur → annonce `pending` complet |
-| L1-14 | Fiche du bien (onglets Infos, Photos, Annonce), actions de statut | L1-13 | Pause / remise en ligne / vendu fonctionnent via fonctions SQL ; une annonce `suspended` est en lecture seule pour le vendeur (test) |
+| L1-14a | Fiche du bien (onglets Infos, Photos, Annonce), actions de statut (décision du 2026-10-19 : L1-14 en deux parties) | L1-13 | Pause / remise en ligne / vendu fonctionnent via fonctions SQL ; une annonce `suspended` est en lecture seule pour le vendeur (test) |
+| L1-14b | Modification d'une annonce envoyée, en ligne ou en pause depuis sa fiche (caractéristiques, photos, prix, titre, description), qui la laisse en ligne (8.3) | L1-14a | Une annonce en ligne modifiée reste en ligne ; une annonce suspendue ne se modifie pas (test) |
 | L1-36 | Pages légales : CGU et mentions légales reprises de la V1, confidentialité, CGV, cookies et mention IA en « En cours de rédaction » (`TODO(client)`, Q10), liens en pied de page | L1-01 | Toutes les pages accessibles depuis le pied de page, adresse légale affichée |
 | L1-37 | Bandeau de consentement (Accepter / Refuser / Personnaliser), Google Consent Mode : GA4 et GTM ne déposent aucun cookie avant consentement ; choix mémorisé 6 mois, modifiable depuis le pied de page (Q23) | L1-01 | Aucun cookie `_ga` avant consentement (test E2E) ; refus respecté |
 
@@ -2023,13 +2024,13 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-16 | Carte Mapbox (marqueurs prix, regroupement, synchronisation liste/carte, recherche dans la zone) | L1-15 | Mobile et desktop conformes à `docs/DESIGN.md` (8, 12.5, 12.6) |
 | L1-17 | Page annonce complète (galerie photo, KeyFigures, KeyFacts, carte approximative, barre d'action), métadonnées, JSON-LD, OG image, compteur de vues | L1-15 | Lighthouse objectifs atteints, validation Rich Results OK |
 | L1-18 | Favoris | L1-17 | Ajout / retrait, liste dans l'espace acquéreur |
-| L1-19 | Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`listing_suspend`, motif obligatoire) / remettre en ligne, audit, emails | L1-14 | Parcours vendeur → admin → publication de bout en bout ; le vendeur ne peut pas lever une suspension (test RLS) |
+| L1-19 | Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`listing_suspend`, motif obligatoire) / remettre en ligne, audit, emails | L1-14a | Parcours vendeur → admin → publication de bout en bout ; le vendeur ne peut pas lever une suspension (test RLS) |
 | L1-20 | Sitemap et robots (pages SEO par ville reportées en V3) | L1-17 | Sitemap valide, robots bloque hors prod |
 | L1-41 | Accueil en V2 (section 8.1, décision du 2026-10-19) : hero sur `BrandPanel` avec « Je vends » (→ `/estimer`) et « J'achète » (→ `/acheter`), « Les derniers biens » (3 `PropertyCard` `tile`, masqué sous 3), sections de la V1 en composants Façade, formulaire de contact, en-tête mobile avec menu, pages du site dans le pied de page | L1-17 | Les deux entrées et les derniers biens sur `/`, en mobile et en desktop ; formulaire de contact au même contrat que la V1 (E2E de L1-01) ; ancres V1 conservées ; aucune violation d'accessibilité sérieuse |
 | L1-42 | `/concept`, `/tarifs`, `/faq` en V2 (décision du 2026-10-19) : mêmes textes et ancres, formules de `/tarifs` lues dans `plans`, FAQ dépliable | L1-41 | Les trois pages sans HTML V1, en mobile et en desktop ; formulaires au même contrat que la V1 |
 | L1-43 | `/investir`, `/qui-sommes-nous` en V2, mentions légales et CGU dans `LegalPage`, `/estimer` dans l'en-tête et le pied V2 ; retrait de `SiteLayout`, du menu et du pied V1, de `HtmlPage` et des HTML V1 (décision du 2026-10-19) | L1-42 | Plus aucune page V1 hors moteur de l'estimateur ; formulaire investir au même contrat que la V1 |
 | L1-44 | Estimateur re-stylé (`docs/DESIGN.md` 13.1, décision du 2026-10-19) : wizard et tableau de résultat en Archivo, tokens et rayons « Façade », dans la portée `FacadeRoot` ; aucune modification de logique ni de texte | L1-43 | Les tests de non-régression de `estimation.ts` passent à l'identique ; plus de police V1 chargée sur le site ; aucune violation d'accessibilité sérieuse sur `/estimer`, en mobile et en desktop |
-| L1-35 | `listing_revisions` simplifié : trigger sur les champs prix, titre, description d'une annonce publiée, historique chronologique côté vendeur et admin, notification `listing.revised` à l'admin | L1-14 | Changement de prix tracé avec ancienne et nouvelle valeur |
+| L1-35 | `listing_revisions` simplifié : trigger sur les champs prix, titre, description d'une annonce publiée, historique chronologique côté vendeur et admin, notification `listing.revised` à l'admin | L1-14b | Changement de prix tracé avec ancienne et nouvelle valeur |
 
 ### Semaine 4 : messagerie, notifications, dashboard
 

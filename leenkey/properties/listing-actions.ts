@@ -192,6 +192,7 @@ export async function submitListing(input: unknown): Promise<SubmitListingResult
 
   after(() =>
     emailListingSubmitted({
+      propertyId,
       listingId: listing.id,
       reference: listing.reference,
       title: listing.title,

@@ -1,37 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
 import { requireProfile } from "@/core/auth/session";
 import { Button } from "@/components/shared/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InlineAlert } from "@/components/shared/inline-alert";
-import { PropertyThumb } from "@/components/shared/property-thumb";
-import { StatusBadge } from "@/components/shared/status-badge";
-import { listingSummary } from "@/leenkey/listings/presentation";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { creationStep, inCreation } from "@/leenkey/properties/creation";
-import { photoUrl } from "@/leenkey/properties/photo-files";
-import { sellerProperties, type SellerProperty } from "@/leenkey/properties/queries";
+import { PropertyList } from "@/leenkey/properties/components/property-list";
+import { sellerProperties } from "@/leenkey/properties/queries";
 import { fr } from "@/lib/i18n/fr";
 import { SpacePage } from "../_components/space-page";
 
 export const metadata: Metadata = { title: fr.spaces.seller.metaTitle };
 
-function summary(property: SellerProperty): string {
-  const { type, rooms, surfaceM2 } = property.characteristics;
-  return type !== null && rooms !== null && surfaceM2 !== null
-    ? listingSummary({ type, rooms, surfaceM2 })
-    : fr.properties.list.untitled;
-}
-
-/** A draft resumes at its step; a listing sent or online opens from its page (L1-14). */
-function resumeHref(property: SellerProperty): string | null {
-  if (!inCreation(property.listingStatus)) return null;
-  return `/vendeur/biens/${property.id}/${creationStep(property.characteristics, property.listing)}`;
-}
-
-// Until the seller dashboard (L1-24): the properties of the seller, a draft
-// resumed where it stopped, and « Créer mon annonce » (L1-11). The bell sits
+// Until the seller dashboard (L1-24): the properties of the seller, each one
+// opening its page (L1-14), and « Créer mon annonce » (L1-11). The bell sits
 // at the top of the page on mobile (SPEC-V2 section 10, DECISIONS Q26), in
 // the TopNav from 768 px.
 export default async function SellerHomePage() {
@@ -67,50 +49,7 @@ export default async function SellerHomePage() {
               <Link href={ROUTES.newProperty}>{list.create}</Link>
             </Button>
           </div>
-          <ul className="flex flex-col divide-y divide-lk-line rounded-lk-md border border-lk-line bg-lk-surface">
-            {result.data.map((property) => {
-              const href = resumeHref(property);
-              const name = summary(property);
-              const status = property.listingStatus ?? "draft";
-              const content = (
-                <>
-                  <PropertyThumb
-                    src={property.coverPath ? photoUrl(property.coverPath) : null}
-                    className="size-14"
-                  />
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <p className="truncate text-lk-compact font-semibold text-lk-ink">
-                      {href ? <span className="sr-only">{`${list.resume} : `}</span> : null}
-                      {name}
-                    </p>
-                    <p className="truncate text-lk-caption text-lk-ink-3">
-                      {property.address.line} · {property.address.city}
-                    </p>
-                    {/* Under the text on a phone: the summary keeps its width. */}
-                    <StatusBadge status={status} className="mt-1 self-start md:hidden" />
-                  </div>
-                  <StatusBadge status={status} className="hidden md:inline-flex" />
-                  {href ? (
-                    <ChevronRight aria-hidden="true" className="size-4 text-lk-ink-3" />
-                  ) : null}
-                </>
-              );
-              return (
-                <li key={property.id}>
-                  {href ? (
-                    <Link
-                      href={href}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-lk-stone-2"
-                    >
-                      {content}
-                    </Link>
-                  ) : (
-                    <div className="flex items-center gap-3 px-4 py-3">{content}</div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+          <PropertyList properties={result.data} />
         </section>
       )}
     </SpacePage>

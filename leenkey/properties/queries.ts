@@ -23,12 +23,20 @@ export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavai
 export type SellerListing = {
   id: string;
   reference: string;
+  /** Address of its public page, /annonce/{slug}. */
+  slug: string;
   title: string;
   description: string;
   priceCents: number;
   status: ListingStatus;
   /** Why Leenkey refused it (rejected), until it is sent again. */
   rejectionReason: string | null;
+  /** Why Leenkey suspended it (suspended), until the suspension is lifted. */
+  suspensionReason: string | null;
+  publishedAt: string | null;
+  soldAt: string | null;
+  /** Final price given when marked as sold, never public (SPEC-V2 section 4). */
+  soldPriceCents: number | null;
 };
 
 /** The analysis of value the property comes from (estimator, L1-13). */
@@ -45,6 +53,8 @@ export type SellerProperty = {
   address: { line: string; postalCode: string; city: string };
   /** Values of the form of step 2 (amounts in euros). */
   characteristics: Omit<Characteristics, "propertyId">;
+  /** Exposure, not asked at step 2 (seed, V1 analysis): shown as on the listing. */
+  orientation: string | null;
   listingStatus: ListingStatus | null;
   listing: SellerListing | null;
   estimation: SellerEstimation | null;
@@ -56,7 +66,7 @@ export type SellerProperty = {
 };
 
 const COLUMNS =
-  "id, type, address_line, postal_code, city, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, build_year, is_new_build, dpe_class, ges_class, heating, has_balcony, has_terrace, has_garden, has_parking, has_cellar, has_elevator, charges_monthly_cents, property_tax_yearly_cents, copro_lots, created_at, estimation_value_cents, estimation_low_cents, estimation_high_cents, estimation:estimations(created_at), listing:listings(id, reference, title, description, price_cents, status, rejection_reason), photos(storage_path, is_cover)";
+  "id, type, address_line, postal_code, city, orientation, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, build_year, is_new_build, dpe_class, ges_class, heating, has_balcony, has_terrace, has_garden, has_parking, has_cellar, has_elevator, charges_monthly_cents, property_tax_yearly_cents, copro_lots, created_at, estimation_value_cents, estimation_low_cents, estimation_high_cents, estimation:estimations(created_at), listing:listings(id, reference, slug, title, description, price_cents, status, rejection_reason, suspension_reason, published_at, sold_at, sold_price_cents), photos(storage_path, is_cover)";
 
 type Row = NonNullable<Awaited<ReturnType<typeof readOne>>["data"]>;
 
@@ -109,6 +119,7 @@ function toSellerProperty(row: Row): SellerProperty {
       propertyTaxYearlyEuros: euros(row.property_tax_yearly_cents),
       coproLots: row.copro_lots,
     },
+    orientation: row.orientation,
     listingStatus: listing?.status ?? null,
     listing: listing
       ? {
@@ -116,9 +127,15 @@ function toSellerProperty(row: Row): SellerProperty {
           reference: listing.reference,
           title: listing.title,
           description: listing.description,
+          slug: listing.slug,
           priceCents: Number(listing.price_cents),
           status: listing.status,
           rejectionReason: listing.rejection_reason,
+          suspensionReason: listing.suspension_reason,
+          publishedAt: listing.published_at,
+          soldAt: listing.sold_at,
+          soldPriceCents:
+            listing.sold_price_cents === null ? null : Number(listing.sold_price_cents),
         }
       : null,
     // An analysis at 0 € (Q29, the château of the V1) gives no value to recall.

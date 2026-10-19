@@ -60,6 +60,7 @@ export const sections = {
   consent: "Consentement aux cookies",
   footer: "Pied de page",
   publicPages: "Pages publiques",
+  propertySheet: "Fiche du bien : onglets et confirmation",
   formats: "Formats des nombres et des dates",
   shapes: "Rayons, ombres et bordures",
   spacing: "Espacements, points de rupture et conteneurs",
@@ -784,3 +785,18 @@ export const backOffice = {
       "La description est incomplète : précisez l'état du bien, ses pièces et ses points forts.",
   },
 } as const;
+
+// L1-14: the tabs of the page of a property and the confirmation dialog.
+export const propertySheet = {
+  tabsLabel: "Rubriques de votre bien",
+  tabs: [
+    { href: "/design#fiche-du-bien", label: "Infos" },
+    { href: "/design#fiche-du-bien-photos", label: "Photos" },
+    { href: "/design#fiche-du-bien-annonce", label: "Annonce" },
+  ],
+  tabsCaption:
+    "LinkTabs · liens vers les pages d'un même objet, 14 px 500 encre 3, l'onglet courant en encre 600 souligné de 2 px bleu (aria-current), défilement horizontal en mobile",
+  open: "Ouvrir la confirmation",
+  dialogCaption:
+    "ConfirmDialog · écran plein avec retour en mobile, dialogue de 520 px au centre à partir de 768 px, champs facultatifs, erreur lue dans le dialogue",
+};

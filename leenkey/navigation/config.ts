@@ -36,7 +36,13 @@ export function bottomTabs(space: Space, signedIn = true): readonly NavItem[] {
     case "seller":
       return [
         { href: ROUTES.seller, label: tabs.sale, icon: "dashboard" },
-        { href: ROUTES.sellerFile, label: tabs.file, icon: "file" },
+        // The page of a property is the file of the sale (L1-14).
+        {
+          href: ROUTES.sellerFile,
+          label: tabs.file,
+          icon: "file",
+          match: [ROUTES.sellerProperties],
+        },
         { href: ROUTES.search, label: tabs.buy, icon: "search" },
         ...SHARED_TABS,
       ];
@@ -121,12 +127,16 @@ export const FAVOURITES_LINK = { href: ROUTES.favourites, label: fr.nav.favourit
 export function notificationBell(space: Space): {
   count: number;
   emptyText: string;
+  emptyAction?: { href: string; label: string };
   settingsHref: string;
 } {
   const t = fr.nav.notifications;
   return {
     count: 0,
     emptyText: space === "seller" ? t.emptySeller : t.emptyBuyer,
+    // DESIGN.md 10.7; the buyer's « Créer une alerte » comes with the alerts (L3-06).
+    emptyAction:
+      space === "seller" ? { href: ROUTES.sellerFile, label: t.completeListing } : undefined,
     settingsHref: ROUTES.account,
   };
 }

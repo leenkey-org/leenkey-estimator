@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Bell, Settings, X } from "lucide-react";
+import { Button } from "./button";
 import { EmptyState } from "./empty-state";
 import { facadeScope } from "./facade-root";
 import { IconButton, iconButtonVariants } from "./icon-button";
@@ -17,6 +18,8 @@ export type NotificationBellProps = {
   count: number;
   /** Sentence of the empty panel, written for the space (seller, buyer). */
   emptyText: string;
+  /** Primary action of the empty panel (« Compléter mon annonce »). */
+  emptyAction?: { href: string; label: string };
   /** Notification settings, the gear of the panel header. */
   settingsHref: string;
   /** nav: 42 px, in the TopNav; md: 44 px, in a mobile app header. */
@@ -39,6 +42,7 @@ export type NotificationBellProps = {
 export function NotificationBell({
   count,
   emptyText,
+  emptyAction,
   settingsHref,
   size = "md",
   tone = "light",
@@ -105,7 +109,20 @@ export function NotificationBell({
             </Link>
           </div>
           <div className="flex flex-1 items-center justify-center overflow-y-auto px-5 py-10">
-            <EmptyState titleAs="h3" title={t.emptyTitle} description={emptyText} />
+            <EmptyState
+              titleAs="h3"
+              title={t.emptyTitle}
+              description={emptyText}
+              action={
+                emptyAction ? (
+                  <Button asChild>
+                    <Link href={emptyAction.href} onClick={() => setOpen(false)}>
+                      {emptyAction.label}
+                    </Link>
+                  </Button>
+                ) : undefined
+              }
+            />
           </div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

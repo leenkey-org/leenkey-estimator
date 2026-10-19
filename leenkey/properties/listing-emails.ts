@@ -12,6 +12,7 @@ import { appEnv } from "@/lib/env";
 import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { absoluteUrl, siteUrl } from "@/lib/site";
+import { sheetHref } from "./sheet";
 
 // Emails of a listing sent for review (SPEC-V2 section 18, L1-13), after the
 // sending: « Annonce reçue » to the seller, « Annonce à valider » to the
@@ -20,6 +21,8 @@ import { absoluteUrl, siteUrl } from "@/lib/site";
 // the log and never undoes the sending.
 
 export type SubmittedListing = {
+  /** Its page, where the seller follows the review (L1-14). */
+  propertyId: string;
   listingId: string;
   reference: string;
   title: string;
@@ -48,7 +51,7 @@ async function toSeller(listing: SubmittedListing): Promise<EmailDelivery> {
   const element = ListingReceivedEmail({
     firstName: listing.seller.firstName,
     title: listing.title,
-    sellerUrl: absoluteUrl("/vendeur"),
+    sellerUrl: absoluteUrl(sheetHref(listing.propertyId)),
     siteUrl: siteUrl(),
   });
   const [html, text] = await Promise.all([render(element), render(element, EMAIL_PLAIN_TEXT)]);

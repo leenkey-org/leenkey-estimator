@@ -237,7 +237,13 @@ describe("current item: longest prefix of the path", () => {
   it("the tab of a sub-page, the deeper tab when two match", () => {
     const seller = bottomTabs("seller");
     expect(currentHref("/vendeur", seller)).toBe("/vendeur");
-    expect(currentHref("/vendeur/biens/nouveau", seller)).toBe("/vendeur");
+    // The page of a property is the file of the sale (L1-14).
+    expect(currentHref("/vendeur/biens/5eed1000-0000-4000-8000-000000000001", seller)).toBe(
+      "/vendeur/dossier",
+    );
+    expect(currentHref("/vendeur/biens/5eed1000-0000-4000-8000-000000000001/photos", seller)).toBe(
+      "/vendeur/dossier",
+    );
     expect(currentHref("/vendeur/dossier", seller)).toBe("/vendeur/dossier");
     expect(currentHref("/vendeur/dossier/pieces", seller)).toBe("/vendeur/dossier");
     expect(currentHref("/messages/123", seller)).toBe("/messages");
@@ -299,8 +305,11 @@ describe("bell and account menu", () => {
     expect(notificationBell("seller")).toEqual({
       count: 0,
       emptyText: fr.nav.notifications.emptySeller,
+      // « Compléter mon annonce » (DESIGN.md 10.7, L1-14): the « Dossier » tab.
+      emptyAction: { href: "/vendeur/dossier", label: "Compléter mon annonce" },
       settingsHref: "/compte",
     });
+    expect(notificationBell("buyer").emptyAction).toBeUndefined();
     expect(notificationBell("buyer").emptyText).toBe(fr.nav.notifications.emptyBuyer);
     expect(notificationBell("admin").emptyText).toBe(fr.nav.notifications.emptyBuyer);
   });

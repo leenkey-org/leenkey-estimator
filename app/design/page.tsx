@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Bell, ChevronLeft, Heart, Plus, Settings, Sparkles, X } from "lucide-react";
 import * as content from "./_content";
+import { ConfirmDemo } from "./_confirm-demo";
 import { ConsentDemo } from "./_consent-demo";
 import { FilterSelectDemo } from "./_filter-select-demo";
 import { AccountMenu } from "@/components/shared/account-menu";
@@ -38,6 +39,7 @@ import { IconButton } from "@/components/shared/icon-button";
 import { InfoNote } from "@/components/shared/info-note";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { FaqList } from "@/components/shared/faq-list";
+import { LinkTabs } from "@/components/shared/link-tabs";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { MoreLink } from "@/components/shared/more-link";
 import { PlanCard } from "@/components/shared/plan-card";
@@ -1162,6 +1164,20 @@ export default function DesignPage() {
               <StagePill stage="next" />
             </div>
             <Caption>{content.publicPages.stageCaption}</Caption>
+          </Section>
+
+          <Section id="fiche-du-bien" title={content.sections.propertySheet} level="h3">
+            <LinkTabs
+              label={content.propertySheet.tabsLabel}
+              tabs={content.propertySheet.tabs}
+              current={content.propertySheet.tabs[0].href}
+              className="max-w-lk-settings"
+            />
+            <Caption>{content.propertySheet.tabsCaption}</Caption>
+            <div>
+              <ConfirmDemo open={content.propertySheet.open} />
+            </div>
+            <Caption>{content.propertySheet.dialogCaption}</Caption>
           </Section>
 
           <Section id="pied-de-page" title={content.sections.footer} level="h3">
