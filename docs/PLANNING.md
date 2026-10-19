@@ -32,7 +32,8 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-11** Création de bien étapes 1 et 2 (Mapbox autocomplétion, géocodage, `public_location`, caractéristiques)… · PR : #20 (géocodage par la Base Adresse Nationale, Q46 ; photos avec L1-12) · Testé en préprod : ☐
 - [x] **L1-12** Photos : upload, conversion WebP 3 tailles, réordonnancement, couverture, route `/img` · PR : #21 (photos du seed : Q48) · Testé en préprod : ☐
 - [x] **L1-13** Étape 3 prix et description, rappel de l’analyse de valeur, reprise depuis l’estimateur (`?estimation=`),… · PR : #23 (L1-13a : étapes 3 et 4, envoi en validation), #25 (L1-13b : reprise depuis l’estimateur) · Testé en préprod : ☐
-- [ ] **L1-14** Fiche du bien (onglets Infos, Photos, Annonce), actions de statut (avec « Compléter mon annonce » du panneau de notifications vide, DESIGN 10.7, reporté de L1-11) · PR : · Testé en préprod : ☐
+- [x] **L1-14a** Fiche du bien (onglets Infos, Photos, Annonce en lecture), actions de statut (pause, remise en ligne, vendu, suppression du brouillon), annonce suspendue en lecture seule, « Compléter mon annonce » du panneau de notifications vide (DESIGN 10.7, reporté de L1-11), onglet « Dossier » · PR : #30 · Testé en préprod : ☐
+- [ ] **L1-14b** Modification d'une annonce envoyée, en ligne ou en pause depuis sa fiche (Infos, Photos, Annonce), qui la laisse en ligne (SPEC 8.3) · PR : · Testé en préprod : ☐
 - [x] **L1-36** Pages légales (CGU et mentions reprises de la V1, autres « En cours de rédaction ») · PR : #16 · Testé en préprod : ☐
 - [x] **L1-37** Bandeau de consentement cookies, Google Consent Mode (Q23) · PR : #16 (« Gérer mes cookies » sous la recherche, l'annonce et les espaces connectés avec L1-10) · Testé en préprod : ☐
 

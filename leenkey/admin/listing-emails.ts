@@ -9,6 +9,7 @@ import {
 } from "@/emails/listing-decision";
 import { createClient } from "@/lib/supabase/server";
 import { fr } from "@/lib/i18n/fr";
+import { sheetHref } from "@/leenkey/properties/sheet";
 import { absoluteUrl, siteUrl } from "@/lib/site";
 
 // Email to the seller after a decision of the back office (SPEC-V2 sections
@@ -29,7 +30,11 @@ export async function emailSellerAboutDecision({
     const supabase = await createClient();
     const [contact, listing] = await Promise.all([
       supabase.rpc("admin_listing_seller_contact", { p_listing_id: listingId }),
-      supabase.from("listings").select("title, slug, reference").eq("id", listingId).maybeSingle(),
+      supabase
+        .from("listings")
+        .select("title, slug, reference, property_id")
+        .eq("id", listingId)
+        .maybeSingle(),
     ]);
     if (contact.error) throw new Error(`contact: ${contact.error.code} ${contact.error.message}`);
     if (listing.error) throw new Error(`listing: ${listing.error.code} ${listing.error.message}`);
@@ -42,7 +47,8 @@ export async function emailSellerAboutDecision({
       title: listing.data.title,
       reason,
       listingUrl: absoluteUrl(`/annonce/${listing.data.slug}`),
-      sellerUrl: absoluteUrl("/vendeur"),
+      // The page of the property: the decision, its motive, what to do (L1-14).
+      sellerUrl: absoluteUrl(sheetHref(listing.data.property_id)),
       contactEmail: fr.legal.contactEmail,
       siteUrl: siteUrl(),
     });

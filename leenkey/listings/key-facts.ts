@@ -11,6 +11,33 @@ import { fr } from "@/lib/i18n/fr";
 const t = fr.listing.facts;
 const notProvided: KeyFact["tone"] = "muted";
 
+/** What the table needs of a property: its public listing, or the seller's own property (L1-14). */
+export type FactsInput = Pick<
+  PublicListing,
+  | "type"
+  | "surfaceM2"
+  | "carrezM2"
+  | "rooms"
+  | "bedrooms"
+  | "floor"
+  | "floorsTotal"
+  | "hasElevator"
+  | "hasBalcony"
+  | "hasTerrace"
+  | "hasGarden"
+  | "hasParking"
+  | "hasCellar"
+  | "orientation"
+  | "buildYear"
+  | "isNewBuild"
+  | "dpe"
+  | "ges"
+  | "heating"
+  | "chargesMonthlyCents"
+  | "propertyTaxYearlyCents"
+  | "coproLots"
+>;
+
 function fact(label: string, value: string | null | undefined): KeyFact {
   return value ? { label, value } : { label, value: t.notProvided, tone: notProvided };
 }
@@ -20,14 +47,14 @@ function yesNo(value: boolean | null): string | null {
   return value ? t.yes : t.no;
 }
 
-function floorFact(listing: PublicListing): KeyFact {
+function floorFact(listing: FactsInput): KeyFact {
   const { floor, floorsTotal } = listing;
   if (floor === null) return fact(t.floor, null);
   const label = floor === 0 ? t.groundFloor : floor < 0 ? t.basement : fr.listing.ordinal(floor);
   return fact(t.floor, floorsTotal ? t.floorOf(label, floorsTotal) : label);
 }
 
-function outdoorValue(listing: PublicListing): string | null {
+function outdoorValue(listing: FactsInput): string | null {
   const spaces = [
     [listing.hasBalcony, fr.search.outdoor.balcon],
     [listing.hasTerrace, fr.search.outdoor.terrasse],
@@ -39,14 +66,21 @@ function outdoorValue(listing: PublicListing): string | null {
   return [present[0], ...present.slice(1).map((label) => label.toLowerCase())].join(", ");
 }
 
-function constructionValue(listing: PublicListing): string | null {
+function constructionValue(listing: FactsInput): string | null {
   if (listing.buildYear) {
     return listing.isNewBuild ? t.buildYearNew(listing.buildYear) : String(listing.buildYear);
   }
   return listing.isNewBuild ? t.newBuild : null;
 }
 
-export function listingKeyFacts(listing: PublicListing): KeyFact[] {
+/**
+ * `documents: false` leaves out the rows that the analysis of the documents
+ * will fill (L3), « Non renseigné » until then: on the seller's page.
+ */
+export function listingKeyFacts(
+  listing: FactsInput,
+  { documents = true }: { documents?: boolean } = {},
+): KeyFact[] {
   const money = (cents: number | null, format: (amount: string) => string) =>
     cents === null ? null : format(formatPrice(cents));
   const taxes = fact(t.propertyTax, money(listing.propertyTaxYearlyCents, t.propertyTaxValue));
@@ -88,8 +122,8 @@ export function listingKeyFacts(listing: PublicListing): KeyFact[] {
     coOwnership
       ? fact(t.coproLots, listing.coproLots === null ? null : String(listing.coproLots))
       : null,
-    coOwnership ? fact(t.votedWorks, null) : null,
-    coOwnership ? fact(t.procedures, null) : null,
+    coOwnership && documents ? fact(t.votedWorks, null) : null,
+    coOwnership && documents ? fact(t.procedures, null) : null,
   ];
   return facts.filter((item): item is KeyFact => item !== null);
 }

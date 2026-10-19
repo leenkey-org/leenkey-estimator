@@ -157,13 +157,16 @@ test("créer un bien en mobile : adresse, caractéristiques, reprise depuis Ma v
   await expect(page.getByLabel("Étage", { exact: true })).toHaveCount(0);
   await page.getByLabel("Niveaux").fill("2");
 
-  // « Enregistrer »: back to « Ma vente », where the draft resumes.
+  // « Enregistrer »: back to « Ma vente », then the page of the draft (L1-14),
+  // from which its creation resumes.
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page).toHaveURL("/vendeur");
   // Earlier runs left drafts of the same name: this one, by its address.
-  const draft = page.locator(`a[href^="/vendeur/biens/${id}/"]`);
-  await expect(draft).toHaveAccessibleName(/^Continuer : Maison\s3\spièces/);
+  const draft = page.locator(`a[href="/vendeur/biens/${id}"]`);
+  await expect(draft).toHaveAccessibleName(/^Maison\s3\spièces/);
   await draft.click();
+  await expect(page).toHaveURL(`/vendeur/biens/${id}`);
+  await page.getByRole("link", { name: "Reprendre la création" }).click();
   await expect(page).toHaveURL(`/vendeur/biens/${id}/prix`);
   await page.goto(`/vendeur/biens/${id}/caracteristiques`);
   await expect(page.getByLabel("Type de bien")).toHaveValue("maison");
@@ -230,7 +233,8 @@ test("envoyer une annonce en validation en mobile : prix, description, aperçu",
   // « Enregistrer »: the listing is created, the draft resumes at step 4.
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page).toHaveURL("/vendeur");
-  await page.locator(`a[href^="/vendeur/biens/${id}/"]`).click();
+  await page.locator(`a[href="/vendeur/biens/${id}"]`).click();
+  await page.getByRole("link", { name: "Reprendre la création" }).click();
   await expect(page).toHaveURL(`/vendeur/biens/${id}/apercu`);
 
   // Step 4: the listing as buyers will see it.
@@ -269,12 +273,14 @@ test("envoyer une annonce en validation en mobile : prix, description, aperçu",
   ).toBeVisible();
   await expectNoSeriousViolation(page);
 
-  // Sent: it waits for the review, and the steps no longer change it.
+  // Sent: it waits for the review, and the steps no longer change it: they
+  // lead to its page (L1-14), which says so.
   await page.getByRole("link", { name: "Retour à Ma vente" }).click();
   await expect(page).toHaveURL("/vendeur");
-  await expect(page.locator(`a[href^="/vendeur/biens/${id}/"]`)).toHaveCount(0);
   await page.goto(`/vendeur/biens/${id}/prix`);
-  await expect(page).toHaveURL("/vendeur");
+  await expect(page).toHaveURL(`/vendeur/biens/${id}`);
+  await expect(page.getByText("Nous relisons votre annonce")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Reprendre la création" })).toHaveCount(0);
 });
 
 test("le bien d'un autre vendeur répond 404, une annonce en ligne ne se reprend pas", async ({
@@ -289,5 +295,5 @@ test("le bien d'un autre vendeur répond 404, une annonce en ligne ne se reprend
   expect((await page.goto("/vendeur/biens/pas-un-id/adresse"))?.status()).toBe(404);
   // A published listing of seller_a: changed from its page (L1-14), not here.
   await page.goto("/vendeur/biens/5eed1000-0000-4000-8000-000000000001/caracteristiques");
-  await expect(page).toHaveURL("/vendeur");
+  await expect(page).toHaveURL("/vendeur/biens/5eed1000-0000-4000-8000-000000000001");
 });

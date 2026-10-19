@@ -214,6 +214,7 @@ export const fr = {
       emptyTitle: "Aucune notification",
       emptySeller:
         "Nous vous prévenons ici des messages, des visites et des offres reçus pour votre bien.",
+      completeListing: "Compléter mon annonce",
       emptyBuyer:
         "Nous vous prévenons ici des réponses des vendeurs et des nouveaux biens de vos recherches.",
     },
@@ -453,8 +454,124 @@ export const fr = {
       title: "Vos biens",
       create: "Créer mon annonce",
       untitled: "Bien à compléter",
-      resume: "Continuer",
       error: "Vos biens n'ont pas pu être chargés.",
+    },
+    // L1-14: the page of a property (SPEC-V2 8.3), its tabs and the actions
+    // of its status.
+    sheet: {
+      metaTitle: (name: string) => `${name} · Ma vente · Leenkey`,
+      back: "Ma vente",
+      reference: (reference: string) => `Réf.\u00A0${reference}`,
+      tabs: {
+        label: "Rubriques de votre bien",
+        infos: "Infos",
+        photos: "Photos",
+        listing: "Annonce",
+      },
+      pricePerM2: "prix au m²",
+      status: {
+        draft: {
+          title: "Votre annonce n'est pas encore envoyée",
+          text: "Reprenez-la là où vous l'avez laissée, puis envoyez-la en validation.",
+        },
+        pending: {
+          title: "Nous relisons votre annonce",
+          text: "Nous la relisons sous 24\u00A0h et vous prévenons par email.",
+        },
+        rejected: {
+          title: "Votre annonce est à corriger",
+          text: (reason: string) => `Notre remarque : ${reason}`,
+        },
+        published: {
+          title: "Votre annonce est en ligne",
+          text: (date: string | null) =>
+            date
+              ? `Elle est visible de tous les acquéreurs depuis le ${date}.`
+              : "Elle est visible de tous les acquéreurs.",
+        },
+        paused: {
+          title: "Votre annonce est en pause",
+          text: "Elle n'apparaît plus dans les recherches et sa page n'est plus visible. Remettez-la en ligne quand vous le souhaitez.",
+        },
+        suspended: {
+          title: "Leenkey a suspendu votre annonce",
+          text: (reason: string) => `Motif : ${reason}`,
+          readOnly:
+            "Elle n'est plus visible et reste en lecture seule : vous ne pouvez ni la modifier ni la remettre en ligne vous-même. Pour en parler, écrivez-nous à",
+        },
+        sold: {
+          title: "Votre bien est vendu",
+          text: (date: string | null, price: string | null) =>
+            `${date ? `Vendu le ${date}` : "Vendu"}${price ? `, au prix de ${price}` : ""}.`,
+        },
+      },
+      actions: {
+        label: "Actions sur votre annonce",
+        resume: "Reprendre la création",
+        fix: "Corriger mon annonce",
+        view: "Voir l'annonce en ligne",
+        pause: "Mettre en pause",
+        publish: "Remettre en ligne",
+        sold: "Marquer comme vendu",
+        delete: "Supprimer le brouillon",
+      },
+      soldDialog: {
+        title: "Marquer votre bien comme vendu ?",
+        text: "L'annonce quitte les recherches et n'est plus visible. Vous ne pourrez pas la remettre en ligne.",
+        price: "Prix de vente final",
+        priceHelp: "Facultatif. Il reste privé : il n'apparaît sur aucune annonce.",
+        confirm: "Marquer comme vendu",
+      },
+      deleteDialog: {
+        title: "Supprimer ce brouillon ?",
+        text: "Le bien, ses photos et son annonce en préparation disparaîtront de votre espace. Vous ne pourrez pas les récupérer.",
+        confirm: "Supprimer le brouillon",
+      },
+      dialog: { back: "Retour", close: "Fermer", cancel: "Annuler" },
+      done: {
+        paused: "Votre annonce est en pause.",
+        published: "Votre annonce est de nouveau en ligne.",
+        sold: "Votre bien est marqué comme vendu.",
+      },
+      errors: {
+        conflict:
+          "Votre annonce a changé entre-temps. La page est à jour : vérifiez-la avant de recommencer.",
+        suspended: "Leenkey a suspendu cette annonce : elle est en lecture seule.",
+        notFound: "Ce bien n'existe plus.",
+        unavailable: "Votre demande n'a pas pu être enregistrée. Réessayez dans un instant.",
+        signedOut: "Votre session a pris fin : reconnectez-vous, puis réessayez.",
+        price: "Indiquez un prix en euros, sans centimes, ou laissez le champ vide.",
+      },
+      infos: {
+        address: "Adresse",
+        addressNote:
+          "Votre adresse exacte n'est jamais publiée : l'annonce montre la commune et une zone approximative.",
+        characteristics: "Caractéristiques",
+        edit: "Modifier",
+        editAddress: "Modifier l'adresse",
+        editCharacteristics: "Modifier les caractéristiques",
+      },
+      photos: {
+        title: "Photos",
+        count: (count: number) =>
+          count === 0 ? "Aucune photo" : count === 1 ? "1 photo" : `${count} photos`,
+        cover: "Photo principale",
+        empty: "Votre bien n'a pas encore de photo.",
+        add: "Ajouter des photos",
+        manage: "Gérer les photos",
+      },
+      listing: {
+        title: "Titre",
+        price: "Prix",
+        pricePerM2: (amount: string) => `soit ${amount} le m²`,
+        description: "Description",
+        reference: "Référence",
+        empty: "Votre annonce n'est pas encore rédigée.",
+        write: "Rédiger mon annonce",
+        edit: "Modifier l'annonce",
+      },
+      loadError: "Votre bien n'a pas pu être chargé.",
+      retry: "Réessayer",
     },
   },
   // L1-13b: from the result of the wizard to the creation of the listing.
@@ -481,11 +598,10 @@ export const fr = {
       comingText:
         "Nous préparons l'écran de vos informations personnelles, de votre mot de passe et de vos notifications.",
     },
+    // « Dossier » tab (L1-14): the page of the property, or the list of them.
     sellerFile: {
       metaTitle: "Dossier de vente · Leenkey",
       title: "Dossier de vente",
-      comingTitle: "Votre dossier de vente arrive",
-      comingText: "Nous préparons l'écran qui réunira la fiche de votre bien et ses documents.",
     },
     admin: {
       users: {
