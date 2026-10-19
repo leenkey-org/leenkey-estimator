@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-19 · L1-13b · PR #25 · Reprise depuis l'estimateur
+- Ajouté : `/api/estimate` garde l'analyse de valeur (`estimation_record`, session de l'appelant) et ajoute `estimationId` et `claimToken` à sa réponse V1. Le résultat de l'estimateur propose « Créer mon annonce » : création du bien avec `?estimation=`, par l'inscription vendeur pour un visiteur sans compte, puis rattachement de l'analyse avec le jeton gardé dans ce navigateur (`estimation_claim`). Étape 1 : adresse de l'analyse cherchée de nouveau ; brouillon créé avec les caractéristiques reprises (vérifiées comme à l'étape 2), l'analyse et sa valeur (rappel de l'étape 3) ; `InfoNote` « Repris de votre analyse de valeur du [date]. Vérifiez et complétez. » aux étapes 1 et 2 ; une même analyse ne crée jamais deux biens. Question Q49 (mention de conservation de l'analyse).
+- Modifié : les caractéristiques de l'étape 2 s'écrivent par `leenkey/properties/columns.ts`, partagé avec la création depuis l'analyse.
+- Tests : unitaires (réponses du wizard vers le bien pour chaque type, valeurs refusées laissées vides, arguments de l'enregistrement, réponse de la route, lien du résultat, jeton gardé dans le navigateur) ; E2E sur la pile de seed (analyse d'un vendeur connecté jusqu'à l'annonce en validation, critère de L1-13 ; analyse sans compte reprise après la connexion dans ce navigateur, pas dans un autre ; bouton du résultat de l'estimateur).
+
 ### 2026-10-19 · Accueil · PR #24 · Accès aux annonces et à l'espace depuis les pages marketing
 - Ajouté : « Acheter » et « Mon compte » dans le menu des pages marketing et de l'estimateur (bouton « Menu » sous 1 240 px). Tâche L1-40 (accueil enrichi de SPEC 8.1) ajoutée au plan.
 - Tests : E2E du menu en desktop et en mobile.

@@ -14,9 +14,10 @@ import {
   missingCharacteristics,
   storableAddress,
   type CharacteristicsField,
-  type PropertyFeature,
 } from "@/lib/validations/property";
+import { characteristicsColumns } from "./columns";
 import { readDraft } from "./drafts";
+import { answersFromEstimation } from "./from-estimation";
 
 // Server actions of the creation of a property (L1-11), with the seller's
 // session: RLS and the column grants of L1-04 decide what they may write.
@@ -66,7 +67,7 @@ export async function saveAddress(input: unknown): Promise<SaveAddressResult> {
   if (!profile) return { ok: false, error: "auth" };
   const parsed = addressChoiceSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
-  const { propertyId, label } = parsed.data;
+  const { propertyId, label, estimationId } = parsed.data;
   const supabase = await createClient();
 
   if (propertyId) {
@@ -100,7 +101,11 @@ export async function saveAddress(input: unknown): Promise<SaveAddressResult> {
         .maybeSingle()
     : await supabase
         .from("properties")
-        .insert({ owner_id: profile.id, ...values })
+        .insert({
+          owner_id: profile.id,
+          ...values,
+          ...(estimationId ? await fromEstimation(supabase, estimationId, profile.id) : {}),
+        })
         .select("id")
         .single();
   if (error) {
@@ -127,6 +132,41 @@ export async function saveAddress(input: unknown): Promise<SaveAddressResult> {
   return { ok: true, data: { id: data.id } };
 }
 
+/**
+ * A new property from an analysis of value of the seller (L1-13b): its
+ * characteristics, checked as step 2 checks them, and its value, recalled at
+ * step 3. Read with their session (RLS: their own analyses only, never the
+ * values the browser would send); nothing when it cannot be read.
+ */
+async function fromEstimation(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  estimationId: string,
+  ownerId: string,
+) {
+  const { data, error } = await supabase
+    .from("estimations")
+    .select("id, input, value_cents, low_cents, high_cents")
+    .eq("id", estimationId)
+    .maybeSingle();
+  if (error || !data) {
+    if (error) {
+      console.error("[properties] estimation read failed", {
+        user_id: ownerId,
+        entity_id: estimationId,
+        code: error.code,
+      });
+    }
+    return {};
+  }
+  return {
+    ...characteristicsColumns(answersFromEstimation(data.input).characteristics),
+    estimation_id: data.id,
+    estimation_value_cents: data.value_cents,
+    estimation_low_cents: data.low_cents,
+    estimation_high_cents: data.high_cents,
+  };
+}
+
 export type SaveCharacteristicsResult =
   | { ok: true; data: { complete: boolean } }
   | {
@@ -135,15 +175,6 @@ export type SaveCharacteristicsResult =
       /** Field and message key (fr.properties.errors). */
       fieldErrors?: Partial<Record<CharacteristicsField, string>>;
     };
-
-const FEATURE_COLUMNS: Record<PropertyFeature, string> = {
-  balcony: "has_balcony",
-  terrace: "has_terrace",
-  garden: "has_garden",
-  parking: "has_parking",
-  cellar: "has_cellar",
-  elevator: "has_elevator",
-};
 
 const NOT_A_FIELD = new Set(["propertyId", "isNewBuild", "features"]);
 
@@ -185,33 +216,9 @@ export async function saveCharacteristics(
   const draft = await readDraft(supabase, value.propertyId, profile.id);
   if (!draft.ok) return draft;
 
-  const features = Object.fromEntries(
-    Object.entries(FEATURE_COLUMNS).map(([feature, column]) => [
-      column,
-      value.features.includes(feature as PropertyFeature),
-    ]),
-  );
-  const cents = (euros: number | null) => (euros === null ? null : Math.round(euros * 100));
   const { data, error } = await supabase
     .from("properties")
-    .update({
-      type: value.type,
-      surface_m2: value.surfaceM2,
-      carrez_m2: value.carrezM2,
-      rooms: value.rooms,
-      bedrooms: value.bedrooms,
-      floor: value.floor,
-      floors_total: value.floorsTotal,
-      build_year: value.buildYear,
-      is_new_build: value.isNewBuild,
-      dpe_class: value.dpe,
-      ges_class: value.ges,
-      heating: value.heating,
-      charges_monthly_cents: cents(value.chargesMonthlyEuros),
-      property_tax_yearly_cents: cents(value.propertyTaxYearlyEuros),
-      copro_lots: value.coproLots,
-      ...features,
-    })
+    .update(characteristicsColumns(value))
     .eq("id", value.propertyId)
     .eq("owner_id", profile.id)
     .is("deleted_at", null)

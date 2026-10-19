@@ -6,6 +6,7 @@ import { statsLocatives, totalCharges } from "./immeuble-calc";
 import { StepPositionContext } from "./step-position";
 import { initialForm, type LeenkeyForm } from "./types";
 import { EstimationDashboard } from "./Dashboard";
+import { listingFromEstimationHref, rememberClaim, type KeptEstimation } from "./listing-link";
 import { cn } from "@/lib/utils";
 
 export type { DvfComparable, DvfResult } from "./dvf";
@@ -226,6 +227,8 @@ export function LeenkeyWizard() {
     ref: string;
     aiAnalyse?: string;
     dvfData?: DvfResult | null;
+    /** Kept by /api/estimate (L1-13b): the way to its listing. */
+    estimation?: KeptEstimation;
   }>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -237,7 +240,12 @@ export function LeenkeyWizard() {
       if (dashRaw) {
         const dash = JSON.parse(dashRaw) as {
           form: LeenkeyForm;
-          submitted: { ref: string; aiAnalyse?: string; dvfData?: DvfResult | null };
+          submitted: {
+            ref: string;
+            aiAnalyse?: string;
+            dvfData?: DvfResult | null;
+            estimation?: KeptEstimation;
+          };
         };
         if (dash.form && dash.submitted) {
           setForm({ ...initialForm, ...dash.form });
@@ -416,14 +424,23 @@ export function LeenkeyWizard() {
       body: JSON.stringify(payload),
     })
       .then((r) => (r.ok ? r.json() : null))
-      .catch(() => null)) as { ref?: string; analyse?: string } | null;
+      .catch(() => null)) as {
+      ref?: string;
+      analyse?: string;
+      estimationId?: string;
+      claimToken?: string | null;
+    } | null;
 
     const ref =
       estimateResult?.ref ??
       `EST-${new Date().getFullYear()}-${Math.floor(Math.random() * 90000 + 10000)}`;
     const aiAnalyse = estimateResult?.analyse;
+    const kept: KeptEstimation | undefined = estimateResult?.estimationId
+      ? { id: estimateResult.estimationId, claimToken: estimateResult.claimToken ?? null }
+      : undefined;
+    if (kept) rememberClaim(kept);
 
-    setSubmitted({ ref, aiAnalyse, dvfData: dvfResult });
+    setSubmitted({ ref, aiAnalyse, dvfData: dvfResult, estimation: kept });
 
     try {
       localStorage.removeItem(STORAGE_KEY);
@@ -454,6 +471,7 @@ export function LeenkeyWizard() {
         ref_={submitted.ref}
         aiAnalyse={submitted.aiAnalyse}
         dvfData={submitted.dvfData}
+        listingHref={listingFromEstimationHref(submitted.estimation)}
         onRestart={restart}
       />
     );
