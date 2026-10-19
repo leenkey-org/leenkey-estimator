@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 // the footer gets room above it.
 export default function ValuationPage() {
   return (
-    <FacadeRoot className="group/estimer flex min-h-dvh flex-col bg-lk-bg">
+    <FacadeRoot className="group/estimer flex min-h-dvh flex-col bg-lk-surface">
       <div className="sticky top-0 z-40">
         <SiteTopNav />
         <SiteMobileHeader />

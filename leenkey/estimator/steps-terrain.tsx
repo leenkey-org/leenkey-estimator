@@ -64,7 +64,6 @@ export function TerrainStep1({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Le terrain"
         title="Parlez-nous de votre terrain"
         subtitle="La surface et la nature du terrain déterminent l'essentiel de sa valeur."
       />
@@ -113,7 +112,6 @@ export function TerrainStep2({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Urbanisme"
         title="Que permet le PLU sur votre terrain ?"
         subtitle="C'est le facteur numéro un du prix : un terrain constructible vaut plusieurs fois un terrain qui ne l'est pas."
       />
@@ -205,7 +203,6 @@ export function TerrainStep3({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Viabilisation"
         title="Le terrain est-il viabilisé ?"
         subtitle="Sélectionnez les réseaux déjà raccordés. Viabiliser un terrain coûte généralement entre 5 000 et 15 000 € — cela se répercute directement sur le prix."
       />
@@ -248,7 +245,6 @@ export function TerrainStep4({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Caractéristiques"
         title="À quoi ressemble le terrain ?"
         subtitle="Une forte pente peut renchérir le terrassement de plusieurs dizaines de milliers d'euros ; une belle vue fait l'inverse."
       />
@@ -295,7 +291,6 @@ export function TerrainStep5({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Environnement"
         title="Qu'y a-t-il autour du terrain ?"
         subtitle="L'accessibilité pèse lourd sur le nombre d'acheteurs potentiels."
       />
@@ -362,7 +357,6 @@ export function TerrainStep6({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Contraintes"
         title="Le terrain est-il soumis à des contraintes ?"
         subtitle="Mieux vaut les déclarer : elles ressortiront de toute façon à la vente, et les anticiper évite une renégociation."
       />
@@ -426,7 +420,6 @@ export function TerrainStep7({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Potentiel foncier"
         title="Qu'avez-vous déjà préparé ?"
         subtitle="Chaque démarche déjà faite est du temps et du risque en moins pour l'acheteur — et se paie."
       />

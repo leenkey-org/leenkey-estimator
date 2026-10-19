@@ -15,6 +15,7 @@ import { FileText, Paperclip } from "lucide-react";
 import { buttonVariants } from "@/components/shared/button";
 import { Checkbox } from "@/components/shared/checkbox";
 import { InfoNote } from "@/components/shared/info-note";
+import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import { chercherParcelle, type Parcelle } from "./cadastre";
 import {
@@ -69,8 +70,6 @@ function ErrorMsg({ msg }: { msg?: string }) {
   );
 }
 
-const TOTAL = 12;
-
 /* ============ STEP 1 — Type ============ */
 const BIEN_OPTIONS: { value: BienType; label: string; desc: string }[] = [
   { value: "maison", label: "Maison", desc: "Individuelle, mitoyenne, de ville" },
@@ -93,9 +92,6 @@ export function Step1({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        step={1}
-        total={TOTAL}
-        label="Votre bien"
         title="Quel type de bien souhaitez-vous vendre ?"
         subtitle="Sélectionnez la catégorie qui correspond le mieux à votre bien."
       />
@@ -165,9 +161,6 @@ export function Step2({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        step={2}
-        total={TOTAL}
-        label="Localisation"
         title="Où se situe votre bien ?"
         subtitle="L'adresse nous permet d'analyser le marché local pour affiner votre rapport de valorisation."
       />
@@ -183,7 +176,7 @@ export function Step2({ form, set, errors }: P) {
               autoComplete="off"
             />
             {open && results.length > 0 && (
-              <ul className="absolute z-10 mt-2 max-h-72 w-full overflow-auto rounded-lk-md border-[1.5px] border-lk-line bg-lk-surface">
+              <ul className="absolute z-10 mt-2 max-h-72 w-full overflow-auto rounded-lk-md border border-lk-line bg-lk-surface shadow-float">
                 {results.map((r, i) => (
                   <li key={i}>
                     <button
@@ -287,7 +280,7 @@ export function Step3({ form, set, errors }: P) {
           type="range"
           min={9}
           max={500}
-          aria-label="Surface habitable"
+          aria-label={fr.estimator.surfaceSlider}
           value={form.surface_habitable ?? 9}
           onChange={(e) => set({ surface_habitable: Number(e.target.value) })}
           className="w-full accent-lk-blue"
@@ -316,12 +309,7 @@ export function Step3({ form, set, errors }: P) {
 
   return (
     <div className="space-y-8">
-      <StepHeader
-        step={3}
-        total={TOTAL}
-        label="Superficie"
-        title="Quelle est la superficie de votre bien ?"
-      />
+      <StepHeader title="Quelle est la superficie de votre bien ?" />
       <div className="grid gap-6 md:grid-cols-2">
         {isAppart ? [carrezField, habitableField] : habitableField}
         {showTerrain && (
@@ -367,7 +355,7 @@ export function Step3({ form, set, errors }: P) {
                     rapproche « 14 rue des Lilas » de « 14 rue des Esclops ».
                     L'afficher permet de repérer la mauvaise correspondance. */}
                 {parcelle.adresseReconnue && (
-                  <p className="mt-1 text-lk-micro text-lk-ink-3">
+                  <p className="mt-1 text-lk-caption text-lk-ink-3">
                     D'après l'adresse {parcelle.adresseReconnue}
                   </p>
                 )}
@@ -402,12 +390,7 @@ export function Step4({ form, set, errors }: P) {
 
   return (
     <div className="space-y-8">
-      <StepHeader
-        step={4}
-        total={TOTAL}
-        label="Composition"
-        title="Comment est composé votre bien ?"
-      />
+      <StepHeader title="Comment est composé votre bien ?" />
       <div className="space-y-6">
         <Field
           label="Nombre de pièces principales"
@@ -580,9 +563,6 @@ export function Step5({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        step={5}
-        total={TOTAL}
-        label="Extérieur"
         title="Votre bien dispose-t-il de ces éléments ?"
         subtitle="Sélectionnez tout ce qui correspond, puis précisez la superficie ou le nombre de places."
       />
@@ -658,9 +638,6 @@ export function Step6({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        step={6}
-        total={TOTAL}
-        label="État général"
         title="Dans quel état se trouve votre bien ?"
         subtitle="Soyez honnête — une estimation juste est plus utile qu'une estimation optimiste."
       />
@@ -753,9 +730,6 @@ export function Step7({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        step={7}
-        total={TOTAL}
-        label="Prestations"
         title="Quels équipements et prestations votre bien inclut-il ?"
         subtitle="Ces éléments influencent significativement la valeur de votre bien."
       />
@@ -824,6 +798,7 @@ export function DpeRow({
       <button
         type="button"
         onClick={() => onChange("inconnu")}
+        aria-pressed={value === "inconnu"}
         className={cn(
           "h-11 rounded-lk-sm border-[1.5px] px-4 text-lk-button-md font-semibold transition-colors duration-140 ease-out-lk",
           value === "inconnu"
@@ -845,9 +820,6 @@ export function Step8({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        step={8}
-        total={TOTAL}
-        label="Énergie"
         title="Connaissez-vous le DPE de votre bien ?"
         subtitle="Le Diagnostic de Performance Énergétique a un impact direct sur la valeur et la vente de votre bien. Les réponses ci-dessous permettent de construire votre profil énergétique."
       />
@@ -1049,12 +1021,7 @@ export function Step9({ form, set, errors }: P) {
 
   return (
     <div className="space-y-8">
-      <StepHeader
-        step={9}
-        total={TOTAL}
-        label="Situation"
-        title="Quelques questions sur la situation de votre bien."
-      />
+      <StepHeader title="Quelques questions sur la situation de votre bien." />
       <div className="space-y-6">
         <Field label="Vous êtes…" required error={errors?.proprietaire}>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -1177,12 +1144,7 @@ export function Step10({ form, set, errors }: P) {
   const hasEst = form.estimation_prealable && !form.estimation_prealable.startsWith("Non");
   return (
     <div className="space-y-8">
-      <StepHeader
-        step={10}
-        total={TOTAL}
-        label="Votre projet"
-        title="Parlez-nous de votre projet de vente."
-      />
+      <StepHeader title="Parlez-nous de votre projet de vente." />
       <div className="space-y-6">
         <Field label="Pourquoi vendez-vous ?" hint="optionnel mais recommandé">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -1360,9 +1322,6 @@ export function Step11({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        step={11}
-        total={TOTAL}
-        label="Vos documents"
         title="Des documents pour affiner votre rapport de valorisation ?"
         subtitle="Cette étape est facultative mais améliore la précision de votre rapport de valorisation."
       />
@@ -1428,9 +1387,6 @@ export function Step12({
   return (
     <div className="space-y-8">
       <StepHeader
-        step={12}
-        total={TOTAL}
-        label="Vos coordonnées"
         title="Où envoyer votre rapport de valorisation ?"
         subtitle="Votre rapport de valorisation personnalisée est prête. Entrez vos coordonnées pour la recevoir gratuitement et sans engagement."
       />
@@ -1494,7 +1450,7 @@ export function Step12({
               V1 link led nowhere). */}
           <Checkbox
             containerClassName={cn(errors.rgpd && "lk-field-error")}
-            aria-invalid={errors.rgpd ? true : undefined}
+            error={errors.rgpd}
             checked={form.rgpd}
             onChange={(e) => set({ rgpd: e.target.checked })}
             label={
@@ -1516,25 +1472,6 @@ export function Step12({
               </>
             }
           />
-          {errors.rgpd && (
-            <p className="flex items-center gap-1.5 text-lk-caption font-medium text-lk-danger -mt-2 ml-8">
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              {errors.rgpd}
-            </p>
-          )}
 
           {/* Case 2 — Opt-in contact téléphonique */}
           <Checkbox

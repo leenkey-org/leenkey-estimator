@@ -487,7 +487,7 @@ export function LeenkeyWizard() {
   // the site (60 px, then the 72 px TopNav, L1-43), in Façade (L1-44): a G5
   // form, its progress under the header, its actions at the bottom.
   return (
-    <main className="min-h-screen bg-lk-bg">
+    <main className="min-h-screen bg-lk-surface">
       {/* Header */}
       <header className="sticky top-15 z-30 border-b border-lk-line bg-lk-surface md:top-18">
         {/* Progress (logo retiré : déjà dans la navbar au-dessus) */}

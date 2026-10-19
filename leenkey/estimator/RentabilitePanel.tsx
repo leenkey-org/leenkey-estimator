@@ -31,7 +31,7 @@ export function RentabilitePanel({ stats }: { stats: Stats }) {
           ).toLocaleString("fr-FR")}{" "}
           €
         </div>
-        <p className="mt-1 text-lk-micro leading-relaxed text-lk-ink-3">
+        <p className="mt-1 text-lk-caption leading-relaxed text-lk-ink-3">
           {stats.surLoyersAttendus
             ? "Aucun lot loué aujourd'hui : montant calculé à partir des loyers attendus que vous saisissez."
             : "C'est ce revenu, plus que la surface, qui fixe le prix d'un immeuble de rapport."}
@@ -51,7 +51,7 @@ export function RentabilitePanel({ stats }: { stats: Stats }) {
             {stats.revenusPotentiels.toLocaleString("fr-FR")} €
             <span className="ml-1 text-lk-caption font-semibold text-lk-ink-2">par an</span>
           </div>
-          <p className="mt-1 text-lk-micro leading-relaxed text-lk-ink-3">
+          <p className="mt-1 text-lk-caption leading-relaxed text-lk-ink-3">
             {stats.potentielVacance.toLocaleString("fr-FR")} € de loyers à récupérer sur les lots
             libres
             {stats.potentielDeclare > 0 ? ", d'après les loyers que vous avez indiqués." : "."}
@@ -114,7 +114,7 @@ export function RentabilitePanel({ stats }: { stats: Stats }) {
       {vacance > 0 && (
         <div className="mt-4 rounded-lk-sm border border-lk-warning-bg bg-lk-warning-bg p-3">
           <div className="text-lk-caption font-bold text-lk-warning-fg">{vacance} % de vacance</div>
-          <p className="mt-1 text-lk-micro leading-relaxed text-lk-warning-fg">
+          <p className="mt-1 text-lk-caption leading-relaxed text-lk-warning-fg">
             Un acquéreur y verra soit un risque, soit un potentiel de revalorisation. Renseignez le
             loyer attendu de chaque lot libre pour montrer le second.
           </p>

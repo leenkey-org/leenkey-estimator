@@ -76,7 +76,6 @@ export function ImmeubleStep1({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="L'immeuble"
         title="Parlez-nous de votre immeuble"
         subtitle="La composition et les surfaces posent la base du calcul de rendement."
       />
@@ -195,7 +194,6 @@ export function ImmeubleStep2({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Composition"
         title="Comment l'immeuble est-il découpé ?"
         subtitle="Indiquez le nombre de lots par typologie, puis précisez lesquels sont occupés."
       />
@@ -272,7 +270,6 @@ export function ImmeubleStep3({ form, set }: P) {
     return (
       <div className="space-y-8">
         <StepHeader
-          label="Situation locative"
           title="Détail des lots"
           subtitle="Revenez à l'étape précédente pour déclarer les lots de l'immeuble."
         />
@@ -283,7 +280,6 @@ export function ImmeubleStep3({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Situation locative"
         title="Quels sont les revenus de l'immeuble ?"
         subtitle="C'est le revenu net qui fixe le prix d'un immeuble de rapport — bien plus que la surface."
       />
@@ -311,7 +307,7 @@ export function ImmeubleStep3({ form, set }: P) {
                     className={
                       "rounded-full px-3 py-1 text-lk-caption font-semibold " +
                       (lot.statut === "occupe"
-                        ? "bg-lk-success-bg text-lk-success"
+                        ? "bg-lk-success-bg text-lk-success-fg"
                         : "bg-lk-warning-bg text-lk-warning-fg")
                     }
                   >
@@ -411,7 +407,6 @@ export function ImmeubleStep4({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Charges"
         title="Quelles charges supportez-vous ?"
         subtitle="Ce sont elles qui transforment un revenu brut en revenu net — la seule base sur laquelle un investisseur calcule."
       />
@@ -465,7 +460,6 @@ export function ImmeubleStep5({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="État technique"
         title="Dans quel état est l'immeuble ?"
         subtitle="Toiture et façade sont les deux postes qui pèsent le plus lourd : un acquéreur en déduit le coût de son offre."
       />
@@ -559,7 +553,6 @@ export function ImmeubleStep6({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Potentiel"
         title="Que peut-on encore tirer de l'immeuble ?"
         subtitle="Le potentiel de développement est ce qui distingue un immeuble de rapport banal d'un actif recherché par les investisseurs."
       />
@@ -620,7 +613,6 @@ export function ImmeubleStep7({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Urbanisme"
         title="Que dit le PLU sur votre parcelle ?"
         subtitle="Ces règles conditionnent tout le potentiel de développement. Si vous ne les connaissez pas, laissez vide : elles se vérifient en mairie."
       />

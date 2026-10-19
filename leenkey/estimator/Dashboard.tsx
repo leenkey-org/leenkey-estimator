@@ -55,14 +55,17 @@ const typeLabel: Record<string, string> = {
 };
 
 const fiabiliteLabel = {
-  elevee: { txt: "Fiabilité élevée", cls: "bg-lk-success-bg text-lk-success border-lk-success-bg" },
+  elevee: {
+    txt: "Fiabilité élevée",
+    cls: "bg-lk-success-bg text-lk-success-fg border-lk-success-bg",
+  },
   moyenne: {
     txt: "Fiabilité moyenne",
     cls: "bg-lk-warning-bg text-lk-warning-fg border-lk-warning-bg",
   },
   faible: {
     txt: "Fiabilité faible",
-    cls: "bg-lk-danger-bg text-lk-danger border-lk-danger-bg",
+    cls: "bg-lk-danger-bg text-lk-danger-fg border-lk-danger-bg",
   },
 };
 
@@ -261,7 +264,7 @@ export function EstimationDashboard({
   // Façade (L1-44): white cards on the background of the site, under its
   // header (the logo of the V1 is no longer repeated here).
   return (
-    <main className="min-h-screen bg-lk-bg">
+    <main className="min-h-screen bg-lk-surface">
       {/* Header */}
       <header className="border-b border-lk-line bg-lk-surface">
         <div className="mx-auto flex max-w-6xl justify-end px-5 py-3">
@@ -296,7 +299,7 @@ export function EstimationDashboard({
         {/* Intro */}
         <div className="fade-up mb-8">
           {/* No label over the title (DESIGN.md 13.2, L1-44). */}
-          <h1 className="text-wide text-lk-h1 font-bold text-lk-ink sm:text-lk-h1-lg">
+          <h1 className="text-wide text-lk-h1 font-bold text-lk-ink lg:text-lk-h1-lg">
             {/* Without a first name, « Bonjour, voici… », not « Bonjour , voici… ». */}
             Bonjour{form.prenom ? ` ${form.prenom}` : ""}, voici la valeur estimée de votre bien
           </h1>
@@ -313,7 +316,7 @@ export function EstimationDashboard({
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-start">
             <div className="flex-1">
               <div className="text-lk-compact font-semibold text-lk-ink-2">Prix estimé</div>
-              <div className="mt-2 text-wide text-lk-display font-bold text-lk-ink sm:text-lk-display-lg">
+              <div className="mt-2 text-wide tabular text-lk-display font-bold text-lk-ink lg:text-lk-display-lg">
                 {formatEUR(r.prixEstime)}
               </div>
               <div className="mt-2 text-lk-ink-2 text-lk-compact">
@@ -336,7 +339,7 @@ export function EstimationDashboard({
                     style={{ left: "calc(50% - 10px)" }}
                   />
                 </div>
-                <div className="mt-2 flex justify-between text-lk-caption font-semibold text-lk-ink-2">
+                <div className="mt-2 flex justify-between text-lk-caption font-semibold tabular text-lk-ink-2">
                   <span>{formatEUR(r.prixBas)}</span>
                   <span className="text-lk-blue">{formatEUR(r.prixEstime)}</span>
                   <span>{formatEUR(r.prixHaut)}</span>
@@ -355,7 +358,7 @@ export function EstimationDashboard({
               </span>
               <div className="md:text-right">
                 <div className="text-lk-compact text-lk-ink-2">Prix au m²</div>
-                <div className="text-wide text-lk-h2-lg font-bold text-lk-ink">
+                <div className="text-wide tabular text-lk-h2-lg font-bold text-lk-ink">
                   {r.prixM2.toLocaleString("fr-FR")} €/m²
                 </div>
                 <div className="mt-1 text-lk-caption text-lk-ink-2">
@@ -465,7 +468,7 @@ export function EstimationDashboard({
                 <h2 className="text-wide text-lk-h3 font-bold text-lk-ink">
                   Ventes réelles dans votre secteur
                 </h2>
-                <span className="ml-auto rounded-lk-sm bg-lk-success-bg px-2 py-0.5 text-lk-caption font-semibold text-lk-success">
+                <span className="ml-auto rounded-lk-sm bg-lk-success-bg px-2 py-0.5 text-lk-caption font-semibold text-lk-success-fg">
                   Données DVF · data.gouv.fr
                 </span>
               </div>
@@ -482,25 +485,25 @@ export function EstimationDashboard({
                   <div className="text-lk-caption font-semibold text-lk-ink-2">
                     Comparables trouvés
                   </div>
-                  <div className="mt-1 text-wide text-lk-h2 font-bold text-lk-ink">
+                  <div className="mt-1 text-wide tabular text-lk-h2 font-bold text-lk-ink">
                     {dvfData.nbComparables}
                   </div>
                 </div>
                 <div className="rounded-lk-sm bg-lk-stone-2 p-3">
                   <div className="text-lk-caption font-semibold text-lk-ink-2">Prix médian /m²</div>
-                  <div className="mt-1 text-wide text-lk-h2 font-bold text-lk-ink">
+                  <div className="mt-1 text-wide tabular text-lk-h2 font-bold text-lk-ink">
                     {dvfData.stats.prixM2Median.toLocaleString("fr-FR")} €
                   </div>
                 </div>
                 <div className="rounded-lk-sm bg-lk-stone-2 p-3">
                   <div className="text-lk-caption font-semibold text-lk-ink-2">Min /m²</div>
-                  <div className="mt-1 text-wide text-lk-h2 font-bold text-lk-ink">
+                  <div className="mt-1 text-wide tabular text-lk-h2 font-bold text-lk-ink">
                     {dvfData.stats.prixM2Min.toLocaleString("fr-FR")} €
                   </div>
                 </div>
                 <div className="rounded-lk-sm bg-lk-stone-2 p-3">
                   <div className="text-lk-caption font-semibold text-lk-ink-2">Max /m²</div>
-                  <div className="mt-1 text-wide text-lk-h2 font-bold text-lk-ink">
+                  <div className="mt-1 text-wide tabular text-lk-h2 font-bold text-lk-ink">
                     {dvfData.stats.prixM2Max.toLocaleString("fr-FR")} €
                   </div>
                 </div>
@@ -530,7 +533,7 @@ export function EstimationDashboard({
                     </div>
                     <div>
                       <div className="text-lk-caption text-lk-ink-2">Prix</div>
-                      <div className="font-semibold text-lk-ink">{formatEUR(c.prix)}</div>
+                      <div className="font-semibold tabular text-lk-ink">{formatEUR(c.prix)}</div>
                       <div className="text-lk-caption text-lk-ink-2">
                         {c.prixM2.toLocaleString("fr-FR")} €/m²
                       </div>
@@ -581,7 +584,7 @@ export function EstimationDashboard({
                 <h3 className="text-lk-body font-semibold text-lk-ink">{rec.title}</h3>
                 <p className="mt-1.5 text-lk-compact text-lk-ink-2">{rec.description}</p>
                 {rec.uplift && (
-                  <div className="mt-3 inline-flex rounded-lk-sm bg-lk-success-bg px-2 py-0.5 text-lk-caption font-semibold text-lk-success">
+                  <div className="mt-3 inline-flex rounded-lk-sm bg-lk-success-bg px-2 py-0.5 text-lk-caption font-semibold text-lk-success-fg">
                     Potentiel {rec.uplift}
                   </div>
                 )}
@@ -662,6 +665,9 @@ export function EstimationDashboard({
                       it.done ? "text-lk-ink" : "text-lk-ink-2",
                     )}
                   >
+                    <span className="sr-only">
+                      {it.done ? fr.estimator.nextStep.done : fr.estimator.nextStep.todo}{" "}
+                    </span>
                     {it.l}
                   </span>
                 </li>
@@ -698,7 +704,7 @@ export function EstimationDashboard({
                     </span>
                   </span>
                   <div className="min-w-0">
-                    <p className="text-wide text-lk-compact font-bold text-lk-success">
+                    <p className="text-wide text-lk-compact font-bold text-lk-success-fg">
                       Rapport envoyé
                     </p>
                     <p className="mt-0.5 break-words text-lk-caption text-lk-ink-2">
@@ -976,7 +982,7 @@ export function EstimationDashboard({
               Avertissement légal
             </h3>
           </div>
-          <p className="text-lk-caption leading-relaxed text-lk-warning-fg">
+          <p className="text-lk-compact leading-relaxed text-lk-warning-fg">
             Ce document constitue une <strong>analyse automatisée</strong> basée sur les
             informations renseignées et les données de marché disponibles. Il est fourni{" "}
             <strong>à titre informatif uniquement</strong> et ne constitue ni une expertise
@@ -1028,7 +1034,7 @@ function Kpi({
   return (
     <div className="rounded-lk-md border border-lk-line bg-lk-surface p-5">
       <div className="text-lk-caption font-semibold text-lk-ink-2">{label}</div>
-      <div className={cn("mt-2 text-wide text-lk-h2-lg font-bold", toneCls)}>{value}</div>
+      <div className={cn("mt-2 text-wide tabular text-lk-h2-lg font-bold", toneCls)}>{value}</div>
       {sub && <div className="mt-1 text-lk-caption text-lk-ink-2">{sub}</div>}
     </div>
   );

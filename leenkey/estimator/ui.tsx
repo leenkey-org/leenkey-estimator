@@ -1,6 +1,7 @@
 import { chipClassName } from "@/components/shared/chip-toggle";
 import { cn } from "@/lib/utils";
-import { createContext, useContext, useId } from "react";
+import { createContext, useContext, useEffect, useId, useMemo, useState } from "react";
+import { AlertCircle } from "lucide-react";
 import type { ReactNode, InputHTMLAttributes } from "react";
 
 // Building blocks of the steps of the wizard, in Façade since L1-44
@@ -11,20 +12,11 @@ import type { ReactNode, InputHTMLAttributes } from "react";
 
 /* ---------- Section header ---------- */
 /**
- * The title of a step and its subtitle. Its label and its place (« Votre
+ * The title of a step and its subtitle. Its name and its place (« Votre
  * bien », « Étape 1 sur 12 ») are said by the progress of the wizard, just
  * above: no label over the title (DESIGN.md 13.2, L1-44).
  */
-export function StepHeader({
-  title,
-  subtitle,
-}: {
-  step?: number;
-  total?: number;
-  label: string;
-  title: string;
-  subtitle?: string;
-}) {
+export function StepHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <header className="space-y-3 fade-up">
       <h1 className="text-lk-h1 font-bold text-wide text-lk-ink lg:text-lk-h1-lg">{title}</h1>
@@ -194,8 +186,13 @@ export function Stepper({
 }
 
 /* ---------- Field ---------- */
-/** The id of the control of a Field: its label names it (TextInput reads it). */
-const FieldIdContext = createContext<string | undefined>(undefined);
+/**
+ * What a Field gives its control: the id that its label names, the id of its
+ * error, and a way for a TextInput to say it is there. Without one, the
+ * label names the group of buttons of the field (cards, chips, numbers).
+ */
+type FieldContextValue = { id: string; errorId?: string; markControl: () => void };
+const FieldContext = createContext<FieldContextValue | undefined>(undefined);
 
 export function Field({
   label,
@@ -211,10 +208,18 @@ export function Field({
   children: ReactNode;
 }) {
   const id = useId();
+  const labelId = useId();
+  const errorId = useId();
+  const [hasControl, setHasControl] = useState(false);
+  const context = useMemo(
+    () => ({ id, errorId: error ? errorId : undefined, markControl: () => setHasControl(true) }),
+    [id, error, errorId],
+  );
   return (
     <div className={cn("space-y-2 lk-field", error && "lk-field-error")}>
       <label
-        htmlFor={id}
+        id={labelId}
+        htmlFor={hasControl ? id : undefined}
         className={cn(
           "flex items-baseline gap-1.5 text-lk-label font-medium transition-colors",
           error ? "text-lk-danger" : "text-lk-ink",
@@ -224,24 +229,17 @@ export function Field({
         {required && <span className={error ? "text-lk-danger" : "text-lk-blue"}>*</span>}
         {hint && <span className="text-lk-caption font-normal text-lk-ink-3">— {hint}</span>}
       </label>
-      <FieldIdContext.Provider value={id}>{children}</FieldIdContext.Provider>
+      <div
+        role={hasControl ? undefined : "group"}
+        aria-labelledby={hasControl ? undefined : labelId}
+        aria-describedby={!hasControl && error ? errorId : undefined}
+        className="space-y-2"
+      >
+        <FieldContext.Provider value={context}>{children}</FieldContext.Provider>
+      </div>
       {error && (
-        <p className="flex items-center gap-1.5 text-lk-caption text-lk-danger">
-          <svg
-            aria-hidden="true"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
+        <p id={errorId} className="flex items-center gap-1.5 text-lk-caption text-lk-danger">
+          <AlertCircle aria-hidden="true" className="size-3.5 shrink-0" />
           {error}
         </p>
       )}
@@ -251,10 +249,14 @@ export function Field({
 
 /* ---------- Input ---------- */
 export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
-  const fieldId = useContext(FieldIdContext);
+  const field = useContext(FieldContext);
+  const markControl = field?.markControl;
+  useEffect(() => markControl?.(), [markControl]);
   return (
     <input
-      id={fieldId}
+      id={field?.id}
+      aria-invalid={field?.errorId ? true : undefined}
+      aria-describedby={field?.errorId}
       {...props}
       className={cn(
         "h-12 w-full rounded-lk-sm border-[1.5px] border-lk-field bg-lk-surface px-3.5 text-lk-body text-lk-ink",
@@ -294,7 +296,8 @@ function Pill({
       aria-pressed={active}
       data-state={active ? "on" : "off"}
       onClick={onClick}
-      className={chipClassName()}
+      // A long label goes on two lines on a narrow screen.
+      className={cn(chipClassName(), "h-auto min-h-10 max-w-full py-2 whitespace-normal")}
     >
       {children}
     </button>

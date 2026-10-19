@@ -86,6 +86,19 @@ test("le wizard est en Archivo, sans police de la V1, et sans violation sérieus
   await expect(page.getByText(/^Étape 2 sur \d+/)).toBeVisible();
   await expectNoSeriousViolation(page);
 
+  // Without an address: the field is focused, in danger, and says why.
+  await page.getByRole("button", { name: "Continuer" }).click();
+  const address = page.getByLabel(/^Adresse/);
+  await expect(address).toBeFocused();
+  await expect(address).toHaveAttribute("aria-invalid", "true");
+  await expect(address).toHaveAccessibleDescription("L'adresse est requise");
+  // Once its colour transition is over.
+  await expect
+    .poll(() => address.evaluate((node) => getComputedStyle(node).borderTopColor))
+    .toBe("rgb(185, 28, 28)");
+  expect(await address.evaluate((node) => getComputedStyle(node).boxShadow)).not.toBe("none");
+  await expectNoSeriousViolation(page);
+
   // The home page loads no V1 font either.
   await page.goto("/");
   expect(await fontFamilies(page)).toEqual(["Archivo", "Archivo Fallback"]);
@@ -95,9 +108,13 @@ test("le résultat, et la demande de rappel par un conseiller au clavier", async
   page,
   isMobile,
 }) => {
+  // The request waits until the test lets it go: the dialog is seen sending.
   let sent: { source?: string; data?: Record<string, string> } = {};
+  let release = () => {};
+  const released = new Promise<void>((resolve) => (release = resolve));
   await page.route("**/api/contact", async (route) => {
     sent = route.request().postDataJSON();
+    await released;
     await route.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
   });
   await restoreResult(page);
@@ -108,12 +125,20 @@ test("le résultat, et la demande de rappel par un conseiller au clavier", async
   await expectNoEmoji(page);
   await expectNoSeriousViolation(page);
 
-  // Opened, it holds the focus; Échap closes it, the focus comes back.
+  // Opened from the keyboard, it keeps the focus inside; Échap closes it and
+  // the focus comes back to its button.
   const open = page.getByRole("button", { name: "Prendre contact avec un conseiller" });
-  await open.click();
+  await open.focus();
+  await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog", { name: "Prendre contact avec un conseiller" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole("button", { name: isMobile ? "Retour" : "Fermer" })).toBeFocused();
+  const first = dialog.getByRole("button", { name: isMobile ? "Retour" : "Fermer" });
+  const send = dialog.getByRole("button", { name: "Envoyer ma demande" });
+  await expect(first).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(send).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(first).toBeFocused();
   await expect(dialog.getByLabel("Quand préférez-vous être contacté ?")).toHaveValue(
     "Dès que possible",
   );
@@ -122,10 +147,14 @@ test("le résultat, et la demande de rappel par un conseiller au clavier", async
   await expect(dialog).toBeHidden();
   await expect(open).toBeFocused();
 
-  // Sent: said in the dialog, which then closes by itself.
-  await open.click();
+  // While it is sent, the dialog stays; once sent, it says so, then closes.
+  await page.keyboard.press("Enter");
   await dialog.getByLabel("Votre message (optionnel)").fill("Je vends au printemps.");
-  await dialog.getByRole("button", { name: "Envoyer ma demande" }).click();
+  await send.click();
+  await expect(dialog.getByRole("button", { name: "Envoi…" })).toHaveAttribute("aria-busy", "true");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeVisible();
+  release();
   await expect(page.getByRole("dialog", { name: "Demande envoyée !" })).toBeVisible({
     timeout: 15_000,
   });
@@ -158,4 +187,31 @@ test("les coordonnées : la case de consentement et sa politique de confidential
   await expect(consent).toBeChecked();
   await expectNoEmoji(page);
   await expectNoSeriousViolation(page);
+});
+
+test("les boutons d'une question sont groupés sous son libellé", async ({ page }) => {
+  const openStep = async (step: number) => {
+    await page.goto("/");
+    await page.evaluate(
+      (at) =>
+        localStorage.setItem(
+          "leenkey_form_v1",
+          JSON.stringify({ form: { type: "appartement" }, step: at }),
+        ),
+      step,
+    );
+    await page.goto("/estimer");
+    await page.getByRole("button", { name: "Reprendre", exact: true }).click();
+    await expect(page.getByText(new RegExp(`^Étape ${step} sur `))).toBeVisible();
+  };
+  // A text field is named by its label, not grouped.
+  await openStep(3);
+  await expect(page.getByRole("spinbutton", { name: /^Surface loi Carrez/ })).toBeVisible();
+  await expect(page.getByRole("group", { name: /^Surface loi Carrez/ })).toHaveCount(0);
+  // Numbers: a group named by the question.
+  await openStep(4);
+  const bedrooms = page.getByRole("group", { name: /^Nombre de chambres/ });
+  const two = bedrooms.getByRole("button", { name: "2", exact: true });
+  await two.click();
+  await expect(two).toHaveAttribute("aria-pressed", "true");
 });

@@ -83,7 +83,6 @@ export function AtypiqueStep1({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Le bien"
         title="De quel bien s'agit-il ?"
         subtitle="Les biens atypiques n'ont presque pas de comparables : plus votre description est précise, plus l'estimation le sera."
       />
@@ -241,7 +240,6 @@ export function AtypiqueStep2({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Caractères exceptionnels"
         title="Qu'est-ce qui rend ce bien unique ?"
         subtitle="C'est précisément ce qui échappe au prix au mètre carré — et ce qui fait la différence à la vente."
       />
@@ -281,7 +279,6 @@ export function AtypiqueStep3({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="État général"
         title="Dans quel état se trouve le bien ?"
         subtitle="Sur ce type de bien, l'état pèse plus lourd que partout ailleurs : une toiture de château se chiffre en centaines de milliers d'euros."
       />
@@ -367,7 +364,6 @@ export function AtypiqueStep4({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Environnement"
         title="Dans quel cadre se trouve le bien ?"
         subtitle="Sur un bien d'exception, l'acquéreur vient souvent de loin : l'accessibilité et le cadre pèsent autant que le bien lui-même."
       />
@@ -457,7 +453,6 @@ export function AtypiqueStep5({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Potentiel"
         title="Que peut-on faire de ce bien ?"
         subtitle="Un bien d'exception qui peut générer des revenus s'adresse à une clientèle bien plus large qu'une simple résidence."
       />
@@ -517,7 +512,6 @@ export function AtypiqueStep6({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Contraintes"
         title="Quelles contraintes pèsent sur le bien ?"
         subtitle="Sur un bien d'exception elles sont fréquentes. Les déclarer évite qu'elles ressortent au moment de la signature."
       />
@@ -552,7 +546,6 @@ export function AtypiqueStep7({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Données financières"
         title="Que coûte et que rapporte le bien ?"
         subtitle="Un bien d'exception qui s'autofinance change complètement de catégorie aux yeux d'un acquéreur."
       />

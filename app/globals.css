@@ -8,11 +8,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Since L1-44, the radii and the font of DESIGN.md (sections 3 and 5) for
-     the classes of the V1 kit still in use: 4 px controls, 6 px containers,
-     Archivo (its variable is set on <html> by app/layout.tsx). */
+  /* Since L1-44, the radii and the font of DESIGN.md (sections 2.2, 3 and 5)
+     for the classes of the V1 kit still in use: rounded-sm 4 px (controls),
+     rounded-md 6 px (containers), never more; Archivo (its variable is set
+     on <html> by app/layout.tsx). */
   --radius-sm: 4px;
-  --radius-md: 4px;
+  --radius-md: 6px;
   --radius-lg: 6px;
   --radius-xl: 6px;
   --radius-2xl: 6px;
@@ -40,13 +41,6 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
-
-  --color-navy: var(--navy);
-  --color-sky: var(--sky);
-  --color-sky-mid: var(--sky-mid);
-  --color-sub: var(--sub);
-  --color-success: var(--success);
-  --color-amber: var(--amber);
 }
 
 :root {
@@ -73,14 +67,6 @@
   --border: oklch(0.92 0.015 256);
   --input: oklch(0.92 0.015 256);
   --ring: oklch(0.56 0.24 264);
-
-  /* Brand tokens */
-  --navy: oklch(0.27 0.07 263);
-  --sky: oklch(0.97 0.025 264);
-  --sky-mid: oklch(0.93 0.045 264);
-  --sub: oklch(0.55 0.04 256);
-  --success: oklch(0.68 0.16 162);
-  --amber: oklch(0.76 0.16 75);
 }
 
 .dark {
@@ -123,7 +109,7 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    color: var(--color-navy);
+    color: var(--color-lk-ink);
     letter-spacing: -0.01em;
   }
 }
@@ -158,7 +144,7 @@
   animation: leenkey-fade-up 0.4s ease-out backwards;
 }
 
-/* Scroll behavior — fix sticky header offset (navbar 80px + wizard header ~52px) */
+/* Room for the sticky headers when the page scrolls to an anchor */
 html {
   scroll-padding-top: 145px;
 }
@@ -176,21 +162,19 @@ html {
   }
 }
 
-/* ─── Champ en erreur — bordure rouge sur tous les inputs/selects/textarea ─── */
+/* A field of the valuation wizard in error (DESIGN.md 10.1): danger border on
+   its controls and on the choices left unpicked, a danger ring on focus.
+   Unlayered, these rules win over the utilities of the controls. */
 .lk-field-error input,
 .lk-field-error select,
 .lk-field-error textarea,
-.lk-field-error button[role="combobox"],
-.lk-field-error [data-radix-collection-item],
-.lk-field-error .border-2 {
-  border-color: hsl(var(--destructive)) !important;
-  background-color: color-mix(in srgb, hsl(var(--destructive)) 4%, transparent) !important;
+.lk-field-error [aria-pressed="false"] {
+  border-color: var(--color-lk-danger);
 }
 .lk-field-error input:focus,
 .lk-field-error select:focus,
-.lk-field-error textarea:focus,
-.lk-field-error button[role="combobox"]:focus {
-  box-shadow: 0 0 0 4px color-mix(in srgb, hsl(var(--destructive)) 15%, transparent) !important;
+.lk-field-error textarea:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-lk-danger) 20%, transparent);
 }
 /* Animation shake quand erreur apparait */
 .lk-field-error {
@@ -504,7 +488,8 @@ html {
     --color-border: var(--color-lk-line);
   }
 
-  /* The V1 base layer gives h1 to h4 Sora and the V1 navy */
+  /* The base layer above gives h1 to h4 their own font and colour: in
+     Façade, they inherit them */
   .facade :where(h1, h2, h3, h4, h5, h6) {
     font-family: inherit;
     color: inherit;

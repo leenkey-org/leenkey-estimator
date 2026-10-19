@@ -135,7 +135,7 @@ export function ProfilEnergetiquePanel({ form }: { form: LeenkeyForm }) {
         >
           {!p.calculable ? "À calculer" : formatImpact(p.impactMin, p.impactMax)}
         </div>
-        <p className="mt-1 text-lk-micro leading-relaxed text-lk-ink-3">
+        <p className="mt-1 text-lk-caption leading-relaxed text-lk-ink-3">
           {!p.calculable
             ? "L'estimation se met à jour selon vos réponses."
             : p.impactMax < 0

@@ -47,7 +47,6 @@ export function LocalStep1({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Le local"
         title="Quel local souhaitez-vous vendre ?"
         subtitle="La destination et la répartition des surfaces déterminent la clientèle d'acquéreurs."
       />
@@ -131,7 +130,6 @@ export function LocalStep2({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Caractéristiques"
         title="Comment le local est-il configuré ?"
         subtitle="Un local d'angle avec une grande vitrine peut valoir 20 à 30 % de plus que le même local en linéaire."
       />
@@ -236,7 +234,6 @@ export function LocalStep3({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Emplacement"
         title="Où se situe le local ?"
         subtitle="C'est le premier facteur de valeur d'un commerce, loin devant l'état ou la surface."
       />
@@ -290,7 +287,6 @@ export function LocalStep4({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Accessibilité"
         title="Comment accède-t-on au local ?"
         subtitle="Le stationnement et les livraisons conditionnent une bonne partie des activités possibles."
       />
@@ -332,7 +328,6 @@ export function LocalStep5({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Données commerciales"
         title="Le local est-il loué ?"
         subtitle="Un local occupé s'évalue d'abord à son rendement : le loyer en place détermine le prix qu'un investisseur acceptera."
       />
@@ -452,7 +447,6 @@ export function LocalStep6({ form, set, errors }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="État du local"
         title="Dans quel état se trouve le local ?"
         subtitle="Un local aux normes et exploitable tout de suite se vend nettement plus cher qu'un local à reprendre."
       />
@@ -558,7 +552,6 @@ export function LocalStep7({ form, set }: P) {
   return (
     <div className="space-y-8">
       <StepHeader
-        label="Potentiel"
         title="Que peut-on faire du local ?"
         subtitle="Plus les usages possibles sont nombreux, plus la clientèle d'acquéreurs est large — et le prix élevé."
       />
