@@ -434,7 +434,7 @@ Plateforme PropTech française de vente immobilière sans agence, développée p
 1. **Avant tout déplacement** : tests de non-régression Vitest sur `estimation.ts`, au moins 20 cas réels couvrant tous les types de bien, avec les résultats actuels figés. Ces tests doivent passer avant et après le portage, à l'identique.
 2. Estimateur porté en composants client (`"use client"`) sous `app/(public)/estimer`, moteur dans `leenkey/estimator/` sans modification de logique.
 3. Les 4 endpoints deviennent des route handlers aux **mêmes chemins** (`/api/estimate`, `/api/contact`, `/api/send-report`, `/api/dvf-comparables`), même format de requête et de réponse, CORS de `send-report` conservé.
-4. Pages marketing `public/pages/*.html` conservées, avec le comportement de `HtmlPage.tsx` (interception des `<form>`) et l'en-tête `Cache-Control: max-age=0, must-revalidate` sur `/pages/*`. **Remplacé** par le site public en V2 (décision du 2026-10-19) : accueil refait en composants Façade (L1-41), puis concept, tarifs, FAQ (L1-42), investir, qui sommes-nous et pages légales (L1-43), textes de Cédric repris mot pour mot ; `HtmlPage.tsx` ne sert plus que les pages pas encore refaites, et disparaît avec L1-43.
+4. Pages marketing `public/pages/*.html` conservées, avec le comportement de `HtmlPage.tsx` (interception des `<form>`) et l'en-tête `Cache-Control: max-age=0, must-revalidate` sur `/pages/*`. **Remplacé** par le site public en V2 (décision du 2026-10-19) : accueil refait en composants Façade (L1-41), puis concept, tarifs, FAQ (L1-42), investir, qui sommes-nous et pages légales (L1-43), textes de Cédric repris mot pour mot ; `HtmlPage.tsx`, `SiteLayout`, le menu et le pied V1 et les HTML de `public/pages/` ont disparu avec L1-43 ; seul le wizard de l'estimateur garde son style V1 jusqu'à son re-stylage (L1-44).
 5. GA4, GTM, Vercel Analytics et le `page_view` à chaque changement de route. GA4 et GTM ne se chargent qu'après l'accord du visiteur (bandeau de L1-37) ; le `noscript` de GTM est retiré, un visiteur sans JavaScript ne pouvant pas consentir (`DECISIONS.md` 2026-10-17).
 6. Redirections 301 : `leenkey.com` et `www.leenkey.fr` → `leenkey.fr` (hors `/api`). URLs, `sitemap.xml` et `robots.txt` conservés.
 
@@ -453,9 +453,9 @@ S'appliquent à tous les textes : interface, emails, prompts de l'assistant, PDF
 
 ### Pièges connus
 
-- Les `.html` de `public/pages/` embarquent leurs styles inline + `leenkey.css` (versionné `?v=N` : incrémenter à chaque modification du CSS pour casser le cache).
-- Le JS d'accordéon et de compteurs (`leenkey.js`) n'est pas chargé partout : préférer des valeurs statiques et une FAQ dépliée là où il est absent.
-- `HtmlPage.tsx` intercepte les `<form>` des pages HTML et poste vers `/api/contact` avec une `source` déduite de l'id du formulaire ; le message de succès `.form-success` doit être un **sibling** du form, pas un enfant.
+- (V1, branche `main`) Les `.html` de `public/pages/` embarquent leurs styles inline + `leenkey.css` (versionné `?v=N` : incrémenter à chaque modification du CSS pour casser le cache).
+- (V1, branche `main`) Le JS d'accordéon et de compteurs (`leenkey.js`) n'est pas chargé partout : préférer des valeurs statiques et une FAQ dépliée là où il est absent.
+- (V1, branche `main` ; en V2, `ContactForm` garde le même contrat) `HtmlPage.tsx` intercepte les `<form>` des pages HTML et poste vers `/api/contact` avec une `source` déduite de l'id du formulaire ; le message de succès `.form-success` doit être un **sibling** du form, pas un enfant.
 - Dans `generatePDF.ts`, mesurer le texte avec la même taille de police que le rendu.
 - Le client (Younes) privilégie toujours la solution la plus simple : proposer le minimum d'abord.
 

@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { computeEstimation } from "./estimation";
 import { prixM2Dvf, type DvfResult } from "./dvf";
@@ -480,10 +482,12 @@ export function LeenkeyWizard() {
 
   const firstError = Object.values(errors)[0];
 
+  // The wizard is the main content of /estimer, under the sticky header of
+  // the site (60 px, then the 72 px TopNav, L1-43).
   return (
-    <div className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-20 z-30 border-b border-border bg-background/95 backdrop-blur">
+      <header className="sticky top-15 z-30 border-b border-border bg-background/95 backdrop-blur md:top-18">
         {/* Progress (logo retiré : déjà dans la navbar au-dessus) */}
         <div className="mx-auto max-w-5xl px-5 py-3">
           <div className="mb-2 flex items-center justify-between text-xs font-medium text-sub">
@@ -536,7 +540,7 @@ export function LeenkeyWizard() {
       )}
 
       {/* Step content */}
-      <main className={cn("mx-auto px-5 pb-32 pt-10", current?.large ? "max-w-6xl" : "max-w-3xl")}>
+      <div className={cn("mx-auto px-5 pb-32 pt-10", current?.large ? "max-w-6xl" : "max-w-3xl")}>
         <StepPositionContext.Provider value={stepPosition}>
           <div key={step} className="step-enter">
             {StepNode}
@@ -547,10 +551,13 @@ export function LeenkeyWizard() {
             {firstError}
           </p>
         )}
-      </main>
+      </div>
 
-      {/* Footer nav */}
-      <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur">
+      {/* Footer nav: data-wizard-bar keeps the site footer above it (/estimer) */}
+      <footer
+        data-wizard-bar
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur"
+      >
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-5 py-4">
           <button
             type="button"
@@ -586,6 +593,6 @@ export function LeenkeyWizard() {
           </button>
         </div>
       </footer>
-    </div>
+    </main>
   );
 }

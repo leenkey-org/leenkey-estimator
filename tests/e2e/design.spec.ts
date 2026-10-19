@@ -15,15 +15,6 @@ test("/design n'existe pas en production", async ({ page }) => {
   expect(response?.status()).toBe(404);
 });
 
-test("les pages V1 ne chargent pas la police Archivo", async ({ page }) => {
-  // goto waits for "load": every stylesheet, hence every @font-face, is in.
-  // The home page, /concept, /tarifs and /faq are in V2 (L1-41, L1-42);
-  // /investir stays in V1 until L1-43.
-  await page.goto("/investir");
-  const families = await page.evaluate(() => [...document.fonts].map((face) => face.family));
-  expect(families.some((family) => /archivo/i.test(family))).toBe(false);
-});
-
 test.describe("catalogue /design", () => {
   test.skip(isProduction, "page absente en production (404), vérifiée par le premier test");
 

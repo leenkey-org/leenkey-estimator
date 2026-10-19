@@ -8,15 +8,12 @@ import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import { CtaPanel } from "./cta-panel";
 import { RichText } from "./rich-text";
+import { card, cardText, cardTitle, statement } from "./site-styles";
 
 // Sections of /concept (L1-42), in the order of the V1 page, rebuilt with the
 // Façade components (DECISIONS 2026-10-19). Texts: fr.site.concept.
 
 const t = fr.site.concept;
-const card = "rounded-lk-md border border-lk-line bg-lk-surface p-5 lg:p-6";
-const cardTitle = "text-lk-h3 font-semibold text-lk-ink lg:text-lk-h3-lg";
-const cardText = "text-lk-body text-pretty text-lk-ink-2";
-const statement = "text-lk-h2 font-bold text-wide text-balance text-lk-ink lg:text-lk-h2-lg";
 
 /** « Combien vaut vraiment votre bien ? » */
 export function ConceptHero() {
