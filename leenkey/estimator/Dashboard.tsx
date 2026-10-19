@@ -4,7 +4,13 @@ import { cn } from "@/lib/utils";
 import { computeEstimation, formatEUR, type EstimationResult } from "./estimation";
 import type { LeenkeyForm } from "./types";
 import { prixM2Dvf, type DvfResult } from "./dvf";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { AlertTriangle, Check, CheckCircle2, ChevronLeft, Circle, Loader2, X } from "lucide-react";
+import { buttonVariants } from "@/components/shared/button";
+import { facadeScope } from "@/components/shared/facade-root";
+import { IconButton } from "@/components/shared/icon-button";
+import { InlineAlert } from "@/components/shared/inline-alert";
 import { generateReportPDFBase64 } from "./generatePDF";
 
 /** Mêmes libellés que l'étape Coordonnées, pour que le vendeur retrouve
@@ -49,11 +55,14 @@ const typeLabel: Record<string, string> = {
 };
 
 const fiabiliteLabel = {
-  elevee: { txt: "Fiabilité élevée", cls: "bg-success/15 text-success border-success/30" },
-  moyenne: { txt: "Fiabilité moyenne", cls: "bg-amber-100 text-amber-700 border-amber-200" },
+  elevee: { txt: "Fiabilité élevée", cls: "bg-lk-success-bg text-lk-success border-lk-success-bg" },
+  moyenne: {
+    txt: "Fiabilité moyenne",
+    cls: "bg-lk-warning-bg text-lk-warning-fg border-lk-warning-bg",
+  },
   faible: {
     txt: "Fiabilité faible",
-    cls: "bg-destructive/10 text-destructive border-destructive/30",
+    cls: "bg-lk-danger-bg text-lk-danger border-lk-danger-bg",
   },
 };
 
@@ -100,6 +109,8 @@ export function EstimationDashboard({
 
   // État pour le modal "Être rappelé"
   const [contactOpen, setContactOpen] = useState(false);
+  // The fields of the dialog, named by their labels.
+  const contactIds = { dispo: useId(), message: useId() };
   const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [contactMsg, setContactMsg] = useState("");
   const [contactDispo, setContactDispo] = useState(
@@ -246,21 +257,16 @@ export function EstimationDashboard({
   };
   const fiab = fiabiliteLabel[r.fiabilite];
 
-  // The main content of /estimer once the analysis is done (L1-43).
+  // The main content of /estimer once the analysis is done (L1-43), in
+  // Façade (L1-44): white cards on the background of the site, under its
+  // header (the logo of the V1 is no longer repeated here).
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-lk-bg">
       {/* Header */}
-      <header className="border-b border-border bg-background/85 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
-          <img
-            src="/leenkey-logo.svg"
-            alt="Leenkey"
-            width={112}
-            height={56}
-            className="h-12 w-auto"
-          />
-          <div className="text-sm text-sub">
-            Réf. dossier · <span className="font-semibold text-navy">{ref_}</span>
+      <header className="border-b border-lk-line bg-lk-surface">
+        <div className="mx-auto flex max-w-6xl justify-end px-5 py-3">
+          <div className="text-lk-compact text-lk-ink-2">
+            Réf. dossier · <span className="font-semibold text-lk-ink">{ref_}</span>
           </div>
         </div>
       </header>
@@ -269,13 +275,13 @@ export function EstimationDashboard({
         {/* Demande de rappel : la case cochée à l'étape coordonnées ne
             produisait aucun retour visible. */}
         {form.contact_conseiller && (
-          <div className="mb-8 flex items-start gap-3 rounded-[14px] border-2 border-success/40 bg-success/10 p-5">
-            <span className="text-xl">📞</span>
+          <div className="mb-8 flex items-start gap-3 rounded-lk-md bg-lk-success-bg p-5">
+            <CheckCircle2 aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-lk-success" />
             <div>
-              <div className="font-display text-base font-bold text-navy">
+              <div className="text-wide text-lk-body font-bold text-lk-ink">
                 Votre demande de rappel est enregistrée
               </div>
-              <p className="mt-1 text-sm text-sub">
+              <p className="mt-1 text-lk-compact text-lk-ink-2">
                 Un conseiller Leenkey vous appelle sous 24&nbsp;h
                 {form.telephone ? ` au ${form.telephone}` : ""}
                 {form.disponibilites.length
@@ -289,31 +295,30 @@ export function EstimationDashboard({
 
         {/* Intro */}
         <div className="fade-up mb-8">
-          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-            Ma valeur immobilière
-          </p>
-          <h1 className="mt-2 font-display text-3xl font-bold text-navy sm:text-4xl">
-            Bonjour {form.prenom || ""}, voici la valeur estimée de votre bien
+          {/* No label over the title (DESIGN.md 13.2, L1-44). */}
+          <h1 className="text-wide text-lk-h1 font-bold text-lk-ink sm:text-lk-h1-lg">
+            {/* Without a first name, « Bonjour, voici… », not « Bonjour , voici… ». */}
+            Bonjour{form.prenom ? ` ${form.prenom}` : ""}, voici la valeur estimée de votre bien
           </h1>
-          <p className="mt-2 text-sub">
+          <p className="mt-2 text-lk-ink-2">
             {typeLabel[form.type ?? "maison"]} · {r.surface} m² · {form.ville || "—"}
           </p>
         </div>
 
         {/* Hero card */}
         <section
-          className="fade-up relative overflow-hidden rounded-[20px] border-2 border-sky-mid bg-gradient-to-br from-sky to-card p-8 shadow-[0_20px_50px_-20px_rgba(17,86,252,0.25)]"
+          className="fade-up relative overflow-hidden rounded-lk-md border border-lk-line bg-lk-surface p-5 md:p-8"
           style={{ animationDelay: "0.05s" }}
         >
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-start">
             <div className="flex-1">
-              <div className="text-sm font-semibold text-sub">Prix estimé</div>
-              <div className="mt-2 font-display text-5xl font-bold tracking-tight text-navy sm:text-6xl">
+              <div className="text-lk-compact font-semibold text-lk-ink-2">Prix estimé</div>
+              <div className="mt-2 text-wide text-lk-display font-bold text-lk-ink sm:text-lk-display-lg">
                 {formatEUR(r.prixEstime)}
               </div>
-              <div className="mt-2 text-sub text-sm">
+              <div className="mt-2 text-lk-ink-2 text-lk-compact">
                 Précision{" "}
-                <span className="font-semibold text-navy">
+                <span className="font-semibold text-lk-ink">
                   ±{Math.round(((r.prixHaut - r.prixEstime) / r.prixEstime) * 100)}%
                 </span>{" "}
                 · {precisionLabel[r.fiabilite]}
@@ -321,19 +326,19 @@ export function EstimationDashboard({
 
               {/* Barre de fourchette visuelle */}
               <div className="mt-6 max-w-md">
-                <div className="relative h-2 rounded-full bg-sky-mid">
+                <div className="relative h-2 rounded-full bg-lk-blue-line">
                   <div
-                    className="absolute top-1/2 h-2 -translate-y-1/2 rounded-full bg-gradient-to-r from-primary/40 via-primary to-primary/40"
+                    className="absolute top-1/2 h-2 -translate-y-1/2 rounded-full bg-lk-blue"
                     style={{ left: "10%", right: "10%" }}
                   />
                   <div
-                    className="absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-4 border-white bg-primary shadow-lg"
+                    className="absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-2 border-white bg-lk-blue"
                     style={{ left: "calc(50% - 10px)" }}
                   />
                 </div>
-                <div className="mt-2 flex justify-between text-xs font-semibold text-sub">
+                <div className="mt-2 flex justify-between text-lk-caption font-semibold text-lk-ink-2">
                   <span>{formatEUR(r.prixBas)}</span>
-                  <span className="text-primary">{formatEUR(r.prixEstime)}</span>
+                  <span className="text-lk-blue">{formatEUR(r.prixEstime)}</span>
                   <span>{formatEUR(r.prixHaut)}</span>
                 </div>
               </div>
@@ -341,36 +346,37 @@ export function EstimationDashboard({
             <div className="flex flex-col items-start gap-3 md:items-end">
               <span
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-full border-2 px-4 py-1.5 text-xs font-semibold",
+                  "inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-lk-caption font-semibold",
                   fiab.cls,
                 )}
               >
-                ● {fiab.txt} · {r.fiabiliteScore}%
+                <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
+                {fiab.txt} · {r.fiabiliteScore}%
               </span>
-              <div className="text-right">
-                <div className="text-sm text-sub">Prix au m²</div>
-                <div className="font-display text-2xl font-bold text-navy">
+              <div className="md:text-right">
+                <div className="text-lk-compact text-lk-ink-2">Prix au m²</div>
+                <div className="text-wide text-lk-h2-lg font-bold text-lk-ink">
                   {r.prixM2.toLocaleString("fr-FR")} €/m²
                 </div>
-                <div className="mt-1 text-xs text-sub">
+                <div className="mt-1 text-lk-caption text-lk-ink-2">
                   Marché : {r.prixM2Marche.toLocaleString("fr-FR")} €/m²
                 </div>
               </div>
               {/* Mini-jauge fiabilité */}
               <div className="w-full max-w-[160px] md:max-w-[200px]">
-                <div className="mb-1 flex justify-between text-xs text-sub">
+                <div className="mb-1 flex justify-between text-lk-caption text-lk-ink-2">
                   <span>Fiabilité</span>
-                  <span className="font-semibold text-navy">{r.fiabiliteScore}%</span>
+                  <span className="font-semibold text-lk-ink">{r.fiabiliteScore}%</span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-sky-mid">
+                <div className="h-1.5 overflow-hidden rounded-full bg-lk-blue-line">
                   <div
                     className={cn(
                       "h-full rounded-full transition-all duration-700",
                       r.fiabilite === "elevee"
-                        ? "bg-success"
+                        ? "bg-lk-success"
                         : r.fiabilite === "moyenne"
-                          ? "bg-amber-500"
-                          : "bg-destructive",
+                          ? "bg-lk-warning"
+                          : "bg-lk-danger",
                     )}
                     style={{ width: `${r.fiabiliteScore}%` }}
                   />
@@ -390,26 +396,18 @@ export function EstimationDashboard({
             value={`${r.deltaMarche >= 0 ? "+" : ""}${r.deltaMarche}%`}
             tone={r.deltaMarche >= 0 ? "pos" : "neg"}
             sub={`Moy. ${r.prixM2Marche.toLocaleString("fr-FR")} €/m²`}
-            icon={r.deltaMarche >= 0 ? "📈" : "📉"}
           />
-          <Kpi
-            label="Délai de vente attendu"
-            value={r.delaiVente}
-            sub="À prix de marché"
-            icon="⏱️"
-          />
+          <Kpi label="Délai de vente attendu" value={r.delaiVente} sub="À prix de marché" />
           <Kpi
             label="Score d'attractivité"
             value={`${r.scoreAttractivite}/100`}
             tone={r.scoreAttractivite >= 70 ? "pos" : r.scoreAttractivite >= 50 ? "neutral" : "neg"}
             sub="DPE · état · prestations"
-            icon="⭐"
           />
           <Kpi
             label="Tension du marché"
             value={tensionLabel[r.tensionMarche]}
             sub={`Département ${(form.departement || form.code_postal || "").slice(0, 2) || "—"}`}
-            icon={r.tensionMarche === "forte" ? "🔥" : r.tensionMarche === "moderee" ? "📊" : "💧"}
           />
         </section>
 
@@ -417,8 +415,8 @@ export function EstimationDashboard({
         <section className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-5">
           {/* Récap */}
           <Card className="fade-up lg:col-span-2" delay="0.15s">
-            <h2 className="mb-4 font-display text-lg font-bold text-navy">Votre bien</h2>
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+            <h2 className="mb-4 text-wide text-lk-h3 font-bold text-lk-ink">Votre bien</h2>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-lk-compact">
               <Row k="Type" v={typeLabel[form.type ?? ""] ?? "—"} />
               <Row k="Surface" v={`${r.surface} m²`} />
               <Row k="Pièces" v={form.pieces ?? "—"} />
@@ -431,15 +429,13 @@ export function EstimationDashboard({
               <Row k="État" v={form.etat ?? "—"} />
             </dl>
             {(form.exterieur.length > 0 || form.prestations.length > 0) && (
-              <div className="mt-5 border-t border-border pt-4">
-                <div className="text-xs font-semibold uppercase tracking-wider text-sub">
-                  Atouts
-                </div>
+              <div className="mt-5 border-t border-lk-line pt-4">
+                <div className="text-lk-caption font-semibold text-lk-ink-2">Atouts</div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {[...form.exterieur, ...form.prestations].map((p) => (
                     <span
                       key={p}
-                      className="rounded-full border border-sky-mid bg-sky px-3 py-1 text-xs font-medium text-primary"
+                      className="rounded-lk-sm border border-lk-blue-line bg-lk-blue-tint px-2.5 py-1 text-lk-caption font-medium text-lk-blue"
                     >
                       {p.replace(/_/g, " ")}
                     </span>
@@ -452,111 +448,107 @@ export function EstimationDashboard({
           {/* Analyse IA Claude */}
           {aiAnalyse && (
             <Card className="fade-up lg:col-span-3" delay="0.18s">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-sm">
-                  ✦
-                </span>
-                <h2 className="font-display text-lg font-bold text-navy">Analyse du marché</h2>
-                <span className="ml-auto rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <h2 className="text-wide text-lk-h3 font-bold text-lk-ink">Analyse du marché</h2>
+                <span className="ml-auto rounded-lk-sm bg-lk-blue-tint px-2 py-0.5 text-lk-caption font-semibold text-lk-blue">
                   Alimenté par IA
                 </span>
               </div>
-              <p className="text-sm leading-relaxed text-sub">{aiAnalyse}</p>
+              <p className="text-lk-compact leading-relaxed text-lk-ink-2">{aiAnalyse}</p>
             </Card>
           )}
 
           {/* Comparables DVF — données officielles data.gouv.fr */}
           {dvfData?.available && dvfData.comparables.length > 0 && (
             <Card className="fade-up lg:col-span-3" delay="0.19s">
-              <div className="mb-3 flex items-center gap-2 flex-wrap">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-success/10 text-sm">
-                  📊
-                </span>
-                <h2 className="font-display text-lg font-bold text-navy">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <h2 className="text-wide text-lk-h3 font-bold text-lk-ink">
                   Ventes réelles dans votre secteur
                 </h2>
-                <span className="ml-auto rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success">
+                <span className="ml-auto rounded-lk-sm bg-lk-success-bg px-2 py-0.5 text-lk-caption font-semibold text-lk-success">
                   Données DVF · data.gouv.fr
                 </span>
               </div>
 
-              <div className="mb-4 rounded-[10px] border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-                <strong>⚠️ Données historiques</strong> · Les ventes ci-dessous proviennent de la
-                base DVF officielle (DGFiP). Elles sont publiées avec un délai d'environ 6 mois. Le
+              <InlineAlert tone="warning" live={false} className="mb-4">
+                <strong>Données historiques</strong> · Les ventes ci-dessous proviennent de la base
+                DVF officielle (DGFiP). Elles sont publiées avec un délai d'environ 6 mois. Le
                 marché peut avoir évolué depuis. Notre analyse tient compte de cette ancienneté.
-              </div>
+              </InlineAlert>
 
               {/* Stats résumées */}
               <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="rounded-[12px] bg-sky/40 p-3">
-                  <div className="text-xs font-semibold uppercase text-sub">
+                <div className="rounded-lk-sm bg-lk-stone-2 p-3">
+                  <div className="text-lk-caption font-semibold text-lk-ink-2">
                     Comparables trouvés
                   </div>
-                  <div className="mt-1 font-display text-xl font-bold text-navy">
+                  <div className="mt-1 text-wide text-lk-h2 font-bold text-lk-ink">
                     {dvfData.nbComparables}
                   </div>
                 </div>
-                <div className="rounded-[12px] bg-sky/40 p-3">
-                  <div className="text-xs font-semibold uppercase text-sub">Prix médian /m²</div>
-                  <div className="mt-1 font-display text-xl font-bold text-navy">
+                <div className="rounded-lk-sm bg-lk-stone-2 p-3">
+                  <div className="text-lk-caption font-semibold text-lk-ink-2">Prix médian /m²</div>
+                  <div className="mt-1 text-wide text-lk-h2 font-bold text-lk-ink">
                     {dvfData.stats.prixM2Median.toLocaleString("fr-FR")} €
                   </div>
                 </div>
-                <div className="rounded-[12px] bg-sky/40 p-3">
-                  <div className="text-xs font-semibold uppercase text-sub">Min /m²</div>
-                  <div className="mt-1 font-display text-xl font-bold text-navy">
+                <div className="rounded-lk-sm bg-lk-stone-2 p-3">
+                  <div className="text-lk-caption font-semibold text-lk-ink-2">Min /m²</div>
+                  <div className="mt-1 text-wide text-lk-h2 font-bold text-lk-ink">
                     {dvfData.stats.prixM2Min.toLocaleString("fr-FR")} €
                   </div>
                 </div>
-                <div className="rounded-[12px] bg-sky/40 p-3">
-                  <div className="text-xs font-semibold uppercase text-sub">Max /m²</div>
-                  <div className="mt-1 font-display text-xl font-bold text-navy">
+                <div className="rounded-lk-sm bg-lk-stone-2 p-3">
+                  <div className="text-lk-caption font-semibold text-lk-ink-2">Max /m²</div>
+                  <div className="mt-1 text-wide text-lk-h2 font-bold text-lk-ink">
                     {dvfData.stats.prixM2Max.toLocaleString("fr-FR")} €
                   </div>
                 </div>
               </div>
 
               {/* Liste des ventes comparables */}
-              <h3 className="mb-3 text-sm font-semibold text-navy">
+              <h3 className="mb-3 text-lk-compact font-semibold text-lk-ink">
                 Dernières ventes comparables ({dvfData.comparables.length})
               </h3>
               <div className="space-y-2">
                 {dvfData.comparables.map((c, i) => (
                   <div
                     key={i}
-                    className="grid grid-cols-2 gap-2 rounded-[10px] border border-border bg-card p-3 text-sm sm:grid-cols-4"
+                    className="grid grid-cols-2 gap-2 rounded-lk-sm border border-lk-line bg-lk-surface p-3 text-lk-compact sm:grid-cols-4"
                   >
                     <div>
-                      <div className="text-xs text-sub">Vente</div>
-                      <div className="font-semibold text-navy">{dateFr(c.date)}</div>
-                      <div className="text-xs text-sub">{monthLabel(c.monthsAgo)}</div>
+                      <div className="text-lk-caption text-lk-ink-2">Vente</div>
+                      <div className="font-semibold text-lk-ink">{dateFr(c.date)}</div>
+                      <div className="text-lk-caption text-lk-ink-2">{monthLabel(c.monthsAgo)}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-sub">Bien</div>
-                      <div className="font-semibold text-navy">{c.type}</div>
-                      <div className="text-xs text-sub">
+                      <div className="text-lk-caption text-lk-ink-2">Bien</div>
+                      <div className="font-semibold text-lk-ink">{c.type}</div>
+                      <div className="text-lk-caption text-lk-ink-2">
                         {c.surface} m² {c.pieces > 0 ? `· ${c.pieces} p.` : ""}
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-sub">Prix</div>
-                      <div className="font-semibold text-navy">{formatEUR(c.prix)}</div>
-                      <div className="text-xs text-sub">
+                      <div className="text-lk-caption text-lk-ink-2">Prix</div>
+                      <div className="font-semibold text-lk-ink">{formatEUR(c.prix)}</div>
+                      <div className="text-lk-caption text-lk-ink-2">
                         {c.prixM2.toLocaleString("fr-FR")} €/m²
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-sub">Localisation</div>
-                      <div className="font-semibold text-navy line-clamp-1">{c.ville}</div>
+                      <div className="text-lk-caption text-lk-ink-2">Localisation</div>
+                      <div className="font-semibold text-lk-ink line-clamp-1">{c.ville}</div>
                       {c.adresse && (
-                        <div className="text-xs text-sub line-clamp-1">{c.adresse}</div>
+                        <div className="text-lk-caption text-lk-ink-2 line-clamp-1">
+                          {c.adresse}
+                        </div>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
 
-              <p className="mt-3 text-xs italic text-sub">
+              <p className="mt-3 text-lk-caption italic text-lk-ink-2">
                 Source : base de données publique DVF (Demandes de Valeurs Foncières) · data.gouv.fr
               </p>
             </Card>
@@ -564,10 +556,10 @@ export function EstimationDashboard({
 
           {/* Facteurs */}
           <Card className="fade-up lg:col-span-3" delay="0.2s">
-            <h2 className="mb-1 font-display text-lg font-bold text-navy">
+            <h2 className="mb-1 text-wide text-lk-h3 font-bold text-lk-ink">
               Facteurs de valorisation
             </h2>
-            <p className="mb-5 text-sm text-sub">
+            <p className="mb-5 text-lk-compact text-lk-ink-2">
               Impact estimé de chaque critère par rapport au prix de marché.
             </p>
             <div className="space-y-4">
@@ -580,22 +572,16 @@ export function EstimationDashboard({
 
         {/* Recommandations */}
         <section className="fade-up mt-6" style={{ animationDelay: "0.25s" }}>
-          <h2 className="mb-4 font-display text-lg font-bold text-navy">
+          <h2 className="mb-4 text-wide text-lk-h3 font-bold text-lk-ink">
             Comment valoriser votre bien
           </h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {r.recommandations.map((rec, i) => (
-              <div
-                key={i}
-                className="rounded-[16px] border-2 border-border bg-card p-5 transition hover:border-primary/40"
-              >
-                <div className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  💡
-                </div>
-                <h3 className="font-display text-base font-semibold text-navy">{rec.title}</h3>
-                <p className="mt-1.5 text-sm text-sub">{rec.description}</p>
+              <div key={i} className="rounded-lk-md border border-lk-line bg-lk-surface p-5">
+                <h3 className="text-lk-body font-semibold text-lk-ink">{rec.title}</h3>
+                <p className="mt-1.5 text-lk-compact text-lk-ink-2">{rec.description}</p>
                 {rec.uplift && (
-                  <div className="mt-3 inline-flex rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success">
+                  <div className="mt-3 inline-flex rounded-lk-sm bg-lk-success-bg px-2 py-0.5 text-lk-caption font-semibold text-lk-success">
                     Potentiel {rec.uplift}
                   </div>
                 )}
@@ -613,14 +599,17 @@ export function EstimationDashboard({
           <Card className="lg:col-span-2">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="mb-2 font-display text-lg font-bold text-navy">
+                <h2 className="mb-2 text-wide text-lk-h3 font-bold text-lk-ink">
                   {fr.estimator.listing.title}
                 </h2>
-                <p className="text-sm text-sub">{fr.estimator.listing.text}</p>
+                <p className="text-lk-compact text-lk-ink-2">{fr.estimator.listing.text}</p>
               </div>
               <Link
                 href={listingHref}
-                className="block shrink-0 rounded-[12px] bg-primary px-8 py-3.5 text-center font-display text-sm font-semibold text-primary-foreground shadow-[0_10px_24px_-8px_rgba(17,86,252,0.5)] transition hover:translate-y-[-1px]"
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  "inline-flex shrink-0 items-center justify-center",
+                )}
               >
                 {fr.estimator.listing.action}
               </Link>
@@ -628,14 +617,13 @@ export function EstimationDashboard({
           </Card>
 
           <Card>
-            <h2 className="mb-4 font-display text-lg font-bold text-navy">Prochaines étapes</h2>
+            <h2 className="mb-4 text-wide text-lk-h3 font-bold text-lk-ink">Prochaines étapes</h2>
             <ol className="space-y-3">
               {[
-                { i: "✅", l: "Rapport généré", done: true },
+                { l: "Rapport généré", done: true },
                 {
                   // Suit l'envoi réel : figé sur « envoyé » non coché, la liste
                   // contredisait le panneau « Rapport envoyé » d'à côté.
-                  i: emailStatus === "sent" ? "✅" : "📧",
                   l:
                     emailStatus === "sent"
                       ? `Rapport détaillé envoyé à ${form.email || "votre email"}`
@@ -643,24 +631,37 @@ export function EstimationDashboard({
                   done: emailStatus === "sent",
                 },
                 {
-                  i: rappelEnvoye || contactStatus === "sent" ? "✅" : "📞",
                   l:
                     rappelEnvoye || contactStatus === "sent"
                       ? "Rappel demandé — un conseiller vous appelle sous 24 h"
                       : "Appel avec un conseiller Leenkey",
                   done: rappelEnvoye || contactStatus === "sent",
                 },
-                { i: "🏷️", l: "Mise en vente sans agence", done: false },
+                { l: "Mise en vente sans agence", done: false },
               ].map((it, i) => (
                 <li
                   key={i}
                   className={cn(
-                    "flex items-start gap-3 rounded-[12px] border-2 p-3",
-                    it.done ? "border-success/30 bg-success/5" : "border-border bg-card",
+                    "flex items-start gap-3 rounded-lk-md border p-3",
+                    it.done
+                      ? "border-lk-success-bg bg-lk-success-bg"
+                      : "border-lk-line bg-lk-surface",
                   )}
                 >
-                  <span className="text-lg">{it.i}</span>
-                  <span className={cn("text-sm font-medium", it.done ? "text-navy" : "text-sub")}>
+                  {it.done ? (
+                    <CheckCircle2
+                      aria-hidden="true"
+                      className="mt-0.5 size-4.5 shrink-0 text-lk-success"
+                    />
+                  ) : (
+                    <Circle aria-hidden="true" className="mt-0.5 size-4.5 shrink-0 text-lk-ink-3" />
+                  )}
+                  <span
+                    className={cn(
+                      "text-lk-compact font-medium",
+                      it.done ? "text-lk-ink" : "text-lk-ink-2",
+                    )}
+                  >
                     {it.l}
                   </span>
                 </li>
@@ -669,8 +670,8 @@ export function EstimationDashboard({
           </Card>
 
           <Card>
-            <h2 className="mb-2 font-display text-lg font-bold text-navy">Aller plus loin</h2>
-            <p className="mb-4 text-sm text-sub">
+            <h2 className="mb-2 text-wide text-lk-h3 font-bold text-lk-ink">Aller plus loin</h2>
+            <p className="mb-4 text-lk-compact text-lk-ink-2">
               Recevez le rapport complet en PDF par email, ou échangez avec un conseiller pour
               affiner votre projet.
             </p>
@@ -679,10 +680,10 @@ export function EstimationDashboard({
                   de le recolorer quelques secondes. Un CTA redevenu bleu laisse
                   croire que l'envoi n'a pas eu lieu. */}
               {emailStatus === "sent" ? (
-                <div className="lk-sent flex items-start gap-3 rounded-[12px] border-2 border-success bg-success/10 p-4">
+                <div className="lk-sent flex items-start gap-3 rounded-lk-md border border-lk-success bg-lk-success-bg p-4">
                   <span className="relative mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center">
-                    <span className="lk-sent-ring absolute inset-0 rounded-full bg-success" />
-                    <span className="lk-sent-badge relative flex h-8 w-8 items-center justify-center rounded-full bg-success">
+                    <span className="lk-sent-ring absolute inset-0 rounded-full bg-lk-success" />
+                    <span className="lk-sent-badge relative flex h-8 w-8 items-center justify-center rounded-full bg-lk-success">
                       <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
                         <path
                           className="lk-sent-check"
@@ -697,20 +698,22 @@ export function EstimationDashboard({
                     </span>
                   </span>
                   <div className="min-w-0">
-                    <p className="font-display text-sm font-bold text-success">Rapport envoyé</p>
-                    <p className="mt-0.5 break-words text-xs text-sub">
+                    <p className="text-wide text-lk-compact font-bold text-lk-success">
+                      Rapport envoyé
+                    </p>
+                    <p className="mt-0.5 break-words text-lk-caption text-lk-ink-2">
                       Votre rapport complet en PDF vient de partir
                       {form.email ? (
                         <>
                           {" "}
-                          à <strong className="text-navy">{form.email}</strong>
+                          à <strong className="text-lk-ink">{form.email}</strong>
                         </>
                       ) : null}
                       . Pensez à vérifier vos spams.
                     </p>
                     <button
                       onClick={sendEmailRecap}
-                      className="mt-2 text-xs font-semibold text-primary underline-offset-2 hover:underline"
+                      className="-ml-2 inline-flex min-h-11 items-center px-2 text-lk-caption font-semibold text-lk-blue underline-offset-2 hover:underline"
                     >
                       Renvoyer
                     </button>
@@ -720,12 +723,11 @@ export function EstimationDashboard({
                 <button
                   onClick={sendEmailRecap}
                   disabled={emailStatus === "sending"}
+                  aria-busy={emailStatus === "sending" || undefined}
                   className={cn(
-                    "rounded-[12px] px-5 py-3.5 font-display text-sm font-semibold transition hover:translate-y-[-1px]",
-                    emailStatus === "error"
-                      ? "border-2 border-destructive bg-destructive/10 text-destructive"
-                      : "bg-primary text-primary-foreground shadow-[0_10px_24px_-8px_rgba(17,86,252,0.5)]",
-                    emailStatus === "sending" && "cursor-wait opacity-60",
+                    buttonVariants({ variant: emailStatus === "error" ? "danger" : "secondary" }),
+                    // Its label takes two lines on a phone.
+                    "inline-flex h-auto min-h-11 items-center justify-center py-2.5 leading-tight text-balance",
                   )}
                 >
                   {emailStatus === "sending" && (
@@ -751,160 +753,230 @@ export function EstimationDashboard({
                       Préparation de votre rapport…
                     </span>
                   )}
-                  {emailStatus === "error" && "❌ Envoi impossible — réessayer"}
-                  {emailStatus === "idle" && "📧 Recevoir mon rapport complet par email"}
+                  {emailStatus === "error" && "Envoi impossible — réessayer"}
+                  {emailStatus === "idle" && "Recevoir mon rapport complet par email"}
                 </button>
               )}
 
-              <button
-                onClick={() => setContactOpen(true)}
-                className="rounded-[12px] border-2 border-border bg-card px-5 py-3 font-display text-sm font-semibold text-navy transition hover:border-primary/60 hover:translate-y-[-1px]"
+              {/* Demande de rappel par un conseiller : the dialog of DESIGN.md 10.8
+                  (full screen on a phone, 520 px in the centre from 768 px), closed
+                  by Échap, its cross or « Annuler », never while the request is
+                  sent; the focus comes back to « Prendre contact ». */}
+              <DialogPrimitive.Root
+                open={contactOpen}
+                onOpenChange={(next) => {
+                  if (next || contactStatus !== "sending") setContactOpen(next);
+                }}
               >
-                📞 Prendre contact avec un conseiller
-              </button>
+                <DialogPrimitive.Trigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      buttonVariants({ variant: "secondary" }),
+                      "inline-flex h-auto min-h-11 items-center justify-center py-2.5 leading-tight text-balance",
+                    )}
+                  >
+                    Prendre contact avec un conseiller
+                  </button>
+                </DialogPrimitive.Trigger>
+                <DialogPrimitive.Portal>
+                  <DialogPrimitive.Overlay
+                    className={cn(
+                      "fixed inset-0 z-60 bg-lk-ink/40 duration-220",
+                      "data-[state=open]:animate-in data-[state=open]:fade-in-0",
+                    )}
+                  />
+                  <DialogPrimitive.Content
+                    className={cn(
+                      facadeScope,
+                      "fixed inset-0 z-60 flex flex-col overflow-y-auto bg-lk-surface outline-none",
+                      "md:top-1/2 md:right-auto md:bottom-auto md:left-1/2 md:max-h-[85vh] md:w-130 md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-lk-md md:shadow-float",
+                      "duration-220 ease-out-lk data-[state=open]:animate-in data-[state=open]:fade-in-0 motion-reduce:animate-none",
+                    )}
+                  >
+                    {contactStatus === "sent" ? (
+                      <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 text-center">
+                        <div
+                          aria-hidden="true"
+                          className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-lk-success-bg text-lk-success"
+                        >
+                          <Check className="size-8" />
+                        </div>
+                        <DialogPrimitive.Title className="mb-2 text-wide text-lk-h2 font-bold text-lk-ink">
+                          Demande envoyée !
+                        </DialogPrimitive.Title>
+                        <DialogPrimitive.Description className="text-lk-compact text-lk-ink-2">
+                          Un conseiller Leenkey vous contactera dans les plus brefs délais.
+                        </DialogPrimitive.Description>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-lk-line px-5 pt-5 pb-3.5 md:flex md:items-start md:border-0 md:px-6 md:pt-6 md:pb-0">
+                          <DialogPrimitive.Close asChild>
+                            <IconButton
+                              icon={ChevronLeft}
+                              variant="stone"
+                              aria-label={fr.estimator.contactDialog.back}
+                              disabled={contactStatus === "sending"}
+                              className="md:hidden"
+                            />
+                          </DialogPrimitive.Close>
+                          <DialogPrimitive.Title className="min-w-0 flex-1 text-center text-lk-title font-semibold text-balance text-lk-ink md:text-left md:text-lk-h2 md:font-bold md:text-wide">
+                            Prendre contact avec un conseiller
+                          </DialogPrimitive.Title>
+                          <DialogPrimitive.Close asChild>
+                            <IconButton
+                              icon={X}
+                              aria-label={fr.estimator.contactDialog.close}
+                              variant="transparent"
+                              size="sm"
+                              disabled={contactStatus === "sending"}
+                              className="hidden md:inline-flex"
+                            />
+                          </DialogPrimitive.Close>
+                          <span aria-hidden="true" className="size-11 md:hidden" />
+                        </div>
+
+                        <div className="flex flex-col gap-4 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:px-6 md:pb-6">
+                          <DialogPrimitive.Description className="text-lk-secondary text-pretty text-lk-ink-2">
+                            {form.contact_conseiller
+                              ? "Vous avez demandé à être rappelé. Confirmez et un conseiller vous contactera sous 24 h."
+                              : "Un conseiller Leenkey vous contactera sous 24 h."}
+                          </DialogPrimitive.Description>
+
+                          <div className="rounded-lk-sm bg-lk-blue-tint p-4 text-lk-compact">
+                            <div className="font-semibold text-lk-ink">
+                              {form.prenom} {form.nom}
+                            </div>
+                            <div className="text-lk-ink-2">
+                              {form.email} · {form.telephone}
+                            </div>
+                            <div className="mt-1 text-lk-caption text-lk-ink-2">
+                              Réf. dossier : <span className="tabular">{ref_}</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={contactIds.dispo}
+                              className="mb-2 block text-lk-label font-medium text-lk-ink"
+                            >
+                              Quand préférez-vous être contacté&nbsp;?
+                            </label>
+                            <select
+                              id={contactIds.dispo}
+                              value={contactDispo}
+                              onChange={(e) => setContactDispo(e.target.value)}
+                              className="h-12 w-full rounded-lk-sm border-[1.5px] border-lk-field bg-lk-surface px-3.5 text-lk-body text-lk-ink focus:border-lk-blue focus:outline-none focus:ring-3 focus:ring-lk-blue-line"
+                            >
+                              <option>Dès que possible</option>
+                              {Object.values(DISPO_LABELS).map((l) => (
+                                <option key={l}>{l}</option>
+                              ))}
+                              {contactDispo !== "Dès que possible" &&
+                                !Object.values(DISPO_LABELS).includes(contactDispo) && (
+                                  <option>{contactDispo}</option>
+                                )}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={contactIds.message}
+                              className="mb-2 block text-lk-label font-medium text-lk-ink"
+                            >
+                              Votre message{" "}
+                              <span className="font-normal text-lk-ink-2 text-lk-caption">
+                                (optionnel)
+                              </span>
+                            </label>
+                            <textarea
+                              id={contactIds.message}
+                              value={contactMsg}
+                              onChange={(e) => setContactMsg(e.target.value)}
+                              rows={4}
+                              placeholder="Décrivez votre projet, vos questions, vos attentes…"
+                              className="w-full resize-none rounded-lk-sm border-[1.5px] border-lk-field bg-lk-surface px-3.5 py-3 text-lk-body text-lk-ink focus:border-lk-blue focus:outline-none focus:ring-3 focus:ring-lk-blue-line"
+                            />
+                          </div>
+
+                          {/* In the dialog from its opening, so that the error is read. */}
+                          <div
+                            aria-live="polite"
+                            className={cn(contactStatus !== "error" && "sr-only")}
+                          >
+                            {contactStatus === "error" ? (
+                              <InlineAlert tone="danger" live={false}>
+                                Erreur d'envoi, réessayez ou contactez-nous directement à
+                                contact.leenkey@gmail.com
+                              </InlineAlert>
+                            ) : null}
+                          </div>
+
+                          <div className="flex flex-col-reverse gap-2.5 pt-2 md:flex-row md:justify-end">
+                            <DialogPrimitive.Close asChild>
+                              <button
+                                type="button"
+                                disabled={contactStatus === "sending"}
+                                className={cn(
+                                  buttonVariants({ variant: "outline-ink" }),
+                                  "inline-flex items-center justify-center",
+                                )}
+                              >
+                                Annuler
+                              </button>
+                            </DialogPrimitive.Close>
+                            <button
+                              type="button"
+                              onClick={() => void sendContactRequest()}
+                              disabled={contactStatus === "sending"}
+                              aria-busy={contactStatus === "sending" || undefined}
+                              className={cn(
+                                buttonVariants(),
+                                "inline-flex items-center justify-center gap-2",
+                              )}
+                            >
+                              {contactStatus === "sending" ? (
+                                <>
+                                  <Loader2
+                                    aria-hidden="true"
+                                    className="size-4 motion-safe:animate-spin"
+                                  />
+                                  Envoi…
+                                </>
+                              ) : (
+                                "Envoyer ma demande"
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </DialogPrimitive.Content>
+                </DialogPrimitive.Portal>
+              </DialogPrimitive.Root>
               <button
                 onClick={onRestart}
-                className="rounded-[12px] px-5 py-3 font-display text-sm font-semibold text-sub transition hover:text-navy"
+                className={cn(
+                  buttonVariants({ variant: "ghost", muted: true }),
+                  "inline-flex items-center justify-center",
+                )}
               >
-                ↻ Refaire une analyse
+                Refaire une analyse
               </button>
             </div>
           </Card>
         </section>
 
-        {/* Modal : Demande de rappel par un conseiller */}
-        {contactOpen && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-            onClick={() => contactStatus !== "sending" && setContactOpen(false)}
-          >
-            <div
-              className="w-full max-w-lg rounded-[16px] bg-card p-6 shadow-2xl sm:p-8"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {contactStatus === "sent" ? (
-                <div className="text-center py-8">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/15 text-3xl">
-                    ✓
-                  </div>
-                  <h3 className="mb-2 font-display text-xl font-bold text-navy">
-                    Demande envoyée !
-                  </h3>
-                  <p className="text-sm text-sub">
-                    Un conseiller Leenkey vous contactera dans les plus brefs délais.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="mb-5 flex items-start justify-between">
-                    <div>
-                      <h3 className="font-display text-xl font-bold text-navy">
-                        📞 Prendre contact avec un conseiller
-                      </h3>
-                      <p className="mt-1 text-sm text-sub">
-                        {form.contact_conseiller
-                          ? "Vous avez demandé à être rappelé. Confirmez et un conseiller vous contactera sous 24 h."
-                          : "Un conseiller Leenkey vous contactera sous 24 h."}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setContactOpen(false)}
-                      className="text-sub hover:text-navy text-2xl leading-none"
-                      aria-label="Fermer"
-                    >
-                      ×
-                    </button>
-                  </div>
-
-                  <div className="mb-5 rounded-[10px] bg-sky/30 p-4 text-sm">
-                    <div className="font-semibold text-navy">
-                      {form.prenom} {form.nom}
-                    </div>
-                    <div className="text-sub">
-                      {form.email} · {form.telephone}
-                    </div>
-                    <div className="mt-1 text-xs text-sub">
-                      Réf. dossier : <span className="font-mono">{ref_}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="mb-2 block font-display text-sm font-semibold text-navy">
-                        Quand préférez-vous être contacté&nbsp;?
-                      </label>
-                      <select
-                        value={contactDispo}
-                        onChange={(e) => setContactDispo(e.target.value)}
-                        className="h-[44px] w-full rounded-[10px] border-2 border-border bg-card px-3 text-sm text-navy focus:border-primary focus:outline-none"
-                      >
-                        <option>Dès que possible</option>
-                        {Object.values(DISPO_LABELS).map((l) => (
-                          <option key={l}>{l}</option>
-                        ))}
-                        {contactDispo !== "Dès que possible" &&
-                          !Object.values(DISPO_LABELS).includes(contactDispo) && (
-                            <option>{contactDispo}</option>
-                          )}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block font-display text-sm font-semibold text-navy">
-                        Votre message{" "}
-                        <span className="font-normal text-sub text-xs">(optionnel)</span>
-                      </label>
-                      <textarea
-                        value={contactMsg}
-                        onChange={(e) => setContactMsg(e.target.value)}
-                        rows={4}
-                        placeholder="Décrivez votre projet, vos questions, vos attentes…"
-                        className="w-full rounded-[10px] border-2 border-border bg-card p-3 text-sm text-navy focus:border-primary focus:outline-none resize-none"
-                      />
-                    </div>
-
-                    {contactStatus === "error" && (
-                      <div className="rounded-[8px] bg-destructive/10 p-3 text-sm text-destructive">
-                        Erreur d'envoi, réessayez ou contactez-nous directement à
-                        contact.leenkey@gmail.com
-                      </div>
-                    )}
-
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        onClick={() => setContactOpen(false)}
-                        disabled={contactStatus === "sending"}
-                        className="flex-1 rounded-[10px] border-2 border-border bg-card px-4 py-3 font-display text-sm font-semibold text-navy hover:border-sub"
-                      >
-                        Annuler
-                      </button>
-                      <button
-                        onClick={() => void sendContactRequest()}
-                        disabled={contactStatus === "sending"}
-                        className={cn(
-                          "flex-[2] rounded-[10px] bg-primary px-4 py-3 font-display text-sm font-semibold text-primary-foreground shadow-[0_10px_24px_-8px_rgba(17,86,252,0.5)] transition",
-                          contactStatus === "sending"
-                            ? "opacity-60 cursor-wait"
-                            : "hover:translate-y-[-1px]",
-                        )}
-                      >
-                        {contactStatus === "sending" ? "⏳ Envoi…" : "📨 Envoyer ma demande"}
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Disclaimer juridique obligatoire */}
-        <div className="mt-10 rounded-[12px] border-2 border-amber-200 bg-amber-50 p-5">
+        <div className="mt-10 rounded-lk-md border border-lk-warning-bg bg-lk-warning-bg p-5">
           <div className="mb-2 flex items-center gap-2">
-            <span className="text-lg">⚠️</span>
-            <h3 className="font-display text-sm font-bold text-amber-900">Avertissement légal</h3>
+            <AlertTriangle aria-hidden="true" className="size-4.5 shrink-0 text-lk-warning-fg" />
+            <h3 className="text-wide text-lk-compact font-bold text-lk-warning-fg">
+              Avertissement légal
+            </h3>
           </div>
-          <p className="text-xs leading-relaxed text-amber-900">
+          <p className="text-lk-caption leading-relaxed text-lk-warning-fg">
             Ce document constitue une <strong>analyse automatisée</strong> basée sur les
             informations renseignées et les données de marché disponibles. Il est fourni{" "}
             <strong>à titre informatif uniquement</strong> et ne constitue ni une expertise
@@ -932,7 +1004,7 @@ function Card({
 }) {
   return (
     <div
-      className={cn("rounded-[16px] border-2 border-border bg-card p-6", className)}
+      className={cn("rounded-lk-md border border-lk-line bg-lk-surface p-6", className)}
       style={delay ? { animationDelay: delay } : undefined}
     >
       {children}
@@ -945,47 +1017,19 @@ function Kpi({
   value,
   sub,
   tone = "neutral",
-  icon,
 }: {
   label: string;
   value: string;
   sub?: string;
   tone?: "pos" | "neg" | "neutral";
-  icon?: string;
 }) {
   const toneCls =
-    tone === "pos" ? "text-success" : tone === "neg" ? "text-destructive" : "text-navy";
-  const iconBg =
-    tone === "pos" ? "bg-success/10" : tone === "neg" ? "bg-destructive/10" : "bg-primary/10";
-  const iconColor =
-    tone === "pos" ? "text-success" : tone === "neg" ? "text-destructive" : "text-primary";
+    tone === "pos" ? "text-lk-success" : tone === "neg" ? "text-lk-danger" : "text-lk-ink";
   return (
-    <div className="group relative overflow-hidden rounded-[16px] border-2 border-border bg-card p-5 transition hover:border-primary/40 hover:shadow-md">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1">
-          <div className="text-xs font-semibold uppercase tracking-wider text-sub">{label}</div>
-          <div className={cn("mt-2 font-display text-2xl font-bold", toneCls)}>{value}</div>
-          {sub && <div className="mt-1 text-xs text-sub">{sub}</div>}
-        </div>
-        {icon && (
-          <div
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg",
-              iconBg,
-              iconColor,
-            )}
-          >
-            {icon}
-          </div>
-        )}
-      </div>
-      {/* Trait décoratif bas */}
-      <div
-        className={cn(
-          "absolute bottom-0 left-0 h-1 w-full opacity-50",
-          tone === "pos" ? "bg-success" : tone === "neg" ? "bg-destructive" : "bg-primary",
-        )}
-      />
+    <div className="rounded-lk-md border border-lk-line bg-lk-surface p-5">
+      <div className="text-lk-caption font-semibold text-lk-ink-2">{label}</div>
+      <div className={cn("mt-2 text-wide text-lk-h2-lg font-bold", toneCls)}>{value}</div>
+      {sub && <div className="mt-1 text-lk-caption text-lk-ink-2">{sub}</div>}
     </div>
   );
 }
@@ -993,8 +1037,8 @@ function Kpi({
 function Row({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <>
-      <dt className="text-sub">{k}</dt>
-      <dd className="text-right font-semibold text-navy">{v ?? "—"}</dd>
+      <dt className="text-lk-ink-2">{k}</dt>
+      <dd className="text-right font-semibold text-lk-ink">{v ?? "—"}</dd>
     </>
   );
 }
@@ -1004,29 +1048,29 @@ function FactorBar({ f }: { f: { label: string; impact: number; detail: string }
   const width = Math.min(Math.abs(f.impact) * 4, 100); // 25% impact = full bar
   return (
     <div>
-      <div className="mb-1 flex items-baseline justify-between text-sm">
-        <span className="font-semibold text-navy">{f.label}</span>
+      <div className="mb-1 flex items-baseline justify-between text-lk-compact">
+        <span className="font-semibold text-lk-ink">{f.label}</span>
         <span
           className={cn(
-            "font-display text-sm font-bold",
-            pos ? "text-success" : "text-destructive",
+            "text-wide text-lk-compact font-bold",
+            pos ? "text-lk-success" : "text-lk-danger",
           )}
         >
           {pos ? "+" : ""}
           {f.impact}%
         </span>
       </div>
-      <div className="relative h-2 overflow-hidden rounded-full bg-sky-mid/40">
+      <div className="relative h-2 overflow-hidden rounded-full bg-lk-stone-2">
         <div
           className={cn(
             "absolute top-0 h-full rounded-full",
-            pos ? "bg-success left-1/2" : "bg-destructive right-1/2",
+            pos ? "bg-lk-success left-1/2" : "bg-lk-danger right-1/2",
           )}
           style={{ width: `${width / 2}%` }}
         />
-        <div className="absolute left-1/2 top-0 h-full w-px bg-border" />
+        <div className="absolute left-1/2 top-0 h-full w-px bg-lk-line" />
       </div>
-      <div className="mt-1 text-xs text-sub">{f.detail}</div>
+      <div className="mt-1 text-lk-caption text-lk-ink-2">{f.detail}</div>
     </div>
   );
 }

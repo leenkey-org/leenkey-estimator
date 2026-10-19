@@ -611,6 +611,8 @@ export const fr = {
       text: "Créez votre annonce : nous reprenons l'adresse, les caractéristiques et la valeur de cette analyse.",
       action: "Créer mon annonce",
     },
+    // The buttons without text of the dialog « Prendre contact » (L1-44).
+    contactDialog: { back: "Retour", close: "Fermer" },
   },
   // L1-10: pages whose screen comes with a later task (ComingSoon).
   placeholders: {

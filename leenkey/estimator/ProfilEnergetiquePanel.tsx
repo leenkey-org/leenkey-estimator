@@ -1,3 +1,4 @@
+import { AlertTriangle, Check } from "lucide-react";
 import { profilEnergetique } from "./energie";
 import type { LeenkeyForm } from "./types";
 
@@ -20,19 +21,29 @@ export function ProfilEnergetiquePanel({ form }: { form: LeenkeyForm }) {
   // Jauge circulaire : 2πr pour r = 34.
   const circonference = 2 * Math.PI * 34;
   const rempli = (p.score / 100) * circonference;
+  // Façade colours (DESIGN.md 2.1), as CSS variables for the SVG.
   const couleur =
-    p.score >= 80 ? "#16a34a" : p.score >= 60 ? "#16a34a" : p.score >= 40 ? "#f59e0b" : "#dc2626";
+    p.score >= 60
+      ? "var(--color-lk-success)"
+      : p.score >= 40
+        ? "var(--color-lk-warning)"
+        : "var(--color-lk-danger)";
 
   return (
-    <aside className="sticky top-32 z-20 rounded-[16px] border-2 border-sky-mid bg-card p-5 shadow-[0_10px_30px_-18px_rgba(15,30,53,0.35)] lg:top-40">
-      <div className="text-[11px] font-bold uppercase tracking-wider text-primary">
-        Votre profil énergétique
-      </div>
+    <aside className="rounded-lk-md lg:sticky lg:top-40 lg:z-20 border border-lk-blue-line bg-lk-surface p-5">
+      <div className="text-lk-micro font-bold text-lk-blue">Votre profil énergétique</div>
 
       <div className="mt-4 flex items-center gap-4">
-        <div className="relative h-[86px] w-[86px] shrink-0">
+        <div className="relative size-21.5 shrink-0">
           <svg viewBox="0 0 80 80" className="h-full w-full -rotate-90">
-            <circle cx="40" cy="40" r="34" fill="none" stroke="#e2e8f0" strokeWidth="7" />
+            <circle
+              cx="40"
+              cy="40"
+              r="34"
+              fill="none"
+              stroke="var(--color-lk-line)"
+              strokeWidth="7"
+            />
             <circle
               cx="40"
               cy="40"
@@ -46,74 +57,85 @@ export function ProfilEnergetiquePanel({ form }: { form: LeenkeyForm }) {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-display text-xl font-bold leading-none text-navy">
+            <span className="text-wide text-lk-h2 font-bold leading-none text-lk-ink">
               {p.score}
-              <span className="text-xs font-semibold text-sub">/100</span>
+              <span className="text-lk-caption font-semibold text-lk-ink-2">/100</span>
             </span>
-            <span className="mt-0.5 text-[10px] font-semibold text-sub">{p.mention}</span>
+            <span className="mt-0.5 text-lk-micro font-semibold text-lk-ink-2">{p.mention}</span>
           </div>
         </div>
         <div>
-          <div className="font-display text-base font-bold leading-tight text-navy">{p.titre}</div>
-          <p className="mt-1 text-xs leading-relaxed text-sub">{p.description}</p>
+          <div className="text-wide text-lk-body font-bold leading-tight text-lk-ink">
+            {p.titre}
+          </div>
+          <p className="mt-1 text-lk-caption leading-relaxed text-lk-ink-2">{p.description}</p>
         </div>
       </div>
 
       {/* Les deux blocs restent toujours visibles : un panneau qui disparaît
           donne l'impression que le calcul ne marche pas. */}
       <div className="mt-5">
-        <div className="text-xs font-bold text-navy">Points forts</div>
+        <div className="text-lk-caption font-bold text-lk-ink">Points forts</div>
         {p.forts.length > 0 ? (
           <ul className="mt-2 space-y-1.5">
             {p.forts.slice(0, 8).map((f) => (
-              <li key={f} className="flex items-start gap-2 text-xs text-sub">
-                <span className="mt-px font-bold text-success">✓</span>
+              <li key={f} className="flex items-start gap-2 text-lk-caption text-lk-ink-2">
+                <Check aria-hidden="true" className="mt-0.5 size-3.5 shrink-0 text-lk-success" />
                 {f}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="mt-2 text-xs italic text-muted-foreground">Ils apparaîtront ici.</p>
+          <p className="mt-2 text-lk-caption italic text-lk-ink-3">Ils apparaîtront ici.</p>
         )}
       </div>
 
       <div className="mt-5">
-        <div className="text-xs font-bold text-navy">Points à améliorer</div>
+        <div className="text-lk-caption font-bold text-lk-ink">Points à améliorer</div>
         {p.ameliorer.length > 0 ? (
           <ul className="mt-2 space-y-1.5">
             {p.ameliorer.slice(0, 8).map((a) => (
-              <li key={a} className="flex items-start gap-2 text-xs text-sub">
-                <span className="mt-px text-amber-500">⚠</span>
+              <li key={a} className="flex items-start gap-2 text-lk-caption text-lk-ink-2">
+                <AlertTriangle
+                  aria-hidden="true"
+                  className="mt-0.5 size-3.5 shrink-0 text-lk-warning"
+                />
                 {a}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="mt-2 text-xs italic text-muted-foreground">Ils apparaîtront ici.</p>
+          <p className="mt-2 text-lk-caption italic text-lk-ink-3">Ils apparaîtront ici.</p>
         )}
       </div>
 
       {p.manquants.length > 0 && (
-        <div className="mt-5 rounded-[10px] bg-sky/60 p-3">
-          <div className="text-xs font-bold text-navy">Pour affiner le profil</div>
-          <p className="mt-1 text-xs leading-relaxed text-sub">
+        <div className="mt-5 rounded-lk-sm bg-lk-blue-tint p-3">
+          <div className="text-lk-caption font-bold text-lk-ink">Pour affiner le profil</div>
+          <p className="mt-1 text-lk-caption leading-relaxed text-lk-ink-2">
             Renseignez {p.manquants.slice(0, 4).join(", ")}
             {p.manquants.length > 4 ? "…" : "."}
           </p>
         </div>
       )}
 
-      <div className="mt-5 border-t border-border pt-4">
-        <div className="text-xs font-semibold text-sub">Impact estimé sur la valeur</div>
+      <div className="mt-5 border-t border-lk-line pt-4">
+        <div className="text-lk-caption font-semibold text-lk-ink-2">
+          Impact estimé sur la valeur
+        </div>
         <div
           className={
-            "mt-1 font-display text-xl font-bold " +
-            (!p.calculable ? "text-sub" : p.impactMax < 0 ? "text-destructive" : "text-success")
+            "mt-1 text-wide text-lk-h2 font-bold " +
+            (!p.calculable
+              ? "text-lk-ink-2"
+              : p.impactMax < 0
+                ? "text-lk-danger"
+                : "text-lk-success")
           }
         >
           {!p.calculable ? "À calculer" : formatImpact(p.impactMin, p.impactMax)}
         </div>
-        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+        <p className="mt-1 text-lk-micro leading-relaxed text-lk-ink-3">
           {!p.calculable
             ? "L'estimation se met à jour selon vos réponses."
             : p.impactMax < 0
@@ -122,9 +144,9 @@ export function ProfilEnergetiquePanel({ form }: { form: LeenkeyForm }) {
         </p>
       </div>
 
-      <div className="mt-5 rounded-[12px] border-2 border-primary/25 bg-primary/5 p-4">
-        <div className="text-xs font-bold text-primary">Recommandation Leenkey</div>
-        <p className="mt-1.5 text-xs leading-relaxed text-navy">
+      <div className="mt-5 rounded-lk-md border border-lk-blue-line bg-lk-blue-tint p-4">
+        <div className="text-lk-caption font-bold text-lk-blue">Recommandation Leenkey</div>
+        <p className="mt-1.5 text-lk-caption leading-relaxed text-lk-ink">
           {p.recommandation ??
             "Complétez quelques critères pour recevoir une recommandation personnalisée."}
         </p>

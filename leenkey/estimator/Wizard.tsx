@@ -5,10 +5,12 @@ import { computeEstimation } from "./estimation";
 import { prixM2Dvf, type DvfResult } from "./dvf";
 import { getFlow } from "./flows";
 import { statsLocatives, totalCharges } from "./immeuble-calc";
-import { StepPositionContext } from "./step-position";
 import { initialForm, type LeenkeyForm } from "./types";
 import { EstimationDashboard } from "./Dashboard";
 import { listingFromEstimationHref, rememberClaim, type KeptEstimation } from "./listing-link";
+import { Loader2 } from "lucide-react";
+import { buttonVariants } from "@/components/shared/button";
+import { InlineAlert } from "@/components/shared/inline-alert";
 import { cn } from "@/lib/utils";
 
 export type { DvfComparable, DvfResult } from "./dvf";
@@ -314,7 +316,6 @@ export function LeenkeyWizard() {
   }, [step, TOTAL]);
 
   const progress = useMemo(() => Math.round((step / TOTAL) * 100), [step, TOTAL]);
-  const stepPosition = useMemo(() => ({ step, total: TOTAL }), [step, TOTAL]);
 
   const next = () => {
     const e = current?.validate?.(form) ?? {};
@@ -483,22 +484,30 @@ export function LeenkeyWizard() {
   const firstError = Object.values(errors)[0];
 
   // The wizard is the main content of /estimer, under the sticky header of
-  // the site (60 px, then the 72 px TopNav, L1-43).
+  // the site (60 px, then the 72 px TopNav, L1-43), in Façade (L1-44): a G5
+  // form, its progress under the header, its actions at the bottom.
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-lk-bg">
       {/* Header */}
-      <header className="sticky top-15 z-30 border-b border-border bg-background/95 backdrop-blur md:top-18">
+      <header className="sticky top-15 z-30 border-b border-lk-line bg-lk-surface md:top-18">
         {/* Progress (logo retiré : déjà dans la navbar au-dessus) */}
         <div className="mx-auto max-w-5xl px-5 py-3">
-          <div className="mb-2 flex items-center justify-between text-xs font-medium text-sub">
-            <span className="font-display font-semibold text-navy">{current?.label}</span>
-            <span>
+          <div className="mb-2 flex items-center justify-between gap-3 text-lk-caption text-lk-ink-3">
+            <span className="font-semibold text-lk-ink">{current?.label}</span>
+            <span className="tabular">
               Étape {step} sur {TOTAL} · {progress}%
             </span>
           </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-sky-mid">
+          <div
+            role="progressbar"
+            aria-label={current?.label}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+            className="h-1.5 overflow-hidden rounded-full bg-lk-line"
+          >
             <div
-              className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+              className="h-full rounded-full bg-lk-blue transition-all duration-500 ease-out-lk motion-reduce:transition-none"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -508,14 +517,14 @@ export function LeenkeyWizard() {
       {/* Resume prompt */}
       {resumePrompt && (
         <div className="mx-auto mt-4 max-w-3xl px-5">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border-2 border-sky-mid bg-sky/60 p-4 text-sm">
-            <span className="text-navy">
-              👋 Nous avons retrouvé votre formulaire en cours. Voulez-vous reprendre ?
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lk-md bg-lk-blue-tint px-4 py-3.5 text-lk-secondary">
+            <span className="text-lk-navy">
+              Nous avons retrouvé votre formulaire en cours. Voulez-vous reprendre ?
             </span>
             <div className="flex gap-2">
               <button
                 onClick={() => setResumePrompt(false)}
-                className="rounded-[8px] bg-primary px-4 py-2 font-semibold text-primary-foreground"
+                className={buttonVariants({ variant: "secondary", size: "sm" })}
               >
                 Reprendre
               </button>
@@ -530,7 +539,7 @@ export function LeenkeyWizard() {
                     /* ignore */
                   }
                 }}
-                className="rounded-[8px] border-2 border-border bg-card px-4 py-2 font-semibold text-navy"
+                className={buttonVariants({ variant: "outline-ink", size: "sm" })}
               >
                 Recommencer
               </button>
@@ -541,54 +550,53 @@ export function LeenkeyWizard() {
 
       {/* Step content */}
       <div className={cn("mx-auto px-5 pb-32 pt-10", current?.large ? "max-w-6xl" : "max-w-3xl")}>
-        <StepPositionContext.Provider value={stepPosition}>
-          <div key={step} className="step-enter">
-            {StepNode}
-          </div>
-        </StepPositionContext.Provider>
+        <div key={step} className="step-enter">
+          {StepNode}
+        </div>
         {firstError && (
-          <p className="mt-6 rounded-[10px] border-2 border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          <InlineAlert tone="danger" className="mt-6">
             {firstError}
-          </p>
+          </InlineAlert>
         )}
       </div>
 
       {/* Footer nav: data-wizard-bar keeps the site footer above it (/estimer) */}
       <footer
         data-wizard-bar
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-lk-line bg-lk-surface pb-[env(safe-area-inset-bottom)]"
       >
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-5 py-4">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-5 py-3.5">
           <button
             type="button"
             onClick={back}
             disabled={step === 1}
             className={cn(
-              "rounded-[10px] px-5 py-3 font-display text-sm font-semibold transition",
-              step === 1 ? "invisible" : "text-navy hover:bg-sky",
+              buttonVariants({ variant: "ghost", size: "md" }),
+              "inline-flex items-center",
+              step === 1 && "invisible",
             )}
           >
-            ← Retour
+            Retour
           </button>
           <button
             type="button"
             onClick={next}
             disabled={submitting}
+            aria-busy={submitting || undefined}
             className={cn(
-              "inline-flex min-w-[180px] items-center justify-center gap-2 rounded-[12px] bg-primary px-7 py-3.5 font-display text-sm font-semibold text-primary-foreground shadow-[0_10px_24px_-8px_rgba(17,86,252,0.5)] transition",
-              "hover:translate-y-[-1px] hover:shadow-[0_14px_28px_-8px_rgba(17,86,252,0.6)]",
-              submitting && "opacity-70",
+              buttonVariants({ size: "lg" }),
+              "inline-flex min-w-45 items-center justify-center gap-2",
             )}
           >
             {submitting ? (
               <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                <Loader2 aria-hidden="true" className="size-4 motion-safe:animate-spin" />
                 Envoi en cours…
               </>
             ) : step === TOTAL ? (
-              "Voir ma valorisation →"
+              "Voir ma valorisation"
             ) : (
-              "Continuer →"
+              "Continuer"
             )}
           </button>
         </div>

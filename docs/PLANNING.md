@@ -48,7 +48,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-41** Accueil en V2 (SPEC 8.1, décision du 19 octobre « V2 finale ») : « Je vends » / « J'achète » sur `BrandPanel`, « Les derniers biens », sections de la V1 en composants Façade, formulaire de contact, en-tête mobile et pied de page du site (tâche ajoutée le 19 octobre, d'abord numérotée L1-40 par erreur) · PR : #27 · Testé en préprod : ☐
 - [x] **L1-42** `/concept`, `/tarifs`, `/faq` en V2 (décision du 19 octobre) : formules de `/tarifs` lues dans `plans`, FAQ dépliable · PR : #28 · Testé en préprod : ☐
 - [x] **L1-43** `/investir`, `/qui-sommes-nous`, mentions légales et CGU en V2, `/estimer` dans l'en-tête V2, retrait du site V1 porté (décision du 19 octobre) · PR : #29 · Testé en préprod : ☐
-- [ ] **L1-44** Estimateur re-stylé (DESIGN 13.1 : Archivo, tokens, rayons), aucune modification de logique (tâche ajoutée le 19 octobre) · PR : · Testé en préprod : ☐
+- [x] **L1-44** Estimateur re-stylé (DESIGN 13.1 : Archivo, tokens, rayons), aucune modification de logique (tâche ajoutée le 19 octobre) ; plus aucune police V1 sur le site ; emojis retirés (DESIGN 1) · PR : #32 · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
 

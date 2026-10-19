@@ -1,13 +1,21 @@
+import { chipClassName } from "@/components/shared/chip-toggle";
 import { cn } from "@/lib/utils";
-import { useContext } from "react";
+import { createContext, useContext, useId } from "react";
 import type { ReactNode, InputHTMLAttributes } from "react";
-import { StepPositionContext } from "./step-position";
+
+// Building blocks of the steps of the wizard, in Façade since L1-44
+// (docs/DESIGN.md 13.1): Archivo, the tokens and the radii of DESIGN.md 2 and
+// 5, the shapes of RoleCard, ChipToggle, SegmentedPicker and Field (10.1,
+// 10.4), without the emoji of the V1 (DESIGN.md 1). Behaviour and texts are
+// those of the V1.
 
 /* ---------- Section header ---------- */
+/**
+ * The title of a step and its subtitle. Its label and its place (« Votre
+ * bien », « Étape 1 sur 12 ») are said by the progress of the wizard, just
+ * above: no label over the title (DESIGN.md 13.2, L1-44).
+ */
 export function StepHeader({
-  step,
-  total,
-  label,
   title,
   subtitle,
 }: {
@@ -17,19 +25,12 @@ export function StepHeader({
   title: string;
   subtitle?: string;
 }) {
-  const pos = useContext(StepPositionContext);
-  const shownStep = pos?.step ?? step;
-  const shownTotal = pos?.total ?? total;
   return (
     <header className="space-y-3 fade-up">
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-        <span className="inline-flex h-6 items-center rounded-full bg-sky px-3">{label}</span>
-        <span className="text-muted-foreground">
-          Étape {shownStep} sur {shownTotal}
-        </span>
-      </div>
-      <h1 className="text-3xl font-semibold leading-tight text-navy md:text-4xl">{title}</h1>
-      {subtitle && <p className="max-w-2xl text-base text-sub md:text-lg">{subtitle}</p>}
+      <h1 className="text-lk-h1 font-bold text-wide text-lk-ink lg:text-lk-h1-lg">{title}</h1>
+      {subtitle && (
+        <p className="max-w-2xl text-lk-body text-lk-ink-2 lg:text-lk-body-lg">{subtitle}</p>
+      )}
     </header>
   );
 }
@@ -38,14 +39,12 @@ export function StepHeader({
 export function OptionCard({
   selected,
   onClick,
-  icon,
   title,
   description,
   compact,
 }: {
   selected: boolean;
   onClick: () => void;
-  icon?: ReactNode;
   title: string;
   description?: string;
   compact?: boolean;
@@ -56,42 +55,37 @@ export function OptionCard({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        "group relative flex w-full items-start gap-4 rounded-[14px] border-2 bg-card p-5 text-left transition-all",
-        "hover:border-primary/60 hover:bg-sky/40",
-        compact && "items-center p-4",
+        "group relative flex w-full items-start gap-4 rounded-lk-md border-[1.5px] p-4 text-left md:p-5",
+        "transition-colors duration-140 ease-out-lk",
+        compact && "items-center md:p-4",
         selected
-          ? "border-primary bg-sky shadow-[0_8px_24px_-12px_rgba(17,86,252,0.4)]"
-          : "border-border",
+          ? "border-lk-blue bg-lk-blue-tint"
+          : "border-lk-line bg-lk-surface hover:border-lk-ink-3",
       )}
     >
-      {icon && (
+      <span className="min-w-0 flex-1 space-y-1">
         <span
           className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] text-2xl",
-            selected ? "bg-primary/15" : "bg-sky",
+            "block break-words text-lk-button-md leading-snug font-semibold",
+            selected ? "text-lk-blue" : "text-lk-ink",
           )}
         >
-          {icon}
-        </span>
-      )}
-      <span className="min-w-0 flex-1 space-y-1">
-        <span className="block break-words font-display text-base font-semibold text-navy">
           {title}
         </span>
         {description && (
-          <span className="block text-sm leading-relaxed text-sub">{description}</span>
+          <span className="block text-lk-secondary text-lk-ink-2">{description}</span>
         )}
       </span>
       <span
         className={cn(
-          "mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all",
-          selected ? "border-primary bg-primary" : "border-border",
+          "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-[1.5px]",
+          selected ? "border-lk-blue bg-lk-blue" : "border-lk-field bg-lk-surface",
         )}
       >
         {selected && (
           <svg
             viewBox="0 0 12 12"
-            className="h-3 w-3 text-primary-foreground"
+            className="size-3 text-white"
             fill="none"
             stroke="currentColor"
             strokeWidth={2.5}
@@ -108,13 +102,11 @@ export function OptionCard({
 export function ToggleCard({
   selected,
   onClick,
-  icon,
   title,
   desc,
 }: {
   selected: boolean;
   onClick: () => void;
-  icon?: ReactNode;
   title: string;
   desc?: string;
 }) {
@@ -124,29 +116,31 @@ export function ToggleCard({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        "flex gap-3 rounded-[12px] border-2 bg-card px-4 py-3 text-left text-sm font-medium transition-all",
+        // The whole cell of its grid, even inside a wrapper (a button shrinks to its text).
+        "flex w-full gap-3 rounded-lk-md border-[1.5px] px-4 py-3 text-left text-lk-label font-medium",
+        "transition-colors duration-140 ease-out-lk",
         desc ? "items-start" : "items-center",
-        "hover:border-primary/50 hover:bg-sky/40",
-        selected ? "border-primary bg-sky text-navy" : "border-border text-foreground",
+        selected
+          ? "border-lk-blue bg-lk-blue-tint text-lk-ink"
+          : "border-lk-line bg-lk-surface text-lk-ink hover:border-lk-ink-3",
       )}
     >
-      {icon && <span className="text-xl">{icon}</span>}
       <span className="min-w-0 flex-1">
         {title}
         {desc && (
-          <span className="mt-0.5 block text-xs font-normal leading-relaxed text-sub">{desc}</span>
+          <span className="mt-0.5 block text-lk-caption font-normal text-lk-ink-2">{desc}</span>
         )}
       </span>
       <span
         className={cn(
-          "flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition",
-          selected ? "border-primary bg-primary" : "border-border",
+          "flex size-5 shrink-0 items-center justify-center rounded-lk-sm border-[1.5px]",
+          selected ? "border-lk-blue bg-lk-blue" : "border-lk-field bg-lk-surface",
         )}
       >
         {selected && (
           <svg
             viewBox="0 0 12 12"
-            className="h-3 w-3 text-primary-foreground"
+            className="size-3 text-white"
             fill="none"
             stroke="currentColor"
             strokeWidth={3}
@@ -170,7 +164,7 @@ export function Stepper({
   options: (number | string)[];
 }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5">
       {options.map((opt) => {
         // La valeur vient du libellé, pas de l'index : "8+" → 8, "RDC" → 0.
         // (avec l'index, "8+" en position 7 valait 7 et s'allumait avec le bouton "7")
@@ -182,11 +176,13 @@ export function Stepper({
             key={String(opt)}
             type="button"
             onClick={() => onChange(numeric)}
+            aria-pressed={active}
             className={cn(
-              "min-w-[52px] rounded-[10px] border-2 px-4 py-3 font-display text-sm font-semibold transition",
+              "h-11 min-w-13 rounded-lk-sm px-4 text-lk-button-md font-semibold",
+              "transition-colors duration-140 ease-out-lk",
               active
-                ? "border-primary bg-primary text-primary-foreground shadow-[0_6px_16px_-6px_rgba(17,86,252,0.5)]"
-                : "border-border bg-card text-navy hover:border-primary/60 hover:bg-sky/50",
+                ? "bg-lk-blue text-white hover:bg-lk-blue-hover"
+                : "bg-lk-stone-2 text-lk-ink-2 hover:bg-lk-stone",
             )}
           >
             {opt}
@@ -198,6 +194,9 @@ export function Stepper({
 }
 
 /* ---------- Field ---------- */
+/** The id of the control of a Field: its label names it (TextInput reads it). */
+const FieldIdContext = createContext<string | undefined>(undefined);
+
 export function Field({
   label,
   hint,
@@ -211,24 +210,25 @@ export function Field({
   required?: boolean;
   children: ReactNode;
 }) {
+  const id = useId();
   return (
     <div className={cn("space-y-2 lk-field", error && "lk-field-error")}>
       <label
+        htmlFor={id}
         className={cn(
-          "flex items-baseline gap-1.5 font-display text-sm font-semibold transition-colors",
-          error ? "text-destructive" : "text-navy",
+          "flex items-baseline gap-1.5 text-lk-label font-medium transition-colors",
+          error ? "text-lk-danger" : "text-lk-ink",
         )}
       >
         {label}
-        {required && <span className={error ? "text-destructive" : "text-primary"}>*</span>}
-        {hint && (
-          <span className="font-sans text-xs font-normal text-muted-foreground">— {hint}</span>
-        )}
+        {required && <span className={error ? "text-lk-danger" : "text-lk-blue"}>*</span>}
+        {hint && <span className="text-lk-caption font-normal text-lk-ink-3">— {hint}</span>}
       </label>
-      {children}
+      <FieldIdContext.Provider value={id}>{children}</FieldIdContext.Provider>
       {error && (
-        <p className="flex items-center gap-1.5 text-xs font-medium text-destructive">
+        <p className="flex items-center gap-1.5 text-lk-caption text-lk-danger">
           <svg
+            aria-hidden="true"
             width="14"
             height="14"
             viewBox="0 0 24 24"
@@ -251,13 +251,15 @@ export function Field({
 
 /* ---------- Input ---------- */
 export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
+  const fieldId = useContext(FieldIdContext);
   return (
     <input
+      id={fieldId}
       {...props}
       className={cn(
-        "h-[52px] w-full rounded-[10px] border-2 border-border bg-card px-4 text-base text-foreground transition",
-        "placeholder:text-muted-foreground",
-        "focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15",
+        "h-12 w-full rounded-lk-sm border-[1.5px] border-lk-field bg-lk-surface px-3.5 text-lk-body text-lk-ink",
+        "transition duration-140 ease-out-lk placeholder:text-lk-ink-3",
+        "focus:border-lk-blue focus:outline-none focus:ring-3 focus:ring-lk-blue-line",
         props.className,
       )}
     />
@@ -267,9 +269,35 @@ export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
 /* ---------- Section grouping for checkbox grids ---------- */
 export function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h3 className="mt-6 font-display text-sm font-semibold uppercase tracking-wide text-navy first:mt-0">
+    <h3 className="mt-6 text-lk-h3 font-semibold text-lk-ink first:mt-0 lg:text-lk-h3-lg">
       {children}
     </h3>
+  );
+}
+
+/**
+ * The pills of one or several choices: chips of DESIGN.md 10.1 (40 px, a
+ * 44 px touch target), as plain buttons that keep the V1 behaviour.
+ */
+function Pill({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      data-state={active ? "on" : "off"}
+      onClick={onClick}
+      className={chipClassName()}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -286,19 +314,9 @@ export function PillGroup({
   return (
     <div className="flex flex-wrap gap-2">
       {options.map((o) => (
-        <button
-          key={o}
-          type="button"
-          onClick={() => onChange(o)}
-          className={cn(
-            "rounded-full border-2 px-4 py-2 text-sm font-medium transition",
-            value === o
-              ? "border-primary bg-primary text-primary-foreground"
-              : "border-border bg-card text-navy hover:border-primary/60 hover:bg-sky/50",
-          )}
-        >
+        <Pill key={o} active={value === o} onClick={() => onChange(o)}>
           {o}
-        </button>
+        </Pill>
       ))}
     </div>
   );
@@ -316,25 +334,11 @@ export function PillMulti({
 }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {options.map((o) => {
-        const active = values.includes(o);
-        return (
-          <button
-            key={o}
-            type="button"
-            aria-pressed={active}
-            onClick={() => onToggle(o)}
-            className={cn(
-              "rounded-full border-2 px-4 py-2 text-sm font-medium transition",
-              active
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-navy hover:border-primary/60 hover:bg-sky/50",
-            )}
-          >
-            {o}
-          </button>
-        );
-      })}
+      {options.map((o) => (
+        <Pill key={o} active={values.includes(o)} onClick={() => onToggle(o)}>
+          {o}
+        </Pill>
+      ))}
     </div>
   );
 }
