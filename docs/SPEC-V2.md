@@ -2036,6 +2036,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-25 | Espace acquéreur v1 (accueil, profil projet et financement déclaratif, `FinancingBadge` côté vendeur) | L1-21 | Le vendeur voit le statut, jamais les montants (test) |
 | L1-38 | Sécurité transverse : en-têtes (CSP, HSTS, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) dans `next.config.ts`, `lib/rate-limit.ts` sur table Postgres (inscription, connexion, contact, messages, assistant) | L1-21 | En-têtes présents (test), 429 au-delà des seuils (test) |
 | L1-39 | Page `/compte` : informations personnelles, changement d'e-mail avec confirmation, mot de passe, préférences de notification, rôles (« Je vends » / « J'achète ») | L1-22 | Changement d'e-mail confirmé par lien ; préférences respectées par `notify()` |
+| L1-40 | Accueil enrichi (section 8.1) : hero sur `BrandPanel` avec « Je vends » (→ `/estimer`) et « J'achète » (→ `/acheter`), bloc « Les derniers biens » (3 `PropertyCard` `tile`, masqué sous 3), reste du contenu marketing inchangé | L1-17 | Les deux entrées et les derniers biens sur `/`, en mobile et en desktop ; formulaires et événements GA4 de l'accueil inchangés (E2E de L1-01) |
 | L1-27 | Embeddings (Edge Function `embed`), import KB, `search_knowledge` | L1-05 | Recherche test pertinente sur les fiches de `faq-cedric-v2.md` |
 
 ### Semaine 5 : paiement, assistant, back office → livraison lot 1

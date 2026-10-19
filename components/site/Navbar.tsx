@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { loginPath } from "@/core/auth/next-path";
+import { ROUTES } from "@/leenkey/navigation/spaces";
+import { fr } from "@/lib/i18n/fr";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
@@ -151,6 +154,9 @@ export function Navbar() {
           transform: scaleX(1);
           height: 2.5px;
         }
+        .lk-nav-actions {
+          display: flex; align-items: center; gap: 24px;
+        }
         .lk-nav-cta {
           display: inline-block;
           background: #3B82F6;
@@ -201,10 +207,12 @@ export function Navbar() {
         .lk-nav-mobile-overlay .lk-nav-link-active {
           color: #1156fc;
         }
-        @media (max-width: 768px) {
+        @media (max-width: 1239px) {
           .lk-nav-links { display: none; }
-          .lk-nav-cta { display: none; }
+          .lk-nav-actions { display: none; }
           .lk-nav-burger { display: flex; }
+        }
+        @media (max-width: 768px) {
           .lk-nav { padding: 0 20px; }
         }
       `}</style>
@@ -215,6 +223,9 @@ export function Navbar() {
         </Link>
 
         <div className="lk-nav-links">
+          <Link href={ROUTES.search} className={routeLinkClass(ROUTES.search)}>
+            {fr.nav.links.buy}
+          </Link>
           <Link href="/qui-sommes-nous" className={routeLinkClass("/qui-sommes-nous")}>
             Qui sommes-nous
           </Link>
@@ -229,9 +240,15 @@ export function Navbar() {
           </Link>
         </div>
 
-        <Link href="/estimer" className="lk-nav-cta">
-          Valoriser mon bien gratuitement
-        </Link>
+        {/* The account (L1-09): signed in, /connexion leads to the space. */}
+        <div className="lk-nav-actions">
+          <Link href={loginPath(null)} className="lk-nav-link">
+            {fr.nav.signIn}
+          </Link>
+          <Link href="/estimer" className="lk-nav-cta">
+            Valoriser mon bien gratuitement
+          </Link>
+        </div>
 
         <button className="lk-nav-burger" aria-label="Menu" onClick={() => setOpen(!open)}>
           <span />
@@ -241,6 +258,13 @@ export function Navbar() {
       </nav>
 
       <div className={`lk-nav-mobile-overlay ${open ? "open" : ""}`}>
+        <Link
+          href={ROUTES.search}
+          className={routeLinkClass(ROUTES.search)}
+          onClick={() => setOpen(false)}
+        >
+          {fr.nav.links.buy}
+        </Link>
         <Link
           href="/qui-sommes-nous"
           className={routeLinkClass("/qui-sommes-nous")}
@@ -260,6 +284,9 @@ export function Navbar() {
           onClick={() => setOpen(false)}
         >
           Investir dans Leenkey
+        </Link>
+        <Link href={loginPath(null)} className="lk-nav-link" onClick={() => setOpen(false)}>
+          {fr.nav.signIn}
         </Link>
         <Link href="/estimer" className="lk-nav-cta" onClick={() => setOpen(false)}>
           Valoriser mon bien gratuitement

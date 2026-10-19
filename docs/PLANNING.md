@@ -44,6 +44,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-18** Favoris · PR : #18 · Testé en préprod : ☐
 - [x] **L1-19** Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`suspended`) / remettre en ligne, audit, emails · PR : #19 (partie vendeur avec L1-14, `DECISIONS.md`) · Testé en préprod : ☐
 - [x] **L1-20** Sitemap et robots (pages SEO par ville reportées en V3) · PR : #18 · Testé en préprod : ☐
+- [ ] **L1-40** Accueil enrichi (SPEC 8.1) : « Je vends » / « J'achète » sur `BrandPanel`, « Les derniers biens » (tâche ajoutée le 19 octobre : la section 8.1 n'en avait pas) · PR : · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
 

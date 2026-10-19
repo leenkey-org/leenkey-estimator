@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-19 · Accueil · PR #24 · Accès aux annonces et à l'espace depuis les pages marketing
+- Ajouté : « Acheter » et « Mon compte » dans le menu des pages marketing et de l'estimateur (bouton « Menu » sous 1 240 px). Tâche L1-40 (accueil enrichi de SPEC 8.1) ajoutée au plan.
+- Tests : E2E du menu en desktop et en mobile.
+
 ### 2026-10-18 · L1-13a · PR #23 · Prix, description, aperçu et envoi en validation
 - Ajouté : étape 3 de la création `/vendeur/biens/[id]/prix` : prix en euros, rappel de l'analyse de valeur avec l'écart du prix en pourcentage (`InfoNote`, dans `/design`), titre proposé d'après le bien et modifiable, description de 1 200 caractères avec compteur ; l'annonce est créée au premier enregistrement (son prix est alors demandé), « Continuer » demande le prix et la description. Étape 4 `/vendeur/biens/[id]/apercu` : la page annonce elle-même dans un cadre bordé, boutons de contact inactifs, motif du refus au-dessus d'une annonce refusée, puis « Envoyer en validation ». Écran de fin `/vendeur/biens/[id]/envoye` (`EndOfFlow`, dans `/design` : « C'est envoyé. », récapitulatif de l'annonce dessous à partir de 768 px). Emails « Annonce reçue » au vendeur et « Annonce à valider » à Leenkey (`ADMIN_NOTIFICATION_EMAIL`, pied de page interne), envoyés après la réponse. « Ma vente » reprend un brouillon à l'aperçu.
 - Modifié : la page annonce, l'aperçu du vendeur et la fiche du back office lisent l'annonce de la même façon (`leenkey/listings/listing-row.ts`) ; le corps de la page annonce devient `ListingBody`, partagé avec l'aperçu ; `PriceColumn` accepte des boutons inactifs.

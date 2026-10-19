@@ -24,6 +24,26 @@ for (const path of pages) {
   });
 }
 
+// The menu of the marketing pages leads to the listings and to the account
+// (DECISIONS 2026-10-19): /connexion takes a signed-in account to its space.
+test("le menu des pages marketing mène aux annonces et au compte", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/tarifs");
+  const nav = page.locator("nav.lk-nav");
+  await expect(nav.getByRole("link", { name: "Acheter", exact: true })).toHaveAttribute(
+    "href",
+    "/acheter",
+  );
+  await expect(nav.getByRole("link", { name: "Mon compte" })).toHaveAttribute("href", "/connexion");
+
+  // Below 1 240 px, in the menu.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Menu" }).click();
+  const menu = page.locator(".lk-nav-mobile-overlay");
+  await menu.getByRole("link", { name: "Mon compte" }).click();
+  await expect(page).toHaveURL("/connexion");
+});
+
 test("le formulaire de contact de l'accueil part vers /api/contact", async ({ page }) => {
   let body: { source?: string; data?: Record<string, string> } = {};
   await page.route("**/api/contact", async (route) => {
