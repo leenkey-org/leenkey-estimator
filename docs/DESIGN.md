@@ -72,7 +72,7 @@ Ce document est la **référence visuelle exécutable** de la V2 : valeurs exact
 | `--lk-blue-tint` | `#EEF4FF` | Fond de sélection, encart d'aide, suggestion de l'assistant | bleu dessus 5,06:1 |
 | `--lk-blue-line` | `#DBEAFE` | Bordure des boutons secondaires et des encarts bleus | décoratif |
 | `--lk-on-blue-2` | `#F0F4FF` | Texte secondaire sur aplat bleu | 5,08:1 sur bleu |
-| `--lk-navy` | `#1A2B4A` | En-têtes sombres (dashboard vendeur), avatars ; sections vitrines de l'accueil (L1-47) | blanc dessus 14,1:1 |
+| `--lk-navy` | `#1A2B4A` | En-têtes sombres (dashboard vendeur), avatars ; sections vitrines de l'accueil (L1-47, L1-48) | blanc dessus 14,1:1 |
 | `--lk-blue-light` | `#93B4FF` | Sur navy : mots mis en valeur d'un titre, courbe, contours des repères (L1-47) | 6,86:1 sur navy |
 | `--lk-ink` | `#0F1E35` | Texte principal, back office (barre latérale), bouton « sur fond sombre » | 16,7:1 sur blanc |
 | `--lk-ink-2` | `#3E4757` | Texte de corps secondaire, valeurs sur pierre | 9,36:1 sur blanc |
@@ -246,6 +246,7 @@ Valeurs : taille px / interligne / graisse. « Large » = `font-stretch: 116%; l
 | Titre de barre | 15 / 1.3 / 600 | 15 | Normale | « Choisir ma formule », « Mon bien » |
 | Prix principal | 26 / 1.0 / 700 | 30–32 / 1.0 / 700 | Large, tabulaire | « 350 000 € » |
 | Prix de carte | 17 / 1.1 / 700 | 16–18 / 1.1 / 700 | Large, tabulaire | cartes de recherche |
+| Prix d'une formule sur l'accueil | 36 / 1.05 / 700 | 36 / 1.05 / 700 | Large, tabulaire | « 990 € » de `PlanCard` `priceSize="large"` (L1-48, jeton `text-lk-display`) |
 | Chiffre clé / indicateur | 15–22 / 1.0 / 700 | 17–22 | Large, tabulaire | « 248 », « 68 m² » |
 | Corps | 15 / 1.55 / 400 | 15–16 / 1.6 / 400 | Normale | description d'annonce (14 accepté en mobile dense) |
 | Corps compact | 13–14 / 1.5 / 400 | 13–14 | Normale | lignes de liste, messages |
@@ -612,7 +613,7 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 - Prix en grand (`priceSize="large"`, section Tarifs de l'accueil, L1-48) : la ligne de tête ne garde que le nom ; le prix 36 px 700 large en bas de la carte, « TTC » 12 px `--lk-ink-3`, la note dessous ; les prix de cartes côte à côte restent alignés.
 - Pied : encart blanc bordure `--lk-line` : cadenas `--lk-success` + « Paiement sécurisé par carte via Stripe… » 12 px `--lk-ink-2`.
 
-> **Mise en œuvre (L1-41).** `components/shared/plan-card.tsx` : liste à coches, note de pied (« Forfait fixe · payé à la souscription ») et action facultatives ; sans elles, la carte compacte de l'accueil (nom, prix, accroche, note). Prix venant de la table `plans` (`core/billing/plans.ts`), « Gratuit » à 0 €. `/tarifs` (L1-42) : ligne de prix (« Forfait fixe TTC · payé à la souscription ») sous le nom, première ligne du texte de la formule en gras avant la liste (« Tout Autonomie, plus : »), lignes suivantes après ; formule mise en avant pendant le lancement : Autonomie (« Disponible gratuitement »), seule action `primary`.
+> **Mise en œuvre (L1-41).** `components/shared/plan-card.tsx` : liste à coches, note de pied (« Forfait fixe · payé à la souscription ») et action facultatives ; sans elles, la carte compacte (nom, prix, accroche, note) ; sur l'accueil, depuis L1-48, la variante à prix en grand (`priceSize="large"`, 10.4). Prix venant de la table `plans` (`core/billing/plans.ts`), « Gratuit » à 0 €. `/tarifs` (L1-42) : ligne de prix (« Forfait fixe TTC · payé à la souscription ») sous le nom, première ligne du texte de la formule en gras avant la liste (« Tout Autonomie, plus : »), lignes suivantes après ; formule mise en avant pendant le lancement : Autonomie (« Disponible gratuitement »), seule action `primary`.
 
 **UpgradePrompt** : encart fond `--lk-blue-tint`, bordure 1 px `--lk-blue-line`, rayon 6, padding 14 × 16. Titre 14 px 600, texte 13 px, lien d'action `ghost` bleu. Toujours placé **après** le contenu utile (jamais avant, jamais en modale). Bouton de fermeture `X` 16 px.
 

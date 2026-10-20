@@ -1160,21 +1160,26 @@ export default function DesignPage() {
                 tone="navy"
                 align="center"
                 titleAs="h4"
-                title={content.publicPages.navyTitle}
-                accent={content.publicPages.navyAccent}
-                lead={content.publicPages.navyLead}
+                title={content.publicPages.sectionTitle}
+                accent={content.publicPages.sectionAccent}
+                lead={content.publicPages.sectionLead}
               >
-                <div className="mx-auto max-w-sm">
-                  <PlanCard
-                    nameAs="h4"
-                    name={content.publicPages.largePlan.name}
-                    price={content.publicPages.largePlan.price}
-                    priceSuffix={content.publicPages.taxes}
-                    priceSize="large"
-                    tagline={content.publicPages.largePlan.tagline}
-                    note={content.publicPages.largePlan.note}
-                  />
-                </div>
+                <ul className="grid gap-4 lg:grid-cols-3">
+                  {content.publicPages.largePlans.map((plan) => (
+                    <li key={plan.name} className="flex">
+                      <PlanCard
+                        className="flex-1"
+                        nameAs="h4"
+                        name={plan.name}
+                        price={plan.price}
+                        priceSuffix={plan.free ? undefined : content.publicPages.taxes}
+                        priceSize="large"
+                        tagline={plan.tagline}
+                        note={plan.note}
+                      />
+                    </li>
+                  ))}
+                </ul>
               </MarketingSection>
             </div>
             <Caption>{content.publicPages.navyCaption}</Caption>

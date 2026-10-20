@@ -29,7 +29,7 @@ export type PlanCardProps = {
   /**
    * large: the price in display size at the bottom of the card, above the
    * note, as the price cards of the V1 home page (#tarifs, L1-48); else on
-   * the head line.
+   * the head line. A priceNote stays under the name (not used in large).
    */
   priceSize?: "default" | "large";
   className?: string;
