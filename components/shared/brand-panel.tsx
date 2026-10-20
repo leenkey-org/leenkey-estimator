@@ -29,6 +29,12 @@ export type BrandPanelProps = {
    * on the first paint (hero) or when it enters the screen.
    */
   illustration?: boolean;
+  /**
+   * A photo on the right of the text from 1024 px, under it before (home
+   * page, L1-46), in place of the drawing. It shows from the first paint,
+   * without entrance: the largest element of the page (LCP) never waits.
+   */
+  media?: ReactNode;
   /** Actions or content under the description. */
   children?: ReactNode;
   className?: string;
@@ -63,6 +69,7 @@ export function BrandPanel({
   titleSize = "hero",
   description,
   illustration = false,
+  media,
   children,
   className,
 }: BrandPanelProps) {
@@ -82,6 +89,7 @@ export function BrandPanel({
         className={cn(
           "relative mx-auto flex min-h-52.5 max-w-lk-page flex-col justify-center px-5 md:px-10",
           hero ? "py-12 lg:py-20" : "py-8",
+          media ? "gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12" : null,
         )}
       >
         <div
@@ -89,7 +97,8 @@ export function BrandPanel({
             "flex max-w-lk-prose flex-col",
             // Room for the dimension line under the title.
             hero ? "gap-4 lg:gap-5" : titleAccent ? "gap-3" : "gap-2",
-            illustration && "lg:max-w-lk-form",
+            (illustration || media) && "lg:max-w-lk-form",
+            media && "lg:flex-1",
           )}
         >
           <Title
@@ -127,7 +136,8 @@ export function BrandPanel({
             </div>
           ) : null}
         </div>
-        {illustration ? (
+        {media ? <div className="w-full lg:w-[38%] lg:max-w-md lg:shrink-0">{media}</div> : null}
+        {illustration && !media ? (
           <FacadeDrawing
             data-reveal-draw={hero ? undefined : ""}
             className={cn(

@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-20 · L1-46 · PR #36 · Photos de biens
+- Ajouté : la photo d'une maison en haut de l'accueil, à droite du texte en desktop, dessous en mobile (comme le hero de la V1) ; les photos des biens de démonstration, déposées par `db:seed` dans le bucket `photos` avec le compte de seed du propriétaire, sans clé de service, et seulement sur les biens sans photo qu'il peut encore modifier (`scripts/seed-photos.mjs`, `supabase/seed/photos/`, provenance dans `CREDITS.md`) : trois maisons, converties comme une photo de vendeur. La photo de l'accueil s'affiche dès l'arrivée, carrée, demandée en priorité.
+- Modifié : « Les derniers biens » prennent d'abord les annonces récentes qui ont une photo ; `BrandPanel` accepte une photo (`media`) à la place du dessin ; le chargeur d'images sert aussi les photos des pages publiques en trois largeurs.
+- Droits : confirmés par Younes (Q57), la photo de l'accueil s'affiche aussi en production ; une photo des pages publiques aux droits non confirmés ne s'y afficherait pas ; le seed n'y tourne pas.
+- Tests : unitaires (garde-fou des droits en production, photo de l'accueil aux trois largeurs, photos du seed uniques, de leur propriétaire, au-dessus du minimum des vendeurs et créditées, ordre des derniers biens, chargeur) ; E2E (photo du hero à la place du dessin, trois tuiles avec photo sur la base de seed).
+
 ### 2026-10-20 · L1-47 · PR #35 · Sections sombres de l'accueil
 - Ajouté : « Ce que vous obtenez en quelques minutes. » retrouve l'aplat bleu foncé et la courbe montante de la V1, ses quatre éléments posés dessus (une ligne verticale les relie en mobile), qui arrivent quand la courbe se trace ; « Vous savez toujours quoi faire ensuite. » retrouve l'aperçu de l'espace vendeur et la légende de la V1 « Aperçu de l'espace vendeur, avec des données d'exemple. », sur « Ma vente » tel que la V2 le montre (maquette du tableau de bord : étape 3 sur 6, prochaine action, trois chiffres, « À faire », conversations), étiqueté « Exemple », dont les étapes se remplissent et la première tâche se coche. Jeton `--lk-blue-light` (accent sur navy, 6,86:1).
 - Non repris de la V1 : étiquettes en capitales, numérotation « 01 » à « 04 », dégradés, halo, icône de maison, flèche du bouton, le contenu de son aperçu (parcours en 4 étapes, graphique, chiffres et bouton que la V2 n'a pas).

@@ -4,8 +4,8 @@
 -- Addresses are fictitious; coordinates are approximate (commune centres).
 -- Rows are created once: a property that already exists is left as the
 -- recette made it, so running the seed again never undoes testing work.
--- Not seeded yet: photos (L1-12, photo pipeline and bucket) and the two
--- offers (L2-01, offers table).
+-- Photos: loaded after this file by scripts/seed-photos.mjs (L1-46, files in
+-- Storage). Not seeded yet: the two offers (L2-01, offers table).
 
 create temporary table seed_props (
   n int, owner text, type public.property_type, address_line text, postal_code text, city text,

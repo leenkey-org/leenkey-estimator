@@ -995,7 +995,7 @@ Leenkey vend des logements, pas un logiciel. L'interface doit faire voir les bie
 - Séparateurs « · » empilés dans un même libellé (deux au maximum, par exemple « 3 pièces · 68 m² »).
 - Icônes de maison ou de clé en dehors du logo et du dessin de marque.
 - Illustrations 3D, isométriques, personnages.
-- Photos de banque d'images dans l'interface marketing (couple souriant, main qui tend des clés). Les photos de l'interface sont celles des vendeurs.
+- Photos de banque d'images dans l'interface marketing (couple souriant, main qui tend des clés). Les photos de l'interface sont celles des vendeurs, sauf la photo de maison du hero de l'accueil (L1-46, demande de Younes, `DECISIONS.md` 2026-10-20).
 - Emoji dans l'interface.
 - Bordure colorée sur un seul côté d'une carte.
 
@@ -1134,13 +1134,13 @@ Pour chaque écran : route, contenu dans l'ordre, états (chargement, vide, erre
 ### 8.1 Accueil `/` (refait en V2)
 
 Page refaite avec les composants « Façade » (décision de Younes du 2026-10-19, « V2 finale ») : les sections de la page V1, dans son ordre, avec ses ancres (`#valoriser`, `#etape`, `#comment`, `#fonctionnalites`, `#comparatif`, `#tarifs`, `#faq`, `#contact`) et les textes de Cédric repris mot pour mot, sauf les corrections listées dans `docs/DECISIONS.md` (2026-10-19). En plus :
-- Hero sur `BrandPanel` avec le dessin `facade.svg` à droite.
+- Hero sur `BrandPanel` avec la photo d'une maison à droite, sous le texte en mobile (L1-46, comme le hero de la V1), ses droits confirmés par Younes (`DECISIONS.md` Q57) ; une photo aux droits non confirmés laisserait le dessin `facade.svg` en production.
 - Deux entrées égales dans le hero, en boutons blancs sur l'aplat bleu (`docs/DESIGN.md` 13.1) : « Je vends » (→ `/estimer`) et « J'achète » (→ `/acheter`).
-- Bloc « Les derniers biens » : 3 `PropertyCard` (variante `tile`) publiées les plus récentes (masqué s'il y en a moins de 3).
+- Bloc « Les derniers biens » : 3 `PropertyCard` (variante `tile`) publiées les plus récentes, celles qui ont une photo d'abord (L1-46) ; masqué s'il y en a moins de 3.
 - Formules : noms et prix lus dans la table `plans`.
 - Formulaire de contact : mêmes champs, mêmes noms et même envoi vers `/api/contact` qu'en V1.
 - Sections sombres de la V1 (décision de Younes du 2026-10-20, L1-47) : « Ce que vous obtenez en quelques minutes. » avec sa courbe et ses quatre éléments, « Vous savez toujours quoi faire ensuite. » avec l'aperçu de l'espace vendeur (« Ma vente » de la maquette du tableau de bord) et ses données d'exemple, dites comme telles (étiquette « Exemple », légende de la V1), sur l'aplat navy (`docs/DESIGN.md` 13.1).
-- Finitions (décision de Younes du 2026-10-20, L1-45) : les mots mis en valeur des titres de la V1 (« votre vente ? », « Jamais de commission. »…) en bleu, les titres de section agrandis, le mouvement de l'accueil V1 adapté à « Façade » (`docs/DESIGN.md` 9), la colonne Leenkey du comparatif en aplat bleu ; « Qui sommes-nous » et « Contact » (`/contact`) dans le menu ; photos de biens libres de droits pour l'accueil et les biens de démonstration en tâche L1-46.
+- Finitions (décision de Younes du 2026-10-20, L1-45) : les mots mis en valeur des titres de la V1 (« votre vente ? », « Jamais de commission. »…) en bleu, les titres de section agrandis, le mouvement de l'accueil V1 adapté à « Façade » (`docs/DESIGN.md` 9), la colonne Leenkey du comparatif en aplat bleu ; « Qui sommes-nous » et « Contact » (`/contact`) dans le menu ; photos de biens pour l'accueil et les biens de démonstration en tâche L1-46.
 
 ### 8.2 Inscription `/inscription`
 
@@ -1984,7 +1984,7 @@ Voir `CLAUDE.md` section 10. Parcours E2E obligatoires (Playwright, sur staging,
 
 Mocks : un client IA factice (`AI_MOCK=1`) renvoie des réponses déterministes pour les tests. Documents de test anonymisés dans `supabase/seed/documents/`.
 
-Seed (`npm run db:seed`, `npm run db:seed:staging`, refusé en production) : comptes `seller_a@test.leenkey.fr`, `seller_b@…`, `buyer_c@…`, `buyer_d@…`, `admin@…` (mot de passe commun en variable `SEED_PASSWORD`, sinon secret Vault `seed_password`), 12 biens publiés répartis dans la zone de lancement (section 20) avec photos libres de droits générées (aplats ou photos Unsplash sous licence, jamais de photos de vraies annonces ; ajoutées avec L1-12), 3 en attente, 1 refusé, conversations, 2 offres (ajoutées avec L2-01), fiches de la FAQ de Cédric. Fichiers `supabase/seed/01_plans.sql`, `02_sale_steps.sql`, la FAQ (`scripts/seed-knowledge.mjs`), `04_accounts.sql`, `05_demo_data.sql`, chargés en une transaction. Idempotent : les données de référence sont mises à jour, les données de démonstration créées une seule fois.
+Seed (`npm run db:seed`, `npm run db:seed:staging`, refusé en production) : comptes `seller_a@test.leenkey.fr`, `seller_b@…`, `buyer_c@…`, `buyer_d@…`, `admin@…` (mot de passe commun en variable `SEED_PASSWORD`, sinon secret Vault `seed_password`), 12 biens publiés répartis dans la zone de lancement (section 20) avec leurs photos (jamais de photos de vraies annonces ; L1-46 : trois maisons pour l'instant, photos fournies par Younes, déposées par `db:seed` avec le compte de seed du propriétaire, sans clé de service ; les autres biens attendent les leurs, L1-46b), 3 en attente, 1 refusé, conversations, 2 offres (ajoutées avec L2-01), fiches de la FAQ de Cédric. Fichiers `supabase/seed/01_plans.sql`, `02_sale_steps.sql`, la FAQ (`scripts/seed-knowledge.mjs`), `04_accounts.sql`, `05_demo_data.sql`, chargés en une transaction. Idempotent : les données de référence sont mises à jour, les données de démonstration créées une seule fois.
 
 ---
 
@@ -2037,7 +2037,8 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-44 | Estimateur re-stylé (`docs/DESIGN.md` 13.1, décision du 2026-10-19) : wizard et tableau de résultat en Archivo, tokens et rayons « Façade », dans la portée `FacadeRoot` ; aucune modification de logique ni de texte (emojis et flèches de la V1 retirés, DESIGN 1 : `DECISIONS.md`, 2026-10-19) | L1-43 | Les tests de non-régression de `estimation.ts` passent à l'identique ; plus de police V1 chargée sur le site ; aucune violation d'accessibilité sérieuse sur `/estimer`, en mobile et en desktop |
 | L1-45 | Finitions de l'accueil et du site (décision de Younes du 2026-10-20) : mots mis en valeur des titres V1 en bleu, titres de section à 40 px, mouvement des pages publiques (`docs/DESIGN.md` 9 : entrée du hero, montée des sections, survols), « Qui sommes-nous » et « Contact » dans la `TopNav` et le menu, page `/contact` | L1-43 | Rien de caché sans JavaScript ni avec `prefers-reduced-motion` ; barre haute sans chevauchement à 768, 1 024 et 1 280 px ; `/contact` au même contrat que le formulaire de l'accueil |
 | L1-47 | Sections sombres de l'accueil (décision de Younes du 2026-10-20) : « Ce que vous obtenez » sur aplat navy avec la courbe de la V1, l'aperçu de l'espace vendeur (« Ma vente » de la V2) avec des données d'exemple | L1-45 | Aplat navy, contrastes AA ; l'aperçu est une image nommée par ce qu'elle montre, étiquetée « Exemple » et légendée, sans contrôle ; courbe à partir de 1 024 px, ligne verticale en dessous |
-| L1-46 | Photos de biens (DESIGN 7.2) : photos libres de droits (licence Unsplash) des biens de démonstration du seed (`supabase/seed/photos/`, chargées par `db:seed`) et photos de l'accueil | L1-45 | Chaque bien publié du seed a sa photo ; accueil avec photos en mobile et en desktop ; aucune photo d'annonce réelle |
+| L1-46 | Photos de biens (DESIGN 7.2), première partie : photo du hero de l'accueil et photos des maisons du seed fournies par Younes (`supabase/seed/photos/`, déposées par `db:seed` avec les comptes de seed), « Les derniers biens » avec photo d'abord (`DECISIONS.md` 2026-10-20) | L1-45 | Accueil avec photos en mobile et en desktop ; trois maisons du seed avec leur photo, jamais sous le minimum de L1-12 ; ni photo d'annonce réelle ni filigrane ; aucune clé de service pour le seed ; aucune photo aux droits non confirmés en production |
+| L1-46b | Photos des autres biens du seed (appartements, terrain, meulière, maison sur sous-sol, biens en attente), dès que Younes les fournit (DESIGN 7.2) | L1-46 | Chaque bien publié du seed a sa photo ; une photo par bien ; aucune photo d'annonce réelle |
 | L1-35 | `listing_revisions` simplifié : trigger sur les champs prix, titre, description d'une annonce publiée, et ajout ou retrait d'une photo (8.3, `DECISIONS.md` 2026-10-19), historique chronologique côté vendeur et admin, notification `listing.revised` à l'admin | L1-14b | Changement de prix tracé avec ancienne et nouvelle valeur |
 
 ### Semaine 4 : messagerie, notifications, dashboard

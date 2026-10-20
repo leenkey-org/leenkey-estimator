@@ -21,6 +21,15 @@ describe("« Les derniers biens »", () => {
     expect(latestOf([])).toEqual([]);
   });
 
+  // L1-46: the most recent with a photo first, each group in its order.
+  it("prend d'abord les plus récents qui ont une photo", () => {
+    const photo = (item: string) => item.endsWith("+");
+    expect(latestOf(["a", "b+", "c", "d+", "e+", "f+"], photo)).toEqual(["b+", "d+", "e+"]);
+    expect(latestOf(["a", "b+", "c", "d"], photo)).toEqual(["b+", "a", "c"]);
+    expect(latestOf(["a", "b", "c"], photo)).toEqual(["a", "b", "c"]);
+    expect(latestOf(["a+", "b+"], photo)).toEqual([]);
+  });
+
   it("« Voir les 12 biens », one listing alone named as such", () => {
     expect(site.home.latest.all(12, "12")).toBe("Voir les 12 biens");
     expect(site.home.latest.all(1, "1")).toBe("Voir le bien");
