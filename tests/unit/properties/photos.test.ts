@@ -108,6 +108,13 @@ describe("files and addresses of a photo", () => {
     expect(imageLoader({ src: "/design/salon-epinay.jpg", width: 800 })).toBe(
       "/design/salon-epinay.jpg?w=800",
     );
+    // The photos of the public pages (L1-46), in the same three widths.
+    expect(imageLoader({ src: "/images/accueil/maison-1600.webp", width: 640 })).toBe(
+      "/images/accueil/maison-800.webp",
+    );
+    expect(imageLoader({ src: "/images/accueil/maison-1600.webp", width: 380 })).toBe(
+      "/images/accueil/maison-400.webp",
+    );
   });
 });
 

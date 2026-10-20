@@ -65,6 +65,21 @@ test.describe("accueil", () => {
     await expect(page.locator(".lk-nav-logo")).toHaveCount(0);
   });
 
+  // L1-46: the house of the V1 hero.
+  test("hero : la photo d'une maison, à la place du dessin", async ({ page }) => {
+    await page.goto("/");
+    const hero = page.locator("#valoriser");
+    // Its rights confirmed (Q57): in production too, so in CI.
+    const photo = hero.locator('img[src*="/images/accueil/maison-"]');
+    await expect(photo).toBeVisible();
+    // Decorative: the title says what the page is about.
+    await expect(photo).toHaveAttribute("alt", "");
+    await expect
+      .poll(() => photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0))
+      .toBe(true);
+    await expect(hero.locator("svg.lk-drawing")).toHaveCount(0);
+  });
+
   test("les sections de la V1 gardent leurs ancres et leurs textes", async ({ page }) => {
     await page.goto("/");
     for (const anchor of ANCHORS) await expect(page.locator(`#${anchor}`)).toHaveCount(1);
@@ -328,6 +343,8 @@ test.describe("accueil (base de seed)", () => {
     const list = page.getByRole("list", { name: "Les derniers biens" });
     const cards = list.getByRole("link");
     await expect(cards).toHaveCount(3);
+    // Those with a photo first (L1-46): the three houses of the seed photos.
+    await expect(list.locator('img[src*="/img/"]')).toHaveCount(3);
     for (const href of await cards.evaluateAll((links) =>
       links.map((link) => link.getAttribute("href")),
     )) {

@@ -1,8 +1,9 @@
-// Loader of next/image (next.config.ts): the photos of the route /img exist
-// in three widths, already WebP (L1-12): the smallest one wide enough is
-// asked, without the optimiser of Vercel. Any other image is served as it is.
+// Loader of next/image (next.config.ts): the photos of the route /img (L1-12)
+// and those of the public pages in /images (L1-46) exist in three widths,
+// already WebP: the smallest one wide enough is asked, without the optimiser
+// of Vercel. Any other image is served as it is.
 
-const PHOTO = /^(\/img\/.+)-(400|800|1600)\.webp$/;
+const PHOTO = /^(\/(?:img|images)\/.+)-(400|800|1600)\.webp$/;
 const WIDTHS = [400, 800, 1600];
 
 export default function imageLoader({ src, width }: { src: string; width: number }): string {

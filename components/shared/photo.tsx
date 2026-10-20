@@ -53,6 +53,8 @@ export function Photo({
       fill
       sizes={sizes}
       priority={priority}
+      // next/image 15 preloads a priority image without saying it is urgent.
+      fetchPriority={priority ? "high" : undefined}
       onLoad={() => setState("loaded")}
       onError={() => setState("failed")}
       className={cn(

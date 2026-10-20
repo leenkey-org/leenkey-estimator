@@ -51,7 +51,8 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-44** Estimateur re-stylé (DESIGN 13.1 : Archivo, tokens, rayons), aucune modification de logique (tâche ajoutée le 19 octobre) ; plus aucune police V1 sur le site ; emojis retirés (DESIGN 1) · PR : #32 · Testé en préprod : ☐
 - [x] **L1-45** Finitions de l'accueil et du site (demande de Younes du 20 octobre) : mots mis en valeur des titres V1 en bleu, titres de section à 40 px, mouvement des pages publiques inspiré de l'accueil V1 (DESIGN 9), « Qui sommes-nous » et « Contact » dans le menu, page `/contact`, colonne Leenkey du comparatif en aplat bleu · PR : #34 · Testé en préprod : ☐
 - [x] **L1-47** Sections sombres de l'accueil (demande de Younes du 20 octobre) : « Ce que vous obtenez en quelques minutes » sur aplat navy avec la courbe de la V1 et ses quatre repères, aperçu de l'espace vendeur (« Ma vente » de la V2) avec des données d'exemple (étiquette « Exemple », légende de la V1) · PR : #35 · Testé en préprod : ☐
-- [ ] **L1-46** Photos de biens libres de droits (DESIGN 7.2) : biens de démonstration du seed et accueil ; en attente de l'accès à `images.unsplash.com` depuis l'environnement de développement · PR : · Testé en préprod : ☐
+- [x] **L1-46** Photos de biens (DESIGN 7.2), première partie, photos fournies par Younes : photo du hero de l'accueil, trois maisons du seed (déposées par `db:seed` avec les comptes de seed), « Les derniers biens » avec photo d'abord · PR : #36 · Testé en préprod : ☐
+- [ ] **L1-46b** Photos des autres biens du seed (appartements, terrain, meulière, maison sur sous-sol, biens en attente) ; en attente des photos de Younes · PR : · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
 

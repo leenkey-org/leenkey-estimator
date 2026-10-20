@@ -181,8 +181,9 @@ export async function countListings(filters: SearchFilters): Promise<QueryResult
 }
 
 /**
- * « Les derniers biens » of the home page (SPEC-V2 8.1): the three listings
- * most recently published, with their main photo, and the number online for
+ * « Les derniers biens » of the home page (SPEC-V2 8.1): among the listings
+ * most recently published (the first page of the search), the three most
+ * recent with a main photo, then without (L1-46), and the number online for
  * « Voir les 12 biens ». None below three.
  */
 export async function latestListings(): Promise<QueryResult<SearchResults>> {
@@ -191,8 +192,9 @@ export async function latestListings(): Promise<QueryResult<SearchResults>> {
   try {
     const rows = await fetchPage({}, "recent", 1);
     const total = Number(rows[0]?.total_count ?? 0);
-    const latest = latestOf(rows.map(toListing));
-    return { ok: true, data: { items: await withCovers(latest), total } };
+    const recent = await withCovers(rows.map(toListing));
+    const latest = latestOf(recent, (listing) => listing.cover !== null);
+    return { ok: true, data: { items: latest, total } };
   } catch (error) {
     // The signals of Next.js (a page rendered at request time) go through.
     unstable_rethrow(error);
