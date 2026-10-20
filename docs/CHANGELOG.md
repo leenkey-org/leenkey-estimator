@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-20 · L1-45 · PR #PR_L145 · Finitions de l'accueil et du site
+### 2026-10-20 · L1-45 · PR #34 · Finitions de l'accueil et du site
 - Ajouté : « Qui sommes-nous » (à partir de 1 280 px) et « Contact » (à partir de 1 024 px) dans la barre haute, les deux dans le menu mobile ; page `/contact` (le formulaire de l'accueil, même envoi vers `/api/contact`), ajoutée au sitemap. Mouvement des pages publiques inspiré de l'accueil V1 (DESIGN 9) : les mots du titre d'un hero montent un à un, le dessin de la façade se trace, les titres et blocs des sections montent en place à leur entrée dans l'écran (les cartes l'une après l'autre), trait sous les liens du menu, flèche des liens « Voir les… », zoom des photos de biens au survol, réaction des boutons à la pression ; rien n'est caché sans JavaScript, avec « réduire les animations » ou à l'impression.
 - Modifié : les mots mis en valeur des titres de la V1 reviennent en bleu plein (accueil, concept, tarifs, investir), la ligne de cote du dessin sous « votre vente. » dans le hero ; titres de section à 40 px en desktop, chapeaux à 18 px ; colonne Leenkey du comparatif en aplat bleu ; tuiles « Les derniers biens » en 3:2 ; « Nous contacter » de `/qui-sommes-nous` mène à `/contact`.
 - Tests : unitaires (liens de la barre haute et du menu, sitemap, accents) ; E2E `site-motion.spec.ts` (montée au défilement, rien de caché à la fin de la page, mouvement réduit, sans JavaScript), barre haute sans chevauchement à 768, 1 024 et 1 280 px, `/contact` ; la suite E2E tourne en mouvement réduit.
