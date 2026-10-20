@@ -6,9 +6,11 @@
 #   staging -> $STAGING_DATABASE_URL
 # Production is refused: it only receives the reference data, at launch (P-05b).
 # SEED_PASSWORD (optional): password of the seed accounts, see 04_accounts.sql.
-# SEED_STORAGE_URL and SEED_STORAGE_KEY (optional): the Storage API and its
-# service role key, to load the photos of the demo properties (L1-46,
-# scripts/seed-photos.mjs); without them, the demo properties have no photo.
+# Photos of the demo properties (L1-46, scripts/seed-photos.mjs), sent as
+# their owners with SEED_PASSWORD, never with the service key: the project of
+# the target and its public key, SEED_SUPABASE_URL and SEED_SUPABASE_ANON_KEY
+# (local) or STAGING_SUPABASE_URL and STAGING_SUPABASE_ANON_KEY (staging).
+# Without them, the demo properties have no photo.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -38,11 +40,20 @@ export PGOPTIONS="${PGOPTIONS:--c client_min_messages=warning}"
   echo "commit;"
 } | psql "$url" -v ON_ERROR_STOP=1 -q -At
 
-# Photos of the demo properties: their files in the bucket photos, then their rows.
-if [ -n "${SEED_STORAGE_URL:-}" ] && [ -n "${SEED_STORAGE_KEY:-}" ]; then
-  node scripts/seed-photos.mjs | psql "$url" -v ON_ERROR_STOP=1 -q -At
+# Photos of the demo properties: their files in the bucket photos, then their
+# rows, for the demo properties without any photo (the others are left as the
+# recette made them).
+case "$target" in
+  local)   supabase_url="${SEED_SUPABASE_URL:-}" anon_key="${SEED_SUPABASE_ANON_KEY:-}" ;;
+  staging) supabase_url="${STAGING_SUPABASE_URL:-}" anon_key="${STAGING_SUPABASE_ANON_KEY:-}" ;;
+esac
+if [ -n "$supabase_url" ] && [ -n "$anon_key" ] && [ -n "${SEED_PASSWORD:-}" ]; then
+  skip="$(psql "$url" -At -c "select coalesce(string_agg(distinct property_id::text, ','), '')
+    from public.photos where property_id::text like '5eed1000-%'")"
+  SEED_SUPABASE_URL="$supabase_url" SEED_SUPABASE_ANON_KEY="$anon_key" SEED_DATABASE_URL="$url" \
+    SEED_PHOTOS_SKIP="$skip" node scripts/seed-photos.mjs "$target" | psql "$url" -v ON_ERROR_STOP=1 -q -At
 else
-  echo "Photos of the demo properties not loaded: SEED_STORAGE_URL and SEED_STORAGE_KEY are not set."
+  echo "Photos of the demo properties not loaded: the project of $target, its public key or SEED_PASSWORD is not set."
 fi
 
 psql "$url" -At -c "

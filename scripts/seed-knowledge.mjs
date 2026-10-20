@@ -7,8 +7,9 @@
 // is reset only when the answer changed. Cards removed from a file are deleted.
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const dir = new URL("../supabase/seed/knowledge/", import.meta.url).pathname;
+const dir = fileURLToPath(new URL("../supabase/seed/knowledge/", import.meta.url));
 const lit = (s) => (s == null ? "null" : `'${String(s).replace(/'/g, "''")}'`);
 
 const statements = [];

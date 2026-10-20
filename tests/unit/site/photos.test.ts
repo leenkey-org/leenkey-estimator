@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
-import { PHOTO_WIDTHS } from "@/leenkey/properties/photo-files";
+import { PHOTO_MINIMUM, PHOTO_WIDTHS } from "@/leenkey/properties/photo-files";
 import { isShown, sitePhoto } from "@/leenkey/site/photos";
 
 // L1-46: the photos of the home page and of the demo properties.
@@ -42,6 +42,7 @@ describe("photos des biens de démonstration (supabase/seed/photos)", () => {
   const { photos } = JSON.parse(readFileSync(`${dir}/photos.json`, "utf8")) as {
     photos: {
       property: number;
+      owner: string;
       file: string;
       caption: string;
       crop: { left: number; top: number; width: number; height: number };
@@ -53,21 +54,26 @@ describe("photos des biens de démonstration (supabase/seed/photos)", () => {
     expect(new Set(files).size).toBe(files.length);
   });
 
-  it("chaque photo est celle d'une maison du seed, avec une légende courte", () => {
+  // Sent as its owner (scripts/seed-photos.mjs): the seller of the property.
+  it("chaque photo est celle d'une maison du seed, de son propriétaire, avec une légende courte", () => {
     const seed = readFileSync("supabase/seed/05_demo_data.sql", "utf8");
     for (const photo of photos) {
-      expect(seed, photo.file).toMatch(new RegExp(`\\(${photo.property}, '[ab]', 'maison'`));
+      expect(seed, photo.file).toMatch(
+        new RegExp(`\\(${photo.property}, '${photo.owner}', 'maison'`),
+      );
       expect(photo.caption.length).toBeGreaterThan(0);
       expect(photo.caption.length).toBeLessThanOrEqual(200);
     }
   });
 
-  it("recadrée en 4:3 dans la photo, comme une photo d'annonce", async () => {
+  // As a photo sent by a seller: never under the minimum of L1-12.
+  it("recadrée dans la photo, jamais sous le minimum imposé aux vendeurs", async () => {
     for (const { file, crop } of photos) {
       const meta = await sharp(`${dir}/${file}`).metadata();
       expect(crop.left + crop.width, file).toBeLessThanOrEqual(meta.width ?? 0);
       expect(crop.top + crop.height, file).toBeLessThanOrEqual(meta.height ?? 0);
-      expect(crop.width * 3, file).toBe(crop.height * 4);
+      expect(Math.max(crop.width, crop.height), file).toBeGreaterThanOrEqual(PHOTO_MINIMUM.long);
+      expect(Math.min(crop.width, crop.height), file).toBeGreaterThanOrEqual(PHOTO_MINIMUM.short);
     }
   });
 

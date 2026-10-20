@@ -23,7 +23,7 @@ const PHOTOS: Record<SitePhotoName, SitePhoto> = {
   home: {
     src: "/images/accueil/maison-1600.webp",
     width: 1199,
-    height: 1592,
+    height: 1199,
     rights: "cleared",
   },
 };

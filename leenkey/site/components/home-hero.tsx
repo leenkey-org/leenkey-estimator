@@ -34,7 +34,7 @@ export function HomeHero() {
             <Photo
               src={photo.src}
               alt=""
-              sizes="(min-width: 1280px) 448px, (min-width: 1024px) 38vw, 100vw"
+              sizes="(min-width: 1280px) 426px, (min-width: 1024px) 35vw, (min-width: 768px) calc(100vw - 5rem), calc(100vw - 2.5rem)"
               priority
             />
           </div>

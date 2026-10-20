@@ -31,7 +31,8 @@ export type BrandPanelProps = {
   illustration?: boolean;
   /**
    * A photo on the right of the text from 1024 px, under it before (home
-   * page, L1-46), in place of the drawing; in a hero, it rises after the text.
+   * page, L1-46), in place of the drawing. It shows from the first paint,
+   * without entrance: the largest element of the page (LCP) never waits.
    */
   media?: ReactNode;
   /** Actions or content under the description. */
@@ -135,15 +136,8 @@ export function BrandPanel({
             </div>
           ) : null}
         </div>
-        {media ? (
-          <div
-            style={hero ? delay(last + 3 * NEXT_MS) : undefined}
-            className={cn("w-full lg:w-[38%] lg:max-w-md lg:shrink-0", hero && "lk-rise")}
-          >
-            {media}
-          </div>
-        ) : null}
-        {illustration ? (
+        {media ? <div className="w-full lg:w-[38%] lg:max-w-md lg:shrink-0">{media}</div> : null}
+        {illustration && !media ? (
           <FacadeDrawing
             data-reveal-draw={hero ? undefined : ""}
             className={cn(

@@ -93,9 +93,9 @@ case "${1:-}" in
       sleep 1
     done
     DATABASE_URL="$DB_URL" scripts/db-migrate.sh local
-    # The photos of the demo properties go straight to the storage service.
+    # The photos of the demo properties are sent by their owners, through the gateway.
     SEED_PASSWORD="$(cat $DIR/seed_password)" DATABASE_URL="$DB_URL" \
-      SEED_STORAGE_URL="http://127.0.0.1:$STORAGE" SEED_STORAGE_KEY="$(jwt service_role)" \
+      SEED_SUPABASE_URL="http://127.0.0.1:$GATEWAY" SEED_SUPABASE_ANON_KEY="$(cat $DIR/anon_key)" \
       scripts/db-seed.sh local
 
     docker run -d --name lk-stack-rest -p 127.0.0.1:$REST:3000 \
