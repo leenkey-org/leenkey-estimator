@@ -222,3 +222,36 @@ describe("pages of the site (L1-42)", () => {
     expect(leenkey?.values[0]).toBe(`${accompagne.replace(" €", "")} à ${serenite}`);
   });
 });
+
+// L1-47 (DECISIONS 2026-10-20): the dark sections of the V1 page.
+describe("aperçu de l'espace vendeur", () => {
+  const space = site.home.space;
+  const texts = JSON.stringify(space);
+
+  it("dit, comme la V1, que ses données sont des exemples", () => {
+    expect(space.caption).toBe("Aperçu de l'espace vendeur, avec des données d'exemple.");
+  });
+
+  it("ne parle ni de portails (annonces exclusives) ni d'« estimation »", () => {
+    expect(texts).not.toMatch(/portail/i);
+    expect(texts).not.toMatch(/estim/i);
+  });
+
+  it("jamais plus de deux séparateurs « · » dans un libellé (DESIGN.md 1)", () => {
+    for (const text of texts.match(/"[^"]*"/g) ?? []) {
+      expect((text.match(/·/g) ?? []).length, text).toBeLessThanOrEqual(2);
+    }
+  });
+
+  it("4 étapes, l'étape en cours après celle qui est faite", () => {
+    expect(space.steps.map((step) => step.state)).toEqual(["done", "current", "todo", "todo"]);
+    expect(space.step).toBe("Étape 2 sur 4 · Dossier vendeur");
+    expect(space.chart.days).toHaveLength(7);
+  });
+});
+
+describe("ce que vous obtenez en quelques minutes", () => {
+  it("les quatre éléments de la courbe, un repère chacun", () => {
+    expect(site.home.features.items).toHaveLength(4);
+  });
+});

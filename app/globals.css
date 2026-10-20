@@ -310,6 +310,8 @@ html {
   --color-lk-blue-tint: #eef4ff;
   --color-lk-blue-line: #dbeafe;
   --color-lk-on-blue-2: #f0f4ff;
+  /* Accent, lines and rings on navy: 6.9:1 on --lk-navy (L1-47) */
+  --color-lk-blue-light: #93b4ff;
   --color-lk-navy: #1a2b4a;
   --color-lk-ink: #0f1e35;
   --color-lk-ink-2: #3e4757;
@@ -513,6 +515,43 @@ html {
     outline-offset: 6px;
   }
 }
+/* The rest of the preview of the seller area (L1-47): its bars grow from
+   the bottom one after the other, its progress fills from the left. */
+@keyframes lk-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+.lk-bar {
+  transform-origin: bottom;
+}
+.lk-fill {
+  transform-origin: left center;
+}
+[data-revealed] .lk-bar {
+  animation: lk-grow 0.8s var(--ease-reveal-lk) 0.3s backwards;
+}
+[data-revealed] :nth-child(2) > * > .lk-bar {
+  animation-delay: 0.36s;
+}
+[data-revealed] :nth-child(3) > * > .lk-bar {
+  animation-delay: 0.42s;
+}
+[data-revealed] :nth-child(4) > * > .lk-bar {
+  animation-delay: 0.48s;
+}
+[data-revealed] :nth-child(5) > * > .lk-bar {
+  animation-delay: 0.54s;
+}
+[data-revealed] :nth-child(6) > * > .lk-bar {
+  animation-delay: 0.6s;
+}
+[data-revealed] :nth-child(7) > * > .lk-bar {
+  animation-delay: 0.66s;
+}
+[data-revealed] .lk-fill {
+  animation: lk-draw-x 1s var(--ease-reveal-lk) 0.4s backwards;
+}
 /* lk-check-pop (above) overshoots on its own keyframes. */
 [data-revealed] .lk-step-done {
   animation: lk-check-pop 0.45s var(--ease-out-lk) 0.45s both;
@@ -603,6 +642,19 @@ html {
   }
   [data-reveal-stagger][data-revealed] > :nth-child(n + 5) {
     transition-delay: 0.32s;
+  }
+  /* The items of the curve of the valuation, as the line reaches them. */
+  [data-reveal-stagger="slow"][data-revealed] > :nth-child(1) {
+    transition-delay: 0.15s;
+  }
+  [data-reveal-stagger="slow"][data-revealed] > :nth-child(2) {
+    transition-delay: 0.5s;
+  }
+  [data-reveal-stagger="slow"][data-revealed] > :nth-child(3) {
+    transition-delay: 0.85s;
+  }
+  [data-reveal-stagger="slow"][data-revealed] > :nth-child(n + 4) {
+    transition-delay: 1.2s;
   }
   [data-reveal-draw][data-reveal-pending] path {
     stroke-dashoffset: 1;

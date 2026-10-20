@@ -93,6 +93,43 @@ test.describe("accueil", () => {
     await expect(page.locator("#tarifs")).toBeInViewport();
   });
 
+  test("sections sombres de la V1 : la courbe de la valorisation, l'aperçu de l'espace vendeur", async ({
+    page,
+    isMobile,
+  }) => {
+    await page.goto("/");
+    const features = page.locator("#fonctionnalites");
+    // The navy flat (DESIGN.md 2.1).
+    expect(await features.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+      "rgb(26, 43, 74)",
+    );
+    await expect(features.getByRole("heading", { level: 3 })).toHaveText([
+      "Une fourchette de valeur, pas un prix figé",
+      "Les ventes réelles de votre quartier",
+      "Ce qui fait monter ou baisser le prix",
+      "Un rapport complet en PDF",
+    ]);
+    // The curve from 1024 px; below, a line from one item to the next.
+    await expect(features.locator("svg[data-reveal-draw]")).toBeVisible({ visible: !isMobile });
+    await expect(
+      features.getByRole("link", { name: "Valoriser mon bien gratuitement" }),
+    ).toHaveAttribute("href", "/estimer");
+
+    const space = page.locator("#espace-vendeur");
+    expect(await space.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+      "rgb(26, 43, 74)",
+    );
+    // A picture, named by its caption: its example data are not read one by one.
+    const preview = space.getByRole("img", {
+      name: "Aperçu de l'espace vendeur, avec des données d'exemple.",
+    });
+    await expect(preview).toBeVisible();
+    await expect(preview).toContainText("Ma vente");
+    await expect(preview).toContainText("Programmer les diagnostics");
+    await expect(preview.getByRole("button")).toHaveCount(0);
+    await expect(preview.getByRole("link")).toHaveCount(0);
+  });
+
   test("« Où en êtes-vous » : la réponse suit la situation choisie", async ({ page }) => {
     await page.goto("/");
     const situations = page.getByRole("group", { name: "Votre situation" });

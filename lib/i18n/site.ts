@@ -140,19 +140,53 @@ export const site = {
       title: "Vous savez toujours quoi faire ensuite.",
       accent: "quoi faire ensuite.",
       lead: "Votre vente se pilote depuis un seul endroit : le dossier, l'annonce, les visites et les offres, avec la prochaine action toujours affichée.",
+      // The preview of the V1 page, « avec des données d'exemple » as it said
+      // (DECISIONS 2026-10-20): its figures and words, on the components of
+      // the seller area (DESIGN.md 10.4); « Publication sur Leenkey » instead
+      // of « sur les portails » (DECISIONS 2026-10-19).
+      address: "leenkey.fr/vendeur",
+      heading: "Ma vente",
+      property: {
+        title: "Maison contemporaine",
+        detail: `Biarritz · 120${N}m² · 4 pièces`,
+        status: "En préparation",
+      },
+      step: "Étape 2 sur 4 · Dossier vendeur",
       next: {
         label: "Prochaine étape",
         title: "Programmer les diagnostics",
         text: "À faire avant la mise en ligne de l'annonce.",
       },
+      figures: [
+        { label: "Visites cette semaine", value: "3", change: "+2" },
+        { label: "Contacts qualifiés", value: "8", change: "+3" },
+        { label: "Documents prêts", value: "12/15", change: null },
+        { label: "Offres reçues", value: "1", change: "+1" },
+      ],
+      chart: {
+        title: "Demandes de visite · 7 derniers jours",
+        days: ["L", "M", "M", "J", "V", "S", "D"],
+      },
+      file: {
+        title: "Dossier vendeur",
+        label: "Pièces fournies",
+        value: `12${N}/${N}15`,
+        items: [
+          { title: "Titre de propriété", missing: null },
+          { title: "Taxe foncière", missing: null },
+          { title: "DPE, amiante, électricité", missing: "3" },
+        ],
+      },
       journey: "Votre parcours",
-      // The V1 example figures (« 845 000 € », « 12 pièces sur 15 ») and
-      // « Publication sur les portails » are left out (DECISIONS 2026-10-19).
       steps: [
-        { title: "Valeur validée", text: "Votre prix et sa fourchette", state: "done" },
+        {
+          title: "Valeur validée",
+          text: `845${N}000${N}€ · fourchette 792${N}000 – 898${N}000${N}€`,
+          state: "done",
+        },
         {
           title: "Dossier vendeur",
-          text: "Pièces fournies, diagnostics à programmer",
+          text: "12 pièces sur 15 · diagnostics à programmer",
           state: "current",
         },
         {
@@ -169,7 +203,7 @@ export const site = {
       done: "Fait",
       current: "En cours",
       todo: "À venir",
-      caption: "Aperçu de l'espace vendeur.",
+      caption: "Aperçu de l'espace vendeur, avec des données d'exemple.",
     },
     comparison: {
       title: "Bénéficiez d'un support total et gardez votre indépendance.",

@@ -694,6 +694,12 @@ export const publicPages = {
     "MarketingSection · fond blanc ou pierre, titre h2 au rôle H1 (26 puis 40 px, accent en bleu), texte 640 px (16 puis 18 px), lien à droite à partir de 768 px ; titre et contenu montent en place à l'entrée dans l'écran (pages publiques)",
   sectionTitle: "Un forfait fixe. Jamais de commission.",
   sectionAccent: "Jamais de commission.",
+  navyCaption:
+    "MarketingSection tone navy, align center · aplat bleu foncé des sections vitrines de l'accueil (L1-47) : titre blanc, accent --lk-blue-light (6,9:1), chapeau blanc à 72 %",
+  navyTitle: "Vous savez toujours quoi faire ensuite.",
+  navyAccent: "quoi faire ensuite.",
+  navyLead:
+    "Votre vente se pilote depuis un seul endroit : le dossier, l'annonce, les visites et les offres.",
   sectionLead:
     "Vous choisissez votre niveau d'accompagnement. Le prix ne dépend jamais de la valeur de votre bien.",
   more: "Voir le détail des formules",

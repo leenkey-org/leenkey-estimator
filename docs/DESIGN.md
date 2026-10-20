@@ -72,7 +72,8 @@ Ce document est la **référence visuelle exécutable** de la V2 : valeurs exact
 | `--lk-blue-tint` | `#EEF4FF` | Fond de sélection, encart d'aide, suggestion de l'assistant | bleu dessus 5,06:1 |
 | `--lk-blue-line` | `#DBEAFE` | Bordure des boutons secondaires et des encarts bleus | décoratif |
 | `--lk-on-blue-2` | `#F0F4FF` | Texte secondaire sur aplat bleu | 5,08:1 sur bleu |
-| `--lk-navy` | `#1A2B4A` | En-têtes sombres (dashboard vendeur), avatars | blanc dessus 14,1:1 |
+| `--lk-navy` | `#1A2B4A` | En-têtes sombres (dashboard vendeur), avatars ; sections vitrines de l'accueil (L1-47) | blanc dessus 14,1:1 |
+| `--lk-blue-light` | `#93B4FF` | Sur navy : mots mis en valeur d'un titre, courbe, contours des repères (L1-47) | 6,86:1 sur navy |
 | `--lk-ink` | `#0F1E35` | Texte principal, back office (barre latérale), bouton « sur fond sombre » | 16,7:1 sur blanc |
 | `--lk-ink-2` | `#3E4757` | Texte de corps secondaire, valeurs sur pierre | 9,36:1 sur blanc |
 | `--lk-ink-3` | `#5B6474` | Texte tertiaire (dates, libellés de chiffres, aides) | 5,97:1 sur blanc ; 5,07:1 sur `--lk-stone-2` |
@@ -94,7 +95,7 @@ Badges DPE (fond / texte) : A `#D1FAE5`/`#065F46` · B `#DCFCE7`/`#166534` · C 
 Règles :
 - Le bleu n'est jamais utilisé pour du texte de plus de 2 lignes.
 - Sur aplat bleu : texte principal blanc, secondaire `--lk-on-blue-2`, jamais de gris.
-- Sur navy ou ink : texte principal blanc, secondaire `rgba(255,255,255,0.72)` (≥ 7:1).
+- Sur navy ou ink : texte principal blanc, secondaire `rgba(255,255,255,0.72)` (≥ 7:1) ; accent `--lk-blue-light`, jamais `--lk-blue` (2,5:1 sur navy).
 - Les pages publiques (accueil, recherche, annonce) ont un fond blanc ; les espaces connectés (vendeur, acquéreur, compte) ont un fond `--lk-bg` avec cartes blanches.
 
 ### 2.2 `app/globals.css` (Tailwind 4)
@@ -113,6 +114,7 @@ Règles :
   --color-lk-blue-tint: #EEF4FF;
   --color-lk-blue-line: #DBEAFE;
   --color-lk-on-blue-2: #F0F4FF;
+  --color-lk-blue-light: #93B4FF; /* accent sur navy, L1-47 */
   --color-lk-navy: #1A2B4A;
   --color-lk-ink: #0F1E35;
   --color-lk-ink-2: #3E4757;
@@ -427,6 +429,7 @@ Usages et réglages :
 | Pages publiques : entrée du hero (les mots du titre un à un, 45 ms d'écart, puis le texte et les actions) ; montée des blocs d'une section quand ils entrent dans l'écran (24 px) ; cartes d'une grille décalées de 80 ms | 700 ms | `--ease-reveal-lk` (celle de l'accueil V1) |
 | Pages publiques : dessin `facade.svg` qui se trace (hero, aplat final) ; ligne de cote sous l'accent d'un titre | 1,6 s ; 0,8 s | `--ease-reveal-lk` |
 | Accueil : aperçu de l'espace vendeur monté en place, l'étape faite qui se coche (léger dépassement de l'échelle), puis un anneau autour de l'étape en cours, une fois | 450 ms ; 1,2 s | `--ease-out-lk` |
+| Accueil : les barres de l'aperçu qui montent l'une après l'autre (60 ms d'écart), les jauges qui se remplissent depuis la gauche ; la courbe de la valorisation qui se trace, ses quatre éléments qui arrivent quand elle les atteint (0,15 s, 0,5 s, 0,85 s, 1,2 s) | 800 ms ; 1 s ; 1,6 s | `--ease-reveal-lk` |
 
 - Montée des sections au défilement (décision de Younes du 2026-10-20, qui remplace « aucune animation d'entrée de section ») : pages publiques seulement (`PublicPage` : accueil, concept, tarifs, FAQ, investir, qui sommes-nous, contact), jamais dans les espaces connectés, les formulaires, la recherche ni l'annonce ; une seule fois par bloc. Ce qui est à l'écran à l'arrivée n'est jamais caché ; sans JavaScript, avec `prefers-reduced-motion` ou à l'impression, rien n'est caché.
 - Repris de l'accueil V1 : montée des blocs et décalage des cartes, entrée mot à mot du titre, trait sous les liens du menu, réaction des boutons à la pression. Non repris (sections 1 et 5) : dégradés (`text-grad`, trait en dégradé), flou, ombres au survol, élévation de cartes non cliquables (une fausse promesse de clic), parallaxe et zoom en boucle, compteurs animés (pas de chiffres inventés), pulsations sans fin.
@@ -796,6 +799,7 @@ Référence de la page `/design` à construire en `L1-07` : palette, typographie
 |---|---|---|
 | Accueil public `/` | G1 | `BrandPanel blue` hero (titre display 56 px, deux entrées égales « Je vends » / « J'achète » en `inverse` et `outline-inverse`, les trois promesses de la V1), « Les derniers biens » (3 `PropertyCard tile`, défilement horizontal en mobile, 3 colonnes à partir de 768 px), puis les sections de la V1 en `MarketingSection` (situation, étapes, valorisation, espace vendeur, comparatif, `PlanCard`, questions, formulaire de contact) et un `BrandPanel` final (L1-41) ; L1-45 : mots mis en valeur des titres V1 (3.2), titres de section à 40 px, colonne Leenkey du comparatif en aplat `--lk-blue` (texte blanc, filets blancs à 24 %), tuiles « Les derniers biens » en 3:2, mouvement de la section 9 |
 | Contact `/contact` | G1 | la `MarketingSection` « Parlons-en ensemble. » de l'accueil en h1, son formulaire (`source` « contact ») (L1-45) |
+| Accueil, sections vitrines (L1-47) | G1 | les deux sections sombres de la V1 (`DECISIONS.md` 2026-10-20), `MarketingSection` `tone="navy"` `align="center"`, l'une après l'autre : « Ce que vous obtenez en quelques minutes. » avec `ValueCurve` (à partir de 1 024 px, la courbe de la V1 en `--lk-blue-light` 2 px, sans aplat dessous, quatre repères ronds de 44 px bordés de `--lk-blue-light` posés dessus, titre 16 puis 17 px 600 et texte 14 px blanc à 72 % centrés dessous ; en dessous de 1 024 px, les repères à gauche reliés par une ligne de 2 px, le texte à droite ; icônes `ChartLine`, `MapPin`, `ChartNoAxesColumn`, `FileText`) puis « Valoriser mon bien gratuitement » `primary lg` ; « Vous savez toujours quoi faire ensuite. » avec `SellerSpacePreview` : fenêtre du site (barre blanche, adresse `leenkey.fr/vendeur`), « Ma vente » comme le dessine 10.4 (`SellerHeader`, `NextActionCard` sans bouton, `StatTile` par 2 puis par 4, demandes de visite de la semaine en barres et dossier vendeur à partir de 768 px, `TaskList` « Votre parcours »), avec les données d'exemple de la V1 et sa légende « Aperçu de l'espace vendeur, avec des données d'exemple. » ; une image pour les technologies d'assistance (`role="img"`, nommée par sa légende), rien n'y est un contrôle. Ni étiquette en capitales au-dessus des titres (« Le point de départ »), ni numérotation « 01 » à « 04 » (section 1). |
 | Estimateur `/estimer` | existant, re-stylé : police Archivo, tokens, rayons ; aucune modification de logique (L1-44) | cartes de choix sur le modèle de `RoleCard`, `ChipToggle`, chiffres et DPE au format du `SegmentedPicker`, `InfoNote`, `InlineAlert`, dialogue 10.8 |
 | Pages par ville | V3 | — |
 | Connexion, mot de passe oublié | G5 simplifié (comme 12.1) | — |
