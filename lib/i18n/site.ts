@@ -7,6 +7,8 @@
 
 // Narrow no-break space of the amounts (docs/DESIGN.md 3.3).
 const N = " ";
+// No-break space before « : ? ! ; », which never start a line (L1-45).
+const NBSP = "\u00a0";
 
 export const site = {
   // Marketing pages, in the footer of the V2 pages and in the mobile menu.
@@ -17,6 +19,7 @@ export const site = {
     faq: "FAQ",
     invest: "Investir",
     about: "Qui sommes-nous",
+    contact: "Contact",
   },
   // G1 mobile header (docs/DESIGN.md 11): logo and menu.
   menu: {
@@ -27,9 +30,11 @@ export const site = {
   },
   home: {
     metaDescription:
-      "La plateforme qui accompagne les propriétaires dans la vente de leur bien, sans agence : analyse de valeur, dossier, annonce, négociation, jusqu'à la signature. Forfait fixe et transparent.",
+      "La plateforme qui accompagne les propriétaires dans la vente de leur bien, sans agence : analyse de valeur, dossier, annonce, négociation, jusqu'à la signature. Forfait fixe et transparent.",
     hero: {
       title: "Leenkey vous donne les clés de votre vente.",
+      // The highlighted words of the V1 titles (DECISIONS 2026-10-20).
+      accent: "votre vente.",
       lead: "Vendez sans agence, accompagné à chaque étape\u00A0— de l'analyse de valeur jusqu'à la signature.",
       entries: "Vendre ou acheter",
       sell: "Je vends",
@@ -46,7 +51,8 @@ export const site = {
         count > 1 ? `Voir les ${formatted} biens` : "Voir le bien",
     },
     stages: {
-      title: "Où en êtes-vous dans votre vente ?",
+      title: "Où en êtes-vous dans votre vente ?",
+      accent: "votre vente ?",
       lead: "Choisissez votre situation. Leenkey vous indique par où commencer.",
       label: "Votre situation",
       items: [
@@ -62,7 +68,7 @@ export const site = {
           key: "prix",
           label: "Je veux connaître mon prix",
           title: "Situez votre bien au bon prix.",
-          text: "Renseignez ses caractéristiques : vous verrez le montant, sa fourchette, et ce qui le fait monter ou baisser.",
+          text: "Renseignez ses caractéristiques : vous verrez le montant, sa fourchette, et ce qui le fait monter ou baisser.",
           action: "Valoriser mon bien",
           href: "/estimer",
         },
@@ -70,7 +76,7 @@ export const site = {
           key: "preparation",
           label: "Je prépare ma vente",
           title: "Préparez votre vente sans rien oublier.",
-          text: "Diagnostics, documents, annonce : le parcours vous indique ce qui reste à faire avant de publier.",
+          text: "Diagnostics, documents, annonce : le parcours vous indique ce qui reste à faire avant de publier.",
           action: "Préparer ma vente",
           href: "/estimer",
         },
@@ -86,6 +92,7 @@ export const site = {
     },
     steps: {
       title: "Trois étapes. Vous gardez les clés du début à la fin.",
+      accent: "du début à la fin.",
       step: (index: number, total: number) => `Étape ${index} sur ${total}`,
       items: [
         {
@@ -95,7 +102,7 @@ export const site = {
         },
         {
           title: "Préparez",
-          text: "Diagnostics, documents, annonce et visites : un dossier complet, prêt pour le notaire, sans oubli.",
+          text: "Diagnostics, documents, annonce et visites : un dossier complet, prêt pour le notaire, sans oubli.",
           tag: "Dossier vendeur",
         },
         {
@@ -107,6 +114,7 @@ export const site = {
     },
     features: {
       title: "Ce que vous obtenez en quelques minutes.",
+      accent: "en quelques minutes.",
       lead: "Tout commence par une analyse sérieuse de votre bien. Gratuite et sans engagement.",
       items: [
         {
@@ -119,18 +127,19 @@ export const site = {
         },
         {
           title: "Ce qui fait monter ou baisser le prix",
-          text: "État, DPE, extérieurs, prestations, étage : chaque critère est chiffré séparément.",
+          text: "État, DPE, extérieurs, prestations, étage : chaque critère est chiffré séparément.",
         },
         {
           title: "Un rapport complet en PDF",
-          text: "Quatre pages reçues par email : valorisation, marché local, stratégie de vente et plan d'action.",
+          text: "Quatre pages reçues par email : valorisation, marché local, stratégie de vente et plan d'action.",
         },
       ],
       action: "Valoriser mon bien gratuitement",
     },
     space: {
       title: "Vous savez toujours quoi faire ensuite.",
-      lead: "Votre vente se pilote depuis un seul endroit : le dossier, l'annonce, les visites et les offres, avec la prochaine action toujours affichée.",
+      accent: "quoi faire ensuite.",
+      lead: "Votre vente se pilote depuis un seul endroit : le dossier, l'annonce, les visites et les offres, avec la prochaine action toujours affichée.",
       next: {
         label: "Prochaine étape",
         title: "Programmer les diagnostics",
@@ -164,7 +173,8 @@ export const site = {
     },
     comparison: {
       title: "Bénéficiez d'un support total et gardez votre indépendance.",
-      lead: "Pourquoi se lancer seul, sans outils, et finir par se tourner vers une agence en payant des honoraires importants\u00A0— alors qu'une solution intermédiaire existe ?",
+      accent: "indépendance.",
+      lead: "Pourquoi se lancer seul, sans outils, et finir par se tourner vers une agence en payant des honoraires importants\u00A0— alors qu'une solution intermédiaire existe ?",
       example: `Sur une vente à 350${N}000${N}€`,
       rows: ["Frais de vente", "Accompagnement", "Contrôle de la vente", "Sécurité juridique"],
       columns: [
@@ -195,6 +205,7 @@ export const site = {
     },
     plans: {
       title: "Un forfait fixe. Jamais de commission.",
+      accent: "Jamais de commission.",
       lead: "Vous choisissez votre niveau d'accompagnement. Le prix ne dépend jamais de la valeur de votre bien.",
       free: "Gratuit",
       taxes: "TTC",
@@ -218,9 +229,10 @@ export const site = {
     },
     faq: {
       title: "Les trois questions essentielles.",
+      accent: "essentielles.",
       items: [
         {
-          question: "Est-ce vraiment gratuit pour commencer ?",
+          question: "Est-ce vraiment gratuit pour commencer ?",
           answer: [
             "Oui. La formule ",
             { strong: "Autonomie est gratuite" },
@@ -228,13 +240,13 @@ export const site = {
           ],
         },
         {
-          question: "Suis-je vraiment accompagné, ou seul face à la plateforme ?",
+          question: "Suis-je vraiment accompagné, ou seul face à la plateforme ?",
           answer: [
-            "Accompagné. Selon votre forfait, un conseiller Leenkey reste joignable à chaque étape : pour valider votre prix, relire une offre, ou répondre à un doute avant la signature. Vous gardez la main, sans jamais rester seul.",
+            "Accompagné. Selon votre forfait, un conseiller Leenkey reste joignable à chaque étape : pour valider votre prix, relire une offre, ou répondre à un doute avant la signature. Vous gardez la main, sans jamais rester seul.",
           ],
         },
         {
-          question: "Quelle différence avec une agence ?",
+          question: "Quelle différence avec une agence ?",
           answer: [
             "Vous restez décisionnaire. Leenkey apporte les outils, le parcours guidé et l'accompagnement, avec un ",
             { strong: "forfait fixe" },
@@ -246,10 +258,11 @@ export const site = {
     },
     contact: {
       title: "Parlons-en ensemble.",
+      accent: "ensemble.",
       lead: "Propriétaire, investisseur, partenaire\u00A0— laissez-nous un message. Nous vous répondons personnellement sous 48 h, 7 j/7.",
     },
     final: {
-      title: "Prêt à garder les clés de votre vente ?",
+      title: "Prêt à garder les clés de votre vente ?",
       text: "Deux minutes pour connaître la valeur réelle de votre bien. Gratuit, sans engagement.",
       action: "Valoriser mon bien gratuitement",
       note: "Réponse sous 24 h par un conseiller · Aucune carte requise",
@@ -260,15 +273,16 @@ export const site = {
   concept: {
     metaTitle: "Le concept · Leenkey",
     metaDescription:
-      "Combien vaut vraiment votre bien ? Leenkey commence par une valorisation honnête, avant tout engagement commercial.",
+      "Combien vaut vraiment votre bien ? Leenkey commence par une valorisation honnête, avant tout engagement commercial.",
     hero: {
-      title: "Combien vaut vraiment votre bien ?",
-      lead: "C'est la première question que se pose tout propriétaire. Et c'est exactement là que Leenkey commence : par une valorisation honnête, avant tout engagement commercial.",
+      title: "Combien vaut vraiment votre bien ?",
+      accent: "vraiment",
+      lead: "C'est la première question que se pose tout propriétaire. Et c'est exactement là que Leenkey commence : par une valorisation honnête, avant tout engagement commercial.",
       action: "Valoriser mon bien",
     },
     options: {
       title: "Aujourd'hui, vendre laisse le choix entre deux mauvaises options.",
-      lead: "Leenkey est né d'un constat simple. Pour vendre un bien en France, il faut choisir : payer cher, ou avancer seul, sans outil fiable.",
+      lead: "Leenkey est né d'un constat simple. Pour vendre un bien en France, il faut choisir : payer cher, ou avancer seul, sans outil fiable.",
       items: [
         {
           title: "L'agence",
@@ -281,8 +295,8 @@ export const site = {
       ],
       or: "ou",
       question: [
-        "Avant de parler de vente, une seule question compte : ",
-        { strong: "combien vaut votre bien ?" },
+        "Avant de parler de vente, une seule question compte : ",
+        { strong: "combien vaut votre bien ?" },
       ],
       answer:
         "La réponse qui vous est donnée aujourd'hui est soit trop vague (les analyses de valeur en ligne), soit intéressée (l'agent qui veut le mandat). Leenkey commence là, par un outil de valorisation sérieux qui donne une réponse honnête avant tout engagement.",
@@ -296,7 +310,7 @@ export const site = {
           title: "Une analyse de fond, pas une moyenne",
           list: [
             "Les transactions réelles enregistrées par les notaires, secteur par secteur",
-            "Les critères qui font vraiment varier le prix : DPE, étage, orientation, état, travaux, transports, commerces",
+            "Les critères qui font vraiment varier le prix : DPE, étage, orientation, état, travaux, transports, commerces",
             "Les tendances du marché local sur 12 mois glissants",
             "Les écarts constatés entre prix affiché et prix de vente réel",
           ],
@@ -309,12 +323,12 @@ export const site = {
         {
           label: "Ce qu'il produit",
           title: "Une fourchette réaliste, analysée",
-          text: "Pas un chiffre sorti du chapeau. Une fourchette réaliste avec une analyse détaillée : quels éléments tirent le prix vers le haut, lesquels le pénalisent, et où se situe votre bien face aux ventes récentes comparables.",
+          text: "Pas un chiffre sorti du chapeau. Une fourchette réaliste avec une analyse détaillée : quels éléments tirent le prix vers le haut, lesquels le pénalisent, et où se situe votre bien face aux ventes récentes comparables.",
         },
         {
           label: "Pourquoi c'est différent",
           title: "Vous comprenez le prix",
-          text: "Les outils en ligne donnent une moyenne. Leenkey donne une analyse. La différence : vous comprenez pourquoi votre bien vaut ce prix. Et ça change tout pour la suite de la vente.",
+          text: "Les outils en ligne donnent une moyenne. Leenkey donne une analyse. La différence : vous comprenez pourquoi votre bien vaut ce prix. Et ça change tout pour la suite de la vente.",
         },
       ],
       quote: [
@@ -339,13 +353,13 @@ export const site = {
         },
         {
           title: "Un accompagnement humain",
-          text: "Un conseiller disponible aux moments qui comptent : la négociation, les questions juridiques, la coordination avec le notaire. Pas un chatbot, une personne.",
+          text: "Un conseiller disponible aux moments qui comptent : la négociation, les questions juridiques, la coordination avec le notaire. Pas un chatbot, une personne.",
         },
         {
           title: "Gratuit pendant le lancement",
           // V1: « Leenkey est entièrement gratuit […] tous les outils »; the
           // V2 sells Accompagné and Sérénité.
-          text: `Pendant notre phase pilote, la formule Autonomie est entièrement gratuite. Aucune commission, aucun engagement : vous profitez de ses outils, et vous gardez 100${N}% du fruit de votre vente.`,
+          text: `Pendant notre phase pilote, la formule Autonomie est entièrement gratuite. Aucune commission, aucun engagement${NBSP}: vous profitez de ses outils, et vous gardez 100${N}% du fruit de votre vente.`,
         },
       ],
     },
@@ -361,8 +375,9 @@ export const site = {
   pricing: {
     metaTitle: "Tarifs · Leenkey",
     metaDescription:
-      "Trois formules à forfait fixe, jamais de commission : Autonomie gratuite pendant la phase pilote, Accompagné et Sérénité payées à la souscription.",
+      "Trois formules à forfait fixe, jamais de commission : Autonomie gratuite pendant la phase pilote, Accompagné et Sérénité payées à la souscription.",
     title: "Une formule pour chaque vendeur.",
+    accent: "chaque vendeur.",
     lead: "Pendant notre phase pilote, accédez à la version gratuite de Leenkey. Aucun engagement, aucune carte bancaire demandée. Vendez votre bien et économisez réellement.",
     view: "Affichage des formules",
     views: { price: "Gratuit pendant le lancement", savings: "Mon économie vs agence" },
@@ -396,11 +411,11 @@ export const site = {
   faqPage: {
     metaTitle: "Questions fréquentes · Leenkey",
     metaDescription:
-      "Prix, accompagnement, sécurité des données, différence avec une agence : les réponses aux questions que se posent les vendeurs.",
+      "Prix, accompagnement, sécurité des données, différence avec une agence : les réponses aux questions que se posent les vendeurs.",
     title: "Tout ce que vous vous demandez, sans détour.",
     items: [
       {
-        question: "Combien ça coûte, vraiment ?",
+        question: "Combien ça coûte, vraiment ?",
         answer: [
           "Leenkey propose ",
           { strong: "trois formules transparentes" },
@@ -416,31 +431,31 @@ export const site = {
         ],
       },
       {
-        question: "Suis-je vraiment accompagné, ou seul face à la plateforme ?",
+        question: "Suis-je vraiment accompagné, ou seul face à la plateforme ?",
         answer: [
-          "Accompagné. Selon votre forfait, un conseiller Leenkey reste joignable à chaque étape : pour valider votre prix, relire une offre, ou répondre à un doute avant la signature. Vous gardez la main, sans jamais rester seul.",
+          "Accompagné. Selon votre forfait, un conseiller Leenkey reste joignable à chaque étape : pour valider votre prix, relire une offre, ou répondre à un doute avant la signature. Vous gardez la main, sans jamais rester seul.",
         ],
       },
       {
-        question: "Mes données et mes documents sont-ils en sécurité ?",
+        question: "Mes données et mes documents sont-ils en sécurité ?",
         answer: [
           "Oui. Vos documents sont chiffrés et hébergés en France, conformément au RGPD. Vous seul décidez de ce qui est partagé, et avec qui. Aucune donnée n'est revendue.",
         ],
       },
       {
-        question: "Combien de temps pour vendre ?",
+        question: "Combien de temps pour vendre ?",
         answer: [
           "Une annonce bien préparée et diffusée en exclusivité fait toute la différence. C'est exactement ce que nous outillons.",
         ],
       },
       {
-        question: "Quelle est la différence avec une agence ?",
+        question: "Quelle est la différence avec une agence ?",
         answer: [
           "Une agence facture une commission au pourcentage et gère la vente à votre place. Leenkey vous donne les mêmes outils (valorisation, diffusion, suivi) pour un forfait fixe, avec un conseiller à la demande. Vous gardez le contrôle et l'économie.",
         ],
       },
       {
-        question: "Et si je bloque en cours de route ?",
+        question: "Et si je bloque en cours de route ?",
         answer: [
           "Vous n'avancez jamais à l'aveugle. À chaque étape, vous pouvez solliciter votre conseiller, qui vous rappelle généralement sous 24 h. Le jargon est expliqué, les démarches détaillées. C'est le principe même de Leenkey.",
         ],
@@ -462,7 +477,7 @@ export const site = {
       "Leenkey construit la première plateforme française qui permet à chaque propriétaire de vendre son bien sans agence. Nous cherchons des partenaires qui croient, comme nous, que ce marché mérite mieux.",
     hero: {
       title: "L'immobilier français se réinvente. Soyez-en.",
-      lead: "Leenkey construit la première plateforme française qui permet à chaque propriétaire de vendre son bien sans agence : accompagné, guidé, à frais réduits. Nous cherchons des partenaires qui croient, comme nous, que ce marché mérite mieux.",
+      lead: "Leenkey construit la première plateforme française qui permet à chaque propriétaire de vendre son bien sans agence : accompagné, guidé, à frais réduits. Nous cherchons des partenaires qui croient, comme nous, que ce marché mérite mieux.",
       action: "Rejoindre l'aventure",
     },
     hook: {
@@ -502,6 +517,7 @@ export const site = {
     },
     vision: {
       title: "Un écosystème IA qui copilote la vente immobilière, de bout en bout.",
+      accent: "écosystème IA",
       lead: "Leenkey n'est pas une simple plateforme de mise en relation.",
       statement:
         "Leenkey se construit comme un écosystème complet, dans lequel le propriétaire particulier est accompagné par un ensemble d'outils automatisés par des IA spécifiquement développées pour copiloter la vente de A à Z.",
@@ -510,7 +526,7 @@ export const site = {
         { strong: "24\u00A0h\u00A0/\u00A024 et 7\u00A0j\u00A0/\u00A07" },
         ".",
       ],
-      goal: "Objectif : rendre autonome, rapide et rentable une opération qui, aujourd'hui encore, coûte des milliers d'euros et des semaines de stress. Une plateforme scalable, à faible coût d'exploitation et à fort effet de réseau.",
+      goal: "Objectif : rendre autonome, rapide et rentable une opération qui, aujourd'hui encore, coûte des milliers d'euros et des semaines de stress. Une plateforme scalable, à faible coût d'exploitation et à fort effet de réseau.",
       items: [
         {
           title: "IA d'analyse et de pricing",
@@ -661,7 +677,7 @@ export const site = {
         },
         {
           title: "Des bases solides, une révolution à construire",
-          text: "Marque, outil de valorisation, première plateforme : les fondations sont là. Le plus grand reste à bâtir, et c'est là que vous entrez en jeu.",
+          text: "Marque, outil de valorisation, première plateforme : les fondations sont là. Le plus grand reste à bâtir, et c'est là que vous entrez en jeu.",
         },
         {
           title: "Rentable dès le début",
@@ -689,37 +705,37 @@ export const site = {
       title: "Vos questions méritent des réponses claires.",
       items: [
         {
-          question: "Quel est le montant de la levée recherchée ?",
+          question: "Quel est le montant de la levée recherchée ?",
           answer: [
             "Nous sommes en phase d'amorçage. Les montants et modalités sont discutés directement selon le profil et les objectifs de chaque partenaire. Remplissez le formulaire\u00A0— c'est là que tout commence.",
           ],
         },
         {
-          question: "Puis-je voir le pitch deck complet ?",
+          question: "Puis-je voir le pitch deck complet ?",
           answer: [
             "Oui. Il est disponible sur demande après un premier échange. Remplissez le formulaire et nous vous le transmettrons rapidement.",
           ],
         },
         {
-          question: "Est-ce que je peux tester le produit avant ?",
+          question: "Est-ce que je peux tester le produit avant ?",
           answer: [
             "Absolument. L'outil de valorisation est accessible gratuitement depuis la page d'accueil. C'est la meilleure façon de voir concrètement ce que Leenkey construit.",
           ],
         },
         {
-          question: "Quelle vision de sortie pour les partenaires ?",
+          question: "Quelle vision de sortie pour les partenaires ?",
           answer: [
-            "Plusieurs scénarios à 5 ans : acquisition stratégique, introduction en bourse, ou buyout. Ces scénarios sont détaillés dans le pitch deck transmis lors du premier échange qualifié.",
+            "Plusieurs scénarios à 5 ans : acquisition stratégique, introduction en bourse, ou buyout. Ces scénarios sont détaillés dans le pitch deck transmis lors du premier échange qualifié.",
           ],
         },
         {
-          question: "Le projet est-il limité à la France ?",
+          question: "Le projet est-il limité à la France ?",
           answer: [
             `Le focus initial est 100${N}% France. L'expansion en Belgique et en Espagne est prévue une fois le modèle solidement validé sur le marché français.`,
           ],
         },
         {
-          question: "Qui est derrière Leenkey ?",
+          question: "Qui est derrière Leenkey ?",
           answer: [
             "Une équipe combinant expertise produit, développement digital et connaissance du marché immobilier. Les détails sont partagés lors du premier échange.",
           ],
@@ -744,10 +760,17 @@ export const site = {
     },
     final: {
       title:
-        "L'immobilier français se réinvente. La question, c'est : vous en faites partie ou pas ?",
+        "L'immobilier français se réinvente. La question, c'est : vous en faites partie ou pas ?",
       text: "Rejoignez les partenaires qui construisent avec nous la prochaine référence de la vente immobilière en France.",
       action: "Rejoindre le projet",
     },
+  },
+  // /contact (L1-45, DECISIONS 2026-10-20): the contact form of the home page
+  // on a page of its own, where « Contact » of the menu leads.
+  contactPage: {
+    metaTitle: "Contact · Leenkey",
+    metaDescription:
+      "Propriétaire, investisseur, partenaire : laissez-nous un message. Nous vous répondons personnellement sous 48 h, 7 j/7.",
   },
   // /qui-sommes-nous (L1-43): the V1 page, its labels above the titles and
   // the arrows of its buttons left out (DECISIONS 2026-10-19).
@@ -846,7 +869,7 @@ export const site = {
     privacy: "Politique de confidentialité",
     sent: {
       title: "Votre demande de contact a bien été envoyée",
-      text: "Merci ! Nous revenons vers vous sous 48 h, 7 j/7. Un email de confirmation vient d'être envoyé à l'adresse indiquée.",
+      text: "Merci ! Nous revenons vers vous sous 48 h, 7 j/7. Un email de confirmation vient d'être envoyé à l'adresse indiquée.",
     },
     failed: "Erreur d'envoi. Réessayez ou contactez-nous par email.",
     errors: {

@@ -110,7 +110,7 @@ export function AboutCta() {
     >
       <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
         <Button asChild variant="inverse" size="lg">
-          <Link href={`${ROUTES.home}#contact`}>{t.final.contact}</Link>
+          <Link href={ROUTES.contact}>{t.final.contact}</Link>
         </Button>
         <Button asChild variant="outline-inverse" size="lg">
           <Link href={ROUTES.valuation}>{t.final.valuation}</Link>

@@ -49,6 +49,8 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-42** `/concept`, `/tarifs`, `/faq` en V2 (décision du 19 octobre) : formules de `/tarifs` lues dans `plans`, FAQ dépliable · PR : #28 · Testé en préprod : ☐
 - [x] **L1-43** `/investir`, `/qui-sommes-nous`, mentions légales et CGU en V2, `/estimer` dans l'en-tête V2, retrait du site V1 porté (décision du 19 octobre) · PR : #29 · Testé en préprod : ☐
 - [x] **L1-44** Estimateur re-stylé (DESIGN 13.1 : Archivo, tokens, rayons), aucune modification de logique (tâche ajoutée le 19 octobre) ; plus aucune police V1 sur le site ; emojis retirés (DESIGN 1) · PR : #32 · Testé en préprod : ☐
+- [x] **L1-45** Finitions de l'accueil et du site (demande de Younes du 20 octobre) : mots mis en valeur des titres V1 en bleu, titres de section à 40 px, mouvement des pages publiques inspiré de l'accueil V1 (DESIGN 9), « Qui sommes-nous » et « Contact » dans le menu, page `/contact`, colonne Leenkey du comparatif en aplat bleu · PR : #PR_L145 · Testé en préprod : ☐
+- [ ] **L1-46** Photos de biens libres de droits (DESIGN 7.2) : biens de démonstration du seed et accueil ; en attente de l'accès à `images.unsplash.com` depuis l'environnement de développement · PR : · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
 

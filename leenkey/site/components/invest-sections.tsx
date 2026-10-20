@@ -77,7 +77,12 @@ export function MarketSection() {
 /** « Un écosystème IA qui copilote la vente immobilière, de bout en bout. » */
 export function VisionSection() {
   return (
-    <MarketingSection id="vision" title={t.vision.title} lead={t.vision.lead}>
+    <MarketingSection
+      id="vision"
+      title={t.vision.title}
+      accent={t.vision.accent}
+      lead={t.vision.lead}
+    >
       <div className="flex max-w-lk-prose flex-col gap-4">
         <p className="text-lk-body font-semibold text-pretty text-lk-ink lg:text-lk-body-lg">
           {t.vision.statement}

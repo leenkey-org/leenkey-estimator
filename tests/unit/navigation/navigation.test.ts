@@ -153,12 +153,15 @@ describe("bottom tabs (DESIGN.md 10.6)", () => {
 });
 
 describe("TopNav", () => {
-  it("links: Acheter, Vendre (the home page), Tarifs from 1024 px, Valoriser mon bien; no Guides", () => {
-    expect(TOP_NAV_LINKS.map(({ href, label, wide }) => ({ href, label, wide }))).toEqual([
-      { href: "/acheter", label: "Acheter", wide: undefined },
-      { href: "/", label: "Vendre", wide: undefined },
-      { href: "/tarifs", label: "Tarifs", wide: true },
-      { href: "/estimer", label: "Valoriser mon bien", wide: undefined },
+  it("links: Acheter, Vendre (the home page), Tarifs, Valoriser mon bien, Qui sommes-nous, Contact; no Guides", () => {
+    expect(TOP_NAV_LINKS.map(({ href, label, from }) => ({ href, label, from }))).toEqual([
+      { href: "/acheter", label: "Acheter", from: undefined },
+      { href: "/", label: "Vendre", from: undefined },
+      // Where the bar has room for them (DESIGN.md 10.6).
+      { href: "/tarifs", label: "Tarifs", from: "lg" },
+      { href: "/estimer", label: "Valoriser mon bien", from: undefined },
+      { href: "/qui-sommes-nous", label: "Qui sommes-nous", from: "xl" },
+      { href: "/contact", label: "Contact", from: "lg" },
     ]);
   });
 
@@ -175,10 +178,11 @@ describe("TopNav", () => {
       "Vendre",
       "Tarifs",
       "Valoriser mon bien",
+      "Qui sommes-nous",
+      "Contact",
       "Concept",
       "FAQ",
       "Investir",
-      "Qui sommes-nous",
     ]);
     // Each page once.
     expect(new Set(MENU_LINKS.map((link) => link.href)).size).toBe(MENU_LINKS.length);

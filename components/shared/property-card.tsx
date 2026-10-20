@@ -41,6 +41,8 @@ export type PropertyCardProps = PropertyCardData & {
   action?: ReactNode;
   /** next/image sizes, when the tile width differs from the default grid. */
   sizes?: string;
+  /** Tile: a 3:2 photo instead of the 120 px strip (public home page, wider tiles). */
+  tallPhoto?: boolean;
   className?: string;
 };
 
@@ -70,7 +72,10 @@ function Photo({
   return (
     <div className={cn("relative shrink-0 overflow-hidden bg-lk-stone-2", className)}>
       {photo ? (
-        <PhotoImage src={photo.src} alt={photo.alt} sizes={sizes} />
+        // A slow zoom of the photo on hover of the card (DESIGN.md 9).
+        <span className="absolute inset-0 transition-transform duration-500 ease-out-lk group-hover:scale-[1.04]">
+          <PhotoImage src={photo.src} alt={photo.alt} sizes={sizes} />
+        </span>
       ) : (
         <div className="flex h-full items-center justify-center">
           <FacadeDrawing className="w-2/5 text-lk-ink-3" />
@@ -82,14 +87,21 @@ function Photo({
 }
 
 const cardLink =
-  "rounded-lk-md border border-lk-line bg-lk-surface transition-colors duration-140 ease-out-lk hover:border-lk-ink-3";
+  "group rounded-lk-md border border-lk-line bg-lk-surface transition-colors duration-140 ease-out-lk hover:border-lk-ink-3";
 
 /**
  * Property card (docs/DESIGN.md 10.3): compact (mobile search), wide (desktop
  * search) and tile (home, similar properties). The whole card is a link; the
  * favourite button, when present, sits next to it over the photo.
  */
-export function PropertyCard({ variant, action, sizes, className, ...card }: PropertyCardProps) {
+export function PropertyCard({
+  variant,
+  action,
+  sizes,
+  tallPhoto = false,
+  className,
+  ...card
+}: PropertyCardProps) {
   const price = formatPrice(card.priceCents);
   const success = card.note?.tone === "success";
 
@@ -180,7 +192,7 @@ export function PropertyCard({ variant, action, sizes, className, ...card }: Pro
         <Photo
           photo={card.photo}
           sizes={sizes ?? "(min-width: 1024px) 240px, (min-width: 768px) 33vw, 80vw"}
-          className="h-30 w-full"
+          className={cn("w-full", tallPhoto ? "aspect-3/2" : "h-30")}
         >
           {card.badge ? (
             <span

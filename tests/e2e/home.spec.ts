@@ -212,11 +212,13 @@ test.describe("accueil", () => {
       "Vendre",
       "Tarifs",
       "Valoriser mon bien",
+      "Qui sommes-nous",
+      "Contact",
       "Concept",
       "FAQ",
       "Investir",
-      "Qui sommes-nous",
     ]);
+    await expect(menu.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
     await expect(menu.getByRole("link", { name: "Vendre", exact: true })).toHaveAttribute(
       "aria-current",
       "page",
@@ -249,6 +251,8 @@ test.describe("accueil", () => {
       "Vendre",
       "Tarifs",
       "Valoriser mon bien",
+      "Qui sommes-nous",
+      "Contact",
     ]);
     await expect(nav.getByRole("link", { name: "Vendre", exact: true })).toHaveAttribute(
       "aria-current",

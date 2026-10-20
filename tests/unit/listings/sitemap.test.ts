@@ -22,6 +22,7 @@ describe("sitemapEntries", () => {
       "/qui-sommes-nous",
       "/faq",
       "/investir",
+      "/contact",
       "/mentions-legales",
       "/cgu",
       "/acheter",
@@ -39,7 +40,7 @@ describe("sitemapEntries", () => {
   });
 
   it("still lists the pages without any listing (database unavailable)", () => {
-    expect(sitemapEntries([]).length).toBe(10);
+    expect(sitemapEntries([]).length).toBe(11);
   });
 });
 
@@ -83,6 +84,7 @@ describe("robots", () => {
       "/faq",
       "/investir",
       "/qui-sommes-nous",
+      "/contact",
       "/intelligence-artificielle",
       "/signalement",
       "/mentions-legales",

@@ -5,7 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
 // database (CI), /tarifs says the plans could not be read; with the seed
 // (E2E_SEED=1), it shows the three plans of the plans table. L1-43:
 // /investir, /qui-sommes-nous, then the legal notice and the CGU of the V1 on
-// the legal page template.
+// the legal page template. L1-45: /contact, the form of the home page.
 
 const seeded = process.env.E2E_SEED === "1";
 
@@ -27,6 +27,7 @@ test.describe("pages du site en V2", () => {
     ["/faq", "Tout ce que vous vous demandez, sans détour."],
     ["/investir", "L'immobilier français se réinvente. Soyez-en."],
     ["/qui-sommes-nous", "Rendre la vente immobilière enfin simple, humaine et transparente."],
+    ["/contact", "Parlons-en ensemble."],
   ] as const) {
     test(`${path} : titre, en-tête et pied V2, aucune violation sérieuse @a11y`, async ({
       page,
@@ -150,11 +151,31 @@ test.describe("pages du site en V2", () => {
     );
     await expect(main.getByRole("link", { name: "Nous contacter" })).toHaveAttribute(
       "href",
-      "/#contact",
+      "/contact",
     );
     await expect(
       main.getByRole("link", { name: "Valoriser mon bien gratuitement" }),
     ).toHaveAttribute("href", "/estimer");
+  });
+
+  test("/contact : le formulaire de l'accueil part vers /api/contact", async ({ page }) => {
+    let body: { source?: string; data?: Record<string, string> } = {};
+    await page.route("**/api/contact", async (route) => {
+      body = route.request().postDataJSON();
+      await route.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
+    });
+    await page.goto("/contact");
+    await expect(page).toHaveTitle("Contact · Leenkey");
+    const form = page.locator("#contact-form");
+    await form.getByLabel("Motif de votre demande").selectOption("Partenaire");
+    await form.getByLabel("Prénom").fill("Alice");
+    await form.getByLabel("Nom", { exact: true }).fill("Martin");
+    await form.getByLabel("Email").fill("alice@example.fr");
+    await form.getByLabel("Votre message").fill("Bonjour, je suis notaire.");
+    await form.getByRole("button", { name: "Envoyer ma demande" }).click();
+    await expect(page.locator(".form-success")).toBeVisible();
+    expect(body.source).toBe("contact");
+    expect(body.data?.prenom).toBe("Alice");
   });
 
   test("/tarifs sans base : le message d'indisponibilité", async ({ page }) => {

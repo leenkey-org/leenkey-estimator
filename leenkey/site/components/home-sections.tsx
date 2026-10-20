@@ -21,7 +21,13 @@ const home = fr.site.home;
 /** « Où en êtes-vous dans votre vente ? » (#etape). */
 export function StagesSection() {
   return (
-    <MarketingSection id="etape" tone="stone" title={home.stages.title} lead={home.stages.lead}>
+    <MarketingSection
+      id="etape"
+      tone="stone"
+      title={home.stages.title}
+      accent={home.stages.accent}
+      lead={home.stages.lead}
+    >
       <StagePicker />
     </MarketingSection>
   );
@@ -31,8 +37,8 @@ export function StagesSection() {
 export function StepsSection() {
   const t = home.steps;
   return (
-    <MarketingSection id="comment" title={t.title}>
-      <ol className="grid gap-4 lg:grid-cols-3">
+    <MarketingSection id="comment" title={t.title} accent={t.accent} revealContent={false}>
+      <ol data-reveal-stagger="" className="grid gap-4 lg:grid-cols-3">
         {t.items.map((step, index) => (
           <li key={step.title} className={cn(card, "flex flex-col gap-2")}>
             <p className="text-lk-caption font-semibold text-lk-blue">
@@ -58,8 +64,15 @@ export function StepsSection() {
 export function FeaturesSection() {
   const t = home.features;
   return (
-    <MarketingSection id="fonctionnalites" tone="stone" title={t.title} lead={t.lead}>
-      <ul className="grid gap-4 md:grid-cols-2">
+    <MarketingSection
+      id="fonctionnalites"
+      tone="stone"
+      title={t.title}
+      accent={t.accent}
+      lead={t.lead}
+      revealContent={false}
+    >
+      <ul data-reveal-stagger="" className="grid gap-4 md:grid-cols-2">
         {t.items.map((feature) => (
           <li key={feature.title} className={card}>
             <h3 className={cardTitle}>{feature.title}</h3>
@@ -67,16 +80,20 @@ export function FeaturesSection() {
           </li>
         ))}
       </ul>
-      <Button asChild size="lg" className="mt-8">
-        <Link href={ROUTES.valuation}>{t.action}</Link>
-      </Button>
+      <div data-reveal="" className="mt-8">
+        <Button asChild size="lg">
+          <Link href={ROUTES.valuation}>{t.action}</Link>
+        </Button>
+      </div>
     </MarketingSection>
   );
 }
 
+// lk-step-done and lk-step-current: once the preview has risen, the step
+// done checks itself and the current one calls for attention (globals.css).
 const STEP_STATE = {
-  done: "border-lk-success bg-lk-success text-white",
-  current: "border-lk-blue bg-lk-surface",
+  done: "lk-step-done border-lk-success bg-lk-success text-white",
+  current: "lk-step-current border-lk-blue bg-lk-surface",
   todo: "border-lk-line bg-lk-surface",
 } as const;
 
@@ -88,7 +105,7 @@ const STEP_STATE = {
 export function SellerSpaceSection() {
   const t = home.space;
   return (
-    <MarketingSection id="espace-vendeur" title={t.title} lead={t.lead}>
+    <MarketingSection id="espace-vendeur" title={t.title} accent={t.accent} lead={t.lead}>
       <figure className="flex flex-col gap-3">
         <div className="grid gap-6 rounded-lk-md border border-lk-line bg-lk-bg p-4 md:p-6 lg:grid-cols-2">
           <div className="flex flex-col gap-2">
@@ -149,36 +166,76 @@ export function SellerSpaceSection() {
 export function ComparisonSection() {
   const t = home.comparison;
   return (
-    <MarketingSection id="comparatif" tone="stone" title={t.title} lead={t.lead}>
-      <p className="text-lk-compact font-semibold text-lk-ink-2">{t.example}</p>
-      <ul className="mt-4 grid gap-4 lg:grid-cols-3">
-        {t.columns.map((column) => (
-          <li
-            key={column.key}
-            className={cn(
-              "rounded-lk-md bg-lk-surface p-5 lg:p-6",
-              column.key === "leenkey" ? "border-2 border-lk-blue" : "border border-lk-line",
-            )}
-          >
-            <h3 className="text-lk-h2 font-bold text-wide text-lk-ink lg:text-lk-h2-lg">
-              {column.name}
-            </h3>
-            <p className="mt-1 text-lk-secondary text-lk-ink-3">{column.detail}</p>
-            <dl className="mt-4">
-              {t.rows.map((row, index) => (
-                <div
-                  key={row}
-                  className="flex items-baseline justify-between gap-4 border-t border-lk-line py-2.5"
-                >
-                  <dt className="text-lk-secondary text-lk-ink-3">{row}</dt>
-                  <dd className="text-right text-lk-compact font-semibold tabular-nums text-lk-ink">
-                    {column.values[index]}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </li>
-        ))}
+    <MarketingSection
+      id="comparatif"
+      tone="stone"
+      title={t.title}
+      accent={t.accent}
+      lead={t.lead}
+      revealContent={false}
+    >
+      <p data-reveal="" className="text-lk-compact font-semibold text-lk-ink-2">
+        {t.example}
+      </p>
+      <ul data-reveal-stagger="" className="mt-4 grid gap-4 lg:grid-cols-3">
+        {t.columns.map((column) => {
+          // Leenkey in the blue flat of the moments that count (DESIGN.md 1).
+          const leenkey = column.key === "leenkey";
+          return (
+            <li
+              key={column.key}
+              className={cn(
+                "rounded-lk-md border p-5 lg:p-6",
+                leenkey ? "border-lk-blue bg-lk-blue text-white" : "border-lk-line bg-lk-surface",
+              )}
+            >
+              <h3
+                className={cn(
+                  "text-lk-h2 font-bold text-wide lg:text-lk-h2-lg",
+                  leenkey ? "text-white" : "text-lk-ink",
+                )}
+              >
+                {column.name}
+              </h3>
+              <p
+                className={cn(
+                  "mt-1 text-lk-secondary",
+                  leenkey ? "text-lk-on-blue-2" : "text-lk-ink-3",
+                )}
+              >
+                {column.detail}
+              </p>
+              <dl className="mt-4">
+                {t.rows.map((row, index) => (
+                  <div
+                    key={row}
+                    className={cn(
+                      "flex items-baseline justify-between gap-4 border-t py-2.5",
+                      leenkey ? "border-white/24" : "border-lk-line",
+                    )}
+                  >
+                    <dt
+                      className={cn(
+                        "text-lk-secondary",
+                        leenkey ? "text-lk-on-blue-2" : "text-lk-ink-3",
+                      )}
+                    >
+                      {row}
+                    </dt>
+                    <dd
+                      className={cn(
+                        "text-right text-lk-compact font-semibold tabular-nums",
+                        leenkey ? "text-white" : "text-lk-ink",
+                      )}
+                    >
+                      {column.values[index]}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </li>
+          );
+        })}
       </ul>
     </MarketingSection>
   );
@@ -192,13 +249,15 @@ export function HomeFaqSection() {
       id="faq"
       tone="stone"
       title={t.title}
+      accent={t.accent}
       action={
         <MoreLink href={ROUTES.faq} tone="ink">
           {t.all}
         </MoreLink>
       }
+      revealContent={false}
     >
-      <ul className="grid gap-4 lg:grid-cols-3">
+      <ul data-reveal-stagger="" className="grid gap-4 lg:grid-cols-3">
         {t.items.map((item) => (
           <li key={item.question} className={card}>
             <h3 className={cardTitle}>{item.question}</h3>
@@ -212,11 +271,17 @@ export function HomeFaqSection() {
   );
 }
 
-/** « Parlons-en ensemble. » (#contact): the contact form of the site. */
-export function ContactSection() {
+/** « Parlons-en ensemble. » (#contact): the contact form of the site, also /contact. */
+export function ContactSection({ titleAs = "h2" }: { titleAs?: "h1" | "h2" }) {
   const t = home.contact;
   return (
-    <MarketingSection id="contact" title={t.title} lead={t.lead}>
+    <MarketingSection
+      id="contact"
+      titleAs={titleAs}
+      title={t.title}
+      accent={t.accent}
+      lead={t.lead}
+    >
       <ContactForm source="contact" className="max-w-lk-settings" />
     </MarketingSection>
   );

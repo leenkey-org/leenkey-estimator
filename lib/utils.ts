@@ -4,9 +4,11 @@ import { extendTailwindMerge } from "tailwind-merge";
 /** Façade type scale (app/globals.css, `--text-lk-*`): font sizes, not colours. */
 export const FACADE_TEXT_SIZES = [
   "lk-display",
+  "lk-display-md",
   "lk-display-lg",
   "lk-h1",
   "lk-h1-lg",
+  "lk-section-lg",
   "lk-h2",
   "lk-h2-lg",
   "lk-h3",
@@ -22,6 +24,7 @@ export const FACADE_TEXT_SIZES = [
   "lk-stat",
   "lk-body",
   "lk-body-lg",
+  "lk-lead-lg",
   "lk-compact",
   "lk-label",
   "lk-button-lg",
@@ -42,8 +45,8 @@ const twMerge = extendTailwindMerge<"lk-width">({
       text: [...FACADE_TEXT_SIZES],
       radius: ["lk-xs", "lk-sm", "lk-md"],
       shadow: ["float", "sheet"],
-      ease: ["out-lk"],
-      container: ["lk-page", "lk-home", "lk-settings", "lk-prose", "lk-form"],
+      ease: ["out-lk", "reveal-lk"],
+      container: ["lk-page", "lk-home", "lk-settings", "lk-heading", "lk-prose", "lk-form"],
     },
     classGroups: {
       "lk-width": ["text-wide", "text-display"],

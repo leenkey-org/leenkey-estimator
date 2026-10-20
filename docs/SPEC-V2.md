@@ -196,6 +196,7 @@ Resend ◄────────── core/notifications (file notifications 
   /annonce/[slug]           page annonce publique
   /vendre                   page vendeur : en V2, la page d'accueil V1 (/), lien « Vendre » (DECISIONS 2026-10-17)
   /concept, /tarifs, /faq, /investir, /qui-sommes-nous   pages du site, refaites en V2 (L1-41 à L1-43)
+  /contact                  formulaire de contact de l'accueil sur sa propre page, lien « Contact » du menu (L1-45)
   /mentions-legales, /cgu, /confidentialite, /cgv, /cookies, /signalement, /intelligence-artificielle
 (auth)
   /inscription, /connexion, /mot-de-passe-oublie, /reinitialiser, /confirmation (lien des emails), /conditions
@@ -1138,6 +1139,7 @@ Page refaite avec les composants « Façade » (décision de Younes du 2026-10-1
 - Bloc « Les derniers biens » : 3 `PropertyCard` (variante `tile`) publiées les plus récentes (masqué s'il y en a moins de 3).
 - Formules : noms et prix lus dans la table `plans`.
 - Formulaire de contact : mêmes champs, mêmes noms et même envoi vers `/api/contact` qu'en V1.
+- Finitions (décision de Younes du 2026-10-20, L1-45) : les mots mis en valeur des titres de la V1 (« votre vente ? », « Jamais de commission. »…) en bleu, les titres de section agrandis, le mouvement de l'accueil V1 adapté à « Façade » (`docs/DESIGN.md` 9), la colonne Leenkey du comparatif en aplat bleu ; « Qui sommes-nous » et « Contact » (`/contact`) dans le menu ; photos de biens libres de droits pour l'accueil et les biens de démonstration en tâche L1-46.
 
 ### 8.2 Inscription `/inscription`
 
@@ -2032,6 +2034,8 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-42 | `/concept`, `/tarifs`, `/faq` en V2 (décision du 2026-10-19) : mêmes textes et ancres, formules de `/tarifs` lues dans `plans`, FAQ dépliable | L1-41 | Les trois pages sans HTML V1, en mobile et en desktop ; formulaires au même contrat que la V1 |
 | L1-43 | `/investir`, `/qui-sommes-nous` en V2, mentions légales et CGU dans `LegalPage`, `/estimer` dans l'en-tête et le pied V2 ; retrait de `SiteLayout`, du menu et du pied V1, de `HtmlPage` et des HTML V1 (décision du 2026-10-19) | L1-42 | Plus aucune page V1 hors moteur de l'estimateur ; formulaire investir au même contrat que la V1 |
 | L1-44 | Estimateur re-stylé (`docs/DESIGN.md` 13.1, décision du 2026-10-19) : wizard et tableau de résultat en Archivo, tokens et rayons « Façade », dans la portée `FacadeRoot` ; aucune modification de logique ni de texte (emojis et flèches de la V1 retirés, DESIGN 1 : `DECISIONS.md`, 2026-10-19) | L1-43 | Les tests de non-régression de `estimation.ts` passent à l'identique ; plus de police V1 chargée sur le site ; aucune violation d'accessibilité sérieuse sur `/estimer`, en mobile et en desktop |
+| L1-45 | Finitions de l'accueil et du site (décision de Younes du 2026-10-20) : mots mis en valeur des titres V1 en bleu, titres de section à 40 px, mouvement des pages publiques (`docs/DESIGN.md` 9 : entrée du hero, montée des sections, survols), « Qui sommes-nous » et « Contact » dans la `TopNav` et le menu, page `/contact` | L1-43 | Rien de caché sans JavaScript ni avec `prefers-reduced-motion` ; barre haute sans chevauchement à 768, 1 024 et 1 280 px ; `/contact` au même contrat que le formulaire de l'accueil |
+| L1-46 | Photos de biens (DESIGN 7.2) : photos libres de droits (licence Unsplash) des biens de démonstration du seed (`supabase/seed/photos/`, chargées par `db:seed`) et photos de l'accueil | L1-45 | Chaque bien publié du seed a sa photo ; accueil avec photos en mobile et en desktop ; aucune photo d'annonce réelle |
 | L1-35 | `listing_revisions` simplifié : trigger sur les champs prix, titre, description d'une annonce publiée, et ajout ou retrait d'une photo (8.3, `DECISIONS.md` 2026-10-19), historique chronologique côté vendeur et admin, notification `listing.revised` à l'admin | L1-14b | Changement de prix tracé avec ancienne et nouvelle valeur |
 
 ### Semaine 4 : messagerie, notifications, dashboard
