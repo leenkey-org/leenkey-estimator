@@ -51,7 +51,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-44** Estimateur re-stylé (DESIGN 13.1 : Archivo, tokens, rayons), aucune modification de logique (tâche ajoutée le 19 octobre) ; plus aucune police V1 sur le site ; emojis retirés (DESIGN 1) · PR : #32 · Testé en préprod : ☐
 - [x] **L1-45** Finitions de l'accueil et du site (demande de Younes du 20 octobre) : mots mis en valeur des titres V1 en bleu, titres de section à 40 px, mouvement des pages publiques inspiré de l'accueil V1 (DESIGN 9), « Qui sommes-nous » et « Contact » dans le menu, page `/contact`, colonne Leenkey du comparatif en aplat bleu · PR : #34 · Testé en préprod : ☐
 - [x] **L1-47** Sections sombres de l'accueil (demande de Younes du 20 octobre) : « Ce que vous obtenez en quelques minutes » sur aplat navy avec la courbe de la V1 et ses quatre repères, aperçu de l'espace vendeur (« Ma vente » de la V2) avec des données d'exemple (étiquette « Exemple », légende de la V1) · PR : #35 · Testé en préprod : ☐
-- [ ] **L1-46** Photos de biens libres de droits (DESIGN 7.2) : biens de démonstration du seed et accueil ; en attente de l'accès à `images.unsplash.com` depuis l'environnement de développement · PR : · Testé en préprod : ☐
+- [x] **L1-46** Photos de biens (DESIGN 7.2), fournies par Younes : photo du hero de l'accueil, trois maisons du seed (chargées par `db:seed`), « Les derniers biens » avec photo d'abord ; appartements, terrain et trois maisons en attente de photos · PR : #36 · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
 
@@ -88,7 +88,7 @@ Recette du lot 1 par Cédric du 16 au 20 novembre ; mise en ligne de la V2 la se
 
 Mise en ligne :
 
-- [ ] **P-05b** Mise en ligne de la V2 (semaine du 23 nov., avant le 30 nov., sur go de Younes) : projet Supabase de production, migrations, seed `plans` et `sale_steps`, variables de production, Resend, vérification des modèles IA, Stripe live si CGV et médiateur prêts ; puis changement de la branche de production du projet Vercel de `leenkey.fr` (jamais de fusion dans `main`) ; retour arrière : remettre `main` · PR : · Testé en préprod : ☐
+- [ ] **P-05b** Mise en ligne de la V2 (semaine du 23 nov., avant le 30 nov., sur go de Younes) : projet Supabase de production, migrations, seed `plans` et `sale_steps`, variables de production, Resend, vérification des modèles IA, Stripe live si CGV et médiateur prêts ; puis changement de la branche de production du projet Vercel de `leenkey.fr` (jamais de fusion dans `main`) ; retour arrière : remettre `main` ; photo de l'accueil : droits confirmés (Q57), sinon l'accueil garde le dessin · PR : · Testé en préprod : ☐
 
 Lot 2 :
 

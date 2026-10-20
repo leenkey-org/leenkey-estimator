@@ -6,6 +6,9 @@
 #   staging -> $STAGING_DATABASE_URL
 # Production is refused: it only receives the reference data, at launch (P-05b).
 # SEED_PASSWORD (optional): password of the seed accounts, see 04_accounts.sql.
+# SEED_STORAGE_URL and SEED_STORAGE_KEY (optional): the Storage API and its
+# service role key, to load the photos of the demo properties (L1-46,
+# scripts/seed-photos.mjs); without them, the demo properties have no photo.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -35,8 +38,15 @@ export PGOPTIONS="${PGOPTIONS:--c client_min_messages=warning}"
   echo "commit;"
 } | psql "$url" -v ON_ERROR_STOP=1 -q -At
 
+# Photos of the demo properties: their files in the bucket photos, then their rows.
+if [ -n "${SEED_STORAGE_URL:-}" ] && [ -n "${SEED_STORAGE_KEY:-}" ]; then
+  node scripts/seed-photos.mjs | psql "$url" -v ON_ERROR_STOP=1 -q -At
+else
+  echo "Photos of the demo properties not loaded: SEED_STORAGE_URL and SEED_STORAGE_KEY are not set."
+fi
+
 psql "$url" -At -c "
-  select format('Seed loaded on %s: %s plans, %s sale steps, %s tasks, %s knowledge cards, %s seed accounts, %s demo properties (%s published).',
+  select format('Seed loaded on %s: %s plans, %s sale steps, %s tasks, %s knowledge cards, %s seed accounts, %s demo properties (%s published), %s demo photos.',
     '$target',
     (select count(*) from public.plans),
     (select count(*) from public.sale_steps),
@@ -44,5 +54,6 @@ psql "$url" -At -c "
     (select count(*) from public.knowledge_base),
     (select count(*) from auth.users where email like '%@test.leenkey.fr'),
     (select count(*) from public.properties where id::text like '5eed1000-%'),
-    (select count(*) from public.listings l where l.property_id::text like '5eed1000-%' and l.status = 'published'));"
+    (select count(*) from public.listings l where l.property_id::text like '5eed1000-%' and l.status = 'published'),
+    (select count(*) from public.photos where storage_path like '5eed1000-%/5eed7000-%'));"
 echo "Seed accounts password: SEED_PASSWORD, or the Vault secret \"seed_password\" (Supabase dashboard)."

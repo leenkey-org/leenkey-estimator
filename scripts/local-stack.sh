@@ -93,7 +93,10 @@ case "${1:-}" in
       sleep 1
     done
     DATABASE_URL="$DB_URL" scripts/db-migrate.sh local
-    SEED_PASSWORD="$(cat $DIR/seed_password)" DATABASE_URL="$DB_URL" scripts/db-seed.sh local
+    # The photos of the demo properties go straight to the storage service.
+    SEED_PASSWORD="$(cat $DIR/seed_password)" DATABASE_URL="$DB_URL" \
+      SEED_STORAGE_URL="http://127.0.0.1:$STORAGE" SEED_STORAGE_KEY="$(jwt service_role)" \
+      scripts/db-seed.sh local
 
     docker run -d --name lk-stack-rest -p 127.0.0.1:$REST:3000 \
       -e "PGRST_DB_URI=postgres://authenticator:postgres@$HOST_IP:$DB_PORT/postgres" -e PGRST_DB_SCHEMAS=public \

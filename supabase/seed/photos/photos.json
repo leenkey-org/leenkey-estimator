@@ -1,0 +1,22 @@
+{
+  "photos": [
+    {
+      "property": 8,
+      "file": "08-sainte-genevieve-des-bois.webp",
+      "caption": "Façade et jardin",
+      "crop": { "left": 0, "top": 100, "width": 1024, "height": 768 }
+    },
+    {
+      "property": 2,
+      "file": "02-epinay-sur-orge.webp",
+      "caption": "Façade et entrée",
+      "crop": { "left": 0, "top": 230, "width": 1024, "height": 768 }
+    },
+    {
+      "property": 14,
+      "file": "14-la-ville-du-bois.webp",
+      "caption": "Façade",
+      "crop": { "left": 0, "top": 200, "width": 736, "height": 552 }
+    }
+  ]
+}
