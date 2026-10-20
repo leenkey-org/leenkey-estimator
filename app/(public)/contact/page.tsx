@@ -4,12 +4,14 @@ import { PublicPage } from "@/leenkey/site/components/public-page";
 import { fr } from "@/lib/i18n/fr";
 
 const t = fr.site.contactPage;
+// The lead of the section, Cédric's words as they are.
+const description = fr.site.home.contact.lead;
 
 export const metadata: Metadata = {
   title: t.metaTitle,
-  description: t.metaDescription,
+  description,
   alternates: { canonical: "/contact" },
-  openGraph: { title: t.metaTitle, description: t.metaDescription, url: "/contact" },
+  openGraph: { title: t.metaTitle, description, url: "/contact" },
 };
 
 // /contact (L1-45, DECISIONS 2026-10-20): « Contact » of the menu leads to the

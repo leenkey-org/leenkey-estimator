@@ -65,6 +65,8 @@ const EMAIL_NOTE = /Email non envoyé : environnement local\.|Email envoyé à l
 
 async function expectNoSeriousViolation(page: Page) {
   await page.evaluate(() => document.fonts.ready);
+  // Nothing waits below the screen (DESIGN.md 9): axe reads the whole page.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   const results = await new AxeBuilder({ page }).analyze();
   expect(
     results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),

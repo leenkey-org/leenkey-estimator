@@ -38,10 +38,6 @@ export default defineConfig({
   use: {
     baseURL,
     storageState: consentRefused,
-    // Nothing waits below the screen (the reveal on scroll of DESIGN.md 9):
-    // every test, and axe, sees the whole page; tests/e2e/site-motion.spec.ts
-    // checks the motion itself.
-    reducedMotion: "reduce",
     trace: "retain-on-failure",
     httpCredentials:
       process.env.PREPROD_USER && process.env.PREPROD_PASSWORD

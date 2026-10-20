@@ -79,6 +79,8 @@ test("pages légales sans violation sérieuse ou critique @a11y", async ({ page 
   for (const path of ["/cgv", "/cookies", "/signalement", "/intelligence-artificielle"]) {
     await page.goto(path);
     await page.evaluate(() => document.fonts.ready);
+    // Nothing waits below the screen (DESIGN.md 9): axe reads the whole page.
+    await page.emulateMedia({ reducedMotion: "reduce" });
     const results = await new AxeBuilder({ page }).analyze();
     const blocking = results.violations.filter(
       (violation) => violation.impact === "serious" || violation.impact === "critical",

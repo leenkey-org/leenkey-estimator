@@ -505,16 +505,17 @@ html {
    done checks itself, then the current one calls for attention, once. */
 @keyframes lk-ring {
   from {
-    outline: 2px solid rgb(17 86 252 / 0.5);
+    outline: 2px solid color-mix(in srgb, var(--color-lk-blue) 50%, transparent);
     outline-offset: 0;
   }
   to {
-    outline: 2px solid rgb(17 86 252 / 0);
+    outline: 2px solid color-mix(in srgb, var(--color-lk-blue) 0%, transparent);
     outline-offset: 6px;
   }
 }
+/* lk-check-pop (above) overshoots on its own keyframes. */
 [data-revealed] .lk-step-done {
-  animation: lk-check-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 0.45s both;
+  animation: lk-check-pop 0.45s var(--ease-out-lk) 0.45s both;
 }
 [data-revealed] .lk-step-current {
   animation: lk-ring 1.2s var(--ease-out-lk) 0.9s;
@@ -546,6 +547,32 @@ html {
   transform-origin: left center;
   background-color: currentColor;
   animation: lk-draw-x 0.8s var(--ease-reveal-lk) backwards;
+}
+/* Without the entrance (a panel further down the page): drawn as it is. */
+.lk-cote-still,
+.lk-cote-still .lk-cote-line {
+  animation: none;
+}
+/* An accent too long for one line (« enfin simple, humaine et
+   transparente. »): the same line, under each of its lines, without the
+   ticks of the dimension. */
+@keyframes lk-underline {
+  from {
+    text-decoration-color: transparent;
+  }
+}
+.lk-cote-wrap {
+  text-decoration-line: underline;
+  text-decoration-thickness: max(1.5px, 0.035em);
+  text-underline-offset: 0.22em;
+  text-decoration-skip-ink: none;
+}
+/* In a hero, it fades in after the words (an inline text that wraps does
+   not move), its line with it. */
+.lk-cote-wrap.lk-enter {
+  animation:
+    lk-fade 0.7s var(--ease-reveal-lk) backwards,
+    lk-underline 0.8s linear backwards;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -590,6 +617,20 @@ html {
   [data-reveal-stagger] > * {
     opacity: 1 !important;
     transform: none !important;
+  }
+  .lk-rise,
+  .lk-enter,
+  .lk-cote,
+  .lk-cote-line,
+  .lk-drawing path,
+  .lk-drawing text {
+    animation: none !important;
+  }
+  [data-reveal-draw] path {
+    stroke-dashoffset: 0 !important;
+  }
+  [data-reveal-draw] text {
+    opacity: 1 !important;
   }
 }
 
@@ -666,8 +707,10 @@ html {
     .facade *::before,
     .facade *::after {
       animation-duration: 1ms !important;
+      animation-delay: 0s !important;
       animation-iteration-count: 1 !important;
       transition-duration: 1ms !important;
+      transition-delay: 0s !important;
       scroll-behavior: auto !important;
     }
   }

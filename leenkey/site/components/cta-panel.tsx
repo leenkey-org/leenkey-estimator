@@ -8,19 +8,29 @@ import { Button } from "@/components/shared/button";
  */
 export function CtaPanel({
   title,
+  accent,
   text,
   action,
   href,
   note,
 }: {
   title: string;
+  /** The highlighted words of the V1 title, under the dimension line. */
+  accent?: string;
   text: string;
   action: string;
   href: string;
   note?: string;
 }) {
   return (
-    <BrandPanel title={title} titleAs="h2" titleSize="page" description={text} illustration>
+    <BrandPanel
+      title={title}
+      titleAccent={accent}
+      titleAs="h2"
+      titleSize="page"
+      description={text}
+      illustration
+    >
       <div className="flex flex-col items-start gap-3">
         <Button asChild variant="inverse" size="lg">
           <Link href={href}>{action}</Link>

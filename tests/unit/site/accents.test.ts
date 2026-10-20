@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { Accented } from "@/components/shared/accented";
+import { Accented, splitAccent } from "@/components/shared/accented";
 import { fr } from "@/lib/i18n/fr";
 
 // L1-45 (DECISIONS 2026-10-20): the highlighted words of the V1 titles, set in
@@ -22,7 +22,12 @@ describe("mots mis en valeur des titres", () => {
     ["contact", home.contact],
     ["concept", fr.site.concept.hero],
     ["tarifs", fr.site.pricing],
-    ["investir", fr.site.invest.vision],
+    ["investir, hero", fr.site.invest.hero],
+    ["investir, vision", fr.site.invest.vision],
+    ["investir, fin", fr.site.invest.final],
+    ["qui sommes-nous, hero", fr.site.about.hero],
+    ["qui sommes-nous, histoire", fr.site.about.story],
+    ["qui sommes-nous, fin", fr.site.about.final],
   ];
 
   it.each(titles)("%s : l'accent est dans son titre", (_, { title, accent }) => {
@@ -39,6 +44,22 @@ describe("mots mis en valeur des titres", () => {
       expect(title).toContain("\u00a0?");
       expect(title).not.toMatch(/ \?/);
     }
+  });
+});
+
+describe("splitAccent", () => {
+  it("coupe le titre autour de la dernière occurrence de l'accent", () => {
+    expect(splitAccent("de votre vente. votre vente.", "votre vente.")).toEqual({
+      before: "de votre vente. ",
+      accent: "votre vente.",
+      after: "",
+    });
+  });
+
+  it("rien à couper sans accent, ou s'il n'est pas dans le titre", () => {
+    expect(splitAccent("Parlons-en ensemble.")).toBeNull();
+    expect(splitAccent("Parlons-en ensemble.", "")).toBeNull();
+    expect(splitAccent("Parlons-en ensemble.", "absent")).toBeNull();
   });
 });
 

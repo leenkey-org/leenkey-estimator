@@ -28,6 +28,8 @@ test.describe("catalogue /design", () => {
   });
 
   test("aucune violation d'accessibilité sérieuse ou critique @a11y", async ({ page }) => {
+    // Nothing waits below the screen (DESIGN.md 9): axe reads the whole page.
+    await page.emulateMedia({ reducedMotion: "reduce" });
     const results = await new AxeBuilder({ page }).analyze();
     const blocking = results.violations
       .filter((violation) => violation.impact === "serious" || violation.impact === "critical")

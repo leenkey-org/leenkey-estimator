@@ -18,6 +18,8 @@ const ADMIN_NAV = "Navigation du back office";
 
 async function seriousViolations(page: Page) {
   await page.evaluate(() => document.fonts.ready);
+  // Nothing waits below the screen (DESIGN.md 9): axe reads the whole page.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   const results = await new AxeBuilder({ page }).analyze();
   return results.violations
     .filter((violation) => violation.impact === "serious" || violation.impact === "critical")

@@ -24,7 +24,13 @@ const MOTIFS: readonly ContactMotif[] = ["Investisseur", "Vendeur", "Partenaire"
 /** « L'immobilier français se réinvente. Soyez-en. » */
 export function InvestHero() {
   return (
-    <BrandPanel title={t.hero.title} description={t.hero.lead} titleSize="hero" illustration>
+    <BrandPanel
+      title={t.hero.title}
+      titleAccent={t.hero.accent}
+      description={t.hero.lead}
+      titleSize="hero"
+      illustration
+    >
       <Button asChild variant="inverse" size="lg">
         <a href={`#${FORM}`}>{t.hero.action}</a>
       </Button>
@@ -290,6 +296,12 @@ export function InvestContactSection() {
 /** « … vous en faites partie ou pas ? » */
 export function InvestCta() {
   return (
-    <CtaPanel title={t.final.title} text={t.final.text} action={t.final.action} href={`#${FORM}`} />
+    <CtaPanel
+      title={t.final.title}
+      accent={t.final.accent}
+      text={t.final.text}
+      action={t.final.action}
+      href={`#${FORM}`}
+    />
   );
 }

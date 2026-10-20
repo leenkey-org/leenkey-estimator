@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
+import { splitAccent } from "./accented";
 import { FacadeDrawing } from "./facade-drawing";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +40,12 @@ const WORD_MS = 45;
 const NEXT_MS = 120;
 /** The dimension line is traced once its words have risen. */
 const COTE_MS = 250;
+/**
+ * Longest accent under the dimension line, in one piece (it never wraps):
+ * « votre vente. » fits a 390 px screen at 36 px. A longer one gets a line
+ * under each of its lines instead (« enfin simple, humaine et transparente. »).
+ */
+const COTE_MAX = 14;
 
 const delay = (ms: number): CSSProperties => ({ animationDelay: `${ms}ms` });
 
@@ -80,18 +87,25 @@ export function BrandPanel({
         <div
           className={cn(
             "flex max-w-lk-prose flex-col",
-            // Room for the dimension line under the title of a hero.
-            hero ? "gap-4 lg:gap-5" : "gap-2",
+            // Room for the dimension line under the title.
+            hero ? "gap-4 lg:gap-5" : titleAccent ? "gap-3" : "gap-2",
             illustration && "lg:max-w-lk-form",
           )}
         >
           <Title
+            // Word by word, the title is read whole: by its name, the words
+            // hidden from assistive technologies (some read them one by one).
+            aria-label={words ? title : undefined}
             className={cn(
               "text-lk-display font-bold text-wide",
               hero && "md:text-lk-display-md lg:text-lk-display-lg",
             )}
           >
-            {words ? words.content : <Accent text={title} accent={titleAccent} />}
+            {words ? (
+              <span aria-hidden="true">{words.content}</span>
+            ) : (
+              <StillAccent text={title} accent={titleAccent} />
+            )}
           </Title>
           {description ? (
             <p
@@ -129,32 +143,44 @@ export function BrandPanel({
 
 /**
  * Title of a hero, word by word: each one rises a little after the previous
- * one (the « lk-word » of the V1 home page, without its blur), the accent in
- * one piece with its dimension line. `last`: delay of the last word.
+ * one (the « lk-word » of the V1 home page, without its blur); a short
+ * accent rises in one piece with its dimension line, a long one fades in
+ * with its line once the words are there. `last`: delay of the last piece.
  */
 function heroTitle(text: string, accent?: string): { content: ReactNode; last: number } {
-  const at = accent ? text.lastIndexOf(accent) : -1;
-  const pieces: Array<string | { accent: string }> =
-    accent && at !== -1
-      ? [...wordsOf(text.slice(0, at)), { accent }, ...wordsOf(text.slice(at + accent.length))]
-      : wordsOf(text);
+  const parts = splitAccent(text, accent);
+  const pieces: Array<string | { accent: string }> = parts
+    ? [...wordsOf(parts.before), { accent: parts.accent }, ...wordsOf(parts.after)]
+    : wordsOf(text);
   let last = FIRST_WORD_MS - WORD_MS;
   const content = pieces.map((piece, index) => {
     last += WORD_MS;
     // The spaces stay between the words: the title still wraps and balances.
     const space = index < pieces.length - 1 ? " " : null;
+    let word: ReactNode;
+    if (typeof piece === "string") {
+      word = (
+        <span className="lk-rise inline-block" style={delay(last)}>
+          {piece}
+        </span>
+      );
+    } else if (piece.accent.length <= COTE_MAX) {
+      word = (
+        <span className="lk-rise relative inline-block whitespace-nowrap" style={delay(last)}>
+          {piece.accent}
+          <CoteLine delayMs={last + COTE_MS} />
+        </span>
+      );
+    } else {
+      word = (
+        <span className="lk-cote-wrap lk-enter" style={delay(last)}>
+          {piece.accent}
+        </span>
+      );
+    }
     return (
       <span key={index}>
-        {typeof piece === "string" ? (
-          <span className="lk-rise inline-block" style={delay(last)}>
-            {piece}
-          </span>
-        ) : (
-          <span className="lk-rise relative inline-block whitespace-nowrap" style={delay(last)}>
-            {piece.accent}
-            <CoteLine delayMs={last + COTE_MS} />
-          </span>
-        )}
+        {word}
         {space}
       </span>
     );
@@ -167,31 +193,41 @@ function wordsOf(text: string): string[] {
   return text.split(" ").filter(Boolean);
 }
 
-/** A title out of a hero: its accent with the dimension line, without the entrance. */
-function Accent({ text, accent }: { text: string; accent?: string }) {
-  const at = accent ? text.lastIndexOf(accent) : -1;
-  if (!accent || at === -1) return text;
+/** A title out of a hero: its accent with the dimension line, drawn as it is. */
+function StillAccent({ text, accent }: { text: string; accent?: string }) {
+  const parts = splitAccent(text, accent);
+  if (!parts) return text;
   return (
     <>
-      {text.slice(0, at)}
-      <span className="relative inline-block whitespace-nowrap">
-        {accent}
-        <CoteLine delayMs={0} />
-      </span>
-      {text.slice(at + accent.length)}
+      {parts.before}
+      {parts.accent.length <= COTE_MAX ? (
+        <span className="relative inline-block whitespace-nowrap">
+          {parts.accent}
+          <CoteLine still />
+        </span>
+      ) : (
+        <span className="lk-cote-wrap">{parts.accent}</span>
+      )}
+      {parts.after}
     </>
   );
 }
 
-/** The dimension line of facade.svg under the accent: two ticks and the line between them. */
-function CoteLine({ delayMs }: { delayMs: number }) {
+/**
+ * The dimension line of facade.svg under a short accent: two ticks and the
+ * line between them, traced after `delayMs` (`still`: drawn as it is).
+ */
+function CoteLine({ delayMs = 0, still = false }: { delayMs?: number; still?: boolean }) {
   return (
     <span
       aria-hidden="true"
-      style={delay(delayMs)}
-      className="lk-cote pointer-events-none absolute inset-x-0 -bottom-[0.12em] flex h-[0.2em] items-center"
+      style={still ? undefined : delay(delayMs)}
+      className={cn(
+        "lk-cote pointer-events-none absolute inset-x-0 -bottom-[0.12em] flex h-[0.2em] items-center",
+        still && "lk-cote-still",
+      )}
     >
-      <span style={delay(delayMs)} className="lk-cote-line block w-full" />
+      <span style={still ? undefined : delay(delayMs)} className="lk-cote-line block w-full" />
     </span>
   );
 }

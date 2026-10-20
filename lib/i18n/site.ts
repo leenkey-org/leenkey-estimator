@@ -477,6 +477,7 @@ export const site = {
       "Leenkey construit la première plateforme française qui permet à chaque propriétaire de vendre son bien sans agence. Nous cherchons des partenaires qui croient, comme nous, que ce marché mérite mieux.",
     hero: {
       title: "L'immobilier français se réinvente. Soyez-en.",
+      accent: "Soyez-en.",
       lead: "Leenkey construit la première plateforme française qui permet à chaque propriétaire de vendre son bien sans agence : accompagné, guidé, à frais réduits. Nous cherchons des partenaires qui croient, comme nous, que ce marché mérite mieux.",
       action: "Rejoindre l'aventure",
     },
@@ -761,6 +762,7 @@ export const site = {
     final: {
       title:
         "L'immobilier français se réinvente. La question, c'est : vous en faites partie ou pas ?",
+      accent: "vous en faites partie ou pas\u00a0?",
       text: "Rejoignez les partenaires qui construisent avec nous la prochaine référence de la vente immobilière en France.",
       action: "Rejoindre le projet",
     },
@@ -769,8 +771,6 @@ export const site = {
   // on a page of its own, where « Contact » of the menu leads.
   contactPage: {
     metaTitle: "Contact · Leenkey",
-    metaDescription:
-      "Propriétaire, investisseur, partenaire : laissez-nous un message. Nous vous répondons personnellement sous 48 h, 7 j/7.",
   },
   // /qui-sommes-nous (L1-43): the V1 page, its labels above the titles and
   // the arrows of its buttons left out (DECISIONS 2026-10-19).
@@ -780,6 +780,7 @@ export const site = {
       "Fondée par Cédric Da Cunha, Leenkey rend la vente immobilière enfin simple, humaine et transparente.",
     hero: {
       title: "Rendre la vente immobilière enfin simple, humaine et transparente.",
+      accent: "enfin simple, humaine et transparente.",
       lead: "Fondée par Cédric Da Cunha, Leenkey est née d'un constat simple\u00A0: vendre son bien immobilier en France reste trop complexe, trop opaque et souvent trop coûteux. Nous construisons une nouvelle façon de vendre, où l'intelligence artificielle accompagne chaque propriétaire pour lui permettre de vendre en toute autonomie, sans jamais être seul.",
       action: "Découvrir notre vision",
     },
@@ -797,6 +798,7 @@ export const site = {
     ],
     story: {
       title: "Pourquoi j'ai lancé Leenkey.",
+      accent: "Leenkey.",
       paragraphs: [
         [
           "Après ",
@@ -842,6 +844,7 @@ export const site = {
     },
     final: {
       title: "Prêt à échanger avec Cédric\u00A0?",
+      accent: "Cédric\u00a0?",
       text: "Que vous soyez propriétaire, investisseur ou partenaire potentiel\u00A0— la porte est ouverte. Un mot suffit pour démarrer la discussion.",
       contact: "Nous contacter",
       valuation: "Valoriser mon bien gratuitement",

@@ -65,25 +65,45 @@ test.describe("mouvement des pages publiques", () => {
     await expect(page).toHaveURL("/faq");
   });
 
-  test("une autre page du site : ses sections montent en place aussi", async ({ page }) => {
-    await page.goto("/concept");
-    await scrollToEnd(page);
-    expect(await waiting(page)).toBe(0);
-    await expect(page.locator("[data-revealed]").first()).toBeAttached();
-  });
+  for (const path of ["/concept", "/tarifs", "/faq", "/investir", "/qui-sommes-nous", "/contact"]) {
+    test(`${path} : ses sections montent en place, rien ne reste caché`, async ({ page }) => {
+      await page.goto(path);
+      await scrollToEnd(page);
+      expect(await waiting(page)).toBe(0);
+      await expect(page.locator("[data-revealed]").first()).toBeAttached();
+    });
+  }
 });
 
 test.describe("moins de mouvement", () => {
   test.use({ reducedMotion: "reduce" });
 
   test("rien n'attend, rien ne bouge", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    // The hero at once: no animation waits for its delay (470 ms for its
+    // text with motion), whatever the delays set on the page.
+    await expect(page.locator("#valoriser .lk-rise").first()).toBeAttached();
+    expect(
+      await page
+        .locator("#valoriser .lk-rise")
+        .evaluateAll((elements) =>
+          elements.map((el) => getComputedStyle(el).animationDelay).filter((d) => d !== "0s"),
+        ),
+    ).toEqual([]);
+    expect(
+      await page.evaluate(() =>
+        document
+          .getAnimations()
+          .map((animation) => animation.effect?.getComputedTiming().delay ?? 0)
+          .filter((delay) => delay > 0),
+      ),
+    ).toEqual([]);
+    const word = page.getByRole("heading", { level: 1 }).locator(".lk-rise").first();
+    expect(await word.evaluate((el) => getComputedStyle(el).animationDuration)).toBe("0.001s");
+    await page.waitForLoadState("load");
     expect(await waiting(page)).toBe(0);
     await expect(page.locator("[data-reveal-pending]")).toHaveCount(0);
     expect(await opacity(page, "#faq [data-reveal]")).toBe("1");
-    // The words of the hero are in place at once.
-    const word = page.getByRole("heading", { level: 1 }).locator(".lk-rise").first();
-    expect(await word.evaluate((el) => getComputedStyle(el).animationDuration)).toBe("0.001s");
   });
 });
 
