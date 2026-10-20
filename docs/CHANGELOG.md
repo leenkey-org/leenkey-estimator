@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-20 · L1-47 · PR #PR_L147 · Sections sombres de l'accueil
+### 2026-10-20 · L1-47 · PR #35 · Sections sombres de l'accueil
 - Ajouté : « Ce que vous obtenez en quelques minutes. » retrouve l'aplat bleu foncé et la courbe montante de la V1, ses quatre éléments posés dessus (une ligne verticale les relie en mobile), qui arrivent quand la courbe se trace ; « Vous savez toujours quoi faire ensuite. » retrouve l'aperçu de l'espace vendeur avec les données d'exemple de la V1 et sa légende « Aperçu de l'espace vendeur, avec des données d'exemple. » (« Ma vente », prochaine étape, chiffres de la semaine, demandes de visite, dossier vendeur, parcours), dont les barres montent et les jauges se remplissent. Jeton `--lk-blue-light` (accent sur navy, 6,86:1).
 - Non repris de la V1 : étiquettes en capitales, numérotation « 01 » à « 04 », dégradés, halo, icône de maison, flèche du bouton, « Réserver un créneau » (fonction non prévue).
 - Tests : unitaires (légende, aucun « portail » ni « estimation », séparateurs) ; E2E accueil (aplat navy, quatre éléments, aperçu nommé par sa légende et sans contrôle) et mouvement des pages publiques.
