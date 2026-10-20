@@ -2,15 +2,25 @@ import { readdirSync, readFileSync } from "node:fs";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import { PHOTO_WIDTHS } from "@/leenkey/properties/photo-files";
-import { sitePhoto } from "@/leenkey/site/photos";
+import { isShown, sitePhoto } from "@/leenkey/site/photos";
 
 // L1-46: the photos of the home page and of the demo properties.
 
 describe("photo de l'accueil", () => {
-  it("ne s'affiche jamais en production tant que ses droits ne sont pas confirmés (Q57)", () => {
-    expect(sitePhoto("home", "production")).toBeNull();
-    expect(sitePhoto("home", "staging")?.rights).toBe("to_confirm");
-    expect(sitePhoto("home", "local")?.rights).toBe("to_confirm");
+  const photo = { src: "/images/x-1600.webp", width: 1600, height: 1200 };
+
+  it("une photo aux droits non confirmés ne s'affiche jamais en production", () => {
+    const pending = { ...photo, rights: "to_confirm" as const };
+    expect(isShown(pending, "production")).toBe(false);
+    expect(isShown(pending, "staging")).toBe(true);
+    expect(isShown(pending, "local")).toBe(true);
+    expect(isShown({ ...photo, rights: "cleared" }, "production")).toBe(true);
+  });
+
+  it("ses droits confirmés par Younes (Q57), elle s'affiche partout", () => {
+    expect(sitePhoto("home", "production")?.rights).toBe("cleared");
+    expect(sitePhoto("home", "staging")).not.toBeNull();
+    expect(sitePhoto("home", "local")).not.toBeNull();
   });
 
   it("existe en WebP aux trois largeurs, jamais agrandie", async () => {

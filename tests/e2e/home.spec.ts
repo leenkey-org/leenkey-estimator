@@ -65,19 +65,12 @@ test.describe("accueil", () => {
     await expect(page.locator(".lk-nav-logo")).toHaveCount(0);
   });
 
-  // L1-46: the house of the V1 hero, as long as its rights are not confirmed
-  // (DECISIONS Q57) outside production only; there, the brand drawing.
-  test("hero : la photo d'une maison, hors production tant que ses droits ne sont pas confirmés", async ({
-    page,
-  }) => {
+  // L1-46: the house of the V1 hero.
+  test("hero : la photo d'une maison, à la place du dessin", async ({ page }) => {
     await page.goto("/");
     const hero = page.locator("#valoriser");
+    // Its rights confirmed (Q57): in production too, so in CI.
     const photo = hero.locator('img[src*="/images/accueil/maison-"]');
-    if (process.env.NEXT_PUBLIC_ENV === "production") {
-      await expect(photo).toHaveCount(0);
-      await expect(hero.locator("svg.lk-drawing")).toHaveCount(1);
-      return;
-    }
     await expect(photo).toBeVisible();
     // Decorative: the title says what the page is about.
     await expect(photo).toHaveAttribute("alt", "");

@@ -1134,7 +1134,7 @@ Pour chaque écran : route, contenu dans l'ordre, états (chargement, vide, erre
 ### 8.1 Accueil `/` (refait en V2)
 
 Page refaite avec les composants « Façade » (décision de Younes du 2026-10-19, « V2 finale ») : les sections de la page V1, dans son ordre, avec ses ancres (`#valoriser`, `#etape`, `#comment`, `#fonctionnalites`, `#comparatif`, `#tarifs`, `#faq`, `#contact`) et les textes de Cédric repris mot pour mot, sauf les corrections listées dans `docs/DECISIONS.md` (2026-10-19). En plus :
-- Hero sur `BrandPanel` avec la photo d'une maison à droite, sous le texte en mobile (L1-46, comme le hero de la V1) ; le dessin `facade.svg` à sa place en production tant que les droits de la photo ne sont pas confirmés (`DECISIONS.md` Q57).
+- Hero sur `BrandPanel` avec la photo d'une maison à droite, sous le texte en mobile (L1-46, comme le hero de la V1), ses droits confirmés par Younes (`DECISIONS.md` Q57) ; une photo aux droits non confirmés laisserait le dessin `facade.svg` en production.
 - Deux entrées égales dans le hero, en boutons blancs sur l'aplat bleu (`docs/DESIGN.md` 13.1) : « Je vends » (→ `/estimer`) et « J'achète » (→ `/acheter`).
 - Bloc « Les derniers biens » : 3 `PropertyCard` (variante `tile`) publiées les plus récentes, celles qui ont une photo d'abord (L1-46) ; masqué s'il y en a moins de 3.
 - Formules : noms et prix lus dans la table `plans`.

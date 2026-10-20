@@ -88,7 +88,7 @@ Recette du lot 1 par Cédric du 16 au 20 novembre ; mise en ligne de la V2 la se
 
 Mise en ligne :
 
-- [ ] **P-05b** Mise en ligne de la V2 (semaine du 23 nov., avant le 30 nov., sur go de Younes) : projet Supabase de production, migrations, seed `plans` et `sale_steps`, variables de production, Resend, vérification des modèles IA, Stripe live si CGV et médiateur prêts ; puis changement de la branche de production du projet Vercel de `leenkey.fr` (jamais de fusion dans `main`) ; retour arrière : remettre `main` ; photo de l'accueil : droits confirmés (Q57), sinon l'accueil garde le dessin · PR : · Testé en préprod : ☐
+- [ ] **P-05b** Mise en ligne de la V2 (semaine du 23 nov., avant le 30 nov., sur go de Younes) : projet Supabase de production, migrations, seed `plans` et `sale_steps`, variables de production, Resend, vérification des modèles IA, Stripe live si CGV et médiateur prêts ; puis changement de la branche de production du projet Vercel de `leenkey.fr` (jamais de fusion dans `main`) ; retour arrière : remettre `main` · PR : · Testé en préprod : ☐
 
 Lot 2 :
 
