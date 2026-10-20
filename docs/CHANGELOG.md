@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-20 · L1-48 · PR #37 · Tarifs de l'accueil en bleu foncé
+- Modifié : « Un forfait fixe. Jamais de commission. » retrouve l'aplat bleu foncé de la V1, titre centré ; les prix des formules en grand en bas de chaque carte, alignés d'une carte à l'autre (`PlanCard` `priceSize="large"`) ; « Voir le détail des formules » en bouton centré sous les cartes. Les prix viennent toujours de la table `plans`.
+- Tests : E2E accueil (aplat navy, titre centré, lien vers `/tarifs` ; prix de 36 px sur la base de seed) ; exemple au catalogue `/design`.
+
 ### 2026-10-20 · L1-46 · PR #36 · Photos de biens
 - Ajouté : la photo d'une maison en haut de l'accueil, à droite du texte en desktop, dessous en mobile (comme le hero de la V1) ; les photos des biens de démonstration, déposées par `db:seed` dans le bucket `photos` avec le compte de seed du propriétaire, sans clé de service, et seulement sur les biens sans photo qu'il peut encore modifier (`scripts/seed-photos.mjs`, `supabase/seed/photos/`, provenance dans `CREDITS.md`) : trois maisons, converties comme une photo de vendeur. La photo de l'accueil s'affiche dès l'arrivée, carrée, demandée en priorité.
 - Modifié : « Les derniers biens » prennent d'abord les annonces récentes qui ont une photo ; `BrandPanel` accepte une photo (`media`) à la place du dessin ; le chargeur d'images sert aussi les photos des pages publiques en trois largeurs.
