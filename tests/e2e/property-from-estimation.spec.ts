@@ -69,6 +69,8 @@ async function signIn(page: Page, email: string, path: string) {
 
 async function expectNoSeriousViolation(page: Page) {
   await page.evaluate(() => document.fonts.ready);
+  // Nothing waits below the screen (DESIGN.md 9): axe reads the whole page.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   const results = await new AxeBuilder({ page }).analyze();
   expect(
     results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),

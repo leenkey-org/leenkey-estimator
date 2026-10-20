@@ -19,7 +19,13 @@ const PHOTO = { src: "/brand/cedric.webp", width: 720, height: 960 } as const;
 /** « Rendre la vente immobilière enfin simple, humaine et transparente. » */
 export function AboutHero() {
   return (
-    <BrandPanel title={t.hero.title} description={t.hero.lead} titleSize="hero" illustration>
+    <BrandPanel
+      title={t.hero.title}
+      titleAccent={t.hero.accent}
+      description={t.hero.lead}
+      titleSize="hero"
+      illustration
+    >
       <Button asChild variant="inverse" size="lg">
         <Link href={ROUTES.invest}>{t.hero.action}</Link>
       </Button>
@@ -48,7 +54,7 @@ export function AboutFigures() {
 /** « Pourquoi j'ai lancé Leenkey. »: Cédric's words, next to his photo. */
 export function StorySection() {
   return (
-    <MarketingSection id="histoire" title={t.story.title}>
+    <MarketingSection id="histoire" title={t.story.title} accent={t.story.accent}>
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-14">
         <figure className="flex max-w-80 flex-col gap-3 lg:max-w-none">
           <Image
@@ -103,6 +109,7 @@ export function AboutCta() {
   return (
     <BrandPanel
       title={t.final.title}
+      titleAccent={t.final.accent}
       titleAs="h2"
       titleSize="page"
       description={t.final.text}
@@ -110,7 +117,7 @@ export function AboutCta() {
     >
       <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
         <Button asChild variant="inverse" size="lg">
-          <Link href={`${ROUTES.home}#contact`}>{t.final.contact}</Link>
+          <Link href={ROUTES.contact}>{t.final.contact}</Link>
         </Button>
         <Button asChild variant="outline-inverse" size="lg">
           <Link href={ROUTES.valuation}>{t.final.valuation}</Link>

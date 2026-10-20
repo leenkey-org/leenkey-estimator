@@ -20,11 +20,13 @@ export async function PlansSection() {
     <MarketingSection
       id="tarifs"
       title={t.title}
+      accent={t.accent}
       lead={t.lead}
       action={<MoreLink href={ROUTES.pricing}>{t.all}</MoreLink>}
+      revealContent={false}
     >
       {plans && plans.length > 0 ? (
-        <ul className="grid gap-4 lg:grid-cols-3">
+        <ul data-reveal-stagger="" className="grid gap-4 lg:grid-cols-3">
           {plans.map((plan) => (
             <li key={plan.code} className="flex">
               <PlanCard

@@ -18,6 +18,8 @@ const ADMIN_NAV = "Navigation du back office";
 
 async function seriousViolations(page: Page) {
   await page.evaluate(() => document.fonts.ready);
+  // Nothing waits below the screen (DESIGN.md 9): axe reads the whole page.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   const results = await new AxeBuilder({ page }).analyze();
   return results.violations
     .filter((violation) => violation.impact === "serious" || violation.impact === "critical")
@@ -38,26 +40,45 @@ async function expectFooter(page: Page) {
   await expect(footer.getByRole("button", { name: "Gérer mes cookies" })).toBeVisible();
 }
 
+/** The links of the TopNav at each width (DESIGN.md 10.6, DECISIONS 2026-10-20). */
+const TOP_NAV = {
+  768: ["Acheter", "Vendre", "Valoriser mon bien"],
+  1024: ["Acheter", "Vendre", "Tarifs", "Valoriser mon bien", "Contact"],
+  1280: ["Acheter", "Vendre", "Tarifs", "Valoriser mon bien", "Qui sommes-nous", "Contact"],
+} as const;
+
 /**
- * At 768 px, the narrowest TopNav (DESIGN.md 10.6, criterion of L1-10): the
- * links end before the buttons on the right, nothing leaves the screen.
+ * The TopNav at 768 px, the narrowest (criterion of L1-10: the links end
+ * before the buttons on the right), and where it gains links (1024 and 1280
+ * px, L1-45: at least 24 px before them); nothing leaves the screen.
  */
-async function expectTopNavFitsAt768(page: Page) {
-  await page.setViewportSize({ width: 768, height: 900 });
-  // Measured with Archivo and its width axis, not with the fallback font.
-  await page.evaluate(() => document.fonts.ready);
-  const lastLink = await mainNav(page).getByRole("link").last().boundingBox();
-  const cta = await page.getByRole("link", { name: "Vendre mon bien" }).boundingBox();
-  expect(lastLink && cta && lastLink.x + lastLink.width).toBeLessThanOrEqual(cta?.x ?? 0);
-  const right = await page
-    .getByRole("banner")
-    .evaluate((header) =>
-      Math.max(
-        ...[...header.querySelectorAll("a, button")].map((el) => el.getBoundingClientRect().right),
-      ),
+async function expectTopNavFits(page: Page) {
+  for (const width of [768, 1024, 1280] as const) {
+    await page.setViewportSize({ width, height: 900 });
+    // Measured with Archivo and its width axis, not with the fallback font.
+    await page.evaluate(() => document.fonts.ready);
+    await expect(mainNav(page).getByRole("link"), `${width}`).toHaveText([...TOP_NAV[width]]);
+    const lastLink = await mainNav(page).getByRole("link").last().boundingBox();
+    const cta = await page.getByRole("link", { name: "Vendre mon bien" }).boundingBox();
+    const room = width === 768 ? 0 : 24;
+    expect(lastLink && cta && lastLink.x + lastLink.width + room, `${width}`).toBeLessThanOrEqual(
+      cta?.x ?? 0,
     );
-  expect(right).toBeLessThanOrEqual(768);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
+    const right = await page
+      .getByRole("banner")
+      .evaluate((header) =>
+        Math.max(
+          ...[...header.querySelectorAll("a, button")].map(
+            (el) => el.getBoundingClientRect().right,
+          ),
+        ),
+      );
+    expect(right, `${width}`).toBeLessThanOrEqual(width);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+      `${width}`,
+    ).toBeLessThanOrEqual(width);
+  }
 }
 
 const BUYER_TABS = ["Chercher", "Favoris", "Vendre", "Messages", "Compte"];
@@ -122,12 +143,7 @@ test.describe("visiteur sans session", () => {
     test.skip(isMobile, "navigation haute à partir de 768 px");
     await page.goto("/acheter?ville=savigny-sur-orge&rayon=5");
     const nav = mainNav(page);
-    await expect(nav.getByRole("link")).toHaveText([
-      "Acheter",
-      "Vendre",
-      "Tarifs",
-      "Valoriser mon bien",
-    ]);
+    await expect(nav.getByRole("link")).toHaveText([...TOP_NAV[1280]]);
     await expect(nav.getByRole("link", { name: "Acheter" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -137,6 +153,11 @@ test.describe("visiteur sans session", () => {
       "href",
       "/estimer",
     );
+    await expect(nav.getByRole("link", { name: "Qui sommes-nous" })).toHaveAttribute(
+      "href",
+      "/qui-sommes-nous",
+    );
+    await expect(nav.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
     await expect(page.getByRole("link", { name: "Leenkey", exact: true })).toHaveAttribute(
       "href",
       "/",
@@ -162,13 +183,13 @@ test.describe("visiteur sans session", () => {
     await expect(page).toHaveURL(/\/connexion\?next=%2Facheter%3Fville%3Dsavigny-sur-orge/);
   });
 
-  test("/acheter à 768 px : la barre haute tient sans chevauchement", async ({
+  test("/acheter à 768, 1 024 et 1 280 px : la barre haute tient sans chevauchement", async ({
     page,
     isMobile,
   }) => {
     test.skip(isMobile, "barre haute à partir de 768 px");
     await page.goto("/acheter");
-    await expectTopNavFitsAt768(page);
+    await expectTopNavFits(page);
   });
 
   test("un onglet d'espace connecté mène à la connexion, qui y ramènera", async ({
@@ -332,12 +353,7 @@ test.describe("comptes connectés (base de seed)", () => {
       await expect(page).toHaveURL("/vendeur");
       await expectTabs(page, SELLER_TABS, "Ma vente");
     } else {
-      await expect(mainNav(page).getByRole("link")).toHaveText([
-        "Acheter",
-        "Vendre",
-        "Tarifs",
-        "Valoriser mon bien",
-      ]);
+      await expect(mainNav(page).getByRole("link")).toHaveText([...TOP_NAV[1280]]);
       await expect(page.getByRole("link", { name: "Vendre mon bien" })).toHaveAttribute(
         "href",
         "/vendeur",
@@ -352,7 +368,7 @@ test.describe("comptes connectés (base de seed)", () => {
     }
     expect(await seriousViolations(page)).toEqual([]);
     // Signed in, the TopNav is at its widest: bell, favourites and avatar.
-    if (!isMobile) await expectTopNavFitsAt768(page);
+    if (!isMobile) await expectTopNavFits(page);
   });
 
   test("une page commune garde l'espace d'où l'on vient, recherche comprise", async ({

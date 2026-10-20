@@ -10,7 +10,8 @@ import { cn } from "@/lib/utils";
 export const buttonVariants = cva(
   [
     "relative rounded-lk-sm font-semibold shadow-none",
-    "transition-colors duration-140 ease-out-lk",
+    // Pressed, it gives a little (DESIGN.md 9), as the V1 buttons did.
+    "transition-[color,background-color,border-color,scale] duration-140 ease-out-lk not-disabled:active:scale-[0.98]",
     "focus-visible:ring-0 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
     // Disabled: 0.45 opacity, "not allowed" cursor, no hover (not-disabled: below).
     "disabled:pointer-events-auto disabled:cursor-not-allowed disabled:opacity-45",

@@ -16,6 +16,7 @@ const PAGES: ReadonlyArray<{ path: string; changeFrequency: ChangeFrequency; pri
   { path: "/qui-sommes-nous", changeFrequency: "monthly", priority: 0.7 },
   { path: "/faq", changeFrequency: "monthly", priority: 0.7 },
   { path: "/investir", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/contact", changeFrequency: "yearly", priority: 0.5 },
   { path: "/mentions-legales", changeFrequency: "yearly", priority: 0.2 },
   { path: "/cgu", changeFrequency: "yearly", priority: 0.2 },
 ];

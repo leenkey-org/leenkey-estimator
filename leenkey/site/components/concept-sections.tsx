@@ -18,7 +18,13 @@ const t = fr.site.concept;
 /** « Combien vaut vraiment votre bien ? » */
 export function ConceptHero() {
   return (
-    <BrandPanel title={t.hero.title} description={t.hero.lead} titleSize="hero" illustration>
+    <BrandPanel
+      title={t.hero.title}
+      titleAccent={t.hero.accent}
+      description={t.hero.lead}
+      titleSize="hero"
+      illustration
+    >
       <Button asChild variant="inverse" size="lg">
         <Link href={ROUTES.valuation}>{t.hero.action}</Link>
       </Button>

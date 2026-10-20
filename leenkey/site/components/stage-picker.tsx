@@ -36,13 +36,16 @@ export function StagePicker() {
       </div>
       <div
         aria-live="polite"
-        className="flex flex-col gap-2 rounded-lk-md border border-lk-line bg-lk-surface p-5 lg:p-6"
+        className="rounded-lk-md border border-lk-line bg-lk-surface p-5 lg:p-6"
       >
-        <h3 className="text-lk-h3 font-semibold text-lk-ink lg:text-lk-h3-lg">{stage.title}</h3>
-        <p className="max-w-lk-prose text-lk-body text-pretty text-lk-ink-2">{stage.text}</p>
-        <Button asChild size="lg" className="mt-3 self-start">
-          <Link href={stage.href}>{stage.action}</Link>
-        </Button>
+        {/* A new answer slides in when the situation changes (DESIGN.md 9). */}
+        <div key={stage.key} className="lk-swap flex flex-col gap-2">
+          <h3 className="text-lk-h3 font-semibold text-lk-ink lg:text-lk-h3-lg">{stage.title}</h3>
+          <p className="max-w-lk-prose text-lk-body text-pretty text-lk-ink-2">{stage.text}</p>
+          <Button asChild size="lg" className="mt-3 self-start">
+            <Link href={stage.href}>{stage.action}</Link>
+          </Button>
+        </div>
       </div>
     </div>
   );

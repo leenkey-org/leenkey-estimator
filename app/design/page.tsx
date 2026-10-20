@@ -784,6 +784,7 @@ export default function DesignPage() {
             <BrandPanel
               titleAs="h4"
               title={content.brandPanel.heroTitle}
+              titleAccent={content.brandPanel.heroAccent}
               description={content.brandPanel.heroText}
               illustration
             />
@@ -1114,6 +1115,7 @@ export default function DesignPage() {
                 tone="stone"
                 titleAs="h4"
                 title={content.publicPages.sectionTitle}
+                accent={content.publicPages.sectionAccent}
                 lead={content.publicPages.sectionLead}
                 action={
                   <MoreLink href="#pages-publiques" tone="ink">

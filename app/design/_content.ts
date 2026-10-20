@@ -428,8 +428,10 @@ export const brandPanel = {
   blueText: "Des biens vendus directement par leurs propriétaires. Sans frais d'agence.",
   navyTitle: "Ma vente",
   navyText: "Étape 3 sur 6 · Contacts et visites",
-  heroCaption: "titleSize hero · 36 puis 56 px, accueil public et fins de parcours",
+  heroCaption:
+    "titleSize hero · 36, 44 puis 56 px, pages publiques ; les mots montent un à un au premier affichage, titleAccent souligné de la ligne de cote du dessin, le dessin se trace",
   heroTitle: "Vous gardez les clés.",
+  heroAccent: "les clés.",
   heroText: "Vendez votre bien sans agence, accompagné à chaque étape.",
 };
 
@@ -689,8 +691,9 @@ export const footer = {
 // L1-41: public pages in V2 (MarketingSection, PlanCard, MoreLink, SiteMenu).
 export const publicPages = {
   sectionCaption:
-    "MarketingSection · fond blanc ou pierre, titre h2 au rôle H1 (26 puis 32 px), texte 640 px, lien à droite à partir de 768 px",
+    "MarketingSection · fond blanc ou pierre, titre h2 au rôle H1 (26 puis 40 px, accent en bleu), texte 640 px (16 puis 18 px), lien à droite à partir de 768 px ; titre et contenu montent en place à l'entrée dans l'écran (pages publiques)",
   sectionTitle: "Un forfait fixe. Jamais de commission.",
+  sectionAccent: "Jamais de commission.",
   sectionLead:
     "Vous choisissez votre niveau d'accompagnement. Le prix ne dépend jamais de la valeur de votre bien.",
   more: "Voir le détail des formules",

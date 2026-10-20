@@ -356,13 +356,17 @@ html {
   --shadow-float: 0 2px 6px rgba(15, 30, 53, 0.18);
   --shadow-sheet: 0 -8px 24px rgba(15, 30, 53, 0.16);
 
-  /* Motion (DESIGN.md 9): duration-140 for hover, duration-220 for panels */
+  /* Motion (DESIGN.md 9): duration-140 for hover, duration-220 for panels;
+     ease-reveal-lk for what rises into place on the public pages (the curve
+     of the V1 home page) */
   --ease-out-lk: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-reveal-lk: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Containers (DESIGN.md 4.3): max-w-lk-page… */
   --container-lk-page: 75rem; /* 1200 px, public pages */
   --container-lk-home: 51.25rem; /* 820 px, buyer home */
   --container-lk-settings: 45rem; /* 720 px, account and settings */
+  --container-lk-heading: 50rem; /* 800 px, 40 px titles of the public pages */
   --container-lk-prose: 40rem; /* 640 px, about 68 characters per line */
   --container-lk-form: 35rem; /* 560 px, step forms */
 
@@ -372,12 +376,16 @@ html {
      text-wide. Sizes in rem so that they follow the reader's font size. */
   --text-lk-display: 2.25rem; /* 36 px */
   --text-lk-display--line-height: 1.05;
+  --text-lk-display-md: 2.75rem; /* 44 px, hero of a public page from 768 px */
+  --text-lk-display-md--line-height: 1.05;
   --text-lk-display-lg: 3.5rem; /* 56 px */
   --text-lk-display-lg--line-height: 1;
   --text-lk-h1: 1.625rem; /* 26 px */
   --text-lk-h1--line-height: 1.15;
   --text-lk-h1-lg: 2rem; /* 32 px */
   --text-lk-h1-lg--line-height: 1.1;
+  --text-lk-section-lg: 2.5rem; /* 40 px, title of a section of the public pages */
+  --text-lk-section-lg--line-height: 1.05;
   --text-lk-h2: 1.25rem; /* 20 px, also the app header title */
   --text-lk-h2--line-height: 1.2;
   --text-lk-h2-lg: 1.5rem; /* 24 px */
@@ -408,6 +416,8 @@ html {
   --text-lk-body--line-height: 1.55;
   --text-lk-body-lg: 1rem; /* 16 px */
   --text-lk-body-lg--line-height: 1.6;
+  --text-lk-lead-lg: 1.125rem; /* 18 px, lead of a public page section */
+  --text-lk-lead-lg--line-height: 1.55;
   --text-lk-compact: 0.875rem; /* 14 px, lists and messages */
   --text-lk-compact--line-height: 1.5;
   --text-lk-label: 0.8125rem; /* 13 px, field label */
@@ -441,6 +451,187 @@ html {
 }
 @utility tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* ─── Motion of the public pages (DESIGN.md 9, DECISIONS 2026-10-20) ───
+   After the V1 home page: the heroes rise into place word by word on the
+   first paint, the blocks of the sections when they enter the screen, the
+   brand drawing traces itself. Nothing is ever hidden without the script:
+   data-reveal-pending is set by <RevealOnScroll> on what is below the
+   screen only. Nothing moves with reduced motion (no hidden state, and the
+   Façade rule of the base layer stops every animation), nothing is hidden
+   in print. */
+@keyframes lk-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+}
+@keyframes lk-fade {
+  from {
+    opacity: 0;
+  }
+}
+/* The paths of a drawing have pathLength="1": a dash as long as the path. */
+@keyframes lk-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes lk-draw-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Rises on the first paint, after its animation-delay (the words of a hero). */
+@utility lk-rise {
+  animation: lk-rise 0.7s var(--ease-reveal-lk) backwards;
+}
+
+/* A content that replaces another one in place (the answer of « Où en
+   êtes-vous dans votre vente ? »): a short slide, the 220 ms of a panel. */
+@keyframes lk-swap {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+@utility lk-swap {
+  animation: lk-swap 0.22s var(--ease-out-lk) backwards;
+}
+
+/* The preview of the seller area (home page), once it has risen: the step
+   done checks itself, then the current one calls for attention, once. */
+@keyframes lk-ring {
+  from {
+    outline: 2px solid color-mix(in srgb, var(--color-lk-blue) 50%, transparent);
+    outline-offset: 0;
+  }
+  to {
+    outline: 2px solid color-mix(in srgb, var(--color-lk-blue) 0%, transparent);
+    outline-offset: 6px;
+  }
+}
+/* lk-check-pop (above) overshoots on its own keyframes. */
+[data-revealed] .lk-step-done {
+  animation: lk-check-pop 0.45s var(--ease-out-lk) 0.45s both;
+}
+[data-revealed] .lk-step-current {
+  animation: lk-ring 1.2s var(--ease-out-lk) 0.9s;
+}
+
+/* The brand drawing, traced: on the first paint (lk-drawing-in), or when it
+   enters the screen (data-reveal-draw). */
+.lk-drawing path {
+  stroke-dasharray: 1;
+}
+.lk-drawing-in path,
+[data-reveal-draw][data-revealed] path {
+  animation: lk-draw 1.6s var(--ease-reveal-lk) 0.3s backwards;
+}
+.lk-drawing-in text,
+[data-reveal-draw][data-revealed] text {
+  animation: lk-fade 0.6s linear 1.4s backwards;
+}
+
+/* The dimension line of the drawing under the end of a title on a blue flat
+   (« votre vente. »): two ticks (lk-cote) and the line between them
+   (lk-cote-line), traced from the left after the words. */
+.lk-cote {
+  border-inline: max(1.5px, 0.035em) solid currentColor;
+  animation: lk-fade 0.3s linear backwards;
+}
+.lk-cote-line {
+  height: max(1.5px, 0.035em);
+  transform-origin: left center;
+  background-color: currentColor;
+  animation: lk-draw-x 0.8s var(--ease-reveal-lk) backwards;
+}
+/* Without the entrance (a panel further down the page): drawn as it is. */
+.lk-cote-still,
+.lk-cote-still .lk-cote-line {
+  animation: none;
+}
+/* An accent too long for one line (« enfin simple, humaine et
+   transparente. »): the same line, under each of its lines, without the
+   ticks of the dimension. */
+@keyframes lk-underline {
+  from {
+    text-decoration-color: transparent;
+  }
+}
+.lk-cote-wrap {
+  text-decoration-line: underline;
+  text-decoration-thickness: max(1.5px, 0.035em);
+  text-underline-offset: 0.22em;
+  text-decoration-skip-ink: none;
+}
+/* In a hero, it fades in after the words (an inline text that wraps does
+   not move), its line with it. */
+.lk-cote-wrap.lk-enter {
+  animation:
+    lk-fade 0.7s var(--ease-reveal-lk) backwards,
+    lk-underline 0.8s linear backwards;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal][data-reveal-pending],
+  [data-reveal-stagger][data-reveal-pending] > * {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  [data-reveal][data-revealed],
+  [data-reveal-stagger][data-revealed] > * {
+    transition:
+      opacity 0.7s var(--ease-reveal-lk),
+      transform 0.7s var(--ease-reveal-lk);
+  }
+  /* After the title of its section, when both enter at once. */
+  [data-reveal][data-revealed][data-reveal-delay="1"] {
+    transition-delay: 0.1s;
+  }
+  /* The items of a grid, one after the other (the « data-d » of the V1). */
+  [data-reveal-stagger][data-revealed] > :nth-child(2) {
+    transition-delay: 0.08s;
+  }
+  [data-reveal-stagger][data-revealed] > :nth-child(3) {
+    transition-delay: 0.16s;
+  }
+  [data-reveal-stagger][data-revealed] > :nth-child(4) {
+    transition-delay: 0.24s;
+  }
+  [data-reveal-stagger][data-revealed] > :nth-child(n + 5) {
+    transition-delay: 0.32s;
+  }
+  [data-reveal-draw][data-reveal-pending] path {
+    stroke-dashoffset: 1;
+  }
+  [data-reveal-draw][data-reveal-pending] text {
+    opacity: 0;
+  }
+}
+
+@media print {
+  [data-reveal],
+  [data-reveal-stagger] > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .lk-rise,
+  .lk-enter,
+  .lk-cote,
+  .lk-cote-line,
+  .lk-drawing path,
+  .lk-drawing text {
+    animation: none !important;
+  }
+  [data-reveal-draw] path {
+    stroke-dashoffset: 0 !important;
+  }
+  [data-reveal-draw] text {
+    opacity: 1 !important;
+  }
 }
 
 /* Skeleton pulse (DESIGN.md 10.8): opacity 0.6 → 1 in 1.2 s */
@@ -516,8 +707,10 @@ html {
     .facade *::before,
     .facade *::after {
       animation-duration: 1ms !important;
+      animation-delay: 0s !important;
       animation-iteration-count: 1 !important;
       transition-duration: 1ms !important;
+      transition-delay: 0s !important;
       scroll-behavior: auto !important;
     }
   }

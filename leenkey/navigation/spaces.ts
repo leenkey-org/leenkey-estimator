@@ -16,6 +16,7 @@ export const ROUTES = {
   faq: "/faq",
   invest: "/investir",
   about: "/qui-sommes-nous",
+  contact: "/contact",
   sellerSignUp: "/inscription?role=seller",
   seller: "/vendeur",
   sellerProperties: "/vendeur/biens",

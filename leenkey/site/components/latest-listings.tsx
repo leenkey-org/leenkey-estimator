@@ -11,10 +11,11 @@ const t = fr.site.home.latest;
 
 /**
  * « Les derniers biens » (SPEC-V2 8.1): the three listings most recently
- * published, PropertyCard tile, and « Voir les 12 biens ». Hidden with fewer
- * than three listings online, or when they cannot be read: the home page
- * never shows a half empty block nor an error for it. A scrolling row in
- * mobile, three columns from 768 px.
+ * published, PropertyCard tile with a 3:2 photo, and « Voir les 12 biens ».
+ * Hidden with fewer than three listings online, or when they cannot be
+ * read: the home page never shows a half empty block nor an error for it. A
+ * scrolling row in mobile, three columns from 768 px, rising one after the
+ * other.
  */
 export async function LatestListings() {
   const result = await latestListings();
@@ -26,9 +27,11 @@ export async function LatestListings() {
       id="derniers-biens"
       title={t.title}
       action={<MoreLink href={ROUTES.search}>{t.all(total, formatInteger(total))}</MoreLink>}
+      revealContent={false}
     >
       <ul
         aria-label={t.title}
+        data-reveal-stagger=""
         className="-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0"
       >
         {items.map((listing) => (
@@ -37,6 +40,7 @@ export async function LatestListings() {
               variant="tile"
               {...toPropertyCard(listing, now)}
               sizes="(min-width: 1280px) 384px, (min-width: 768px) 33vw, 78vw"
+              tallPhoto
               className="h-full"
             />
           </li>

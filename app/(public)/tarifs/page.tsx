@@ -21,7 +21,7 @@ export default async function PricingPage() {
   const plans = await activePlans();
   return (
     <PublicPage>
-      <MarketingSection id="tarifs" titleAs="h1" title={t.title} lead={t.lead}>
+      <MarketingSection id="tarifs" titleAs="h1" title={t.title} accent={t.accent} lead={t.lead}>
         {plans && plans.length > 0 ? (
           <PricingPlans plans={plans} />
         ) : (

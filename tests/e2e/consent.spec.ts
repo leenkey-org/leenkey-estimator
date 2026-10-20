@@ -159,6 +159,8 @@ test("le bandeau n'a aucune violation sérieuse ou critique @a11y", async ({ pag
     await page.goto(path);
     await expect(banner(page)).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
+    // Nothing waits below the screen (DESIGN.md 9): axe reads the whole page.
+    await page.emulateMedia({ reducedMotion: "reduce" });
     const results = await new AxeBuilder({ page }).include("section[role=region]").analyze();
     const blocking = results.violations.filter(
       (violation) => violation.impact === "serious" || violation.impact === "critical",

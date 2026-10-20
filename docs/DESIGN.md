@@ -151,6 +151,7 @@ Règles :
 
   /* Mouvement */
   --ease-out-lk: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-reveal-lk: cubic-bezier(0.16, 1, 0.3, 1); /* pages publiques, L1-45 */
 }
 
 /* Variables shadcn/ui alignées sur Leenkey */
@@ -233,8 +234,10 @@ Valeurs : taille px / interligne / graisse. « Large » = `font-stretch: 116%; l
 
 | Rôle | Mobile (< 768) | Desktop (≥ 1024) | Largeur | Exemples |
 |---|---|---|---|---|
-| Display | 36 / 1.05 / 700 | 56 / 1.0 / 700 | Large | « Bonjour Thomas » (30 px dans la maquette desktop, accepté de 30 à 56 selon la place) |
+| Display | 36 / 1.05 / 700 | 56 / 1.0 / 700 | Large | « Bonjour Thomas » (30 px dans la maquette desktop, accepté de 30 à 56 selon la place) ; hero des pages publiques à 44 px de 768 à 1 023 px (L1-45) |
 | H1 | 26 / 1.15 / 700 | 32 / 1.1 / 700 | Large | « Créez votre compte », titre d'annonce desktop (26) |
+| Titre de section des pages publiques | 26 / 1.15 / 700 | 40 / 1.05 / 700 | Large | « Un forfait fixe. Jamais de commission. » (`MarketingSection`, L1-45) |
+| Chapeau de section des pages publiques | 15 / 1.55 / 400 (16 à partir de 768) | 18 / 1.55 / 400 | Normale | « Vous choisissez votre niveau d'accompagnement… » (L1-45) |
 | H2 | 20 / 1.2 / 700 | 22–24 / 1.15 / 700 | Large | « Votre dossier fait la différence auprès des vendeurs » |
 | Titre d'en-tête d'app | 20 / 1.2 / 700 | — | Large | « Ma vente » |
 | H3 / titre de section | 16 / 1.3 / 600 | 17 / 1.3 / 600 | Normale | « À faire », « Le bien », « Conversations » |
@@ -255,6 +258,7 @@ Règles :
 - Longueur de ligne maximale du corps : 68 caractères environ (`max-w-[640px]` en desktop).
 - Titres : `text-wrap: balance`. Paragraphes : `text-wrap: pretty`.
 - Chiffres : `tabular-nums` sur tous les montants, surfaces, compteurs et dates en tableau.
+- Mots mis en valeur (les mots en dégradé des titres de la V1, `DECISIONS.md` 2026-10-20), le plus souvent la fin du titre (« Combien vaut *vraiment* votre bien ? » au milieu) : sur fond clair, en `--lk-blue` plein (« Où en êtes-vous dans *votre vente ?* ») ; sur un aplat bleu, la ligne de cote de `facade.svg` sous les mots (« de *votre vente.* » du hero), d'un seul tenant jusqu'à 14 caractères ; au-delà, un trait de même épaisseur sous chacune de leurs lignes, sans les traits de cote (« enfin simple, humaine et transparente. », qui passe à la ligne). Un seul accent par titre, jamais dans un texte courant, jamais de dégradé.
 
 ### 3.3 Formatage des nombres et du texte
 
@@ -349,6 +353,7 @@ Couches (`z-index`) : contenu 0 · en-tête collant 20 · `BottomNav` 30 · bout
 | Carte de recherche mobile | 110 × 96 px, rayon 4 |
 | Carte de recherche desktop | 200 × 140 px, rayon 4 |
 | Tuile « Nouveaux biens » (accueil) | pleine largeur de tuile × 120 px, rayon 6 en haut |
+| Tuile « Les derniers biens » (accueil public) | pleine largeur de tuile, ratio 3:2, rayon 6 en haut (L1-45 : tuiles plus larges, la photo d'abord) |
 | Grille « Résultats de votre dernière recherche » | ratio 4:3 environ (150 px de haut sur 1280) |
 | Vignette dashboard, admin, conversation | 56 × 56, 56 × 44, 44 × 44 ; rayon 4 |
 | Grille de photos du formulaire | carrés, 4 colonnes, 8 px d'écart |
@@ -413,14 +418,23 @@ Usages et réglages :
 
 | Interaction | Durée | Courbe |
 |---|---|---|
-| Survol, pression (couleur, fond) | 140 ms | `--ease-out-lk` |
-| Ouverture de panneau, feuille, menu | 220 ms | `--ease-out-lk`, translation + opacité |
+| Survol, pression (couleur, fond) ; un bouton pressé : échelle 0,98 | 140 ms | `--ease-out-lk` |
+| Trait sous un lien de la `TopNav` au survol, flèche d'un `MoreLink` qui avance | 220 ms | `--ease-out-lk` |
+| Ouverture de panneau, feuille, menu ; contenu remplacé sur place (réponse de « Où en êtes-vous ») | 220 ms | `--ease-out-lk`, translation + opacité |
+| Zoom de la photo d'une carte de bien au survol (1,04) | 500 ms | `--ease-out-lk` |
 | Fondu d'image chargée | 160 ms | linéaire |
 | Toast | entrée 220 ms, sortie 160 ms | — |
+| Pages publiques : entrée du hero (les mots du titre un à un, 45 ms d'écart, puis le texte et les actions) ; montée des blocs d'une section quand ils entrent dans l'écran (24 px) ; cartes d'une grille décalées de 80 ms | 700 ms | `--ease-reveal-lk` (celle de l'accueil V1) |
+| Pages publiques : dessin `facade.svg` qui se trace (hero, aplat final) ; ligne de cote sous l'accent d'un titre | 1,6 s ; 0,8 s | `--ease-reveal-lk` |
+| Accueil : aperçu de l'espace vendeur monté en place, l'étape faite qui se coche (léger dépassement de l'échelle), puis un anneau autour de l'étape en cours, une fois | 450 ms ; 1,2 s | `--ease-out-lk` |
 
-- Aucune animation d'entrée de section au défilement. Aucun effet de parallaxe.
-- Un seul moment orchestré autorisé : l'écran de fin de parcours (« C'est envoyé », « C'est activé ») avec le dessin `facade.svg` qui apparaît en fondu (360 ms).
+- Montée des sections au défilement (décision de Younes du 2026-10-20, qui remplace « aucune animation d'entrée de section ») : pages publiques seulement (`PublicPage` : accueil, concept, tarifs, FAQ, investir, qui sommes-nous, contact), jamais dans les espaces connectés, les formulaires, la recherche ni l'annonce ; une seule fois par bloc. Ce qui est à l'écran à l'arrivée n'est jamais caché ; sans JavaScript, avec `prefers-reduced-motion` ou à l'impression, rien n'est caché.
+- Repris de l'accueil V1 : montée des blocs et décalage des cartes, entrée mot à mot du titre, trait sous les liens du menu, réaction des boutons à la pression. Non repris (sections 1 et 5) : dégradés (`text-grad`, trait en dégradé), flou, ombres au survol, élévation de cartes non cliquables (une fausse promesse de clic), parallaxe et zoom en boucle, compteurs animés (pas de chiffres inventés), pulsations sans fin.
+- Aucun effet de parallaxe.
+- Moments orchestrés : l'écran de fin de parcours (« C'est envoyé », « C'est activé ») avec le dessin `facade.svg` qui apparaît en fondu (360 ms) ; l'entrée du hero des pages publiques.
 - `prefers-reduced-motion` respecté (section 2.2).
+
+> **Mise en œuvre (L1-45).** `app/globals.css` (« Motion of the public pages ») et `components/shared/reveal-on-scroll.tsx`, monté par `PublicPage` : à l'arrivée, ce qui est sous l'écran reçoit `data-reveal-pending` (caché), puis `data-revealed` quand il entre dans l'écran (marge de 10 % en bas) ; `data-reveal` pour un bloc, `data-reveal-stagger` pour les enfants d'une grille, `data-reveal-draw` pour un dessin. `MarketingSection` fait monter son titre, puis son contenu (`revealContent`, ou sa grille en `data-reveal-stagger`). `BrandPanel` `hero` : mots du titre en `lk-rise`, dessin `lk-drawing-in` ; `page` : dessin tracé à son entrée dans l'écran. L'aperçu de l'espace vendeur de l'accueil coche son étape faite, puis signale l'étape en cours d'un anneau, une fois. Avec `prefers-reduced-motion`, la règle de 2.2 annule aussi les délais : rien n'attend. Les tests E2E tournent avec le mouvement ; chaque analyse axe passe d'abord en mouvement réduit (rien n'attend, les contrastes sont lus en entier) ; `tests/e2e/site-motion.spec.ts` vérifie le mouvement sur les sept pages publiques, avec et sans `prefers-reduced-motion`, et sans JavaScript.
 
 ---
 
@@ -625,7 +639,9 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 > **Mise en œuvre (L1-10).** `components/shared/top-nav.tsx`, collante en haut (couche 20), masquée sous 768 px. De 768 à 1023 px, padding 0 20 et écart 24 pour tenir dans 768 px ; 0 40 et 32 à partir de 1024 px. Cloche, favoris et avatar de 42 px, zone tactile de 44 px. Lien courant (`aria-current="page"`) : le plus long préfixe de l'adresse ; « Acheter » l'est aussi sur une annonce (`AnnonceDesktop`). Sans session : « Vendre mon bien », puis « Mon compte » (connexion, avec retour à la page et à ses filtres) ; ni cloche, ni favoris. L'avatar ouvre l'`AccountMenu`. Liens de Leenkey : « Acheter », « Vendre » (la page d'accueil, écrite pour les vendeurs), « Tarifs » (à partir de 1 024 px seulement : à 768 px il chevaucherait « Vendre mon bien » ; L1-41, `DECISIONS.md` 2026-10-19), « Valoriser mon bien » ; pas de « Guides » (`DECISIONS.md`, 2026-10-17).
 
-**SiteMenu** (en-tête mobile des pages publiques, G1 ; L1-41, `components/shared/site-menu.tsx`) : sous 768 px, collé en haut (couche 20), hauteur 60, fond blanc, bordure basse `--lk-line`, padding 0 20 : logo 28 px à gauche, `IconButton stone` « Menu » (`Menu`) à droite. Le menu est un dialogue Radix plein écran, ouvert du haut en 220 ms (aucun mouvement réduit) : en-tête de 60 px (logo, fermer `outline` rond), liens de 48 px (16 px 500, séparés par `--lk-line`, courant en `--lk-blue` avec `aria-current`) : ceux de la `TopNav` puis les pages du site (concept, FAQ, investir, qui sommes-nous) ; en bas, « Vendre mon bien » `primary lg` et « Mon compte » (« Mon espace » une fois connecté) `secondary lg`. Échap ou un lien suivi le referment, le focus revient au bouton.
+> **Mise en œuvre (L1-45).** Liens de la `TopNav` (`DECISIONS.md` 2026-10-20) : « Acheter », « Vendre », « Tarifs » (à partir de 1 024 px), « Valoriser mon bien », « Qui sommes-nous » (à partir de 1 280 px), « Contact » (`/contact`, à partir de 1 024 px) ; en dessous de leur largeur, ils toucheraient « Vendre mon bien » : le menu mobile et le pied de page les ont. Sous chaque lien, un trait bleu de 2 px : tracé depuis la gauche au survol (220 ms), présent sous le lien courant.
+
+**SiteMenu** (en-tête mobile des pages publiques, G1 ; L1-41, `components/shared/site-menu.tsx`) : sous 768 px, collé en haut (couche 20), hauteur 60, fond blanc, bordure basse `--lk-line`, padding 0 20 : logo 28 px à gauche, `IconButton stone` « Menu » (`Menu`) à droite. Le menu est un dialogue Radix plein écran, ouvert du haut en 220 ms (aucun mouvement réduit) : en-tête de 60 px (logo, fermer `outline` rond), liens de 48 px (16 px 500, séparés par `--lk-line`, courant en `--lk-blue` avec `aria-current`) : ceux de la `TopNav` (contact compris) puis les pages du site (concept, FAQ, investir) ; en bas, « Vendre mon bien » `primary lg` et « Mon compte » (« Mon espace » une fois connecté) `secondary lg`. Échap ou un lien suivi le referment, le focus revient au bouton.
 
 **BottomNav mobile** : fond blanc, bordure haute `--lk-line`, padding 10 × 20 × 22 (zone de sécurité iOS incluse via `env(safe-area-inset-bottom)`), grille de 5 (4 dans le back office). Élément : icône 22 + libellé 11 px, écart 4 ; actif `--lk-blue` 600, inactif `--lk-ink-3` 500. Onglets par espace : acquéreur « Chercher / Favoris / Vendre / Messages / Compte » ; vendeur « Ma vente / Dossier / Acheter / Messages / Compte » ; admin « Annonces / Dossiers / Utilisateurs / Assistant ». Un même compte achète et vend (`DECISIONS.md`, 2026-10-19) : l'onglet du milieu mène à l'autre côté, « Messages » et « Compte » gardent leur place.
 
@@ -704,7 +720,7 @@ Tout écran de la V2 relève d'un de ces gabarits.
 | **G9 Réglages / compte** | `AppHeader`, sections en cartes blanches sur `--lk-bg`, lignes de 56 px | colonne de 720 px centrée, sommaire à gauche (200 px) |
 | **G10 Page légale** | texte 15 px / 1,6, largeur 640, titres H2, encart « en cours de rédaction » tant que le texte définitif manque, adresse légale, `SiteFooter` | idem, centré |
 
-> **Mise en œuvre (L1-41).** G1 : `PublicPage` (`leenkey/site/components/public-page.tsx`) = `TopNav` à partir de 768 px, `SiteMenu` dessous, contenu sur blanc, `SiteFooter`. Le contenu se compose de `MarketingSection` (`components/shared/marketing-section.tsx`) : pleine largeur, fond blanc ou `--lk-stone` en alternance, conteneur 1200 px, padding 48 puis 72 px en hauteur ; titre h2 au rôle H1 (26 puis 32 px, large, `text-wrap: balance`) sous le titre display du hero, texte de 640 px au plus (15 puis 16 px `--lk-ink-2`), lien à droite à partir de 768 px ; aucune étiquette au-dessus du titre (13.2). Sur `--lk-stone`, le bleu n'atteint que 4,4:1 : le texte y est en `--lk-ink` ou `--lk-ink-2`, les liens en encre. `MoreLink` (`components/shared/more-link.tsx`) : « Voir les 12 biens », « Toutes les questions », 14 px 600 avec l'icône `ArrowRight` 16 px, bleu sur blanc, encre sur pierre. Cartes de contenu : blanches, bordure `--lk-line`, rayon 6, padding 20 puis 24.
+> **Mise en œuvre (L1-41).** G1 : `PublicPage` (`leenkey/site/components/public-page.tsx`) = `TopNav` à partir de 768 px, `SiteMenu` dessous, contenu sur blanc, `SiteFooter`. Le contenu se compose de `MarketingSection` (`components/shared/marketing-section.tsx`) : pleine largeur, fond blanc ou `--lk-stone` en alternance, conteneur 1200 px, padding 48 puis 72 px en hauteur ; titre h2 au rôle H1 (26 puis 32 px, large, `text-wrap: balance` ; 26 puis 40 px depuis L1-45, section 3.2) sous le titre display du hero, texte de 640 px au plus (15 puis 16 px `--lk-ink-2` ; 15, 16 puis 18 px depuis L1-45), lien à droite à partir de 768 px ; aucune étiquette au-dessus du titre (13.2). Sur `--lk-stone`, le bleu n'atteint que 4,4:1 : le texte y est en `--lk-ink` ou `--lk-ink-2`, les liens en encre ; seuls les mots mis en valeur d'un titre (26 px et plus, gras : grand texte, seuil 3:1) y sont en bleu (L1-45, 3.2). `MoreLink` (`components/shared/more-link.tsx`) : « Voir les 12 biens », « Toutes les questions », 14 px 600 avec l'icône `ArrowRight` 16 px, bleu sur blanc, encre sur pierre. Cartes de contenu : blanches, bordure `--lk-line`, rayon 6, padding 20 puis 24.
 
 > **Mise en œuvre (L1-43).** `/investir` et `/qui-sommes-nous` suivent G1 (`BrandPanel` hero, `MarketingSection` en alternance blanc / pierre, `BrandPanel` final). Cartes de jalons, de sources de revenus et de phases avec `StagePill` ou une petite étiquette bleue qui dit la phase (« Maintenant », « Demain »…) ; citation de Leenkey en 20 puis 24 px 700 large, partie forte en bleu, sur blanc ; contacts directs (WhatsApp, email) en cartes bordées de 64 px avec icône bleue à côté du formulaire. Photo du fondateur 3:4, rayon 6, 320 px au plus en mobile, légende nom 15 px 600 et rôle 12 px `--lk-ink-3`. G10 : `LegalPage` (`app/(public)/_components/legal-page.tsx`) avec la date de mise à jour en 12 px `--lk-ink-3` sous le titre, sans l'encart « en cours de rédaction » pour les textes en vigueur (mentions légales, CGU) ; `LegalSections` : titre de section en h2 17 puis 18 px 600 avec son ancre, intertitres 15 px 600, listes à puces `--lk-ink-3`, identité de l'éditeur et de l'hébergeur sur une tuile `--lk-stone-2`, encart « Important » en `InlineAlert` `warning` sans annonce ; sommaire des CGU en cadre bordé, liens 13 px vers chaque article. `/estimer` : le wizard V1 garde ses styles (hors portée `.facade`) sous l'en-tête V2 collé en haut, sa barre de progression collée sous lui (60 puis 72 px), en attendant son re-stylage (L1-44).
 
@@ -778,7 +794,8 @@ Référence de la page `/design` à construire en `L1-07` : palette, typographie
 
 | Écran (`SPEC-V2` plan des écrans) | Gabarit | Composants principaux |
 |---|---|---|
-| Accueil public `/` | G1 | `BrandPanel blue` hero (titre display 56 px, deux entrées égales « Je vends » / « J'achète » en `inverse` et `outline-inverse`, les trois promesses de la V1), « Les derniers biens » (3 `PropertyCard tile`, défilement horizontal en mobile, 3 colonnes à partir de 768 px), puis les sections de la V1 en `MarketingSection` (situation, étapes, valorisation, espace vendeur, comparatif, `PlanCard`, questions, formulaire de contact) et un `BrandPanel` final (L1-41) |
+| Accueil public `/` | G1 | `BrandPanel blue` hero (titre display 56 px, deux entrées égales « Je vends » / « J'achète » en `inverse` et `outline-inverse`, les trois promesses de la V1), « Les derniers biens » (3 `PropertyCard tile`, défilement horizontal en mobile, 3 colonnes à partir de 768 px), puis les sections de la V1 en `MarketingSection` (situation, étapes, valorisation, espace vendeur, comparatif, `PlanCard`, questions, formulaire de contact) et un `BrandPanel` final (L1-41) ; L1-45 : mots mis en valeur des titres V1 (3.2), titres de section à 40 px, colonne Leenkey du comparatif en aplat `--lk-blue` (texte blanc, filets blancs à 24 %), tuiles « Les derniers biens » en 3:2, mouvement de la section 9 |
+| Contact `/contact` | G1 | la `MarketingSection` « Parlons-en ensemble. » de l'accueil en h1, son formulaire (`source` « contact ») (L1-45) |
 | Estimateur `/estimer` | existant, re-stylé : police Archivo, tokens, rayons ; aucune modification de logique (L1-44) | cartes de choix sur le modèle de `RoleCard`, `ChipToggle`, chiffres et DPE au format du `SegmentedPicker`, `InfoNote`, `InlineAlert`, dialogue 10.8 |
 | Pages par ville | V3 | — |
 | Connexion, mot de passe oublié | G5 simplifié (comme 12.1) | — |
@@ -871,6 +888,7 @@ Contenu et textes : `SPEC-V2` section 13 (modèle de Cédric). Mise en forme :
 - [ ] Captures 390, 768 et 1280 px jointes, comparées à la maquette PNG correspondante.
 - [ ] Contrastes conformes à la section 2.1 ; cibles ≥ 44 px.
 - [ ] Textes en casse normale, montants et surfaces formatés (section 3.3), textes client repris mot pour mot.
+- [ ] Mouvement (section 9) : rien de caché sans JavaScript ni avec `prefers-reduced-motion` ; montée au défilement sur les pages publiques seulement.
 
 ---
 

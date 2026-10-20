@@ -65,21 +65,26 @@ export function bottomTabs(space: Space, signedIn = true): readonly NavItem[] {
 /**
  * Links of the TopNav. « Vendre » is the home page, written for the sellers;
  * « Acheter » stays current on a listing (AnnonceDesktop); « Tarifs » joins
- * them with the public site in V2 (DECISIONS 2026-10-19). No « Guides »: no
+ * them with the public site in V2 (DECISIONS 2026-10-19), then « Qui
+ * sommes-nous » and « Contact » (DECISIONS 2026-10-20). No « Guides »: no
  * such page in the SPEC.
  */
 export const TOP_NAV_LINKS: readonly NavItem[] = [
   { href: ROUTES.search, label: fr.nav.links.buy, match: [ROUTES.listing] },
   { href: ROUTES.home, label: fr.nav.links.sell },
-  // From 1024 px: at 768 px it would run into « Vendre mon bien » (footer and
-  // mobile menu below).
-  { href: ROUTES.pricing, label: fr.site.links.pricing, wide: true },
+  // Below their width, they would run into « Vendre mon bien »: the footer
+  // and the mobile menu have them.
+  { href: ROUTES.pricing, label: fr.site.links.pricing, from: "lg" },
   { href: ROUTES.valuation, label: fr.nav.links.valuation },
+  { href: ROUTES.about, label: fr.site.links.about, from: "xl" },
+  { href: ROUTES.contact, label: fr.site.links.contact, from: "lg" },
 ];
 
 /**
  * Pages of the public site (DECISIONS 2026-10-19, « V2 finale »): in the
- * footer of every V2 page and in the mobile menu, after the TopNav links.
+ * footer of every V2 page and in the mobile menu, after the TopNav links. Not
+ * /contact: the legal links of the footer already end with « Contact » (the
+ * email of Leenkey, L1-36).
  */
 export const SITE_LINKS: readonly NavItem[] = [
   { href: ROUTES.concept, label: fr.site.links.concept },

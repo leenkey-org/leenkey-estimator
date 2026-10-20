@@ -69,6 +69,15 @@ describe("palette (DESIGN.md 2.1)", () => {
   it("field borders reach 3:1 on white", () => {
     expect(contrast("field", "surface")).toBeGreaterThanOrEqual(3);
   });
+
+  // Large text, 24 px and more: WCAG 1.4.3, 3:1. The blue words of the title
+  // of a section of the public pages, on white or on stone (L1-45).
+  it.each([
+    ["blue", "surface"],
+    ["blue", "stone"],
+  ])("the accent of a title, %s on %s, reaches 3:1", (foreground, background) => {
+    expect(contrast(foreground, background)).toBeGreaterThanOrEqual(3);
+  });
 });
 
 describe("cn() knows the Façade classes", () => {

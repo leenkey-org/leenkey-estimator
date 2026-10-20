@@ -8,6 +8,8 @@ import { expect, test, type Page } from "@playwright/test";
 // scripts/local-stack.sh, then tests/e2e/auth-journey.spec.ts.
 
 async function blockingViolations(page: Page) {
+  // Nothing waits below the screen (DESIGN.md 9): axe reads the whole page.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   const results = await new AxeBuilder({ page }).analyze();
   return results.violations
     .filter((violation) => violation.impact === "serious" || violation.impact === "critical")

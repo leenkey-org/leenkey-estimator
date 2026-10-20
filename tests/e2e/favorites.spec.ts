@@ -83,6 +83,8 @@ test("ajouter une annonce aux favoris, la retrouver, puis la retirer", async ({
     .filter({ has: page.locator(`a[href="${href}"]`) });
   await expect(card).toHaveCount(1);
   await page.evaluate(() => document.fonts.ready);
+  // Nothing waits below the screen (DESIGN.md 9): axe reads the whole page.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   const results = await new AxeBuilder({ page }).analyze();
   expect(
     results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),

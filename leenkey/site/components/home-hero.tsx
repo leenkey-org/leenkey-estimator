@@ -15,7 +15,14 @@ const t = fr.site.home.hero;
  */
 export function HomeHero() {
   return (
-    <BrandPanel id="valoriser" title={t.title} description={t.lead} titleSize="hero" illustration>
+    <BrandPanel
+      id="valoriser"
+      title={t.title}
+      titleAccent={t.accent}
+      description={t.lead}
+      titleSize="hero"
+      illustration
+    >
       <div
         role="group"
         aria-label={t.entries}
