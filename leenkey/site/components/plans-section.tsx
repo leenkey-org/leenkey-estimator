@@ -1,5 +1,6 @@
+import Link from "next/link";
+import { Button } from "@/components/shared/button";
 import { MarketingSection } from "@/components/shared/marketing-section";
-import { MoreLink } from "@/components/shared/more-link";
 import { PlanCard } from "@/components/shared/plan-card";
 import { activePlans } from "@/core/billing/plans";
 import { ROUTES } from "@/leenkey/navigation/spaces";
@@ -9,20 +10,22 @@ import { fr } from "@/lib/i18n/fr";
 const t = fr.site.home.plans;
 
 /**
- * « Un forfait fixe. Jamais de commission. » (#tarifs, V1 home page): the
- * three plans, their names and prices read from the plans table (reference
- * data), the short texts of the home page, and the way to /tarifs. Without
- * the plans (database unreachable), the link alone.
+ * « Un forfait fixe. Jamais de commission. » (#tarifs), the dark section of
+ * the V1 home page (L1-48): title centred on navy, the three plans with their
+ * price in large type, names and prices read from the plans table (reference
+ * data), the short texts of the home page, then the way to /tarifs. Without
+ * the plans (database unreachable: CI build, PR previews), the way alone.
  */
 export async function PlansSection() {
   const plans = await activePlans();
   return (
     <MarketingSection
       id="tarifs"
+      tone="navy"
+      align="center"
       title={t.title}
       accent={t.accent}
       lead={t.lead}
-      action={<MoreLink href={ROUTES.pricing}>{t.all}</MoreLink>}
       revealContent={false}
     >
       {plans && plans.length > 0 ? (
@@ -34,6 +37,7 @@ export async function PlansSection() {
                 name={plan.name}
                 price={plan.priceCents === 0 ? t.free : formatPrice(plan.priceCents)}
                 priceSuffix={plan.priceCents === 0 ? undefined : t.taxes}
+                priceSize="large"
                 tagline={t.items[plan.code].text}
                 note={t.items[plan.code].note}
               />
@@ -41,6 +45,11 @@ export async function PlansSection() {
           ))}
         </ul>
       ) : null}
+      <div data-reveal="" className="mt-10 flex justify-center lg:mt-12">
+        <Button asChild size="lg" className="focus-visible:outline-white">
+          <Link href={ROUTES.pricing}>{t.all}</Link>
+        </Button>
+      </div>
     </MarketingSection>
   );
 }

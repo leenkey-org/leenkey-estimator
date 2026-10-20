@@ -695,11 +695,31 @@ export const publicPages = {
   sectionTitle: "Un forfait fixe. Jamais de commission.",
   sectionAccent: "Jamais de commission.",
   navyCaption:
-    "MarketingSection tone navy, align center · aplat bleu foncé des sections vitrines de l'accueil (L1-47) : titre blanc, accent --lk-blue-light (6,9:1), chapeau blanc à 72 %",
-  navyTitle: "Vous savez toujours quoi faire ensuite.",
-  navyAccent: "quoi faire ensuite.",
-  navyLead:
-    "Votre vente se pilote depuis un seul endroit : le dossier, l'annonce, les visites et les offres.",
+    "MarketingSection tone navy, align center · aplat bleu foncé des sections vitrines de l'accueil (L1-47, L1-48) : titre blanc, accent --lk-blue-light (6,9:1), chapeau blanc à 72 % ; PlanCard priceSize large · le prix en 36 px en bas de la carte, au-dessus de la note, aligné d'une carte à l'autre (#tarifs de l'accueil)",
+  // The section Tarifs of the home page (L1-48): its three plans, price in large type.
+  largePlans: [
+    {
+      name: "Autonomie",
+      price: "Gratuit",
+      free: true,
+      tagline: "Pour piloter votre vente en toute autonomie.",
+      note: "Sans engagement · sans carte bancaire",
+    },
+    {
+      name: "Accompagné",
+      price: formatPrice(99000),
+      free: false,
+      tagline: "Un conseiller dédié à vos côtés, du prix à la signature.",
+      note: "Forfait fixe · payé à la souscription",
+    },
+    {
+      name: "Sérénité",
+      price: formatPrice(150000),
+      free: false,
+      tagline: "Nous nous occupons de presque tout, vous gardez la décision.",
+      note: "Forfait fixe · payé à la souscription",
+    },
+  ],
   sectionLead:
     "Vous choisissez votre niveau d'accompagnement. Le prix ne dépend jamais de la valeur de votre bien.",
   more: "Voir le détail des formules",

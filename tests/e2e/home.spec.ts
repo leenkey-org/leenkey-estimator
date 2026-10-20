@@ -108,7 +108,7 @@ test.describe("accueil", () => {
     await expect(page.locator("#tarifs")).toBeInViewport();
   });
 
-  test("sections sombres de la V1 : la courbe de la valorisation, l'aperçu de l'espace vendeur", async ({
+  test("sections sombres de la V1 : la courbe de la valorisation, l'aperçu de l'espace vendeur, les formules", async ({
     page,
     isMobile,
   }) => {
@@ -146,6 +146,17 @@ test.describe("accueil", () => {
     await expect(preview.getByRole("link")).toHaveCount(0);
     await expect(space.locator("figcaption")).toHaveText(
       "Aperçu de l'espace vendeur, avec des données d'exemple.",
+    );
+
+    // The plans, dark as in the V1 (L1-48), the way to /tarifs under them.
+    const plans = page.locator("#tarifs");
+    expect(await plans.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+      "rgb(26, 43, 74)",
+    );
+    await expect(plans.getByRole("heading", { level: 2 })).toHaveCSS("text-align", "center");
+    await expect(plans.getByRole("link", { name: "Voir le détail des formules" })).toHaveAttribute(
+      "href",
+      "/tarifs",
     );
   });
 
@@ -354,7 +365,7 @@ test.describe("accueil (base de seed)", () => {
     await expect(page).toHaveURL("/acheter");
   });
 
-  test("les formules et leurs prix viennent de la base", async ({ page }) => {
+  test("les formules et leurs prix viennent de la base", async ({ page, isMobile }) => {
     await page.goto("/");
     const plans = page.locator("#tarifs article");
     await expect(plans).toHaveCount(3);
@@ -363,5 +374,21 @@ test.describe("accueil (base de seed)", () => {
     await expect(plans.nth(1)).toContainText("990 €");
     await expect(plans.nth(2)).toContainText("1 500 €");
     await expect(plans.nth(1)).toContainText("Forfait fixe · payé à la souscription");
+    // In large type at the bottom of the card, as the price cards of the V1 (L1-48).
+    const price = plans.nth(1).getByText(/^990\s€$/);
+    expect(await price.evaluate((el) => getComputedStyle(el).fontSize)).toBe("36px");
+
+    // Side by side from 1024 px, the prices on one line, whatever the length
+    // of the taglines: at 1280 px, and at 1024 px where Sérénité's wraps.
+    if (isMobile) return;
+    const prices = plans.locator("p.whitespace-nowrap");
+    for (const width of [1280, 1024]) {
+      await page.setViewportSize({ width, height: 900 });
+      const tops = await prices.evaluateAll((items) =>
+        items.map((item) => Math.round(item.getBoundingClientRect().top)),
+      );
+      expect(tops, `${width} px`).toHaveLength(3);
+      expect(new Set(tops).size, `${width} px`).toBe(1);
+    }
   });
 });
