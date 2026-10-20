@@ -42,14 +42,20 @@ export PGOPTIONS="${PGOPTIONS:--c client_min_messages=warning}"
 
 # Photos of the demo properties: their files in the bucket photos, then their
 # rows, for the demo properties without any photo (the others are left as the
-# recette made them).
+# recette made them) whose owner may still add one (photo_file_writable: not
+# deleted, sold or suspended, the owner active).
 case "$target" in
   local)   supabase_url="${SEED_SUPABASE_URL:-}" anon_key="${SEED_SUPABASE_ANON_KEY:-}" ;;
   staging) supabase_url="${STAGING_SUPABASE_URL:-}" anon_key="${STAGING_SUPABASE_ANON_KEY:-}" ;;
 esac
 if [ -n "$supabase_url" ] && [ -n "$anon_key" ] && [ -n "${SEED_PASSWORD:-}" ]; then
-  skip="$(psql "$url" -At -c "select coalesce(string_agg(distinct property_id::text, ','), '')
-    from public.photos where property_id::text like '5eed1000-%'")"
+  skip="$(psql "$url" -At -c "select coalesce(string_agg(p.id::text, ','), '') from public.properties p
+    where p.id::text like '5eed1000-%' and (p.deleted_at is not null
+      or exists (select 1 from public.photos ph where ph.property_id = p.id)
+      or exists (select 1 from public.listings l where l.property_id = p.id
+                 and (l.status = 'suspended' or (l.status = 'sold' and l.deleted_at is null)))
+      or exists (select 1 from public.profiles pr where pr.id = p.owner_id
+                 and (pr.suspended_at is not null or pr.deleted_at is not null)))")"
   SEED_SUPABASE_URL="$supabase_url" SEED_SUPABASE_ANON_KEY="$anon_key" SEED_DATABASE_URL="$url" \
     SEED_PHOTOS_SKIP="$skip" node scripts/seed-photos.mjs "$target" | psql "$url" -v ON_ERROR_STOP=1 -q -At
 else

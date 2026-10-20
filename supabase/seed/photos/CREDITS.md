@@ -1,6 +1,6 @@
 # Photos des biens de démonstration
 
-Photos du seed (local et préprod uniquement : `db:seed` refuse la production), déposées par `scripts/seed-photos.mjs` d'après `photos.json`, connecté avec le compte de seed du propriétaire (jamais la clé de service), seulement sur les biens sans photo : recadrées sans descendre sous le minimum de 800 × 600 des vendeurs, puis converties en WebP de 400, 800 et 1 600 px comme une photo envoyée par un vendeur (L1-12).
+Photos du seed (local et préprod uniquement : `db:seed` refuse la production), déposées par `scripts/seed-photos.mjs` d'après `photos.json`, connecté avec le compte de seed du propriétaire (jamais la clé de service), seulement sur les biens sans photo que leur propriétaire peut encore modifier (ni supprimés, ni vendus, ni suspendus) : recadrées sans descendre sous le minimum de 800 × 600 des vendeurs, puis converties en WebP de 400, 800 et 1 600 px comme une photo envoyée par un vendeur (L1-12).
 
 | Fichier | Bien du seed | Provenance |
 |---|---|---|

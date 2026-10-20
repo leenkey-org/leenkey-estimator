@@ -62,7 +62,11 @@ async function signIn(email) {
   return (await response.json()).access_token;
 }
 
-/** A file sent by its owner; one already there (a second run) is kept. */
+/**
+ * A file sent by its owner: true once in the bucket (one already there, a
+ * second run, is kept); false when the RLS refuses it, the property changed
+ * meanwhile (sold, suspended, deleted): the property is then left out.
+ */
 async function upload(token, name, data) {
   const response = await fetch(`${url}/storage/v1/object/photos/${name}`, {
     method: "POST",
@@ -74,9 +78,10 @@ async function upload(token, name, data) {
     },
     body: data,
   });
-  if (response.ok) return;
+  if (response.ok) return true;
   const text = await response.text();
-  if (/duplicate|already exists/i.test(text)) return;
+  if (/duplicate|already exists/i.test(text)) return true;
+  if (response.status === 403 || /row-level security|unauthorized/i.test(text)) return false;
   fail(`${name}: ${response.status} ${text}`);
 }
 
@@ -94,6 +99,7 @@ for (const photo of photos) {
   const hash = createHash("sha256").update(photo.file).digest("hex").slice(0, 12);
   const path = `${propertyId}/5eed7000-0000-4000-8000-${hash}`;
   let largest = { width: 0, height: 0 };
+  let sent = true;
   for (const width of WIDTHS) {
     // From the file each time: one lossy encoding, as for an upload.
     const { data, info } = await sharp(`${dir}${photo.file}`)
@@ -103,15 +109,22 @@ for (const photo of photos) {
       .webp({ quality: 80 })
       .toBuffer({ resolveWithObject: true });
     if (info.width > largest.width) largest = { width: info.width, height: info.height };
-    await upload(tokens.get(photo.owner), `${path}-${width}.webp`, data);
+    if (!(await upload(tokens.get(photo.owner), `${path}-${width}.webp`, data))) {
+      console.error(`seed-photos: ${photo.file} left out, its owner may no longer add photos.`);
+      sent = false;
+      break;
+    }
   }
+  if (!sent) continue;
   rows.push(
     `(${lit(propertyId)}::uuid, ${lit(path)}, ${largest.width}, ${largest.height}, ${lit(photo.caption)})`,
   );
 }
 
 if (rows.length === 0) {
-  console.error("seed-photos: every demo property with a photo in photos.json already has some.");
+  console.error(
+    "seed-photos: no demo property to give a photo (they have some, or may no longer take one).",
+  );
   process.exit(0);
 }
 // Only for properties still without photo (the check is made again here);

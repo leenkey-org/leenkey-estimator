@@ -367,7 +367,7 @@ Couches (`z-index`) : contenu 0 · en-tête collant 20 · `BottomNav` 30 · bout
 
 ### 7.2 Photos de démonstration
 
-Le seed utilise des photos d'illustration, jamais des photos d'annonces réelles : fournies par Younes (L1-46, `DECISIONS.md` 2026-10-20, droits confirmés : Q57) ou libres de droits (Unsplash, licence Unsplash), stockées dans `supabase/seed/photos/` avec leur provenance (`CREDITS.md`), recadrées sans descendre sous le minimum de 800 × 600 des vendeurs, et déposées par `db:seed` avec le compte de seed de leur propriétaire (jamais avec la clé de service), seulement sur les biens sans photo. Une photo n'apparaît que pour un seul bien. Les photos des pages publiques sont dans `public/images/` (`leenkey/site/photos.ts`), en WebP de 400, 800 et 1 600 px : une photo dont les droits ne sont pas confirmés ne s'affiche jamais en production.
+Le seed utilise des photos d'illustration, jamais des photos d'annonces réelles : fournies par Younes (L1-46, `DECISIONS.md` 2026-10-20, droits confirmés : Q57) ou libres de droits (Unsplash, licence Unsplash), stockées dans `supabase/seed/photos/` avec leur provenance (`CREDITS.md`), recadrées sans descendre sous le minimum de 800 × 600 des vendeurs, et déposées par `db:seed` avec le compte de seed de leur propriétaire (jamais avec la clé de service), seulement sur les biens sans photo que leur propriétaire peut encore modifier. Une photo n'apparaît que pour un seul bien. Les photos des pages publiques sont dans `public/images/` (`leenkey/site/photos.ts`), en WebP de 400, 800 et 1 600 px : une photo dont les droits ne sont pas confirmés ne s'affiche jamais en production.
 
 ### 7.3 Dessin de marque `public/brand/facade.svg`
 
