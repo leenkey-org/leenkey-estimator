@@ -222,3 +222,48 @@ describe("pages of the site (L1-42)", () => {
     expect(leenkey?.values[0]).toBe(`${accompagne.replace(" €", "")} à ${serenite}`);
   });
 });
+
+// L1-47 (DECISIONS 2026-10-20): the dark sections of the V1 page.
+describe("aperçu de l'espace vendeur", () => {
+  const space = site.home.space;
+  const texts = JSON.stringify(space);
+
+  it("dit, comme la V1, que ses données sont des exemples, dès sa barre d'adresse", () => {
+    expect(space.caption).toBe("Aperçu de l'espace vendeur, avec des données d'exemple.");
+    expect(space.sample).toBe("Exemple");
+    expect(space.label).toMatch(/^Exemple de tableau de bord vendeur/);
+  });
+
+  it("ne parle ni de portails (annonces exclusives) ni d'« estimation »", () => {
+    expect(texts).not.toMatch(/portail/i);
+    expect(texts).not.toMatch(/estim/i);
+  });
+
+  it("jamais plus de deux séparateurs « · » dans un libellé (DESIGN.md 1)", () => {
+    for (const text of texts.match(/"[^"]*"/g) ?? []) {
+      expect((text.match(/·/g) ?? []).length, text).toBeLessThanOrEqual(2);
+    }
+  });
+
+  // Dashboard.png, DESIGN.md 10.4 and SPEC 8.7: what a seller finds in V2.
+  it("montre « Ma vente » de la V2 : 6 étapes, 3 chiffres, la tâche en cours après celle qui est faite", () => {
+    expect(space.step).toBe("Étape 3 sur 6 · Contacts et visites");
+    expect(space.figures.map((figure) => figure.label)).toEqual([
+      "vues · 7\u202fj",
+      "contacts",
+      "qualifiés",
+    ]);
+    expect(space.todo.tasks.map((task) => task.state)).toEqual(["done", "current", "todo"]);
+    expect(space.next.label).toBe("Prochaine action");
+  });
+
+  it("ne dit jamais d'un financement qu'il est « validé » (CLAUDE.md section 6)", () => {
+    expect(texts).not.toMatch(/validé/i);
+  });
+});
+
+describe("ce que vous obtenez en quelques minutes", () => {
+  it("les quatre éléments de la courbe, un repère chacun", () => {
+    expect(site.home.features.items).toHaveLength(4);
+  });
+});

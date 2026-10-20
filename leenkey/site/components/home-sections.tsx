@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Calendar, Check } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { MoreLink } from "@/components/shared/more-link";
@@ -9,8 +8,10 @@ import { cn } from "@/lib/utils";
 import { ContactForm } from "./contact-form";
 import { CtaPanel } from "./cta-panel";
 import { RichText } from "./rich-text";
+import { SellerSpacePreview } from "./seller-space-preview";
 import { card, cardText, cardTitle } from "./site-styles";
 import { StagePicker } from "./stage-picker";
+import { ValueCurve } from "./value-curve";
 
 // Sections of the home page after the hero and the latest listings, in the
 // order of the V1 page and with its anchors (#etape, #comment…), rebuilt with
@@ -60,28 +61,25 @@ export function StepsSection() {
   );
 }
 
-/** « Ce que vous obtenez en quelques minutes » (#fonctionnalites). */
+/**
+ * « Ce que vous obtenez en quelques minutes » (#fonctionnalites): the dark
+ * section of the V1 page, its curve and its four items (DECISIONS 2026-10-20).
+ */
 export function FeaturesSection() {
   const t = home.features;
   return (
     <MarketingSection
       id="fonctionnalites"
-      tone="stone"
+      tone="navy"
+      align="center"
       title={t.title}
       accent={t.accent}
       lead={t.lead}
       revealContent={false}
     >
-      <ul data-reveal-stagger="" className="grid gap-4 md:grid-cols-2">
-        {t.items.map((feature) => (
-          <li key={feature.title} className={card}>
-            <h3 className={cardTitle}>{feature.title}</h3>
-            <p className={cn(cardText, "mt-2")}>{feature.text}</p>
-          </li>
-        ))}
-      </ul>
-      <div data-reveal="" className="mt-8">
-        <Button asChild size="lg">
+      <ValueCurve items={t.items} />
+      <div data-reveal="" className="mt-10 flex justify-center lg:mt-12">
+        <Button asChild size="lg" className="focus-visible:outline-white">
           <Link href={ROUTES.valuation}>{t.action}</Link>
         </Button>
       </div>
@@ -89,75 +87,23 @@ export function FeaturesSection() {
   );
 }
 
-// lk-step-done and lk-step-current: once the preview has risen, the step
-// done checks itself and the current one calls for attention (globals.css).
-const STEP_STATE = {
-  done: "lk-step-done border-lk-success bg-lk-success text-white",
-  current: "lk-step-current border-lk-blue bg-lk-surface",
-  todo: "border-lk-line bg-lk-surface",
-} as const;
-
 /**
- * « Vous savez toujours quoi faire ensuite. »: a still preview of the seller
- * area, with the NextActionCard and the TaskList of DESIGN.md 10.4, without
- * example figures (DECISIONS 2026-10-19).
+ * « Vous savez toujours quoi faire ensuite. » (#espace-vendeur): the dark
+ * section of the V1 page and its preview of the seller area, with example
+ * data said as such (DECISIONS 2026-10-20).
  */
 export function SellerSpaceSection() {
   const t = home.space;
   return (
-    <MarketingSection id="espace-vendeur" title={t.title} accent={t.accent} lead={t.lead}>
-      <figure className="flex flex-col gap-3">
-        <div className="grid gap-6 rounded-lk-md border border-lk-line bg-lk-bg p-4 md:p-6 lg:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <p className="text-lk-caption font-semibold text-lk-blue">{t.next.label}</p>
-            <div className="flex gap-3 rounded-lk-md border border-lk-line bg-lk-surface p-4">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-lk-sm bg-lk-blue-tint text-lk-blue">
-                <Calendar aria-hidden="true" className="size-5" />
-              </span>
-              <div className="flex min-w-0 flex-col gap-0.5">
-                <p className="text-lk-title font-semibold text-lk-ink">{t.next.title}</p>
-                <p className="text-lk-secondary text-lk-ink-3">{t.next.text}</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <h3 className="text-lk-h3 font-semibold text-lk-ink">{t.journey}</h3>
-            <ol className="rounded-lk-md border border-lk-line bg-lk-surface">
-              {t.steps.map((step) => (
-                <li
-                  key={step.title}
-                  className="flex items-start gap-3 border-b border-lk-line p-3.5 last:border-b-0"
-                >
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      "mt-px flex size-5.5 shrink-0 items-center justify-center rounded-full border-2",
-                      STEP_STATE[step.state],
-                    )}
-                  >
-                    {step.state === "done" ? (
-                      <Check className="size-3.5" strokeWidth={2.5} />
-                    ) : null}
-                  </span>
-                  <span className="flex min-w-0 flex-col">
-                    <span
-                      className={cn(
-                        "text-lk-compact font-medium",
-                        step.state === "done" ? "text-lk-ink-3 line-through" : "text-lk-ink",
-                      )}
-                    >
-                      {step.title}
-                      <span className="sr-only">, {t[step.state]}</span>
-                    </span>
-                    <span className="text-lk-caption text-lk-ink-3">{step.text}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-        <figcaption className="text-lk-caption text-lk-ink-3">{t.caption}</figcaption>
-      </figure>
+    <MarketingSection
+      id="espace-vendeur"
+      tone="navy"
+      align="center"
+      title={t.title}
+      accent={t.accent}
+      lead={t.lead}
+    >
+      <SellerSpacePreview />
     </MarketingSection>
   );
 }
