@@ -10,7 +10,14 @@ const CURVE =
 /** Height of each point from the top of the curve (96, 72, 46 and 24 out of 130). */
 const POINTS = ["73.8%", "55.4%", "35.4%", "18.5%"] as const;
 /** In the order of the items: the range, the sales of the area, the criteria, the report. */
-const ICONS: readonly LucideIcon[] = [ChartLine, MapPin, ChartNoAxesColumn, FileText];
+const ICONS = [
+  ChartLine,
+  MapPin,
+  ChartNoAxesColumn,
+  FileText,
+] as const satisfies readonly LucideIcon[];
+
+type Item = { title: string; text: string };
 
 /**
  * « Ce que vous obtenez en quelques minutes. » (#fonctionnalites) as in the
@@ -20,7 +27,7 @@ const ICONS: readonly LucideIcon[] = [ChartLine, MapPin, ChartNoAxesColumn, File
  * the items come one after the other (DESIGN.md 9). No numbering: the items
  * are not the steps of a journey (DESIGN.md 1).
  */
-export function ValueCurve({ items }: { items: readonly { title: string; text: string }[] }) {
+export function ValueCurve({ items }: { items: readonly [Item, Item, Item, Item] }) {
   return (
     <div className="relative">
       <svg
@@ -40,7 +47,11 @@ export function ValueCurve({ items }: { items: readonly { title: string; text: s
           pathLength={1}
         />
       </svg>
-      <ul data-reveal-stagger="slow" className="relative grid gap-8 lg:grid-cols-4 lg:gap-0">
+      <ul
+        data-reveal-stagger="slow"
+        // Below 1024 px, a column of reading width under the centred title.
+        className="relative mx-auto grid max-w-lk-prose gap-8 lg:max-w-none lg:grid-cols-4 lg:gap-0"
+      >
         {items.map((item, index) => {
           const Icon = ICONS[index] ?? FileText;
           return (

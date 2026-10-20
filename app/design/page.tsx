@@ -1154,6 +1154,7 @@ export default function DesignPage() {
               </MarketingSection>
             </div>
             <Caption>{content.publicPages.sectionCaption}</Caption>
+            <Caption>{content.publicPages.planCaption}</Caption>
             <div className="overflow-hidden rounded-lk-md">
               <MarketingSection
                 tone="navy"
@@ -1165,7 +1166,6 @@ export default function DesignPage() {
               />
             </div>
             <Caption>{content.publicPages.navyCaption}</Caption>
-            <Caption>{content.publicPages.planCaption}</Caption>
             <div className="flex flex-wrap items-center gap-6">
               <MoreLink href="#pages-publiques">{content.publicPages.more}</MoreLink>
               <Caption>{content.publicPages.moreCaption}</Caption>

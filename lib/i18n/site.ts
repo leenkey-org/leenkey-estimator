@@ -140,69 +140,62 @@ export const site = {
       title: "Vous savez toujours quoi faire ensuite.",
       accent: "quoi faire ensuite.",
       lead: "Votre vente se pilote depuis un seul endroit : le dossier, l'annonce, les visites et les offres, avec la prochaine action toujours affichée.",
-      // The preview of the V1 page, « avec des données d'exemple » as it said
-      // (DECISIONS 2026-10-20): its figures and words, on the components of
-      // the seller area (DESIGN.md 10.4); « Publication sur Leenkey » instead
-      // of « sur les portails » (DECISIONS 2026-10-19).
+      // « Ma vente » of the seller area with the example data of its mock-up
+      // (Dashboard.png, DESIGN.md 10.4, SPEC 8.7). The V1 preview, « avec des
+      // données d'exemple » as it said, showed a journey in four steps, a
+      // chart and figures that the V2 area does not have (DECISIONS
+      // 2026-10-20): the preview shows what a seller finds.
       address: "leenkey.fr/vendeur",
+      sample: "Exemple",
+      label: `Exemple de tableau de bord vendeur${NBSP}: un appartement de 3${N}pièces à Savigny-sur-Orge, en ligne, à l'étape 3 sur 6, contacts et visites. Prochaine action${NBSP}: confirmer la visite de Thomas. 248${N}vues en 7${N}jours, 8${N}contacts, 3${N}acquéreurs qualifiés.`,
+      greeting: "Bonjour Camille",
       heading: "Ma vente",
       property: {
-        title: "Maison contemporaine",
-        detail: `Biarritz · 120${N}m² · 4 pièces`,
-        status: "En préparation",
+        title: `Appartement 3${N}p · Savigny-sur-Orge`,
+        detail: `350${N}000${N}€ · publié le 18${N}sept.`,
       },
-      step: "Étape 2 sur 4 · Dossier vendeur",
+      step: "Étape 3 sur 6 · Contacts et visites",
       next: {
-        label: "Prochaine étape",
-        title: "Programmer les diagnostics",
-        text: "À faire avant la mise en ligne de l'annonce.",
+        label: "Prochaine action",
+        title: "Confirmer la visite de Thomas",
+        text: `Samedi 27${N}sept. à 10${N}h. Son justificatif de financement a été vérifié par Leenkey.`,
       },
       figures: [
-        { label: "Visites cette semaine", value: "3", change: "+2" },
-        { label: "Contacts qualifiés", value: "8", change: "+3" },
-        { label: "Documents prêts", value: "12/15", change: null },
-        { label: "Offres reçues", value: "1", change: "+1" },
+        { value: "248", label: `vues · 7${N}j` },
+        { value: "8", label: "contacts" },
+        { value: "3", label: "qualifiés" },
       ],
-      chart: {
-        title: "Demandes de visite · 7 derniers jours",
-        days: ["L", "M", "M", "J", "V", "S", "D"],
-      },
-      file: {
-        title: "Dossier vendeur",
-        label: "Pièces fournies",
-        value: `12${N}/${N}15`,
-        items: [
-          { title: "Titre de propriété", missing: null },
-          { title: "Taxe foncière", missing: null },
-          { title: "DPE, amiante, électricité", missing: "3" },
+      todo: {
+        title: "À faire",
+        tasks: [
+          { title: "Diagnostics déposés", detail: null, state: "done" },
+          { title: "Répondre à 2 contacts en attente", detail: "Depuis hier", state: "current" },
+          {
+            title: "Ajouter le PV de la dernière AG",
+            detail: "Demandé par 1 acquéreur",
+            state: "todo",
+          },
         ],
       },
-      journey: "Votre parcours",
-      steps: [
-        {
-          title: "Valeur validée",
-          text: `845${N}000${N}€ · fourchette 792${N}000 – 898${N}000${N}€`,
-          state: "done",
-        },
-        {
-          title: "Dossier vendeur",
-          text: "12 pièces sur 15 · diagnostics à programmer",
-          state: "current",
-        },
-        {
-          title: "Annonce & visites",
-          text: "Publication sur Leenkey, gestion des créneaux",
-          state: "todo",
-        },
-        {
-          title: "Offres & notaire",
-          text: "Comparaison des offres, suivi jusqu'à la signature",
-          state: "todo",
-        },
-      ],
-      done: "Fait",
-      current: "En cours",
-      todo: "À venir",
+      conversations: {
+        title: "Conversations",
+        items: [
+          {
+            initials: "TH",
+            name: "Thomas",
+            time: "10:05",
+            text: `Serait-il possible de visiter samedi matin${NBSP}?`,
+            unread: true,
+          },
+          {
+            initials: "SL",
+            name: "Sarah",
+            time: "Hier",
+            text: "Merci pour les précisions, je reviens vers vous.",
+            unread: false,
+          },
+        ],
+      },
       caption: "Aperçu de l'espace vendeur, avec des données d'exemple.",
     },
     comparison: {

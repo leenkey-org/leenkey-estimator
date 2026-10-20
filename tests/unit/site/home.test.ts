@@ -228,8 +228,10 @@ describe("aperçu de l'espace vendeur", () => {
   const space = site.home.space;
   const texts = JSON.stringify(space);
 
-  it("dit, comme la V1, que ses données sont des exemples", () => {
+  it("dit, comme la V1, que ses données sont des exemples, dès sa barre d'adresse", () => {
     expect(space.caption).toBe("Aperçu de l'espace vendeur, avec des données d'exemple.");
+    expect(space.sample).toBe("Exemple");
+    expect(space.label).toMatch(/^Exemple de tableau de bord vendeur/);
   });
 
   it("ne parle ni de portails (annonces exclusives) ni d'« estimation »", () => {
@@ -243,10 +245,20 @@ describe("aperçu de l'espace vendeur", () => {
     }
   });
 
-  it("4 étapes, l'étape en cours après celle qui est faite", () => {
-    expect(space.steps.map((step) => step.state)).toEqual(["done", "current", "todo", "todo"]);
-    expect(space.step).toBe("Étape 2 sur 4 · Dossier vendeur");
-    expect(space.chart.days).toHaveLength(7);
+  // Dashboard.png, DESIGN.md 10.4 and SPEC 8.7: what a seller finds in V2.
+  it("montre « Ma vente » de la V2 : 6 étapes, 3 chiffres, la tâche en cours après celle qui est faite", () => {
+    expect(space.step).toBe("Étape 3 sur 6 · Contacts et visites");
+    expect(space.figures.map((figure) => figure.label)).toEqual([
+      "vues · 7\u202fj",
+      "contacts",
+      "qualifiés",
+    ]);
+    expect(space.todo.tasks.map((task) => task.state)).toEqual(["done", "current", "todo"]);
+    expect(space.next.label).toBe("Prochaine action");
+  });
+
+  it("ne dit jamais d'un financement qu'il est « validé » (CLAUDE.md section 6)", () => {
+    expect(texts).not.toMatch(/validé/i);
   });
 });
 

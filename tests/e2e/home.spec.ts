@@ -119,15 +119,19 @@ test.describe("accueil", () => {
     expect(await space.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
       "rgb(26, 43, 74)",
     );
-    // A picture, named by its caption: its example data are not read one by one.
-    const preview = space.getByRole("img", {
-      name: "Aperçu de l'espace vendeur, avec des données d'exemple.",
-    });
+    // A picture named by what it shows, its example data not read one by one,
+    // then its caption.
+    const preview = space.getByRole("img", { name: /^Exemple de tableau de bord vendeur/ });
     await expect(preview).toBeVisible();
+    await expect(preview).toContainText("Exemple");
     await expect(preview).toContainText("Ma vente");
-    await expect(preview).toContainText("Programmer les diagnostics");
+    await expect(preview).toContainText("Étape 3 sur 6 · Contacts et visites");
+    await expect(preview).toContainText("Confirmer la visite de Thomas");
     await expect(preview.getByRole("button")).toHaveCount(0);
     await expect(preview.getByRole("link")).toHaveCount(0);
+    await expect(space.locator("figcaption")).toHaveText(
+      "Aperçu de l'espace vendeur, avec des données d'exemple.",
+    );
   });
 
   test("« Où en êtes-vous » : la réponse suit la situation choisie", async ({ page }) => {
