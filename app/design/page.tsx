@@ -1163,7 +1163,19 @@ export default function DesignPage() {
                 title={content.publicPages.navyTitle}
                 accent={content.publicPages.navyAccent}
                 lead={content.publicPages.navyLead}
-              />
+              >
+                <div className="mx-auto max-w-sm">
+                  <PlanCard
+                    nameAs="h4"
+                    name={content.publicPages.largePlan.name}
+                    price={content.publicPages.largePlan.price}
+                    priceSuffix={content.publicPages.taxes}
+                    priceSize="large"
+                    tagline={content.publicPages.largePlan.tagline}
+                    note={content.publicPages.largePlan.note}
+                  />
+                </div>
+              </MarketingSection>
             </div>
             <Caption>{content.publicPages.navyCaption}</Caption>
             <div className="flex flex-wrap items-center gap-6">

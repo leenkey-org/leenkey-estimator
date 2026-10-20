@@ -695,7 +695,13 @@ export const publicPages = {
   sectionTitle: "Un forfait fixe. Jamais de commission.",
   sectionAccent: "Jamais de commission.",
   navyCaption:
-    "MarketingSection tone navy, align center · aplat bleu foncé des sections vitrines de l'accueil (L1-47) : titre blanc, accent --lk-blue-light (6,9:1), chapeau blanc à 72 %",
+    "MarketingSection tone navy, align center · aplat bleu foncé des sections vitrines de l'accueil (L1-47, L1-48) : titre blanc, accent --lk-blue-light (6,9:1), chapeau blanc à 72 % ; PlanCard priceSize large · le prix en 36 px en bas de la carte, au-dessus de la note (#tarifs de l'accueil)",
+  largePlan: {
+    name: "Accompagné",
+    price: formatPrice(99000),
+    tagline: "Un conseiller dédié à vos côtés, du prix à la signature.",
+    note: "Forfait fixe · payé à la souscription",
+  },
   navyTitle: "Vous savez toujours quoi faire ensuite.",
   navyAccent: "quoi faire ensuite.",
   navyLead:

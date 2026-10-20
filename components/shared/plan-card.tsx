@@ -26,13 +26,20 @@ export type PlanCardProps = {
   action?: ReactNode;
   /** HTML level of the plan name, set by the page outline. */
   nameAs?: "h2" | "h3" | "h4";
+  /**
+   * large: the price in display size at the bottom of the card, above the
+   * note, as the price cards of the V1 home page (#tarifs, L1-48); else on
+   * the head line.
+   */
+  priceSize?: "default" | "large";
   className?: string;
 };
 
 /**
  * PlanCard (docs/DESIGN.md 10.4): white card, 1.5 px border, radius 6,
  * padding 16, gap 10. Head line: name 16 px 600, price 20 px 700 wide and
- * « TTC » 11 px; tagline 13 px; checked list (Check 16 px blue, 13 px). The
+ * « TTC » 11 px (large: the price 36 px at the bottom, « TTC » 12 px);
+ * tagline 13 px; checked list (Check 16 px blue, 13 px). The
  * recommended plan has a 2 px blue border and a blue badge over the top edge.
  * No shadow.
  */
@@ -49,8 +56,17 @@ export function PlanCard({
   badge,
   action,
   nameAs: Name = "h3",
+  priceSize = "default",
   className,
 }: PlanCardProps) {
+  const large = priceSize === "large";
+  const suffix = priceSuffix ? (
+    <span
+      className={cn("ml-1 font-medium text-lk-ink-3", large ? "text-lk-caption" : "text-lk-micro")}
+    >
+      {priceSuffix}
+    </span>
+  ) : null;
   return (
     <article
       className={cn(
@@ -66,12 +82,12 @@ export function PlanCard({
       ) : null}
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <Name className="text-lk-h3 font-semibold text-lk-ink">{name}</Name>
-        <p className="whitespace-nowrap text-lk-ink">
-          <span className="text-lk-h2 font-bold text-wide tabular-nums">{price}</span>
-          {priceSuffix ? (
-            <span className="ml-1 text-lk-micro font-medium text-lk-ink-3">{priceSuffix}</span>
-          ) : null}
-        </p>
+        {large ? null : (
+          <p className="whitespace-nowrap text-lk-ink">
+            <span className="text-lk-h2 font-bold text-wide tabular-nums">{price}</span>
+            {suffix}
+          </p>
+        )}
       </div>
       {priceNote ? <p className="-mt-1 text-lk-caption text-lk-ink-2">{priceNote}</p> : null}
       {tagline ? <p className="text-lk-secondary text-pretty text-lk-ink-3">{tagline}</p> : null}
@@ -91,8 +107,21 @@ export function PlanCard({
       {featuresOutro ? (
         <p className="text-lk-secondary text-pretty text-lk-ink-2">{featuresOutro}</p>
       ) : null}
-      {note ? <p className="mt-auto pt-1 text-lk-caption text-lk-ink-2">{note}</p> : null}
-      {action ? <div className={cn("flex flex-col pt-2", !note && "mt-auto")}>{action}</div> : null}
+      {large ? (
+        // At the bottom: the prices of cards side by side stay on one line.
+        <div className="mt-auto flex flex-col gap-1 pt-3">
+          <p className="whitespace-nowrap text-lk-ink">
+            <span className="text-lk-display font-bold text-wide tabular-nums">{price}</span>
+            {suffix}
+          </p>
+          {note ? <p className="text-lk-caption text-lk-ink-2">{note}</p> : null}
+        </div>
+      ) : note ? (
+        <p className="mt-auto pt-1 text-lk-caption text-lk-ink-2">{note}</p>
+      ) : null}
+      {action ? (
+        <div className={cn("flex flex-col pt-2", !note && !large && "mt-auto")}>{action}</div>
+      ) : null}
     </article>
   );
 }
