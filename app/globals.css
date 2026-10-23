@@ -379,6 +379,11 @@ html {
   --shadow-lk-lift: 0 24px 50px rgba(15, 30, 53, 0.3);
   --shadow-lk-photo: 0 24px 60px -20px rgba(0, 0, 0, 0.4);
 
+  /* Home page in the direction of the V1 (L1-49): letter spacing of its
+     labels in capitals, above the titles and in its cards */
+  --tracking-lk-eyebrow: 0.14em;
+  --tracking-lk-caps: 0.1em;
+
   /* Motion (DESIGN.md 9): duration-140 for hover, duration-220 for panels;
      ease-reveal-lk for what rises into place on the public pages (the curve
      of the V1 home page) */

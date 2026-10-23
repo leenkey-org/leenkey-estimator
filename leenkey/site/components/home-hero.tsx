@@ -111,7 +111,7 @@ export function HomeHero() {
                   key={point}
                   className="flex items-center gap-2.5 text-lk-compact font-medium text-white/86"
                 >
-                  <span className="flex size-8.5 shrink-0 items-center justify-center rounded-[9px] bg-white/10 text-lk-blue-light">
+                  <span className="flex size-8.5 shrink-0 items-center justify-center rounded-lk-lg bg-white/10 text-lk-blue-light">
                     <Icon aria-hidden="true" className="size-4" />
                   </span>
                   {point}
@@ -166,7 +166,7 @@ function FactChip({ className }: { className?: string }) {
         className,
       )}
     >
-      <span className="flex size-9.5 shrink-0 items-center justify-center rounded-[10px] bg-lk-success-bg text-lk-success">
+      <span className="flex size-9.5 shrink-0 items-center justify-center rounded-lk-lg bg-lk-success-bg text-lk-success">
         <ChartLine aria-hidden="true" className="size-4.5" />
       </span>
       <span className="flex flex-col">
@@ -219,7 +219,7 @@ function ExampleCard({ className }: { className?: string }) {
         })}
       </ul>
       <div className="rounded-lk-lg bg-lk-blue-tint px-4 py-3.5">
-        <p className="text-lk-micro font-bold tracking-[0.08em] text-lk-blue uppercase">
+        <p className="text-lk-micro font-bold tracking-lk-caps text-lk-blue uppercase">
           {e.value}
         </p>
         <p className="mt-0.5 text-lk-price font-extrabold text-wide tabular-nums">

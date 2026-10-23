@@ -49,7 +49,7 @@ export function StagePicker() {
             >
               <span
                 aria-hidden="true"
-                className="text-lk-caption font-extrabold tracking-[0.1em] text-lk-blue tabular-nums"
+                className="text-lk-caption font-extrabold tracking-lk-caps text-lk-blue tabular-nums"
               >
                 {String(index + 1).padStart(2, "0")}
               </span>

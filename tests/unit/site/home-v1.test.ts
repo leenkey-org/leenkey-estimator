@@ -32,6 +32,12 @@ describe("carte d'exemple du hero", () => {
     ]);
   });
 
+  it("dans une commune sans bien de démonstration : aucune annonce du seed n'affiche le même lieu", async () => {
+    const { readFileSync } = await import("node:fs");
+    const seed = readFileSync("supabase/seed/05_demo_data.sql", "utf8");
+    expect(seed).not.toContain(VALUATION_EXAMPLE.ville);
+  });
+
   it("dit que c'est un exemple, sans le chiffre de la V1 « + 5,2 % vs prix agence »", () => {
     expect(home.hero.example.sample).toBe("Exemple");
     expect(home.hero.example.label).toBe("Exemple de valorisation");

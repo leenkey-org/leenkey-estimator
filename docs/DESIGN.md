@@ -251,7 +251,7 @@ Valeurs : taille px / interligne / graisse. « Large » = `font-stretch: 116%; l
 | Titre de section des pages publiques | 26 / 1.15 / 700 | 40 / 1.05 / 700 | Large | « Un forfait fixe. Jamais de commission. » (`MarketingSection`, L1-45) |
 | Chapeau de section des pages publiques | 15 / 1.55 / 400 (16 à partir de 768) | 18 / 1.55 / 400 | Normale | « Vous choisissez votre niveau d'accompagnement… » (L1-45) |
 | Titre de section de l'accueil (L1-49) | 32 / 1.1 / 700 (40 à partir de 768) | 48 / 1.1 / 700 | Large | « Où en êtes-vous dans votre vente ? » (`look="showcase"`, jeton `text-lk-showcase`) ; hero de l'accueil en 800 |
-| Surtitre de l'accueil (L1-49) | 15 / 1.3 / 800, capitales, interlettrage 0,14 em | 17 / 1.3 / 800 | Normale | « VOTRE PROJET » (jetons `text-lk-eyebrow`, `text-lk-eyebrow-lg`) ; exception de la section 1 |
+| Surtitre de l'accueil (L1-49) | 15 / 1.3 / 800, capitales, interlettrage 0,14 em | 17 / 1.3 / 800 | Normale | « VOTRE PROJET » (jetons `text-lk-eyebrow`, `text-lk-eyebrow-lg`, `tracking-lk-eyebrow`) ; libellés en capitales des cartes de l'accueil (« MA VALEUR IMMOBILIÈRE », numéros « 01 ») en `tracking-lk-caps` (0,1 em) ; exception de la section 1 |
 | H2 | 20 / 1.2 / 700 | 22–24 / 1.15 / 700 | Large | « Votre dossier fait la différence auprès des vendeurs » |
 | Titre d'en-tête d'app | 20 / 1.2 / 700 | — | Large | « Ma vente » |
 | H3 / titre de section | 16 / 1.3 / 600 | 17 / 1.3 / 600 | Normale | « À faire », « Le bien », « Conversations » |

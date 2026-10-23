@@ -58,6 +58,7 @@ const twMerge = extendTailwindMerge<"lk-width">({
         "lk-photo",
       ],
       ease: ["out-lk", "reveal-lk"],
+      tracking: ["lk-eyebrow", "lk-caps"],
       container: ["lk-page", "lk-home", "lk-settings", "lk-heading", "lk-prose", "lk-form"],
     },
     classGroups: {

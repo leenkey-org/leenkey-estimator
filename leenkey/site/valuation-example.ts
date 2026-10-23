@@ -7,12 +7,16 @@ import { initialForm, type LeenkeyForm } from "@/leenkey/estimator/types";
 // engine of the estimator gives for this house of the launch zone, and the
 // card says « Exemple » (CLAUDE.md section 16, no invented figures).
 
-/** A recent contemporary house in Sainte-Geneviève-des-Bois (91), as on the photo. */
+/**
+ * A recent contemporary house in Saint-Michel-sur-Orge (91), as on the photo:
+ * a town without a demo listing, so that no listing of the seed shows the
+ * same figure next to it.
+ */
 export const VALUATION_EXAMPLE: LeenkeyForm = {
   ...initialForm,
   type: "maison",
-  code_postal: "91700",
-  ville: "Sainte-Geneviève-des-Bois",
+  code_postal: "91240",
+  ville: "Saint-Michel-sur-Orge",
   departement: "91",
   surface_habitable: 120,
   surface_terrain: 600,

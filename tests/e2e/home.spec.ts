@@ -74,7 +74,7 @@ test.describe("accueil", () => {
     await expect(card).toBeVisible();
     await expect(card.getByText("Exemple", { exact: true })).toBeVisible();
     await expect(card).toContainText("Maison contemporaine");
-    await expect(card).toContainText("Sainte-Geneviève-des-Bois, 91700");
+    await expect(card).toContainText("Saint-Michel-sur-Orge, 91240");
     // The value of the engine (tests/unit/site/home-v1.test.ts), and its range.
     await expect(card.getByText(/^\d{3}\u202f000\u202f€$/)).toBeVisible();
     await expect(card).toContainText(

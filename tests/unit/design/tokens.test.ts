@@ -116,6 +116,7 @@ describe("cn() knows the Façade classes", () => {
     expect(cn("rounded-lk-md", "rounded-lk-xl")).toBe("rounded-lk-xl");
     expect(cn("shadow-lk-card", "shadow-lk-cta")).toBe("shadow-lk-cta");
     expect(cn("text-lk-eyebrow", "text-lk-blue")).toBe("text-lk-eyebrow text-lk-blue");
+    expect(cn("tracking-wide", "tracking-lk-eyebrow")).toBe("tracking-lk-eyebrow");
     expect(cn("tabular-nums", "tabular")).toBe("tabular");
     expect(cn("bg-primary", "bg-lk-blue")).toBe("bg-lk-blue");
   });

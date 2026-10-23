@@ -113,7 +113,7 @@ export function MarketingSection({
             {showcase && eyebrow ? (
               <p
                 className={cn(
-                  "mb-1 text-lk-eyebrow font-extrabold tracking-[0.14em] uppercase lg:mb-2 lg:text-lk-eyebrow-lg",
+                  "mb-1 text-lk-eyebrow font-extrabold tracking-lk-eyebrow uppercase lg:mb-2 lg:text-lk-eyebrow-lg",
                   dark ? "text-lk-blue-light" : "text-lk-blue",
                 )}
               >

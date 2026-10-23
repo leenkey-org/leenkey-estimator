@@ -52,7 +52,7 @@ export const site = {
         label: "Exemple de valorisation",
         sample: "Exemple",
         title: "Maison contemporaine",
-        place: "Sainte-Geneviève-des-Bois, 91700",
+        place: "Saint-Michel-sur-Orge, 91240",
         specs: [`120${N}m²`, "5 pièces", "4 chambres"],
         value: "Ma valeur immobilière",
         range: (low: string, high: string) => `Fourchette${NBSP}: ${low} à ${high}`,
