@@ -89,7 +89,16 @@ test.describe("pages du site en V2", () => {
     await page.goto("/investir");
     const main = page.getByRole("main");
     await expect(main).toContainText("des milliards d'euros");
-    for (const removed of [/M€/, /MRR|ARR|NPS/, /10 milliards/, /1 000 000/, /diffusion auto/i]) {
+    for (const removed of [
+      /M€/,
+      /MRR|ARR|NPS/,
+      /10 milliards/,
+      // The figures are written with narrow no-break spaces.
+      /1[\s\u202f]000[\s\u202f]000/,
+      /acteur dominant/,
+      /100 premiers/,
+      /diffusion auto/i,
+    ]) {
       await expect(main.getByText(removed)).toHaveCount(0);
     }
     const milestone = main
@@ -189,7 +198,7 @@ test.describe("pages du site en V2", () => {
     [
       "/investir",
       [
-        "Opportunité d'investissement · PropTech France 2026",
+        "Opportunité d'investissement · Proptech France 2026",
         "Ce que personne n'a encore vraiment résolu",
         "La vision",
         "État d'avancement",
@@ -228,8 +237,10 @@ test.describe("pages du site en V2", () => {
     );
     const question = page.locator("summary").first();
     await expect(question).toHaveCSS("color", "rgb(255, 255, 255)");
-    // The focus ring turns white on navy, where the blue would not reach 3:1.
+    // The focus ring turns white on navy, where the blue would not reach 3:1
+    // (its colour alone would be white without any ring: currentColor).
     await question.focus();
+    await expect(question).toHaveCSS("outline-style", "solid");
     await expect(question).toHaveCSS("outline-color", "rgb(255, 255, 255)");
   });
 
@@ -319,6 +330,12 @@ test.describe("/tarifs (base de seed)", () => {
   }) => {
     await page.goto("/tarifs");
     const plans = page.locator("article");
+    // On navy, the white focus ring of the switch (L1-50), before any click:
+    // after one, Chromium keeps a focus set by script without its ring.
+    const chosen = page.getByRole("radio", { name: "Gratuit pendant le lancement" });
+    await chosen.focus();
+    await expect(chosen).toHaveCSS("outline-style", "solid");
+    await expect(chosen).toHaveCSS("outline-color", "rgb(255, 255, 255)");
     await page.getByRole("radio", { name: "Mon économie vs agence" }).click();
     await expect(plans.nth(1)).toContainText("−14 010 € vs agence");
     await expect(plans.nth(2)).toContainText("−13 500 € vs agence");

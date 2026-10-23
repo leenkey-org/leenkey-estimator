@@ -42,7 +42,7 @@ describe("labels above the titles of the V1 pages", () => {
       "Ce que Leenkey ouvre ensuite",
       "Phase de lancement · Freemium",
       "Questions fréquentes",
-      "Opportunité d'investissement · PropTech France 2026",
+      "Opportunité d'investissement · Proptech France 2026",
       "Ce que personne n'a encore vraiment résolu",
       "La vision",
       "État d'avancement",
@@ -86,6 +86,26 @@ describe("/investir in the direction of the V1", () => {
       "Nous cherchons des partenaires qui croient, comme nous, que ce marché mérite mieux.",
     );
     expect(invest.hero.lead[0]).toMatch(/^Leenkey construit la première plateforme française /);
+  });
+
+  it("nothing taken out by L1-43 or L1-50 comes back, whatever the spaces (Q53)", () => {
+    const all = JSON.stringify(invest).replace(/[\u00a0\u202f]/g, " ");
+    for (const removed of [
+      /10 Md/,
+      /10 milliards/,
+      /\b35 ?%/,
+      /1 000 000/,
+      /acteur dominant/i,
+      /\d+ (premiers )?vendeurs/,
+      /M€/,
+      /\b(MRR|ARR|NPS)\b/,
+      /CA annuel/,
+      /diffusion auto/i,
+      /entraîn/i,
+      /V2\b.*Source|Source \d · V2/,
+    ]) {
+      expect(all).not.toMatch(removed);
+    }
   });
 
   it("no emoji, in any text of the page (DESIGN 1)", () => {

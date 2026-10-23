@@ -32,13 +32,7 @@ export function AboutHero() {
       accent={t.hero.accent}
       lead={t.hero.lead}
       actions={
-        <Button
-          asChild
-          variant="cta"
-          size="lg"
-          trailingIcon={ArrowRight}
-          className="focus-visible:outline-white"
-        >
+        <Button asChild variant="cta" size="lg" trailingIcon={ArrowRight}>
           <Link href={ROUTES.invest}>{t.hero.action}</Link>
         </Button>
       }
@@ -118,7 +112,7 @@ export function StorySection() {
       title={t.story.title}
       accent={t.story.accent}
     >
-      <div className="mx-auto flex max-w-lk-heading flex-col gap-5 text-lk-body-lg text-pretty text-lk-ink-2 lg:text-lk-lead-lg">
+      <div className="mx-auto flex max-w-lk-prose flex-col gap-5 text-lk-body-lg text-pretty text-lk-ink-2 lg:text-lk-lead-lg">
         {t.story.paragraphs.map((paragraph, index) => (
           <p key={index}>
             <RichText parts={paragraph} />

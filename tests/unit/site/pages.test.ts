@@ -47,7 +47,10 @@ describe("contact links of /investir", () => {
 });
 
 describe("texts of /investir", () => {
-  const all = texts(invest).join("\n");
+  // The figures are written with no-break spaces: plain ones for the patterns.
+  const all = texts(invest)
+    .join("\n")
+    .replace(/[\u00A0\u202F]/g, " ");
 
   it("no forecast, target or market figure without a source (Q53)", () => {
     for (const removed of [

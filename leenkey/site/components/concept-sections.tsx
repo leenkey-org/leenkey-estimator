@@ -49,13 +49,7 @@ export function ConceptHero() {
       accent={t.hero.accent}
       lead={t.hero.lead}
       actions={
-        <Button
-          asChild
-          variant="cta"
-          size="lg"
-          trailingIcon={ArrowRight}
-          className="focus-visible:outline-white"
-        >
+        <Button asChild variant="cta" size="lg" trailingIcon={ArrowRight}>
           <Link href={ROUTES.valuation}>{t.hero.action}</Link>
         </Button>
       }
@@ -92,7 +86,8 @@ export function OptionsSection() {
         ))}
       />
       <div className="mx-auto mt-12 flex max-w-lk-prose flex-col gap-4 text-center lg:mt-14">
-        <p className={statement}>
+        {/* 24 px from 390 px: the gradient of a title, never under 24 px (DESIGN.md 2.1). */}
+        <p className={cn(statement, "text-lk-h2-lg")}>
           <RichText parts={t.options.question} strongClassName="lk-text-grad" />
         </p>
         <p className={cardText}>{t.options.answer}</p>
@@ -101,11 +96,8 @@ export function OptionsSection() {
   );
 }
 
-/**
- * Two options side by side from 1024 px, each in a card, « ou » in a round
- * between them (here, and the market of /investir).
- */
-export function OptionPair({ options, or }: { options: readonly ReactNode[]; or: string }) {
+/** Two options side by side from 1024 px, each in a card, « ou » in a round between them. */
+function OptionPair({ options, or }: { options: readonly ReactNode[]; or: string }) {
   return (
     <div className="mx-auto grid max-w-220 items-center gap-4 lg:grid-cols-[1fr_auto_1fr] lg:gap-5">
       {options.map((content, index) => (

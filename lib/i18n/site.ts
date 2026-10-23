@@ -535,17 +535,19 @@ export const site = {
     metaTitle: "Valoriser mon bien · Leenkey",
   },
   // /investir (L1-43): the V1 page. Left out (DECISIONS 2026-10-19, Q53): the
-  // market figures without a source, the forecasts and the targets, the
-  // labels above the titles and « diffusion auto » (listings exclusive to
-  // Leenkey); « 10 milliards d'euros » becomes « des milliards d'euros » and
-  // the engine is no « modèle entraîné ».
+  // market figures without a source, the forecasts and the targets, and
+  // « diffusion auto » (listings exclusive to Leenkey); « 10 milliards
+  // d'euros » becomes « des milliards d'euros » and the engine is no « modèle
+  // entraîné ». Since L1-50 (DECISIONS 2026-10-23): its labels above the
+  // titles are back, « Zéro acteur dominant » and the « 100 » of its first
+  // sellers are out too.
   invest: {
     metaTitle: "Investir dans le projet · Leenkey",
     metaDescription:
       "Leenkey construit la première plateforme française qui permet à chaque propriétaire de vendre son bien sans agence. Nous cherchons des partenaires qui croient, comme nous, que ce marché mérite mieux.",
     // The labels of the V1 page above its titles (L1-50, DECISIONS 2026-10-23).
     hero: {
-      eyebrow: "Opportunité d'investissement · PropTech France 2026",
+      eyebrow: "Opportunité d'investissement · Proptech France 2026",
       title: "L'immobilier français se réinvente. Soyez-en.",
       accent: "Soyez-en.",
       // Its two paragraphs, as in the V1.
@@ -729,7 +731,7 @@ export const site = {
           when: "Maintenant",
           title: "Valider le modèle",
           list: [
-            "Accompagner les 100 premiers vendeurs",
+            "Accompagner les premiers vendeurs",
             "Collecter les feedbacks terrain",
             "Affiner le produit",
             "Prouver que ça marche",
@@ -764,7 +766,7 @@ export const site = {
       items: [
         {
           title: "Un marché énorme, encore vierge",
-          text: "Des milliards d'euros de commissions. Zéro acteur dominant côté vendeur. La place est à prendre\u00A0— et Leenkey est déjà en train de la prendre.",
+          text: "Des milliards d'euros de commissions. La place est à prendre\u00A0— et Leenkey est déjà en train de la prendre.",
         },
         {
           title: "Des bases solides, une révolution à construire",

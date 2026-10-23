@@ -35,7 +35,9 @@ export default async function PricingPage() {
         {plans && plans.length > 0 ? (
           <PricingPlans plans={plans} />
         ) : (
-          <InlineAlert tone="danger">{t.unavailable}</InlineAlert>
+          <InlineAlert tone="danger" className="mx-auto max-w-lk-form">
+            {t.unavailable}
+          </InlineAlert>
         )}
       </MarketingSection>
     </PublicPage>

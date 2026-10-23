@@ -100,7 +100,9 @@ export function ShowcaseHero({
           {actions ? (
             <div
               style={delay(words.last + 2 * NEXT_MS)}
-              className="lk-rise mt-8 flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-6"
+              // On the dark of the hero, the focus ring of the actions turns
+              // white (the blue would not reach 3:1).
+              className="lk-rise mt-8 flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-6 [&_:focus-visible]:outline-white"
             >
               {actions}
             </div>

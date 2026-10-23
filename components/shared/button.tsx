@@ -23,9 +23,9 @@ export const buttonVariants = cva(
       variant: {
         primary:
           "bg-lk-blue text-white not-disabled:hover:bg-lk-blue-hover not-disabled:active:bg-lk-blue-hover",
-        // The main call to action of the home page (L1-49), as in the V1: the
-        // gradient of the brand blue in its blue shadow, rising a little on
-        // hover.
+        // The main call to action of the showcase pages (L1-49, L1-50), as in
+        // the V1: the gradient of the brand blue in its blue shadow, rising a
+        // little on hover.
         cta: [
           "bg-linear-90 from-lk-blue to-lk-blue-mid text-white shadow-lk-cta",
           "transition-[color,background-color,border-color,scale,translate,box-shadow]",
@@ -82,7 +82,7 @@ export type ButtonProps = Omit<ComponentProps<"button">, "children"> & {
   icon?: LucideIcon;
   /**
    * Lucide icon after the label, 16 px, moving forward on hover: the arrow of
-   * the calls to action of the home page (L1-49).
+   * the calls to action of the showcase pages (L1-49, L1-50).
    */
   trailingIcon?: LucideIcon;
   /** Keeps the label, shows a spinning Loader2 and disables the button. */

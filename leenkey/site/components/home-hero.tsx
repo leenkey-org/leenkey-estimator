@@ -47,13 +47,7 @@ export function HomeHero() {
       lead={t.lead}
       actions={
         <>
-          <Button
-            asChild
-            variant="cta"
-            size="lg"
-            trailingIcon={ArrowRight}
-            className="focus-visible:outline-white"
-          >
+          <Button asChild variant="cta" size="lg" trailingIcon={ArrowRight}>
             <Link href={ROUTES.valuation}>{t.action}</Link>
           </Button>
           <Link

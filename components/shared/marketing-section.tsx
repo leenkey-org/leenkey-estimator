@@ -13,7 +13,9 @@ export type MarketingSectionProps = {
    */
   tone?: "surface" | "stone" | "mist" | "navy";
   /**
-   * showcase: a section of the home page in the direction of the V1 (L1-49):
+   * showcase: a section of a showcase page in the direction of the V1 (L1-49,
+   * L1-50: the home page, /contact, /concept, /tarifs, /faq, /investir,
+   * /qui-sommes-nous):
    * centred head, label above the title, larger title with its words in the
    * blue gradient (in plain blue on stone, where the gradient would not reach
    * 3:1), more room. Title on the left with its link on its right otherwise.
@@ -57,7 +59,7 @@ const BACKGROUND = {
  * mist or navy, 1200 px container, 48 then 72 px of vertical padding. Its
  * title is an h2 with the H1 role (26 then 40 px, wide, its accent in blue)
  * under the display title of the hero; no label above it (DESIGN.md 13.2).
- * Showcase (home page, L1-49): the V1 section head, its label in capitals
+ * Showcase (the showcase pages, L1-49, L1-50): the V1 section head, its label in capitals
  * above the title, 32, 40 then 48 px, 56 then 96 px of vertical padding. The
  * title and the content rise into place when they enter the screen.
  */

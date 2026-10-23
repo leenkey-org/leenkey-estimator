@@ -47,8 +47,11 @@ const VISION_ICONS = [Sparkles, MessageSquareMore, CircleCheck, Network] as cons
 const TIMING_ICONS = [Users, Globe, Lightbulb] as const;
 const REASON_ICONS = [Lightbulb, Layers, ChartLine, Users] as const;
 
-/** Body text of the two columns of the V1: 16 px, the secondary ink, bold parts in ink. */
-const columnText = "text-lk-body-lg text-pretty text-lk-ink-2";
+/**
+ * Body text of the two columns of the V1: 16 px, the secondary ink, bold
+ * parts in ink, a reading width until the columns sit side by side.
+ */
+const columnText = "max-w-lk-prose text-lk-body-lg text-pretty text-lk-ink-2 lg:max-w-none";
 
 /** « L'immobilier français se réinvente. Soyez-en. » */
 export function InvestHero() {
@@ -62,13 +65,7 @@ export function InvestHero() {
         <p key={paragraph}>{paragraph}</p>
       ))}
       actions={
-        <Button
-          asChild
-          variant="cta"
-          size="lg"
-          trailingIcon={ArrowRight}
-          className="focus-visible:outline-white"
-        >
+        <Button asChild variant="cta" size="lg" trailingIcon={ArrowRight}>
           <a href={`#${FORM}`}>{t.hero.action}</a>
         </Button>
       }
