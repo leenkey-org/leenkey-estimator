@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { FacadeDrawing } from "@/components/shared/facade-drawing";
-import { NEXT_MS, delay, heroTitle } from "@/components/shared/hero-title";
 import { Photo } from "@/components/shared/photo";
+import { ShowcaseHero } from "@/components/shared/showcase-hero";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { sitePhoto } from "@/leenkey/site/photos";
 import { valuationExample } from "@/leenkey/site/valuation-example";
@@ -31,98 +31,66 @@ const SPEC_ICONS = [Ruler, DoorOpen, BedDouble] as const;
 
 /**
  * Hero of the home page, the V1 one (DECISIONS 2026-10-23, docs/DESIGN.md
- * 13.1): deep navy towards the brand blue with a grid of dots, the badge
- * « Ni agence, ni seul », the display title word by word with its words in
- * the light blue gradient over the dimension line, « Voir ma valorisation »
- * and, under it, the entry of the buyers; the three promises with their
- * icons. On the right (under the text below 1024 px), the photo of a house
+ * 13.1), a ShowcaseHero: the badge « Ni agence, ni seul », the title with
+ * « votre vente. » in the light gradient, « Voir ma valorisation » and,
+ * beside it, the entry of the buyers; the three promises with their icons. On the right (under the text below 1024 px), the photo of a house
  * with the curve of the V1 on its left side, the card of an example
  * valuation over it and a chip. Anchor #valoriser kept from the V1.
  */
 export function HomeHero() {
-  const words = heroTitle(t.title, t.accent, {
-    accentClassName: "lk-text-grad-light",
-    lineClassName: "text-lk-blue-light",
-  });
   return (
-    <section
+    <ShowcaseHero
       id="valoriser"
-      aria-labelledby="valoriser-titre"
-      className="lk-hero-bg relative isolate scroll-mt-15 overflow-hidden text-white md:scroll-mt-18"
+      badge={{ text: t.badge, icon: Handshake }}
+      title={t.title}
+      accent={t.accent}
+      lead={t.lead}
+      actions={
+        <>
+          <Button
+            asChild
+            variant="cta"
+            size="lg"
+            trailingIcon={ArrowRight}
+            className="focus-visible:outline-white"
+          >
+            <Link href={ROUTES.valuation}>{t.action}</Link>
+          </Button>
+          <Link
+            href={ROUTES.search}
+            className={cn(
+              "group inline-flex min-h-11 items-center gap-1.5 rounded-lk-sm text-lk-compact font-semibold text-white",
+              "underline-offset-4 hover:underline",
+              "focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
+            )}
+          >
+            {t.buy}
+            <ArrowRight
+              aria-hidden="true"
+              className="size-4 shrink-0 transition-transform duration-220 ease-out-lk group-hover:translate-x-0.5"
+            />
+          </Link>
+        </>
+      }
+      aside={<HeroVisual />}
     >
-      <div aria-hidden="true" className="lk-dots pointer-events-none absolute inset-0 -z-10" />
-      <div className="mx-auto grid max-w-lk-page items-center gap-12 px-5 pt-10 pb-16 md:px-10 md:pt-14 md:pb-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:pt-16 lg:pb-24">
-        <div className="flex flex-col items-start">
-          <p className="lk-rise inline-flex items-center gap-1.5 rounded-full border border-white/16 bg-white/10 px-3.25 py-1.5 text-lk-caption font-semibold">
-            <Handshake aria-hidden="true" className="size-3.5 shrink-0" />
-            {t.badge}
-          </p>
-          <h1
-            id="valoriser-titre"
-            // Word by word, the title is read whole: by its name, the words
-            // hidden from assistive technologies.
-            aria-label={t.title}
-            className="mt-5 text-lk-display font-extrabold text-wide md:text-lk-display-md lg:mt-6 lg:text-lk-display-lg"
-          >
-            <span aria-hidden="true">{words.content}</span>
-          </h1>
-          <p
-            style={delay(words.last + NEXT_MS)}
-            className="lk-rise mt-5 max-w-130 text-lk-body-lg text-pretty text-white/80 lg:mt-6 lg:text-lk-lead-lg"
-          >
-            {t.lead}
-          </p>
-          <div
-            style={delay(words.last + 2 * NEXT_MS)}
-            className="lk-rise mt-8 flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-6"
-          >
-            <Button
-              asChild
-              variant="cta"
-              size="lg"
-              trailingIcon={ArrowRight}
-              className="focus-visible:outline-white"
+      <ul className="mt-10 flex w-full flex-col gap-3.5 border-t border-white/10 pt-7 md:flex-row md:flex-wrap md:gap-x-7 lg:mt-11">
+        {t.points.map((point, index) => {
+          const Icon = POINT_ICONS[index] ?? Users;
+          return (
+            <li
+              key={point}
+              className="flex items-center gap-2.5 text-lk-compact font-medium text-white/86"
             >
-              <Link href={ROUTES.valuation}>{t.action}</Link>
-            </Button>
-            <Link
-              href={ROUTES.search}
-              className={cn(
-                "group inline-flex min-h-11 items-center gap-1.5 rounded-lk-sm text-lk-compact font-semibold text-white",
-                "underline-offset-4 hover:underline",
-                "focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
-              )}
-            >
-              {t.buy}
-              <ArrowRight
-                aria-hidden="true"
-                className="size-4 shrink-0 transition-transform duration-220 ease-out-lk group-hover:translate-x-0.5"
-              />
-            </Link>
-          </div>
-          <ul
-            style={delay(words.last + 3 * NEXT_MS)}
-            className="lk-rise mt-10 flex w-full flex-col gap-3.5 border-t border-white/10 pt-7 md:flex-row md:flex-wrap md:gap-x-7 lg:mt-11"
-          >
-            {t.points.map((point, index) => {
-              const Icon = POINT_ICONS[index] ?? Users;
-              return (
-                <li
-                  key={point}
-                  className="flex items-center gap-2.5 text-lk-compact font-medium text-white/86"
-                >
-                  <span className="flex size-8.5 shrink-0 items-center justify-center rounded-lk-lg bg-white/10 text-lk-blue-light">
-                    <Icon aria-hidden="true" className="size-4" />
-                  </span>
-                  {point}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-        <HeroVisual />
-      </div>
-    </section>
+              <span className="flex size-8.5 shrink-0 items-center justify-center rounded-lk-lg bg-white/10 text-lk-blue-light">
+                <Icon aria-hidden="true" className="size-4" />
+              </span>
+              {point}
+            </li>
+          );
+        })}
+      </ul>
+    </ShowcaseHero>
   );
 }
 

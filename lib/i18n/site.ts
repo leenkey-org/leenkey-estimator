@@ -332,13 +332,16 @@ export const site = {
     metaTitle: "Le concept · Leenkey",
     metaDescription:
       "Combien vaut vraiment votre bien ? Leenkey commence par une valorisation honnête, avant tout engagement commercial.",
+    // The labels of the V1 page above its titles (L1-50, DECISIONS 2026-10-23).
     hero: {
+      badge: "Le concept",
       title: "Combien vaut vraiment votre bien ?",
       accent: "vraiment",
       lead: "C'est la première question que se pose tout propriétaire. Et c'est exactement là que Leenkey commence : par une valorisation honnête, avant tout engagement commercial.",
       action: "Valoriser mon bien",
     },
     options: {
+      eyebrow: "L'idée de départ",
       title: "Aujourd'hui, vendre laisse le choix entre deux mauvaises options.",
       lead: "Leenkey est né d'un constat simple. Pour vendre un bien en France, il faut choisir : payer cher, ou avancer seul, sans outil fiable.",
       items: [
@@ -352,6 +355,8 @@ export const site = {
         },
       ],
       or: "ou",
+      // Before each option, with the cross of the V1.
+      option: (index: number) => `Option ${index}`,
       question: [
         "Avant de parler de vente, une seule question compte : ",
         { strong: "combien vaut votre bien ?" },
@@ -360,6 +365,7 @@ export const site = {
         "La réponse qui vous est donnée aujourd'hui est soit trop vague (les analyses de valeur en ligne), soit intéressée (l'agent qui veut le mandat). Leenkey commence là, par un outil de valorisation sérieux qui donne une réponse honnête avant tout engagement.",
     },
     tool: {
+      eyebrow: "Le cœur du concept",
       title: "L'outil de valorisation.",
       lead: "Pas un algorithme basé sur le code postal et les m². Une valorisation construite après une vraie analyse de marché.",
       items: [
@@ -396,6 +402,7 @@ export const site = {
       after: "C'est la base de tout ce que Leenkey construit ensuite.",
     },
     next: {
+      eyebrow: "Ce que Leenkey ouvre ensuite",
       title: "La valorisation est le déclencheur. Voici ce qu'elle ouvre.",
       lead: "L'accès à une plateforme complète pour vendre sans agence, mais avec tout l'accompagnement nécessaire.",
       items: [
@@ -434,6 +441,8 @@ export const site = {
     metaTitle: "Tarifs · Leenkey",
     metaDescription:
       "Trois formules à forfait fixe, jamais de commission : Autonomie gratuite pendant la phase pilote, Accompagné et Sérénité payées à la souscription.",
+    // The pill of the V1 page, without its emoji (L1-50).
+    eyebrow: "Phase de lancement · Freemium",
     title: "Une formule pour chaque vendeur.",
     accent: "chaque vendeur.",
     lead: "Pendant notre phase pilote, accédez à la version gratuite de Leenkey. Aucun engagement, aucune carte bancaire demandée. Vendez votre bien et économisez réellement.",
@@ -470,6 +479,7 @@ export const site = {
     metaTitle: "Questions fréquentes · Leenkey",
     metaDescription:
       "Prix, accompagnement, sécurité des données, différence avec une agence : les réponses aux questions que se posent les vendeurs.",
+    eyebrow: "Questions fréquentes",
     title: "Tout ce que vous vous demandez, sans détour.",
     items: [
       {
@@ -533,19 +543,28 @@ export const site = {
     metaTitle: "Investir dans le projet · Leenkey",
     metaDescription:
       "Leenkey construit la première plateforme française qui permet à chaque propriétaire de vendre son bien sans agence. Nous cherchons des partenaires qui croient, comme nous, que ce marché mérite mieux.",
+    // The labels of the V1 page above its titles (L1-50, DECISIONS 2026-10-23).
     hero: {
+      eyebrow: "Opportunité d'investissement · PropTech France 2026",
       title: "L'immobilier français se réinvente. Soyez-en.",
       accent: "Soyez-en.",
-      lead: "Leenkey construit la première plateforme française qui permet à chaque propriétaire de vendre son bien sans agence : accompagné, guidé, à frais réduits. Nous cherchons des partenaires qui croient, comme nous, que ce marché mérite mieux.",
+      // Its two paragraphs, as in the V1.
+      lead: [
+        "Leenkey construit la première plateforme française qui permet à chaque propriétaire de vendre son bien sans agence : accompagné, guidé, à frais réduits.",
+        "Nous cherchons des partenaires qui croient, comme nous, que ce marché mérite mieux.",
+      ],
       action: "Rejoindre l'aventure",
     },
     hook: {
       title:
         "Chaque année en France, les propriétaires versent des milliards d'euros aux agences immobilières.",
+      // The words in blue of the V1 (« 10 milliards d'euros » there).
+      accent: "des milliards d'euros",
       text: ["Pas parce qu'ils le veulent. ", { strong: "Parce qu'ils n'ont pas d'autre choix." }],
       last: "Jusqu'ici.",
     },
     market: {
+      eyebrow: "Ce que personne n'a encore vraiment résolu",
       title: "Un marché gigantesque, figé depuis 30 ans.",
       lead: [
         "Vendre un bien immobilier en France, c'est encore aujourd'hui choisir entre ",
@@ -558,6 +577,11 @@ export const site = {
         ", sans véritable plan d'action, avec des informations souvent contradictoires et sans accompagnement pour sécuriser chaque étape de la vente.",
       ],
       or: "ou",
+      // The figure beside the text in the V1: 5 % of a sale at 300 000 €.
+      example: {
+        value: `15${N}000${N}€`,
+        label: `prélevés sur une seule vente à 300${N}000${N}€`,
+      },
       agency: [
         { strong: "«\u00A0Passer par une agence\u00A0»" },
         " et accepter de céder en moyenne ",
@@ -575,6 +599,7 @@ export const site = {
         "Leenkey leur donne les outils, la méthode et l'accompagnement pour réussir leur vente en toute sérénité.",
     },
     vision: {
+      eyebrow: "La vision",
       title: "Un écosystème IA qui copilote la vente immobilière, de bout en bout.",
       accent: "écosystème IA",
       lead: "Leenkey n'est pas une simple plateforme de mise en relation.",
@@ -608,6 +633,7 @@ export const site = {
     // Labels of the stage of a milestone, a source of income or a phase.
     status: { done: "Fait", ongoing: "En cours", next: "À venir" },
     progress: {
+      eyebrow: "État d'avancement",
       title: "Ce n'est pas une idée. C'est un projet construit.",
       items: [
         {
@@ -650,7 +676,10 @@ export const site = {
       ],
     },
     model: {
+      eyebrow: "Comment Leenkey crée de la valeur",
       title: "Un modèle simple, rentable dès le premier client.",
+      // « Source 3 · V2 » of the V1: « Source 3 », its stage « À venir » beside it.
+      source: (index: number) => `Source ${index}`,
       items: [
         {
           title: "Forfait vendeur",
@@ -671,6 +700,7 @@ export const site = {
       ],
     },
     timing: {
+      eyebrow: "Le timing",
       title: "La fenêtre est ouverte. Elle ne le sera pas toujours.",
       items: [
         {
@@ -692,6 +722,7 @@ export const site = {
       closing: "C'est Leenkey.",
     },
     roadmap: {
+      eyebrow: "La vision 24 mois",
       title: "Une construction méthodique, étape par étape.",
       items: [
         {
@@ -728,6 +759,7 @@ export const site = {
       ],
     },
     reasons: {
+      eyebrow: "Ce que vous obtenez",
       title: "Pourquoi les bons rejoignent Leenkey maintenant.",
       items: [
         {
@@ -761,6 +793,7 @@ export const site = {
       action: "Parlons-en",
     },
     faq: {
+      eyebrow: "Questions fréquentes",
       title: "Vos questions méritent des réponses claires.",
       items: [
         {
@@ -802,6 +835,7 @@ export const site = {
       ],
     },
     contact: {
+      eyebrow: "Échangeons",
       title: "Parlons directement de votre intérêt pour Leenkey.",
       lead: "Contactez Cédric en un clic par WhatsApp ou par email, ou remplissez le formulaire ci-dessous. Nous revenons vers vous sous 48 h.",
       whatsapp: {
@@ -830,19 +864,23 @@ export const site = {
   contactPage: {
     metaTitle: "Contact · Leenkey",
   },
-  // /qui-sommes-nous (L1-43): the V1 page, its labels above the titles and
-  // the arrows of its buttons left out (DECISIONS 2026-10-19).
+  // /qui-sommes-nous (L1-43): the V1 page; its labels above the titles and
+  // the arrows of its buttons are back since L1-50 (DECISIONS 2026-10-23).
   about: {
     metaTitle: "Qui sommes-nous · Leenkey",
     metaDescription:
       "Fondée par Cédric Da Cunha, Leenkey rend la vente immobilière enfin simple, humaine et transparente.",
+    // The labels of the V1 page above its titles (L1-50, DECISIONS 2026-10-23).
     hero: {
+      eyebrow: "Qui sommes-nous",
       title: "Rendre la vente immobilière enfin simple, humaine et transparente.",
       accent: "enfin simple, humaine et transparente.",
       lead: "Fondée par Cédric Da Cunha, Leenkey est née d'un constat simple\u00A0: vendre son bien immobilier en France reste trop complexe, trop opaque et souvent trop coûteux. Nous construisons une nouvelle façon de vendre, où l'intelligence artificielle accompagne chaque propriétaire pour lui permettre de vendre en toute autonomie, sans jamais être seul.",
       action: "Découvrir notre vision",
     },
     founder: {
+      // The initials of the card on his photo, as in the V1.
+      initials: "CD",
       name: "Cédric Da Cunha",
       role: "Fondateur & CEO · Leenkey",
       photoAlt: "Cédric Da Cunha, fondateur de Leenkey",
@@ -855,6 +893,7 @@ export const site = {
       { value: "24 / 7", label: "un copilote IA à vos côtés" },
     ],
     story: {
+      eyebrow: "L'histoire",
       title: "Pourquoi j'ai lancé Leenkey.",
       accent: "Leenkey.",
       paragraphs: [
@@ -879,6 +918,7 @@ export const site = {
         "Leenkey est née de cette conviction\u00A0: redonner aux propriétaires les clés de leur vente.",
     },
     values: {
+      eyebrow: "Nos valeurs",
       title: "Ce qui nous anime au quotidien.",
       lead: "Quatre principes qui guident chaque décision produit, chaque conversation client, chaque ligne de code.",
       items: [

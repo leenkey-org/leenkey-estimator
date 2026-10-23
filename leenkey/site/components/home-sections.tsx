@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { ArrowRight, ChartLine, CircleCheck, CircleX, FileText, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/shared/button";
+import { FaqList } from "@/components/shared/faq-list";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import { ContactForm } from "./contact-form";
+import { CtaPanel } from "./cta-panel";
+import { NumberBadge } from "./number-badge";
 import { RichText } from "./rich-text";
 import { SellerSpacePreview } from "./seller-space-preview";
 import { StagePicker } from "./stage-picker";
@@ -75,12 +78,7 @@ export function StepsSection() {
                   className="absolute top-11.5 left-[calc(100%-0.5rem)] hidden h-0.5 w-8 bg-[repeating-linear-gradient(90deg,var(--color-lk-blue-line)_0_6px,transparent_6px_12px)] lg:block"
                 />
               ) : null}
-              <span
-                aria-hidden="true"
-                className="flex size-10 items-center justify-center rounded-lk-lg bg-linear-135 from-lk-blue to-lk-blue-mid text-lk-title font-extrabold text-white shadow-lk-cta"
-              >
-                {index + 1}
-              </span>
+              <NumberBadge value={index + 1} className="self-start" />
               <Icon aria-hidden="true" className="mt-4.5 mb-3.5 size-6.5 text-lk-blue" />
               <h3 className="text-lk-h3-lg font-semibold text-lk-ink lg:text-lk-h2">
                 {step.title}
@@ -302,8 +300,8 @@ function ComparisonValue({ value, good }: { value: string; good: boolean }) {
 
 /**
  * « Les trois questions essentielles. » (#faq): the V1 list, a white card for
- * each question that unfolds its answer (<details>, without script), a blue
- * « + » that becomes a « − » once open; « Toutes les questions » under it.
+ * each question that unfolds its answer (FaqList), « Toutes les questions »
+ * under it.
  */
 export function HomeFaqSection() {
   const t = home.faq;
@@ -316,35 +314,17 @@ export function HomeFaqSection() {
       accent={t.accent}
       revealContent={false}
     >
-      <ul data-reveal-stagger="" className="mx-auto flex max-w-220 flex-col gap-3.5">
-        {t.items.map((item) => (
-          <li key={item.question}>
-            <details
-              className={cn(
-                "group rounded-lk-lg border border-lk-mist-line bg-lk-surface",
-                "transition-[border-color,box-shadow] duration-220 ease-out-lk open:border-lk-blue-line open:shadow-lk-card",
-              )}
-            >
-              <summary
-                className={cn(
-                  "flex min-h-14 cursor-pointer list-none items-center justify-between gap-4.5 px-5 py-5 md:px-6 md:py-5.5 [&::-webkit-details-marker]:hidden",
-                  "text-lk-h3 font-semibold text-lk-ink lg:text-lk-h3-lg",
-                  "rounded-lk-lg focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
-                )}
-              >
-                <span>{item.question}</span>
-                <span aria-hidden="true" className="relative size-5.5 shrink-0">
-                  <span className="absolute top-1/2 left-1/2 h-0.5 w-4.25 -translate-1/2 rounded-lk-xs bg-lk-blue" />
-                  <span className="absolute top-1/2 left-1/2 h-4.25 w-0.5 -translate-1/2 rounded-lk-xs bg-lk-blue transition-transform duration-220 ease-out-lk group-open:scale-y-0" />
-                </span>
-              </summary>
-              <p className="max-w-lk-prose px-5 pb-6 text-lk-body text-pretty text-lk-ink-2 md:px-6">
-                <RichText parts={item.answer} />
-              </p>
-            </details>
-          </li>
-        ))}
-      </ul>
+      <FaqList
+        className="mx-auto max-w-220"
+        items={t.items.map((item) => ({
+          question: item.question,
+          answer: (
+            <p>
+              <RichText parts={item.answer} />
+            </p>
+          ),
+        }))}
+      />
       <div data-reveal="" className="mt-8 flex justify-center">
         <Button asChild variant="secondary" size="lg" trailingIcon={ArrowRight}>
           <Link href={ROUTES.faq}>{t.all}</Link>
@@ -376,51 +356,16 @@ export function ContactSection({ titleAs = "h2" }: { titleAs?: "h1" | "h2" }) {
   );
 }
 
-/**
- * Last call to action of the home page, the V1 one: the brand blue in its
- * gradient with a white glow and a grid of dots, the title and its text
- * centred, « Valoriser mon bien gratuitement » in white with its arrow, the
- * note under it with a shield.
- */
+/** Last call to action of the home page, the V1 one (CtaPanel). */
 export function FinalCta() {
   const t = home.final;
   return (
-    <section
-      aria-labelledby="cta-final-titre"
-      className="lk-cta-bg relative isolate overflow-hidden text-white"
-    >
-      <div
-        aria-hidden="true"
-        className="lk-dots-round pointer-events-none absolute inset-0 -z-10"
-      />
-      <div
-        data-reveal=""
-        className="mx-auto flex max-w-lk-settings flex-col items-center px-5 py-16 text-center md:px-10 lg:py-24"
-      >
-        <h2
-          id="cta-final-titre"
-          className="text-lk-h1-lg font-bold text-wide text-balance md:text-lk-section-lg lg:text-lk-showcase"
-        >
-          {t.title}
-        </h2>
-        <p className="mt-4 max-w-lk-prose text-lk-body-lg text-pretty lg:text-lk-lead-lg">
-          {t.text}
-        </p>
-        <Button
-          asChild
-          variant="inverse"
-          size="lg"
-          trailingIcon={ArrowRight}
-          className="mt-8 shadow-lk-raised"
-        >
-          <Link href={ROUTES.valuation}>{t.action}</Link>
-        </Button>
-        {/* The shield in the line: on two lines, it stays before the first word. */}
-        <p className="mt-5 text-lk-secondary text-balance">
-          <ShieldCheck aria-hidden="true" className="mr-2 inline size-4 align-[-0.1875em]" />
-          {t.note}
-        </p>
-      </div>
-    </section>
+    <CtaPanel
+      title={t.title}
+      text={t.text}
+      action={t.action}
+      href={ROUTES.valuation}
+      note={t.note}
+    />
   );
 }

@@ -52,6 +52,7 @@ import { IconButton } from "@/components/shared/icon-button";
 import { InfoNote } from "@/components/shared/info-note";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { FaqList } from "@/components/shared/faq-list";
+import { ShowcaseHero } from "@/components/shared/showcase-hero";
 import { LinkTabs } from "@/components/shared/link-tabs";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { MessageBubble, MessageDate, SystemMessage } from "@/components/shared/message-bubble";
@@ -89,6 +90,8 @@ import {
   signInLink,
   TOP_NAV_LINKS,
 } from "@/leenkey/navigation/config";
+import { CtaPanel } from "@/leenkey/site/components/cta-panel";
+import { NumberBadge } from "@/leenkey/site/components/number-badge";
 import { StagePill } from "@/leenkey/site/components/stage-pill";
 import { isProduction } from "@/lib/env";
 import {
@@ -112,6 +115,9 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = isProduction()
   ? {}
   : { title: content.page.metaTitle, robots: { index: false, follow: false } };
+
+/** The pieces of the showcase pages (L1-50). */
+const showcase = content.publicPages.showcase;
 
 const LISTING_STATUSES = [
   "draft",
@@ -1210,6 +1216,70 @@ export default function DesignPage() {
             <Caption>{content.publicPages.menuCaption}</Caption>
             <FaqList className="max-w-lk-settings" items={content.publicPages.faq} />
             <Caption>{content.publicPages.faqCaption}</Caption>
+            <div className="overflow-hidden rounded-lk-md">
+              <ShowcaseHero
+                id="exemple-hero"
+                titleAs="h4"
+                eyebrow={showcase.heroEyebrow}
+                title={showcase.heroTitle}
+                accent={showcase.heroAccent}
+                lead={showcase.heroText}
+                actions={
+                  <Button
+                    variant="cta"
+                    size="lg"
+                    trailingIcon={ArrowRight}
+                    className="focus-visible:outline-white"
+                  >
+                    {showcase.heroAction}
+                  </Button>
+                }
+              />
+            </div>
+            <Caption>{showcase.heroCaption}</Caption>
+            <div className="flex flex-col gap-6 rounded-lk-md bg-lk-navy p-5 md:p-8">
+              <SegmentedPicker
+                label={showcase.pickerLabel}
+                hideLabel
+                tone="dark"
+                defaultValue={showcase.picker[0].value}
+                options={showcase.picker}
+                className="w-full max-w-lk-form"
+              />
+              <FaqList tone="dark" className="max-w-lk-settings" items={content.publicPages.faq} />
+            </div>
+            <Caption>{showcase.darkCaption}</Caption>
+            <div className="flex items-center gap-4">
+              <NumberBadge value={1} />
+              <NumberBadge value={2} />
+              <NumberBadge value={1} size="sm" />
+              <NumberBadge value={4} size="sm" />
+            </div>
+            <Caption>{showcase.badgeCaption}</Caption>
+            <div className="overflow-hidden rounded-lk-md border border-lk-line">
+              <CtaPanel
+                id="exemple-dernier-appel"
+                titleAs="h4"
+                title={showcase.ctaTitle}
+                accent={showcase.ctaAccent}
+                text={showcase.ctaText}
+                action={showcase.ctaAction}
+                href="#pages-publiques"
+                secondary={{ label: showcase.ctaSecondary, href: "#pages-publiques" }}
+                note={showcase.ctaNote}
+              />
+              <CtaPanel
+                id="exemple-dernier-appel-clair"
+                titleAs="h4"
+                tone="light"
+                title={showcase.ctaLightTitle}
+                accent={showcase.ctaLightAccent}
+                text={showcase.ctaLightText}
+                action={showcase.ctaLightAction}
+                href="#pages-publiques"
+              />
+            </div>
+            <Caption>{showcase.ctaCaption}</Caption>
             <div className="flex flex-wrap items-center gap-2">
               <StagePill stage="done" />
               <StagePill stage="ongoing" />

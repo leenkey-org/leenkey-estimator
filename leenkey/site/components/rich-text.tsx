@@ -5,17 +5,25 @@ import type { Rich } from "@/lib/i18n/rich";
 
 export type { Rich } from "@/lib/i18n/rich";
 
-const linkClassName =
-  "rounded-lk-sm text-lk-blue underline underline-offset-2 hover:text-lk-blue-hover focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue";
+const linkClassName = {
+  light:
+    "rounded-lk-sm text-lk-blue underline underline-offset-2 hover:text-lk-blue-hover focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+  // On navy (L1-50): the light blue (6.9:1), white on hover and for the focus ring.
+  dark: "rounded-lk-sm text-lk-blue-light underline underline-offset-2 hover:text-white focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
+} as const;
 
 export function RichText({
   parts,
-  strongClassName = "font-semibold text-lk-ink",
+  tone = "light",
+  strongClassName = tone === "dark" ? "font-semibold text-white" : "font-semibold text-lk-ink",
 }: {
   parts: Rich;
-  /** Style of the bold parts: ink 600 by default. */
+  /** dark: on navy, bold parts in white and links in the light blue. */
+  tone?: "light" | "dark";
+  /** Style of the bold parts: ink 600 by default (white on navy). */
   strongClassName?: string;
 }) {
+  const link = linkClassName[tone];
   return (
     <>
       {parts.map((part, index) => {
@@ -31,7 +39,7 @@ export function RichText({
         // as a plain link, another site in a new tab.
         if (part.href.startsWith("/")) {
           return (
-            <Link key={index} href={part.href} className={linkClassName}>
+            <Link key={index} href={part.href} className={link}>
               {part.link}
             </Link>
           );
@@ -41,7 +49,7 @@ export function RichText({
           <a
             key={index}
             href={part.href}
-            className={linkClassName}
+            className={link}
             {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
           >
             {part.link}

@@ -760,7 +760,39 @@ export const publicPages = {
   taxes: "TTC",
   menuLabel: "Navigation du site (exemple)",
   faqCaption:
-    "FaqList · questions dépliables (<details>), ligne de 1 px entre elles, réponse de 640 px au plus",
+    "FaqList · questions dépliables (<details>) dans les cartes de la V1 (L1-50) : une carte de 12 px par question, « + » bleu qui devient « − », ouverte bordée de bleu pâle avec l'ombre bleue ; réponse de 640 px au plus",
+  // L1-50: the pieces of the showcase pages (DESIGN.md 1 and 10.6).
+  showcase: {
+    heroCaption:
+      "ShowcaseHero · hero des pages vitrines (accueil, /concept, /investir, /qui-sommes-nous) : fond bleu nuit à trame de points, surtitre en capitales --lk-blue-light (ou pastille), titre mot à mot 36, 44 puis 56 px 800, mots mis en valeur en dégradé clair sur la ligne de cote, actions cta ; une photo à droite à partir de 1 024 px (aside)",
+    heroEyebrow: "Qui sommes-nous",
+    heroTitle: "Rendre la vente immobilière enfin simple.",
+    heroAccent: "enfin simple.",
+    heroText:
+      "Fondée par Cédric Da Cunha, Leenkey accompagne chaque propriétaire, de la valeur de son bien à la signature.",
+    heroAction: "Découvrir notre vision",
+    darkCaption:
+      "Sur navy (/tarifs, /faq) : SegmentedPicker tone dark (cadre de verre, l'option choisie en blanc à texte bleu, anneau de focus blanc), FaqList tone dark (cartes de verre, question blanche, « + » --lk-blue-light, réponse blanc à 72 %)",
+    pickerLabel: "Affichage des formules",
+    picker: [
+      { value: "price", label: "Gratuit pendant le lancement" },
+      { value: "savings", label: "Mon économie vs agence" },
+    ],
+    badgeCaption:
+      "NumberBadge · carré numéroté de la V1 en dégradé bleu, caché des aides techniques (la liste ordonnée dit l'ordre) : md 40 px (étapes de l'accueil), sm 32 px à deux chiffres (outil de /concept)",
+    ctaCaption:
+      "CtaPanel · dernier appel des pages vitrines : bleu (dégradé, trame de points ronds, action blanche avec sa flèche, la seconde en contour blanc, note au bouclier) ; clair (/qui-sommes-nous : fond blanc, accent en dégradé, action cta, la seconde en secondary)",
+    ctaTitle: "Prêt à garder les clés de votre vente ?",
+    ctaAccent: "les clés",
+    ctaText: "Valorisez votre bien gratuitement, puis décidez de la suite.",
+    ctaAction: "Valoriser mon bien",
+    ctaSecondary: "Voir les formules",
+    ctaNote: "Gratuit · sans engagement · sans carte bancaire",
+    ctaLightTitle: "Prêt à échanger avec Cédric ?",
+    ctaLightAccent: "Cédric ?",
+    ctaLightText: "Un mot suffit pour démarrer la discussion.",
+    ctaLightAction: "Nous contacter",
+  },
   faq: [
     {
       question: "Combien ça coûte, vraiment ?",
