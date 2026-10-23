@@ -175,7 +175,10 @@ export function ComparisonSection() {
         className={cn(v1Card, "mx-auto hidden max-w-275 overflow-hidden rounded-lk-xl md:block")}
       >
         <table className="w-full table-fixed border-separate border-spacing-0 text-left">
-          <caption className="sr-only">{t.title}</caption>
+          {/* The figures of the table hold for this sale (« ≈ 15 000 € »). */}
+          <caption className="sr-only">
+            {t.title} {t.example}
+          </caption>
           <colgroup>
             <col className="w-[27%]" />
             <col />
@@ -331,8 +334,8 @@ export function HomeFaqSection() {
               >
                 <span>{item.question}</span>
                 <span aria-hidden="true" className="relative size-5.5 shrink-0">
-                  <span className="absolute top-1/2 left-1/2 h-[2.5px] w-4.25 -translate-1/2 rounded-xs bg-lk-blue" />
-                  <span className="absolute top-1/2 left-1/2 h-4.25 w-[2.5px] -translate-1/2 rounded-xs bg-lk-blue transition-transform duration-220 ease-out-lk group-open:scale-y-0" />
+                  <span className="absolute top-1/2 left-1/2 h-0.5 w-4.25 -translate-1/2 rounded-lk-xs bg-lk-blue" />
+                  <span className="absolute top-1/2 left-1/2 h-4.25 w-0.5 -translate-1/2 rounded-lk-xs bg-lk-blue transition-transform duration-220 ease-out-lk group-open:scale-y-0" />
                 </span>
               </summary>
               <p className="max-w-lk-prose px-5 pb-6 text-lk-body text-pretty text-lk-ink-2 md:px-6">
@@ -368,7 +371,7 @@ export function ContactSection({ titleAs = "h2" }: { titleAs?: "h1" | "h2" }) {
       accent={t.accent}
       lead={t.lead}
     >
-      <ContactForm source="contact" look="showcase" className="mx-auto max-w-180" />
+      <ContactForm source="contact" look="showcase" className="mx-auto max-w-lk-settings" />
     </MarketingSection>
   );
 }
@@ -392,7 +395,7 @@ export function FinalCta() {
       />
       <div
         data-reveal=""
-        className="mx-auto flex max-w-180 flex-col items-center px-5 py-16 text-center md:px-10 lg:py-24"
+        className="mx-auto flex max-w-lk-settings flex-col items-center px-5 py-16 text-center md:px-10 lg:py-24"
       >
         <h2
           id="cta-final-titre"
@@ -412,8 +415,9 @@ export function FinalCta() {
         >
           <Link href={ROUTES.valuation}>{t.action}</Link>
         </Button>
-        <p className="mt-5 flex items-center gap-2 text-lk-secondary">
-          <ShieldCheck aria-hidden="true" className="size-4 shrink-0" />
+        {/* The shield in the line: on two lines, it stays before the first word. */}
+        <p className="mt-5 text-lk-secondary text-balance">
+          <ShieldCheck aria-hidden="true" className="mr-2 inline size-4 align-[-0.1875em]" />
           {t.note}
         </p>
       </div>

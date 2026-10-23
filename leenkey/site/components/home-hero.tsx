@@ -2,10 +2,10 @@ import Link from "next/link";
 import {
   ArrowRight,
   BedDouble,
-  ChartLine,
   Clock,
   DoorOpen,
   Euro,
+  FileText,
   Handshake,
   ListChecks,
   MapPin,
@@ -157,7 +157,11 @@ function HeroVisual() {
   );
 }
 
-/** « Ventes réelles de votre secteur », where the V1 chip said « + 5,2 % vs prix agence ». */
+/**
+ * « Rapport PDF · Quatre pages, par email », what the valuation gives, where
+ * the V1 chip said « + 5,2 % vs prix agence »: nothing that qualifies the
+ * figure of the card.
+ */
 function FactChip({ className }: { className?: string }) {
   return (
     <p
@@ -166,8 +170,8 @@ function FactChip({ className }: { className?: string }) {
         className,
       )}
     >
-      <span className="flex size-9.5 shrink-0 items-center justify-center rounded-lk-lg bg-lk-success-bg text-lk-success">
-        <ChartLine aria-hidden="true" className="size-4.5" />
+      <span className="flex size-9.5 shrink-0 items-center justify-center rounded-lk-lg bg-lk-blue-tint text-lk-blue">
+        <FileText aria-hidden="true" className="size-4.5" />
       </span>
       <span className="flex flex-col">
         <span className="text-lk-h3-lg leading-none font-extrabold text-wide">{t.fact.title}</span>
@@ -180,7 +184,8 @@ function FactChip({ className }: { className?: string }) {
 /**
  * The card of the V1 (« Votre bien »), as an example: a house of the launch
  * zone, its specs, the value and range the engine of the estimator gives for
- * it (leenkey/site/valuation-example.ts), « Analyse gratuite en 2 minutes ».
+ * it from its reference prices (leenkey/site/valuation-example.ts),
+ * « Analyse gratuite en 2 minutes ».
  * Read as a group named « Exemple de valorisation »; nothing in it is a
  * control.
  */

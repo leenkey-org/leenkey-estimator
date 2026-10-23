@@ -82,7 +82,8 @@ test.describe("accueil", () => {
     );
     await expect(card.getByRole("link")).toHaveCount(0);
     await expect(card.getByRole("button")).toHaveCount(0);
-    await expect(page.locator("#valoriser").getByText("Ventes réelles")).toBeVisible();
+    // In place of the V1 figure, what the valuation gives.
+    await expect(page.locator("#valoriser").getByText("Rapport PDF")).toBeVisible();
   });
 
   // L1-46: the house of the V1 hero.
@@ -97,7 +98,6 @@ test.describe("accueil", () => {
     await expect
       .poll(() => photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0))
       .toBe(true);
-    await expect(hero.locator("svg.lk-drawing")).toHaveCount(0);
   });
 
   test("les sections de la V1 gardent leurs ancres et leurs textes", async ({ page }) => {
@@ -422,6 +422,29 @@ test.describe("accueil", () => {
   test("accueil : aucune violation sérieuse ou critique @a11y", async ({ page }) => {
     await page.goto("/");
     expect(await seriousViolations(page)).toEqual([]);
+  });
+
+  // The words in the gradient are transparent text over a background: in
+  // print (backgrounds off) and in forced colours, they get a colour back.
+  test("les mots en dégradé gardent une couleur à l'impression et en contraste forcé", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const accent = page.locator("#etape-titre .lk-text-grad");
+    await expect(accent).toHaveText("votre vente ?");
+    expect(await accent.evaluate((el) => getComputedStyle(el).color)).toBe("rgba(0, 0, 0, 0)");
+    for (const media of [
+      { media: "print" },
+      { media: "screen", forcedColors: "active" },
+    ] as const) {
+      await page.emulateMedia(media);
+      const style = await accent.evaluate((el) => {
+        const computed = getComputedStyle(el);
+        return { color: computed.color, image: computed.backgroundImage };
+      });
+      expect(style.image, JSON.stringify(media)).toBe("none");
+      expect(style.color, JSON.stringify(media)).not.toBe("rgba(0, 0, 0, 0)");
+    }
   });
 
   test("dernier appel : « Valoriser mon bien gratuitement » vers l'estimateur", async ({

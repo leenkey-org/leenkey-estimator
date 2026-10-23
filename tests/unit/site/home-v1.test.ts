@@ -8,13 +8,19 @@ import { fr } from "@/lib/i18n/fr";
 const home = fr.site.home;
 
 describe("carte d'exemple du hero", () => {
-  it("affiche la valeur que donne le moteur de l'estimateur pour ce bien", () => {
+  it("affiche la valeur que donne le moteur de l'estimateur pour ce bien, sans les ventes du secteur", () => {
     const result = computeEstimation(VALUATION_EXAMPLE);
     expect(valuationExample()).toEqual({
       value: result.prixEstime,
       low: result.prixBas,
       high: result.prixHaut,
     });
+  });
+
+  // The figures given to Cédric (DECISIONS 2026-10-23, Q58): a new calibration
+  // of the engine changes them, and these documents with them.
+  it("453 000 €, de 422 000 € à 484 000 € : les chiffres écrits dans DECISIONS et Q58", () => {
+    expect(valuationExample()).toEqual({ value: 453_000, low: 422_000, high: 484_000 });
   });
 
   it("une valeur dans sa fourchette, pour la maison que décrit la carte", () => {
@@ -46,6 +52,13 @@ describe("carte d'exemple du hero", () => {
     expect(hero).not.toMatch(/prix agence/i);
   });
 
+  // The figure of the card comes from the reference prices of the engine,
+  // not from the sales of the area: nothing on the photo may say otherwise.
+  it("rien sur la photo ne rattache le chiffre aux ventes du secteur", () => {
+    const photo = JSON.stringify([home.hero.example, home.hero.fact]);
+    expect(photo).not.toMatch(/vente|DVF|secteur|quartier/i);
+  });
+
   it("garde l'entrée des acquéreurs sous celle des vendeurs", () => {
     expect(home.hero.action).toBe("Voir ma valorisation");
     expect(home.hero.buy).toBe("Je cherche un bien à acheter");
@@ -53,7 +66,8 @@ describe("carte d'exemple du hero", () => {
 });
 
 describe("têtes de section de la V1", () => {
-  it("le surtitre de la V1 au-dessus de chaque titre de section", () => {
+  // « En vente sur Leenkey » is new: the V1 page had no listings.
+  it("le surtitre de la V1 au-dessus de chaque titre de section, et celui des derniers biens", () => {
     expect(
       [
         home.stages,

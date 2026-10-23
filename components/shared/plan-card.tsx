@@ -68,7 +68,10 @@ export function PlanCard({
 }: PlanCardProps) {
   const large = priceSize === "large";
   const dark = tone === "dark";
+  // Text colours: white on navy (72 % for the secondary, 60 % for the notes).
   const ink = dark ? "text-white" : "text-lk-ink";
+  const ink2 = dark ? "text-white/72" : "text-lk-ink-2";
+  const muted = dark ? "text-white/60" : "text-lk-ink-2";
   const suffix = priceSuffix ? (
     <span
       className={cn(
@@ -87,7 +90,12 @@ export function PlanCard({
         dark
           ? "rounded-lk-xl border border-white/10 bg-white/[0.045] px-6 py-7 lg:px-7 lg:py-8"
           : "rounded-lk-md bg-lk-surface p-4 lg:p-5",
-        !dark && (badge ? "border-2 border-lk-blue" : "border-[1.5px] border-lk-line"),
+        // The recommended plan keeps its frame on navy, in the light blue.
+        dark
+          ? badge && "border-2 border-lk-blue-light"
+          : badge
+            ? "border-2 border-lk-blue"
+            : "border-[1.5px] border-lk-line",
         className,
       )}
     >
@@ -105,7 +113,7 @@ export function PlanCard({
           </p>
         )}
       </div>
-      {priceNote ? <p className="-mt-1 text-lk-caption text-lk-ink-2">{priceNote}</p> : null}
+      {priceNote ? <p className={cn("-mt-1 text-lk-caption", muted)}>{priceNote}</p> : null}
       {tagline ? (
         <p
           className={cn("text-lk-secondary text-pretty", dark ? "text-white/72" : "text-lk-ink-3")}
@@ -114,20 +122,26 @@ export function PlanCard({
         </p>
       ) : null}
       {featuresIntro ? (
-        <p className="mt-1 text-lk-secondary font-semibold text-lk-ink">{featuresIntro}</p>
+        <p className={cn("mt-1 text-lk-secondary font-semibold", ink)}>{featuresIntro}</p>
       ) : null}
       {features && features.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {features.map((feature) => (
-            <li key={feature} className="flex gap-2 text-lk-secondary text-lk-ink">
-              <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-lk-blue" />
+            <li key={feature} className={cn("flex gap-2 text-lk-secondary", ink)}>
+              <Check
+                aria-hidden="true"
+                className={cn(
+                  "mt-0.5 size-4 shrink-0",
+                  dark ? "text-lk-blue-light" : "text-lk-blue",
+                )}
+              />
               <span>{feature}</span>
             </li>
           ))}
         </ul>
       ) : null}
       {featuresOutro ? (
-        <p className="text-lk-secondary text-pretty text-lk-ink-2">{featuresOutro}</p>
+        <p className={cn("text-lk-secondary text-pretty", ink2)}>{featuresOutro}</p>
       ) : null}
       {large ? (
         // At the bottom: the prices of cards side by side stay on one line.
@@ -136,14 +150,10 @@ export function PlanCard({
             <span className="text-lk-display font-bold text-wide tabular-nums">{price}</span>
             {suffix}
           </p>
-          {note ? (
-            <p className={cn("text-lk-caption", dark ? "text-white/60" : "text-lk-ink-2")}>
-              {note}
-            </p>
-          ) : null}
+          {note ? <p className={cn("text-lk-caption", muted)}>{note}</p> : null}
         </div>
       ) : note ? (
-        <p className="mt-auto pt-1 text-lk-caption text-lk-ink-2">{note}</p>
+        <p className={cn("mt-auto pt-1 text-lk-caption", muted)}>{note}</p>
       ) : null}
       {action ? (
         <div className={cn("flex flex-col pt-2", !note && !large && "mt-auto")}>{action}</div>

@@ -12,12 +12,11 @@ export type MarketingSectionProps = {
    * --lk-blue-light).
    */
   tone?: "surface" | "stone" | "mist" | "navy";
-  /** start: title on the left, link on its right; center: the V1 showcase sections. */
-  align?: "start" | "center";
   /**
    * showcase: a section of the home page in the direction of the V1 (L1-49):
    * centred head, label above the title, larger title with its words in the
-   * blue gradient, more room.
+   * blue gradient (in plain blue on stone, where the gradient would not reach
+   * 3:1), more room. Title on the left with its link on its right otherwise.
    */
   look?: "facade" | "showcase";
   /** The label above the title in the V1 (« Votre projet »), showcase only. */
@@ -60,7 +59,6 @@ const BACKGROUND = {
 export function MarketingSection({
   id,
   tone = "surface",
-  align = "start",
   look = "facade",
   eyebrow,
   title,
@@ -75,7 +73,7 @@ export function MarketingSection({
   const titleId = id ? `${id}-titre` : undefined;
   const dark = tone === "navy";
   const showcase = look === "showcase";
-  const center = showcase || align === "center";
+  const gradient = showcase && tone !== "stone";
   return (
     <section
       id={id}
@@ -98,7 +96,7 @@ export function MarketingSection({
           data-reveal=""
           className={cn(
             "flex flex-col gap-4",
-            center
+            showcase
               ? "items-center text-center"
               : "md:flex-row md:items-end md:justify-between md:gap-10",
           )}
@@ -107,7 +105,7 @@ export function MarketingSection({
             className={cn(
               "flex flex-col gap-3 lg:gap-4",
               showcase ? "max-w-170" : "max-w-lk-heading",
-              center && "items-center",
+              showcase && "items-center",
             )}
           >
             {showcase && eyebrow ? (
@@ -134,7 +132,7 @@ export function MarketingSection({
                 text={title}
                 accent={accent}
                 className={
-                  showcase
+                  gradient
                     ? dark
                       ? "lk-text-grad-light"
                       : "lk-text-grad"

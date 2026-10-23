@@ -41,4 +41,21 @@ describe("PlanCard", () => {
     expect(html).not.toContain("bg-lk-surface");
     expect(html).not.toContain("text-lk-ink");
   });
+
+  it("sombre : la liste, son introduction, la note de prix et la formule recommandée aussi", () => {
+    const html = renderToStaticMarkup(
+      createElement(PlanCard, {
+        ...props,
+        tone: "dark",
+        priceNote: "Forfait fixe TTC · payé à la souscription",
+        featuresIntro: "Tout Autonomie, plus :",
+        features: ["Un conseiller dédié"],
+        featuresOutro: "Vous gardez la décision.",
+        badge: "Le plus complet",
+      }),
+    );
+    expect(html).not.toContain("text-lk-ink");
+    expect(html).toContain("text-lk-blue-light");
+    expect(html).toContain("border-lk-blue-light");
+  });
 });

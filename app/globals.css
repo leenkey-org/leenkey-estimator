@@ -496,8 +496,16 @@ html {
    glows. */
 .lk-hero-bg {
   background:
-    radial-gradient(ellipse at top right, rgb(17 86 252 / 0.28) 0%, transparent 55%),
-    radial-gradient(ellipse at bottom left, rgb(17 86 252 / 0.22) 0%, transparent 55%),
+    radial-gradient(
+      ellipse at top right,
+      color-mix(in srgb, var(--color-lk-blue) 28%, transparent) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at bottom left,
+      color-mix(in srgb, var(--color-lk-blue) 22%, transparent) 0%,
+      transparent 55%
+    ),
     linear-gradient(
       135deg,
       var(--color-lk-ink) 0%,
@@ -506,10 +514,11 @@ html {
     );
 }
 /* The last call to action (« cta-final »): the brand blue with a white glow
-   behind its title; white text stays above 4.5:1 everywhere else. */
+   behind its title (10 %, where the V1 had 16 %: white text stays above 4.5:1
+   wherever there is text). */
 .lk-cta-bg {
   background:
-    radial-gradient(50% 80% at 50% 0%, rgb(255 255 255 / 0.16), transparent 60%),
+    radial-gradient(50% 80% at 50% 0%, rgb(255 255 255 / 0.1), transparent 60%),
     linear-gradient(90deg, var(--color-lk-blue), var(--color-lk-blue-mid));
 }
 /* A grid of dots fading at its edges (« hero-dots », « cta-dots »). */
@@ -525,7 +534,7 @@ html {
 }
 /* Words in the blue gradient (« text-grad »): on a light flat (3.4:1 at its
    lightest, titles of 24 px and more only), and lighter on a dark one
-   (4.8:1 at its darkest on --lk-ink). In print and in forced colours, the
+   (4.6:1 at its darkest on --lk-ink). In print and in forced colours, the
    words keep a plain colour. */
 .lk-text-grad,
 .lk-text-grad-light {

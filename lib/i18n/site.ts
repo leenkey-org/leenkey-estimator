@@ -53,13 +53,14 @@ export const site = {
         sample: "Exemple",
         title: "Maison contemporaine",
         place: "Saint-Michel-sur-Orge, 91240",
-        specs: [`120${N}m²`, "5 pièces", "4 chambres"],
+        specs: [`120${N}m²`, "4 pièces", "3 chambres"],
         value: "Ma valeur immobilière",
         range: (low: string, high: string) => `Fourchette${NBSP}: ${low} à ${high}`,
         meta: "Analyse gratuite en 2 minutes",
       },
-      // In place of « + 5,2 % vs prix agence », a figure the V1 did not source.
-      fact: { title: "Ventes réelles", text: "de votre secteur" },
+      // In place of « + 5,2 % vs prix agence », a figure the V1 did not
+      // source: what the valuation gives, nothing about the figure of the card.
+      fact: { title: "Rapport PDF", text: "Quatre pages, par email" },
     },
     latest: {
       eyebrow: "En vente sur Leenkey",
@@ -112,7 +113,6 @@ export const site = {
       eyebrow: "Comment ça marche",
       title: "Trois étapes. Vous gardez les clés du début à la fin.",
       accent: "du début à la fin.",
-      step: (index: number, total: number) => `Étape ${index} sur ${total}`,
       items: [
         {
           title: "Estimez",
