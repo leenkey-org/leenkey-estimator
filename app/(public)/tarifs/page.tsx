@@ -16,16 +16,28 @@ export const metadata: Metadata = {
 };
 
 // /tarifs in V2 (L1-42, DECISIONS 2026-10-19): the plans read from the plans
-// table, so that this page says what is sold (SPEC-V2 11 bis).
+// table, so that this page says what is sold (SPEC-V2 11 bis); on the navy
+// of the V1 page, its label above the title, since L1-50.
 export default async function PricingPage() {
   const plans = await activePlans();
   return (
     <PublicPage>
-      <MarketingSection id="tarifs" titleAs="h1" title={t.title} accent={t.accent} lead={t.lead}>
+      <MarketingSection
+        id="tarifs"
+        titleAs="h1"
+        look="showcase"
+        tone="navy"
+        eyebrow={t.eyebrow}
+        title={t.title}
+        accent={t.accent}
+        lead={t.lead}
+      >
         {plans && plans.length > 0 ? (
           <PricingPlans plans={plans} />
         ) : (
-          <InlineAlert tone="danger">{t.unavailable}</InlineAlert>
+          <InlineAlert tone="danger" className="mx-auto max-w-lk-form">
+            {t.unavailable}
+          </InlineAlert>
         )}
       </MarketingSection>
     </PublicPage>

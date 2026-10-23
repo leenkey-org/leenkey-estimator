@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { PlanCard } from "@/components/shared/plan-card";
 import { SegmentedPicker } from "@/components/shared/segmented-picker";
@@ -18,7 +19,9 @@ type View = "price" | "savings";
  * The plans of /tarifs (V1 page): their contents from the plans table
  * (SPEC-V2 11 bis), the free plan put forward during the launch, and the
  * switch « Mon économie vs agence » that shows, for a paid plan, the saving
- * on the example of the home page instead of its price.
+ * on the example of the home page instead of its price. On the navy of the
+ * V1 (L1-50): the glass cards, « Commencer gratuitement » in the gradient
+ * with its arrow, the paid plans in a white outline.
  */
 export function PricingPlans({ plans }: { plans: readonly PlanView[] }) {
   const [view, setView] = useState<View>("price");
@@ -27,15 +30,16 @@ export function PricingPlans({ plans }: { plans: readonly PlanView[] }) {
       <SegmentedPicker
         label={t.view}
         hideLabel
+        tone="dark"
         value={view}
         onValueChange={(value) => setView(value === "savings" ? "savings" : "price")}
         options={[
           { value: "price", label: t.views.price },
           { value: "savings", label: t.views.savings },
         ]}
-        className="max-w-lk-form"
+        className="mx-auto w-full max-w-lk-form"
       />
-      <ul className="grid gap-6 lg:grid-cols-3">
+      <ul className="mx-auto grid w-full max-w-275 gap-6 lg:grid-cols-3">
         {plans.map((plan) => {
           const texts = t.items[plan.code];
           const free = plan.priceCents === 0;
@@ -45,6 +49,7 @@ export function PricingPlans({ plans }: { plans: readonly PlanView[] }) {
               <PlanCard
                 className="flex-1"
                 nameAs="h2"
+                tone="dark"
                 name={plan.name}
                 price={
                   saving !== null
@@ -63,9 +68,21 @@ export function PricingPlans({ plans }: { plans: readonly PlanView[] }) {
                 featuresOutro={plan.outro ?? undefined}
                 badge={"badge" in texts ? texts.badge : undefined}
                 action={
-                  <Button asChild size="lg" variant={free ? "primary" : "secondary"}>
-                    <Link href={ROUTES.valuation}>{texts.action}</Link>
-                  </Button>
+                  free ? (
+                    <Button
+                      asChild
+                      size="lg"
+                      variant="cta"
+                      trailingIcon={ArrowRight}
+                      className="focus-visible:outline-white"
+                    >
+                      <Link href={ROUTES.valuation}>{texts.action}</Link>
+                    </Button>
+                  ) : (
+                    <Button asChild size="lg" variant="outline-inverse">
+                      <Link href={ROUTES.valuation}>{texts.action}</Link>
+                    </Button>
+                  )
                 }
               />
             </li>

@@ -89,7 +89,16 @@ test.describe("pages du site en V2", () => {
     await page.goto("/investir");
     const main = page.getByRole("main");
     await expect(main).toContainText("des milliards d'euros");
-    for (const removed of [/M€/, /MRR|ARR|NPS/, /10 milliards/, /1 000 000/, /diffusion auto/i]) {
+    for (const removed of [
+      /M€/,
+      /MRR|ARR|NPS/,
+      /10 milliards/,
+      // The figures are written with narrow no-break spaces.
+      /1[\s\u202f]000[\s\u202f]000/,
+      /acteur dominant/,
+      /100 premiers/,
+      /diffusion auto/i,
+    ]) {
       await expect(main.getByText(removed)).toHaveCount(0);
     }
     const milestone = main
@@ -180,6 +189,107 @@ test.describe("pages du site en V2", () => {
     expect(body.data?.prenom).toBe("Alice");
   });
 
+  // L1-50: the labels of the V1 above the titles, in capitals by their style
+  // (the text keeps its case for screen readers).
+  for (const [path, eyebrows] of [
+    ["/concept", ["L'idée de départ", "Le cœur du concept", "Ce que Leenkey ouvre ensuite"]],
+    ["/tarifs", ["Phase de lancement · Freemium"]],
+    ["/faq", ["Questions fréquentes"]],
+    [
+      "/investir",
+      [
+        "Opportunité d'investissement · Proptech France 2026",
+        "Ce que personne n'a encore vraiment résolu",
+        "La vision",
+        "État d'avancement",
+        "Comment Leenkey crée de la valeur",
+        "Le timing",
+        "La vision 24 mois",
+        "Ce que vous obtenez",
+        "Questions fréquentes",
+        "Échangeons",
+      ],
+    ],
+    ["/qui-sommes-nous", ["Qui sommes-nous", "L'histoire", "Nos valeurs"]],
+  ] as const) {
+    test(`${path} : les surtitres de la V1, en capitales`, async ({ page }) => {
+      await page.goto(path);
+      const main = page.getByRole("main");
+      for (const eyebrow of eyebrows) {
+        const label = main.getByText(eyebrow, { exact: true });
+        await expect(label).toBeVisible();
+        await expect(label).toHaveCSS("text-transform", "uppercase");
+      }
+    });
+  }
+
+  test("/tarifs et /faq : sur le navy de la V1, les questions en cartes de verre", async ({
+    page,
+  }) => {
+    const navy = "rgb(26, 43, 74)";
+    await page.goto("/tarifs");
+    expect(
+      await page.locator("#tarifs").evaluate((el) => getComputedStyle(el).backgroundColor),
+    ).toBe(navy);
+    await page.goto("/faq");
+    expect(await page.locator("#faq").evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+      navy,
+    );
+    const question = page.locator("summary").first();
+    await expect(question).toHaveCSS("color", "rgb(255, 255, 255)");
+    // The focus ring turns white on navy, where the blue would not reach 3:1
+    // (its colour alone would be white without any ring: currentColor).
+    await question.focus();
+    await expect(question).toHaveCSS("outline-style", "solid");
+    await expect(question).toHaveCSS("outline-color", "rgb(255, 255, 255)");
+  });
+
+  test("/concept : les deux options de la V1 et l'outil sur navy", async ({ page }) => {
+    await page.goto("/concept");
+    const options = page.locator("#idee");
+    await expect(options.getByText(/^Option [12]$/)).toHaveText(["Option 1", "Option 2"]);
+    await expect(options.getByText("ou", { exact: true })).toBeVisible();
+    const tool = page.locator("#outil");
+    expect(await tool.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+      "rgb(26, 43, 74)",
+    );
+    await expect(tool.locator("ol > li")).toHaveCount(4);
+  });
+
+  test("/investir : l'encart du marché, la frise et les trois sources de la V1", async ({
+    page,
+  }) => {
+    await page.goto("/investir");
+    const market = page.locator("#marche");
+    // In the text of the agency, then in large beside it.
+    await expect(market.getByText("15\u202f000\u202f€", { exact: true })).toHaveCount(2);
+    await expect(
+      market.getByText("prélevés sur une seule vente à 300\u202f000\u202f€", { exact: true }),
+    ).toBeVisible();
+    await expect(page.locator("#avancement ol > li")).toHaveCount(6);
+    const model = page.locator("#modele");
+    await expect(model.getByText(/^Source [123]$/)).toHaveText([
+      "Source 1",
+      "Source 2",
+      "Source 3",
+    ]);
+    await expect(model.getByRole("listitem").nth(2)).toContainText("À venir");
+    await expect(page.getByText(/Source 3 · V2/)).toHaveCount(0);
+  });
+
+  test("/qui-sommes-nous : la photo de Cédric dans le hero, chargée en premier", async ({
+    page,
+  }) => {
+    await page.goto("/qui-sommes-nous");
+    const hero = page.locator("#qui-sommes-nous");
+    const photo = hero.getByRole("img", { name: "Cédric Da Cunha, fondateur de Leenkey" });
+    await expect(photo).toBeVisible();
+    await expect(photo).toHaveAttribute("fetchpriority", "high");
+    await expect(photo).not.toHaveAttribute("loading", "lazy");
+    await expect(hero.locator("figcaption")).toContainText("Cédric Da Cunha");
+    await expect(hero.locator("figcaption")).toContainText("Fondateur & CEO · Leenkey");
+  });
+
   test("/tarifs sans base : le message d'indisponibilité", async ({ page }) => {
     test.skip(seeded, "base de seed : voir plus bas");
     await page.goto("/tarifs");
@@ -220,6 +330,12 @@ test.describe("/tarifs (base de seed)", () => {
   }) => {
     await page.goto("/tarifs");
     const plans = page.locator("article");
+    // On navy, the white focus ring of the switch (L1-50), before any click:
+    // after one, Chromium keeps a focus set by script without its ring.
+    const chosen = page.getByRole("radio", { name: "Gratuit pendant le lancement" });
+    await chosen.focus();
+    await expect(chosen).toHaveCSS("outline-style", "solid");
+    await expect(chosen).toHaveCSS("outline-color", "rgb(255, 255, 255)");
     await page.getByRole("radio", { name: "Mon économie vs agence" }).click();
     await expect(plans.nth(1)).toContainText("−14 010 € vs agence");
     await expect(plans.nth(2)).toContainText("−13 500 € vs agence");

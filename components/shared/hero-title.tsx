@@ -27,6 +27,8 @@ export type AccentStyle = {
   accentClassName?: string;
   /** Colour of its dimension line when the accent has no plain colour. */
   lineClassName?: string;
+  /** Colour of the line under each line of a long accent, in the same case. */
+  decorationClassName?: string;
 };
 
 /**
@@ -65,7 +67,10 @@ export function heroTitle(
       );
     } else {
       word = (
-        <span className={cn("lk-cote-wrap lk-enter", style.accentClassName)} style={delay(last)}>
+        <span
+          className={cn("lk-cote-wrap lk-enter", style.accentClassName, style.decorationClassName)}
+          style={delay(last)}
+        >
           {piece.accent}
         </span>
       );

@@ -15,15 +15,30 @@ export const metadata: Metadata = {
 };
 
 // /faq in V2 (L1-42, DECISIONS 2026-10-19): the questions of the V1 page,
-// each answer opened on demand.
+// each answer opened on demand; on the navy of the V1, in its glass cards,
+// since L1-50.
 export default function FaqPage() {
   return (
     <PublicPage>
-      <MarketingSection id="faq" titleAs="h1" title={t.title}>
+      <MarketingSection
+        id="faq"
+        titleAs="h1"
+        look="showcase"
+        tone="navy"
+        eyebrow={t.eyebrow}
+        title={t.title}
+        revealContent={false}
+      >
         <FaqList
+          tone="dark"
+          className="mx-auto max-w-220"
           items={t.items.map((item) => ({
             question: item.question,
-            answer: <RichText parts={item.answer} />,
+            answer: (
+              <p>
+                <RichText parts={item.answer} tone="dark" />
+              </p>
+            ),
           }))}
         />
       </MarketingSection>
