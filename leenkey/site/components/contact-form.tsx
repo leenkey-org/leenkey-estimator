@@ -2,6 +2,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { flushSync } from "react-dom";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
@@ -9,6 +10,7 @@ import { Input } from "@/components/shared/input";
 import { Select } from "@/components/shared/select";
 import { Textarea } from "@/components/shared/textarea";
 import { fr } from "@/lib/i18n/fr";
+import { cn } from "@/lib/utils";
 import {
   CONTACT_MESSAGE_MAX,
   CONTACT_MOTIFS,
@@ -30,13 +32,15 @@ type Values = Record<ContactField, string>;
  * 2026-10-19): same fields, same names and ids (GTM), same POST to
  * /api/contact. The errors show under each field and the focus goes to the
  * first one; once sent, the form gives way to « .form-success », its sibling
- * as in the V1.
+ * as in the V1. Showcase (home page and /contact, L1-49): the white card of
+ * the V1 in its blue shadow, the full width button with its arrow.
  */
 export function ContactForm({
   source,
   formId = "contact-form",
   idPrefix = "cf",
   motifs = CONTACT_MOTIFS,
+  look = "facade",
   className,
 }: {
   source: ContactSource;
@@ -45,6 +49,7 @@ export function ContactForm({
   idPrefix?: string;
   /** Order of the motifs: the page's own first (Investir). */
   motifs?: readonly ContactMotif[];
+  look?: "facade" | "showcase";
   className?: string;
 }) {
   const form = useRef<HTMLFormElement>(null);
@@ -102,6 +107,10 @@ export function ContactForm({
 
   const id = (field: string) => `${idPrefix}-${field}`;
   const sent = status === "sent";
+  const showcase = look === "showcase";
+  const box = showcase
+    ? "rounded-lk-xl border border-lk-mist-line bg-lk-surface p-5 shadow-lk-card md:p-8"
+    : "rounded-lk-md border border-lk-line bg-lk-surface p-4 md:p-6";
 
   return (
     <div className={className}>
@@ -111,7 +120,7 @@ export function ContactForm({
         onSubmit={submit}
         noValidate
         hidden={sent}
-        className="flex flex-col gap-3.5 rounded-lk-md border border-lk-line bg-lk-surface p-4 md:p-6"
+        className={cn("flex flex-col gap-3.5", box)}
       >
         {status === "failed" ? (
           <InlineAlert tone="danger">
@@ -191,21 +200,24 @@ export function ContactForm({
           error={errorOf("message")}
           onChange={(event) => change("message", event.target.value)}
         />
-        <Button type="submit" size="lg" loading={status === "sending"} className="md:self-start">
+        <Button
+          type="submit"
+          variant={showcase ? "cta" : "primary"}
+          size="lg"
+          loading={status === "sending"}
+          trailingIcon={showcase ? ArrowRight : undefined}
+          className={showcase ? "mt-1" : "md:self-start"}
+        >
           {t.submit}
         </Button>
-        <p className="text-lk-caption text-lk-ink-3">
+        <p className={cn("text-lk-caption text-lk-ink-3", showcase && "text-center")}>
           {t.note} ·{" "}
           <Link href="/confidentialite" className="underline underline-offset-2 hover:text-lk-ink">
             {t.privacy}
           </Link>
         </p>
       </form>
-      <div
-        role="status"
-        hidden={!sent}
-        className="form-success rounded-lk-md border border-lk-line bg-lk-surface p-4 md:p-6"
-      >
+      <div role="status" hidden={!sent} className={cn("form-success", box)}>
         {sent ? (
           <>
             <h3

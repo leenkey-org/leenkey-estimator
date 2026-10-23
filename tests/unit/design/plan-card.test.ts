@@ -30,4 +30,32 @@ describe("PlanCard", () => {
     expect(html.indexOf(props.tagline)).toBeLessThan(html.indexOf(props.price));
     expect(html.indexOf(props.price)).toBeLessThan(html.indexOf(props.note));
   });
+
+  // L1-49: the glass card of the V1 home page on its navy section.
+  it("sombre : la carte de verre de la V1, texte blanc, sans le fond blanc", () => {
+    const html = renderToStaticMarkup(
+      createElement(PlanCard, { ...props, priceSize: "large", tone: "dark" }),
+    );
+    expect(html).toContain("border-white/10");
+    expect(html).toContain("rounded-lk-xl");
+    expect(html).not.toContain("bg-lk-surface");
+    expect(html).not.toContain("text-lk-ink");
+  });
+
+  it("sombre : la liste, son introduction, la note de prix et la formule recommandée aussi", () => {
+    const html = renderToStaticMarkup(
+      createElement(PlanCard, {
+        ...props,
+        tone: "dark",
+        priceNote: "Forfait fixe TTC · payé à la souscription",
+        featuresIntro: "Tout Autonomie, plus :",
+        features: ["Un conseiller dédié"],
+        featuresOutro: "Vous gardez la décision.",
+        badge: "Le plus complet",
+      }),
+    );
+    expect(html).not.toContain("text-lk-ink");
+    expect(html).toContain("text-lk-blue-light");
+    expect(html).toContain("border-lk-blue-light");
+  });
 });

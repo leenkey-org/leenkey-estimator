@@ -11,11 +11,11 @@ const t = fr.site.home.latest;
 
 /**
  * « Les derniers biens » (SPEC-V2 8.1): the three listings most recently
- * published, PropertyCard tile with a 3:2 photo, and « Voir les 12 biens ».
- * Hidden with fewer than three listings online, or when they cannot be
- * read: the home page never shows a half empty block nor an error for it. A
- * scrolling row in mobile, three columns from 768 px, rising one after the
- * other.
+ * published, PropertyCard tile with a 3:2 photo, and « Voir les 12 biens »
+ * under them. Hidden with fewer than three listings online, or when they
+ * cannot be read: the home page never shows a half empty block nor an error
+ * for it. A scrolling row in mobile, three columns from 768 px, rising one
+ * after the other. Head of the V1 sections (L1-49), after the seller area.
  */
 export async function LatestListings() {
   const result = await latestListings();
@@ -25,8 +25,9 @@ export async function LatestListings() {
   return (
     <MarketingSection
       id="derniers-biens"
+      look="showcase"
+      eyebrow={t.eyebrow}
       title={t.title}
-      action={<MoreLink href={ROUTES.search}>{t.all(total, formatInteger(total))}</MoreLink>}
       revealContent={false}
     >
       <ul
@@ -46,6 +47,9 @@ export async function LatestListings() {
           </li>
         ))}
       </ul>
+      <div data-reveal="" className="mt-6 flex justify-center md:mt-8">
+        <MoreLink href={ROUTES.search}>{t.all(total, formatInteger(total))}</MoreLink>
+      </div>
     </MarketingSection>
   );
 }

@@ -1,8 +1,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-// L1-41: the home page in V2 (SPEC-V2 8.1, DECISIONS 2026-10-19). Two modes,
-// like search.spec.ts:
+// L1-41: the home page in V2 (SPEC-V2 8.1, DECISIONS 2026-10-19), in the
+// direction of the V1 since L1-49 (DECISIONS 2026-10-23). Two modes, like
+// search.spec.ts:
 // - without a database (CI): the hero, the sections of the V1 page and their
 //   anchors, the contact form (answer of /api/contact simulated), the
 //   situations, the menu; neither the latest listings nor the plan cards;
@@ -36,33 +37,53 @@ const ANCHORS = [
 ];
 
 test.describe("accueil", () => {
-  test("hero : « Je vends » vers l'estimateur, « J'achète » vers les annonces", async ({
+  test("hero de la V1 : « Voir ma valorisation » sur le premier écran, puis l'entrée des acquéreurs", async ({
     page,
   }) => {
     const response = await page.goto("/");
     expect(response?.status()).toBe(200);
+    const hero = page.locator("#valoriser");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Leenkey vous donne les clés de votre vente.",
     );
-    const entries = page.getByRole("group", { name: "Vendre ou acheter" });
-    await expect(entries.getByRole("link")).toHaveText(["Je vends", "J'achète"]);
-    await expect(entries.getByRole("link", { name: "Je vends" })).toHaveAttribute(
-      "href",
-      "/estimer",
-    );
-    await expect(entries.getByRole("link", { name: "J'achète" })).toHaveAttribute(
+    await expect(hero.getByText("Ni agence, ni seul · Vendre accompagné")).toBeVisible();
+    const sell = hero.getByRole("link", { name: "Voir ma valorisation" });
+    await expect(sell).toHaveAttribute("href", "/estimer");
+    await expect(hero.getByRole("link", { name: "Je cherche un bien à acheter" })).toHaveAttribute(
       "href",
       "/acheter",
     );
-    // Two equal entries.
-    const [sell, buy] = await Promise.all(
-      ["Je vends", "J'achète"].map((name) => entries.getByRole("link", { name }).boundingBox()),
+    // The way of the sellers on the first screen, at 390 px too.
+    const box = await sell.boundingBox();
+    expect((box?.y ?? Infinity) + (box?.height ?? 0)).toBeLessThan(
+      page.viewportSize()?.height ?? 0,
     );
-    expect(sell?.width).toBe(buy?.width);
-    expect(sell?.height).toBe(buy?.height);
+    await expect(hero.getByRole("listitem")).toContainText([
+      "Forfait fixe · jamais de commission",
+      "Plus de contrôle · vous validez tout",
+      "Accompagné à chaque étape",
+    ]);
     // The V1 page is gone: no invented figure, no V1 menu.
     await expect(page.getByText("vs prix agence")).toHaveCount(0);
     await expect(page.locator(".lk-nav-logo")).toHaveCount(0);
+  });
+
+  test("hero : la carte de la V1 dit que sa valorisation est un exemple", async ({ page }) => {
+    await page.goto("/");
+    const card = page.getByRole("group", { name: "Exemple de valorisation" });
+    await expect(card).toBeVisible();
+    await expect(card.getByText("Exemple", { exact: true })).toBeVisible();
+    await expect(card).toContainText("Maison contemporaine");
+    await expect(card).toContainText("Saint-Michel-sur-Orge, 91240");
+    // The value of the engine (tests/unit/site/home-v1.test.ts), and its range.
+    await expect(card.getByText(/^\d{3}\u202f000\u202f€$/)).toBeVisible();
+    await expect(card).toContainText(
+      /Fourchette\u00a0: \d{3}\u202f000\u202f€ à \d{3}\u202f000\u202f€/,
+    );
+    await expect(card.getByRole("link")).toHaveCount(0);
+    await expect(card.getByRole("button")).toHaveCount(0);
+    // In place of the V1 figure, what the valuation gives.
+    await expect(page.locator("#valoriser").getByText("Rapport PDF")).toBeVisible();
   });
 
   // L1-46: the house of the V1 hero.
@@ -77,7 +98,6 @@ test.describe("accueil", () => {
     await expect
       .poll(() => photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0))
       .toBe(true);
-    await expect(hero.locator("svg.lk-drawing")).toHaveCount(0);
   });
 
   test("les sections de la V1 gardent leurs ancres et leurs textes", async ({ page }) => {
@@ -94,7 +114,27 @@ test.describe("accueil", () => {
       "Parlons-en ensemble.",
       "Prêt à garder les clés de votre vente ?",
     ]);
-    await expect(page.getByText("Étape 1 sur 3")).toBeVisible();
+    // The labels of the V1 above the titles.
+    for (const [anchor, eyebrow] of [
+      ["etape", "Votre projet"],
+      ["comment", "Comment ça marche"],
+      ["fonctionnalites", "Le point de départ"],
+      ["espace-vendeur", "Votre espace Leenkey"],
+      ["comparatif", "Position de Leenkey"],
+      ["tarifs", "Nos formules"],
+      ["faq", "Questions fréquentes"],
+      ["contact", "Une question, un projet ?"],
+    ] as const) {
+      const label = page.locator(`#${anchor}`).getByText(eyebrow, { exact: true });
+      await expect(label).toBeVisible();
+      await expect(label).toHaveCSS("text-transform", "uppercase");
+    }
+    // The three steps of the sale, in order.
+    await expect(page.locator("#comment ol > li").getByRole("heading")).toHaveText([
+      "Estimez",
+      "Préparez",
+      "Signez",
+    ]);
     await expect(page.getByRole("link", { name: "Voir le détail des formules" })).toHaveAttribute(
       "href",
       "/tarifs",
@@ -158,6 +198,55 @@ test.describe("accueil", () => {
       "href",
       "/tarifs",
     );
+  });
+
+  test("comparatif : un tableau à partir de 768 px, une carte par façon de vendre avant", async ({
+    page,
+    isMobile,
+  }) => {
+    await page.goto("/");
+    const section = page.locator("#comparatif");
+    const table = section.getByRole("table");
+    if (isMobile) {
+      await expect(table).toBeHidden();
+      await expect(section.getByRole("heading", { level: 3 })).toHaveText([
+        "Vente seul",
+        "Leenkey",
+        "Agence",
+      ]);
+    } else {
+      await expect(table).toBeVisible();
+      await expect(table.getByRole("columnheader")).toContainText([
+        "Vente seul",
+        "Leenkey",
+        "Agence",
+      ]);
+      await expect(table.getByRole("rowheader")).toHaveText([
+        "Frais de vente",
+        "Accompagnement",
+        "Contrôle de la vente",
+        "Sécurité juridique",
+      ]);
+    }
+    // The check or the cross said in words before each value.
+    await expect(
+      section.getByText("Point fort :", { exact: true }).filter({ visible: true }),
+    ).toHaveCount(8);
+    await expect(
+      section.getByText("Point faible :", { exact: true }).filter({ visible: true }),
+    ).toHaveCount(4);
+  });
+
+  test("questions : la réponse se déplie sous sa question", async ({ page }) => {
+    await page.goto("/");
+    const faq = page.locator("#faq");
+    const question = faq.getByText("Est-ce vraiment gratuit pour commencer ?");
+    const answer = faq.getByText(/Elle inclut l'analyse de votre bien/);
+    await expect(answer).toBeHidden();
+    await question.click();
+    await expect(answer).toBeVisible();
+    await question.click();
+    await expect(answer).toBeHidden();
   });
 
   test("« Où en êtes-vous » : la réponse suit la situation choisie", async ({ page }) => {
@@ -335,6 +424,43 @@ test.describe("accueil", () => {
     expect(await seriousViolations(page)).toEqual([]);
   });
 
+  // The words in the gradient are transparent text over a background: in
+  // print (backgrounds off) and in forced colours, they get a colour back.
+  test("les mots en dégradé gardent une couleur à l'impression et en contraste forcé", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const accent = page.locator("#etape-titre .lk-text-grad");
+    await expect(accent).toHaveText("votre vente ?");
+    expect(await accent.evaluate((el) => getComputedStyle(el).color)).toBe("rgba(0, 0, 0, 0)");
+    for (const media of [
+      { media: "print" },
+      { media: "screen", forcedColors: "active" },
+    ] as const) {
+      await page.emulateMedia(media);
+      const style = await accent.evaluate((el) => {
+        const computed = getComputedStyle(el);
+        return { color: computed.color, image: computed.backgroundImage };
+      });
+      expect(style.image, JSON.stringify(media)).toBe("none");
+      expect(style.color, JSON.stringify(media)).not.toBe("rgba(0, 0, 0, 0)");
+    }
+  });
+
+  test("dernier appel : « Valoriser mon bien gratuitement » vers l'estimateur", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const last = page.locator('section[aria-labelledby="cta-final-titre"]');
+    await expect(last.getByRole("heading", { level: 2 })).toHaveText(
+      "Prêt à garder les clés de votre vente ?",
+    );
+    await expect(
+      last.getByRole("link", { name: "Valoriser mon bien gratuitement" }),
+    ).toHaveAttribute("href", "/estimer");
+    await expect(last).toContainText("Réponse sous 24 h par un conseiller · Aucune carte requise");
+  });
+
   test("sans base : ni derniers biens ni cartes de formules, la page reste entière", async ({
     page,
   }) => {
@@ -371,8 +497,8 @@ test.describe("accueil (base de seed)", () => {
     await expect(plans).toHaveCount(3);
     await expect(plans.getByRole("heading")).toHaveText(["Autonomie", "Accompagné", "Sérénité"]);
     await expect(plans.nth(0)).toContainText("Gratuit");
-    await expect(plans.nth(1)).toContainText("990 €");
-    await expect(plans.nth(2)).toContainText("1 500 €");
+    await expect(plans.nth(1)).toContainText("990\u202f€");
+    await expect(plans.nth(2)).toContainText("1\u202f500\u202f€");
     await expect(plans.nth(1)).toContainText("Forfait fixe · payé à la souscription");
     // In large type at the bottom of the card, as the price cards of the V1 (L1-48).
     const price = plans.nth(1).getByText(/^990\s€$/);

@@ -31,26 +31,45 @@ export const site = {
   home: {
     metaDescription:
       "La plateforme qui accompagne les propriétaires dans la vente de leur bien, sans agence : analyse de valeur, dossier, annonce, négociation, jusqu'à la signature. Forfait fixe et transparent.",
+    // The V1 hero (landing.html of the main branch, DECISIONS 2026-10-23).
     hero: {
+      badge: "Ni agence, ni seul · Vendre accompagné",
       title: "Leenkey vous donne les clés de votre vente.",
       // The highlighted words of the V1 titles (DECISIONS 2026-10-20).
       accent: "votre vente.",
       lead: "Vendez sans agence, accompagné à chaque étape\u00A0— de l'analyse de valeur jusqu'à la signature.",
-      entries: "Vendre ou acheter",
-      sell: "Je vends",
-      buy: "J'achète",
+      action: "Voir ma valorisation",
+      // The entry of the buyers, under the one of the sellers (V2).
+      buy: "Je cherche un bien à acheter",
       points: [
         "Forfait fixe · jamais de commission",
         "Plus de contrôle · vous validez tout",
         "Accompagné à chaque étape",
       ],
+      // The card on the photo: the V1 one, with the value the engine gives
+      // for this house (leenkey/site/valuation-example.ts), said as an example.
+      example: {
+        label: "Exemple de valorisation",
+        sample: "Exemple",
+        title: "Maison contemporaine",
+        place: "Saint-Michel-sur-Orge, 91240",
+        specs: [`120${N}m²`, "4 pièces", "3 chambres"],
+        value: "Ma valeur immobilière",
+        range: (low: string, high: string) => `Fourchette${NBSP}: ${low} à ${high}`,
+        meta: "Analyse gratuite en 2 minutes",
+      },
+      // In place of « + 5,2 % vs prix agence », a figure the V1 did not
+      // source: what the valuation gives, nothing about the figure of the card.
+      fact: { title: "Rapport PDF", text: "Quatre pages, par email" },
     },
     latest: {
+      eyebrow: "En vente sur Leenkey",
       title: "Les derniers biens",
       all: (count: number, formatted: string) =>
         count > 1 ? `Voir les ${formatted} biens` : "Voir le bien",
     },
     stages: {
+      eyebrow: "Votre projet",
       title: "Où en êtes-vous dans votre vente ?",
       accent: "votre vente ?",
       lead: "Choisissez votre situation. Leenkey vous indique par où commencer.",
@@ -91,9 +110,9 @@ export const site = {
       ],
     },
     steps: {
+      eyebrow: "Comment ça marche",
       title: "Trois étapes. Vous gardez les clés du début à la fin.",
       accent: "du début à la fin.",
-      step: (index: number, total: number) => `Étape ${index} sur ${total}`,
       items: [
         {
           title: "Estimez",
@@ -113,6 +132,7 @@ export const site = {
       ],
     },
     features: {
+      eyebrow: "Le point de départ",
       title: "Ce que vous obtenez en quelques minutes.",
       accent: "en quelques minutes.",
       lead: "Tout commence par une analyse sérieuse de votre bien. Gratuite et sans engagement.",
@@ -137,6 +157,7 @@ export const site = {
       action: "Valoriser mon bien gratuitement",
     },
     space: {
+      eyebrow: "Votre espace Leenkey",
       title: "Vous savez toujours quoi faire ensuite.",
       accent: "quoi faire ensuite.",
       lead: "Votre vente se pilote depuis un seul endroit : le dossier, l'annonce, les visites et les offres, avec la prochaine action toujours affichée.",
@@ -199,6 +220,7 @@ export const site = {
       caption: "Aperçu de l'espace vendeur, avec des données d'exemple.",
     },
     comparison: {
+      eyebrow: "Position de Leenkey",
       title: "Bénéficiez d'un support total et gardez votre indépendance.",
       accent: "indépendance.",
       lead: "Pourquoi se lancer seul, sans outils, et finir par se tourner vers une agence en payant des honoraires importants\u00A0— alors qu'une solution intermédiaire existe ?",
@@ -210,6 +232,7 @@ export const site = {
           name: "Vente seul",
           detail: "Aucun intermédiaire",
           values: ["Minimes", "Aucun", "Total", "À votre charge"],
+          good: [true, false, true, false],
         },
         {
           key: "leenkey",
@@ -221,16 +244,22 @@ export const site = {
             `100${N}% à vous`,
             "Notaire coordonné",
           ],
+          good: [true, true, true, true],
         },
         {
           key: "agence",
           name: "Agence",
           detail: "Commission au pourcentage",
           values: [`≈ 15${N}000${N}€`, "Complet", "Délégué à l'agent", "Mandat d'agence"],
+          good: [false, true, false, true],
         },
       ],
+      // The V1 check (green) or cross (grey) before each value, read first.
+      good: `Point fort${NBSP}:`,
+      bad: `Point faible${NBSP}:`,
     },
     plans: {
+      eyebrow: "Nos formules",
       title: "Un forfait fixe. Jamais de commission.",
       accent: "Jamais de commission.",
       lead: "Vous choisissez votre niveau d'accompagnement. Le prix ne dépend jamais de la valeur de votre bien.",
@@ -255,6 +284,7 @@ export const site = {
       all: "Voir le détail des formules",
     },
     faq: {
+      eyebrow: "Questions fréquentes",
       title: "Les trois questions essentielles.",
       accent: "essentielles.",
       items: [
@@ -284,6 +314,7 @@ export const site = {
       all: "Toutes les questions",
     },
     contact: {
+      eyebrow: `Une question, un projet${NBSP}?`,
       title: "Parlons-en ensemble.",
       accent: "ensemble.",
       lead: "Propriétaire, investisseur, partenaire\u00A0— laissez-nous un message. Nous vous répondons personnellement sous 48 h, 7 j/7.",
