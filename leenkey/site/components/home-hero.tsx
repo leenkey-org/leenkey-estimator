@@ -219,9 +219,7 @@ function ExampleCard({ className }: { className?: string }) {
         })}
       </ul>
       <div className="rounded-lk-lg bg-lk-blue-tint px-4 py-3.5">
-        <p className="text-lk-micro font-bold tracking-lk-caps text-lk-blue uppercase">
-          {e.value}
-        </p>
+        <p className="text-lk-micro font-bold tracking-lk-caps text-lk-blue uppercase">{e.value}</p>
         <p className="mt-0.5 text-lk-price font-extrabold text-wide tabular-nums">
           {formatPrice(example.value * 100)}
         </p>
