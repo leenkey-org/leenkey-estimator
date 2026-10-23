@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  ArrowRight,
   Bell,
   CalendarCheck,
   ChevronLeft,
@@ -355,6 +356,12 @@ export default function DesignPage() {
               <Button variant="ghost" muted>
                 {content.buttons.variants.ghostMuted}
               </Button>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              <Button variant="cta" trailingIcon={ArrowRight}>
+                {content.buttons.variants.cta}
+              </Button>
+              <Caption>{content.buttons.ctaCaption}</Caption>
             </div>
             <BlueFlat className="flex flex-wrap items-center gap-4">
               <Button variant="inverse">{content.buttons.variants.inverse}</Button>
@@ -1157,9 +1164,10 @@ export default function DesignPage() {
             <Caption>{content.publicPages.planCaption}</Caption>
             <div className="overflow-hidden rounded-lk-md">
               <MarketingSection
+                look="showcase"
                 tone="navy"
-                align="center"
                 titleAs="h4"
+                eyebrow={content.publicPages.eyebrow}
                 title={content.publicPages.sectionTitle}
                 accent={content.publicPages.sectionAccent}
                 lead={content.publicPages.sectionLead}
@@ -1174,6 +1182,7 @@ export default function DesignPage() {
                         price={plan.price}
                         priceSuffix={plan.free ? undefined : content.publicPages.taxes}
                         priceSize="large"
+                        tone="dark"
                         tagline={plan.tagline}
                         note={plan.note}
                       />

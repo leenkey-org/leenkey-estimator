@@ -32,6 +32,12 @@ export type PlanCardProps = {
    * the head line. A priceNote stays under the name (not used in large).
    */
   priceSize?: "default" | "large";
+  /**
+   * dark: the glass card of the V1 home page on its navy section (#tarifs,
+   * L1-49), white text on white at 4.5 %, a white line at 10 %, 16 px
+   * corners; else the white card.
+   */
+  tone?: "light" | "dark";
   className?: string;
 };
 
@@ -41,7 +47,7 @@ export type PlanCardProps = {
  * « TTC » 11 px (large: the price 36 px at the bottom, « TTC » 12 px);
  * tagline 13 px; checked list (Check 16 px blue, 13 px). The
  * recommended plan has a 2 px blue border and a blue badge over the top edge.
- * No shadow.
+ * No shadow. Dark (home page, L1-49): the V1 glass card on navy.
  */
 export function PlanCard({
   name,
@@ -57,12 +63,19 @@ export function PlanCard({
   action,
   nameAs: Name = "h3",
   priceSize = "default",
+  tone = "light",
   className,
 }: PlanCardProps) {
   const large = priceSize === "large";
+  const dark = tone === "dark";
+  const ink = dark ? "text-white" : "text-lk-ink";
   const suffix = priceSuffix ? (
     <span
-      className={cn("ml-1 font-medium text-lk-ink-3", large ? "text-lk-caption" : "text-lk-micro")}
+      className={cn(
+        "ml-1 font-medium",
+        dark ? "text-white/60" : "text-lk-ink-3",
+        large ? "text-lk-caption" : "text-lk-micro",
+      )}
     >
       {priceSuffix}
     </span>
@@ -70,8 +83,11 @@ export function PlanCard({
   return (
     <article
       className={cn(
-        "relative flex flex-col gap-2.5 rounded-lk-md bg-lk-surface p-4 lg:p-5",
-        badge ? "border-2 border-lk-blue" : "border-[1.5px] border-lk-line",
+        "relative flex flex-col gap-2.5",
+        dark
+          ? "rounded-lk-xl border border-white/10 bg-white/[0.045] px-6 py-7 lg:px-7 lg:py-8"
+          : "rounded-lk-md bg-lk-surface p-4 lg:p-5",
+        !dark && (badge ? "border-2 border-lk-blue" : "border-[1.5px] border-lk-line"),
         className,
       )}
     >
@@ -81,16 +97,22 @@ export function PlanCard({
         </span>
       ) : null}
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <Name className="text-lk-h3 font-semibold text-lk-ink">{name}</Name>
+        <Name className={cn("font-semibold", ink, dark ? "text-lk-h2" : "text-lk-h3")}>{name}</Name>
         {large ? null : (
-          <p className="whitespace-nowrap text-lk-ink">
+          <p className={cn("whitespace-nowrap", ink)}>
             <span className="text-lk-h2 font-bold text-wide tabular-nums">{price}</span>
             {suffix}
           </p>
         )}
       </div>
       {priceNote ? <p className="-mt-1 text-lk-caption text-lk-ink-2">{priceNote}</p> : null}
-      {tagline ? <p className="text-lk-secondary text-pretty text-lk-ink-3">{tagline}</p> : null}
+      {tagline ? (
+        <p
+          className={cn("text-lk-secondary text-pretty", dark ? "text-white/72" : "text-lk-ink-3")}
+        >
+          {tagline}
+        </p>
+      ) : null}
       {featuresIntro ? (
         <p className="mt-1 text-lk-secondary font-semibold text-lk-ink">{featuresIntro}</p>
       ) : null}
@@ -109,12 +131,16 @@ export function PlanCard({
       ) : null}
       {large ? (
         // At the bottom: the prices of cards side by side stay on one line.
-        <div className="mt-auto flex flex-col gap-1 pt-3">
-          <p className="whitespace-nowrap text-lk-ink">
+        <div className={cn("mt-auto flex flex-col pt-3", dark ? "gap-3" : "gap-1")}>
+          <p className={cn("whitespace-nowrap", ink)}>
             <span className="text-lk-display font-bold text-wide tabular-nums">{price}</span>
             {suffix}
           </p>
-          {note ? <p className="text-lk-caption text-lk-ink-2">{note}</p> : null}
+          {note ? (
+            <p className={cn("text-lk-caption", dark ? "text-white/60" : "text-lk-ink-2")}>
+              {note}
+            </p>
+          ) : null}
         </div>
       ) : note ? (
         <p className="mt-auto pt-1 text-lk-caption text-lk-ink-2">{note}</p>

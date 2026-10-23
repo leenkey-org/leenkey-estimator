@@ -30,4 +30,15 @@ describe("PlanCard", () => {
     expect(html.indexOf(props.tagline)).toBeLessThan(html.indexOf(props.price));
     expect(html.indexOf(props.price)).toBeLessThan(html.indexOf(props.note));
   });
+
+  // L1-49: the glass card of the V1 home page on its navy section.
+  it("sombre : la carte de verre de la V1, texte blanc, sans le fond blanc", () => {
+    const html = renderToStaticMarkup(
+      createElement(PlanCard, { ...props, priceSize: "large", tone: "dark" }),
+    );
+    expect(html).toContain("border-white/10");
+    expect(html).toContain("rounded-lk-xl");
+    expect(html).not.toContain("bg-lk-surface");
+    expect(html).not.toContain("text-lk-ink");
+  });
 });

@@ -23,6 +23,14 @@ export const buttonVariants = cva(
       variant: {
         primary:
           "bg-lk-blue text-white not-disabled:hover:bg-lk-blue-hover not-disabled:active:bg-lk-blue-hover",
+        // The main call to action of the home page (L1-49), as in the V1: the
+        // gradient of the brand blue in its blue shadow, rising a little on
+        // hover.
+        cta: [
+          "bg-linear-90 from-lk-blue to-lk-blue-mid text-white shadow-lk-cta",
+          "transition-[color,background-color,border-color,scale,translate,box-shadow]",
+          "not-disabled:hover:-translate-y-0.5 not-disabled:hover:shadow-lk-cta-hover not-disabled:active:translate-y-0 not-disabled:active:shadow-none",
+        ],
         secondary:
           "border-[1.5px] border-lk-blue-line bg-lk-surface text-lk-blue not-disabled:hover:bg-lk-blue-tint not-disabled:active:bg-lk-blue-tint",
         "outline-ink":
@@ -72,6 +80,11 @@ export type ButtonProps = Omit<ComponentProps<"button">, "children"> & {
   muted?: boolean;
   /** Lucide icon on the left, 16 px. */
   icon?: LucideIcon;
+  /**
+   * Lucide icon after the label, 16 px, moving forward on hover: the arrow of
+   * the calls to action of the home page (L1-49).
+   */
+  trailingIcon?: LucideIcon;
   /** Keeps the label, shows a spinning Loader2 and disables the button. */
   loading?: boolean;
   /** Gives the button styles to its only child, a link. */
@@ -84,6 +97,7 @@ export function Button({
   size,
   muted,
   icon: Icon,
+  trailingIcon: TrailingIcon,
   loading = false,
   asChild = false,
   disabled,
@@ -98,7 +112,11 @@ export function Button({
       asChild={asChild}
       disabled={asChild ? undefined : disabled || loading}
       aria-busy={loading || undefined}
-      className={cn(buttonVariants({ variant, size, muted }), className)}
+      className={cn(
+        buttonVariants({ variant, size, muted }),
+        TrailingIcon && "group/button",
+        className,
+      )}
       {...props}
     >
       {loading ? (
@@ -107,6 +125,12 @@ export function Button({
         <Icon aria-hidden="true" />
       ) : null}
       <Slottable>{children}</Slottable>
+      {TrailingIcon ? (
+        <TrailingIcon
+          aria-hidden="true"
+          className="transition-transform duration-220 ease-out-lk group-hover/button:translate-x-0.75"
+        />
+      ) : null}
     </UiButton>
   );
 }

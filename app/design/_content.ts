@@ -238,7 +238,10 @@ export const buttons = {
     danger: "Retirer mon offre",
     inverse: "Voir mon annonce",
     "outline-inverse": "J'achète",
+    cta: "Voir ma valorisation",
   },
+  ctaCaption:
+    "Variante cta avec trailingIcon ArrowRight · appels à l'action de l'accueil seulement, dans la direction de la V1 (L1-49) : dégradé du bleu de marque (4,9:1 sous le texte blanc), ombre bleue, s'élève de 2 px au survol, la flèche avance",
   sizes: { lg: "Grand · 52 px", md: "Moyen · 44 px", sm: "Petit · 40 px" },
   withIcon: "Vendre mon bien",
   disabled: "Désactivé",
@@ -695,7 +698,8 @@ export const publicPages = {
   sectionTitle: "Un forfait fixe. Jamais de commission.",
   sectionAccent: "Jamais de commission.",
   navyCaption:
-    "MarketingSection tone navy, align center · aplat bleu foncé des sections vitrines de l'accueil (L1-47, L1-48) : titre blanc, accent --lk-blue-light (6,9:1), chapeau blanc à 72 % ; PlanCard priceSize large · le prix en 36 px en bas de la carte, au-dessus de la note, aligné d'une carte à l'autre (#tarifs de l'accueil)",
+    "MarketingSection look showcase, tone navy · sections de l'accueil dans la direction de la V1 (L1-47 à L1-49) : surtitre en capitales --lk-blue-light, titre centré 32, 40 puis 48 px, accent en dégradé clair ; PlanCard priceSize large, tone dark · la carte de verre de la V1 (blanc à 4,5 %, filet blanc à 10 %, coins de 16 px), prix en 36 px en bas de la carte, aligné d'une carte à l'autre (#tarifs de l'accueil)",
+  eyebrow: "Nos formules",
   // The section Tarifs of the home page (L1-48): its three plans, price in large type.
   largePlans: [
     {

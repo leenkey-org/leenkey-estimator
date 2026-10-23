@@ -7,12 +7,21 @@ export type MarketingSectionProps = {
   id?: string;
   /**
    * surface: white; stone: the neutral flat of the marketing pages (DESIGN.md
-   * 2.1); navy: the dark flat of the V1 showcase sections (white text, accent
-   * in --lk-blue-light).
+   * 2.1); mist: the light cool flat of the V1 home page (L1-49); navy: the
+   * dark flat of the V1 showcase sections (white text, accent in
+   * --lk-blue-light).
    */
-  tone?: "surface" | "stone" | "navy";
+  tone?: "surface" | "stone" | "mist" | "navy";
   /** start: title on the left, link on its right; center: the V1 showcase sections. */
   align?: "start" | "center";
+  /**
+   * showcase: a section of the home page in the direction of the V1 (L1-49):
+   * centred head, label above the title, larger title with its words in the
+   * blue gradient, more room.
+   */
+  look?: "facade" | "showcase";
+  /** The label above the title in the V1 (« Votre projet »), showcase only. */
+  eyebrow?: string;
   title: string;
   /** The words of the title set in blue (« votre vente ? »), as in the V1 titles. */
   accent?: string;
@@ -32,19 +41,28 @@ export type MarketingSectionProps = {
   className?: string;
 };
 
-const BACKGROUND = { surface: "bg-lk-surface", stone: "bg-lk-stone", navy: "bg-lk-navy" } as const;
+const BACKGROUND = {
+  surface: "bg-lk-surface",
+  stone: "bg-lk-stone",
+  mist: "bg-lk-mist",
+  navy: "bg-lk-navy",
+} as const;
 
 /**
- * Section of a public page (G1, docs/DESIGN.md 11): full width, white, stone
- * or navy, 1200 px container, 48 then 72 px of vertical padding. Its title is
- * an h2 with the H1 role (26 then 40 px, wide, its accent in blue) under the
- * display title of the hero; no label above it (DESIGN.md 13.2). The title
- * and the content rise into place when they enter the screen.
+ * Section of a public page (G1, docs/DESIGN.md 11): full width, white, stone,
+ * mist or navy, 1200 px container, 48 then 72 px of vertical padding. Its
+ * title is an h2 with the H1 role (26 then 40 px, wide, its accent in blue)
+ * under the display title of the hero; no label above it (DESIGN.md 13.2).
+ * Showcase (home page, L1-49): the V1 section head, its label in capitals
+ * above the title, 32, 40 then 48 px, 56 then 96 px of vertical padding. The
+ * title and the content rise into place when they enter the screen.
  */
 export function MarketingSection({
   id,
   tone = "surface",
   align = "start",
+  look = "facade",
+  eyebrow,
   title,
   accent,
   titleAs: Title = "h2",
@@ -56,7 +74,8 @@ export function MarketingSection({
 }: MarketingSectionProps) {
   const titleId = id ? `${id}-titre` : undefined;
   const dark = tone === "navy";
-  const center = align === "center";
+  const showcase = look === "showcase";
+  const center = showcase || align === "center";
   return (
     <section
       id={id}
@@ -69,7 +88,12 @@ export function MarketingSection({
         className,
       )}
     >
-      <div className="mx-auto max-w-lk-page px-5 py-12 md:px-10 lg:py-18">
+      <div
+        className={cn(
+          "mx-auto max-w-lk-page px-5 md:px-10",
+          showcase ? "py-14 md:py-18 lg:py-24" : "py-12 lg:py-18",
+        )}
+      >
         <div
           data-reveal=""
           className={cn(
@@ -81,21 +105,43 @@ export function MarketingSection({
         >
           <div
             className={cn(
-              "flex max-w-lk-heading flex-col gap-3 lg:gap-4",
+              "flex flex-col gap-3 lg:gap-4",
+              showcase ? "max-w-170" : "max-w-lk-heading",
               center && "items-center",
             )}
           >
+            {showcase && eyebrow ? (
+              <p
+                className={cn(
+                  "mb-1 text-lk-eyebrow font-extrabold tracking-[0.14em] uppercase lg:mb-2 lg:text-lk-eyebrow-lg",
+                  dark ? "text-lk-blue-light" : "text-lk-blue",
+                )}
+              >
+                {eyebrow}
+              </p>
+            ) : null}
             <Title
               id={titleId}
               className={cn(
-                "text-lk-h1 font-bold text-wide text-balance lg:text-lk-section-lg",
+                "font-bold text-wide text-balance",
+                showcase
+                  ? "text-lk-h1-lg md:text-lk-section-lg lg:text-lk-showcase"
+                  : "text-lk-h1 lg:text-lk-section-lg",
                 dark ? "text-white" : "text-lk-ink",
               )}
             >
               <Accented
                 text={title}
                 accent={accent}
-                className={dark ? "text-lk-blue-light" : "text-lk-blue"}
+                className={
+                  showcase
+                    ? dark
+                      ? "lk-text-grad-light"
+                      : "lk-text-grad"
+                    : dark
+                      ? "text-lk-blue-light"
+                      : "text-lk-blue"
+                }
               />
             </Title>
             {lead ? (
@@ -115,7 +161,7 @@ export function MarketingSection({
           <div
             data-reveal={revealContent ? "" : undefined}
             data-reveal-delay={revealContent ? "1" : undefined}
-            className="mt-8 lg:mt-12"
+            className={showcase ? "mt-10 lg:mt-14" : "mt-8 lg:mt-12"}
           >
             {children}
           </div>

@@ -55,6 +55,17 @@ describe("palette (DESIGN.md 2.1)", () => {
     ["danger-fg", "danger-bg"],
     ["danger", "danger-bg"],
     ["navy", "blue-tint"],
+    // Home page in the direction of the V1 (L1-49): its labels and texts on
+    // the mist flat, the light blue on the deep navy, the pill « Exemple ».
+    ["blue", "mist"],
+    ["ink", "mist"],
+    ["ink-2", "mist"],
+    ["ink-3", "mist"],
+    ["blue", "blue-line"],
+    ["blue-light", "navy"],
+    ["blue-light", "ink"],
+    // White on the lighter end of the gradients of the calls to action.
+    ["surface", "blue-mid"],
     ...(["a", "b", "c", "d", "e", "f", "g"].map((letter) => [
       `dpe-${letter}-fg`,
       `dpe-${letter}-bg`,
@@ -75,6 +86,12 @@ describe("palette (DESIGN.md 2.1)", () => {
   it.each([
     ["blue", "surface"],
     ["blue", "stone"],
+    // The gradient of the words of a title of the home page (L1-49), at its
+    // lightest on a light flat, at its darkest on navy.
+    ["blue-bright", "surface"],
+    ["blue-bright", "mist"],
+    ["blue-bright", "navy"],
+    ["blue-bright", "ink"],
   ])("the accent of a title, %s on %s, reaches 3:1", (foreground, background) => {
     expect(contrast(foreground, background)).toBeGreaterThanOrEqual(3);
   });
@@ -95,6 +112,10 @@ describe("cn() knows the Façade classes", () => {
     expect(cn("rounded-lk-md", "rounded-br-lk-xs")).toBe("rounded-lk-md rounded-br-lk-xs");
     expect(cn("rounded-br-lk-sm", "rounded-br-lk-xs")).toBe("rounded-br-lk-xs");
     expect(cn("shadow", "shadow-float")).toBe("shadow-float");
+    // L1-49: the radii and shadows of the home page in the direction of the V1.
+    expect(cn("rounded-lk-md", "rounded-lk-xl")).toBe("rounded-lk-xl");
+    expect(cn("shadow-lk-card", "shadow-lk-cta")).toBe("shadow-lk-cta");
+    expect(cn("text-lk-eyebrow", "text-lk-blue")).toBe("text-lk-eyebrow text-lk-blue");
     expect(cn("tabular-nums", "tabular")).toBe("tabular");
     expect(cn("bg-primary", "bg-lk-blue")).toBe("bg-lk-blue");
   });
