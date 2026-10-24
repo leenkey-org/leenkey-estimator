@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-24 · L1-51 · PR #41 · Sous-menu « Qui sommes-nous »
+- Ajouté : « Qui sommes-nous » ouvre « Leenkey et son fondateur » (`/qui-sommes-nous`) et « Investir dans Leenkey » (`/investir`) : dans la barre haute à partir de 1 280 px (survol, clic, Entrée ou Espace ; Échap, clic ailleurs, sortie du focus ou du pointeur referment), dans le menu mobile sous son intitulé. Groupes de liens dans `NavItem` (`items`).
+- Modifié : « Découvrir notre vision » (`/qui-sommes-nous`) mène à la section « La vision » de `/investir` ; le menu mobile ne répète plus « Investir » ; pied de page inchangé.
+- Tests : unitaires (groupe, page courante, chaque page une fois dans le menu mobile) ; E2E (survol, clic, clavier, axe panneau ouvert, page courante, menu mobile, lien vers la vision).
+
 ### 2026-10-24 · L1-22 · PR #40 · Notifications
 - Ajouté : notifications créées par la base (déclencheurs sur les messages et les annonces, fonction `notification_add` réservée au rôle de service, `notify()` pour les webhooks et les crons) : « Nouveau message » à l'autre partie (extrait de 140 caractères), « Une annonce attend votre relecture » à l'équipe, « Votre annonce est en ligne » et « Votre annonce est à corriger » au vendeur ; ouvrir une conversation marque lues ses notifications.
 - Ajouté : cloche en temps réel (vendeur, acquéreur, back office) et son panneau (DESIGN 10.7) : filtres de l'espace, groupes « Aujourd'hui », « Cette semaine », « Plus ancien », `NotificationItem`, « Tout marquer comme lu », chargement, erreur, vide ; `FilterPillButtons`.

@@ -166,6 +166,16 @@ describe("TopNav", () => {
     ]);
   });
 
+  it("« Qui sommes-nous » opens the company and its founder, then the investors (L1-51)", () => {
+    const about = TOP_NAV_LINKS.find((link) => link.label === "Qui sommes-nous");
+    expect(about?.items?.map(({ href, label }) => ({ href, label }))).toEqual([
+      { href: "/qui-sommes-nous", label: "Leenkey et son fondateur" },
+      { href: "/investir", label: "Investir dans Leenkey" },
+    ]);
+    // The only group of the bar.
+    expect(TOP_NAV_LINKS.filter((link) => link.items)).toHaveLength(1);
+  });
+
   it("pages of the site: in the footer, and in the mobile menu after the TopNav", () => {
     expect(SITE_LINKS.map((link) => link.label)).toEqual([
       "Concept",
@@ -174,6 +184,7 @@ describe("TopNav", () => {
       "Investir",
       "Qui sommes-nous",
     ]);
+    // /investir under « Qui sommes-nous », not again after the TopNav.
     expect(MENU_LINKS.map((link) => link.label)).toEqual([
       "Acheter",
       "Vendre",
@@ -183,15 +194,17 @@ describe("TopNav", () => {
       "Contact",
       "Concept",
       "FAQ",
-      "Investir",
     ]);
-    // Each page once.
-    expect(new Set(MENU_LINKS.map((link) => link.href)).size).toBe(MENU_LINKS.length);
+    // Each page once, those of the group included; every page of the footer.
+    const pages = MENU_LINKS.flatMap((link) => link.items ?? [link]).map((link) => link.href);
+    expect(new Set(pages).size).toBe(pages.length);
+    for (const link of SITE_LINKS) expect(pages).toContain(link.href);
   });
 
   it("never says « estimer » nor « estimation » (CLAUDE.md section 16)", () => {
     const labels = [
       ...TOP_NAV_LINKS,
+      ...TOP_NAV_LINKS.flatMap((link) => link.items ?? []),
       ...ADMIN_NAV_ITEMS,
       ...SPACES.flatMap((space) => bottomTabs(space)),
     ].map((item) => item.label);
@@ -285,6 +298,15 @@ describe("current item: longest prefix of the path", () => {
     expect(currentHref("/vendeur", TOP_NAV_LINKS)).toBeNull();
     expect(currentHref("/annonces", TOP_NAV_LINKS)).toBeNull();
   });
+
+  it("TopNav: « Qui sommes-nous » on its two pages, each of its links on its own", () => {
+    const about = TOP_NAV_LINKS.find((link) => link.items);
+    expect(currentHref("/qui-sommes-nous", TOP_NAV_LINKS)).toBe(about?.href);
+    expect(currentHref("/investir", TOP_NAV_LINKS)).toBe(about?.href);
+    expect(currentHref("/qui-sommes-nous", about?.items ?? [])).toBe("/qui-sommes-nous");
+    expect(currentHref("/investir", about?.items ?? [])).toBe("/investir");
+    expect(currentHref("/concept", TOP_NAV_LINKS)).toBeNull();
+  });
 });
 
 describe("path helpers", () => {
@@ -369,7 +391,7 @@ describe("every link of the navigation leads to a page", () => {
   );
 
   it.each([
-    ...TOP_NAV_LINKS.map((link) => link.href),
+    ...TOP_NAV_LINKS.flatMap((link) => link.items ?? [link]).map((link) => link.href),
     ...SITE_LINKS.map((link) => link.href),
     ...ADMIN_NAV_ITEMS.map((item) => item.href),
     ...SPACES.flatMap((space) => bottomTabs(space).map((tab) => tab.href)),

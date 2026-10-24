@@ -479,7 +479,7 @@ export const emptyStates = {
 // L1-10: navigation shells, with a forced current item (activeHref).
 export const navigation = {
   topSignedInCaption:
-    "TopNav connectée, à partir de 768 px : action principale, cloche, favoris et avatar du menu du compte ; lien courant en bleu",
+    "TopNav connectée, à partir de 768 px : action principale, cloche, favoris et avatar du menu du compte ; lien courant en bleu ; à partir de 1 280 px, « Qui sommes-nous » ouvre ses deux pages (survol, clic ou clavier)",
   topSignedOutCaption:
     "TopNav sans session : « Mon compte » mène à la connexion, qui revient ensuite à la page",
   bottomCaptions: {

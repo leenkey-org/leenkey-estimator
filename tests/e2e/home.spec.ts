@@ -370,12 +370,22 @@ test.describe("accueil", () => {
       "Vendre",
       "Tarifs",
       "Valoriser mon bien",
-      "Qui sommes-nous",
+      "Leenkey et son fondateur",
+      "Investir dans Leenkey",
       "Contact",
       "Concept",
       "FAQ",
-      "Investir",
     ]);
+    // The two pages of « Qui sommes-nous » under its label (L1-51).
+    const about = menu.getByRole("list", { name: "Qui sommes-nous" });
+    await expect(about.getByRole("link", { name: "Leenkey et son fondateur" })).toHaveAttribute(
+      "href",
+      "/qui-sommes-nous",
+    );
+    await expect(about.getByRole("link", { name: "Investir dans Leenkey" })).toHaveAttribute(
+      "href",
+      "/investir",
+    );
     await expect(menu.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
     await expect(menu.getByRole("link", { name: "Vendre", exact: true })).toHaveAttribute(
       "aria-current",
@@ -409,9 +419,10 @@ test.describe("accueil", () => {
       "Vendre",
       "Tarifs",
       "Valoriser mon bien",
-      "Qui sommes-nous",
       "Contact",
     ]);
+    // Its two pages open from a button (L1-51).
+    await expect(nav.getByRole("button", { name: "Qui sommes-nous" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Vendre", exact: true })).toHaveAttribute(
       "aria-current",
       "page",

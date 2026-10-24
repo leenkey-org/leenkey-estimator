@@ -33,6 +33,11 @@ export type NavItem = {
   count?: number;
   /** TopNav: shown from 1024 px (lg) or 1280 px (xl) only, where the bar has room for it. */
   from?: "lg" | "xl";
+  /**
+   * A group: the TopNav opens these links under its label instead of leading
+   * to `href` (the first of them), the mobile menu lists them under it.
+   */
+  items?: readonly NavItem[];
 };
 
 /** The path alone: no query, no hash, no trailing slash. */

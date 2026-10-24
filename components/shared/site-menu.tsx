@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
@@ -41,8 +41,9 @@ const rowClass = cn(
  * Mobile header of the public pages (G1, docs/DESIGN.md 11): below 768 px,
  * sticky, 60 px, white with a bottom border, the logo and « Menu ». The menu
  * is a Radix dialog over the whole screen, opened from the top in 220 ms (no
- * movement with reduced motion): the links of the site, then « Vendre mon
- * bien » and the account. A link followed closes it. From 768 px, the TopNav.
+ * movement with reduced motion): the links of the site, those of a group
+ * under its label (« Qui sommes-nous », L1-51), then « Vendre mon bien » and
+ * the account. A link followed closes it. From 768 px, the TopNav.
  */
 export function SiteMenu({
   homeHref,
@@ -57,6 +58,20 @@ export function SiteMenu({
   const pathname = usePathname();
   const current = currentHref(pathname, links);
   const close = () => setOpen(false);
+  const id = useId();
+
+  const row = (link: NavItem, active: boolean) => (
+    <li key={link.href}>
+      <Link
+        href={link.href}
+        aria-current={active ? "page" : undefined}
+        onClick={close}
+        className={cn(rowClass, active ? "text-lk-blue" : "text-lk-ink")}
+      >
+        {link.label}
+      </Link>
+    </li>
+  );
 
   return (
     <header
@@ -103,17 +118,20 @@ export function SiteMenu({
             <nav aria-label={label} className="px-5 pt-2">
               <ul>
                 {links.map((link) => {
-                  const active = link.href === current;
+                  if (!link.items) return row(link, link.href === current);
+                  const here = link.href === current ? currentHref(pathname, link.items) : null;
+                  const labelId = `${id}-${link.href}`;
                   return (
                     <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        aria-current={active ? "page" : undefined}
-                        onClick={close}
-                        className={cn(rowClass, active ? "text-lk-blue" : "text-lk-ink")}
+                      <p
+                        id={labelId}
+                        className="pt-5 pb-1 text-lk-label font-semibold text-lk-ink-3"
                       >
                         {link.label}
-                      </Link>
+                      </p>
+                      <ul aria-labelledby={labelId} className="ml-4">
+                        {link.items.map((item) => row(item, item.href === here))}
+                      </ul>
                     </li>
                   );
                 })}

@@ -40,12 +40,17 @@ async function expectFooter(page: Page) {
   await expect(footer.getByRole("button", { name: "Gérer mes cookies" })).toBeVisible();
 }
 
-/** The links of the TopNav at each width (DESIGN.md 10.6, DECISIONS 2026-10-20). */
+/**
+ * The links of the TopNav at each width (DESIGN.md 10.6, DECISIONS 2026-10-20),
+ * and from 1280 px the button of « Qui sommes-nous » between the last two
+ * (L1-51, DECISIONS 2026-10-24).
+ */
 const TOP_NAV = {
   768: ["Acheter", "Vendre", "Valoriser mon bien"],
   1024: ["Acheter", "Vendre", "Tarifs", "Valoriser mon bien", "Contact"],
-  1280: ["Acheter", "Vendre", "Tarifs", "Valoriser mon bien", "Qui sommes-nous", "Contact"],
+  1280: ["Acheter", "Vendre", "Tarifs", "Valoriser mon bien", "Contact"],
 } as const;
+const ABOUT = "Qui sommes-nous";
 
 /**
  * The TopNav at 768 px, the narrowest (criterion of L1-10: the links end
@@ -58,6 +63,9 @@ async function expectTopNavFits(page: Page) {
     // Measured with Archivo and its width axis, not with the fallback font.
     await page.evaluate(() => document.fonts.ready);
     await expect(mainNav(page).getByRole("link"), `${width}`).toHaveText([...TOP_NAV[width]]);
+    const about = mainNav(page).getByRole("button", { name: ABOUT });
+    if (width === 1280) await expect(about).toBeVisible();
+    else await expect(about, `${width}`).toBeHidden();
     const lastLink = await mainNav(page).getByRole("link").last().boundingBox();
     const cta = await page.getByRole("link", { name: "Vendre mon bien" }).boundingBox();
     const room = width === 768 ? 0 : 24;
@@ -153,9 +161,9 @@ test.describe("visiteur sans session", () => {
       "href",
       "/estimer",
     );
-    await expect(nav.getByRole("link", { name: "Qui sommes-nous" })).toHaveAttribute(
-      "href",
-      "/qui-sommes-nous",
+    await expect(nav.getByRole("button", { name: ABOUT })).toHaveAttribute(
+      "aria-expanded",
+      "false",
     );
     await expect(nav.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
     await expect(page.getByRole("link", { name: "Leenkey", exact: true })).toHaveAttribute(
@@ -190,6 +198,64 @@ test.describe("visiteur sans session", () => {
     test.skip(isMobile, "barre haute à partir de 768 px");
     await page.goto("/acheter");
     await expectTopNavFits(page);
+  });
+
+  test("« Qui sommes-nous » ouvre ses deux pages : survol, clic, clavier (L1-51)", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "barre haute à partir de 768 px");
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/");
+    const nav = mainNav(page);
+    const about = nav.getByRole("button", { name: ABOUT });
+    const company = nav.getByRole("link", { name: "Leenkey et son fondateur" });
+    const invest = nav.getByRole("link", { name: "Investir dans Leenkey" });
+    await expect(about).toHaveAttribute("aria-expanded", "false");
+    await expect(company).toBeHidden();
+    // The pointer resting on it opens it; the click that follows keeps it
+    // open (it meant to open it), the next one closes it.
+    await about.hover();
+    await expect(about).toHaveAttribute("aria-expanded", "true");
+    await expect(company).toHaveAttribute("href", "/qui-sommes-nous");
+    await expect(invest).toHaveAttribute("href", "/investir");
+    await about.click();
+    await expect(about).toHaveAttribute("aria-expanded", "true");
+    await about.click();
+    await expect(about).toHaveAttribute("aria-expanded", "false");
+    // Open again, the pointer leaving the group closes it.
+    await about.click();
+    await expect(company).toBeVisible();
+    await page.mouse.move(640, 500);
+    await expect(about).toHaveAttribute("aria-expanded", "false");
+    // Keyboard: Enter opens, Tab goes through its links, Escape closes and
+    // gives the focus back; the focus leaving the group closes it.
+    await about.focus();
+    await page.keyboard.press("Enter");
+    await expect(about).toHaveAttribute("aria-expanded", "true");
+    await page.keyboard.press("Tab");
+    await expect(company).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(invest).toBeFocused();
+    expect(await seriousViolations(page)).toEqual([]);
+    await page.keyboard.press("Escape");
+    await expect(about).toHaveAttribute("aria-expanded", "false");
+    await expect(about).toBeFocused();
+    await page.keyboard.press("Enter");
+    for (let i = 0; i < 3; i += 1) await page.keyboard.press("Tab");
+    await expect(nav.getByRole("link", { name: "Contact" })).toBeFocused();
+    await expect(about).toHaveAttribute("aria-expanded", "false");
+    // A link followed: its page, closed, the group current and the link of the page too.
+    await about.click();
+    await invest.click();
+    await expect(page).toHaveURL("/investir");
+    await expect(about).toHaveAttribute("aria-expanded", "false");
+    await about.click();
+    await expect(invest).toHaveAttribute("aria-current", "page");
+    await expect(company).not.toHaveAttribute("aria-current", /.+/);
+    // A click elsewhere closes it.
+    await page.mouse.click(850, 36);
+    await expect(about).toHaveAttribute("aria-expanded", "false");
   });
 
   test("un onglet d'espace connecté mène à la connexion, qui y ramènera", async ({

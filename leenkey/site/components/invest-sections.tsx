@@ -40,6 +40,8 @@ import { StagePill, type Stage } from "./stage-pill";
 const t = fr.site.invest;
 /** Anchor of the form, the one of the V1 page (links already shared). */
 const FORM = "formulaire";
+/** The vision, where « Découvrir notre vision » of /qui-sommes-nous leads (L1-51). */
+export const VISION = "vision";
 const MOTIFS: readonly ContactMotif[] = ["Investisseur", "Vendeur", "Partenaire", "Autre"];
 
 /** The icons of the V1 cards, in the order of their texts (no house, DESIGN.md 1). */
@@ -166,7 +168,7 @@ export function VisionSection() {
   const v = t.vision;
   return (
     <MarketingSection
-      id="vision"
+      id={VISION}
       look="showcase"
       align="start"
       eyebrow={v.eyebrow}
