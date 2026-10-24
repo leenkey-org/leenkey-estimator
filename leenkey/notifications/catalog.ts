@@ -57,8 +57,14 @@ const CATALOG: Record<string, Entry> = {
     tone: "stone",
     filters: [],
     title: () => t.listingPending.title,
-    detail: (data) =>
-      t.listingPending.detail([text(data.title), text(data.reference), text(data.city)]),
+    detail: (data) => {
+      const title = text(data.title);
+      const city = text(data.city);
+      // The town once: the titles often carry it already (« … · Épinay-sur-Orge »).
+      const place =
+        city && !title?.toLocaleLowerCase("fr-FR").includes(city.toLocaleLowerCase("fr-FR"));
+      return t.listingPending.detail([title, text(data.reference), place ? city : null]);
+    },
   },
   "listing.published": {
     icon: CircleCheck,

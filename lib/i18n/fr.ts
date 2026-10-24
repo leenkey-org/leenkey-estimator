@@ -762,7 +762,7 @@ export const fr = {
       title: "Mon compte",
       comingTitle: "Vos réglages arrivent",
       comingText:
-        "Nous préparons l'écran de vos informations personnelles, de votre mot de passe et de vos notifications.",
+        "Nous préparons l'écran de vos informations personnelles et de votre mot de passe.",
     },
     // « Dossier » tab (L1-14): the page of the property, or the list of them.
     sellerFile: {

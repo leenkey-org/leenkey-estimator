@@ -143,6 +143,19 @@ describe("wording of the notifications (from type and data)", () => {
       title: t.listingPending.title,
       detail: "Maison 5 pièces · LK-0042 · Savigny-sur-Orge",
     });
+    // The town once, when the title carries it already.
+    expect(
+      describeNotification(
+        view({
+          type: "listing.pending",
+          data: {
+            title: "Appartement 3 pièces · Épinay-sur-Orge",
+            reference: "LK-0018",
+            city: "Épinay-sur-Orge",
+          },
+        }),
+      ).detail,
+    ).toBe("Appartement 3 pièces · Épinay-sur-Orge · LK-0018");
     expect(
       describeNotification(view({ type: "listing.published", data: { title: "Maison" } })),
     ).toMatchObject({ title: t.listingPublished.title, tone: "success" });

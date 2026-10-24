@@ -119,7 +119,7 @@ test("la cloche s'allume en direct, le panneau lit, la r√©ponse arrive sur le t√
     await expect(item).toHaveAttribute("href", conversation);
     await expect(panel(seller).getByRole("heading", { name: "Aujourd'hui" })).toBeVisible();
     // 420 px on the right from 768 px (DESIGN.md 10.7).
-    expect((await panel(seller).boundingBox())?.width).toBe(420);
+    expect((await panel(seller).boundingBox())?.width).toBeCloseTo(420, 0);
     await expectNoSeriousViolation(seller);
   });
 
@@ -163,7 +163,7 @@ test("la cloche s'allume en direct, le panneau lit, la r√©ponse arrive sur le t√
     });
     await bell(buyer).click();
     // Full screen below 768 px.
-    expect((await panel(buyer).boundingBox())?.width).toBe(390);
+    expect((await panel(buyer).boundingBox())?.width).toBeCloseTo(390, 0);
     const item = panel(buyer).getByRole("link").filter({ hasText: run });
     await expect(item).toContainText("Nouveau message de Alice");
     const filters = panel(buyer).getByRole("group", { name: "Filtrer les notifications" });

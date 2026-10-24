@@ -64,7 +64,7 @@ test.describe("catalogue /design", () => {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    const section = page.locator("#notifications");
+    const section = page.locator('section[aria-labelledby="notifications"]');
     await section.getByRole("button", { name: "Notifications", exact: true }).first().click();
     const panel = page.getByRole("dialog", { name: "Notifications" });
     await expect(panel.getByRole("heading", { name: "Aucune notification" })).toBeVisible();
