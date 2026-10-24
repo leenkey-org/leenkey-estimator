@@ -171,22 +171,11 @@ test("le bien d'un autre vendeur ou une adresse inconnue : 404", async ({ page }
   expect((await page.goto("/vendeur/biens/pas-un-id"))?.status()).toBe(404);
 });
 
-test("« Dossier » et « Compléter mon annonce » mènent aux biens du vendeur", async ({
-  page,
-  isMobile,
-}) => {
+test("« Dossier » mène aux biens du vendeur", async ({ page }) => {
   await signIn(page, "seller_a", "/vendeur/dossier");
-  // Several properties: the list, each one to its page.
+  // Several properties: the list, each one to its page. « Compléter mon
+  // annonce » of the empty panel leads here too: tests/e2e/design.spec.ts
+  // (the accounts of the seed have notifications since L1-22).
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dossier de vente");
   await expect(page.locator(`a[href="${sheet(1)}"]`)).toBeVisible();
-
-  await page.goto("/vendeur");
-  const bell = isMobile
-    ? page.getByRole("main").getByRole("button", { name: "Notifications" })
-    : page.getByRole("banner").getByRole("button", { name: "Notifications" });
-  await bell.click();
-  const panel = page.getByRole("dialog", { name: "Notifications" });
-  await panel.getByRole("link", { name: "Compléter mon annonce" }).click();
-  await expect(panel).toBeHidden();
-  await expect(page).toHaveURL("/vendeur/dossier");
 });

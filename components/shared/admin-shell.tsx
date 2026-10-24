@@ -18,6 +18,8 @@ export type AdminShellProps = {
   /** Mobile title of a page that no item covers. */
   fallbackTitle: string;
   account: Omit<AccountMenuProps, "variant" | "className">;
+  /** The NotificationBell of the sidebar (beside the logo) and of the mobile header. */
+  notifications?: { sidebar: ReactNode; header: ReactNode };
   /** Under the content, beside the sidebar (SiteFooter). */
   footer?: ReactNode;
   children: ReactNode;
@@ -37,6 +39,7 @@ export function AdminShell({
   tabs,
   fallbackTitle,
   account,
+  notifications,
   footer,
   children,
   className,
@@ -54,10 +57,16 @@ export function AdminShell({
         homeHref={homeHref}
         items={items}
         account={account}
+        notifications={notifications?.sidebar}
         className="hidden md:sticky md:top-0 md:flex md:h-dvh"
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <AdminMobileHeader items={items} fallbackTitle={fallbackTitle} account={account} />
+        <AdminMobileHeader
+          items={items}
+          fallbackTitle={fallbackTitle}
+          account={account}
+          notifications={notifications?.header}
+        />
         <main className="flex-1 px-5 pt-5 pb-8 md:px-8 md:py-7">{children}</main>
         {footer}
       </div>

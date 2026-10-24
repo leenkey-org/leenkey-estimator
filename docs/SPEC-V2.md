@@ -1355,6 +1355,8 @@ Fin de parcours : statut « Vendu », `SaleRecap` (prix de vente, durée de comm
 
 Fonction unique `notify(profileId, type, payload)` dans `core/notifications/`. Elle crée la ligne `notifications` et, si le canal email est actif pour ce type et que la préférence de l'utilisateur l'autorise, programme l'email.
 
+> **Mise en œuvre (L1-22, `DECISIONS.md` 2026-10-24).** `notify()` est la fonction SQL `notification_add` (rôle de service seulement) : la base l'appelle elle-même pour les événements qu'elle tient (déclencheurs sur `messages` et `listings`), les webhooks et les crons par `core/notifications/notify.ts`. Une ligne garde les faits de l'événement (`data`) ; son libellé est écrit depuis son type (`lib/i18n/fr.ts`). L'email attend dans la table (`email_after`) et part avec `/api/cron/send-notification-emails`, regroupé ; la préférence est lue au moment de l'envoi. Types en place : `message.new`, `listing.pending`, `listing.published`, `listing.rejected` ; les autres arrivent avec leurs événements.
+
 | Type | In-app | Email | Regroupement |
 |---|---|---|---|
 | `message.new` | oui | oui | Un email maximum par conversation toutes les 15 min ; si l'utilisateur a lu entre-temps, pas d'email |
@@ -1898,9 +1900,9 @@ Gabarit commun (`docs/DESIGN.md` 14) : fond `#F4F4F1`, carte blanche 560 px rayo
 | Message du conseiller | `advisor.message` | Aperçu, lien |
 | Offre retirée | `offer.withdrawn` | Date et heure du retrait |
 | Alertes | cron | Digest de biens |
-| Admin : annonce à valider, dossier créé | admin | Lien back office |
+| Admin : annonce à valider, dossier créé | admin | Lien back office (plusieurs annonces en moins de 20 minutes : un seul email « N annonces à valider », L1-22) |
 
-Aperçu de tous les emails : `npm run email:dev`.
+Aperçu de tous les emails : `/design/emails` (local et préprod, L1-22 ; au lieu de `npm run email:dev`, sans dépendance de plus).
 
 ---
 

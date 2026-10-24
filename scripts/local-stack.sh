@@ -10,6 +10,7 @@
 #   up    starts the stack, applies the migrations and the seed (keys and seed
 #         password generated in .local-stack/, never committed)
 #   env   prints the variables to export before building the app for port 3200
+#         (CRON_SECRET and the service key included, for the routes /api/cron/*)
 #   down  removes the containers
 # Ports: gateway 54331, Mailpit 54328 (UI and API), Postgres 54326, on 127.0.0.1
 # (and on the docker host address for the containers), never on the network.
@@ -40,6 +41,7 @@ case "${1:-}" in
     [ -f $DIR/jwt_secret ] || openssl rand -hex 32 > $DIR/jwt_secret
     [ -f $DIR/seed_password ] || openssl rand -hex 12 > $DIR/seed_password
     [ -f $DIR/realtime_secret ] || openssl rand -hex 32 > $DIR/realtime_secret
+    [ -f $DIR/cron_secret ] || openssl rand -hex 32 > $DIR/cron_secret
     jwt anon > $DIR/anon_key
     docker rm -f $CONTAINERS >/dev/null 2>&1 || true
 
@@ -131,6 +133,8 @@ case "${1:-}" in
     # Addresses from core/geo/address-fixtures.ts: the tests know them.
     echo "export GEOCODER=fixtures"
     echo "export SEED_PASSWORD=$(cat $DIR/seed_password) MAILPIT_URL=http://127.0.0.1:$MAIL_UI BASE_URL=$APP_URL"
+    # The jobs of /api/cron/* (L1-22): their secret, and the service key of the stack.
+    echo "export CRON_SECRET=$(cat $DIR/cron_secret 2>/dev/null) SUPABASE_SERVICE_ROLE_KEY=$(jwt service_role)"
     ;;
   down)
     docker rm -f $CONTAINERS >/dev/null 2>&1 || true

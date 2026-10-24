@@ -20,6 +20,7 @@ const t = fr.messaging;
 export function InboxPane({
   result,
   roles,
+  profileId,
   currentId = null,
   titleAs: Title,
   now,
@@ -27,6 +28,8 @@ export function InboxPane({
 }: {
   result: QueryResult<ConversationSummary[]>;
   roles: readonly string[];
+  /** The account the page is rendered for: its notifications. */
+  profileId: string;
   currentId?: string | null;
   /** h1 on /messages, h2 next to an open conversation. */
   titleAs: "h1" | "h2";
@@ -44,7 +47,9 @@ export function InboxPane({
         <Title className="min-w-0 text-lk-h1 font-bold text-wide text-lk-ink lg:text-lk-h2-lg">
           {t.title}
         </Title>
-        {Title === "h1" ? <SpaceNotificationBell roles={roles} className="md:hidden" /> : null}
+        {Title === "h1" ? (
+          <SpaceNotificationBell roles={roles} profileId={profileId} className="md:hidden" />
+        ) : null}
       </div>
       <nav aria-label={t.list.label} className="mt-6 lg:mt-5">
         {!result.ok ? (

@@ -4,6 +4,7 @@ import { FacadeRoot } from "@/components/shared/facade-root";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { requireAdmin } from "@/core/auth/session";
 import { signOut } from "@/leenkey/auth/actions";
+import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { accountMenu, ADMIN_NAV_ITEMS, bottomTabs, ROUTES } from "@/leenkey/navigation/config";
 import { fr } from "@/lib/i18n/fr";
 
@@ -27,6 +28,14 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           signOut,
           name: profile.firstName,
           role: fr.nav.admin.role,
+        }}
+        notifications={{
+          sidebar: (
+            <SpaceNotificationBell roles={profile.roles} profileId={profile.id} tone="dark" />
+          ),
+          header: (
+            <SpaceNotificationBell roles={profile.roles} profileId={profile.id} tone="dark" />
+          ),
         }}
         footer={<SiteFooter />}
       >

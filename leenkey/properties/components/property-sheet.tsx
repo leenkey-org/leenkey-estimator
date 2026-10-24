@@ -91,9 +91,12 @@ function StatusNotice({ property }: { property: SellerProperty }) {
 export function PropertySheetHeader({
   property,
   roles,
+  profileId,
 }: {
   property: SellerProperty;
   roles: readonly string[];
+  /** The account the page is rendered for: its notifications. */
+  profileId: string;
 }) {
   const { address, listing } = property;
   const figures = sheetFigures(property);
@@ -117,7 +120,7 @@ export function PropertySheetHeader({
           </p>
           <StatusBadge status={property.listingStatus ?? "draft"} className="mt-1 self-start" />
         </div>
-        <SpaceNotificationBell roles={roles} className="md:hidden" />
+        <SpaceNotificationBell roles={roles} profileId={profileId} className="md:hidden" />
       </div>
       {figures.length > 0 ? <KeyFigures items={figures} /> : null}
       <StatusNotice property={property} />

@@ -27,6 +27,7 @@ import {
   type Space,
 } from "@/leenkey/navigation/config";
 import { fr } from "@/lib/i18n/fr";
+import { adminListingsHref } from "@/lib/validations/admin";
 
 // L1-10: navigation shells (docs/DESIGN.md 10.6, DECISIONS 2026-10-17).
 
@@ -305,17 +306,25 @@ describe("path helpers", () => {
 });
 
 describe("bell and account menu", () => {
-  it("nothing unread before the notifications (L1-22), text by space", () => {
+  it("the empty panel speaks to its space, the gear leads to the preferences (L1-22)", () => {
     expect(notificationBell("seller")).toEqual({
-      count: 0,
       emptyText: fr.nav.notifications.emptySeller,
       // « Compléter mon annonce » (DESIGN.md 10.7, L1-14): the « Dossier » tab.
       emptyAction: { href: "/vendeur/dossier", label: "Compléter mon annonce" },
-      settingsHref: "/compte",
+      settingsHref: "/compte/notifications",
     });
     expect(notificationBell("buyer").emptyAction).toBeUndefined();
     expect(notificationBell("buyer").emptyText).toBe(fr.nav.notifications.emptyBuyer);
-    expect(notificationBell("admin").emptyText).toBe(fr.nav.notifications.emptyBuyer);
+    expect(notificationBell("admin")).toEqual({
+      emptyText: fr.nav.notifications.emptyAdmin,
+      emptyAction: {
+        href: "/admin/annonces?statut=a-valider",
+        label: "Voir les annonces à valider",
+      },
+      settingsHref: "/compte/notifications",
+    });
+    // The same address as the filter of the back office.
+    expect(ROUTES.adminListingsToReview).toBe(adminListingsHref({ status: "pending" }));
   });
 
   it("the avatar shows the capital initial of the first name", () => {

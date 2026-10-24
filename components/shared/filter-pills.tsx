@@ -57,3 +57,57 @@ export function FilterPills({
     </nav>
   );
 }
+
+export type FilterPillButton<K extends string = string> = { key: K; label: string };
+
+/**
+ * The same pills as buttons, for a filter of the page that leaves the address
+ * alone (the notifications panel, DESIGN.md 10.7): a group of toggle buttons,
+ * the active one aria-pressed.
+ */
+export function FilterPillButtons<K extends string>({
+  label,
+  items,
+  active,
+  onSelect,
+  className,
+}: {
+  label: string;
+  items: readonly FilterPillButton<K>[];
+  active: K;
+  onSelect: (key: K) => void;
+  className?: string;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className={cn("-my-1.25 overflow-x-auto py-1.25", className)}
+    >
+      <ul className="flex w-max gap-2">
+        {items.map((item) => {
+          const current = item.key === active;
+          return (
+            <li key={item.key}>
+              <button
+                type="button"
+                aria-pressed={current}
+                onClick={() => onSelect(item.key)}
+                className={cn(
+                  "relative inline-flex h-8.5 items-center whitespace-nowrap rounded-lk-sm px-3.5 text-lk-caption",
+                  "after:absolute after:-inset-y-1.25 after:inset-x-0",
+                  "transition-colors duration-140 ease-out-lk",
+                  current
+                    ? "bg-lk-navy font-semibold text-white"
+                    : "border-[1.5px] border-lk-line bg-lk-surface font-medium text-lk-ink hover:bg-lk-stone-2",
+                )}
+              >
+                {item.label}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}

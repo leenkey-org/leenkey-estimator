@@ -5,6 +5,8 @@ import {
   NotificationBell,
   type NotificationBellProps,
 } from "@/components/shared/notification-bell";
+import { useNotifications } from "@/core/notifications/store";
+import { NotificationPanel } from "@/leenkey/notifications/components/notification-panel";
 import { bottomTabs, notificationBell } from "../config";
 import { useSpace } from "./space-context";
 
@@ -14,14 +16,34 @@ export function SpaceBottomNav({ roles, label }: { roles: readonly string[]; lab
 }
 
 /**
- * Bell with the empty-panel sentence of the current space (DESIGN.md 10.7).
- * None in the back office yet (DECISIONS 2026-10-17, with L1-22).
+ * Bell of the account (DESIGN.md 10.7, L1-22): its unread count in real time,
+ * the panel of its notifications with the filters and the empty state of the
+ * current space, the back office included.
  */
 export function SpaceNotificationBell({
   roles,
+  profileId,
   ...props
-}: { roles: readonly string[] } & Pick<NotificationBellProps, "size" | "tone" | "className">) {
+}: {
+  roles: readonly string[];
+  /** The account the page is rendered for. */
+  profileId: string;
+} & Pick<NotificationBellProps, "size" | "tone" | "className">) {
   const space = useSpace(roles);
-  if (space === "admin") return null;
-  return <NotificationBell {...notificationBell(space)} {...props} />;
+  const notifications = useNotifications(profileId);
+  return (
+    <NotificationBell
+      {...notificationBell(space)}
+      {...props}
+      count={notifications.unread}
+      panel={({ close, empty }) => (
+        <NotificationPanel
+          notifications={notifications}
+          space={space}
+          close={close}
+          empty={empty}
+        />
+      )}
+    />
+  );
 }

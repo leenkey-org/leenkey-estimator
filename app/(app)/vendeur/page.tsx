@@ -23,7 +23,11 @@ export default async function SellerHomePage() {
   const result = await sellerProperties(profile.id);
 
   return (
-    <SpacePage title={fr.spaces.greeting(profile.firstName)} roles={profile.roles}>
+    <SpacePage
+      title={fr.spaces.greeting(profile.firstName)}
+      roles={profile.roles}
+      profileId={profile.id}
+    >
       {!result.ok ? (
         <InlineAlert tone="danger" className="mt-6">
           {list.error}

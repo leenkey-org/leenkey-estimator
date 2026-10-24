@@ -23,7 +23,7 @@ export default async function SellerFilePage() {
   const result = await sellerProperties(profile.id);
   if (result.ok && result.data.length === 1) redirect(sheetHref(result.data[0].id));
   return (
-    <SpacePage title={t.title} roles={profile.roles}>
+    <SpacePage title={t.title} roles={profile.roles} profileId={profile.id}>
       {!result.ok ? (
         <InlineAlert tone="danger" className="mt-6">
           {fr.properties.list.error}

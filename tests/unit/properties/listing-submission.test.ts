@@ -290,9 +290,6 @@ describe("submitListing (step 4)", () => {
       listingId,
       reference: "LK-0042",
       title: input.title,
-      city: "Épinay-sur-Orge",
-      postalCode: "91360",
-      priceCents: 23_900_000,
       seller: { email: "alice@exemple.test", firstName: "Alice" },
     });
   });
@@ -331,9 +328,6 @@ describe("emails of the sending", () => {
     listingId,
     reference: "LK-0042",
     title: "Appartement 3 pièces 68 m² · Épinay-sur-Orge",
-    city: "Épinay-sur-Orge",
-    postalCode: "91360",
-    priceCents: 23_900_000,
     seller: { email: "alice@exemple.test", firstName: "Alice" },
   };
   const env = { ...process.env };
@@ -379,42 +373,32 @@ describe("emails of the sending", () => {
     expect(text).not.toContain("Gérer mes notifications");
   });
 
-  it("sends both, to ADMIN_NOTIFICATION_EMAIL for Leenkey", async () => {
+  it("sends « Annonce reçue » to the seller only: Leenkey hears of it through the cron", async () => {
     const { emailListingSubmitted } = await vi.importActual<
       typeof import("@/leenkey/properties/listing-emails")
     >("@/leenkey/properties/listing-emails");
     process.env.ADMIN_NOTIFICATION_EMAIL = "admin@exemple.test";
     mocks.sendEmail.mockResolvedValue("sent");
-    expect(await emailListingSubmitted(listing)).toEqual({ seller: "sent", admin: "sent" });
+    expect(await emailListingSubmitted(listing)).toBe("sent");
+    expect(mocks.sendEmail).toHaveBeenCalledTimes(1);
+    const [email] = mocks.sendEmail.mock.calls[0];
+    expect([email.to, email.subject]).toEqual([
+      "alice@exemple.test",
+      "Votre annonce est bien reçue (LK-0042)",
+    ]);
     // The seller follows the review from the page of the property (L1-14).
-    const toSeller = mocks.sendEmail.mock.calls.find(
-      ([email]) => email.to === "alice@exemple.test",
-    );
-    expect(toSeller?.[0].text).toContain(`https://leenkey.fr/vendeur/biens/${propertyId}`);
-    expect(mocks.sendEmail.mock.calls.map(([email]) => [email.to, email.subject])).toEqual(
-      expect.arrayContaining([
-        ["alice@exemple.test", "Votre annonce est bien reçue (LK-0042)"],
-        ["admin@exemple.test", "Annonce à valider (LK-0042)"],
-      ]),
-    );
+    expect(email.text).toContain(`https://leenkey.fr/vendeur/biens/${propertyId}`);
   });
 
-  it("never sends the internal one to nobody in production, and one failure stays alone", async () => {
+  it("a failure is written to the log, never thrown", async () => {
     const { emailListingSubmitted } = await vi.importActual<
       typeof import("@/leenkey/properties/listing-emails")
     >("@/leenkey/properties/listing-emails");
-    delete process.env.ADMIN_NOTIFICATION_EMAIL;
-    process.env.NEXT_PUBLIC_ENV = "production";
     mocks.sendEmail.mockRejectedValueOnce(new Error("Resend down"));
-    const result = await emailListingSubmitted(listing);
-    expect(result).toEqual({ seller: "failed", admin: "failed" });
-    expect(mocks.sendEmail).toHaveBeenCalledTimes(1);
-
-    // Outside production, the test inbox gets it under any address.
-    process.env.NEXT_PUBLIC_ENV = "staging";
-    mocks.sendEmail.mockResolvedValue("test");
+    expect(await emailListingSubmitted(listing)).toBe("failed");
     expect(
       await emailListingSubmitted({ ...listing, seller: { email: null, firstName: null } }),
-    ).toEqual({ seller: "failed", admin: "test" });
+    ).toBe("failed");
+    expect(mocks.sendEmail).toHaveBeenCalledTimes(1);
   });
 });

@@ -382,11 +382,15 @@ test.describe("comptes connectés (base de seed)", () => {
     await mainNav(page).getByRole("link", { name: "Messages" }).click();
     await expect(page).toHaveURL("/messages");
     await expectTabs(page, BUYER_TABS, "Messages");
-    await expect(page.getByRole("button", { name: "Notifications", exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Notifications", exact: true }).click();
-    await expect(page.getByRole("dialog", { name: "Notifications" })).toContainText(
-      "des réponses des vendeurs",
-    );
+    await expect(page.getByRole("button", { name: /^Notifications/ })).toBeVisible();
+    await page.getByRole("button", { name: /^Notifications/ }).click();
+    // The panel of the buyer space: its filters (L1-22).
+    await expect(
+      page
+        .getByRole("dialog", { name: "Notifications" })
+        .getByRole("group", { name: "Filtrer les notifications" })
+        .getByRole("button"),
+    ).toHaveText(["Toutes", "Mes recherches", "Visites et offres"]);
   });
 
   test("acquéreur : onglets de l'acquéreur", async ({ page, isMobile }) => {
@@ -399,8 +403,9 @@ test.describe("comptes connectés (base de seed)", () => {
       await mainNav(page).getByRole("link", { name: "Favoris" }).click();
       await expect(page).toHaveURL("/acquereur/favoris");
       await expectTabs(page, BUYER_TABS, "Favoris");
-      // The buyer home is not a tab: the bell is on this page too (Q26).
-      await expect(page.getByRole("button", { name: "Notifications", exact: true })).toBeVisible();
+      // The buyer home is not a tab: the bell is on this page too (Q26), with the
+      // answer of Alice unread in the seed (L1-22).
+      await expect(page.getByRole("button", { name: "Notifications, 1 nouvelle" })).toBeVisible();
       // On the search too, the buyer keeps the same tabs.
       await mainNav(page).getByRole("link", { name: "Chercher" }).click();
       await expect(page).toHaveURL("/acheter");
@@ -479,7 +484,7 @@ test.describe("comptes connectés (base de seed)", () => {
     expect(await seriousViolations(page)).toEqual([]);
   });
 
-  test("l'espace suit la page sans rechargement : la phrase de la cloche change", async ({
+  test("l'espace suit la page sans rechargement : les filtres de la cloche changent", async ({
     page,
     isMobile,
   }) => {
@@ -490,19 +495,22 @@ test.describe("comptes connectés (base de seed)", () => {
     const panel = page.getByRole("dialog", { name: "Notifications" });
     // Kept by a client navigation, lost by a full load.
     await page.evaluate(() => Object.assign(window, { lkSameDocument: true }));
+    const filters = panel
+      .getByRole("group", { name: "Filtrer les notifications" })
+      .getByRole("button");
     await page.getByRole("link", { name: "Favoris" }).click();
     await expect(page).toHaveURL("/acquereur/favoris");
     await bell.click();
-    await expect(panel).toContainText("des réponses des vendeurs");
+    await expect(filters).toHaveText(["Toutes", "Mes recherches", "Visites et offres"]);
     await page.keyboard.press("Escape");
     await page.getByRole("link", { name: "Vendre mon bien" }).click();
     await expect(page).toHaveURL("/vendeur");
     await bell.click();
-    await expect(panel).toContainText("des offres reçus pour votre bien");
+    await expect(filters).toHaveText(["Toutes", "Messages", "Offres et visites"]);
     expect(await page.evaluate(() => "lkSameDocument" in window)).toBe(true);
   });
 
-  test("la cloche ouvre le panneau vide, Échap le referme", async ({ page }) => {
+  test("la cloche ouvre le panneau, Échap le referme", async ({ page }) => {
     // No 220 ms entrance (DESIGN.md 2.2): axe measures the panel in place.
     await page.emulateMedia({ reducedMotion: "reduce" });
     await signIn(page, "seller_a", "/vendeur");
@@ -510,11 +518,13 @@ test.describe("comptes connectés (base de seed)", () => {
     await bell.click();
     const panel = page.getByRole("dialog", { name: "Notifications" });
     await expect(panel).toBeVisible();
-    await expect(panel.getByRole("heading", { name: "Aucune notification" })).toBeVisible();
-    await expect(panel).toContainText("des messages, des visites et des offres");
+    // The messages of the seed, read (L1-22); the empty panel: tests/e2e/design.spec.ts.
+    await expect(
+      panel.getByRole("link").filter({ hasText: "Nouveau message de" }).first(),
+    ).toBeVisible();
     await expect(panel.getByRole("link", { name: "Réglages des notifications" })).toHaveAttribute(
       "href",
-      "/compte",
+      "/compte/notifications",
     );
     expect(await seriousViolations(page)).toEqual([]);
     await page.keyboard.press("Escape");
@@ -526,7 +536,7 @@ test.describe("comptes connectés (base de seed)", () => {
     await expect(panel).toBeHidden();
     await bell.click();
     await panel.getByRole("link", { name: "Réglages des notifications" }).click();
-    await expect(page).toHaveURL("/compte");
+    await expect(page).toHaveURL("/compte/notifications");
     await expect(panel).toBeHidden();
   });
 
@@ -609,11 +619,12 @@ test.describe("comptes connectés (base de seed)", () => {
       await expect(page.getByRole("heading", { level: 1 }), path).toHaveText(title);
       await expect(page, path).toHaveTitle(`${title} · Back office · Leenkey`);
     }
-    // No bell for the back office yet (DECISIONS 2026-10-17), nor on the
-    // account page of an admin-only account.
+    // The bell of the back office (L1-22), on the account page too: the
+    // listings sent for review of the seed, unread.
     await page.goto("/compte");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Mon compte");
-    await expect(page.getByRole("button", { name: /^Notifications/ })).toHaveCount(0);
+    const bell = page.getByRole("button", { name: /^Notifications, \d+ nouvelles?$/ });
+    await expect(bell.locator("visible=true")).toHaveCount(1);
   });
 
   test("« Compte » déconnecte en mobile (jusqu'à la page compte)", async ({ page, isMobile }) => {

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AccountMenu, type AccountMenuProps } from "./account-menu";
@@ -19,6 +20,8 @@ export type AdminSidebarProps = {
   activeHref?: string | null;
   /** User card at the bottom, which opens the account menu. */
   account: Omit<AccountMenuProps, "variant" | "className">;
+  /** The NotificationBell, beside the logo (tone dark). */
+  notifications?: ReactNode;
   className?: string;
 };
 
@@ -27,7 +30,8 @@ const darkFocus =
 
 /**
  * Back office sidebar (docs/DESIGN.md 10.6): 240 px on ink, padding 24 × 16,
- * gap 24. Logo and « Back office » (11 px, white 60 %); links of 42 px, icon
+ * gap 24. Logo and « Back office » (11 px, white 60 %), the bell on their
+ * right (L1-22); links of 42 px, icon
  * 18 and 14 px label in white 80 %, the current one on blue in 600, count
  * pill on the right; user card at the bottom.
  */
@@ -37,6 +41,7 @@ export function AdminSidebar({
   items,
   activeHref,
   account,
+  notifications,
   className,
 }: AdminSidebarProps) {
   const pathname = usePathname();
@@ -48,13 +53,16 @@ export function AdminSidebar({
         className,
       )}
     >
-      <Link
-        href={homeHref}
-        className={cn("flex flex-col gap-0.5 self-start rounded-lk-sm px-2", darkFocus)}
-      >
-        <Logo tone="white" />
-        <span className="text-lk-micro text-white/60">{fr.nav.backOffice}</span>
-      </Link>
+      <div className="flex items-start justify-between gap-2">
+        <Link
+          href={homeHref}
+          className={cn("flex flex-col gap-0.5 self-start rounded-lk-sm px-2", darkFocus)}
+        >
+          <Logo tone="white" />
+          <span className="text-lk-micro text-white/60">{fr.nav.backOffice}</span>
+        </Link>
+        {notifications}
+      </div>
       <nav aria-label={label}>
         <ul className="flex flex-col gap-1">
           {items.map((item) => {

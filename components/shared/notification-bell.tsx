@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Bell, Settings, X } from "lucide-react";
@@ -26,6 +26,14 @@ export type NotificationBellProps = {
   size?: "nav" | "md";
   /** dark: on a dark app header (DECISIONS Q26), on-dark until something is unread. */
   tone?: "light" | "dark";
+  /**
+   * The content of the panel under its header (filters, list, footer):
+   * `empty` is the empty state of the space, for an account without any
+   * notification; `close` closes the panel. Without it, the empty state.
+   */
+  panel?: (helpers: { close: () => void; empty: ReactNode }) => ReactNode;
+  /** The panel opens or closes. */
+  onOpenChange?: (open: boolean) => void;
   className?: string;
 };
 
@@ -35,9 +43,9 @@ export type NotificationBellProps = {
  * white when something is unread. The panel is a Radix dialog: full screen
  * below 768 px, 420 px on the right from there, page dimmed with ink at 40 %,
  * opened from the right in 220 ms (no movement with reduced motion). Its
- * header is 72 px: round close button, « Notifications », settings. The list,
- * its filters and « Tout marquer comme lu » come with the notifications
- * themselves; until then, the empty state.
+ * header is 72 px: round close button, « Notifications », settings. Under
+ * it, the `panel` of the application (filters, list, « Tout marquer comme
+ * lu »), otherwise the empty state.
  */
 export function NotificationBell({
   count,
@@ -46,12 +54,37 @@ export function NotificationBell({
   settingsHref,
   size = "md",
   tone = "light",
+  panel,
+  onOpenChange,
   className,
 }: NotificationBellProps) {
   const [open, setOpen] = useState(false);
   const unread = count > 0;
+  const change = (next: boolean) => {
+    setOpen(next);
+    onOpenChange?.(next);
+  };
+  const close = () => change(false);
+  const empty = (
+    <div className="flex flex-1 items-center justify-center overflow-y-auto px-5 py-10">
+      <EmptyState
+        titleAs="h3"
+        title={t.emptyTitle}
+        description={emptyText}
+        action={
+          emptyAction ? (
+            <Button asChild>
+              <Link href={emptyAction.href} onClick={close}>
+                {emptyAction.label}
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      />
+    </div>
+  );
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
+    <DialogPrimitive.Root open={open} onOpenChange={change}>
       <span className={cn("relative inline-flex shrink-0", className)}>
         <DialogPrimitive.Trigger asChild>
           <IconButton
@@ -99,7 +132,7 @@ export function NotificationBell({
             <Link
               href={settingsHref}
               aria-label={t.settings}
-              onClick={() => setOpen(false)}
+              onClick={close}
               className={cn(
                 iconButtonVariants({ variant: "transparent", size: "sm" }),
                 "inline-flex items-center justify-center",
@@ -108,22 +141,7 @@ export function NotificationBell({
               <Settings aria-hidden="true" />
             </Link>
           </div>
-          <div className="flex flex-1 items-center justify-center overflow-y-auto px-5 py-10">
-            <EmptyState
-              titleAs="h3"
-              title={t.emptyTitle}
-              description={emptyText}
-              action={
-                emptyAction ? (
-                  <Button asChild>
-                    <Link href={emptyAction.href} onClick={() => setOpen(false)}>
-                      {emptyAction.label}
-                    </Link>
-                  </Button>
-                ) : undefined
-              }
-            />
-          </div>
+          {panel ? panel({ close, empty }) : empty}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

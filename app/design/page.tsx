@@ -63,6 +63,7 @@ import { Input } from "@/components/shared/input";
 import { KeyFactsTable } from "@/components/shared/key-facts-table";
 import { KeyFigures } from "@/components/shared/key-figures";
 import { NotificationBell } from "@/components/shared/notification-bell";
+import { NotificationItemsDemo, NotificationsDemo } from "./_notifications-demo";
 import { PriceBlock } from "@/components/shared/price-block";
 import { ProgressBar } from "@/components/shared/progress-bar";
 import { PropertyCard } from "@/components/shared/property-card";
@@ -908,7 +909,9 @@ export default function DesignPage() {
                 cta={sellCta(true)}
                 account={{
                   signedIn: true,
-                  notifications: <NotificationBell {...notificationBell("buyer")} size="nav" />,
+                  notifications: (
+                    <NotificationBell {...notificationBell("buyer")} count={0} size="nav" />
+                  ),
                   favourites: FAVOURITES_LINK,
                   menu: { ...accountMenu(content.navigation.buyer), signOut },
                 }}
@@ -979,17 +982,26 @@ export default function DesignPage() {
 
           <Section id="notifications" title={content.sections.notifications} level="h3">
             <div className="flex flex-wrap items-center gap-4">
-              <NotificationBell {...notificationBell("buyer")} size="nav" />
-              <NotificationBell
-                {...notificationBell("seller")}
+              <NotificationBell {...notificationBell("buyer")} count={0} size="nav" />
+              <NotificationsDemo
+                sample={content.notifications.samples}
                 count={content.notifications.unread}
-                size="nav"
               />
               <div className="rounded-lk-md bg-lk-navy p-3">
-                <NotificationBell {...notificationBell("seller")} tone="dark" />
+                <NotificationBell {...notificationBell("seller")} count={0} tone="dark" />
               </div>
             </div>
             <Caption>{content.notifications.bellCaption}</Caption>
+            <NotificationItemsDemo
+              sample={content.notifications.samples}
+              times={content.notifications.times}
+            />
+            <Caption>{content.notifications.itemsCaption}</Caption>
+            <p className="text-lk-secondary">
+              <Link href="/design/emails" className="font-semibold text-lk-blue underline">
+                {content.notifications.emailsLink}
+              </Link>
+            </p>
             <div className="flex flex-wrap items-center gap-4">
               <AccountMenu {...accountMenu(content.navigation.buyer)} signOut={signOut} />
               <div className="rounded-lk-md bg-lk-ink p-3">
