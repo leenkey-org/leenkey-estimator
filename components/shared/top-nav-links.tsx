@@ -7,9 +7,11 @@ import { ChevronDown } from "lucide-react";
 import { currentHref, type NavItem } from "./nav-items";
 import { cn } from "@/lib/utils";
 
-/** The pointer resting on a group opens it after this pause, leaving it closes it after this one. */
+/** The mouse resting on a group opens it after this pause, leaving it closes it after this one. */
 const OPEN_DELAY_MS = 200;
 const CLOSE_DELAY_MS = 150;
+/** A click this soon after an opening by the mouse meant to open it too: it keeps it open. */
+const CLICK_GRACE_MS = 500;
 
 /** 14 px 500, 44 px high in the 72 px bar, the current one in blue. */
 function linkClassName(active: boolean) {
@@ -27,20 +29,30 @@ function linkClassName(active: boolean) {
   );
 }
 
-/** A link of an open group: the rows of the AccountMenu. */
-const groupLinkClassName = cn(
-  "flex h-11 items-center whitespace-nowrap rounded-lk-sm px-3 text-lk-compact font-medium",
-  "transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2 focus-visible:bg-lk-stone-2",
-);
+/**
+ * A link of an open group: the rows of the AccountMenu; the one of the page in
+ * blue and underlined (never told by the colour alone, DESIGN.md 15).
+ */
+function groupLinkClassName(page: boolean) {
+  return cn(
+    "flex h-11 items-center whitespace-nowrap rounded-lk-sm px-3 text-lk-compact font-medium",
+    "transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2 focus-visible:bg-lk-stone-2",
+    page ? "text-lk-blue underline decoration-2 underline-offset-6" : "text-lk-ink",
+  );
+}
 
 /**
- * A group of the TopNav (« Qui sommes-nous », L1-51): a button that shows its
- * links under it (disclosure: aria-expanded, then the links in the tab order),
- * on a click, Enter or Space, or when the pointer rests on it. The click that
- * follows an opening by the pointer keeps it open (it meant to open it).
- * Escape, a click outside, the focus or the pointer leaving the group, a link
- * followed close it. Panel of the AccountMenu, 8 px under the button, its rows
- * aligned on the label.
+ * A group of the TopNav (« Qui sommes-nous », L1-51, docs/DESIGN.md 10.6): a
+ * button that shows its links under it (disclosure: aria-expanded, then the
+ * links in the tab order).
+ * - Opened by a click, Enter or Space, it stays open until Escape (the focus
+ *   back on the button), a press outside, the focus moving out of the group,
+ *   a link followed or another page.
+ * - Opened by the mouse resting on it, it also closes when the mouse leaves
+ *   the group, unless the focus is in it; a click right after the opening
+ *   keeps it open (it meant to open it), a later one closes it.
+ * Panel of the AccountMenu, 8 px under the button, its rows aligned on the
+ * label; the TopNav is above the sticky headers of the pages (layer 30).
  */
 function NavGroup({
   link,
@@ -58,19 +70,22 @@ function NavGroup({
   className?: string;
 }) {
   const pathname = usePathname();
-  // Open on the page it was opened on: a navigation closes it.
+  // The page it was opened on: another page closes it, and coming back
+  // (Back, then Forward) does not open it again.
   const [openOn, setOpenOn] = useState<string | null>(null);
+  if (openOn !== null && openOn !== pathname) setOpenOn(null);
   const open = openOn === pathname;
   const id = useId();
   const group = useRef<HTMLLIElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const timer = useRef<number | undefined>(undefined);
-  const openedOnHover = useRef(false);
+  // When the mouse opened it; null when a click or the keyboard did.
+  const hoveredAt = useRef<number | null>(null);
 
   const show = useCallback(
     (next: boolean, onHover = false) => {
       window.clearTimeout(timer.current);
-      openedOnHover.current = next && onHover;
+      hoveredAt.current = next && onHover ? performance.now() : null;
       setOpenOn(next ? pathname : null);
     },
     [pathname],
@@ -105,7 +120,7 @@ function NavGroup({
     <li
       ref={group}
       className={cn("relative", className)}
-      // A mouse only: a tap is a click.
+      // The mouse only: a tap is a click.
       onPointerEnter={(event) => {
         if (event.pointerType !== "mouse") return;
         if (open) window.clearTimeout(timer.current);
@@ -113,11 +128,16 @@ function NavGroup({
       }}
       onPointerLeave={(event) => {
         if (event.pointerType !== "mouse") return;
-        if (open) showLater(false, CLOSE_DELAY_MS);
-        else window.clearTimeout(timer.current);
+        if (!open) window.clearTimeout(timer.current);
+        else if (hoveredAt.current !== null && !group.current?.contains(document.activeElement)) {
+          showLater(false, CLOSE_DELAY_MS);
+        }
       }}
+      // The focus going to an element out of the group (Tab); a press that
+      // gives it to nothing (a link in Safari) is left to the document.
       onBlur={(event) => {
-        if (open && !event.currentTarget.contains(event.relatedTarget)) show(false);
+        const to = event.relatedTarget;
+        if (open && to && !event.currentTarget.contains(to)) show(false);
       }}
     >
       <button
@@ -125,14 +145,23 @@ function NavGroup({
         type="button"
         aria-expanded={open}
         aria-controls={id}
-        onClick={() => {
-          if (open && openedOnHover.current) {
-            openedOnHover.current = false;
+        // Its pages are the group's: in blue and underlined, as a current link.
+        aria-current={active ? "true" : undefined}
+        onClick={(event) => {
+          const hovered = hoveredAt.current;
+          // A real click (not Enter nor Space) right after the mouse opened it.
+          if (
+            open &&
+            hovered !== null &&
+            event.detail > 0 &&
+            performance.now() - hovered < CLICK_GRACE_MS
+          ) {
+            hoveredAt.current = null;
             return;
           }
           show(!open);
         }}
-        className={cn(linkClassName(active || open), "group gap-1")}
+        className={cn(linkClassName(active || open), "group cursor-pointer gap-1")}
       >
         {link.label}
         <ChevronDown
@@ -155,7 +184,7 @@ function NavGroup({
                   href={item.href}
                   aria-current={page ? "page" : undefined}
                   onClick={() => show(false)}
-                  className={cn(groupLinkClassName, page ? "text-lk-blue" : "text-lk-ink")}
+                  className={groupLinkClassName(page)}
                 >
                   {item.label}
                 </Link>

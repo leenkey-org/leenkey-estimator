@@ -81,7 +81,6 @@ export const TOP_NAV_LINKS: readonly NavItem[] = [
   {
     href: ROUTES.about,
     label: fr.site.links.about,
-    match: [ROUTES.invest],
     from: "xl",
     items: [
       { href: ROUTES.about, label: fr.site.links.aboutCompany },

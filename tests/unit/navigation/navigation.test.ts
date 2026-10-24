@@ -307,6 +307,22 @@ describe("current item: longest prefix of the path", () => {
     expect(currentHref("/investir", about?.items ?? [])).toBe("/investir");
     expect(currentHref("/concept", TOP_NAV_LINKS)).toBeNull();
   });
+
+  it("a group is current on the pages of its links and their sub-pages, without a match of its own", () => {
+    const group: NavItem = {
+      href: "/a",
+      label: "A",
+      items: [
+        { href: "/a", label: "A" },
+        { href: "/b", label: "B" },
+        { href: "/c", label: "C", match: ["/d"] },
+      ],
+    };
+    expect(currentHref("/b", [group])).toBe("/a");
+    expect(currentHref("/c/x", [group])).toBe("/a");
+    expect(currentHref("/d", [group])).toBe("/a");
+    expect(currentHref("/e", [group])).toBeNull();
+  });
 });
 
 describe("path helpers", () => {

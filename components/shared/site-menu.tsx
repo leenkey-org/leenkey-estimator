@@ -66,7 +66,11 @@ export function SiteMenu({
         href={link.href}
         aria-current={active ? "page" : undefined}
         onClick={close}
-        className={cn(rowClass, active ? "text-lk-blue" : "text-lk-ink")}
+        // In blue and underlined: never told by the colour alone (DESIGN.md 15).
+        className={cn(
+          rowClass,
+          active ? "text-lk-blue underline decoration-2 underline-offset-6" : "text-lk-ink",
+        )}
       >
         {link.label}
       </Link>

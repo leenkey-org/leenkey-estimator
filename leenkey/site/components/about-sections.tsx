@@ -7,8 +7,8 @@ import { ShowcaseHero } from "@/components/shared/showcase-hero";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
+import { VISION_ANCHOR } from "../anchors";
 import { CtaPanel } from "./cta-panel";
-import { VISION } from "./invest-sections";
 import { RichText } from "./rich-text";
 import { cardDark, cardTextDark, cardTitleDark } from "./site-styles";
 
@@ -34,7 +34,7 @@ export function AboutHero() {
       lead={t.hero.lead}
       actions={
         <Button asChild variant="cta" size="lg" trailingIcon={ArrowRight}>
-          <Link href={`${ROUTES.invest}#${VISION}`}>{t.hero.action}</Link>
+          <Link href={`${ROUTES.invest}#${VISION_ANCHOR}`}>{t.hero.action}</Link>
         </Button>
       }
       aside={<FounderPhoto />}

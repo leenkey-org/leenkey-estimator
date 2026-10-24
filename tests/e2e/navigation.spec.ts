@@ -200,62 +200,151 @@ test.describe("visiteur sans session", () => {
     await expectTopNavFits(page);
   });
 
-  test("« Qui sommes-nous » ouvre ses deux pages : survol, clic, clavier (L1-51)", async ({
+  test("« Qui sommes-nous » ouvre ses deux pages : souris, clic, clavier (L1-51)", async ({
     page,
     isMobile,
   }) => {
     test.skip(isMobile, "barre haute à partir de 768 px");
-    await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/");
     const nav = mainNav(page);
     const about = nav.getByRole("button", { name: ABOUT });
     const company = nav.getByRole("link", { name: "Leenkey et son fondateur" });
     const invest = nav.getByRole("link", { name: "Investir dans Leenkey" });
-    await expect(about).toHaveAttribute("aria-expanded", "false");
+    const expanded = (value: boolean) =>
+      expect(about).toHaveAttribute("aria-expanded", String(value));
+    /** Open, read at once (the time of a click that follows the opening counts). */
+    const opened = async () =>
+      page.waitForFunction(
+        (button) => button?.getAttribute("aria-expanded") === "true",
+        await about.elementHandle(),
+        { polling: "raf" },
+      );
+    // A point of the page out of the group: the left margin, under the bar.
+    const banner = await page.getByRole("banner").boundingBox();
+    const away = { x: 8, y: (banner?.y ?? 0) + (banner?.height ?? 0) + 200 };
+
+    await expanded(false);
     await expect(company).toBeHidden();
-    // The pointer resting on it opens it; the click that follows keeps it
-    // open (it meant to open it), the next one closes it.
-    await about.hover();
-    await expect(about).toHaveAttribute("aria-expanded", "true");
-    await expect(company).toHaveAttribute("href", "/qui-sommes-nous");
-    await expect(invest).toHaveAttribute("href", "/investir");
-    await about.click();
-    await expect(about).toHaveAttribute("aria-expanded", "true");
-    await about.click();
-    await expect(about).toHaveAttribute("aria-expanded", "false");
-    // Open again, the pointer leaving the group closes it.
-    await about.click();
-    await expect(company).toBeVisible();
-    await page.mouse.move(640, 500);
-    await expect(about).toHaveAttribute("aria-expanded", "false");
-    // Keyboard: Enter opens, Tab goes through its links, Escape closes and
-    // gives the focus back; the focus leaving the group closes it.
-    await about.focus();
-    await page.keyboard.press("Enter");
-    await expect(about).toHaveAttribute("aria-expanded", "true");
-    await page.keyboard.press("Tab");
-    await expect(company).toBeFocused();
-    await page.keyboard.press("Tab");
-    await expect(invest).toBeFocused();
-    expect(await seriousViolations(page)).toEqual([]);
-    await page.keyboard.press("Escape");
-    await expect(about).toHaveAttribute("aria-expanded", "false");
-    await expect(about).toBeFocused();
-    await page.keyboard.press("Enter");
-    for (let i = 0; i < 3; i += 1) await page.keyboard.press("Tab");
-    await expect(nav.getByRole("link", { name: "Contact" })).toBeFocused();
-    await expect(about).toHaveAttribute("aria-expanded", "false");
-    // A link followed: its page, closed, the group current and the link of the page too.
-    await about.click();
-    await invest.click();
-    await expect(page).toHaveURL("/investir");
-    await expect(about).toHaveAttribute("aria-expanded", "false");
-    await about.click();
-    await expect(invest).toHaveAttribute("aria-current", "page");
-    await expect(company).not.toHaveAttribute("aria-current", /.+/);
-    // A click elsewhere closes it.
-    await page.mouse.click(850, 36);
-    await expect(about).toHaveAttribute("aria-expanded", "false");
+
+    await test.step("la souris posée dessus l'ouvre, la souris qui s'en va le referme", async () => {
+      await about.hover();
+      await expanded(true);
+      await expect(company).toHaveAttribute("href", "/qui-sommes-nous");
+      await expect(invest).toHaveAttribute("href", "/investir");
+      await page.mouse.move(away.x, away.y);
+      await expanded(false);
+    });
+
+    await test.step("un clic juste après cette ouverture la confirme, un clic plus tard referme", async () => {
+      await about.hover();
+      await opened();
+      await about.click();
+      await expanded(true);
+      await about.click();
+      await expanded(false);
+      await page.mouse.move(away.x, away.y);
+      await about.hover();
+      await opened();
+      await page.waitForTimeout(700);
+      await about.click();
+      await expanded(false);
+    });
+
+    await test.step("ouvert d'un clic, il reste ouvert quand la souris s'en va ; un appui ailleurs le referme", async () => {
+      await about.click();
+      await expanded(true);
+      await page.mouse.move(away.x, away.y);
+      await page.waitForTimeout(400);
+      await expanded(true);
+      await page.mouse.click(away.x, away.y);
+      await expanded(false);
+    });
+
+    await test.step("le focus dans le panneau le garde ouvert quand la souris s'en va", async () => {
+      await about.focus();
+      await about.hover();
+      await expanded(true);
+      await page.keyboard.press("Tab");
+      await expect(company).toBeFocused();
+      await page.mouse.move(away.x, away.y);
+      await page.waitForTimeout(400);
+      await expanded(true);
+      await expect(company).toBeFocused();
+      await page.keyboard.press("Escape");
+      await expanded(false);
+      await expect(about).toBeFocused();
+    });
+
+    await test.step("clavier : Entrée ouvre, Tab parcourt ses liens, Échap referme", async () => {
+      await page.keyboard.press("Enter");
+      await expanded(true);
+      await page.keyboard.press("Tab");
+      await expect(company).toBeFocused();
+      await page.keyboard.press("Tab");
+      await expect(invest).toBeFocused();
+      expect(await seriousViolations(page)).toEqual([]);
+      // Over the sticky header of a page (layer 20), as the one of a conversation.
+      await page.evaluate(() => {
+        const bar = document.createElement("div");
+        bar.style.cssText =
+          "position: sticky; top: 72px; z-index: 20; height: 160px; background: #fff";
+        document.querySelector("main")?.prepend(bar);
+      });
+      for (const link of [company, invest]) {
+        const box = await link.boundingBox();
+        const point = {
+          x: (box?.x ?? 0) + (box?.width ?? 0) / 2,
+          y: (box?.y ?? 0) + (box?.height ?? 0) / 2,
+        };
+        const onTop = await link.evaluate((element, { x, y }) => {
+          const top = document.elementFromPoint(x, y);
+          return top !== null && element.contains(top);
+        }, point);
+        expect(onTop).toBe(true);
+      }
+      await page.keyboard.press("Escape");
+      await expanded(false);
+      await expect(about).toBeFocused();
+      // Past its links, the focus leaving the group closes it.
+      await page.keyboard.press("Enter");
+      for (let i = 0; i < 3; i += 1) await page.keyboard.press("Tab");
+      await expect(nav.getByRole("link", { name: "Contact" })).toBeFocused();
+      await expanded(false);
+    });
+
+    await test.step("un lien suivi : sa page, le groupe courant et la page dans le panneau", async () => {
+      await about.click();
+      await invest.click();
+      await expect(page).toHaveURL("/investir");
+      await expanded(false);
+      await expect(about).toHaveAttribute("aria-current", "true");
+      await about.click();
+      await expect(invest).toHaveAttribute("aria-current", "page");
+      await expect(company).not.toHaveAttribute("aria-current", /.+/);
+    });
+  });
+
+  test.describe("au toucher, à 1 280 px", () => {
+    test.use({ hasTouch: true });
+
+    test("« Qui sommes-nous » : un appui ouvre, un appui ailleurs referme, un lien se suit", async ({
+      page,
+      isMobile,
+    }) => {
+      test.skip(isMobile, "barre haute à partir de 768 px");
+      await page.goto("/");
+      const nav = mainNav(page);
+      const about = nav.getByRole("button", { name: ABOUT });
+      const banner = await page.getByRole("banner").boundingBox();
+      await about.tap();
+      await expect(about).toHaveAttribute("aria-expanded", "true");
+      await page.touchscreen.tap(8, (banner?.y ?? 0) + (banner?.height ?? 0) + 200);
+      await expect(about).toHaveAttribute("aria-expanded", "false");
+      await about.tap();
+      await nav.getByRole("link", { name: "Investir dans Leenkey" }).tap();
+      await expect(page).toHaveURL("/investir");
+      await expect(about).toHaveAttribute("aria-expanded", "false");
+    });
   });
 
   test("un onglet d'espace connecté mène à la connexion, qui y ramènera", async ({

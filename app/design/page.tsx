@@ -920,7 +920,7 @@ export default function DesignPage() {
               />
             </div>
             <Caption>{content.navigation.topSignedInCaption}</Caption>
-            <div className="overflow-x-auto rounded-lk-md border border-lk-line">
+            <div className="overflow-x-auto rounded-lk-md border border-lk-line xl:relative xl:z-20 xl:overflow-visible">
               <TopNav
                 className="flex min-w-4xl border-b-0"
                 homeHref="/design#navigation"

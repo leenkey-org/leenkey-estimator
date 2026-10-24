@@ -59,9 +59,10 @@ export function matchesPath(path: string, prefix: string): boolean {
 }
 
 /**
- * Href of the current item: the one whose path (or one of its `match` paths)
- * is the longest prefix of the page path, so that « Dossier »
- * (/vendeur/dossier) wins over « Ma vente » (/vendeur). Null when none.
+ * Href of the current item: the one whose path (or one of its `match` paths,
+ * or those of the links of its group) is the longest prefix of the page path,
+ * so that « Dossier » (/vendeur/dossier) wins over « Ma vente » (/vendeur).
+ * Null when none.
  */
 export function currentHref(
   path: string | null | undefined,
@@ -70,7 +71,8 @@ export function currentHref(
   if (!path) return null;
   let best: { href: string; length: number } | null = null;
   for (const item of items) {
-    for (const prefix of [item.href, ...(item.match ?? [])]) {
+    const group = (item.items ?? []).flatMap((link) => [link.href, ...(link.match ?? [])]);
+    for (const prefix of [item.href, ...(item.match ?? []), ...group]) {
       const exact = item.exact && prefix === item.href;
       if (exact ? pathnameOf(path) !== pathnameOf(prefix) : !matchesPath(path, prefix)) continue;
       const length = pathnameOf(prefix).length;
