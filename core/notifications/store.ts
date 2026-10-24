@@ -110,6 +110,8 @@ function hold(profileId: string): () => void {
     if (holders > 0) return;
     linger = window.setTimeout(() => {
       linger = null;
+      if (reload !== null) window.clearTimeout(reload);
+      reload = null;
       watching?.end();
       watching = null;
       // Nothing followed from now on: read again by the next bell, the list shown meanwhile.
@@ -121,12 +123,15 @@ function hold(profileId: string): () => void {
 async function markRead(id: string) {
   const next = withRead(state, id, new Date().toISOString());
   if (next === state) return;
+  // A reading on its way would bring the notification back unread.
+  ticket += 1;
   set(next);
   const result = await markNotificationRead(id).catch(() => null);
   if (!result?.ok && state.profileId) void load(state.profileId);
 }
 
 async function markAllRead() {
+  ticket += 1;
   set(withAllRead(state, new Date().toISOString()));
   const result = await markAllNotificationsRead().catch(() => null);
   if (!result?.ok && state.profileId) void load(state.profileId);

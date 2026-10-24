@@ -82,7 +82,8 @@ export function FilterPillButtons<K extends string>({
     <div
       role="group"
       aria-label={label}
-      className={cn("-my-1.25 overflow-x-auto py-1.25", className)}
+      // Room for the focus ring of the first and last pills (DESIGN.md 15).
+      className={cn("-mx-1 -my-1.25 overflow-x-auto px-1 py-1.25", className)}
     >
       <ul className="flex w-max gap-2">
         {items.map((item) => {

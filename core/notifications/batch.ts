@@ -45,7 +45,8 @@ export type PlannedEmail = {
   firstName: string | null;
   /** What the email speaks of, the oldest first (one per event for the team). */
   items: QueuedNotification[];
-  /** Every row it covers (for the team, the rows of each of its members). */
+  /** Every row it covers (for the team, the rows of each of its members), the oldest first. */
+  rows: QueuedNotification[];
   ids: string[];
 };
 
@@ -146,6 +147,7 @@ export function planEmails(
         email: null,
         firstName: null,
         items,
+        rows: sorted,
         ids,
       });
     } else {
@@ -157,11 +159,39 @@ export function planEmails(
         email: first.email,
         firstName: first.firstName,
         items: sorted,
+        rows: sorted,
         ids,
       });
     }
   }
   return plan;
+}
+
+/**
+ * The email of the rows a run could claim (unread, not taken by another run
+ * meanwhile): the others are left out of its content. For the team, an event
+ * stays only when every row of it was claimed (read by one admin: dealt with).
+ * Null: nothing left to send.
+ */
+export function claimedEmail(
+  email: PlannedEmail,
+  claimed: ReadonlySet<string>,
+): PlannedEmail | null {
+  const keep = (rows: readonly QueuedNotification[]) => {
+    if (email.audience === "recipient") return rows.filter((row) => claimed.has(row.id));
+    const events = new Set(
+      email.items
+        .map(entityOf)
+        .filter((entity) =>
+          email.rows.every((row) => entityOf(row) !== entity || claimed.has(row.id)),
+        ),
+    );
+    return rows.filter((row) => events.has(entityOf(row)));
+  };
+  const items = keep(email.items);
+  if (items.length === 0) return null;
+  const rows = keep(email.rows);
+  return { ...email, items, rows, ids: rows.map((row) => row.id) };
 }
 
 /** A row of public.notification_email_queue, as PostgREST gives it. */

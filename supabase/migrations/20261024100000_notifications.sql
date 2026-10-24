@@ -7,17 +7,28 @@
 -- the application from their type and their data (lib/i18n/fr.ts), so that
 -- the texts stay in one place. The emails wait in the table and go out with
 -- /api/cron/send-notification-emails, every 5 minutes, grouped as SPEC 10
--- says (leenkey/notifications/send-emails.ts).
+-- says (leenkey/notifications/send-emails.ts). Written to be played again
+-- (DECISIONS 2026-10-08, update of 2026-10-17).
 
 -- ---------------------------------------------------------------------------
 -- Columns
 -- ---------------------------------------------------------------------------
 alter table public.notifications
   alter column title drop not null,
-  add column data jsonb not null default '{}' check (jsonb_typeof(data) = 'object'),
-  add column group_key text,
-  add column email_after timestamptz,
-  add column email_skipped_at timestamptz;
+  add column if not exists data jsonb not null default '{}' check (jsonb_typeof(data) = 'object'),
+  add column if not exists group_key text,
+  add column if not exists email_after timestamptz,
+  add column if not exists email_skipped_at timestamptz;
+
+-- A notification leads inside the site, never elsewhere (« //hote » neither).
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'notifications_link_internal') then
+    alter table public.notifications
+      add constraint notifications_link_internal check (link ~ '^/([^/\\]|$)') not valid;
+  end if;
+end;
+$$;
 
 comment on column public.notifications.title is
   'Wording written when the row is created; null: written from type and data (lib/i18n/fr.ts)';
@@ -30,10 +41,10 @@ comment on column public.notifications.email_after is
 comment on column public.notifications.email_skipped_at is
   'The email did not leave: read meanwhile, preference off, account closed, too old';
 
-create index notifications_unread_idx on public.notifications (profile_id) where read_at is null;
-create index notifications_group_idx on public.notifications (profile_id, group_key, created_at desc)
+create index if not exists notifications_unread_idx on public.notifications (profile_id) where read_at is null;
+create index if not exists notifications_group_idx on public.notifications (profile_id, group_key, created_at desc)
   where group_key is not null;
-create index notifications_email_due_idx on public.notifications (email_after)
+create index if not exists notifications_email_due_idx on public.notifications (email_after)
   where email_after is not null and email_sent_at is null and email_skipped_at is null;
 
 -- ---------------------------------------------------------------------------
@@ -55,7 +66,7 @@ $$;
 -- The one way in: from the triggers below and, later, the webhooks and the
 -- crons (service role). Never executable by a user.
 -- ---------------------------------------------------------------------------
-create function public.notification_add(
+create or replace function public.notification_add(
   p_profile_id uuid,
   p_type text,
   p_data jsonb,
@@ -88,7 +99,7 @@ $$;
 -- groups with the next ones of the conversation (cron). Never an email for
 -- an old message (imported, seed), nor for a message the recipient has read.
 -- ---------------------------------------------------------------------------
-create function public.messages_notify() returns trigger
+create or replace function public.messages_notify() returns trigger
 language plpgsql security definer set search_path = '' as $$
 declare
   c public.conversations;
@@ -140,13 +151,14 @@ begin
   return new;
 end;
 $$;
+drop trigger if exists messages_notify on public.messages;
 create trigger messages_notify after insert on public.messages
   for each row execute function public.messages_notify();
 
 -- A conversation read (conversation_mark_read): its message notifications
 -- up to that moment are read too, in the bell, and their email does not
 -- leave.
-create function public.conversations_read_notifications() returns trigger
+create or replace function public.conversations_read_notifications() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
   if new.seller_last_read_at is not null
@@ -166,6 +178,7 @@ begin
   return new;
 end;
 $$;
+drop trigger if exists conversations_read_notifications on public.conversations;
 create trigger conversations_read_notifications
   after update of seller_last_read_at, buyer_last_read_at on public.conversations
   for each row execute function public.conversations_read_notifications();
@@ -177,7 +190,7 @@ create trigger conversations_read_notifications
 -- their email leaves with the decision of the back office, L1-19). A listing
 -- sent more than an hour ago (seed) sends no email.
 -- ---------------------------------------------------------------------------
-create function public.listings_notify() returns trigger
+create or replace function public.listings_notify() returns trigger
 language plpgsql security definer set search_path = '' as $$
 declare
   p public.properties;
@@ -186,6 +199,13 @@ declare
 begin
   if new.status is not distinct from old.status then
     return new;
+  end if;
+  -- Reviewed, withdrawn or changed: the team has nothing left to do with it
+  -- (read in the bell, its email does not leave).
+  if old.status = 'pending' then
+    update public.notifications
+       set read_at = now()
+     where type = 'listing.pending' and read_at is null and data->>'listing_id' = new.id::text;
   end if;
   select * into p from public.properties where id = new.property_id;
   info := jsonb_build_object(
@@ -221,6 +241,7 @@ begin
   return new;
 end;
 $$;
+drop trigger if exists listings_notify on public.listings;
 create trigger listings_notify after update of status on public.listings
   for each row execute function public.listings_notify();
 
@@ -229,7 +250,7 @@ create trigger listings_notify after update of status on public.listings
 -- preferences and whether their account is open, and when the last email of
 -- the same group left.
 -- ---------------------------------------------------------------------------
-create function public.notification_email_queue(p_limit int default 500)
+create or replace function public.notification_email_queue(p_limit int default 500)
 returns table (
   id uuid,
   profile_id uuid,
@@ -276,12 +297,16 @@ exception when others then
 end;
 $$;
 
-create function public.cron_call(p_path text) returns bigint
+create or replace function public.cron_call(p_path text) returns bigint
 language plpgsql security definer set search_path = '' as $$
 declare
   base text;
   secret text;
 begin
+  -- A route of the site only: the secret never leaves for another host.
+  if p_path is null or p_path !~ '^/api/cron/[a-z0-9-]+$' then
+    raise exception 'cron_call: invalid path %', p_path using errcode = '22023';
+  end if;
   select decrypted_secret into base from vault.decrypted_secrets where name = 'site_url';
   select decrypted_secret into secret from vault.decrypted_secrets where name = 'cron_secret';
   if base is null or secret is null then
@@ -292,7 +317,8 @@ begin
     body := '{}'::jsonb,
     headers := jsonb_build_object('Authorization', 'Bearer ' || secret,
                                   'Content-Type', 'application/json'),
-    timeout_milliseconds := 20000);
+    -- The route sends for 40 seconds at most (leenkey/notifications/send-emails.ts).
+    timeout_milliseconds := 55000);
 end;
 $$;
 
@@ -312,7 +338,7 @@ $$;
 revoke execute on function public.notification_add(uuid, text, jsonb, text, text, timestamptz, timestamptz, timestamptz)
   from public, anon, authenticated;
 revoke execute on function public.notification_email_queue(int) from public, anon, authenticated;
-revoke execute on function public.cron_call(text) from public, anon, authenticated;
+revoke execute on function public.cron_call(text) from public, anon, authenticated, service_role;
 revoke execute on function public.messages_notify() from public, anon, authenticated;
 revoke execute on function public.conversations_read_notifications() from public, anon, authenticated;
 revoke execute on function public.listings_notify() from public, anon, authenticated;

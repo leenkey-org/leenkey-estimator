@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  claimedEmail,
   MAX_AGE_HOURS,
   planEmails,
   toQueuedNotification,
@@ -175,6 +176,28 @@ describe("planEmails", () => {
         { ids: [expect.any(String), expect.any(String)], until: minutes(-8) },
       ]);
     });
+  });
+
+  it("claimed: the email of the rows a run could take", () => {
+    const a = row({ createdAt: minutes(9) });
+    const b = row({ createdAt: minutes(8) });
+    const [email] = planEmails([a, b], policyOf, NOW).emails;
+    expect(claimedEmail(email, new Set([b.id]))?.items.map((item) => item.id)).toEqual([b.id]);
+    expect(claimedEmail(email, new Set())).toBeNull();
+
+    // The team: an event read by one admin meanwhile (its row not claimed) is left out.
+    const pending = (entity: string, admin: string) =>
+      row({
+        type: "listing.pending",
+        profileId: admin,
+        groupKey: "listings:review",
+        data: { entity_id: entity },
+      });
+    const rows = [pending("L1", "x"), pending("L1", "y"), pending("L2", "x"), pending("L2", "y")];
+    const [team] = planEmails(rows, policyOf, NOW).emails;
+    const kept = claimedEmail(team, new Set([rows[0].id, rows[2].id, rows[3].id]));
+    expect(kept?.items.map((item) => item.data.entity_id)).toEqual(["L2"]);
+    expect(kept?.ids.sort()).toEqual([rows[2].id, rows[3].id].sort());
   });
 
   it("reads a row of the queue as PostgREST gives it", () => {

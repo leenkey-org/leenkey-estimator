@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  claimedEmail,
   planEmails,
   toQueuedNotification,
   type PlannedEmail,
@@ -14,9 +15,10 @@ import { emailPolicy, renderNotificationEmail } from "./email-catalog";
 // The notification emails waiting in the table (L1-22, SPEC-V2 sections 10 and
 // 19), sent by /api/cron/send-notification-emails every 5 minutes with the
 // service role client of the cron. Each email is claimed before it leaves
-// (email_sent_at), so that two runs at once never send it twice; one that
-// fails is tried again 15 minutes later, until its event is a day old
-// (core/notifications/batch.ts).
+// (email_sent_at, rows still unread only) and speaks only of the rows it
+// claimed, so that two runs at once never send the same message twice and a
+// conversation read meanwhile sends nothing; one that fails is tried again
+// 15 minutes later, until its event is a day old (core/notifications/batch.ts).
 
 /** Rows read at each run; the next ones wait for the next run. */
 const QUEUE_LIMIT = 500;
@@ -76,6 +78,24 @@ async function updateWaiting(supabase: Client, ids: readonly string[], changes: 
   return count;
 }
 
+/** Claims the unread rows still waiting for their email; the ids claimed. */
+async function claim(supabase: Client, ids: readonly string[], claimedAt: string) {
+  const claimed = new Set<string>();
+  for (const part of chunks(ids)) {
+    const { data, error } = await supabase
+      .from("notifications")
+      .update({ email_sent_at: claimedAt })
+      .in("id", part)
+      .is("email_sent_at", null)
+      .is("email_skipped_at", null)
+      .is("read_at", null)
+      .select("id");
+    if (error) throw new Error(`notifications claim: ${error.code} ${error.message}`);
+    for (const row of data) claimed.add(row.id);
+  }
+  return claimed;
+}
+
 /** Gives back the rows of an email that did not leave, for a new try later. */
 async function release(supabase: Client, ids: readonly string[], claimedAt: string, retry: Date) {
   for (const part of chunks(ids)) {
@@ -92,22 +112,26 @@ type Outcome = "sent" | "failed" | "skipped" | "taken";
 
 async function deliver(supabase: Client, email: PlannedEmail, now: Date): Promise<Outcome> {
   const to = email.audience === "team" ? teamAddress() : email.email;
-  const content = await renderNotificationEmail(email);
-  if (!to || !content) {
-    console.error("[notifications] email without recipient or content", {
+  if (!to) {
+    console.error("[notifications] email without recipient", {
       type: email.type,
       user_id: email.profileId,
     });
     await updateWaiting(supabase, email.ids, { email_skipped_at: now.toISOString() });
     return "skipped";
   }
-  // Claimed first: a run that started meanwhile finds nothing left to send.
+  // Claimed first: a run that started meanwhile, or a reading, leaves its rows out.
   const claimedAt = now.toISOString();
-  if ((await updateWaiting(supabase, email.ids, { email_sent_at: claimedAt })) === 0) {
+  const claimed = await claim(supabase, email.ids, claimedAt);
+  const kept = claimed.size > 0 ? claimedEmail(email, claimed) : null;
+  if (!kept) return "taken";
+  const content = await renderNotificationEmail(kept);
+  if (!content) {
+    console.error("[notifications] email without content", { type: email.type });
     return "taken";
   }
   if ((await sendEmail({ to, ...content })) !== "failed") return "sent";
-  await release(supabase, email.ids, claimedAt, new Date(now.getTime() + RETRY_MINUTES * 60_000));
+  await release(supabase, kept.ids, claimedAt, new Date(now.getTime() + RETRY_MINUTES * 60_000));
   return "failed";
 }
 

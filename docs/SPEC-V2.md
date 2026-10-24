@@ -1362,7 +1362,7 @@ Fonction unique `notify(profileId, type, payload)` dans `core/notifications/`. E
 | `message.new` | oui | oui | Un email maximum par conversation toutes les 15 min ; si l'utilisateur a lu entre-temps, pas d'email |
 | `listing.published` | oui | oui | — |
 | `listing.rejected` | oui | oui | — |
-| `listing.pending` (admin) | oui | oui | Digest si > 3 en 1 h |
+| `listing.pending` (admin) | oui | oui | Digest si > 3 en 1 h (au plus 3 emails par heure, les annonces en attente regroupées, L1-22) |
 | `offer.received` | oui | oui | — |
 | `offer.answered` | oui | oui | — |
 | `offer.expired` | oui | oui | — |

@@ -7,7 +7,7 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { NotificationItem } from "@/components/shared/notification-item";
 import { Skeleton } from "@/components/shared/skeleton";
 import type { Notifications } from "@/core/notifications/store";
-import type { NotificationView } from "@/core/notifications/types";
+import { internalLink, type NotificationView } from "@/core/notifications/types";
 import type { Space } from "@/leenkey/navigation/spaces";
 import { formatNotificationTime, parisDaysAgo } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
@@ -100,7 +100,7 @@ export function NotificationPanel({
         time={formatNotificationTime(notification.createdAt, now)}
         dateTime={notification.createdAt}
         unread={!notification.readAt}
-        href={notification.link}
+        href={internalLink(notification.link)}
         onSelect={() => {
           if (!notification.readAt) markRead(notification.id);
           close();
@@ -114,6 +114,7 @@ export function NotificationPanel({
       {filters.length > 1 ? (
         <div className="shrink-0 border-b border-lk-line px-4 py-3">
           <FilterPillButtons
+            className="-mx-4 px-4"
             label={t.filtersLabel}
             items={filters.map((key) => ({ key, label: t.filters[key] }))}
             active={filter}
@@ -139,7 +140,16 @@ export function NotificationPanel({
         )}
       </div>
       <div className="flex shrink-0 items-center border-t border-lk-line px-4 py-3.5">
-        <Button variant="ghost" size="sm" disabled={unread === 0} onClick={markAllRead}>
+        {/* aria-disabled, not disabled: the focus stays on it once all is read. */}
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-disabled={unread === 0}
+          onClick={() => {
+            if (unread > 0) markAllRead();
+          }}
+          className="aria-disabled:cursor-not-allowed aria-disabled:opacity-45"
+        >
           {t.markAllRead}
         </Button>
       </div>

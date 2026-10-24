@@ -58,6 +58,7 @@ function planned(items: QueuedNotification[], overrides: Partial<PlannedEmail> =
     email: items[0].email,
     firstName: items[0].firstName,
     items,
+    rows: items,
     ids: items.map((item) => item.id),
     ...overrides,
   };
@@ -96,6 +97,8 @@ describe("« Nouveau message »", () => {
     expect(email?.text).toContain("parce que vous vendez un bien sur Leenkey");
     expect(email?.text).toContain("https://leenkey-v2.vercel.app/compte/notifications");
     expect(email?.replyTo).toBe("contact.leenkey@gmail.com");
+    // An answer by email reaches Leenkey, not the other party: the email says so.
+    expect(email?.text).toContain("Pour répondre, écrivez sur Leenkey");
   });
 
   it("several messages in one email, the excerpt of the last one", async () => {
@@ -120,7 +123,7 @@ describe("« Nouveau message »", () => {
       data: { ...queued().data, from: "seller", sender_first_name: "Alice" },
     });
     const email = await renderNotificationEmail(planned([fromSeller]));
-    expect(email?.subject).toBe("Nouveau message de Alice");
+    expect(email?.subject).toBe("Nouveau message d'Alice");
     expect(email?.text).toContain("parce que vous avez contacté un vendeur sur Leenkey");
   });
 
@@ -161,6 +164,19 @@ describe("« Annonce à valider »", () => {
     expect(email?.text).toContain("Notification interne du back office de Leenkey.");
   });
 
+  it("never a link written by the seller: its title and first name stay out", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const trap = listing("l9", "LK-0049", "Voir leenkey-admin.fr");
+    trap.data.seller_first_name = "Jean, rappelez-moi sur www.verif-leenkey.fr";
+    const email = await renderNotificationEmail(planned([trap], { audience: "team", email: null }));
+    for (const part of [email?.text ?? "", email?.html ?? ""]) {
+      expect(part).not.toContain("leenkey-admin.fr");
+      expect(part).not.toContain("verif-leenkey.fr");
+    }
+    // The reference instead of the title.
+    expect(email?.text).toMatch(/«.LK-0049.» vient d'être envoyée en validation/);
+  });
+
   it("several: one email that lists them", async () => {
     const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
     const email = await renderNotificationEmail(
@@ -185,7 +201,7 @@ describe("« Annonce à valider »", () => {
 describe("sendNotificationEmails", () => {
   type Update = { values: Record<string, unknown>; ids: string[]; filters: string[] };
 
-  function client(rows: unknown[], { claimed = true }: { claimed?: boolean } = {}) {
+  function client(rows: unknown[], { claimed = true }: { claimed?: boolean | string[] } = {}) {
     const updates: Update[] = [];
     const supabase = {
       rpc: vi.fn(async () => ({ data: rows, error: null })),
@@ -207,7 +223,12 @@ describe("sendNotificationEmails", () => {
               return chain;
             },
             select: async () => ({
-              data: claimed || !("email_sent_at" in values) ? update.ids.map((id) => ({ id })) : [],
+              data:
+                !("email_sent_at" in values) || claimed === true
+                  ? update.ids.map((id) => ({ id }))
+                  : Array.isArray(claimed)
+                    ? update.ids.filter((id) => claimed.includes(id)).map((id) => ({ id }))
+                    : [],
               error: null,
             }),
             then(resolve: (value: { error: null }) => void) {
@@ -256,7 +277,7 @@ describe("sendNotificationEmails", () => {
     expect(updates[1]).toMatchObject({
       values: { email_sent_at: NOW.toISOString() },
       ids: ["n1"],
-      filters: ["email_sent_at is null", "email_skipped_at is null"],
+      filters: ["email_sent_at is null", "email_skipped_at is null", "read_at is null"],
     });
     expect(mocks.sendEmail).toHaveBeenCalledWith(
       expect.objectContaining({ to: "seller_a@exemple.test", subject: "Nouveau message de Chloé" }),
@@ -275,6 +296,25 @@ describe("sendNotificationEmails", () => {
       ids: ["n1"],
       filters: [`email_sent_at = ${NOW.toISOString()}`],
     });
+  });
+
+  it("speaks only of the rows it claimed (another run, a reading meanwhile)", async () => {
+    const { sendNotificationEmails } = await import("@/leenkey/notifications/send-emails");
+    const { supabase } = client(
+      [
+        row({ id: "n1", data: { ...queued().data, excerpt: "Premier" } }),
+        row({ id: "n2", data: { ...queued().data, excerpt: "Deuxième" } }),
+        row({ id: "n3", data: { ...queued().data, excerpt: "Troisième" } }),
+      ],
+      { claimed: ["n3"] },
+    );
+    mocks.sendEmail.mockResolvedValue("test");
+    // @ts-expect-error: a script of answers, not a client.
+    await sendNotificationEmails(supabase, NOW, { paceMs: 0 });
+    expect(mocks.sendEmail).toHaveBeenCalledTimes(1);
+    const [email] = mocks.sendEmail.mock.calls[0];
+    expect(email.subject).toBe("Nouveau message de Chloé");
+    expect(email.text).toContain("Troisième");
   });
 
   it("an email claimed by another run meanwhile does not leave twice", async () => {

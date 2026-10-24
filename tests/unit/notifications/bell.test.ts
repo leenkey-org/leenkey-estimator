@@ -7,7 +7,7 @@ import {
   withRead,
   type NotificationsState,
 } from "@/core/notifications/state";
-import type { NotificationRow } from "@/core/notifications/types";
+import { internalLink, type NotificationRow } from "@/core/notifications/types";
 import { isCronRequest } from "@/core/cron/auth";
 import { formatNotificationTime } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
@@ -195,6 +195,30 @@ describe("wording of the notifications (from type and data)", () => {
     expect(formatNotificationTime("2026-10-23T09:00:00Z", now)).toBe("Hier");
     expect(formatNotificationTime("2026-10-20T09:00:00Z", now)).toBe("Mardi");
     expect(formatNotificationTime("2026-10-03T09:00:00Z", now)).toBe("3 oct.");
+  });
+});
+
+describe("words and links of the bell", () => {
+  it("« d'Alice », « de David »", () => {
+    expect(t.messageNew.title("Alice")).toBe("Nouveau message d'Alice");
+    expect(t.messageNew.title("Émilie")).toBe("Nouveau message d'Émilie");
+    expect(t.messageNew.title("Hugo")).toBe("Nouveau message d'Hugo");
+    expect(t.messageNew.title("David")).toBe("Nouveau message de David");
+    expect(t.messageNew.title("Yann")).toBe("Nouveau message de Yann");
+    expect(fr.emails.newMessages.subject("Alice", 3)).toBe("3 nouveaux messages d'Alice");
+  });
+
+  it("a date ahead of the clock of the device is « À l'instant »", () => {
+    const now = new Date("2026-10-24T10:00:00Z");
+    expect(formatNotificationTime("2026-10-24T10:00:40Z", now)).toBe("À l'instant");
+  });
+
+  it("a notification leads inside the site only", () => {
+    expect(internalLink("/messages/c1")).toBe("/messages/c1");
+    expect(internalLink("//hote-tiers.example/x")).toBeNull();
+    expect(internalLink("/\\hote-tiers.example")).toBeNull();
+    expect(internalLink("https://hote-tiers.example")).toBeNull();
+    expect(internalLink(null)).toBeNull();
   });
 });
 

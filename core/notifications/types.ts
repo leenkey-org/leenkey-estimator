@@ -33,6 +33,11 @@ export type NotificationRow = {
 export const NOTIFICATION_COLUMNS =
   "id, profile_id, type, title, body, data, link, created_at, read_at";
 
+/** A path of the site (« /messages/… »), never another host (« //hote », « https:… »). */
+export function internalLink(link: string | null): string | null {
+  return link && /^\/(?![/\\])/.test(link) ? link : null;
+}
+
 /** Facts of an event: an object, whatever came from the database. */
 export function notificationData(value: unknown): NotificationData {
   return value && typeof value === "object" && !Array.isArray(value)

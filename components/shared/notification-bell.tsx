@@ -92,7 +92,11 @@ export function NotificationBell({
             variant={tone === "dark" && !unread ? "on-dark" : "tint"}
             aria-label={unread ? t.bellUnread(count) : t.bell}
             // 42 px in the TopNav, 44 px touch target kept.
-            className={cn(size === "nav" && "size-10.5 after:absolute after:-inset-px")}
+            className={cn(
+              size === "nav" && "size-10.5 after:absolute after:-inset-px",
+              // The blue ring is too faint on ink (DESIGN.md 2.1).
+              tone === "dark" && "focus-visible:outline-white",
+            )}
           />
         </DialogPrimitive.Trigger>
         {unread ? (

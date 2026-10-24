@@ -91,7 +91,10 @@ test.describe("catalogue /design", () => {
       panel.getByRole("link").filter({ hasText: "Nouveau message de Chloé" }),
     ).toContainText(", non lue");
     await panel.getByRole("button", { name: "Tout marquer comme lu" }).click();
-    await expect(panel.getByRole("button", { name: "Tout marquer comme lu" })).toBeDisabled();
+    await expect(panel.getByRole("button", { name: "Tout marquer comme lu" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     await expect(panel.getByText(", non lue")).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(section.getByRole("button", { name: "Notifications, 3 nouvelles" })).toHaveCount(

@@ -5,7 +5,7 @@
 // the email: they are read in the application.
 
 const LINK_LIKE =
-  /(?:[a-z][a-z\d+.-]*:\/\/|www\.|[\p{L}\d._%+-]+@[\p{L}\d-]+\.|[\p{L}\d-]{2,}\.[a-z]{2,}(?![\p{L}\d]))/iu;
+  /(?:[a-z][a-z\d+.-]*:\/\/|www\.|[\p{L}\d._%+-]+@[\p{L}\d-]+\.|[\p{L}\d-]+\.[a-z]{2,}(?![\p{L}\d]))/iu;
 
 /** Whether a mail client could make a link of these words. */
 export function looksLikeLink(text: string): boolean {

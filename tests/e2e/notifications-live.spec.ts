@@ -165,7 +165,7 @@ test("la cloche s'allume en direct, le panneau lit, la r√©ponse arrive sur le t√
     // Full screen below 768 px.
     expect((await panel(buyer).boundingBox())?.width).toBeCloseTo(390, 0);
     const item = panel(buyer).getByRole("link").filter({ hasText: run });
-    await expect(item).toContainText("Nouveau message de Alice");
+    await expect(item).toContainText("Nouveau message d'Alice");
     const filters = panel(buyer).getByRole("group", { name: "Filtrer les notifications" });
     await expect(filters.getByRole("button")).toHaveText([
       "Toutes",
@@ -180,9 +180,10 @@ test("la cloche s'allume en direct, le panneau lit, la r√©ponse arrive sur le t√
     await expect(panel(buyer).getByRole("link").filter({ hasText: run })).not.toContainText(
       "non lue",
     );
-    await expect(
-      panel(buyer).getByRole("button", { name: "Tout marquer comme lu" }),
-    ).toBeDisabled();
+    const markAll = panel(buyer).getByRole("button", { name: "Tout marquer comme lu" });
+    await expect(markAll).toHaveAttribute("aria-disabled", "true");
+    // The focus stays where it was (DESIGN.md 15).
+    await expect(markAll).toBeFocused();
     // Read in the database too: the same after a reload.
     await buyer.reload();
     await bell(buyer).click();

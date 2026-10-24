@@ -83,12 +83,17 @@ function adminUrl(item: QueuedNotification): string {
   return absoluteUrl(item.link ?? adminListingsHref({ status: "pending" }));
 }
 
+/** Written by the seller: its reference instead of a title a mail client would make a link of. */
+function listingTitle(item: QueuedNotification): string {
+  return emailSafeText(item.data.title) ?? text(item.data.reference) ?? "";
+}
+
 /** Listings sent for review: one email for one, a list for several. */
 async function listingsToReview(email: PlannedEmail): Promise<RenderedEmail | null> {
   const [first, ...others] = email.items;
   if (!first) return null;
   const reference = text(first.data.reference) ?? "";
-  const title = text(first.data.title) ?? reference;
+  const title = listingTitle(first);
   if (others.length === 0) {
     return rendered(
       listingToReviewSubject(reference),
@@ -97,7 +102,7 @@ async function listingsToReview(email: PlannedEmail): Promise<RenderedEmail | nu
         reference,
         place: place(first),
         price: price(first),
-        sellerName: text(first.data.seller_first_name),
+        sellerName: emailSafeText(first.data.seller_first_name),
         adminUrl: adminUrl(first),
         siteUrl: siteUrl(),
       }),
@@ -107,12 +112,12 @@ async function listingsToReview(email: PlannedEmail): Promise<RenderedEmail | nu
     listingsToReviewSubject(email.items.length),
     ListingsToReviewEmail({
       items: email.items.map((item) => ({
-        title: text(item.data.title) ?? text(item.data.reference) ?? "",
+        title: listingTitle(item),
         details: fr.emails.listingToReview.details(
           text(item.data.reference) ?? "",
           place(item),
           price(item),
-          text(item.data.seller_first_name),
+          emailSafeText(item.data.seller_first_name),
         ),
         adminUrl: adminUrl(item),
       })),

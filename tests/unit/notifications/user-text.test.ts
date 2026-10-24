@@ -12,6 +12,10 @@ describe("looksLikeLink", () => {
     "écrivez-moi : jean.dupont@gmail.com",
     "Mon annonce sur leboncoin.fr",
     "paiement sur exemple.com/payer",
+    "Écrivez-moi sur t.me/vendeur_rapide",
+    "suivez x.com/abc",
+    "g.co/x",
+    "a.b.fr",
   ])("« %s » could become a link", (text) => {
     expect(looksLikeLink(text)).toBe(true);
   });

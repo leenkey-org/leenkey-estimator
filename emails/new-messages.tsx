@@ -54,6 +54,7 @@ export function NewMessagesEmail({
       {excerpt ? <Text style={emailQuote}>{excerpt}</Text> : null}
       {excerptHidden ? <Text style={emailText}>{copy.hidden}</Text> : null}
       {count > 1 ? <Text style={emailText}>{copy.more(count - 1)}</Text> : null}
+      <Text style={emailText}>{copy.replyHint}</Text>
     </EmailLayout>
   );
 }

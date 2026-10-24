@@ -195,6 +195,8 @@ export function formatRelative(value: DateInput, now: DateInput = new Date()): s
  */
 export function formatNotificationTime(value: DateInput, now: DateInput = new Date()): string {
   const date = toDate(value);
+  // Ahead of the clock of the device: just written.
+  if (date.getTime() > toDate(now).getTime()) return capitalize(fr.format.justNow);
   const days = parisDayNumber(toDate(now)) - parisDayNumber(date);
   if (days <= 0) return capitalize(formatRelative(date, now));
   if (days === 1) return capitalize(fr.format.yesterday);

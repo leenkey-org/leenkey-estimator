@@ -59,7 +59,7 @@ export function NotificationItem({
         <Icon className="size-4.5" />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.75">
-        <span className="text-lk-label font-semibold text-lk-ink">
+        <span className="text-lk-label font-semibold break-words text-lk-ink">
           {title}
           {unread ? <span className="sr-only">{`, ${fr.notifications.unread}`}</span> : null}
         </span>

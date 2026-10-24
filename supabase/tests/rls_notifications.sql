@@ -4,7 +4,7 @@
 -- cron, its functions closed to the users; Realtime publication.
 begin;
 \ir _helpers.psql
-select plan(42);
+select plan(47);
 \ir _plan.psql
 
 -- seller_a: a listing sent for review, then published by the team; seller_b:
@@ -73,6 +73,9 @@ select is((select email_after from notifications
 select is((select data->>'reason' from notifications
             where profile_id = tests.uid('seller_b') and type = 'listing.rejected'),
           'Ajoutez les charges et l''étage.', 'to correct: « listing.rejected » with its reason');
+select is((select count(*) from notifications
+            where profile_id = tests.uid('admin') and type = 'listing.pending' and read_at is null)::int, 0,
+          'reviewed: the notifications of the team are read, their email never leaves');
 
 -- ===========================================================================
 -- A message: to the other party only, its email in 5 minutes
@@ -197,6 +200,11 @@ select is((select count(*) from notifications
 \ir _as.psql
 select ok((select count(*) from notifications where profile_id = tests.uid('seller_a')) > 0,
           'admin: reads them (back office)');
+update notifications set read_at = now() where profile_id = tests.uid('seller_a') and read_at is null;
+reset role;
+select ok((select count(*) from notifications
+            where profile_id = tests.uid('seller_a') and read_at is null) > 0,
+          'admin: cannot mark those of a seller read (their email would never leave)');
 
 -- ===========================================================================
 -- The functions of the server only
@@ -209,6 +217,15 @@ select throws_ok('select * from notification_email_queue()', '42501', null,
                  'seller_a: cannot read the email queue');
 select throws_ok($$select cron_call('/api/cron/send-notification-emails')$$, '42501', null,
                  'seller_a: cannot call a cron job');
+reset role;
+select throws_ok($$select cron_call('@hote-tiers.example/x')$$, '22023', null,
+                 'a job calls a route of the site only: the secret never leaves for another host');
+select throws_ok(format($$select notification_add(%L, 'x', '{}', '//hote-tiers.example')$$, tests.uid('buyer_c')),
+                 '23514', null, 'a notification leads inside the site only');
+select is(has_function_privilege('service_role', 'public.cron_call(text)', 'execute'), false,
+          'cron_call: the job of pg_cron only, not the service role');
+\set who seller_a
+\ir _as.psql
 
 \set who admin
 \ir _as.psql

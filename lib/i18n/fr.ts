@@ -2,6 +2,11 @@
 import { legalNotice, terms } from "./legal-texts";
 import { site } from "./site";
 
+/** « de David », « d'Alice », « d'Hélène »: the elision before a vowel or an h (« de Yann »). */
+function of(name: string): string {
+  return /^[aeiouhàâäéèêëîïôöùûüæœ]/i.test(name) ? `d'${name}` : `de ${name}`;
+}
+
 export const fr = {
   env: {
     stagingBanner: "Environnement de test",
@@ -240,7 +245,7 @@ export const fr = {
     retry: "Réessayer",
     types: {
       messageNew: {
-        title: (name: string | null) => (name ? `Nouveau message de ${name}` : "Nouveau message"),
+        title: (name: string | null) => (name ? `Nouveau message ${of(name)}` : "Nouveau message"),
         detail: (excerpt: string, truncated: boolean) =>
           `«\u00A0${excerpt}${truncated ? "…" : ""}\u00A0»`,
       },
@@ -1100,13 +1105,15 @@ export const fr = {
     newMessages: {
       subject: (name: string | null, count: number) =>
         count > 1
-          ? `${count} nouveaux messages${name ? ` de ${name}` : ""}`
-          : `Nouveau message${name ? ` de ${name}` : ""}`,
+          ? `${count} nouveaux messages${name ? ` ${of(name)}` : ""}`
+          : `Nouveau message${name ? ` ${of(name)}` : ""}`,
       about: (listing: string) => `À propos de «\u00A0${listing}\u00A0» :`,
       more: (count: number) =>
         count === 1 ? "Et un autre message." : `Et ${count} autres messages.`,
       // Its words may hold a link: never in an email (core/notifications/user-text.ts).
       hidden: "Ce message contient un lien ou une adresse : lisez-le sur Leenkey.",
+      replyHint:
+        "Pour répondre, écrivez sur Leenkey : une réponse à cet email ne lui parvient pas.",
       action: "Lire la conversation",
     },
     // L1-22: several listings sent for review at once, in one email (SPEC-V2 10).
