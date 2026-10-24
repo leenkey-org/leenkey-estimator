@@ -66,8 +66,10 @@ export function bottomTabs(space: Space, signedIn = true): readonly NavItem[] {
  * Links of the TopNav. « Vendre » is the home page, written for the sellers;
  * « Acheter » stays current on a listing (AnnonceDesktop); « Tarifs » joins
  * them with the public site in V2 (DECISIONS 2026-10-19), then « Qui
- * sommes-nous » and « Contact » (DECISIONS 2026-10-20). No « Guides »: no
- * such page in the SPEC.
+ * sommes-nous » and « Contact » (DECISIONS 2026-10-20). « Qui sommes-nous »
+ * opens the company and its founder, then the page of the investors, where
+ * the vision is (L1-51, DECISIONS 2026-10-24): current on both. No
+ * « Guides »: no such page in the SPEC.
  */
 export const TOP_NAV_LINKS: readonly NavItem[] = [
   { href: ROUTES.search, label: fr.nav.links.buy, match: [ROUTES.listing] },
@@ -76,7 +78,15 @@ export const TOP_NAV_LINKS: readonly NavItem[] = [
   // and the mobile menu have them.
   { href: ROUTES.pricing, label: fr.site.links.pricing, from: "lg" },
   { href: ROUTES.valuation, label: fr.nav.links.valuation },
-  { href: ROUTES.about, label: fr.site.links.about, from: "xl" },
+  {
+    href: ROUTES.about,
+    label: fr.site.links.about,
+    from: "xl",
+    items: [
+      { href: ROUTES.about, label: fr.site.links.aboutCompany },
+      { href: ROUTES.invest, label: fr.site.links.aboutInvest },
+    ],
+  },
   { href: ROUTES.contact, label: fr.site.links.contact, from: "lg" },
 ];
 
@@ -94,10 +104,15 @@ export const SITE_LINKS: readonly NavItem[] = [
   { href: ROUTES.about, label: fr.site.links.about },
 ];
 
-/** Links of the mobile menu of the public pages (G1): the TopNav, then the site. */
+/** The pages the TopNav leads to, those of its groups included. */
+const TOP_NAV_PAGES = TOP_NAV_LINKS.flatMap((link) => link.items ?? [link]).map(
+  (link) => link.href,
+);
+
+/** Links of the mobile menu of the public pages (G1): the TopNav, then the rest of the site. */
 export const MENU_LINKS: readonly NavItem[] = [
   ...TOP_NAV_LINKS,
-  ...SITE_LINKS.filter((link) => !TOP_NAV_LINKS.some((top) => top.href === link.href)),
+  ...SITE_LINKS.filter((link) => !TOP_NAV_PAGES.includes(link.href)),
 ];
 
 const admin = fr.nav.admin;

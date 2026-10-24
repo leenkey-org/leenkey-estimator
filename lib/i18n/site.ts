@@ -20,6 +20,9 @@ export const site = {
     invest: "Investir",
     about: "Qui sommes-nous",
     contact: "Contact",
+    // The two pages under « Qui sommes-nous » in the menus (L1-51, DECISIONS 2026-10-24).
+    aboutCompany: "Leenkey et son fondateur",
+    aboutInvest: "Investir dans Leenkey",
   },
   // G1 mobile header (docs/DESIGN.md 11): logo and menu.
   menu: {

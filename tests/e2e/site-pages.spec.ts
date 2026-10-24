@@ -156,9 +156,10 @@ test.describe("pages du site en V2", () => {
     const photo = main.getByRole("img", { name: "Cédric Da Cunha, fondateur de Leenkey" });
     await expect(photo).toBeVisible();
     expect(await photo.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(720);
+    // The vision of /investir, where its section starts (L1-51).
     await expect(main.getByRole("link", { name: "Découvrir notre vision" })).toHaveAttribute(
       "href",
-      "/investir",
+      "/investir#vision",
     );
     await expect(main.getByRole("link", { name: "Nous contacter" })).toHaveAttribute(
       "href",

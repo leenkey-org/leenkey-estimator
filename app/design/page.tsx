@@ -899,7 +899,9 @@ export default function DesignPage() {
           </Section>
 
           <Section id="navigation" title={content.sections.navigation} level="h3">
-            <div className="overflow-x-auto rounded-lk-md border border-lk-line">
+            {/* From 1280 px, room for the bar: the panel of « Qui sommes-nous » shows under it, over
+                the next example. */}
+            <div className="overflow-x-auto rounded-lk-md border border-lk-line xl:relative xl:z-30 xl:overflow-visible">
               <TopNav
                 className="flex min-w-4xl border-b-0"
                 homeHref="/design#navigation"
@@ -918,7 +920,7 @@ export default function DesignPage() {
               />
             </div>
             <Caption>{content.navigation.topSignedInCaption}</Caption>
-            <div className="overflow-x-auto rounded-lk-md border border-lk-line">
+            <div className="overflow-x-auto rounded-lk-md border border-lk-line xl:relative xl:z-20 xl:overflow-visible">
               <TopNav
                 className="flex min-w-4xl border-b-0"
                 homeHref="/design#navigation"

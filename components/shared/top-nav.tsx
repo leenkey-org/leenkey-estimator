@@ -44,7 +44,9 @@ export type TopNavProps = {
  * border, sticky. Logo 32 px high, links, then on the right (gap 6): the
  * primary action, and when signed in the bell, the favourites and the avatar
  * of the account menu; when signed out, « Mon compte ». Padding 0 40 and gap
- * 32 from 1024 px, tighter below so that it fits in 768 px.
+ * 32 from 1024 px, tighter below so that it fits in 768 px. Layer 30, above
+ * the sticky headers of the pages (20): the panel of a group of its links
+ * covers them (L1-51); no BottomNav from 768 px.
  */
 export function TopNav({
   homeHref,
@@ -59,7 +61,7 @@ export function TopNav({
     <header
       className={cn(
         "hidden h-18 items-center gap-6 border-b border-lk-line bg-lk-surface px-5",
-        "md:sticky md:top-0 md:z-20 md:flex lg:gap-8 lg:px-10",
+        "md:sticky md:top-0 md:z-30 md:flex lg:gap-8 lg:px-10",
         className,
       )}
     >

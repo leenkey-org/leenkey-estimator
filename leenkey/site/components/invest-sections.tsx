@@ -24,6 +24,7 @@ import { ShowcaseHero } from "@/components/shared/showcase-hero";
 import { fr } from "@/lib/i18n/fr";
 import type { ContactMotif } from "@/lib/validations/contact";
 import { cn } from "@/lib/utils";
+import { VISION_ANCHOR } from "../anchors";
 import { emailHref, whatsappHref } from "../contact-links";
 import { ContactForm } from "./contact-form";
 import { CtaPanel } from "./cta-panel";
@@ -166,7 +167,7 @@ export function VisionSection() {
   const v = t.vision;
   return (
     <MarketingSection
-      id="vision"
+      id={VISION_ANCHOR}
       look="showcase"
       align="start"
       eyebrow={v.eyebrow}
