@@ -60,7 +60,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
 
 - [x] **L1-21** Messagerie : création de conversation depuis l'annonce, liste, fil, Realtime, lu / non lu, signalement, limites anti-abus ; « Demander une visite » ouvre le premier message avec un texte de visite (jusqu'aux visites de L3) · PR : #33 · Testé en préprod : ☐
-- [ ] **L1-22** Notifications : `notify()`, table, cloche Realtime, préférences, cron d'envoi groupé, emails React Email… · PR : · Testé en préprod : ☐
+- [x] **L1-22** Notifications : `notify()`, table, cloche Realtime, préférences, cron d'envoi groupé, emails React Email… · PR : #40 (emails groupés : `CRON_SECRET`, clé de service et secrets du Vault à saisir, `DEMARRAGE.md`) · Testé en préprod : ☐
 - [ ] **L1-23** Moteur d'étapes : `emitEvent`, bascule de modèle, `getNextAction`, branchement sur les événements existants · PR : · Testé en préprod : ☐
 - [ ] **L1-24** Dashboard vendeur complet (en-tête navy, StepProgress, NextActionCard, StatTile, TaskList, conversations) · PR : · Testé en préprod : ☐
 - [ ] **L1-25** Espace acquéreur v1 (accueil, profil projet et financement déclaratif, `FinancingBadge` côté vendeur) · PR : · Testé en préprod : ☐

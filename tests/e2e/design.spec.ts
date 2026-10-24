@@ -60,6 +60,60 @@ test.describe("catalogue /design", () => {
     await expect(dpe.getByRole("radio", { name: "Classe C" })).not.toBeChecked();
   });
 
+  test("la cloche : panneau vide de l'espace, puis le panneau d'exemple (L1-22)", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const section = page.locator('section[aria-labelledby="notifications"]');
+    await section.getByRole("button", { name: "Notifications", exact: true }).first().click();
+    const panel = page.getByRole("dialog", { name: "Notifications" });
+    await expect(panel.getByRole("heading", { name: "Aucune notification" })).toBeVisible();
+    await expect(panel).toContainText("des réponses des vendeurs");
+    await page.keyboard.press("Escape");
+    await expect(panel).toBeHidden();
+    // The empty panel of a seller: « Compléter mon annonce » to the « Dossier » tab.
+    await section.getByRole("button", { name: "Notifications", exact: true }).last().click();
+    await expect(panel.getByRole("link", { name: "Compléter mon annonce" })).toHaveAttribute(
+      "href",
+      "/vendeur/dossier",
+    );
+    await page.keyboard.press("Escape");
+
+    const bell = section.getByRole("button", { name: "Notifications, 3 nouvelles" });
+    await bell.click();
+    await expect(panel.getByRole("heading")).toHaveText([
+      "Notifications",
+      "Aujourd'hui",
+      "Cette semaine",
+      "Plus ancien",
+    ]);
+    await expect(
+      panel.getByRole("link").filter({ hasText: "Nouveau message de Chloé" }),
+    ).toContainText(", non lue");
+    await panel.getByRole("button", { name: "Tout marquer comme lu" }).click();
+    await expect(panel.getByRole("button", { name: "Tout marquer comme lu" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    await expect(panel.getByText(", non lue")).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(section.getByRole("button", { name: "Notifications, 3 nouvelles" })).toHaveCount(
+      0,
+    );
+  });
+
+  test("l'aperçu des emails : chaque gabarit, avec son sujet (L1-22)", async ({ page }) => {
+    await page.getByRole("link", { name: "Aperçu des emails" }).click();
+    await expect(page).toHaveURL("/design/emails");
+    await expect(page.getByRole("heading", { level: 1, name: "Emails" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(9);
+    await expect(page.getByText("Sujet : 3 annonces à valider")).toBeVisible();
+    const frame = page.frameLocator(
+      'iframe[title="Aperçu de l\'email « Nouveau message avec un lien (vendeur) »"]',
+    );
+    await expect(frame.getByText("Ce message contient un lien ou une adresse")).toBeVisible();
+  });
+
   test("le titre et les prix utilisent Archivo élargie", async ({ page }) => {
     const title = page.getByRole("heading", { level: 1, name: "Design system" });
     const style = await title.evaluate((element) => {

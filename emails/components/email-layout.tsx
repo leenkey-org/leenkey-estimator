@@ -45,6 +45,13 @@ export const EMAIL_PLAIN_TEXT = {
   },
 } as const;
 export const emailLink = { color: BLUE, textDecoration: "underline" };
+/** The words of another person (the excerpt of a message), set apart on the blue tint. */
+export const emailQuote = {
+  ...emailText,
+  padding: "12px 16px",
+  borderLeft: `3px solid ${BLUE}`,
+  backgroundColor: BLUE_TINT,
+};
 
 export type EmailLayoutProps = {
   /** Line shown by the inbox after the subject. */
@@ -55,6 +62,8 @@ export type EmailLayoutProps = {
   action?: { href: string; label: string };
   /** A notification for the team of Leenkey: its own footer, no preferences. */
   internal?: boolean;
+  /** Why the recipient gets it, when they do not sell (a buyer, L1-22). */
+  why?: string;
   children: ReactNode;
 };
 
@@ -64,6 +73,7 @@ export function EmailLayout({
   siteUrl,
   action,
   internal = false,
+  why = t.footer.why,
   children,
 }: EmailLayoutProps) {
   return (
@@ -126,9 +136,9 @@ export function EmailLayout({
               t.footer.internal
             ) : (
               <>
-                {t.footer.why}{" "}
+                {why}{" "}
                 <Link
-                  href={`${siteUrl}/compte`}
+                  href={`${siteUrl}/compte/notifications`}
                   style={{ color: MUTED, textDecoration: "underline" }}
                 >
                   {t.footer.preferences}

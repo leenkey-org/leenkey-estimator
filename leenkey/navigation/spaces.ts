@@ -26,8 +26,11 @@ export const ROUTES = {
   favourites: "/acquereur/favoris",
   messages: "/messages",
   account: "/compte",
+  notificationSettings: "/compte/notifications",
   admin: "/admin",
   adminListings: "/admin/annonces",
+  /** The listings to review first (lib/validations/admin.ts, ADMIN_LISTING_FILTERS). */
+  adminListingsToReview: "/admin/annonces?statut=a-valider",
   adminUsers: "/admin/utilisateurs",
   adminCases: "/admin/dossiers",
   adminOffers: "/admin/offres",

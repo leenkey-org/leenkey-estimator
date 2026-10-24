@@ -128,22 +128,26 @@ export function signInLink(path: string): { href: string; label: string } {
 
 export const FAVOURITES_LINK = { href: ROUTES.favourites, label: fr.nav.favourites } as const;
 
-/** Bell of a space: nothing unread until the notifications (L1-22). */
+/** Bell of a space: the sentence and the action of its empty panel, its settings (L1-22). */
 export function notificationBell(space: Space): {
-  count: number;
   emptyText: string;
   emptyAction?: { href: string; label: string };
   settingsHref: string;
 } {
   const t = fr.nav.notifications;
-  return {
-    count: 0,
-    emptyText: space === "seller" ? t.emptySeller : t.emptyBuyer,
+  const empty = {
+    seller: {
+      emptyText: t.emptySeller,
+      emptyAction: { href: ROUTES.sellerFile, label: t.completeListing },
+    },
     // DESIGN.md 10.7; the buyer's « Créer une alerte » comes with the alerts (L3-06).
-    emptyAction:
-      space === "seller" ? { href: ROUTES.sellerFile, label: t.completeListing } : undefined,
-    settingsHref: ROUTES.account,
-  };
+    buyer: { emptyText: t.emptyBuyer },
+    admin: {
+      emptyText: t.emptyAdmin,
+      emptyAction: { href: ROUTES.adminListingsToReview, label: t.reviewListings },
+    },
+  }[space];
+  return { ...empty, settingsHref: ROUTES.notificationSettings };
 }
 
 /** Capital initial of the first name, for the avatar. */

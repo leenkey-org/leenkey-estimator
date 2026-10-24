@@ -56,7 +56,14 @@ export default async function ConversationPage({ params, searchParams }: Props) 
       <MessagesLayout
         show="detail"
         list={
-          <InboxPane result={list} roles={profile.roles} currentId={id} titleAs="h2" now={now} />
+          <InboxPane
+            result={list}
+            roles={profile.roles}
+            profileId={profile.id}
+            currentId={id}
+            titleAs="h2"
+            now={now}
+          />
         }
       >
         <ConversationView

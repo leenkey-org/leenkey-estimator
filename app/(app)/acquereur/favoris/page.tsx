@@ -30,7 +30,7 @@ export default async function FavouritesPage() {
   const now = new Date(checkedAt);
 
   return (
-    <SpacePage title={t.title} roles={profile.roles}>
+    <SpacePage title={t.title} roles={profile.roles} profileId={profile.id}>
       {!result.ok ? (
         <InlineAlert
           tone="danger"

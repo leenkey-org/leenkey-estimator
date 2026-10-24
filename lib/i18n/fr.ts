@@ -2,6 +2,11 @@
 import { legalNotice, terms } from "./legal-texts";
 import { site } from "./site";
 
+/** « de David », « d'Alice », « d'Hélène »: the elision before a vowel or an h (« de Yann »). */
+function of(name: string): string {
+  return /^[aeiouhàâäéèêëîïôöùûüæœ]/i.test(name) ? `d'${name}` : `de ${name}`;
+}
+
 export const fr = {
   env: {
     stagingBanner: "Environnement de test",
@@ -217,6 +222,65 @@ export const fr = {
       completeListing: "Compléter mon annonce",
       emptyBuyer:
         "Nous vous prévenons ici des réponses des vendeurs et des nouveaux biens de vos recherches.",
+      emptyAdmin: "Nous vous prévenons ici des annonces envoyées en relecture.",
+      reviewListings: "Voir les annonces à valider",
+    },
+  },
+  // L1-22 (SPEC-V2 section 10, docs/DESIGN.md 10.7): the list of the panel,
+  // the wording of each type of notification and the email preferences.
+  notifications: {
+    filtersLabel: "Filtrer les notifications",
+    filters: {
+      all: "Toutes",
+      searches: "Mes recherches",
+      visitsOffers: "Visites et offres",
+      messages: "Messages",
+      offersVisits: "Offres et visites",
+    },
+    groups: { today: "Aujourd'hui", week: "Cette semaine", older: "Plus ancien" },
+    unread: "non lue",
+    markAllRead: "Tout marquer comme lu",
+    filterEmpty: "Aucune notification de ce type pour l'instant.",
+    loadError: "Les notifications n'ont pas pu être chargées.",
+    retry: "Réessayer",
+    types: {
+      messageNew: {
+        title: (name: string | null) => (name ? `Nouveau message ${of(name)}` : "Nouveau message"),
+        detail: (excerpt: string, truncated: boolean) =>
+          `«\u00A0${excerpt}${truncated ? "…" : ""}\u00A0»`,
+      },
+      listingPending: {
+        title: "Une annonce attend votre relecture",
+        detail: (parts: readonly (string | null)[]) => parts.filter(Boolean).join(" · "),
+      },
+      listingPublished: {
+        title: "Votre annonce est en ligne",
+        detail: (title: string) => `«\u00A0${title}\u00A0» est visible des acquéreurs.`,
+      },
+      listingRejected: {
+        title: "Votre annonce est à corriger",
+        detail: (title: string) =>
+          `Nous avons relu «\u00A0${title}\u00A0» : voyez ce qu'il faut corriger.`,
+      },
+      fallback: "Nouvelle notification",
+    },
+    preferences: {
+      metaTitle: "Notifications · Mon compte",
+      title: "Notifications",
+      lead: "Choisissez les emails que vous recevez. Dans l'application, la cloche vous prévient de tout.",
+      legend: "Emails",
+      // The offers (L2) and the alerts (L3) add theirs with their emails.
+      messages: {
+        label: "Nouveaux messages",
+        hint: "Quand un acquéreur ou un vendeur vous écrit : au plus un email toutes les 15\u00A0minutes par conversation, aucun si vous l'avez déjà lue.",
+      },
+      always:
+        "Les emails sur votre annonce (relecture, mise en ligne, corrections) partent toujours.",
+      save: "Enregistrer",
+      saved: "Vos préférences sont enregistrées.",
+      error: "Vos préférences n'ont pas pu être enregistrées. Réessayez.",
+      loadError: "Vos préférences n'ont pas pu être chargées. Rechargez la page.",
+      back: "Mon compte",
     },
   },
   // L1-18: favourites.
@@ -703,7 +767,7 @@ export const fr = {
       title: "Mon compte",
       comingTitle: "Vos réglages arrivent",
       comingText:
-        "Nous préparons l'écran de vos informations personnelles, de votre mot de passe et de vos notifications.",
+        "Nous préparons l'écran de vos informations personnelles et de votre mot de passe.",
     },
     // « Dossier » tab (L1-14): the page of the property, or the list of them.
     sellerFile: {
@@ -1024,6 +1088,7 @@ export const fr = {
     signature: "L'équipe Leenkey",
     footer: {
       why: "Vous recevez cet email parce que vous vendez un bien sur Leenkey.",
+      whyBuyer: "Vous recevez cet email parce que vous avez contacté un vendeur sur Leenkey.",
       preferences: "Gérer mes notifications",
       internal: "Notification interne du back office de Leenkey.",
     },
@@ -1035,6 +1100,28 @@ export const fr = {
       text: (title: string) => `Nous avons bien reçu « ${title} ».`,
       next: "Nous la relisons sous 24\u00A0h et vous prévenons par email dès qu'elle est en ligne, ou s'il faut la corriger.",
       action: "Voir ma vente",
+    },
+    // L1-22: the new messages of a conversation, in one email (SPEC-V2 10).
+    newMessages: {
+      subject: (name: string | null, count: number) =>
+        count > 1
+          ? `${count} nouveaux messages${name ? ` ${of(name)}` : ""}`
+          : `Nouveau message${name ? ` ${of(name)}` : ""}`,
+      about: (listing: string) => `À propos de «\u00A0${listing}\u00A0» :`,
+      more: (count: number) =>
+        count === 1 ? "Et un autre message." : `Et ${count} autres messages.`,
+      // Its words may hold a link: never in an email (core/notifications/user-text.ts).
+      hidden: "Ce message contient un lien ou une adresse : lisez-le sur Leenkey.",
+      replyHint:
+        "Pour répondre, écrivez sur Leenkey : une réponse à cet email ne lui parvient pas.",
+      action: "Lire la conversation",
+    },
+    // L1-22: several listings sent for review at once, in one email (SPEC-V2 10).
+    listingsToReview: {
+      subject: (count: number) => `${count} annonces à valider`,
+      title: (count: number) => `${count} annonces attendent votre relecture`,
+      text: "Elles sont arrivées presque en même temps : les voici ensemble.",
+      action: "Ouvrir les annonces à valider",
     },
     listingToReview: {
       subject: (reference: string) => `Annonce à valider (${reference})`,

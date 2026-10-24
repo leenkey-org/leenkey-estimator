@@ -189,6 +189,25 @@ export function formatRelative(value: DateInput, now: DateInput = new Date()): s
   return formatDateShort(date, reference);
 }
 
+/**
+ * Time of a notification (docs/DESIGN.md 10.7): « Il y a 12 min » today,
+ * « Hier », the day of the week within six days (« Mardi »), then the short date.
+ */
+export function formatNotificationTime(value: DateInput, now: DateInput = new Date()): string {
+  const date = toDate(value);
+  // Ahead of the clock of the device: just written.
+  if (date.getTime() > toDate(now).getTime()) return capitalize(fr.format.justNow);
+  const days = parisDayNumber(toDate(now)) - parisDayNumber(date);
+  if (days <= 0) return capitalize(formatRelative(date, now));
+  if (days === 1) return capitalize(fr.format.yesterday);
+  if (days < 7) {
+    return capitalize(
+      new Intl.DateTimeFormat(LOCALE, { timeZone: TIME_ZONE, weekday: "long" }).format(date),
+    );
+  }
+  return formatDateShort(date, now);
+}
+
 /** Capital at the start of a line (« Il y a 2 h ») without CSS text-transform. */
 export function capitalize(value: string): string {
   return value.charAt(0).toLocaleUpperCase(LOCALE) + value.slice(1);

@@ -22,7 +22,9 @@ export async function SiteTopNav() {
   const account: TopNavAccount = profile
     ? {
         signedIn: true,
-        notifications: <SpaceNotificationBell roles={profile.roles} size="nav" />,
+        notifications: (
+          <SpaceNotificationBell roles={profile.roles} profileId={profile.id} size="nav" />
+        ),
         favourites: FAVOURITES_LINK,
         menu: { ...accountMenu(profile), signOut },
       }

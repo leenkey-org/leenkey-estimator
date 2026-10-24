@@ -506,8 +506,20 @@ export const navigation = {
 
 export const notifications = {
   bellCaption:
-    "NotificationBell : rien de non lu, puis 3 non lues (point bleu) ; sur en-tête sombre, variante on-dark. Elle ouvre le panneau, vide jusqu'aux notifications (L1-22)",
+    "NotificationBell : rien de non lu (panneau vide de l'espace), puis 3 non lues (point bleu) avec le panneau de L1-22 : filtres du vendeur, groupes par âge, « Tout marquer comme lu » ; sur en-tête sombre, variante on-dark",
   unread: 3,
+  itemsCaption:
+    "NotificationItem : message (bleu), annonce en ligne (vert), annonce à corriger (orange), annonce à valider (pierre) ; non lue sur fond bleu pâle, avec son point",
+  emailsLink: "Aperçu des emails",
+  /** The events of the samples, written as the database writes them. */
+  samples: {
+    sender: "Chloé",
+    excerpt: "Bonjour, la maison est-elle toujours disponible ? Je peux visiter samedi matin.",
+    listing: "Maison 5 pièces avec jardin",
+    reference: "LK-0042",
+    city: "Savigny-sur-Orge",
+  },
+  times: ["Il y a 12\u00A0min", "Hier", "Mardi", "3 oct."],
   menuCaption:
     "AccountMenu : avatar de la barre haute, puis avatar d'en-tête sombre ; Mon espace, Mon compte, Se déconnecter (qui déconnecte vraiment)",
 };
@@ -881,4 +893,48 @@ export const propertySheet = {
   open: "Ouvrir la confirmation",
   dialogCaption:
     "ConfirmDialog · écran plein avec retour en mobile, dialogue de 520 px au centre à partir de 768 px, champs facultatifs, erreur lue dans le dialogue",
+};
+
+/** /design/emails: every email of the V2 with example data (SPEC-V2 18, L1-22). */
+export const emails = {
+  metaTitle: "Emails · Design Leenkey",
+  title: "Emails",
+  lead: "Les emails de la V2 avec des données d'exemple (SPEC 18, DESIGN 14). Hors production, ils partent vers la boîte de test, sujet préfixé « [PREPROD] » ou « [LOCAL] ».",
+  back: "Catalogue",
+  subject: "Sujet",
+  frame: (name: string) => `Aperçu de l'email « ${name} »`,
+  names: {
+    received: "Annonce reçue (vendeur)",
+    toReview: "Annonce à valider (équipe)",
+    toReviewMany: "Plusieurs annonces à valider (équipe)",
+    published: "Annonce en ligne (vendeur)",
+    rejected: "Annonce à corriger (vendeur)",
+    suspended: "Annonce suspendue (vendeur)",
+    messageSeller: "Nouveau message (vendeur)",
+    messagesBuyer: "Nouveaux messages (acquéreur)",
+    messageLink: "Nouveau message avec un lien (vendeur)",
+  },
+  sample: {
+    seller: "Alice",
+    buyer: "Chloé",
+    title: "Maison 5 pièces avec jardin",
+    reference: "LK-0042",
+    place: "Savigny-sur-Orge (91600)",
+    reason:
+      "La description est trop courte pour être publiée : précisez l'étage, l'exposition, les pièces et les charges, puis renvoyez l'annonce.",
+    excerpt: "Bonjour, la maison est-elle toujours disponible ? Je peux visiter samedi matin.",
+    reply: "Oui, elle est toujours disponible. Samedi 10 h vous convient-il ?",
+    others: [
+      {
+        title: "Appartement 3 pièces avec balcon",
+        reference: "LK-0043",
+        place: "Juvisy-sur-Orge (91260)",
+      },
+      {
+        title: "Terrain constructible de 600 m²",
+        reference: "LK-0044",
+        place: "Montlhéry (91310)",
+      },
+    ],
+  },
 };

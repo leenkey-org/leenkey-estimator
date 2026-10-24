@@ -15,7 +15,11 @@ export default async function BuyerHomePage() {
   const profile = await requireProfile();
   const t = fr.spaces.buyer;
   return (
-    <SpacePage title={fr.spaces.greeting(profile.firstName)} roles={profile.roles}>
+    <SpacePage
+      title={fr.spaces.greeting(profile.firstName)}
+      roles={profile.roles}
+      profileId={profile.id}
+    >
       <EmptyState
         className="mt-12"
         title={t.title}

@@ -22,7 +22,7 @@ export default async function MessagesPage() {
 
   if (result.ok && result.data.length === 0) {
     return (
-      <SpacePage title={t.title} roles={profile.roles}>
+      <SpacePage title={t.title} roles={profile.roles} profileId={profile.id}>
         <InboxEmpty className="mt-12" roles={profile.roles} />
         <InboxRefresh profileId={profile.id} />
       </SpacePage>
@@ -32,7 +32,15 @@ export default async function MessagesPage() {
     <>
       <MessagesLayout
         show="list"
-        list={<InboxPane result={result} roles={profile.roles} titleAs="h1" now={now} />}
+        list={
+          <InboxPane
+            result={result}
+            roles={profile.roles}
+            profileId={profile.id}
+            titleAs="h1"
+            now={now}
+          />
+        }
       >
         <EmptyState
           className="m-auto px-5 py-10"

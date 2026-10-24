@@ -50,7 +50,15 @@ export default async function NewConversationPage({ searchParams }: Props) {
   return (
     <MessagesLayout
       show="detail"
-      list={<InboxPane result={list} roles={profile.roles} titleAs="h2" now={new Date()} />}
+      list={
+        <InboxPane
+          result={list}
+          roles={profile.roles}
+          profileId={profile.id}
+          titleAs="h2"
+          now={new Date()}
+        />
+      }
     >
       <NewConversation
         listingId={listingId}

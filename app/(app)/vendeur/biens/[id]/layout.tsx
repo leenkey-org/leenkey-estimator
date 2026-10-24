@@ -22,7 +22,7 @@ export default async function PropertySheetLayout({ children, params }: Props) {
     <div className="mx-auto w-full max-w-lk-settings px-5 py-6 md:px-10 md:py-10">
       {property ? (
         <>
-          <PropertySheetHeader property={property} roles={profile.roles} />
+          <PropertySheetHeader property={property} roles={profile.roles} profileId={profile.id} />
           <div className="mt-6">{children}</div>
         </>
       ) : (

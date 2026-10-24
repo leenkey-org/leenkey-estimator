@@ -150,8 +150,9 @@ export type SubmitListingResult =
 
 /**
  * Step 4: « Envoyer en validation ». listing_submit checks the property and
- * the transition again; then the emails of SPEC section 18, sent after the
- * answer (after()): the seller does not wait for them.
+ * the transition again (and notifies Leenkey, L1-22); then « Annonce reçue »
+ * (SPEC section 18), sent after the answer (after()): the seller does not
+ * wait for it.
  */
 export async function submitListing(input: unknown): Promise<SubmitListingResult> {
   const [profile, user] = await Promise.all([getProfile(), getUser()]);
@@ -165,9 +166,7 @@ export async function submitListing(input: unknown): Promise<SubmitListingResult
 
   const { data: listing, error } = await supabase
     .from("listings")
-    .select(
-      "id, reference, title, description, price_cents, property:properties!inner(type, surface_m2, rooms, city, postal_code)",
-    )
+    .select("id, reference, title, description, property:properties!inner(type, surface_m2, rooms)")
     .eq("property_id", propertyId)
     .is("deleted_at", null)
     .maybeSingle();
@@ -207,9 +206,6 @@ export async function submitListing(input: unknown): Promise<SubmitListingResult
       listingId: listing.id,
       reference: listing.reference,
       title: listing.title,
-      city: property.city,
-      postalCode: property.postal_code,
-      priceCents: Number(listing.price_cents),
       seller: { email: user?.email ?? null, firstName: profile.firstName },
     }),
   );

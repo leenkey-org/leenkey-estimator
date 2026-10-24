@@ -255,13 +255,16 @@ insert into notifications (profile_id, type, title) values (tests.uid('seller_a'
 
 \set who seller_a
 \ir _as.psql
-select is((select count(*) from notifications)::int, 1, 'seller_a: reads own notification');
+-- Scoped to this row: the messages above notify too, since L1-22.
+select is((select count(*) from notifications where title = 'Votre annonce est en ligne')::int, 1,
+          'seller_a: reads own notification');
 select lives_ok($$update notifications set read_at = now()$$, 'seller_a: marks it read');
 select throws_ok($$update notifications set title = 'Modifié'$$, '42501', null, 'seller_a: cannot rewrite a notification');
 
 \set who buyer_c
 \ir _as.psql
-select is((select count(*) from notifications)::int, 0, 'buyer_c: cannot read seller_a notifications');
+select is((select count(*) from notifications where profile_id = tests.uid('seller_a'))::int, 0,
+          'buyer_c: cannot read seller_a notifications');
 
 -- ===========================================================================
 -- knowledge base and assistant logs

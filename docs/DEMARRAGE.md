@@ -47,6 +47,16 @@ Guide pour Younes. Claude Code ne lit pas ce fichier en priorité : il lit `CLAU
 - [ ] **Vercel `leenkey-v2`, onglet Production** : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (projet staging) et `NEXT_PUBLIC_SITE_URL=https://leenkey-v2.vercel.app`. Emails du back office (L1-19) : `RESEND_API_KEY` (clé Resend de test) et `EMAIL_TEST_INBOX` (la boîte qui reçoit tout hors production) ; `EMAIL_FROM` facultatif, si `bonjour@leenkey.fr` n'est pas encore vérifié dans Resend. Sans elles, les décisions passent, le back office dit que l'email n'est pas parti.
 - Comptes de test : `seller_a@test.leenkey.fr`, `seller_b@…`, `buyer_c@…`, `buyer_d@…`, `admin@…` ; mot de passe dans **Integrations → Vault**, secret `seed_password`. À la première connexion, chacun accepte les conditions (écran « Acceptez nos conditions »).
 
+### Emails groupés des notifications (L1-22, une seule fois)
+
+Toutes les 5 minutes, Supabase (`pg_cron`) appelle `/api/cron/send-notification-emails` avec un secret partagé ; la route envoie les emails en attente, regroupés (« Nouveau message », « Annonce à valider »).
+
+- [ ] **Le secret** : une valeur de 64 caractères, lettres et chiffres (Terminal du Mac : `openssl rand -hex 32` ; ou un gestionnaire de mots de passe, sans symboles). Ne l'envoyer à personne.
+- [ ] **Vercel `leenkey-v2`, onglet Production** : `CRON_SECRET` = le secret ; `SUPABASE_SERVICE_ROLE_KEY` = clé `service_role` du projet `leenkey-staging` (Project Settings → API Keys → Legacy API Keys), lue par la seule route cron. Vérifier `RESEND_API_KEY` et `EMAIL_TEST_INBOX`. Puis redéployer (ou attendre le prochain déploiement de `v2`).
+- [ ] **Supabase `leenkey-staging` → Integrations → Vault → Add new secret** : `site_url` = `https://leenkey-v2.vercel.app` ; `cron_secret` = le même secret que Vercel. Sans eux, la tâche planifiée ne fait rien (et « Annonce à valider » ne part pas ; la notification reste dans le back office).
+- [ ] **Vérifier** (SQL Editor) : `select status_code, created from net._http_response order by created desc limit 5;` → 200 ; 401 = secrets différents entre Vercel et le Vault ; 500 = clé de service absente ou fausse ; aucune ligne = secrets du Vault absents.
+- En production (P-05b) : la même chose sur le projet de production avec `https://leenkey.fr`.
+
 ## 3. Installer le pack dans le repo
 
 Le développement se fait dans le repo existant de Leenkey (celui de l'estimateur), sans casser le site actuel.

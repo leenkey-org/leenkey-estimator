@@ -3,9 +3,9 @@ import { fr } from "@/lib/i18n/fr";
 import { EmailLayout, emailText } from "./components/email-layout";
 
 // Emails of a listing sent for review (SPEC-V2 section 18, L1-13): « Annonce
-// reçue » to the seller, « Annonce à valider » to Leenkey (an internal
-// notification, ADMIN_NOTIFICATION_EMAIL). Rendered by
-// leenkey/properties/listing-emails.ts.
+// reçue » to the seller (leenkey/properties/listing-emails.ts), « Annonce à
+// valider » to Leenkey (an internal notification, ADMIN_NOTIFICATION_EMAIL),
+// sent by the cron of the notifications (leenkey/notifications/email-catalog.ts).
 
 const t = fr.emails;
 

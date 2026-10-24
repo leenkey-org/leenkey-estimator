@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { AccountMenu, type AccountMenuProps } from "./account-menu";
 import { currentHref, type NavItem } from "./nav-items";
@@ -15,20 +16,23 @@ export type AdminMobileHeaderProps = {
   fallbackTitle: string;
   /** 40 px blue avatar, which opens the account menu. */
   account: Omit<AccountMenuProps, "variant" | "className">;
+  /** The NotificationBell, before the avatar (tone dark). */
+  notifications?: ReactNode;
   className?: string;
 };
 
 /**
  * Back office header below 768 px (docs/DESIGN.md 10.6): ink, padding
  * 20 × 20 × 16, « Back office » (11 px, white 60 %) over the title of the
- * page (20 px 700 wide), avatar on the right. The counter tiles come with the
- * back office data.
+ * page (20 px 700 wide), the bell and the avatar on the right. The counter
+ * tiles come with the back office data.
  */
 export function AdminMobileHeader({
   items,
   title,
   fallbackTitle,
   account,
+  notifications,
   className,
 }: AdminMobileHeaderProps) {
   const pathname = usePathname();
@@ -45,7 +49,10 @@ export function AdminMobileHeader({
         <p className="text-lk-micro font-semibold text-white/60">{fr.nav.backOffice}</p>
         <p className="truncate text-lk-h2 font-bold text-wide">{heading}</p>
       </div>
-      <AccountMenu {...account} variant="header" />
+      <div className="flex shrink-0 items-center gap-2">
+        {notifications}
+        <AccountMenu {...account} variant="header" />
+      </div>
     </header>
   );
 }
