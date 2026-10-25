@@ -140,7 +140,9 @@ test("une annonce suspendue par Leenkey : en lecture seule, avec son motif", asy
   await page.goto(`${sheet(13)}/photos`);
   await expect(main.getByText("3 photos", { exact: true })).toBeVisible();
   await expect(main.getByText("Photo principale", { exact: true })).toHaveCount(1);
-  await expect(main.getByText("Double séjour", { exact: true })).toBeVisible();
+  const first = main.getByRole("region", { name: "Photos" }).getByRole("listitem").first();
+  await expect(first).toContainText("Photo principale");
+  await expect(first).toContainText("Double séjour");
   await expect(main.getByRole("button", { name: "Ajouter des photos" })).toHaveCount(0);
   await page.close();
 });
