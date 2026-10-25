@@ -291,6 +291,26 @@ test.describe("pages du site en V2", () => {
     await expect(hero.locator("figcaption")).toContainText("Fondateur & CEO · Leenkey");
   });
 
+  test("une adresse inconnue : la 404 de Façade, réponse 404", async ({ page }) => {
+    const response = await page.goto("/cette-page-n-existe-pas");
+    expect(response?.status()).toBe(404);
+    await expect(page).toHaveTitle("Page introuvable · Leenkey");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Cette page n'existe pas." }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Retour à l'accueil" })).toHaveAttribute(
+      "href",
+      "/",
+    );
+    // On the blue flat of the brand (DESIGN.md 13.1), not the theme of the start.
+    expect(
+      await page
+        .getByRole("main")
+        .evaluate((main) => getComputedStyle(main.parentElement!).backgroundColor),
+    ).toBe("rgb(17, 86, 252)");
+    expect(await seriousViolations(page)).toEqual([]);
+  });
+
   test("/tarifs sans base : le message d'indisponibilité", async ({ page }) => {
     test.skip(seeded, "base de seed : voir plus bas");
     await page.goto("/tarifs");

@@ -164,6 +164,22 @@ export const fr = {
     },
   },
   // L1-10: navigation shells (docs/DESIGN.md 10.6 to 10.8).
+  // A page that does not exist, or that could not be shown (app/not-found.tsx,
+  // app/error.tsx; docs/DESIGN.md 13.1).
+  errors: {
+    notFound: {
+      metaTitle: "Page introuvable · Leenkey",
+      title: "Cette page n'existe pas.",
+      text: "Elle a peut-être été déplacée, ou son adresse contient une erreur.",
+      action: "Retour à l'accueil",
+    },
+    failed: {
+      title: "Ça n'a pas fonctionné.",
+      text: "Réessayez dans un instant ; si le problème continue, écrivez-nous.",
+      retry: "Réessayer",
+      home: "Retour à l'accueil",
+    },
+  },
   nav: {
     label: "Navigation principale",
     adminLabel: "Navigation du back office",

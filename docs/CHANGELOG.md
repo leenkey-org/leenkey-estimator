@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-25 · Correctif · PR #43 · Page 404 et page d'erreur en Façade
+- Corrigé : la page 404 du site (`app/not-found.tsx`) et la page d'erreur générale (`app/error.tsx`) gardaient le thème du début du projet (bouton violet `bg-primary`, textes en dur). La 404 est celle de DESIGN 13.1, comme celle d'une annonce : aplat bleu, `facade.svg` en blanc à 55 %, « Cette page n'existe pas. », « Retour à l'accueil » ; titre de l'onglet « Page introuvable · Leenkey ». La page d'erreur reprend celle d'une annonce : « Ça n'a pas fonctionné. », « Réessayer » et « Retour à l'accueil ». Textes dans `lib/i18n/fr.ts` (`errors`).
+- Ajouté : `NotFoundScreen` (`components/shared/not-found-screen.tsx`), la 404 commune au site et aux annonces.
+- Tests : E2E (adresse inconnue : réponse 404, titre, lien, aplat bleu, axe), en mobile et en desktop.
+
 ### 2026-10-24 · L1-51 · PR #41 · Sous-menu « Qui sommes-nous »
 - Ajouté : « Qui sommes-nous » ouvre « Leenkey et son fondateur » (`/qui-sommes-nous`) et « Investir dans Leenkey » (`/investir`) : dans la barre haute à partir de 1 280 px (survol, clic, Entrée ou Espace ; Échap, clic ailleurs, sortie du focus ou du pointeur referment), dans le menu mobile sous son intitulé. Groupes de liens dans `NavItem` (`items`).
 - Modifié : « Découvrir notre vision » (`/qui-sommes-nous`) mène à la section « La vision » de `/investir` ; le menu mobile ne répète plus « Investir » ; pied de page inchangé.
