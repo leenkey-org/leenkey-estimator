@@ -90,22 +90,22 @@
       "file": "03-morsang-sur-orge-salle-d-eau-refaite.webp",
       "caption": "Salle d'eau refaite",
       "crop": {
-        "left": 88,
+        "left": 0,
         "top": 0,
-        "width": 1423,
-        "height": 1067
+        "width": 1424,
+        "height": 1068
       }
     },
     {
       "property": 4,
       "owner": "a",
-      "file": "04-montlhery-terrain.webp",
-      "caption": "Terrain",
+      "file": "04-montlhery-la-parcelle.webp",
+      "caption": "La parcelle",
       "crop": {
-        "left": 88,
+        "left": 200,
         "top": 0,
-        "width": 1423,
-        "height": 1067
+        "width": 1200,
+        "height": 900
       }
     },
     {
@@ -142,18 +142,6 @@
         "top": 0,
         "width": 1444,
         "height": 1083
-      }
-    },
-    {
-      "property": 6,
-      "owner": "a",
-      "file": "06-villiers-sur-orge-facade-et-jardin.webp",
-      "caption": "Façade et jardin",
-      "crop": {
-        "left": 88,
-        "top": 0,
-        "width": 1423,
-        "height": 1067
       }
     },
     {
@@ -210,10 +198,10 @@
       "file": "09-viry-chatillon-sejour.webp",
       "caption": "Séjour",
       "crop": {
-        "left": 88,
+        "left": 0,
         "top": 0,
-        "width": 1423,
-        "height": 1067
+        "width": 1600,
+        "height": 1200
       }
     },
     {
@@ -274,18 +262,6 @@
         "top": 0,
         "width": 1423,
         "height": 1067
-      }
-    },
-    {
-      "property": 11,
-      "owner": "b",
-      "file": "11-chilly-mazarin-cuisine-ouverte.webp",
-      "caption": "Cuisine ouverte",
-      "crop": {
-        "left": 91,
-        "top": 0,
-        "width": 1417,
-        "height": 1063
       }
     },
     {

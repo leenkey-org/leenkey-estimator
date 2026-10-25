@@ -52,6 +52,27 @@ describe("photos des biens de démonstration (supabase/seed/photos)", () => {
   it("une photo ne sert qu'à un seul bien (DESIGN.md 7.2)", () => {
     const files = photos.map((photo) => photo.file);
     expect(new Set(files).size).toBe(files.length);
+    // Two files never come from the same Unsplash photo.
+    const sources = readFileSync(`${dir}/CREDITS.md`, "utf8").match(
+      /images\.unsplash\.com\/photo-[\w-]+/g,
+    );
+    expect(sources?.length).toBeGreaterThan(0);
+    expect(new Set(sources).size).toBe(sources?.length);
+  });
+
+  // SPEC-V2 section 23, L1-46b: every listing online in the seed has its photo.
+  it("chaque bien publié du seed a au moins une photo", () => {
+    const seed = readFileSync("supabase/seed/05_demo_data.sql", "utf8");
+    const published = [
+      ...seed.matchAll(
+        /^ {2}\((\d+), '[ab]', '[a-z]+'[^]*?, '(published|pending|rejected)', \d+, '[a-z]+'\)/gm,
+      ),
+    ]
+      .filter((row) => row[2] === "published")
+      .map((row) => Number(row[1]));
+    expect(published).toHaveLength(12);
+    const shown = new Set(photos.map((photo) => photo.property));
+    for (const property of published) expect(shown.has(property), `n° ${property}`).toBe(true);
   });
 
   // Sent as its owner (scripts/seed-photos.mjs): the seller of the property.

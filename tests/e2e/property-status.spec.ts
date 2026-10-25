@@ -144,6 +144,8 @@ test("une annonce suspendue par Leenkey : en lecture seule, avec son motif", asy
   await expect(first).toContainText("Photo principale");
   await expect(first).toContainText("Double séjour");
   await expect(main.getByRole("button", { name: "Ajouter des photos" })).toHaveCount(0);
+  // Read only: no button to move or remove a photo either.
+  await expect(main.getByRole("region", { name: "Photos" }).getByRole("button")).toHaveCount(0);
   await page.close();
 });
 
