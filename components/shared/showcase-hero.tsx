@@ -57,7 +57,7 @@ export function ShowcaseHero({
     <section
       id={id}
       aria-labelledby={titleId}
-      className="lk-hero-bg relative isolate scroll-mt-15 overflow-hidden text-white md:scroll-mt-18"
+      className="lk-hero-bg relative isolate overflow-hidden text-white"
     >
       <div aria-hidden="true" className="lk-dots pointer-events-none absolute inset-0 -z-10" />
       <div

@@ -84,11 +84,7 @@ const hookLine =
  */
 export function HookSection() {
   return (
-    <section
-      id="constat"
-      aria-labelledby="constat-titre"
-      className="scroll-mt-15 bg-lk-surface md:scroll-mt-18"
-    >
+    <section id="constat" aria-labelledby="constat-titre" className="bg-lk-surface">
       <div
         data-reveal=""
         className="mx-auto flex max-w-205 flex-col items-center gap-5 px-5 py-14 text-center text-lk-ink md:px-10 md:py-18 lg:gap-6 lg:py-24"
