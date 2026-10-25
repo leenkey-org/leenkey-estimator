@@ -144,14 +144,27 @@
   animation: leenkey-fade-up 0.4s ease-out backwards;
 }
 
-/* Room for the sticky headers when the page scrolls to an anchor */
+/* Room for the sticky header of the site when the page scrolls to an anchor
+   or to an element that takes the focus (WCAG 2.4.11): the 60 px SiteMenu,
+   then the 72 px TopNav from 768 px; the target lands right under it. A page
+   with a second sticky header under it (the wizard of /estimer, a
+   conversation: data-sticky-subheader) adds 72 px. The V1 values (145 and
+   165 px) left every anchor of the V2 that much too low. */
 html {
-  scroll-padding-top: 145px;
+  scroll-padding-top: 3.75rem;
 }
 
-@media (max-width: 640px) {
+html:has([data-sticky-subheader]) {
+  scroll-padding-top: 8.25rem;
+}
+
+@media (min-width: 48rem) {
   html {
-    scroll-padding-top: 165px;
+    scroll-padding-top: 4.5rem;
+  }
+
+  html:has([data-sticky-subheader]) {
+    scroll-padding-top: 9rem;
   }
 }
 

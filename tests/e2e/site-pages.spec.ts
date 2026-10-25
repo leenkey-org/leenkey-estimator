@@ -394,3 +394,62 @@ test.describe("mentions légales et CGU de la V1", () => {
     await expect(page.getByText("pas une agence immobilière")).toBeVisible();
   });
 });
+
+// The sticky header of the site (60 px, then the 72 px TopNav) never covers an
+// anchor, and the anchor lands right under it: the scroll padding of the V1
+// (145 px) left every one of them that much too low (app/globals.css).
+test.describe("ancres sous l'en-tête collant", () => {
+  /** Right under the header, or as close as the end of the page lets it come. */
+  async function expectUnderHeader(page: Page, id: string, gap = 0) {
+    const header = (page.viewportSize()?.width ?? 0) < 768 ? 60 : 72;
+    await expect
+      .poll(() =>
+        page.evaluate(
+          ({ anchor, expected }) => {
+            const top = document.getElementById(anchor)?.getBoundingClientRect().top;
+            if (top === undefined) return `#${anchor} missing`;
+            const end =
+              window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+            return Math.abs(top - expected) <= 2 || (end && top >= expected - 2)
+              ? "under the header"
+              : `top ${Math.round(top)}, expected ${expected}`;
+          },
+          { anchor: id, expected: header + gap },
+        ),
+      )
+      .toBe("under the header");
+  }
+
+  test.beforeEach(async ({ page }) => {
+    // Without the smooth scroll of the site: the position is read once there.
+    await page.emulateMedia({ reducedMotion: "reduce" });
+  });
+
+  test("« Découvrir notre vision » arrive sur la vision de /investir", async ({ page }) => {
+    await page.goto("/qui-sommes-nous");
+    await page.getByRole("main").getByRole("link", { name: "Découvrir notre vision" }).click();
+    await expect(page).toHaveURL(/\/investir#vision$/);
+    await expectUnderHeader(page, "vision");
+  });
+
+  for (const [path, id] of [
+    ["/investir", "formulaire"],
+    ["/", "tarifs"],
+    ["/", "contact"],
+  ] as const) {
+    test(`${path}#${id} au chargement de la page`, async ({ page }) => {
+      await page.goto(`${path}#${id}`);
+      await expectUnderHeader(page, id);
+    });
+  }
+
+  test("/cgu : un article du sommaire, 24 px sous l'en-tête", async ({ page }) => {
+    await page.goto("/cgu");
+    await page
+      .getByRole("navigation", { name: "Sommaire" })
+      .getByRole("link", { name: "5. Tarifs et paiement" })
+      .click();
+    await expect(page).toHaveURL(/\/cgu#tarifs$/);
+    await expectUnderHeader(page, "tarifs", 24);
+  });
+});

@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-25 · Correctif · PR #42 · Ancres sous l'en-tête collant
+- Corrigé : une ancre des pages publiques (« Découvrir notre vision » vers `/investir#vision`, `#formulaire`, `#tarifs`, `#contact`, sommaire des pages légales) arrivait environ 145 px trop bas : le `scroll-padding-top` de la V1 (145 puis 165 px, `app/globals.css`) s'ajoutait aux marges des sections. Il suit maintenant l'en-tête collant de la V2 (60 px, puis 72 px à partir de 768 px), et les marges en double des sections sont retirées ; une page avec un second en-tête collant (assistant de valorisation, conversation : `data-sticky-subheader`) garde 72 px de plus pour qu'un élément qui prend le focus ne passe pas dessous (WCAG 2.4.11).
+- Tests : E2E (« Découvrir notre vision », trois ancres au chargement, sommaire des CGU), en mobile et en desktop.
+
 ### 2026-10-24 · L1-51 · PR #41 · Sous-menu « Qui sommes-nous »
 - Ajouté : « Qui sommes-nous » ouvre « Leenkey et son fondateur » (`/qui-sommes-nous`) et « Investir dans Leenkey » (`/investir`) : dans la barre haute à partir de 1 280 px (survol, clic, Entrée ou Espace ; Échap, clic ailleurs, sortie du focus ou du pointeur referment), dans le menu mobile sous son intitulé. Groupes de liens dans `NavItem` (`items`).
 - Modifié : « Découvrir notre vision » (`/qui-sommes-nous`) mène à la section « La vision » de `/investir` ; le menu mobile ne répète plus « Investir » ; pied de page inchangé.

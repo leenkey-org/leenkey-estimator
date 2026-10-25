@@ -489,7 +489,11 @@ export function LeenkeyWizard() {
   return (
     <main className="min-h-screen bg-lk-surface">
       {/* Header */}
-      <header className="sticky top-15 z-30 border-b border-lk-line bg-lk-surface md:top-18">
+      {/* A second sticky header: room for it when the focus moves (app/globals.css). */}
+      <header
+        data-sticky-subheader=""
+        className="sticky top-15 z-30 border-b border-lk-line bg-lk-surface md:top-18"
+      >
         {/* Progress (logo retiré : déjà dans la navbar au-dessus) */}
         <div className="mx-auto max-w-5xl px-5 py-3">
           <div className="mb-2 flex items-center justify-between gap-3 text-lk-caption text-lk-ink-3">
