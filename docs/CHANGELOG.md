@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-25 · Correctif · PR #46 · Espace du back office pour un compte non admin
+- Corrigé : un compte sans le rôle admin qui ouvrait `/admin` (une 404) gardait ensuite l'espace du back office dans le navigateur (`SpaceProvider`). La cloche ouvrait alors le panneau du back office (« Voir les annonces à valider », une 404), et les onglets du bas devenaient ceux du back office sous 768 px. `useSpace` et `spaceFor` ignorent maintenant cet espace pour un tel compte (`allowedSpace`, `leenkey/navigation/spaces.ts`). Relevé par la relecture de la PR #43.
+- Tests : unitaires (`allowedSpace`, `spaceFor`) ; E2E avec le seed (`seller_a`, 404 du back office puis retour à l'accueil : la cloche garde les filtres de la vente).
+
 ### 2026-10-25 · Correctif · PR #42 · Ancres sous les en-têtes collants
 - Corrigé : une ancre des pages publiques (« Découvrir notre vision » vers `/investir#vision`, `#formulaire`, `#tarifs`, `#contact`, sommaire des pages légales) arrivait environ 145 px trop bas : le `scroll-padding-top` de la V1 (145 px, et 165 px sous 640 px, `app/globals.css`) s'ajoutait aux marges des sections. La marge du défilement est maintenant celle des en-têtes collés en haut de la page : `data-sticky-header` (le `SiteMenu` sous 768 px, la `TopNav` ensuite) et `data-sticky-subheader` (l'en-tête de l'assistant de valorisation, 57 px ; celui d'une conversation, 73 px) ; aucune sur une page qui n'en a pas (pages légales, formulaires, back office). Les marges en double des sections sont retirées, le sommaire des pages légales arrive 24 px sous le haut de l'écran, et un champ qui prend le focus arrive avec son libellé (`scroll-margin-top` de 32 px).
 - Tests : E2E, en mobile et en desktop. La marge égale la hauteur mesurée des en-têtes à 390, 768 et 1 280 px (accueil, une page légale, `/estimer`) ; « Découvrir notre vision » avec le défilement doux ; trois ancres au chargement ; le sommaire des CGU.

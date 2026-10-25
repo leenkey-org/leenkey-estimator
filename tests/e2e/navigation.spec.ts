@@ -759,6 +759,27 @@ test.describe("comptes connectés (base de seed)", () => {
     }
   });
 
+  test("après la 404 du back office, un vendeur garde la cloche de sa vente", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "la cloche de la TopNav, à partir de 768 px");
+    await signIn(page, "seller_a", "/vendeur");
+    expect((await page.goto("/admin"))?.status()).toBe(404);
+    // Home by a client navigation: the browser keeps the space of /admin
+    // (SpaceProvider), which the bell of a seller ignores.
+    await page.getByRole("link", { name: "Retour à l'accueil" }).click();
+    await expect(page).toHaveURL("/");
+    await page
+      .getByRole("button", { name: /^Notifications/ })
+      .locator("visible=true")
+      .click();
+    const panel = page.getByRole("dialog", { name: "Notifications" });
+    await expect(panel.getByRole("group", { name: "Filtrer les notifications" })).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Messages" })).toBeVisible();
+    await expect(panel.getByRole("link", { name: "Voir les annonces à valider" })).toHaveCount(0);
+  });
+
   test("pages d'attente du back office : 200 pour l'admin", async ({ page }) => {
     await signIn(page, "admin", "/admin");
     for (const [path, title] of [

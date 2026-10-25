@@ -52,14 +52,23 @@ export function ownSpace(path: string): Space | null {
 }
 
 /**
+ * A space the account may be in: the back office for an admin only, a 404
+ * for any other account, which keeps the tabs and the bell of its own space
+ * (the seller and buyer areas are open to every account). Null otherwise.
+ */
+export function allowedSpace(space: Space | null, roles: readonly string[]): Space | null {
+  return space === "admin" && !roles.includes("admin") ? null : space;
+}
+
+/**
  * Space of a page, which picks the bottom tabs and the notifications text,
- * without history: its own (ownSpace), otherwise the roles of the account:
- * seller when it sells, otherwise buyer, admin for an admin-only account.
- * In the browser, a page without a space of its own takes the last one
- * visited first (SpaceProvider).
+ * without history: its own (ownSpace) when the account may be in it,
+ * otherwise the roles of the account: seller when it sells, otherwise buyer,
+ * admin for an admin-only account. In the browser, a page without a space of
+ * its own takes the last one visited first (SpaceProvider).
  */
 export function spaceFor(path: string, roles: readonly string[]): Space {
-  const own = ownSpace(path);
+  const own = allowedSpace(ownSpace(path), roles);
   if (own) return own;
   if (roles.includes("seller")) return "seller";
   if (roles.includes("admin") && !roles.includes("buyer")) return "admin";
