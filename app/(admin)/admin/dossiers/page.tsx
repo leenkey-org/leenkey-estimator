@@ -1,12 +1,12 @@
-import type { Metadata } from "next";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { requireAdmin } from "@/core/auth/session";
+import { adminMetadata } from "@/leenkey/admin/metadata";
 import { fr } from "@/lib/i18n/fr";
 import { AdminPage } from "../_components/admin-page";
 
 const t = fr.placeholders.admin.cases;
 
-export const metadata: Metadata = { title: t.metaTitle };
+export const generateMetadata = adminMetadata({ title: t.metaTitle });
 
 // Placeholder until the cases (L1-30). The page checks the admin role itself,
 // not only the layout (see app/(admin)/admin/layout.tsx).

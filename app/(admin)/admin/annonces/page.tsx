@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/shared/button";
@@ -19,6 +18,7 @@ import { Input } from "@/components/shared/input";
 import { PropertyThumb } from "@/components/shared/property-thumb";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { requireAdmin } from "@/core/auth/session";
+import { adminMetadata } from "@/leenkey/admin/metadata";
 import {
   ListingModeration,
   ModerationFeedback,
@@ -43,7 +43,7 @@ import { AdminPage } from "../_components/admin-page";
 
 const t = fr.adminListings;
 
-export const metadata: Metadata = { title: t.metaTitle };
+export const generateMetadata = adminMetadata({ title: t.metaTitle });
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 

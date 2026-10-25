@@ -746,7 +746,10 @@ test.describe("comptes connectés (base de seed)", () => {
     }
     // Until the account page (L1-39), it signs out (the only way in mobile).
     await expect(page.getByRole("button", { name: "Se déconnecter" })).toBeVisible();
+    // The 404 of the site, alone on the screen, which never names the back
+    // office, not even in the title of the tab (app/(admin)/admin/layout.tsx).
     for (const path of [
+      "/admin",
       "/admin/annonces",
       "/admin/utilisateurs",
       "/admin/dossiers",
@@ -756,6 +759,15 @@ test.describe("comptes connectés (base de seed)", () => {
     ]) {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(404);
+      await expect(page, path).toHaveTitle("Page introuvable · Leenkey");
+      await expect(page.getByRole("heading", { level: 1 }), path).toHaveText(
+        "Cette page n'existe pas.",
+      );
+      await expect(page.getByRole("main"), path).toHaveCount(1);
+      await expect(
+        page.getByRole("navigation", { name: "Navigation du back office" }),
+        path,
+      ).toHaveCount(0);
     }
   });
 
