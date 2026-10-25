@@ -57,6 +57,17 @@ Toutes les 5 minutes, Supabase (`pg_cron`) appelle `/api/cron/send-notification-
 - [ ] **Vérifier** (SQL Editor) : `select status_code, created from net._http_response order by created desc limit 5;` → 200 ; 401 = secrets différents entre Vercel et le Vault ; 500 = clé de service absente ou fausse ; aucune ligne = secrets du Vault absents.
 - En production (P-05b) : la même chose sur le projet de production avec `https://leenkey.fr`.
 
+### Données de test de la préprod (une seule fois)
+
+Après chaque fusion dans `v2` qui modifie les données de test (`supabase/seed/`, scripts du seed), GitHub les charge sur `leenkey-staging` (workflow « Seed staging ») : formules, étapes, fiches de l'assistant, comptes de test, biens de démonstration et les photos qui leur manquent. Ce que la recette a changé est conservé ; la production n'est jamais touchée.
+
+- [ ] **GitHub → `leenkey-org/leenkey-estimator` → Settings → Secrets and variables → Actions → New repository secret**, quatre secrets (ne les envoyer à personne, pas même à Claude Code) :
+  - `STAGING_DATABASE_URL` : Supabase `leenkey-staging` → **Connect** → *Session pooler* → l'URI, avec le mot de passe de la base à la place de `[YOUR-PASSWORD]`. Pas la connexion directe : les serveurs de GitHub n'ont pas d'IPv6. Mot de passe perdu : Project Settings → Database → *Reset database password* (le site ne s'en sert pas).
+  - `STAGING_SUPABASE_URL` et `STAGING_SUPABASE_ANON_KEY` : les valeurs de `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` du projet Vercel `leenkey-v2`.
+  - `SEED_PASSWORD` : la valeur du secret `seed_password` du Vault de `leenkey-staging`, pour garder le mot de passe des comptes de test (une autre valeur le remplace, dans le Vault aussi).
+- [ ] **Premier chargement** : onglet **Actions** → **Seed staging** → le dernier passage → **Re-run all jobs** (ou le demander à Claude Code). Le journal finit par « Seed loaded on staging: … demo photos. ».
+- Sans ces secrets, le chargement est sauté, avec un avertissement dans l'onglet *Actions*, et la fusion n'est pas bloquée. Le bouton **Run workflow** n'apparaîtra qu'à la bascule : GitHub ne l'affiche que pour un fichier présent sur `main`, la branche par défaut du dépôt.
+
 ## 3. Installer le pack dans le repo
 
 Le développement se fait dans le repo existant de Leenkey (celui de l'estimateur), sans casser le site actuel.

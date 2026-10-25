@@ -1,0 +1,82 @@
+name: Seed staging
+
+# Loads supabase/seed/ on the preprod project (leenkey-staging), as
+# `npm run db:seed:staging` does (scripts/db-seed.sh staging): reference data,
+# seed accounts, demo properties and the photos they lack. Idempotent: what
+# the recette changed is kept. Never production: the script refuses it, and
+# no secret of production is given here.
+#
+# Runs by itself after a merge into v2 that changes the seed, and on demand
+# (workflow_dispatch: the « Run workflow » button shows once this file is on
+# the default branch of the repository, main, at the switch to V2).
+#
+# Secrets of the repository (Settings → Secrets and variables → Actions,
+# docs/DEMARRAGE.md section 2):
+# - STAGING_DATABASE_URL: the « Session pooler » URI of leenkey-staging (the
+#   runners of GitHub have no IPv6 for the direct connection);
+# - STAGING_SUPABASE_URL, STAGING_SUPABASE_ANON_KEY: its URL and public key;
+# - SEED_PASSWORD: the password of the seed accounts, which send the photos as
+#   their owners (never the service key, DECISIONS Q48).
+
+on:
+  push:
+    branches: [v2]
+    paths:
+      - "supabase/seed/**"
+      - "scripts/db-seed.sh"
+      - "scripts/seed-*.mjs"
+      - ".github/workflows/seed-staging.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: seed-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # The secrets go to these two steps only, never to npm ci (the install
+      # scripts of the dependencies). Without them, a merge into v2 stays
+      # green (a warning says what is missing); a run on demand fails.
+      - name: Check the secrets
+        id: secrets
+        env:
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SEED_PASSWORD: ${{ secrets.SEED_PASSWORD }}
+        run: |
+          missing=""
+          for name in STAGING_DATABASE_URL STAGING_SUPABASE_URL STAGING_SUPABASE_ANON_KEY SEED_PASSWORD; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -z "$missing" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          elif [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "::error::Missing secrets:$missing (Settings → Secrets and variables → Actions)."
+            exit 1
+          else
+            echo "::warning::Seed of staging skipped, missing secrets:$missing (docs/DEMARRAGE.md section 2)."
+          fi
+      - if: steps.secrets.outputs.ready == 'true'
+        uses: actions/checkout@v4
+      - if: steps.secrets.outputs.ready == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.secrets.outputs.ready == 'true'
+        run: npm ci
+      - name: Seed leenkey-staging
+        if: steps.secrets.outputs.ready == 'true'
+        env:
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SEED_PASSWORD: ${{ secrets.SEED_PASSWORD }}
+        run: npm run db:seed:staging
