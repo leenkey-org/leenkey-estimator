@@ -12,7 +12,8 @@ import { fr } from "@/lib/i18n/fr";
 // without it gets a 404; a signed-out visitor is sent to the login page by the
 // middleware. Each page checks again with requireAdmin() (see its comment).
 // AdminShell: sidebar from 768 px, header and bottom tabs below (DESIGN.md 10.6),
-// SiteFooter under the content (L1-36).
+// SiteFooter under the content (L1-36). The metadata of each page are read
+// under requireAdmin() too (leenkey/admin/metadata.ts).
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const profile = await requireAdmin();
   return (

@@ -42,14 +42,15 @@ const t = fr.listing;
 
 async function loadListing(slug: string) {
   const result = await getPublicListing(slug);
-  // The error boundary of the page shows « Ça n'a pas fonctionné » (500).
+  // The error boundary of the site (app/error.tsx) shows « Ça n'a pas fonctionné » (500).
   if (!result.ok) throw new Error("The listing could not be read.");
   return result.data;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const listing = await loadListing((await params).slug);
-  if (!listing) return { title: t.notFound.metaTitle };
+  if (!listing)
+    return { title: t.notFound.metaTitle, alternates: { canonical: null }, openGraph: null };
   const title = listingMetaTitle(listing);
   const description = listingMetaDescription(listing.description);
   const url = absoluteUrl(`/annonce/${listing.slug}`);

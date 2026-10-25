@@ -291,6 +291,35 @@ test.describe("pages du site en V2", () => {
     await expect(hero.locator("figcaption")).toContainText("Fondateur & CEO · Leenkey");
   });
 
+  test("une adresse inconnue : la 404 de Façade, réponse 404 @a11y", async ({ page }) => {
+    const response = await page.goto("/cette-page-n-existe-pas");
+    expect(response?.status()).toBe(404);
+    await expect(page).toHaveTitle("Page introuvable · Leenkey");
+    // Never indexed, and never a copy of the home page (app/layout.tsx).
+    await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute("content", /noindex/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+    await expect(page.locator('meta[property="og:url"]')).toHaveCount(0);
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Cette page n'existe pas." }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Retour à l'accueil" })).toHaveAttribute(
+      "href",
+      "/",
+    );
+    // The whole screen on the blue flat of the brand (DESIGN.md 13.1): the
+    // background under the top left corner, whatever element is there.
+    expect(
+      await page.evaluate(() => {
+        for (let node = document.elementFromPoint(4, 4); node; node = node.parentElement) {
+          const color = getComputedStyle(node).backgroundColor;
+          if (color !== "rgba(0, 0, 0, 0)") return color;
+        }
+        return null;
+      }),
+    ).toBe("rgb(17, 86, 252)");
+    expect(await seriousViolations(page)).toEqual([]);
+  });
+
   test("/tarifs sans base : le message d'indisponibilité", async ({ page }) => {
     test.skip(seeded, "base de seed : voir plus bas");
     await page.goto("/tarifs");
