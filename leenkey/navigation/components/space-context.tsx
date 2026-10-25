@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { allowedSpace, followSpace, spaceFor, type Space } from "../spaces";
+import { followSpace, pageSpace, type Space } from "../spaces";
 
 const SpaceContext = createContext<Space | null>(null);
 
@@ -30,5 +30,5 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
  */
 export function useSpace(roles: readonly string[]): Space {
   const pathname = usePathname();
-  return allowedSpace(useContext(SpaceContext), roles) ?? spaceFor(pathname, roles);
+  return pageSpace(useContext(SpaceContext), pathname, roles);
 }

@@ -771,25 +771,39 @@ test.describe("comptes connectés (base de seed)", () => {
     }
   });
 
-  test("après la 404 du back office, un vendeur garde la cloche de sa vente", async ({
+  test("après la 404 du back office, un vendeur garde la cloche et les onglets de sa vente", async ({
     page,
     isMobile,
   }) => {
     test.skip(isMobile, "la cloche de la TopNav, à partir de 768 px");
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await signIn(page, "seller_a", "/vendeur");
     expect((await page.goto("/admin"))?.status()).toBe(404);
-    // Home by a client navigation: the browser keeps the space of /admin
-    // (SpaceProvider), which the bell of a seller ignores.
+    // Kept by a client navigation, lost by a full load: from here, the
+    // browser keeps the space of /admin (SpaceProvider), which the bell and
+    // the tabs of a seller ignore.
+    await page.evaluate(() => Object.assign(window, { lkSameDocument: true }));
     await page.getByRole("link", { name: "Retour à l'accueil" }).click();
     await expect(page).toHaveURL("/");
     await page
       .getByRole("button", { name: /^Notifications/ })
       .locator("visible=true")
       .click();
-    const panel = page.getByRole("dialog", { name: "Notifications" });
-    await expect(panel.getByRole("group", { name: "Filtrer les notifications" })).toBeVisible();
-    await expect(panel.getByRole("button", { name: "Messages" })).toBeVisible();
-    await expect(panel.getByRole("link", { name: "Voir les annonces à valider" })).toHaveCount(0);
+    // The filters of the sale; the back office has a single one, without group.
+    await expect(
+      page
+        .getByRole("dialog", { name: "Notifications" })
+        .getByRole("group", { name: "Filtrer les notifications" })
+        .getByRole("button"),
+    ).toHaveText(["Toutes", "Messages", "Offres et visites"]);
+    await page.keyboard.press("Escape");
+    // A page without a space of its own: under 768 px, the tabs of the sale.
+    await page.getByRole("button", { name: "Menu du compte" }).click();
+    await page.getByRole("menu").getByRole("menuitem", { name: "Mon compte" }).click();
+    await expect(page).toHaveURL("/compte");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expectTabs(page, SELLER_TABS, "Compte");
+    expect(await page.evaluate(() => "lkSameDocument" in window)).toBe(true);
   });
 
   test("pages d'attente du back office : 200 pour l'admin", async ({ page }) => {

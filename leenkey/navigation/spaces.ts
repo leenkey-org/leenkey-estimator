@@ -76,6 +76,15 @@ export function spaceFor(path: string, roles: readonly string[]): Space {
 }
 
 /**
+ * Space of a page in the browser (useSpace): the last one visited
+ * (SpaceProvider, which does not know the roles), unless the account may not
+ * be in it, otherwise the one of the page and of the roles (spaceFor).
+ */
+export function pageSpace(last: Space | null, path: string, roles: readonly string[]): Space {
+  return allowedSpace(last, roles) ?? spaceFor(path, roles);
+}
+
+/**
  * Last space visited after a client navigation to `path` (SpaceProvider):
  * the page's own, or the previous one for a page without one.
  */

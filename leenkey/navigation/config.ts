@@ -8,7 +8,15 @@ import { homePathForRoles } from "@/leenkey/auth/routes";
 import { fr } from "@/lib/i18n/fr";
 import { ROUTES, type Space } from "./spaces";
 
-export { allowedSpace, followSpace, ownSpace, ROUTES, spaceFor, type Space } from "./spaces";
+export {
+  allowedSpace,
+  followSpace,
+  ownSpace,
+  pageSpace,
+  ROUTES,
+  spaceFor,
+  type Space,
+} from "./spaces";
 
 const tabs = fr.nav.tabs;
 

@@ -19,6 +19,7 @@ import {
   MENU_LINKS,
   notificationBell,
   ownSpace,
+  pageSpace,
   ROUTES,
   sellCta,
   signInLink,
@@ -124,11 +125,27 @@ describe("allowedSpace (useSpace)", () => {
   });
 
   // seller_a opens /admin (a 404), then goes home: the provider keeps the
-  // back office, the tabs and the bell are those of the sale.
+  // back office, the page takes the space of the account's roles (useSpace).
   it("after the 404 of the back office, the space of the account's roles", () => {
     const last = followSpace(followSpace("seller", "/admin"), "/");
     expect(last).toBe("admin");
-    expect(allowedSpace(last, ["seller"]) ?? spaceFor("/", ["seller"])).toBe("seller");
+    expect(pageSpace(last, "/", ["seller"])).toBe("seller");
+    expect(pageSpace(followSpace(last, "/compte"), "/compte", ["buyer"])).toBe("buyer");
+  });
+});
+
+describe("pageSpace (useSpace)", () => {
+  it("keeps the back office for an admin on a page without a space of its own", () => {
+    const last = followSpace(null, "/admin");
+    expect(pageSpace(followSpace(last, "/compte"), "/compte", ["admin"])).toBe("admin");
+    expect(pageSpace(followSpace(last, "/compte"), "/compte", ["admin", "seller"])).toBe("admin");
+  });
+
+  it("keeps the last space visited, otherwise the one of the page and of the roles", () => {
+    expect(pageSpace("buyer", "/messages", ["seller"])).toBe("buyer");
+    expect(pageSpace(null, "/messages", ["seller"])).toBe("seller");
+    expect(pageSpace(null, "/admin", ["seller"])).toBe("seller");
+    expect(pageSpace(null, "/admin", ["admin"])).toBe("admin");
   });
 });
 
