@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-25 · L1-46b · PR #44 · Photos des biens de test
+- Ajouté : 26 photos libres de droits (Unsplash, licence Unsplash) pour les 13 biens du seed qui n'en avaient pas : appartements (façade de la résidence, séjour, cuisine, chambre, salle de bains ou d'eau), maisons (n° 6 et 10), meulière de Ballainvilliers (pièces de vie), terrain de Montlhéry, biens en attente et à corriger. Recadrées en 4:3, déposées par `db:seed` comme les envoie un vendeur (WebP 400, 800 et 1 600 px). Provenance dans `supabase/seed/photos/CREDITS.md` ; l'auteur n'est pas relevé (Q59).
+- Corrigé : `scripts/seed-photos.mjs` insère les photos d'un bien dans l'ordre du manifeste, la première en photo principale (une seule insertion les visitait à l'envers).
+- Inchangé : les trois maisons qui avaient leur photo (n° 2, 8, 14) ; `db:seed` ne touche pas aux photos d'un bien qui en a.
+- Tests : unitaires (chaque bien publié a sa photo, une photo et une source Unsplash ne servent qu'à un bien, jamais sous 800 × 600, chaque fichier crédité) ; E2E (fiche du bien n° 1 : 5 photos, la façade en photo principale ; meulière suspendue : 3 photos en lecture seule, le double séjour en premier ; accueil).
+
 ### 2026-10-25 · Correctif · PR #46 · Espace du back office pour un compte non admin
 - Corrigé : un compte sans le rôle admin qui ouvrait `/admin` (une 404) gardait ensuite l'espace du back office dans le navigateur (`SpaceProvider`). La cloche ouvrait alors le panneau du back office (« Voir les annonces à valider », une 404), et les onglets du bas devenaient ceux du back office sous 768 px. `useSpace` et `spaceFor` ignorent maintenant cet espace pour un tel compte (`allowedSpace`, `leenkey/navigation/spaces.ts`). Relevé par la relecture de la PR #43.
 - Tests : unitaires (`allowedSpace`, `spaceFor`) ; E2E avec le seed (`seller_a`, 404 du back office puis retour à l'accueil : la cloche garde les filtres de la vente).

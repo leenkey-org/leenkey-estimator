@@ -1,25 +1,352 @@
 {
   "photos": [
     {
-      "property": 8,
-      "owner": "b",
-      "file": "08-sainte-genevieve-des-bois.webp",
-      "caption": "Façade et jardin",
-      "crop": { "left": 0, "top": 100, "width": 1024, "height": 768 }
+      "property": 1,
+      "owner": "a",
+      "file": "01-savigny-sur-orge-facade-de-la-residence.webp",
+      "caption": "Façade de la résidence",
+      "crop": {
+        "left": 10,
+        "top": 0,
+        "width": 1579,
+        "height": 1184
+      }
+    },
+    {
+      "property": 1,
+      "owner": "a",
+      "file": "01-savigny-sur-orge-sejour.webp",
+      "caption": "Séjour",
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 1424,
+        "height": 1068
+      }
+    },
+    {
+      "property": 1,
+      "owner": "a",
+      "file": "01-savigny-sur-orge-cuisine.webp",
+      "caption": "Cuisine",
+      "crop": {
+        "left": 160,
+        "top": 0,
+        "width": 1279,
+        "height": 959
+      }
+    },
+    {
+      "property": 1,
+      "owner": "a",
+      "file": "01-savigny-sur-orge-chambre.webp",
+      "caption": "Chambre",
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 1423,
+        "height": 1067
+      }
+    },
+    {
+      "property": 1,
+      "owner": "a",
+      "file": "01-savigny-sur-orge-salle-de-bains.webp",
+      "caption": "Salle de bains",
+      "crop": {
+        "left": 0,
+        "top": 599,
+        "width": 1600,
+        "height": 1200
+      }
     },
     {
       "property": 2,
       "owner": "a",
       "file": "02-epinay-sur-orge.webp",
       "caption": "Façade et entrée",
-      "crop": { "left": 0, "top": 230, "width": 1024, "height": 768 }
+      "crop": {
+        "left": 0,
+        "top": 230,
+        "width": 1024,
+        "height": 768
+      }
+    },
+    {
+      "property": 3,
+      "owner": "a",
+      "file": "03-morsang-sur-orge-sejour.webp",
+      "caption": "Séjour",
+      "crop": {
+        "left": 6,
+        "top": 0,
+        "width": 1587,
+        "height": 1190
+      }
+    },
+    {
+      "property": 3,
+      "owner": "a",
+      "file": "03-morsang-sur-orge-salle-d-eau-refaite.webp",
+      "caption": "Salle d'eau refaite",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1424,
+        "height": 1068
+      }
+    },
+    {
+      "property": 4,
+      "owner": "a",
+      "file": "04-montlhery-la-parcelle.webp",
+      "caption": "La parcelle",
+      "crop": {
+        "left": 200,
+        "top": 0,
+        "width": 1200,
+        "height": 900
+      }
+    },
+    {
+      "property": 5,
+      "owner": "a",
+      "file": "05-juvisy-sur-orge-sejour-et-vue-degagee.webp",
+      "caption": "Séjour et vue dégagée",
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 1423,
+        "height": 1067
+      }
+    },
+    {
+      "property": 5,
+      "owner": "a",
+      "file": "05-juvisy-sur-orge-cuisine-ouverte.webp",
+      "caption": "Cuisine ouverte",
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 1423,
+        "height": 1067
+      }
+    },
+    {
+      "property": 5,
+      "owner": "a",
+      "file": "05-juvisy-sur-orge-chambre.webp",
+      "caption": "Chambre",
+      "crop": {
+        "left": 78,
+        "top": 0,
+        "width": 1444,
+        "height": 1083
+      }
+    },
+    {
+      "property": 6,
+      "owner": "a",
+      "file": "06-villiers-sur-orge-chambre.webp",
+      "caption": "Chambre",
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 1423,
+        "height": 1067
+      }
+    },
+    {
+      "property": 7,
+      "owner": "a",
+      "file": "07-longjumeau-sejour.webp",
+      "caption": "Séjour",
+      "crop": {
+        "left": 0,
+        "top": 600,
+        "width": 1600,
+        "height": 1200
+      }
+    },
+    {
+      "property": 8,
+      "owner": "b",
+      "file": "08-sainte-genevieve-des-bois.webp",
+      "caption": "Façade et jardin",
+      "crop": {
+        "left": 0,
+        "top": 100,
+        "width": 1024,
+        "height": 768
+      }
+    },
+    {
+      "property": 9,
+      "owner": "b",
+      "file": "09-viry-chatillon-facade-de-la-residence.webp",
+      "caption": "Façade de la résidence",
+      "crop": {
+        "left": 0,
+        "top": 466,
+        "width": 1600,
+        "height": 1200
+      }
+    },
+    {
+      "property": 9,
+      "owner": "b",
+      "file": "09-viry-chatillon-sejour.webp",
+      "caption": "Séjour",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1600,
+        "height": 1200
+      }
+    },
+    {
+      "property": 9,
+      "owner": "b",
+      "file": "09-viry-chatillon-cuisine.webp",
+      "caption": "Cuisine",
+      "crop": {
+        "left": 0,
+        "top": 600,
+        "width": 1600,
+        "height": 1200
+      }
+    },
+    {
+      "property": 10,
+      "owner": "b",
+      "file": "10-morangis-facade-et-jardin.webp",
+      "caption": "Façade et jardin",
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 1423,
+        "height": 1067
+      }
+    },
+    {
+      "property": 10,
+      "owner": "b",
+      "file": "10-morangis-sejour.webp",
+      "caption": "Séjour",
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 1423,
+        "height": 1067
+      }
+    },
+    {
+      "property": 11,
+      "owner": "b",
+      "file": "11-chilly-mazarin-facade-de-la-residence.webp",
+      "caption": "Façade de la résidence",
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 1423,
+        "height": 1067
+      }
+    },
+    {
+      "property": 11,
+      "owner": "b",
+      "file": "11-chilly-mazarin-sejour.webp",
+      "caption": "Séjour",
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 1423,
+        "height": 1067
+      }
+    },
+    {
+      "property": 12,
+      "owner": "b",
+      "file": "12-athis-mons-sejour-et-cuisine-ouverte.webp",
+      "caption": "Séjour et cuisine ouverte",
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 1423,
+        "height": 1067
+      }
+    },
+    {
+      "property": 13,
+      "owner": "b",
+      "file": "13-ballainvilliers-double-sejour.webp",
+      "caption": "Double séjour",
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 1423,
+        "height": 1067
+      }
+    },
+    {
+      "property": 13,
+      "owner": "b",
+      "file": "13-ballainvilliers-salle-a-manger.webp",
+      "caption": "Salle à manger",
+      "crop": {
+        "left": 200,
+        "top": 0,
+        "width": 1200,
+        "height": 900
+      }
+    },
+    {
+      "property": 13,
+      "owner": "b",
+      "file": "13-ballainvilliers-salon.webp",
+      "caption": "Salon",
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 1423,
+        "height": 1067
+      }
     },
     {
       "property": 14,
       "owner": "b",
       "file": "14-la-ville-du-bois.webp",
       "caption": "Façade et terrasse",
-      "crop": { "left": 0, "top": 0, "width": 736, "height": 920 }
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 736,
+        "height": 920
+      }
+    },
+    {
+      "property": 15,
+      "owner": "b",
+      "file": "15-villemoisson-sur-orge-sejour.webp",
+      "caption": "Séjour",
+      "crop": {
+        "left": 0,
+        "top": 106,
+        "width": 1600,
+        "height": 1200
+      }
+    },
+    {
+      "property": 16,
+      "owner": "b",
+      "file": "16-grigny-facade-de-la-residence.webp",
+      "caption": "Façade de la résidence",
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 1423,
+        "height": 1067
+      }
     }
   ]
 }

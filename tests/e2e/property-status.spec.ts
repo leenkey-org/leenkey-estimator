@@ -135,9 +135,17 @@ test("une annonce suspendue par Leenkey : en lecture seule, avec son motif", asy
   await expect(page).toHaveURL(sheet(13));
   await page.goto(`${sheet(13)}/modifier/annonce`);
   await expect(page).toHaveURL(sheet(13));
+  // Its three photos of the seed (L1-46b) shown, the first the cover; none
+  // added, moved nor removed.
   await page.goto(`${sheet(13)}/photos`);
-  await expect(main.getByText("Votre bien n'a pas encore de photo.")).toBeVisible();
+  await expect(main.getByText("3 photos", { exact: true })).toBeVisible();
+  await expect(main.getByText("Photo principale", { exact: true })).toHaveCount(1);
+  const first = main.getByRole("region", { name: "Photos" }).getByRole("listitem").first();
+  await expect(first).toContainText("Photo principale");
+  await expect(first).toContainText("Double séjour");
   await expect(main.getByRole("button", { name: "Ajouter des photos" })).toHaveCount(0);
+  // Read only: no button to move or remove a photo either.
+  await expect(main.getByRole("region", { name: "Photos" }).getByRole("button")).toHaveCount(0);
   await page.close();
 });
 

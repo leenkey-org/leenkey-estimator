@@ -121,9 +121,13 @@ test("une annonce en ligne : statut, chiffres clés, actions et onglets @a11y", 
     "page",
   );
   await expect(main.getByRole("heading", { level: 2 })).toHaveText("Photos");
-  // This apartment of the seed has no photo (L1-46: three houses have one):
-  // they are added here, the listing online (L1-14b).
-  await expect(main.getByText("0 photo sur 15")).toBeAttached();
+  // The five photos of this apartment in the seed (L1-46b), the façade first;
+  // more are added here, the listing online (L1-14b).
+  await expect(main.getByText("5 photos sur 15")).toBeAttached();
+  // In the order of the seed, the façade first: the cover of the listing.
+  await expect(
+    main.getByRole("button", { name: "Photo 1 sur 5, Façade de la résidence, photo principale" }),
+  ).toBeVisible();
   await expect(main.getByRole("button", { name: "Ajouter des photos" })).toBeVisible();
   await expect(main.getByText(/^Votre annonce reste en ligne/)).toBeVisible();
   await tabs(page).getByRole("link", { name: "Annonce" }).click();

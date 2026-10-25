@@ -117,7 +117,7 @@ for (const photo of photos) {
   }
   if (!sent) continue;
   rows.push(
-    `(${lit(propertyId)}::uuid, ${lit(path)}, ${largest.width}, ${largest.height}, ${lit(photo.caption)})`,
+    `(${rows.length}, ${lit(propertyId)}::uuid, ${lit(path)}, ${largest.width}, ${largest.height}, ${lit(photo.caption)})`,
   );
 }
 
@@ -128,12 +128,15 @@ if (rows.length === 0) {
   process.exit(0);
 }
 // Only for properties still without photo (the check is made again here);
-// photos_before_insert numbers them in this order, the first one the cover.
+// photos_before_insert numbers them in the order of the manifest, the first
+// one the cover: « order by v.ord », the rows of a single insert being
+// otherwise visited in any order (a hash anti-join gave them reversed).
 console.log(
   "insert into public.photos (property_id, storage_path, width, height, caption)\n" +
     "select v.property_id, v.storage_path, v.width, v.height, v.caption from (values\n" +
-    `${rows.join(",\n")}\n) as v(property_id, storage_path, width, height, caption)\n` +
+    `${rows.join(",\n")}\n) as v(ord, property_id, storage_path, width, height, caption)\n` +
     "where not exists (select 1 from public.photos p where p.property_id = v.property_id)\n" +
+    "order by v.ord\n" +
     "on conflict (storage_path) do nothing;",
 );
 console.error(`seed-photos: ${rows.length} photos sent by their owners to the bucket photos.`);
