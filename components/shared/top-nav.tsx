@@ -59,6 +59,7 @@ export function TopNav({
 }: TopNavProps) {
   return (
     <header
+      data-sticky-header="top-nav"
       className={cn(
         "hidden h-18 items-center gap-6 border-b border-lk-line bg-lk-surface px-5",
         "md:sticky md:top-0 md:z-30 md:flex lg:gap-8 lg:px-10",

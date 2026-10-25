@@ -390,7 +390,89 @@ test.describe("mentions légales et CGU de la V1", () => {
     await toc.getByRole("link", { name: "5. Tarifs et paiement" }).click();
     await expect(page).toHaveURL(/\/cgu#tarifs$/);
     await expect(page.getByRole("heading", { name: "5. Tarifs et paiement" })).toBeInViewport();
+    // No sticky header on a legal page: the article 24 px under the top of the screen.
+    await expectAnchorUnderHeaders(page, "tarifs", 24);
     await expect(page.getByRole("status").filter({ hasText: "Important :" })).toHaveCount(0);
     await expect(page.getByText("pas une agence immobilière")).toBeVisible();
   });
+});
+
+// The sticky headers at the top of the screen never cover an anchor, and an
+// anchor lands right under them: the scroll padding of the V1 (145 px) left
+// every one of them that much too low (app/globals.css). Measured on the page,
+// never written in the test: the visible elements marked data-sticky-header
+// (SiteMenu, TopNav) or data-sticky-subheader (the wizard, a conversation).
+async function stickyStack(page: Page) {
+  return page.evaluate(() => ({
+    padding: parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0,
+    stack: [...document.querySelectorAll("[data-sticky-header], [data-sticky-subheader]")]
+      .map((element) => element.getBoundingClientRect().height)
+      .reduce((sum, height) => sum + height, 0),
+  }));
+}
+
+/** The top of the anchor, `gap` px under the sticky headers (polled: smooth scroll, fonts). */
+async function expectAnchorUnderHeaders(page: Page, id: string, gap = 0) {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        ({ anchor, gap }) => {
+          const top = document.getElementById(anchor)?.getBoundingClientRect().top;
+          if (top === undefined) return `#${anchor} missing`;
+          const stack = [
+            ...document.querySelectorAll("[data-sticky-header], [data-sticky-subheader]"),
+          ]
+            .map((element) => element.getBoundingClientRect().height)
+            .reduce((sum, height) => sum + height, 0);
+          return Math.abs(top - (stack + gap)) <= 2
+            ? "under the headers"
+            : `top ${Math.round(top)}, expected ${Math.round(stack + gap)}`;
+        },
+        { anchor: id, gap },
+      ),
+    )
+    .toBe("under the headers");
+}
+
+test.describe("ancres sous les en-têtes collants", () => {
+  test("la marge du défilement est celle des en-têtes collants, à 390, 768 et 1 280 px", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "les trois largeurs depuis le navigateur de bureau");
+    // The site header; none on a legal page (G10); the header and the wizard on /estimer.
+    for (const path of ["/", "/cgu", "/estimer"]) {
+      await page.goto(path);
+      for (const width of [390, 768, 1280]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.evaluate(() => document.fonts.ready);
+        const { padding, stack } = await stickyStack(page);
+        expect(
+          Math.abs(padding - stack),
+          `${path} at ${width}: ${padding} for ${stack}`,
+        ).toBeLessThanOrEqual(1);
+        if (path === "/cgu") expect(stack, path).toBe(0);
+        else expect(stack, `${path} at ${width}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  test("« Découvrir notre vision » arrive sur la vision de /investir", async ({ page }) => {
+    // With the smooth scroll of the site (DESIGN.md 9): polled until it ends.
+    await page.goto("/qui-sommes-nous");
+    await page.getByRole("main").getByRole("link", { name: "Découvrir notre vision" }).click();
+    await expect(page).toHaveURL(/\/investir#vision$/);
+    await expectAnchorUnderHeaders(page, "vision");
+  });
+
+  for (const [path, id] of [
+    ["/investir", "formulaire"],
+    ["/", "tarifs"],
+    ["/", "contact"],
+  ] as const) {
+    test(`${path}#${id} au chargement de la page`, async ({ page }) => {
+      await page.goto(`${path}#${id}`);
+      await expectAnchorUnderHeaders(page, id);
+    });
+  }
 });

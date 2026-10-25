@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-25 · Correctif · PR #42 · Ancres sous les en-têtes collants
+- Corrigé : une ancre des pages publiques (« Découvrir notre vision » vers `/investir#vision`, `#formulaire`, `#tarifs`, `#contact`, sommaire des pages légales) arrivait environ 145 px trop bas : le `scroll-padding-top` de la V1 (145 px, et 165 px sous 640 px, `app/globals.css`) s'ajoutait aux marges des sections. La marge du défilement est maintenant celle des en-têtes collés en haut de la page : `data-sticky-header` (le `SiteMenu` sous 768 px, la `TopNav` ensuite) et `data-sticky-subheader` (l'en-tête de l'assistant de valorisation, 57 px ; celui d'une conversation, 73 px) ; aucune sur une page qui n'en a pas (pages légales, formulaires, back office). Les marges en double des sections sont retirées, le sommaire des pages légales arrive 24 px sous le haut de l'écran, et un champ qui prend le focus arrive avec son libellé (`scroll-margin-top` de 32 px).
+- Tests : E2E, en mobile et en desktop. La marge égale la hauteur mesurée des en-têtes à 390, 768 et 1 280 px (accueil, une page légale, `/estimer`) ; « Découvrir notre vision » avec le défilement doux ; trois ancres au chargement ; le sommaire des CGU.
+
 ### 2026-10-24 · L1-51 · PR #41 · Sous-menu « Qui sommes-nous »
 - Ajouté : « Qui sommes-nous » ouvre « Leenkey et son fondateur » (`/qui-sommes-nous`) et « Investir dans Leenkey » (`/investir`) : dans la barre haute à partir de 1 280 px (survol, clic, Entrée ou Espace ; Échap, clic ailleurs, sortie du focus ou du pointeur referment), dans le menu mobile sous son intitulé. Groupes de liens dans `NavItem` (`items`).
 - Modifié : « Découvrir notre vision » (`/qui-sommes-nous`) mène à la section « La vision » de `/investir` ; le menu mobile ne répète plus « Investir » ; pied de page inchangé.

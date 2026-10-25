@@ -87,13 +87,9 @@ export function MarketingSection({
     <section
       id={id}
       aria-labelledby={titleId}
-      className={cn(
-        // The sticky header (60 px, then the 72 px TopNav) never covers the
-        // title of an anchor.
-        "scroll-mt-15 md:scroll-mt-18",
-        BACKGROUND[tone],
-        className,
-      )}
+      // An anchor lands right under the sticky header (scroll-padding of the
+      // page, app/globals.css).
+      className={cn(BACKGROUND[tone], className)}
     >
       <div
         className={cn(
