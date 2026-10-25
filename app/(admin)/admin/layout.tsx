@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import type { Metadata } from "next";
 import { AdminShell } from "@/components/shared/admin-shell";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { SiteFooter } from "@/components/shared/site-footer";
@@ -9,19 +8,12 @@ import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { accountMenu, ADMIN_NAV_ITEMS, bottomTabs, ROUTES } from "@/leenkey/navigation/config";
 import { fr } from "@/lib/i18n/fr";
 
-// The metadata are read under the same guard as the layout: without it, the
-// 404 of an account without the admin role would keep in the title of the tab
-// the name of the page of the back office it hides.
-export async function generateMetadata(): Promise<Metadata> {
-  await requireAdmin();
-  return {};
-}
-
 // Back office: admin role required (CLAUDE.md section 3). A signed-in user
 // without it gets a 404; a signed-out visitor is sent to the login page by the
 // middleware. Each page checks again with requireAdmin() (see its comment).
 // AdminShell: sidebar from 768 px, header and bottom tabs below (DESIGN.md 10.6),
-// SiteFooter under the content (L1-36).
+// SiteFooter under the content (L1-36). The metadata of each page are read
+// under requireAdmin() too (leenkey/admin/metadata.ts).
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const profile = await requireAdmin();
   return (
