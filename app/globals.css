@@ -144,28 +144,40 @@
   animation: leenkey-fade-up 0.4s ease-out backwards;
 }
 
-/* Room for the sticky header of the site when the page scrolls to an anchor
-   or to an element that takes the focus (WCAG 2.4.11): the 60 px SiteMenu,
-   then the 72 px TopNav from 768 px; the target lands right under it. A page
-   with a second sticky header under it (the wizard of /estimer, a
-   conversation: data-sticky-subheader) adds 72 px. The V1 values (145 and
-   165 px) left every anchor of the V2 that much too low. */
+/* Room for the sticky headers at the top of the screen, when the page scrolls
+   to an anchor or to an element that takes the focus (WCAG 2.4.11): the
+   SiteMenu below 768 px or the TopNav from 768 px (data-sticky-header), and a
+   second sticky header under it on a page that has one (data-sticky-subheader:
+   the wizard of /estimer, 57 px; a conversation, 73 px). Nothing on a page
+   without any (legal pages, forms, back office). An anchor lands right under
+   them. The V1 padding (145 px, and 165 px below 640 px) left every anchor of
+   the V2 that much too low. The bottom of the screen is not handled here. */
 html {
-  scroll-padding-top: 3.75rem;
+  scroll-padding-top: calc(var(--lk-sticky-header, 0rem) + var(--lk-sticky-subheader, 0rem));
 }
 
-html:has([data-sticky-subheader]) {
-  scroll-padding-top: 8.25rem;
+html:has([data-sticky-header="site-menu"]) {
+  --lk-sticky-header: --spacing(15);
 }
 
-@media (min-width: 48rem) {
-  html {
-    scroll-padding-top: 4.5rem;
+html:has([data-sticky-header]) {
+  @variant md {
+    --lk-sticky-header: 0rem;
   }
+}
 
-  html:has([data-sticky-subheader]) {
-    scroll-padding-top: 9rem;
+html:has([data-sticky-header="top-nav"]) {
+  @variant md {
+    --lk-sticky-header: --spacing(18);
   }
+}
+
+html:has([data-sticky-subheader="wizard"]) {
+  --lk-sticky-subheader: --spacing(14.25);
+}
+
+html:has([data-sticky-subheader="conversation"]) {
+  --lk-sticky-subheader: --spacing(18.25);
 }
 
 /* Ensure smooth scroll behavior site-wide */
@@ -853,6 +865,12 @@ html:has([data-sticky-subheader]) {
   .facade :focus-visible {
     outline: 2px solid var(--color-lk-blue);
     outline-offset: 2px;
+  }
+
+  /* A field that takes the focus comes into view with its label, under the
+     sticky headers (scroll-padding of the page, above). */
+  .facade :is(input, select, textarea) {
+    scroll-margin-top: 2rem;
   }
 
   /* DESIGN.md 2.2, scoped so that the V1 animations stay as they are. The

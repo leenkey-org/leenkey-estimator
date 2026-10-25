@@ -491,7 +491,7 @@ export function LeenkeyWizard() {
       {/* Header */}
       {/* A second sticky header: room for it when the focus moves (app/globals.css). */}
       <header
-        data-sticky-subheader=""
+        data-sticky-subheader="wizard"
         className="sticky top-15 z-30 border-b border-lk-line bg-lk-surface md:top-18"
       >
         {/* Progress (logo retiré : déjà dans la navbar au-dessus) */}

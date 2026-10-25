@@ -79,6 +79,7 @@ export function SiteMenu({
 
   return (
     <header
+      data-sticky-header="site-menu"
       className={cn(
         "sticky top-0 z-20 flex h-15 items-center justify-between gap-4 border-b border-lk-line bg-lk-surface px-5 md:hidden",
         className,

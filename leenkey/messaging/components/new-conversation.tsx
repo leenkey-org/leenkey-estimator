@@ -65,7 +65,7 @@ export function NewConversation({
   return (
     <>
       {/* A second sticky header: room for it when the focus moves (app/globals.css). */}
-      <div data-sticky-subheader="" className="sticky top-0 z-20 md:top-18">
+      <div data-sticky-subheader="conversation" className="sticky top-0 z-20 md:top-18">
         <ConversationHeader
           back={
             <Link
