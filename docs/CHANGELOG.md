@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-25 · L1-46b · PR #44 · Photos des biens de test
+- Ajouté : 28 photos libres de droits (Unsplash, licence Unsplash) pour les 13 biens du seed qui n'en avaient pas : appartements (façade de la résidence, séjour, cuisine, chambre, salle de bains ou d'eau), maisons (n° 6 et 10), meulière de Ballainvilliers (pièces de vie), terrain de Montlhéry, biens en attente et à corriger. Recadrées en 4:3, déposées par `db:seed` comme les envoie un vendeur (WebP 400, 800 et 1 600 px). Provenance dans `supabase/seed/photos/CREDITS.md`.
+- Inchangé : les trois maisons qui avaient leur photo (n° 2, 8, 14) ; `db:seed` ne touche pas aux photos d'un bien qui en a.
+- Tests : unitaires (toutes sortes de biens, une photo par bien, jamais sous 800 × 600, chaque fichier crédité) ; E2E (fiche du bien n° 1 : 5 photos ; accueil).
+
 ### 2026-10-24 · L1-51 · PR #41 · Sous-menu « Qui sommes-nous »
 - Ajouté : « Qui sommes-nous » ouvre « Leenkey et son fondateur » (`/qui-sommes-nous`) et « Investir dans Leenkey » (`/investir`) : dans la barre haute à partir de 1 280 px (survol, clic, Entrée ou Espace ; Échap, clic ailleurs, sortie du focus ou du pointeur referment), dans le menu mobile sous son intitulé. Groupes de liens dans `NavItem` (`items`).
 - Modifié : « Découvrir notre vision » (`/qui-sommes-nous`) mène à la section « La vision » de `/investir` ; le menu mobile ne répète plus « Investir » ; pied de page inchangé.

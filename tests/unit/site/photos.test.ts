@@ -55,11 +55,11 @@ describe("photos des biens de démonstration (supabase/seed/photos)", () => {
   });
 
   // Sent as its owner (scripts/seed-photos.mjs): the seller of the property.
-  it("chaque photo est celle d'une maison du seed, de son propriétaire, avec une légende courte", () => {
+  it("chaque photo est celle d'un bien du seed, de son propriétaire, avec une légende courte", () => {
     const seed = readFileSync("supabase/seed/05_demo_data.sql", "utf8");
     for (const photo of photos) {
       expect(seed, photo.file).toMatch(
-        new RegExp(`\\(${photo.property}, '${photo.owner}', 'maison'`),
+        new RegExp(`\\(${photo.property}, '${photo.owner}', '(maison|appartement|terrain)'`),
       );
       expect(photo.caption.length).toBeGreaterThan(0);
       expect(photo.caption.length).toBeLessThanOrEqual(200);

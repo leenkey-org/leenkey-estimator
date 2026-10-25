@@ -491,7 +491,7 @@ test.describe("accueil (base de seed)", () => {
     const list = page.getByRole("list", { name: "Les derniers biens" });
     const cards = list.getByRole("link");
     await expect(cards).toHaveCount(3);
-    // Those with a photo first (L1-46): the three houses of the seed photos.
+    // Those with a photo first (L1-46): every listing of the seed has some (L1-46b).
     await expect(list.locator('img[src*="/img/"]')).toHaveCount(3);
     for (const href of await cards.evaluateAll((links) =>
       links.map((link) => link.getAttribute("href")),
