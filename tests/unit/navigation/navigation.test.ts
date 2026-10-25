@@ -12,12 +12,14 @@ import {
   accountInitial,
   accountMenu,
   ADMIN_NAV_ITEMS,
+  allowedSpace,
   bottomTabs,
   FAVOURITES_LINK,
   followSpace,
   MENU_LINKS,
   notificationBell,
   ownSpace,
+  pageSpace,
   ROUTES,
   sellCta,
   signInLink,
@@ -61,6 +63,14 @@ describe("spaceFor", () => {
     }
   });
 
+  // The back office is a 404 for an account without the admin role.
+  it("never gives the back office to an account without the admin role", () => {
+    expect(spaceFor("/admin", ["seller"])).toBe("seller");
+    expect(spaceFor("/admin/annonces", ["buyer"])).toBe("buyer");
+    expect(spaceFor("/admin/annonces", ["buyer", "seller"])).toBe("seller");
+    expect(spaceFor("/admin", [])).toBe("buyer");
+  });
+
   it("cuts paths on segments only", () => {
     expect(spaceFor("/administration", ["seller"])).toBe("seller");
     expect(spaceFor("/vendeurs", ["buyer"])).toBe("buyer");
@@ -94,6 +104,48 @@ describe("followSpace (client navigation, SpaceProvider)", () => {
     // The search belongs to the buyer area: a seller who goes from it to the
     // messages keeps the buyer tabs.
     expect(followSpace(followSpace("seller", "/acheter"), "/messages")).toBe("buyer");
+  });
+});
+
+describe("allowedSpace (useSpace)", () => {
+  it("drops the back office for an account without the admin role", () => {
+    expect(allowedSpace("admin", ["admin"])).toBe("admin");
+    expect(allowedSpace("admin", ["admin", "seller"])).toBe("admin");
+    expect(allowedSpace("admin", ["seller"])).toBeNull();
+    expect(allowedSpace("admin", ["buyer", "seller"])).toBeNull();
+    expect(allowedSpace("admin", [])).toBeNull();
+    expect(allowedSpace(null, ["admin"])).toBeNull();
+  });
+
+  it("keeps the seller and buyer areas, open to every account", () => {
+    for (const roles of [["seller"], ["buyer"], ["admin"], []]) {
+      expect(allowedSpace("seller", roles)).toBe("seller");
+      expect(allowedSpace("buyer", roles)).toBe("buyer");
+    }
+  });
+
+  // seller_a opens /admin (a 404), then goes home: the provider keeps the
+  // back office, the page takes the space of the account's roles (useSpace).
+  it("after the 404 of the back office, the space of the account's roles", () => {
+    const last = followSpace(followSpace("seller", "/admin"), "/");
+    expect(last).toBe("admin");
+    expect(pageSpace(last, "/", ["seller"])).toBe("seller");
+    expect(pageSpace(followSpace(last, "/compte"), "/compte", ["buyer"])).toBe("buyer");
+  });
+});
+
+describe("pageSpace (useSpace)", () => {
+  it("keeps the back office for an admin on a page without a space of its own", () => {
+    const last = followSpace(null, "/admin");
+    expect(pageSpace(followSpace(last, "/compte"), "/compte", ["admin"])).toBe("admin");
+    expect(pageSpace(followSpace(last, "/compte"), "/compte", ["admin", "seller"])).toBe("admin");
+  });
+
+  it("keeps the last space visited, otherwise the one of the page and of the roles", () => {
+    expect(pageSpace("buyer", "/messages", ["seller"])).toBe("buyer");
+    expect(pageSpace(null, "/messages", ["seller"])).toBe("seller");
+    expect(pageSpace(null, "/admin", ["seller"])).toBe("seller");
+    expect(pageSpace(null, "/admin", ["admin"])).toBe("admin");
   });
 });
 

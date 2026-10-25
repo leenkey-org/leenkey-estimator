@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-25 · Correctif · PR #46 · Espace du back office pour un compte non admin
+- Corrigé : un compte sans le rôle admin qui ouvrait `/admin` (une 404) gardait ensuite l'espace du back office dans le navigateur (`SpaceProvider`). La cloche ouvrait alors le panneau du back office (« Voir les annonces à valider », une 404), et les onglets du bas devenaient ceux du back office sous 768 px. `useSpace` et `spaceFor` ignorent maintenant cet espace pour un tel compte (`allowedSpace`, `leenkey/navigation/spaces.ts`). Relevé par la relecture de la PR #43.
+- Tests : unitaires (`allowedSpace`, `spaceFor`) ; E2E avec le seed (`seller_a`, 404 du back office puis retour à l'accueil : la cloche garde les filtres de la vente).
+
 ### 2026-10-25 · Correctif · PR #43 · Page 404 et page d'erreur en Façade
 - Corrigé : la page 404 du site (`app/not-found.tsx`) et la page d'erreur générale (`app/error.tsx`) gardaient le thème du début du projet (bouton violet `bg-primary`, textes en dur). La 404 est celle de DESIGN 13.1, comme celle d'une annonce : aplat bleu sur tout l'écran, `facade.svg` en blanc à 55 %, « Cette page n'existe pas. », « Retour à l'accueil » ; titre de l'onglet « Page introuvable · Leenkey », sans lien canonique ni partage de l'accueil. La page d'erreur : « Ça n'a pas fonctionné. », « Réessayer », « Retour à l'accueil » et « Nous écrire » ; elle sert aussi aux annonces. Textes dans `lib/i18n/fr.ts` (`errors`).
 - Corrigé : « Réessayer » redemande la page au serveur (site, annonce, conversation) ; avant, il réaffichait l'erreur sans nouvelle requête. Le back office ouvert par un compte sans le rôle admin ne se nomme plus dans le titre de l'onglet de sa 404.
