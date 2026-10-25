@@ -13,11 +13,13 @@ export type NotFoundScreenProps = {
 /**
  * The 404 (docs/DESIGN.md 13.1, G8 variant): facade.svg in white at 55 % on
  * the blue flat, the title, one sentence, one inverse button, the whole
- * screen. A missing address and a listing no longer online.
+ * screen. A missing address and a listing no longer online. It renders the
+ * main landmark of the page: for a not-found page of the root of the app or
+ * of a segment without a layout of its own, never inside a layout with one.
  */
 export function NotFoundScreen({ title, text, action }: NotFoundScreenProps) {
   return (
-    <FacadeRoot className="flex min-h-screen items-center justify-center bg-lk-blue px-5 py-16 text-white">
+    <FacadeRoot className="flex min-h-dvh items-center justify-center bg-lk-blue px-5 py-16 text-white">
       <main>
         <EmptyState
           tone="blue"

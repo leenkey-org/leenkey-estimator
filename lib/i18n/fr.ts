@@ -163,9 +163,8 @@ export const fr = {
       text: "La validation des annonces arrive avec la prochaine étape.",
     },
   },
-  // L1-10: navigation shells (docs/DESIGN.md 10.6 to 10.8).
   // A page that does not exist, or that could not be shown (app/not-found.tsx,
-  // app/error.tsx; docs/DESIGN.md 13.1).
+  // app/error.tsx, app/global-error.tsx; docs/DESIGN.md 13.1).
   errors: {
     notFound: {
       metaTitle: "Page introuvable · Leenkey",
@@ -178,8 +177,10 @@ export const fr = {
       text: "Réessayez dans un instant ; si le problème continue, écrivez-nous.",
       retry: "Réessayer",
       home: "Retour à l'accueil",
+      contact: "Nous écrire",
     },
   },
+  // L1-10: navigation shells (docs/DESIGN.md 10.6 to 10.8).
   nav: {
     label: "Navigation principale",
     adminLabel: "Navigation du back office",
@@ -1459,16 +1460,10 @@ export const fr = {
       // The preview of the seller before sending (L1-13).
       inactive: "Dans l'aperçu, ces boutons sont inactifs.",
     },
+    // The title and the action of errors.notFound.
     notFound: {
       metaTitle: "Annonce introuvable · Leenkey",
-      title: "Cette page n'existe pas.",
       text: "L'annonce a peut-être été vendue ou retirée par son propriétaire.",
-      action: "Retour à l'accueil",
-    },
-    error: {
-      title: "Ça n'a pas fonctionné.",
-      text: "Réessayez dans un instant ; si le problème continue, écrivez-nous.",
-      retry: "Réessayer",
     },
   },
   // Public site in V2 (lib/i18n/site.ts).

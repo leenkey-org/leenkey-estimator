@@ -137,11 +137,27 @@ test.describe("sans base de données", () => {
     await expect(location(page)).toHaveValue(/^Savigny-sur-Orge · 5\skm$/);
   });
 
-  test("une annonce répond 500 avec la page d'erreur", async ({ page, request }) => {
-    const response = await page.goto("/annonce/appartement-3-pieces-savigny-sur-orge-lk0001");
+  test("une annonce répond 500 avec la page d'erreur du site", async ({ page, request }) => {
+    const path = "/annonce/appartement-3-pieces-savigny-sur-orge-lk0001";
+    const response = await page.goto(path);
     expect(response?.status()).toBe(500);
     await expect(page.getByRole("heading", { name: "Ça n'a pas fonctionné." })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Réessayer" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Retour à l'accueil" })).toHaveAttribute(
+      "href",
+      "/",
+    );
+    await expect(page.getByRole("link", { name: "Nous écrire" })).toHaveAttribute(
+      "href",
+      "/contact",
+    );
+    // « Réessayer » asks the server again (app/error.tsx), and shows the error
+    // again as long as the database is unavailable.
+    const asked = page.waitForRequest(
+      (sent) => new URL(sent.url()).pathname === path && sent.headers()["rsc"] === "1",
+    );
+    await page.getByRole("button", { name: "Réessayer" }).click();
+    await asked;
+    await expect(page.getByRole("heading", { name: "Ça n'a pas fonctionné." })).toBeVisible();
     const image = await request.get("/api/og/appartement-3-pieces-savigny-sur-orge-lk0001");
     expect(image.status()).toBe(503);
   });
