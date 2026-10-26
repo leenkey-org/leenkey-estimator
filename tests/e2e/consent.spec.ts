@@ -45,15 +45,65 @@ async function analyticsCookies(page: Page) {
 const banner = (page: Page) => page.getByRole("region", { name: "Cookies" });
 const preferences = (page: Page) => page.getByRole("region", { name: "Vos préférences" });
 
+// No « networkidle »: on /acheter with the photos of the seed, the network
+// sometimes never went quiet and the test failed after 30 s (2026-10-25).
+// What counts is the moment ConsentManager has read the consent cookie: the
+// tags it allows are mounted in that same render, the banner is shown when
+// there is no choice yet, and « Gérer mes cookies » opens the preferences.
+
+/**
+ * Opens « Vos préférences » from the footer once the page is hydrated (a
+ * click before is lost): ConsentManager has then read the consent cookie.
+ */
+async function openPreferences(page: Page) {
+  const manage = page.getByRole("contentinfo").getByRole("button", { name: "Gérer mes cookies" });
+  await expect(async () => {
+    await manage.click();
+    await expect(preferences(page)).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+}
+
+/** Records whether the banner (not the preferences) was ever in the page. */
+async function watchBanner(page: Page) {
+  await page.addInitScript(() => {
+    const seen = { banner: false };
+    Object.assign(window, { lkBanner: seen });
+    // The region named « Cookies » by its title, as getByRole reads it: the
+    // preferences have the same region, named « Vos préférences ».
+    const check = () => {
+      for (const region of document.querySelectorAll('section[role="region"][aria-labelledby]')) {
+        const title = document.getElementById(region.getAttribute("aria-labelledby") ?? "");
+        if (title?.textContent?.trim() === "Cookies") seen.banner = true;
+      }
+    };
+    new MutationObserver(check).observe(document, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+  });
+}
+
+const bannerSeen = (page: Page) =>
+  page.evaluate(() => (window as unknown as { lkBanner: { banner: boolean } }).lkBanner.banner);
+
+/** Nothing of Google in the page: no tag, no gtag, no cookie, no request. */
+async function expectNoGoogle(page: Page, requests: string[]) {
+  await expect(page.locator('script[src*="googletagmanager"], script#ga4, script#gtm')).toHaveCount(
+    0,
+  );
+  expect(await page.evaluate(() => typeof (window as { gtag?: unknown }).gtag)).toBe("undefined");
+  expect(await analyticsCookies(page)).toEqual([]);
+  expect(requests).toEqual([]);
+}
+
 test("premier passage : le bandeau demande l'accord, rien de Google avant", async ({ page }) => {
   const google = watchGoogle(page);
   await page.goto("/");
+  // Shown once ConsentManager has found no choice: nothing of Google so far.
   await expect(banner(page)).toBeVisible();
   await expect(banner(page)).toContainText("Vous pouvez changer d'avis à tout moment");
-  await page.waitForLoadState("networkidle");
-  expect(await page.evaluate(() => typeof (window as { gtag?: unknown }).gtag)).toBe("undefined");
-  expect(await analyticsCookies(page)).toEqual([]);
-  expect(google).toEqual([]);
+  await expectNoGoogle(page, google);
 });
 
 test("Refuser : rien ne se charge, et le choix est gardé six mois", async ({ page }) => {
@@ -72,24 +122,32 @@ test("Refuser : rien ne se charge, et le choix est gardé six mois", async ({ pa
   expect(days).toBeGreaterThan(179);
   expect(days).toBeLessThan(184);
 
+  // Again, once the refusal is read: no banner, the audience unchecked, and
+  // still nothing of Google.
+  await watchBanner(page);
   await page.reload();
-  await page.waitForLoadState("networkidle");
-  await expect(banner(page)).toBeHidden();
-  expect(await page.evaluate(() => typeof (window as { gtag?: unknown }).gtag)).toBe("undefined");
-  expect(await analyticsCookies(page)).toEqual([]);
-  expect(google).toEqual([]);
+  await openPreferences(page);
+  expect(await bannerSeen(page)).toBe(false);
+  await expect(
+    preferences(page).getByRole("checkbox", { name: /Mesure d'audience/ }),
+  ).not.toBeChecked();
+  await expectNoGoogle(page, google);
 });
 
 test("Accepter : la mesure d'audience démarre (en production seulement)", async ({ page }) => {
+  const google = watchGoogle(page);
   await page.goto("/");
+  const action = consentAction(page);
   await banner(page).getByRole("button", { name: "Accepter" }).click();
   await expect(banner(page)).toBeHidden();
   await consentValue(page).toMatch(/^v1\.1\./);
   if (production) {
     await page.waitForFunction(() => typeof (window as { gtag?: unknown }).gtag === "function");
   } else {
-    await page.waitForLoadState("networkidle");
-    expect(await page.evaluate(() => typeof (window as { gtag?: unknown }).gtag)).toBe("undefined");
+    // The choice is rendered before its answer from the server comes back:
+    // tags allowed outside production would be mounted by then.
+    await action;
+    await expectNoGoogle(page, google);
   }
 });
 
@@ -138,7 +196,8 @@ test("retirer son accord recharge la page sans Google", async ({ page }) => {
     page.waitForEvent("load"),
     preferences(page).getByRole("button", { name: "Refuser" }).click(),
   ]);
-  await page.waitForLoadState("networkidle");
+  // The reloaded page has read the refusal: gtag.js no longer runs.
+  await openPreferences(page);
   expect(await page.evaluate(() => typeof (window as { gtag?: unknown }).gtag)).toBe("undefined");
   expect(await analyticsCookies(page)).toEqual([]);
   await consentValue(page).toMatch(/^v1\.0\./);

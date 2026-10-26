@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-26 · Correctif · PR #47 · Test des cookies sans « networkidle »
+- Corrigé : les tests du consentement (`tests/e2e/consent.spec.ts`) attendaient que le réseau se calme (`networkidle`). Sur `/acheter`, avec les photos du seed, ce moment n'arrivait parfois jamais : le test « Refuser » échouait au bout de 30 s, et les 24 tests du projet `seed-mutations` ne tournaient pas. Les tests attendent maintenant le moment où le gestionnaire de consentement a lu son cookie. C'est le bandeau affiché, les préférences ouvertes par « Gérer mes cookies », ou la réponse du serveur au choix. Ils vérifient ensuite qu'aucune balise, aucun `gtag`, aucun cookie ni aucune requête de Google n'est présent, et que le bandeau ne revient jamais après un refus.
+- Tests : contre-épreuves (un choix ignoré, des balises montées sans accord : les tests échouent) ; tests du consentement répétés cinq fois, avec et sans base de seed.
+
 ### 2026-10-25 · L1-46b · PR #44 · Photos des biens de test
 - Ajouté : 26 photos libres de droits (Unsplash, licence Unsplash) pour les 13 biens du seed qui n'en avaient pas : appartements (façade de la résidence, séjour, cuisine, chambre, salle de bains ou d'eau), maisons (n° 6 et 10), meulière de Ballainvilliers (pièces de vie), terrain de Montlhéry, biens en attente et à corriger. Recadrées en 4:3, déposées par `db:seed` comme les envoie un vendeur (WebP 400, 800 et 1 600 px). Provenance dans `supabase/seed/photos/CREDITS.md` ; l'auteur n'est pas relevé (Q59).
 - Corrigé : `scripts/seed-photos.mjs` insère les photos d'un bien dans l'ordre du manifeste, la première en photo principale (une seule insertion les visitait à l'envers).
