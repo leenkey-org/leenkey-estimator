@@ -58,7 +58,9 @@ const preferences = (page: Page) => page.getByRole("region", { name: "Vos préf�
 async function openPreferences(page: Page) {
   const manage = page.getByRole("contentinfo").getByRole("button", { name: "Gérer mes cookies" });
   await expect(async () => {
-    await manage.click();
+    // Clicked again only while the panel is not there: on a phone it covers
+    // the button once open, and React may show it up to 300 ms late.
+    if (!(await preferences(page).isVisible())) await manage.click({ timeout: 2_000 });
     await expect(preferences(page)).toBeVisible({ timeout: 1_000 });
   }).toPass({ timeout: 15_000 });
 }
@@ -103,11 +105,17 @@ async function watchConsent(page: Page) {
         node.addEventListener("load", done, { once: true });
         node.addEventListener("error", done, { once: true });
       }
-      // The region named « Cookies » by its title, as getByRole reads it: the
-      // preferences have the same region, named « Vos préférences ».
-      for (const region of document.querySelectorAll('section[role="region"][aria-labelledby]')) {
-        const title = document.getElementById(region.getAttribute("aria-labelledby") ?? "");
-        if (title?.textContent?.trim() === "Cookies") state.banner = true;
+      // A region whose name says « cookies », as banner() finds it (a named
+      // section, or role="region"; the preferences are « Vos préférences »).
+      for (const region of document.querySelectorAll("section, [role='region']")) {
+        const role = region.getAttribute("role");
+        if (role && role !== "region") continue;
+        const labels = (region.getAttribute("aria-labelledby") ?? "").split(/\s+/);
+        const name = [
+          region.getAttribute("aria-label") ?? "",
+          ...labels.map((id) => (id ? (document.getElementById(id)?.textContent ?? "") : "")),
+        ].join(" ");
+        if (/cookies/i.test(name)) state.banner = true;
       }
     }).observe(document, { childList: true, subtree: true, characterData: true });
   }, "lk:cookies");
@@ -115,10 +123,15 @@ async function watchConsent(page: Page) {
 
 /** Whether the banner showed: 600 ms after the cookie is read and no script loads, twice the 300 ms. */
 async function bannerShown(page: Page) {
-  await page.waitForFunction(() => {
-    const watch = (window as Watched).lkConsent;
-    return !!watch?.read && watch.loading === 0 && performance.now() - watch.quietSince >= 600;
-  });
+  await page.waitForFunction(
+    () => {
+      const watch = (window as Watched).lkConsent;
+      return !!watch?.read && watch.loading === 0 && performance.now() - watch.quietSince >= 600;
+    },
+    null,
+    // ConsentManager listens for « Gérer mes cookies » once it has read the cookie.
+    { timeout: 15_000 },
+  );
   return page.evaluate(() => (window as Watched).lkConsent?.banner);
 }
 
@@ -161,7 +174,8 @@ test("Refuser : rien ne se charge, et le choix est gardé six mois", async ({ pa
   // still nothing of Google.
   await watchConsent(page);
   await page.reload();
-  expect(await bannerShown(page)).toBe(false);
+  expect(await bannerShown(page), "the banner came back after the refusal").toBe(false);
+  await expect(banner(page)).toHaveCount(0);
   await openPreferences(page);
   await expect(
     preferences(page).getByRole("checkbox", { name: /Mesure d'audience/ }),
@@ -176,12 +190,12 @@ test("Accepter : la mesure d'audience démarre (en production seulement)", async
   await banner(page).getByRole("button", { name: "Accepter" }).click();
   await expect(banner(page)).toBeHidden();
   await consentValue(page).toMatch(/^v1\.1\./);
+  // The choice is rendered before its answer from the server comes back:
+  // tags allowed would be mounted by then.
+  await action;
   if (production) {
     await page.waitForFunction(() => typeof (window as { gtag?: unknown }).gtag === "function");
   } else {
-    // The choice is rendered before its answer from the server comes back:
-    // tags allowed outside production would be mounted by then.
-    await action;
     await expectNoGoogle(page, google);
   }
 });
@@ -213,8 +227,7 @@ test("« Gérer mes cookies » rouvre les choix, depuis le pied de page V2 et V1
   await expect(manage).toBeFocused();
 
   await page.goto("/");
-  await page.locator("footer").getByRole("button", { name: "Gérer mes cookies" }).click();
-  await expect(preferences(page)).toBeVisible();
+  await openPreferences(page);
   await expect(
     preferences(page).getByRole("checkbox", { name: /Mesure d'audience/ }),
   ).toBeChecked();
@@ -243,8 +256,7 @@ test("« Gérer mes cookies » est aussi sous la connexion et la recherche", asy
   await banner(page).getByRole("button", { name: "Refuser" }).click();
   for (const path of ["/connexion", "/acheter"]) {
     await page.goto(path);
-    await page.getByRole("contentinfo").getByRole("button", { name: "Gérer mes cookies" }).click();
-    await expect(preferences(page), path).toBeVisible();
+    await openPreferences(page);
   }
 });
 
