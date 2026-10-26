@@ -4,7 +4,7 @@
 -- and step.advanced; what a seller may tick or declare; the plan switch.
 begin;
 \ir _helpers.psql
-select plan(47);
+select plan(57);
 \ir _plan.psql
 
 -- The templates of Autonomie and Accompagné as the seed loads them (codes,
@@ -70,6 +70,12 @@ select id as task_first_visit from sale_step_tasks t
 select id as task_notary from sale_step_tasks t
  where t.code = 'notary_chosen'
    and t.step_id = (select id from sale_steps where plan = 'autonomie' and code = 'notary') \gset
+select id as task_notary_c from sale_step_tasks t
+ where t.code = 'notary_chosen'
+   and t.step_id = (select id from sale_steps where plan = 'accompagne' and code = 'notary') \gset
+select id as task_published from sale_step_tasks t
+ where t.code = 'listing_published'
+   and t.step_id = (select id from sale_steps where plan = 'autonomie' and code = 'publish') \gset
 
 -- ===========================================================================
 -- Parcours 1: seller_a writes the property and its listing, sends it
@@ -115,9 +121,16 @@ select lives_ok(format($$select listing_publish(%L)$$, :'listing_a'), 'admin pub
 select ok(tests.done(:'prop_a', 'listing_published'), '« Annonce en ligne » ticked');
 select is(tests.step(:'prop_a'), 'contacts_visits', 'step 2 done: the sale is at step 3');
 
+\set who buyer_d
+\ir _as.psql
+select lives_ok(format($$select conversation_start(%L)$$, :'listing_a'),
+                'buyer_d opens a conversation without a word');
+select ok(not tests.done(:'prop_a', 'first_contact'), 'no message: not a first contact');
+
 \set who buyer_c
 \ir _as.psql
-select lives_ok(format($$select conversation_start(%L)$$, :'listing_a'), 'buyer_c writes to the seller');
+select lives_ok(format($$select conversation_open(%L, 'Bonjour, est-il toujours disponible ?')$$, :'listing_a'),
+                'buyer_c writes to the seller');
 select ok(tests.done(:'prop_a', 'first_contact'), '« Premier contact reçu » ticked');
 select is(tests.step(:'prop_a'), 'contacts_visits', 'the visits still to come: step 3');
 
@@ -128,7 +141,8 @@ select is((select link || ' ' || (data->>'step_position') || '/' || (data->>'ste
                   || ' ' || (data->>'title') from notifications
             where profile_id = tests.uid('seller_a') and type = 'step.advanced'
               and data->>'step_code' = 'contacts_visits'),
-          '/vendeur 3/6 Appartement 3 pièces', 'its link, its position and the title of the listing');
+          '/vendeur?bien=' || :'prop_a' || ' 3/6 Appartement 3 pièces',
+          'its link (the dashboard of the property), its position and the title of the listing');
 select ok((select channels = '{in_app}' and email_after is null from notifications
             where profile_id = tests.uid('seller_a') and type = 'step.advanced' limit 1),
           'in the app only (SPEC-V2 section 10)');
@@ -149,9 +163,18 @@ select lives_ok(format($$insert into sale_task_status (property_id, task_id, don
                          values (%L, %L, now(), tests.uid('seller_a'))$$, :'prop_a', :'task_notary'),
                 'seller_a ticks a task without event of a seller step');
 select is(tests.step(:'prop_a'), 'contacts_visits', 'a task done by hand further on does not move the sale');
-select lives_ok(format($$select sale_declare_event(%L, 'documents.checklist_viewed')$$, :'prop_a'),
-                'seller_a declares the documents to prepare seen');
+select is(sale_declare_event(:'prop_a', 'documents.checklist_viewed'), true,
+          'seller_a declares the documents to prepare seen: a task ticked');
 select ok(tests.done(:'prop_a', 'checklist_viewed'), '« Documents à préparer identifiés » ticked');
+select is(sale_declare_event(:'prop_a', 'documents.checklist_viewed'), false,
+          'declared again: nothing more ticked');
+with u as (update sale_task_status set done_at = null
+            where property_id = :'prop_a' and task_id = :'task_published' returning 1)
+select is((select count(*) from u)::int, 0, 'seller_a cannot untick « Annonce en ligne »');
+select ok(tests.done(:'prop_a', 'listing_published'), '« Annonce en ligne » still ticked');
+select throws_ok(format($$insert into sale_task_status (property_id, task_id, done_at)
+                          values (%L, %L, now())$$, :'prop_a', :'task_notary_c'),
+                 '42501', null, 'seller_a cannot tick a task of the template of another plan');
 select throws_ok(format($$select sale_declare_event(%L, 'listing.published')$$, :'prop_a'),
                  '22023', null, 'an event of the database is never declared by a seller');
 select throws_ok(format($$select sale_emit_event(%L, 'listing.sold')$$, :'prop_a'),
@@ -177,6 +200,22 @@ select is((select count(*) from sale_progress where property_id = :'prop_a')::in
 \ir _as.psql
 select throws_ok(format($$select sale_declare_event(%L, 'documents.checklist_viewed')$$, :'prop_a'),
                  '42501', null, 'anon cannot declare an event');
+
+-- A suspended account acts on its sale no more.
+reset role;
+insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms)
+values (tests.uid('seller_b'), 'appartement', '5 rue Pasteur', '91200', 'Athis-Mons', 45, 2)
+returning id as prop_s \gset
+update profiles set suspended_at = now() where id = tests.uid('seller_b');
+\set who seller_b
+\ir _as.psql
+select throws_ok(format($$select sale_declare_event(%L, 'documents.checklist_viewed')$$, :'prop_s'),
+                 '42501', null, 'a suspended seller cannot declare an event');
+select throws_ok(format($$insert into sale_task_status (property_id, task_id, done_at)
+                          values (%L, %L, now())$$, :'prop_s', :'task_notary'),
+                 '42501', null, 'a suspended seller cannot tick a task by hand');
+reset role;
+update profiles set suspended_at = null where id = tests.uid('seller_b');
 
 -- ===========================================================================
 -- A paid plan, then refunded: the template follows, the tasks done kept
@@ -205,6 +244,9 @@ select ok(tests.done(:'prop_a', 'first_contact'), 'with the tasks done');
 select lives_ok(format($$select listing_mark_sold(%L, 34000000)$$, :'listing_a'), 'seller_a marks it sold');
 select ok(tests.done(:'prop_a', 'deed_signed'), '« Acte authentique signé » ticked');
 select is(tests.step(:'prop_a'), 'closing', 'the sale is at « Finaliser ma vente »');
+reset role;
+select is(tests.advanced(tests.uid('seller_a')), 'publish,contacts_visits',
+          'sold: no step.advanced, the seller marked it');
 
 reset role;
 \o /dev/null
@@ -217,6 +259,15 @@ insert into listings (property_id, title, description, price_cents, status, subm
 values (:'prop_b', 'Maison 5 pièces', 'Jardin.', 42000000, 'published', now(), now());
 select is(tests.step(:'prop_b'), 'contacts_visits', 'quiet: the sale moves');
 select is(tests.advanced(tests.uid('seller_b')), '', 'quiet: no step.advanced');
+
+-- Positions with gaps (steps moved by Leenkey): the next step all the same.
+update sale_steps set position = position * 10 where plan = 'autonomie';
+insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms)
+values (tests.uid('seller_b'), 'maison', '9 rue Victor Hugo', '91200', 'Athis-Mons', 95, 4)
+returning id as prop_g \gset
+insert into listings (property_id, title, description, price_cents, status, submitted_at, published_at)
+values (:'prop_g', 'Maison 4 pièces', 'Jardin.', 39000000, 'published', now(), now());
+select is(tests.step(:'prop_g'), 'contacts_visits', 'positions 10, 20, 30: step 2 done, the sale at step 3');
 
 select * from finish();
 rollback;

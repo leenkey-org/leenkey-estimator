@@ -29,7 +29,7 @@ export async function saleProgress(propertyId: string): Promise<QueryResult<Prog
     supabase
       .from("sale_steps")
       .select(
-        "code, position, title, description, tasks:sale_step_tasks(id, code, title, required, auto_trigger, owner, position)",
+        "code, position, title, description, owner, tasks:sale_step_tasks(id, code, title, required, auto_trigger, owner, position)",
       )
       .eq("plan", progress.data.plan),
     supabase

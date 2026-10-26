@@ -8,6 +8,7 @@ export type StepRow = {
   position: number;
   title: string;
   description: string;
+  owner: string;
   tasks: {
     id: string;
     code: string;
@@ -46,7 +47,8 @@ export function toProgress(
             title: task.title,
             required: task.required,
             autoTrigger: task.auto_trigger,
-            owner: task.owner,
+            // A task without owner is the one of its step (SPEC-V2 section 4).
+            owner: task.owner ?? step.owner,
             doneAt: doneAt.get(task.id) ?? null,
           })),
       })),

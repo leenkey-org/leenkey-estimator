@@ -77,6 +77,7 @@ const rows: StepRow[] = TEMPLATE.map(([code, description, tasks], index) => ({
   position: index + 1,
   title: `Étape ${code}`,
   description,
+  owner: "seller",
   tasks: tasks
     .map(([task, trigger, owner], position) => ({
       id: `task-${task}`,
@@ -183,6 +184,20 @@ describe("steps of a sale read from their template", () => {
       doneAt: "2026-10-20T09:00:00Z",
     });
     expect(prepare && stepCount(prepare)).toEqual({ done: 1, total: 5 });
+  });
+
+  it("a task without owner is the one of its step", () => {
+    const withoutOwner: StepRow[] = rows.map((step) =>
+      step.code === "notary"
+        ? {
+            ...step,
+            owner: "both",
+            tasks: step.tasks.map((task) => ({ ...task, owner: null })),
+          }
+        : step,
+    );
+    const sale = toProgress({ template: "autonomie", currentStepCode: "notary" }, withoutOwner, []);
+    expect(currentStep(sale)?.tasks.every((task) => task.owner === "both")).toBe(true);
   });
 
   it("a status without date, or of no task, ticks nothing", () => {
