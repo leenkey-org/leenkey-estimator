@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { devices, expect, test, type Page } from "@playwright/test";
+import { consentValue } from "./google";
 
 // L1-19: back office of the listings, on the seed. The decisions change the
 // seed for good (a published listing does not go back to pending, db:seed
@@ -8,7 +9,8 @@ import { devices, expect, test, type Page } from "@playwright/test";
 // E2E_MUTATE=1, never on the preprod. Project « seed-mutations » of
 // playwright.config.ts, after the other specs. Seed listings used here only:
 // LK-0015 and LK-0007 (pending), LK-0014 (published, the oldest, out of the
-// first search results), LK-0006 (pending, read only).
+// first search results), LK-0006 (pending, read only); the bell of seller_b,
+// owner of LK-0015.
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
@@ -28,10 +30,10 @@ const PUBLIC = {
   "LK-0014": "/annonce/maison-4-pieces-la-ville-du-bois-lk0014",
 } as const;
 
-/** Signs the admin in and lands on `path` (terms gate as in navigation.spec.ts). */
-async function signIn(page: Page, path: string) {
+/** Signs the admin (or a seller) in and lands on `path` (terms gate as in navigation.spec.ts). */
+async function signIn(page: Page, path: string, account: "admin" | "seller_b" = "admin") {
   await page.goto(`/connexion?next=${encodeURIComponent(path)}`);
-  await page.getByLabel("Email").fill("admin@test.leenkey.fr");
+  await page.getByLabel("Email").fill(`${account}@test.leenkey.fr`);
   await page.getByLabel("Mot de passe").fill(SEED_PASSWORD ?? "");
   await page.getByRole("button", { name: "Se connecter" }).click();
   await page.waitForURL((url) => url.pathname !== "/connexion");
@@ -74,7 +76,7 @@ async function expectNoSeriousViolation(page: Page) {
 }
 
 test.describe("bureau", () => {
-  test("valider et publier une annonce en attente", async ({ page }) => {
+  test("valider et publier une annonce en attente", async ({ page, browser, baseURL }) => {
     await signIn(page, "/admin/annonces?statut=a-valider");
     await expect(page.getByRole("heading", { level: 1, name: "Annonces" })).toBeVisible();
     await expect(
@@ -91,6 +93,26 @@ test.describe("bureau", () => {
     await expect(outcome).toBeFocused();
     await expect(row(page, "LK-0015")).toHaveCount(0);
     expect((await page.request.get(PUBLIC["LK-0015"])).status()).toBe(200);
+
+    // L1-23: online, the sale of seller_b reaches its third step, which their bell says.
+    const context = await browser.newContext({ baseURL, viewport: { width: 1280, height: 900 } });
+    await context.addCookies([
+      { name: "lk_consent", value: consentValue(false), url: baseURL ?? "" },
+    ]);
+    const seller = await context.newPage();
+    await signIn(seller, "/vendeur", "seller_b");
+    await seller
+      .getByRole("button", { name: /^Notifications/ })
+      .locator("visible=true")
+      .click();
+    const step = seller
+      .getByRole("dialog", { name: "Notifications" })
+      .getByRole("link")
+      .filter({ hasText: "Nouvelle étape : Gérer mes contacts et mes visites" });
+    await expect(step).toHaveCount(1);
+    await expect(step).toContainText("Étape 3 sur 6 · 2 pièces en rez-de-jardin");
+    await expect(step).toHaveAttribute("href", "/vendeur");
+    await context.close();
   });
 
   test("refuser avec motif : le motif est obligatoire", async ({ page }) => {

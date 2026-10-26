@@ -27,6 +27,10 @@ fi
 export PGOPTIONS="${PGOPTIONS:--c client_min_messages=warning}"
 {
   echo "begin;"
+  # Demo sales replay their past: their steps move without notifying (L1-23).
+  echo '\o /dev/null'
+  echo "select set_config('leenkey.sale_quiet', 'on', true);"
+  echo '\o'
   if [ -n "${SEED_PASSWORD:-}" ]; then
     # Read from the environment by psql itself: never on a command line.
     echo '\getenv seed_password SEED_PASSWORD'

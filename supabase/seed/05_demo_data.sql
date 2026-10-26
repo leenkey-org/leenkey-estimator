@@ -256,7 +256,9 @@ where m.conversation_id in (select c.id from public.conversations c
 order by m.age desc
 on conflict do nothing;
 
--- Task progress coherent with each status (core/steps, L1-23, ticks them in real use).
+-- Task progress coherent with each status: the engine (L1-23) has ticked the
+-- tasks of the events above; these are the tasks done by hand before, by the
+-- seller or by Leenkey. The current step follows them (sale_task_status_refresh).
 insert into public.sale_task_status (property_id, task_id, done_at, done_by)
 select sp.property_id, t.id, coalesce(l.submitted_at, now()),
        case when coalesce(t.owner, s.owner) = 'leenkey' then '5eed0000-0000-4000-8000-0000000000ad'::uuid

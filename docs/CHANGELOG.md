@@ -12,6 +12,15 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-26 · L1-23 · PR #48 · Moteur d'étapes de la vente
+- Ajouté : les tâches de la vente se cochent toutes seules, depuis les événements que la base tient : analyse de valeur liée, fiche du bien complète (type, surface, pièces), 6 photos, annonce rédigée (prix et description), envoyée, en ligne, premier contact d'un acquéreur, bien vendu. L'étape en cours suit : un événement d'une étape plus loin y amène la vente, les tâches sautées restent à faire, une tâche cochée par un événement ne se décoche plus (`DECISIONS.md` 2026-10-26).
+- Ajouté : la notification « Nouvelle étape : … » (`step.advanced`, « Étape 3 sur 6 · » titre de l'annonce) à chaque étape atteinte, dans la cloche seulement ; aucune pendant `db:seed`.
+- Ajouté : la formule de la vente suit l'abonnement actif du bien (Accompagné, Sérénité, sinon Autonomie) ; un changement de formule garde les tâches faites (par leur code).
+- Ajouté : `getNextAction` (SPEC 8.7, règles 1, 5, 6, 7 ; `leenkey/properties/next-action.ts`, `core/steps/`), la lecture de la progression (`leenkey/properties/sale.ts`) et `emitEvent` (`core/steps/engine.ts`) pour les événements qu'un écran seul connaît (documents, lot 3). Leur affichage vient avec le tableau de bord (L1-24).
+- Modifié (RLS) : un vendeur ne coche à la main que les tâches sans événement des étapes où il agit, dans la formule de sa vente ; « Annonce en ligne » et les autres tâches à événement, jamais à la main.
+- Migration : `20261026100000_sale_engine.sql` (fonctions et déclencheurs, aucune table ; reprise des biens existants).
+- Tests : permissions (`rls_sale_engine.sql`, 47 : le parcours 1 rejoué en SQL, notifications, formule, vente, droits de chacun) ; unitaires (progression, prochaine action, libellé de la notification) ; E2E (la notification d'étape du vendeur à la publication par le back office).
+
 ### 2026-10-25 · L1-46b · PR #44 · Photos des biens de test
 - Ajouté : 26 photos libres de droits (Unsplash, licence Unsplash) pour les 13 biens du seed qui n'en avaient pas : appartements (façade de la résidence, séjour, cuisine, chambre, salle de bains ou d'eau), maisons (n° 6 et 10), meulière de Ballainvilliers (pièces de vie), terrain de Montlhéry, biens en attente et à corriger. Recadrées en 4:3, déposées par `db:seed` comme les envoie un vendeur (WebP 400, 800 et 1 600 px). Provenance dans `supabase/seed/photos/CREDITS.md` ; l'auteur n'est pas relevé (Q59).
 - Corrigé : `scripts/seed-photos.mjs` insère les photos d'un bien dans l'ordre du manifeste, la première en photo principale (une seule insertion les visitait à l'envers).

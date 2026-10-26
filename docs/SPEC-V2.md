@@ -1347,6 +1347,8 @@ Fin de parcours : statut « Vendu », `SaleRecap` (prix de vente, durée de comm
 - Passage à une formule payante : bascule du modèle d'étapes en conservant les tâches déjà faites (correspondance par `code`).
 - Toute progression d'étape crée une notification in-app.
 
+> **Mise en œuvre (L1-23, `DECISIONS.md` 2026-10-26).** La base coche les tâches elle-même, depuis les événements qu'elle tient (déclencheurs sur `properties`, `photos`, `listings`, `conversations`, `supabase/migrations/20261026100000_sale_engine.sql`), et tient l'étape en cours : la plus avancée de la première étape qui a une tâche obligatoire à faire et de l'étape qu'un événement a atteinte ; les tâches sautées restent à faire, une tâche cochée par un événement ne se décoche plus. `emitEvent` (`core/steps/engine.ts`) déclare les événements qu'un écran seul connaît (documents, L3-04). La formule de la vente suit l'abonnement actif du bien ; elle reprend les tâches faites par leur code. Une étape atteinte crée la notification `step.advanced` (dans l'application). `getNextAction` : règles 6 et 7 dans `core/steps/next-action.ts`, les autres dans `leenkey/properties/next-action.ts` ; les règles 2 à 4 arrivent avec les offres, la conversation conseiller et les visites.
+
 ---
 
 ## 10. Messagerie et notifications

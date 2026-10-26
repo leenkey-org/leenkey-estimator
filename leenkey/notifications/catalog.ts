@@ -2,6 +2,7 @@ import {
   CircleAlert,
   CircleCheck,
   ClipboardList,
+  Flag,
   MessageCircle,
   Bell,
   type LucideIcon,
@@ -15,7 +16,7 @@ import { fr } from "@/lib/i18n/fr";
 // wording, from the facts written by the database (supabase/migrations,
 // L1-22): the title and the detail of the panel, the visual, the filters it
 // falls under. The other types of SPEC 10 come with their events (offers L2,
-// visits and alerts L3, plan with Stripe, steps with L1-23).
+// visits and alerts L3, plan with Stripe).
 
 const t = fr.notifications.types;
 
@@ -39,6 +40,10 @@ type Entry = {
 
 function text(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function position(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
 }
 
 const CATALOG: Record<string, Entry> = {
@@ -84,6 +89,23 @@ const CATALOG: Record<string, Entry> = {
     detail: (data) => {
       const title = text(data.title);
       return title ? t.listingRejected.detail(title) : null;
+    },
+  },
+  // In the app only (SPEC-V2 section 10): « Étape 3 sur 6 · Maison 5 pièces ».
+  "step.advanced": {
+    icon: Flag,
+    tone: "stone",
+    filters: [],
+    title: (data) => t.stepAdvanced.title(text(data.step_title)),
+    detail: (data) => {
+      const step = position(data.step_position);
+      const total = position(data.steps_total);
+      return (
+        t.stepAdvanced.detail([
+          step && total ? t.stepAdvanced.position(step, total) : null,
+          text(data.title) ?? text(data.city),
+        ]) || null
+      );
     },
   },
 };
