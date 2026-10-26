@@ -62,11 +62,11 @@ export function TopNav({
     <header
       data-sticky-header="top-nav"
       className={cn(
-        "hidden border-b border-lk-line bg-lk-surface md:sticky md:top-0 md:z-30 md:block",
+        "hidden h-18 border-b border-lk-line bg-lk-surface md:sticky md:top-0 md:z-30 md:block",
         className,
       )}
     >
-      <div className="mx-auto flex h-18 max-w-lk-wide items-center gap-6 px-5 lg:gap-10 lg:px-8">
+      <div className="mx-auto flex h-full max-w-lk-wide items-center gap-6 px-5 lg:gap-10 lg:px-8">
         <Link href={homeHref} className="inline-flex h-11 shrink-0 items-center rounded-lk-sm">
           <Logo className="h-8" />
         </Link>
@@ -97,12 +97,13 @@ export function TopNav({
               href={account.href}
               aria-label={account.label}
               className={cn(
-                "flex h-12 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface pr-1.5 pl-4 text-lk-ink",
+                // The avatar alone below 1 024 px, where the links need the room.
+                "flex h-12 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface pr-1.5 pl-1.5 text-lk-ink lg:pl-4",
                 "transition-shadow duration-140 ease-out-lk hover:shadow-lk-field",
                 "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue focus-visible:outline-solid",
               )}
             >
-              <Menu aria-hidden="true" className="size-4.5" />
+              <Menu aria-hidden="true" className="hidden size-4.5 lg:block" />
               <span className="flex size-8.5 items-center justify-center rounded-full bg-lk-blue text-white">
                 <User aria-hidden="true" className="size-4.5" />
               </span>

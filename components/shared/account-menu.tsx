@@ -109,13 +109,14 @@ export function AccountMenu({
             type="button"
             aria-label={t.trigger}
             className={cn(
-              "flex h-12 shrink-0 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface pr-1.5 pl-4 text-lk-ink",
+              // The avatar alone below 1 024 px, where the links of the TopNav need the room.
+              "flex h-12 shrink-0 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface pr-1.5 pl-1.5 text-lk-ink lg:pl-4",
               "transition-shadow duration-140 ease-out-lk hover:shadow-lk-field data-[state=open]:shadow-lk-field",
               "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
               className,
             )}
           >
-            <Menu aria-hidden="true" className="size-4.5" />
+            <Menu aria-hidden="true" className="hidden size-4.5 lg:block" />
             <Avatar initial={initial} className="size-8.5 bg-lk-blue text-lk-label" />
           </button>
         ) : (
