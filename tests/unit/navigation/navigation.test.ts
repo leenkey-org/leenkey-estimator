@@ -426,13 +426,13 @@ describe("bell and account menu", () => {
     expect(accountInitial(null)).toBeNull();
   });
 
-  it("« Mon espace » leads to the home of the role; an admin's is the Cockpit, with the site", () => {
+  it("« Mon espace » leads to the home of the role; an admin's is the Cockpit", () => {
+    // « Voir le site » is added by the Cockpit only (app/(admin)/admin/layout.tsx).
     expect(accountMenu({ firstName: "Cédric", roles: ["admin"] })).toEqual({
       initial: "C",
       homeHref: "/admin",
       homeLabel: "Cockpit",
       accountHref: "/compte",
-      siteHref: "/",
     });
     expect(accountMenu({ firstName: "Alice", roles: ["seller"] }).homeHref).toBe("/vendeur");
     expect(accountMenu({ firstName: "Chloé", roles: ["buyer"] }).homeHref).toBe("/acquereur");

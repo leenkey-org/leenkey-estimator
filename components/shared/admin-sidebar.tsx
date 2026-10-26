@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House } from "lucide-react";
+import { Globe } from "lucide-react";
 import { AccountMenu, type AccountMenuProps } from "./account-menu";
 import { Logo } from "./logo";
 import { NavIcon } from "./nav-icon";
@@ -105,12 +105,12 @@ export function AdminSidebar({
           <Link
             href={account.siteHref}
             className={cn(
-              "flex h-10.5 items-center gap-2.5 rounded-lk-sm px-3 text-lk-compact text-white/80",
+              "flex h-10.5 items-center gap-2.5 rounded-lk-sm px-3 text-lk-compact font-medium text-white/80",
               "transition-colors duration-140 ease-out-lk hover:bg-white/6 hover:text-white",
               darkFocus,
             )}
           >
-            <House aria-hidden="true" className="size-4.5" />
+            <Globe aria-hidden="true" className="size-4.5" />
             {fr.nav.site}
           </Link>
         ) : null}

@@ -72,7 +72,8 @@ export function bottomTabs(space: Space, signedIn = true): readonly NavItem[] {
 }
 
 /**
- * Links of the TopNav. « Vendre » is the home page, written for the sellers;
+ * Links of the TopNav. « Vendre » leads to its two ways, the analysis of
+ * value or the listing straight away (/vendre, DECISIONS 2026-10-26);
  * « Acheter » stays current on a listing (AnnonceDesktop); « Tarifs » joins
  * them with the public site in V2 (DECISIONS 2026-10-19), then « Qui
  * sommes-nous » and « Contact » (DECISIONS 2026-10-20). « Qui sommes-nous »
@@ -179,22 +180,20 @@ export function accountInitial(firstName: string | null | undefined): string | n
 
 /**
  * Account menu of a profile, without its sign-out action (a Server Action).
- * An admin's space is the Cockpit, named so (Younes, 2026-10-26), with the
- * way back to the site.
+ * An admin's space is the Cockpit, named so (Younes, 2026-10-26); the way
+ * back to the site is given by the Cockpit itself (app/(admin)/admin/layout.tsx),
+ * not on the pages of the site.
  */
 export function accountMenu(profile: { firstName: string | null; roles: readonly string[] }): {
   initial: string | null;
   homeHref: string;
   homeLabel: string;
   accountHref: string;
-  siteHref?: string;
 } {
-  const admin = profile.roles.includes("admin");
   return {
     initial: accountInitial(profile.firstName),
     homeHref: homePathForRoles(profile.roles),
-    homeLabel: admin ? fr.nav.menu.cockpit : fr.nav.menu.home,
+    homeLabel: profile.roles.includes("admin") ? fr.nav.backOffice : fr.nav.menu.home,
     accountHref: ROUTES.account,
-    ...(admin ? { siteHref: ROUTES.home } : {}),
   };
 }

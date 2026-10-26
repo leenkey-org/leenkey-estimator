@@ -6,7 +6,9 @@ import {
   ArrowRight,
   Bell,
   CalendarCheck,
+  ChartLine,
   ChevronLeft,
+  FilePlus2,
   Heart,
   MoreVertical,
   Plus,
@@ -28,6 +30,7 @@ import { BrandPanel } from "@/components/shared/brand-panel";
 import { Button } from "@/components/shared/button";
 import { Checkbox } from "@/components/shared/checkbox";
 import { ChipButton, ChipToggle } from "@/components/shared/chip-toggle";
+import { ChoiceCard } from "@/components/shared/choice-card";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { ContactCard } from "@/components/shared/contact-card";
 import { ConversationHeader } from "@/components/shared/conversation-header";
@@ -78,6 +81,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Textarea } from "@/components/shared/textarea";
 import { TopNav } from "@/components/shared/top-nav";
 import { FavoriteButton } from "@/leenkey/favorites/components/favorite-button";
+import { BackLink } from "@/leenkey/listings/components/back-link";
 import { UnitInput } from "@/components/shared/unit-input";
 import { signOut } from "@/leenkey/auth/actions";
 import {
@@ -625,6 +629,11 @@ export default function DesignPage() {
               className="overflow-hidden rounded-lk-md lg:rounded-none"
             />
             <Caption>{content.gallery.caption}</Caption>
+            <div className="flex flex-wrap items-center gap-6 rounded-lk-md bg-lk-stone-2 p-3">
+              <BackLink />
+              <BackLink variant="text" />
+            </div>
+            <Caption>{content.gallery.backCaption}</Caption>
             <Gallery photos={[]} className="overflow-hidden rounded-lk-md lg:rounded-none" />
             <Caption>{content.gallery.noPhotoCaption}</Caption>
             <div className="flex items-end gap-4">
@@ -763,6 +772,30 @@ export default function DesignPage() {
               />
             </div>
             <Caption>{content.cardCaptions.favourite}</Caption>
+            <ul className="grid gap-4 md:grid-cols-2 md:gap-6">
+              <ChoiceCard
+                icon={ChartLine}
+                title={fr.sellStart.valuation.title}
+                text={fr.sellStart.valuation.text}
+                action={{
+                  href: content.cardCaptions.choiceHref,
+                  label: fr.sellStart.valuation.action,
+                }}
+                primary
+                titleAs="h4"
+              />
+              <ChoiceCard
+                icon={FilePlus2}
+                title={fr.sellStart.direct.title}
+                text={fr.sellStart.direct.text}
+                action={{
+                  href: content.cardCaptions.choiceHref,
+                  label: fr.sellStart.direct.action,
+                }}
+                titleAs="h4"
+              />
+            </ul>
+            <Caption>{content.cardCaptions.choice}</Caption>
           </Section>
 
           <Section id="logo" title={content.sections.logo} level="h3">
@@ -962,6 +995,7 @@ export default function DesignPage() {
                   activeHref={ADMIN_NAV_ITEMS[1].href}
                   account={{
                     ...accountMenu(content.navigation.admin),
+                    siteHref: "/design#navigation",
                     signOut,
                     name: content.navigation.admin.firstName,
                     role: fr.nav.admin.role,
@@ -975,7 +1009,11 @@ export default function DesignPage() {
                   items={ADMIN_NAV_ITEMS}
                   title={ADMIN_NAV_ITEMS[1].label}
                   fallbackTitle={fr.nav.backOffice}
-                  account={{ ...accountMenu(content.navigation.admin), signOut }}
+                  account={{
+                    ...accountMenu(content.navigation.admin),
+                    siteHref: "/design#navigation",
+                    signOut,
+                  }}
                 />
                 <Caption>{content.navigation.headerCaption}</Caption>
               </div>
@@ -1350,6 +1388,33 @@ export default function DesignPage() {
               <ComposerDemo />
             </div>
             <Caption>{content.messaging.caption}</Caption>
+            <div className="hidden max-w-155 overflow-hidden rounded-lk-md border border-lk-line md:block">
+              <ConversationHeader
+                back={
+                  <IconButton
+                    icon={ChevronLeft}
+                    variant="stone"
+                    aria-label={fr.messaging.thread.back}
+                  />
+                }
+                title={content.messaging.header.title}
+                subtitle={content.messaging.header.subtitle}
+                action={
+                  <Button variant="secondary" size="sm" className="shrink-0">
+                    {content.messaging.action}
+                  </Button>
+                }
+                menu={
+                  <IconButton
+                    icon={MoreVertical}
+                    variant="transparent"
+                    aria-label={fr.messaging.thread.menu}
+                  />
+                }
+                titleAs="h4"
+              />
+            </div>
+            <Caption>{content.messaging.actionCaption}</Caption>
           </Section>
 
           <Section id="pied-de-page" title={content.sections.footer} level="h3">

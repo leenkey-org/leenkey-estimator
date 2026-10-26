@@ -194,7 +194,7 @@ Resend ◄────────── core/notifications (file notifications 
   /estimer                  estimateur (existant)
   /acheter                  recherche liste + carte
   /annonce/[slug]           page annonce publique
-  /vendre                   page vendeur : en V2, la page d'accueil V1 (/), lien « Vendre » (DECISIONS 2026-10-17)
+  /vendre                   les deux façons de vendre : la valorisation gratuite ou l'annonce directe, liens « Vendre » et « Vendre mon bien » (DECISIONS 2026-10-26)
   /concept, /tarifs, /faq, /investir, /qui-sommes-nous   pages du site, refaites en V2 (L1-41 à L1-43), dans la direction de la V1 (L1-50)
   /contact                  formulaire de contact de l'accueil sur sa propre page, lien « Contact » du menu (L1-45)
   /mentions-legales, /cgu, /confidentialite, /cgv, /cookies, /signalement, /intelligence-artificielle

@@ -472,27 +472,34 @@ test.describe("page annonce (base de seed)", () => {
     }
   });
 
-  test("« Retour aux annonces » ramène à la recherche d'où l'on vient (DECISIONS 2026-10-26)", async ({
+  test("« Retour aux annonces » ramène à la recherche, jamais à la page d'avant si ce n'est pas elle (DECISIONS 2026-10-26)", async ({
     page,
-    isMobile,
   }) => {
-    test.skip(isMobile, "en mobile, le bouton retour sur la galerie (DESIGN.md 12.7)");
+    // The text link from 1 024 px, the button over the mobile gallery: the same name.
+    const back = page.getByRole("link", { name: "Retour aux annonces" }).locator("visible=true");
     const search = "/acheter?ville=epinay-sur-orge&rayon=10";
     await page.goto(search);
     await page.getByRole("list", { name: "Résultats" }).locator("a:visible").first().click();
     await expect(page).toHaveURL(/\/annonce\//);
-    const back = page.getByRole("link", { name: "Retour aux annonces" });
-    await expect(back).toBeVisible();
+    const listing = new URL(page.url()).pathname;
     await back.click();
-    // The same search, its filters kept.
+    // Back in the history: the same search, its filters kept.
     await expect(page).toHaveURL(search);
-    // Opened directly, it leads to the search.
-    await page.goBack();
-    await page.reload();
-    await expect(page.getByRole("link", { name: "Retour aux annonces" })).toHaveAttribute(
-      "href",
-      "/acheter",
-    );
+
+    // From the home page, a listing leads to the last search of the visit, not home.
+    await page.getByRole("banner").locator('a[href="/"]').locator("visible=true").first().click();
+    await expect(page).toHaveURL("/");
+    await page.locator('main a[href^="/annonce/"]:visible').first().click();
+    await expect(page).toHaveURL(/\/annonce\//);
+    await expect(back).toHaveAttribute("href", search);
+    await back.click();
+    await expect(page).toHaveURL(search);
+
+    // Opened directly (a new visit), it leads to the search.
+    await page.goto(listing);
+    await expect(back).toHaveAttribute("href", "/acheter");
+    await back.click();
+    await expect(page).toHaveURL("/acheter");
   });
 });
 
@@ -525,6 +532,16 @@ async function signIn(page: Page, account: Account, path: string) {
     if (new URL(page.url()).pathname === "/conditions") await page.goto(path);
   }
   await expect(page).toHaveURL(path);
+}
+
+/**
+ * The way from a conversation to what it is about: a button of its header
+ * from 768 px, the first item of its menu below (DECISIONS 2026-10-26).
+ */
+async function conversationLink(page: Page, isMobile: boolean, name: string) {
+  if (!isMobile) return page.getByRole("link", { name }).locator("visible=true");
+  await page.getByRole("button", { name: "Plus d'actions" }).click();
+  return page.getByRole("menu").getByRole("menuitem", { name });
 }
 
 test.describe("comptes connectés (base de seed)", () => {
@@ -640,9 +657,19 @@ test.describe("comptes connectés (base de seed)", () => {
     await signIn(page, "admin", "/admin");
     const nav = page.getByRole("navigation", { name: ADMIN_NAV });
     await expectFooter(page);
+    // The dashboard comes with L1-30; the listings to review are already there.
+    await expect(page.getByRole("heading", { name: "Le tableau de bord arrive" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Voir les annonces à valider" })).toHaveAttribute(
+      "href",
+      "/admin/annonces?statut=a-valider",
+    );
     if (isMobile) {
       await expect(page.getByRole("banner")).toContainText("Cockpit");
       await expect(page.getByRole("banner")).toContainText("Tableau de bord");
+      // Always a way back to the site, in the header too (DECISIONS 2026-10-26).
+      await expect(
+        page.getByRole("banner").getByRole("link", { name: "Voir le site" }),
+      ).toHaveAttribute("href", "/");
       await expect(nav.getByRole("link")).toHaveText([
         "Annonces",
         "Dossiers",
@@ -692,25 +719,50 @@ test.describe("comptes connectés (base de seed)", () => {
     expect(await seriousViolations(page)).toEqual([]);
   });
 
-  test("une conversation mène à l'annonce, pour l'acquéreur (DECISIONS 2026-10-26)", async ({
+  test("une conversation mène à l'annonce, pour l'acquéreur, et l'annonce à la recherche (DECISIONS 2026-10-26)", async ({
     page,
+    isMobile,
   }) => {
     await signIn(page, "buyer_c", "/messages");
     await page.locator('main a[href^="/messages/"]:visible').first().click();
     await expect(page).toHaveURL(/\/messages\/[0-9a-f-]{36}$/);
-    const listing = page.getByRole("link", { name: "Voir l'annonce" }).locator("visible=true");
+    const listing = await conversationLink(page, isMobile, "Voir l'annonce");
     await expect(listing).toHaveAttribute("href", /^\/annonce\//);
     await listing.click();
     await expect(page).toHaveURL(/\/annonce\//);
+    // Never back to the conversation: to the search.
+    await page.getByRole("link", { name: "Retour aux annonces" }).locator("visible=true").click();
+    await expect(page).toHaveURL("/acheter");
   });
 
-  test("une conversation mène au bien, pour le vendeur", async ({ page }) => {
+  test("une conversation mène au bien, pour le vendeur", async ({ page, isMobile }) => {
     await signIn(page, "seller_a", "/messages");
     await page.locator('main a[href^="/messages/"]:visible').first().click();
     await expect(page).toHaveURL(/\/messages\/[0-9a-f-]{36}$/);
-    await expect(
-      page.getByRole("link", { name: "Voir mon bien" }).locator("visible=true"),
-    ).toHaveAttribute("href", /^\/vendeur\/biens\/[0-9a-f-]{36}$/);
+    await expect(await conversationLink(page, isMobile, "Voir mon bien")).toHaveAttribute(
+      "href",
+      /^\/vendeur\/biens\/[0-9a-f-]{36}$/,
+    );
+  });
+
+  test("admin sur le site : son espace s'appelle « Cockpit », sans « Voir le site »", async ({
+    page,
+    isMobile,
+  }) => {
+    await signIn(page, "admin", "/");
+    if (isMobile) {
+      await page.getByRole("button", { name: "Menu" }).click();
+      const menu = page.getByRole("dialog");
+      await expect(menu.getByRole("link", { name: "Cockpit" })).toHaveAttribute("href", "/admin");
+      await expect(menu.getByRole("link", { name: "Mon espace" })).toHaveCount(0);
+    } else {
+      await page.getByRole("button", { name: "Menu du compte" }).click();
+      await expect(page.getByRole("menu").getByRole("menuitem")).toHaveText([
+        "Cockpit",
+        "Mon compte",
+        "Se déconnecter",
+      ]);
+    }
   });
 
   test("vendeur : « Publier mon annonce » mène à la création du bien", async ({ page }) => {

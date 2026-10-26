@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChartLine, FilePlus2, type LucideIcon } from "lucide-react";
-import { Button } from "@/components/shared/button";
+import { ChartLine, FilePlus2 } from "lucide-react";
+import { ChoiceCard } from "@/components/shared/choice-card";
+import { InlineAlert } from "@/components/shared/inline-alert";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { getProfile } from "@/core/auth/session";
 import { ROUTES } from "@/leenkey/navigation/spaces";
+import { sellerProperties } from "@/leenkey/properties/queries";
 import { PublicPage } from "@/leenkey/site/components/public-page";
 import { fr } from "@/lib/i18n/fr";
 
@@ -23,53 +25,48 @@ function directHref(signedIn: boolean): string {
   return `${ROUTES.sellerSignUp}&next=${encodeURIComponent(ROUTES.newProperty)}`;
 }
 
-function Choice({
-  icon: Icon,
-  title,
-  text,
-  action,
-  primary = false,
-}: {
-  icon: LucideIcon;
-  title: string;
-  text: string;
-  action: { href: string; label: string };
-  primary?: boolean;
-}) {
-  return (
-    <li className="flex flex-col gap-4 rounded-lk-md border border-lk-line bg-lk-surface p-6">
-      <span className="flex size-11 items-center justify-center rounded-lk-sm bg-lk-blue-tint text-lk-blue">
-        <Icon aria-hidden="true" className="size-5" />
-      </span>
-      <div className="flex flex-1 flex-col gap-2">
-        <h2 className="text-lk-h3 font-semibold text-lk-ink">{title}</h2>
-        <p className="text-lk-body text-lk-ink-2">{text}</p>
-      </div>
-      <Button asChild variant={primary ? "primary" : "secondary"} className="w-full md:w-auto">
-        <Link href={action.href}>{action.label}</Link>
-      </Button>
-    </li>
-  );
+/** Whether a signed-in account already has a property: its sale to resume. */
+async function hasSale(profileId: string | null): Promise<boolean> {
+  if (!profileId) return false;
+  const result = await sellerProperties(profileId);
+  return result.ok && result.data.length > 0;
 }
 
 // /vendre (Younes, DECISIONS 2026-10-26): « Vendre » and « Vendre mon bien »
 // lead here, to the two ways to start: the free analysis of value (the
 // estimator, then « Créer mon annonce » from its result, L1-13b) or the
-// listing straight away (the creation of the property, L1-11).
+// listing straight away (the creation of the property, L1-11). A seller who
+// has a property already finds the way back to their sale first.
 export default async function SellStartPage() {
   const profile = await getProfile();
+  const resume = await hasSale(profile?.id ?? null);
   return (
     <PublicPage>
       <MarketingSection id="vendre" title={t.title} titleAs="h1" lead={t.lead}>
+        {resume ? (
+          <InlineAlert
+            className="mb-6"
+            action={
+              <Link
+                href={ROUTES.seller}
+                className="font-semibold underline underline-offset-2 hover:no-underline"
+              >
+                {t.resume.action}
+              </Link>
+            }
+          >
+            {t.resume.text}
+          </InlineAlert>
+        ) : null}
         <ul className="grid gap-4 md:grid-cols-2 md:gap-6">
-          <Choice
+          <ChoiceCard
             icon={ChartLine}
             title={t.valuation.title}
             text={t.valuation.text}
             action={{ href: ROUTES.valuation, label: t.valuation.action }}
             primary
           />
-          <Choice
+          <ChoiceCard
             icon={FilePlus2}
             title={t.direct.title}
             text={t.direct.text}

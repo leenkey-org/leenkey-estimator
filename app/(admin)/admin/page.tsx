@@ -1,5 +1,8 @@
+import Link from "next/link";
 import { requireAdmin } from "@/core/auth/session";
+import { ROUTES } from "@/leenkey/navigation/config";
 import { adminMetadata } from "@/leenkey/admin/metadata";
+import { Button } from "@/components/shared/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { fr } from "@/lib/i18n/fr";
 import { AdminPage } from "./_components/admin-page";
@@ -19,6 +22,11 @@ export default async function AdminHomePage() {
         className="mt-6"
         title={fr.spaces.admin.title}
         description={fr.spaces.admin.text}
+        action={
+          <Button asChild>
+            <Link href={ROUTES.adminListingsToReview}>{fr.spaces.admin.action}</Link>
+          </Button>
+        }
       />
     </AdminPage>
   );

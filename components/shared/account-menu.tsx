@@ -148,7 +148,7 @@ export function AccountMenu({
           </MenuPrimitive.Item>
           {siteHref ? (
             <MenuPrimitive.Item asChild className={itemClassName}>
-              <Link href={siteHref}>{t.site}</Link>
+              <Link href={siteHref}>{fr.nav.site}</Link>
             </MenuPrimitive.Item>
           ) : null}
           <MenuPrimitive.Item asChild className={itemClassName}>

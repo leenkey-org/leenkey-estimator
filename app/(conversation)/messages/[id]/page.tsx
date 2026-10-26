@@ -12,6 +12,7 @@ import {
   counterpartName,
   coverSrc,
   propertyHref,
+  propertyHrefLabel,
 } from "@/leenkey/messaging/presentation";
 import { getConversation, isUuid, listConversations } from "@/leenkey/messaging/queries";
 import { capitalize } from "@/lib/format";
@@ -76,7 +77,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
             subtitle: conversationSubtitle(conversation),
             thumbSrc: coverSrc(conversation.coverPath),
             href: propertyHref(conversation),
-            hrefLabel: conversation.role === "seller" ? t.thread.property : t.thread.listing,
+            hrefLabel: propertyHrefLabel(conversation),
           }}
           initialMessages={thread.data}
           unread={conversation.unread}

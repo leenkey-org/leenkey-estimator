@@ -149,7 +149,8 @@ export const fr = {
     seller: {
       metaTitle: "Ma vente · Leenkey",
       title: "Mettez votre bien en vente",
-      text: "Commencez par son adresse et ses caractéristiques : tout est enregistré au fur et à mesure, vous reprenez quand vous voulez.",
+      // The two ways to start (DECISIONS 2026-10-26).
+      text: "Créez votre annonce, ou commencez par une analyse de valeur gratuite : tout est enregistré au fur et à mesure, vous reprenez quand vous voulez.",
     },
     buyer: {
       metaTitle: "Mon espace · Leenkey",
@@ -159,8 +160,10 @@ export const fr = {
     },
     admin: {
       metaTitle: "Cockpit · Leenkey",
-      title: "Le Cockpit arrive",
-      text: "La validation des annonces arrive avec la prochaine étape.",
+      // The dashboard of the Cockpit comes with L1-30; the listings are already there (L1-19).
+      title: "Le tableau de bord arrive",
+      text: "Nous préparons le tableau de bord du Cockpit. Les annonces à valider sont déjà dans « Annonces ».",
+      action: "Voir les annonces à valider",
     },
   },
   // « Vendre » (Younes, DECISIONS 2026-10-26): the two ways to start a sale,
@@ -176,9 +179,14 @@ export const fr = {
       text: "Une analyse de valeur gratuite en quelques minutes. Votre annonce reprend ensuite vos réponses.",
       action: "Valoriser mon bien gratuitement",
     },
+    // A seller who has a property already: the way back to their sale.
+    resume: {
+      text: "Vous avez déjà un bien en vente sur Leenkey.",
+      action: "Reprendre ma vente",
+    },
     direct: {
       title: "Publier directement mon annonce",
-      text: "Vous connaissez votre prix : créez votre annonce, nous la relisons sous 24 h avant sa mise en ligne.",
+      text: "Vous connaissez votre prix : créez votre annonce, nous la relisons sous 24\u00A0h avant sa mise en ligne.",
       action: "Publier mon annonce",
     },
   },
@@ -245,9 +253,6 @@ export const fr = {
     menu: {
       trigger: "Menu du compte",
       home: "Mon espace",
-      // « Mon espace » of an admin: the Cockpit.
-      cockpit: "Cockpit",
-      site: "Voir le site",
       account: "Mon compte",
       signOut: "Se déconnecter",
     },
@@ -1401,7 +1406,7 @@ export const fr = {
       `${summary} ${place} · ${price} · Leenkey`,
     breadcrumb: "Fil d'Ariane",
     breadcrumbRoot: "Acheter",
-    back: "Retour",
+    // The back link of a listing, the button over the mobile gallery included.
     backToListings: "Retour aux annonces",
     summary: {
       rooms: (rooms: number) => (rooms === 1 ? "1 pièce" : `${rooms} pièces`),

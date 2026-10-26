@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { ConsentManager } from "@/components/analytics/consent-manager";
 import { EnvBanner } from "@/components/shared/env-banner";
+import { RouteHistory } from "@/leenkey/navigation/components/route-history";
 import { SpaceProvider } from "@/leenkey/navigation/components/space-context";
 import { isProduction } from "@/lib/env";
 import { archivo } from "@/lib/fonts";
@@ -48,6 +49,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <EnvBanner />
         {/* Space of the navigation, kept across client navigations (L1-10). */}
         <SpaceProvider>{children}</SpaceProvider>
+        {/* The page before, for « Retour aux annonces » (DECISIONS 2026-10-26). */}
+        <RouteHistory />
         <Analytics />
         <ConsentManager analyticsEnabled={analytics} gaId={GA_ID} gtmId={GTM_ID} />
       </body>
