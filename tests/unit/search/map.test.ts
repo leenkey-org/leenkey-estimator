@@ -9,7 +9,7 @@ import { LAUNCH_ZONE_CENTRE } from "@/lib/config/launch-zone";
 
 // L1-16: the maps of Google Maps (docs/DESIGN.md 8).
 
-const plain = (value: string) => value.replace(/[  ]/g, " ");
+const plain = (value: string) => value.replace(/[\u00a0\u202f]/g, " ");
 
 const flat: SearchListing = {
   cover: null,
