@@ -111,7 +111,11 @@ test.describe("bureau", () => {
       .filter({ hasText: "Nouvelle étape : Gérer mes contacts et mes visites" });
     await expect(step).toHaveCount(1);
     await expect(step).toContainText("Étape 3 sur 6 · 2 pièces en rez-de-jardin");
-    await expect(step).toHaveAttribute("href", "/vendeur");
+    // The dashboard of this property (L1-24).
+    await expect(step).toHaveAttribute(
+      "href",
+      "/vendeur?bien=5eed1000-0000-4000-8000-000000000015",
+    );
     await context.close();
   });
 
