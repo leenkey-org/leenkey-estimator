@@ -15,7 +15,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 ### 2026-10-26 · L1-55 · PR #PRNUM · Fiches de biens façon Airbnb
 - Modifié : les résultats de `/acheter` prennent les cartes de l'accueil, la photo d'abord. Jusqu'à cinq photos par bien tournent d'un glissement du doigt sur téléphone, avec des flèches au survol en desktop. Le cadre devient bleu au survol et à la pression, avec « Nouveau » pour un bien en ligne depuis moins de 7 jours. Une colonne sur téléphone, deux ensuite.
 - Modifié : plus de gris sur les fiches. Les chiffres clés de l'annonce sont en bleu Leenkey clair et les atouts des cartes (Favoris) en pilules bleues.
-- Modifié : « Ce que vous savez avant de visiter », sur la page de l'annonce, est une grille à pictogrammes groupée (« Le bien », « Énergie », « Coûts et copropriété »). La fiche du vendeur et le Cockpit gardent le tableau.
+- Modifié : « Ce que vous savez avant de visiter », sur la page de l'annonce, est une grille à pictogrammes groupée (« Caractéristiques », « Énergie », « Coûts et copropriété »). La fiche du vendeur et le Cockpit gardent le tableau.
 - Tests : unitaires (un pictogramme et un groupe pour chaque caractéristique, ordre des groupes) ; E2E des prix lus sous le lien des nouvelles cartes.
 
 ### 2026-10-26 · L1-54 · PR #52 · Recherche aux formes arrondies

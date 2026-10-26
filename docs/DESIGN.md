@@ -587,7 +587,7 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 **KeyFactsTable** (« Ce que vous savez avant de visiter ») : conteneur rayon 6, bordure 1 px `--lk-line`. Lignes padding 11–12 × 14 px, séparateur 1 px `--lk-line`, 13 px. Libellé `--lk-ink-3`, valeur 600 `--lk-ink` alignée à droite. Valeurs d'état colorées : « Complets » `--lk-success`, « Sur demande » ou « Demander l'accès » `--lk-blue` (lien). Garde sa forme de tableau sur la fiche du vendeur et dans le Cockpit.
 
-**KeyFactsGrid** (« Ce que vous savez avant de visiter » de la page de l'annonce, L1-55, « inspire-toi d'Airbnb ») : les mêmes lignes groupées sous « Le bien », « Énergie », « Coûts et copropriété » (titres 15 px 600, écart 24 entre les groupes), deux colonnes à partir de 768 px (écart 32 × 16). Chaque ligne : pictogramme Lucide 20 px trait 1,8 dans un rond de 40 px `--lk-blue-tint`, icône `--lk-blue` ; le libellé 12 px `--lk-ink-3` au-dessus de la valeur 14 px 600 (« Non renseigné » en `--lk-ink-3`). Une liste de définitions par groupe, le pictogramme dans le `dt`.
+**KeyFactsGrid** (« Ce que vous savez avant de visiter » de la page de l'annonce, L1-55, « inspire-toi d'Airbnb ») : les mêmes lignes groupées sous « Caractéristiques », « Énergie », « Coûts et copropriété » (titres 15 px 600, écart 24 entre les groupes), deux colonnes à partir de 768 px (écart 32 × 16). Chaque ligne : pictogramme Lucide 20 px trait 1,8 dans un rond de 40 px `--lk-blue-tint`, icône `--lk-blue` ; le libellé 12 px `--lk-ink-3` au-dessus de la valeur 14 px 600 (« Non renseigné » en `--lk-ink-3`). Une liste de définitions par groupe, le pictogramme dans le `dt`.
 
 **PriceBlock** : prix 26–30 px 700 large tabulaire ; dessous « 5 147 € / m², sans commission » 12 px `--lk-ink-3`.
 

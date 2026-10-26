@@ -12,7 +12,7 @@ export type KeyFact = {
   tone?: "default" | "muted" | "success" | "link";
   /** Its pictogram in the grid of a listing (KeyFactsGrid). */
   icon?: LucideIcon;
-  /** Title of the group of the grid it belongs to (« Le bien », « Énergie »…). */
+  /** Title of the group of the grid it belongs to (« Caractéristiques », « Énergie »…). */
   section?: string;
 };
 

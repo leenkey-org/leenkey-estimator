@@ -174,11 +174,13 @@ export function ShowcaseCard({
         ) : null}
       </div>
       <div className={cn("flex flex-col gap-0.5", framed && "px-1.5")}>
-        <div className="flex items-center justify-between gap-2">
+        <div className={cn("flex justify-between gap-2", framed ? "items-start" : "items-center")}>
           <Link
             href={href}
             className={cn(
-              "min-w-0 truncate text-lk-body-lg font-bold text-lk-ink",
+              "min-w-0 text-lk-body-lg font-bold text-lk-ink",
+              // Two lines in the narrower cards of the search, beside their DPE.
+              framed ? "line-clamp-2" : "truncate",
               // The link covers the whole card (its arrows and heart stay above).
               "after:absolute after:inset-0 after:content-['']",
               framed ? "after:rounded-lk-2xl" : "after:rounded-lk-xl",

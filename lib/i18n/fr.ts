@@ -1495,7 +1495,7 @@ export const fr = {
       title: "Ce que vous savez avant de visiter",
       // Groups of the grid of the listing page (L1-55).
       sections: {
-        property: "Le bien",
+        property: "Caractéristiques",
         energy: "Énergie",
         costs: "Coûts et copropriété",
       },

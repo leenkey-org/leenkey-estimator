@@ -162,7 +162,7 @@ describe("Ce que vous savez avant de visiter", () => {
       }
     }
     const sections = bySection(listingKeyFacts(flat)).map((fact) => fact.section);
-    expect([...new Set(sections)]).toEqual(["Le bien", "Énergie", "Coûts et copropriété"]);
+    expect([...new Set(sections)]).toEqual(["Caractéristiques", "Énergie", "Coûts et copropriété"]);
     expect(bySection(listingKeyFacts(flat))[0]?.label).toBe("Type de bien");
   });
 
