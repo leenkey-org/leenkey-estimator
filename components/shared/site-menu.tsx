@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Menu, Plus, X } from "lucide-react";
+import { Menu, Plus, User, X } from "lucide-react";
 import { Button } from "./button";
 import { facadeScope } from "./facade-root";
 import { IconButton } from "./icon-button";
@@ -39,7 +39,8 @@ const rowClass = cn(
 
 /**
  * Mobile header of the public pages (G1, docs/DESIGN.md 11): below 768 px,
- * sticky, 60 px, white with a bottom border, the logo and « Menu ». The menu
+ * sticky, 60 px, white with a bottom border, the logo and « Menu » (a pill, its
+ * menu icon and the avatar of the account, direction C). The menu
  * is a Radix dialog over the whole screen, opened from the top in 220 ms (no
  * movement with reduced motion): the links of the site, those of a group
  * under its label (« Qui sommes-nous », L1-51), then « Vendre mon bien » and
@@ -81,7 +82,7 @@ export function SiteMenu({
     <header
       data-sticky-header="site-menu"
       className={cn(
-        "sticky top-0 z-20 flex h-15 items-center justify-between gap-4 border-b border-lk-line bg-lk-surface px-5 md:hidden",
+        "sticky top-0 z-20 flex h-15 items-center justify-between gap-4 border-b border-lk-line bg-lk-surface px-4 md:hidden",
         className,
       )}
     >
@@ -93,7 +94,20 @@ export function SiteMenu({
       </Link>
       <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
         <DialogPrimitive.Trigger asChild>
-          <IconButton icon={Menu} variant="stone" aria-label={texts.open} />
+          {/* The pill of direction C: the menu and the avatar of the account. */}
+          <button
+            type="button"
+            aria-label={texts.open}
+            className={cn(
+              "flex h-11 items-center gap-2 rounded-full border border-lk-line-strong bg-lk-surface pr-1.25 pl-3.5 text-lk-ink",
+              "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue focus-visible:outline-solid",
+            )}
+          >
+            <Menu aria-hidden="true" className="size-4.5" />
+            <span className="flex size-8 items-center justify-center rounded-full bg-lk-blue text-white">
+              <User aria-hidden="true" className="size-4" />
+            </span>
+          </button>
         </DialogPrimitive.Trigger>
         <DialogPrimitive.Portal>
           <DialogPrimitive.Content
@@ -107,7 +121,7 @@ export function SiteMenu({
               "motion-reduce:animate-none",
             )}
           >
-            <div className="flex h-15 shrink-0 items-center justify-between gap-4 border-b border-lk-line px-5">
+            <div className="flex h-15 shrink-0 items-center justify-between gap-4 border-b border-lk-line px-4">
               <Link
                 href={homeHref}
                 onClick={close}

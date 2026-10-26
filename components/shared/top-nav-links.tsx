@@ -13,11 +13,11 @@ const CLOSE_DELAY_MS = 150;
 /** A click this soon after an opening by the mouse meant to open it too: it keeps it open. */
 const CLICK_GRACE_MS = 500;
 
-/** 14 px 500, 44 px high in the 72 px bar, the current one in blue. */
+/** 14 then 15 px 600 (direction C), 44 px high in the 72 px bar, the current one in blue. */
 function linkClassName(active: boolean) {
   return cn(
     // 44 px high touch target inside the 72 px bar.
-    "relative inline-flex h-11 items-center whitespace-nowrap rounded-lk-sm text-lk-compact font-medium",
+    "relative inline-flex h-11 items-center whitespace-nowrap rounded-lk-sm text-lk-compact font-semibold xl:text-lk-title",
     "transition-colors duration-140 ease-out-lk",
     // A 2 px blue line under the label, drawn from the left on hover, kept
     // under the current link (DESIGN.md 9).
