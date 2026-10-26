@@ -91,12 +91,7 @@ export function MarketingSection({
       // page, app/globals.css).
       className={cn(BACKGROUND[tone], className)}
     >
-      <div
-        className={cn(
-          "mx-auto max-w-lk-page px-5 md:px-10",
-          showcase ? "py-14 md:py-18 lg:py-24" : "py-12 lg:py-18",
-        )}
-      >
+      <div className={cn("lk-frame", showcase ? "py-14 md:py-18 lg:py-24" : "py-12 lg:py-18")}>
         <div
           data-reveal=""
           className={cn(

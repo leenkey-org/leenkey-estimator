@@ -4,6 +4,7 @@ import { PropertyThumb } from "@/components/shared/property-thumb";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { listingSummary } from "@/leenkey/listings/presentation";
 import { fr } from "@/lib/i18n/fr";
+import { cn } from "@/lib/utils";
 import { photoUrl } from "../photo-files";
 import type { SellerProperty } from "../queries";
 import { sheetHref } from "../sheet";
@@ -18,15 +19,34 @@ function summary(property: SellerProperty): string {
 /**
  * The properties of the seller (« Ma vente », « Dossier »): main photo,
  * summary, address and status; each one opens its page (L1-14), from which
- * a draft resumes.
+ * a draft resumes. `wide` (a page of the width of the screen, L1-56): from
+ * 1 280 px, a card each, two then three a row.
  */
-export function PropertyList({ properties }: { properties: readonly SellerProperty[] }) {
+export function PropertyList({
+  properties,
+  wide = false,
+}: {
+  properties: readonly SellerProperty[];
+  wide?: boolean;
+}) {
   return (
-    <ul className="flex flex-col divide-y divide-lk-line rounded-lk-md border border-lk-line bg-lk-surface">
+    <ul
+      className={cn(
+        "flex flex-col divide-y divide-lk-line rounded-lk-md border border-lk-line bg-lk-surface",
+        wide &&
+          "xl:grid xl:grid-cols-2 xl:gap-3 xl:divide-y-0 xl:border-0 xl:bg-transparent 2xl:grid-cols-3",
+      )}
+    >
       {properties.map((property) => {
         const status = property.listingStatus ?? "draft";
         return (
-          <li key={property.id}>
+          <li
+            key={property.id}
+            className={cn(
+              wide &&
+                "xl:overflow-hidden xl:rounded-lk-md xl:border xl:border-lk-line xl:bg-lk-surface",
+            )}
+          >
             <Link
               href={sheetHref(property.id)}
               className="flex items-center gap-3 px-4 py-3 hover:bg-lk-stone-2"

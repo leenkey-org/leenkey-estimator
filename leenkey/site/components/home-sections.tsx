@@ -39,7 +39,7 @@ export async function ShortcutsSection() {
   return (
     <section
       aria-labelledby="que-faire"
-      className="mx-auto max-w-lk-wide px-4 pt-10 md:px-8 md:pt-18"
+      className="lk-frame max-md:[--lk-gutter:1rem] pt-10 md:pt-18"
     >
       <h2 id="que-faire" data-reveal="" className={`${sectionTitle} mb-3.5 md:mb-6`}>
         {t.title}
@@ -96,7 +96,7 @@ export async function SavingsSection() {
           { kind: "dot", slow: true, className: "top-18 left-[44%] hidden size-3.5 md:block" },
         ]}
       />
-      <div className="mx-auto flex max-w-lk-wide flex-col gap-4 px-4 py-10 md:px-8 md:py-20 lg:flex-row lg:items-center lg:gap-14">
+      <div className="lk-frame max-md:[--lk-gutter:1rem] flex flex-col gap-4 py-10 md:py-20 lg:flex-row lg:items-center lg:gap-14">
         <div data-reveal="" className="min-w-0 lg:flex-[1_1_440px]">
           <p className="mb-2 text-lk-compact font-bold text-lk-blue md:mb-3 md:text-lk-body-lg">
             {t.eyebrow}
@@ -129,7 +129,7 @@ export function StepsSection() {
     <section
       id="comment"
       aria-labelledby="etapes"
-      className="mx-auto max-w-lk-wide px-4 pt-12 md:px-8 md:pt-22"
+      className="lk-frame max-md:[--lk-gutter:1rem] pt-12 md:pt-22"
     >
       <h2 id="etapes" data-reveal="" className={`${sectionTitle} mb-3.5 md:mb-7`}>
         {t.title}
@@ -181,7 +181,7 @@ export async function PlansSection() {
     <section
       id="tarifs"
       aria-labelledby="formules"
-      className="mx-auto max-w-lk-wide px-4 pt-12 md:px-8 md:pt-22"
+      className="lk-frame max-md:[--lk-gutter:1rem] pt-12 md:pt-22"
     >
       <div data-reveal="" className="mb-3.5 flex flex-wrap items-end justify-between gap-4 md:mb-6">
         <h2 id="formules" className={sectionTitle}>
@@ -197,7 +197,7 @@ export async function PlansSection() {
       {plans && plans.length > 0 ? (
         <ul
           data-reveal-stagger=""
-          className="flex flex-col gap-2.5 md:grid md:grid-cols-3 md:gap-6"
+          className="flex flex-col gap-2.5 md:gap-4 lg:grid lg:grid-cols-3 lg:gap-6"
         >
           {plans.map((plan) => (
             <li key={plan.code} className="flex">
@@ -257,7 +257,7 @@ export function HomeFaqSection() {
 export function FinalBanner() {
   const t = home.final;
   return (
-    <section aria-labelledby="pret" className="mx-auto max-w-lk-wide px-4 pt-10 md:px-8 md:pt-22">
+    <section aria-labelledby="pret" className="lk-frame max-md:[--lk-gutter:1rem] pt-10 md:pt-22">
       <div
         data-reveal=""
         className="relative isolate flex flex-col gap-4 overflow-hidden rounded-lk-3xl border border-lk-line bg-lk-surface px-5.5 py-7 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-8 md:rounded-lk-4xl md:p-16"

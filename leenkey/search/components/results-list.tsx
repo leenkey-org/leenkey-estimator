@@ -15,7 +15,7 @@ export function ResultsList({ items, now }: { items: SearchListing[]; now: Date 
   return (
     <ul
       aria-label={fr.search.results.list}
-      className="grid gap-x-4 gap-y-5 md:grid-cols-2 lg:gap-x-5 lg:gap-y-6"
+      className="grid gap-x-4 gap-y-5 md:grid-cols-2 lg:gap-x-5 lg:gap-y-6 2xl:grid-cols-3"
     >
       {items.map((item, index) => (
         <ResultItem key={item.id} id={item.id} index={index}>
@@ -25,7 +25,7 @@ export function ResultsList({ items, now }: { items: SearchListing[]; now: Date 
             framed
             // The first photo of the page is its largest image (LCP).
             priority={index === 0}
-            sizes="(min-width: 1024px) 280px, (min-width: 768px) 45vw, 92vw"
+            sizes="(min-width: 1536px) 20vw, (min-width: 1024px) 280px, (min-width: 768px) 45vw, 92vw"
           />
         </ResultItem>
       ))}

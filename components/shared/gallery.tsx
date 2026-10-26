@@ -36,7 +36,8 @@ function NoPhoto({ className }: { className?: string }) {
 /**
  * Listing photos (docs/DESIGN.md 10.3, 7.1). Mobile: one photo across the
  * width, 280 px, snap scrolling, counter « 1 / 12 », touch to enlarge.
- * Desktop: one large photo and four small ones, « + N photos » on the last.
+ * Desktop: one large photo and four small ones, « + N photos » on the last;
+ * taller from 1 536 px, where the page takes the width of the screen (L1-56).
  * Enlarged: full-screen viewer on ink 95 %, arrows, counter, Escape, focus
  * kept inside, keyboard arrows and swipe. Without photos: facade.svg.
  */
@@ -89,7 +90,7 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
       {total ? (
         <div
           className={cn(
-            "hidden h-77.5 gap-2.5 lg:grid min-[1440px]:h-92.5",
+            "hidden h-77.5 gap-2.5 lg:grid min-[1440px]:h-92.5 2xl:h-[min(30vw,35rem)]",
             total === 1 && "grid-cols-1",
             total > 1 && total < 5 && "grid-cols-[2fr_1fr]",
             total === 2 && "grid-rows-1",
@@ -109,7 +110,15 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
               <Photo
                 src={photo.src}
                 alt={photo.alt}
-                sizes="(min-width: 1280px) 600px, 50vw"
+                // Its share of the width of the page (L1-56): all of it alone,
+                // two thirds beside one column, half beside two.
+                sizes={
+                  total === 1
+                    ? "(min-width: 1920px) 1792px, 100vw"
+                    : total < 5
+                      ? "(min-width: 1920px) 1200px, 66vw"
+                      : "(min-width: 1920px) 900px, 50vw"
+                }
                 priority
               />
             </button>
@@ -124,7 +133,7 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
                 onClick={() => setViewer(index + 1)}
                 className="relative overflow-hidden rounded-lk-sm"
               >
-                <Photo src={photo.src} alt={photo.alt} sizes="300px" />
+                <Photo src={photo.src} alt={photo.alt} sizes="(min-width: 1920px) 600px, 33vw" />
                 {more ? (
                   <span className="absolute inset-0 flex items-center justify-center bg-lk-ink/55 text-lk-label font-semibold text-white">
                     {t.more(more)}
@@ -135,7 +144,7 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
           })}
         </div>
       ) : (
-        <NoPhoto className="hidden h-77.5 rounded-lk-md lg:flex min-[1440px]:h-92.5" />
+        <NoPhoto className="hidden h-77.5 rounded-lk-md lg:flex min-[1440px]:h-92.5 2xl:h-[min(30vw,35rem)]" />
       )}
 
       {total ? <Viewer photos={photos} index={viewer} onIndexChange={setViewer} /> : null}

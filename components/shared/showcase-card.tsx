@@ -70,7 +70,7 @@ export function ShowcaseCard({
   swipe = false,
   framed = false,
   priority = false,
-  sizes = "(min-width: 1024px) 300px, (min-width: 768px) 45vw, 272px",
+  sizes = "(min-width: 1536px) 18vw, (min-width: 1024px) 23vw, (min-width: 768px) 45vw, 272px",
   className,
 }: ShowcaseCardProps) {
   const id = useId();

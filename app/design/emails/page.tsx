@@ -138,7 +138,7 @@ export default async function EmailsPage() {
   );
   return (
     <FacadeRoot className="min-h-dvh bg-lk-bg">
-      <main className="mx-auto flex w-full max-w-lk-page flex-col gap-8 px-5 py-10 md:px-10">
+      <main className="lk-frame flex flex-col gap-8 py-10">
         <div className="flex flex-col gap-2">
           <Link href="/design" className="text-lk-secondary font-semibold text-lk-blue underline">
             {t.back}

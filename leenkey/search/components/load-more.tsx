@@ -32,9 +32,10 @@ export function LoadMore({ shown, hasMore }: { shown: number; hasMore: boolean }
     <>
       {loading ? (
         // The size of the cards (L1-55): the next ones take their place without a jump.
-        <div className="mt-5 grid gap-x-4 gap-y-5 md:grid-cols-2 lg:mt-6 lg:gap-x-5 lg:gap-y-6">
+        <div className="mt-5 grid gap-x-4 gap-y-5 md:grid-cols-2 lg:mt-6 lg:gap-x-5 lg:gap-y-6 2xl:grid-cols-3">
           <Skeleton className="aspect-[1/1.25] rounded-lk-2xl" />
           <Skeleton className="hidden aspect-[1/1.25] rounded-lk-2xl md:block" />
+          <Skeleton className="hidden aspect-[1/1.25] rounded-lk-2xl 2xl:block" />
         </div>
       ) : null}
       <div className="mt-6 flex justify-center">

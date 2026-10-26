@@ -27,6 +27,7 @@ export default async function SellerHomePage() {
       title={fr.spaces.greeting(profile.firstName)}
       roles={profile.roles}
       profileId={profile.id}
+      wide
     >
       {!result.ok ? (
         <InlineAlert tone="danger" className="mt-6">
@@ -59,7 +60,7 @@ export default async function SellerHomePage() {
               <Link href={ROUTES.newProperty}>{list.create}</Link>
             </Button>
           </div>
-          <PropertyList properties={result.data} />
+          <PropertyList properties={result.data} wide />
         </section>
       )}
     </SpacePage>

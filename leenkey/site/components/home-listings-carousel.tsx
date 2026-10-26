@@ -43,9 +43,9 @@ export type CarouselListing = Omit<ShowcaseCardProps, "action" | "className" | "
 /**
  * Categories and carousel of « Biens à vendre près de chez vous »
  * (docs/design-handoff/SPECS.md 2, 3): the categories filter the cards (a
- * toggle each); four cards a page from 1 024 px with the round arrows and
- * « 1 / 3 », the arrow of an end in the colour of « Désactivé »; swiped with
- * a snap on a phone. « Voir les N biens » leads to the search of the same
+ * toggle each); four cards a page from 1 024 px, five from 1 536 px (L1-56),
+ * with the round arrows and « 1 / 3 », the arrow of an end in the colour of
+ * « Désactivé »; swiped with a snap on a phone. « Voir les N biens » leads to the search of the same
  * category, its number counted.
  */
 export function HomeListingsCarousel({
@@ -196,7 +196,7 @@ export function HomeListingsCarousel({
           {shown.map(({ id, categories, favorite, signUpHref, ...card }) => (
             <li
               key={id}
-              className="w-68 shrink-0 snap-start md:w-[calc((100%-0.875rem)/2)] lg:w-[calc((100%-4.5rem)/4)]"
+              className="w-68 shrink-0 snap-start md:w-[calc((100%-0.875rem)/2)] lg:w-[calc((100%-4.5rem)/4)] 2xl:w-[calc((100%-6rem)/5)]"
             >
               <ShowcaseCard
                 {...card}

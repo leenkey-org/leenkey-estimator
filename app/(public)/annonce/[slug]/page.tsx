@@ -100,7 +100,7 @@ export default async function ListingPage({ params }: Props) {
   return (
     <FacadeRoot className="min-h-screen bg-lk-surface">
       <SiteTopNav />
-      <main className="mx-auto max-w-lk-page pb-10 lg:px-10 lg:pb-16">
+      <main className="mx-auto w-full max-w-lk-frame pb-10 lg:lk-gutter lg:pb-16">
         <div className="hidden items-center gap-6 pt-5 lg:flex">
           <BackLink variant="text" />
           <ListingBreadcrumb

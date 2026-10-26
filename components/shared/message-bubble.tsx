@@ -24,7 +24,9 @@ export function MessageBubble({
   return (
     <div
       className={cn(
-        "flex max-w-[82%] flex-col gap-1",
+        // 640 px at most: a line stays readable when the thread takes the
+        // width of a large screen (L1-56).
+        "flex max-w-[min(82%,40rem)] flex-col gap-1",
         mine ? "items-end self-end" : "items-start self-start",
         className,
       )}

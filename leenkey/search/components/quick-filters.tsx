@@ -57,7 +57,8 @@ export function QuickFilters({ className }: { className?: string }) {
       role="group"
       aria-label={t.quickFilters}
       className={cn(
-        "-mx-5 flex gap-2 overflow-x-auto px-5 py-1 md:-mx-10 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        // Scrolls under the gutters of the page, whatever their width (L1-56).
+        "mx-[calc(-1*var(--lk-gutter))] flex gap-2 overflow-x-auto px-(--lk-gutter) py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
     >

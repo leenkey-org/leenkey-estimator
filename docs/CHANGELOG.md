@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-26 · L1-56 · PR #54 · Pleine page selon l'appareil
+- Modifié : toutes les pages prennent la largeur de l'écran jusqu'à 1 920 px, au lieu de 1 200 à 1 280 px. Les marges suivent l'appareil : 20 px sur téléphone, 32 px sur tablette et ordinateur portable, 64 px à partir de 1 536 px. La barre haute, le contenu et le pied de page sont alignés (sur tablette, la barre haute garde 20 px).
+- Modifié : sur grand écran (à partir de 1 536 px), une colonne de cartes de plus. La recherche passe à trois colonnes, le carrousel de l'accueil à cinq cartes et les Favoris à quatre. Les photos de l'annonce sont plus hautes et ses caractéristiques sur trois colonnes. Les biens du vendeur s'affichent en cartes, deux puis trois par rangée.
+- Modifié : l'espace vendeur, l'espace acquéreur, les Favoris, la messagerie et le rapport de valorisation sont en pleine largeur. Les textes, formulaires, réglages du compte et bulles de message gardent une largeur de lecture.
+- Corrigé : à 768 px, les cartes des formules de l'accueil sortaient de l'écran ; elles restent en lignes jusqu'à 1 024 px.
+
 ### 2026-10-26 · L1-55 · PR #53 · Fiches de biens façon Airbnb
 - Modifié : les résultats de `/acheter` prennent les cartes de l'accueil, la photo d'abord. Jusqu'à cinq photos par bien tournent d'un glissement du doigt sur téléphone, avec des flèches au survol en desktop. Le cadre devient bleu au survol et à la pression, avec « Nouveau » pour un bien en ligne depuis moins de 7 jours. Une colonne sur téléphone, deux ensuite.
 - Modifié : plus de gris sur les fiches. Les chiffres clés sont en bleu Leenkey clair, sur l'annonce comme sur la fiche du vendeur et le Cockpit. Le cœur de la colonne du prix et les tuiles du conseiller sont bleu clair aussi. Les atouts de la `PropertyCard` large passent en pilules bleues (catalogue `/design` seulement : la recherche ne s'en sert plus).

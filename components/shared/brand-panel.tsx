@@ -65,7 +65,7 @@ export function BrandPanel({
     >
       <div
         className={cn(
-          "relative mx-auto flex min-h-52.5 max-w-lk-page flex-col justify-center px-5 md:px-10",
+          "lk-frame relative flex min-h-52.5 flex-col justify-center",
           hero ? "py-12 lg:py-20" : "py-8",
         )}
       >
@@ -116,7 +116,7 @@ export function BrandPanel({
           <FacadeDrawing
             data-reveal-draw={hero ? undefined : ""}
             className={cn(
-              "lk-drawing pointer-events-none absolute bottom-0 right-10 hidden h-52.5 w-95 opacity-55 lg:block",
+              "lk-drawing pointer-events-none absolute bottom-0 right-(--lk-gutter) hidden h-52.5 w-95 opacity-55 lg:block",
               hero && "lk-drawing-in",
             )}
           />
