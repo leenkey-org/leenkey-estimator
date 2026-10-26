@@ -15,7 +15,9 @@ const t = fr.search.location;
  * DECISIONS proposal of L1-15). Choosing a commune applies the search at once;
  * Enter without a choice takes the best suggestion, a postal code or the typed
  * name. At rest the field reads « Savigny-sur-Orge · 5 km » (the radius is set
- * in the filters panel); while typing, the commune alone.
+ * in the filters panel); while typing, the commune alone. A pill on a phone;
+ * from 1024 px the « Où ? » part of the rounded search bar, its name above
+ * it (direction C, DECISIONS 2026-10-26).
  */
 export function LocationField({ className }: { className?: string }) {
   const { query, placeLabel, applyFilters } = useSearch();
@@ -107,52 +109,70 @@ export function LocationField({ className }: { className?: string }) {
 
   return (
     <div className={cn("relative", className)}>
-      <label htmlFor={inputId} className="sr-only">
-        {t.label}
-      </label>
       <div
+        // The whole part of the bar takes the pointer to the field.
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) {
+            event.preventDefault();
+            inputRef.current?.focus();
+          }
+        }}
         className={cn(
-          "flex h-12 items-center gap-2.5 rounded-lk-sm border-[1.5px] border-lk-field bg-lk-surface pl-3.5 pr-1 lg:h-11",
+          "flex h-12 cursor-text items-center gap-2.5 rounded-full border-[1.5px] border-lk-line-strong bg-lk-surface pl-4 pr-1 shadow-lk-field",
           "transition duration-140 ease-out-lk",
           "has-[input:focus-visible]:border-lk-blue has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-lk-blue-line",
+          // A part of the bar: no frame of its own, sand under the pointer.
+          "lg:min-h-14 lg:h-auto lg:border-transparent lg:pl-5 lg:shadow-none lg:hover:bg-lk-sand",
+          "lg:has-[input:focus-visible]:border-transparent lg:has-[input:focus-visible]:bg-lk-surface lg:has-[input:focus-visible]:shadow-lk-field lg:has-[input:focus-visible]:ring-0",
+          "lg:has-[input:focus-visible]:outline-3 lg:has-[input:focus-visible]:outline-offset-2 lg:has-[input:focus-visible]:outline-lk-blue lg:has-[input:focus-visible]:outline-solid",
         )}
       >
-        <Search aria-hidden="true" className="size-4.5 shrink-0 text-lk-ink-3" />
-        <input
-          ref={inputRef}
-          id={inputId}
-          type="text"
-          role="combobox"
-          aria-autocomplete="list"
-          aria-expanded={expanded}
-          aria-controls={listId}
-          aria-activedescendant={expanded && active >= 0 ? `${listId}-${active}` : undefined}
-          autoComplete="off"
-          spellCheck={false}
-          enterKeyHint="search"
-          placeholder={t.placeholder}
-          value={text}
-          onChange={(event) => {
-            setText(event.target.value);
-            setEditing(true);
-            setOpen(true);
-            setActive(-1);
-          }}
-          onFocus={() => {
-            setEditing(true);
-            setOpen(true);
-            // While typing, the commune alone, selected: typing replaces it.
-            setText(chosenLabel.current ?? placeLabel ?? "");
-            requestAnimationFrame(() => inputRef.current?.select());
-          }}
-          onBlur={() => {
-            close();
-            setEditing(false);
-            setText(atRest(chosenLabel.current ?? placeLabel));
-          }}
-          onKeyDown={onKeyDown}
-          className="h-full min-w-0 flex-1 bg-transparent text-lk-compact font-medium text-lk-ink outline-none placeholder:font-normal placeholder:text-lk-ink-3"
-        />
+        <Search aria-hidden="true" className="size-4.5 shrink-0 text-lk-ink-3 lg:hidden" />
+        <div className="flex min-w-0 flex-1 flex-col justify-center lg:py-1.5">
+          <label
+            htmlFor={inputId}
+            className="sr-only lg:not-sr-only lg:cursor-text lg:text-lk-caption lg:font-bold lg:text-lk-ink"
+          >
+            {/* « Où ? » shown from 1024 px, the full name read everywhere. */}
+            <span className="hidden lg:inline">{`${fr.search.bar.where} `}</span>
+            <span className="lg:sr-only">{t.label}</span>
+          </label>
+          <input
+            ref={inputRef}
+            id={inputId}
+            type="text"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={expanded}
+            aria-controls={listId}
+            aria-activedescendant={expanded && active >= 0 ? `${listId}-${active}` : undefined}
+            autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="search"
+            placeholder={t.placeholder}
+            value={text}
+            onChange={(event) => {
+              setText(event.target.value);
+              setEditing(true);
+              setOpen(true);
+              setActive(-1);
+            }}
+            onFocus={() => {
+              setEditing(true);
+              setOpen(true);
+              // While typing, the commune alone, selected: typing replaces it.
+              setText(chosenLabel.current ?? placeLabel ?? "");
+              requestAnimationFrame(() => inputRef.current?.select());
+            }}
+            onBlur={() => {
+              close();
+              setEditing(false);
+              setText(atRest(chosenLabel.current ?? placeLabel));
+            }}
+            onKeyDown={onKeyDown}
+            className="h-full min-w-0 flex-1 bg-transparent text-lk-compact font-medium text-lk-ink outline-none placeholder:font-normal placeholder:text-lk-ink-3 lg:h-auto lg:flex-none"
+          />
+        </div>
         {filters.location ? (
           <button
             type="button"
@@ -163,7 +183,7 @@ export function LocationField({ className }: { className?: string }) {
               inputRef.current?.focus();
             }}
             className={cn(
-              "relative flex size-10 shrink-0 items-center justify-center rounded-lk-sm text-lk-ink-3",
+              "relative flex size-10 shrink-0 items-center justify-center rounded-full text-lk-ink-3",
               "transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2 hover:text-lk-ink",
               "after:absolute after:-inset-0.5",
             )}
@@ -180,7 +200,7 @@ export function LocationField({ className }: { className?: string }) {
         role="listbox"
         aria-label={t.suggestions}
         hidden={!expanded}
-        className="absolute inset-x-0 top-full z-40 mt-1 max-h-72 overflow-y-auto rounded-lk-md border border-lk-line bg-lk-surface py-1 shadow-float"
+        className="absolute inset-x-0 top-full z-40 mt-2.5 max-h-80 overflow-y-auto rounded-lk-xl border border-lk-line bg-lk-surface p-2 shadow-lk-block lg:right-auto lg:w-80"
       >
         {suggestions.map((commune, index) => (
           <li
@@ -192,8 +212,8 @@ export function LocationField({ className }: { className?: string }) {
             onClick={() => choose(commune)}
             onMouseMove={() => setActive(index)}
             className={cn(
-              "flex cursor-pointer items-baseline justify-between gap-3 px-3.5 py-2.5",
-              index === active && "bg-lk-blue-tint",
+              "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lk-lg px-3 py-2",
+              index === active && "bg-lk-sand",
             )}
           >
             <span className="text-lk-compact text-lk-ink">{commune.name}</span>
@@ -206,7 +226,7 @@ export function LocationField({ className }: { className?: string }) {
       {open && editing && text.trim() && suggestions.length === 0 ? (
         <p
           role="status"
-          className="absolute inset-x-0 top-full z-40 mt-1 rounded-lk-md border border-lk-line bg-lk-surface px-3.5 py-3 text-lk-caption text-lk-ink-2 shadow-float"
+          className="absolute inset-x-0 top-full z-40 mt-2.5 rounded-lk-xl border border-lk-line bg-lk-surface px-4 py-3 text-lk-caption text-lk-ink-2 shadow-lk-block lg:right-auto lg:w-80"
         >
           {t.noSuggestion}
         </p>

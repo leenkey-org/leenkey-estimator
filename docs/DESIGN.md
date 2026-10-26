@@ -534,11 +534,11 @@ Pour chaque composant : anatomie, dimensions, variantes, états. Les composants 
 
 **Checkbox** : 20 × 20, rayon 4, bordure 1,5 px `--lk-field`, cochée = fond `--lk-blue` + coche blanche. Libellé 12–13 px `--lk-ink-2`, cliquable.
 
-**FilterSelect** (select de la `FilterBar` desktop) : 44 px, valeur courte affichée au-dessus d'un select natif transparent, jamais sur deux lignes, teinte bleue quand une valeur est choisie (L1-15).
+**FilterMenu** (parties de la `FilterBar` desktop, tri des résultats ; L1-54, remplace le `FilterSelect` à select natif de L1-15, « menus déroulants trop Excel » de Younes, `DECISIONS.md` 2026-10-26) : déclencheur `segment` (nom 12 px 700 `--lk-ink` au-dessus de la valeur 14 px, `--lk-ink-3` sans filtre, `--lk-blue` 600 avec un filtre, chevron qui se retourne à l'ouverture ; pilule de 56 px, `--lk-sand` au survol, blanche à ombre `shadow-lk-field` ouverte) ou `ghost` (mot bleu et chevron, le tri). Menu : panneau blanc rayon 16, bordure `--lk-line`, `shadow-lk-block`, padding 8, 256 px au moins ; options de 44 px rayon 12, icône du type ou pastille DPE, `--lk-sand` sous le pointeur et le clavier, l'option choisie en `--lk-blue` 600 avec une coche. Radix : choix radio, flèches, Début, Fin, premières lettres, Échap qui rend le focus au déclencheur.
 
 **ChipButton** : forme d'un `ChipToggle` inactif ; ouvre le panneau des filtres sur son champ au lieu de basculer un état (L1-15).
 
-**ChipToggle** (atouts, filtres rapides) : hauteur 40 px (36 px dans la barre de filtres mobile), padding 0 12–14 px, 13 px 500, rayon 4. Inactif : fond blanc, bordure 1,5 px `--lk-line`, texte `--lk-ink`. Actif : fond `--lk-blue-tint`, bordure 1,5 px `--lk-blue`, texte `--lk-blue`. `aria-pressed`.
+**ChipToggle** (atouts, filtres rapides) : hauteur 40 px (36 px dans la barre de filtres mobile), padding 0 16 px, 13 px 500, pilule (rayon 4 jusqu'à L1-54). Inactif : fond blanc, bordure 1,5 px `--lk-line`, texte `--lk-ink`. Actif : fond `--lk-blue-tint`, bordure 1,5 px `--lk-blue`, texte `--lk-blue`. `aria-pressed`.
 
 **SegmentedPicker** (DPE A à G, choix du projet) : boutons égaux de 44 px, écart 6 px, rayon 4. Inactif : fond `--lk-stone-2`, texte `--lk-ink-2` 600 14 px. Actif : fond `--lk-blue`, texte blanc. Rôle `radiogroup`. Sombre (`tone="dark"`, `/tarifs` sur navy, L1-50, pages vitrines seulement) : cadre de verre (blanc à 6 %, filet blanc à 12 %, rayon 12, padding 4, écart 4), options blanc à 80 % de 44 px au moins (deux lignes possibles à 390 px), rayon 6 ; l'option choisie en blanc à texte `--lk-blue` (le bleu plein n'atteindrait que 2,5:1 contre le navy), anneau de focus blanc.
 
@@ -617,9 +617,11 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 **DecorativeShapes** (direction C, `components/shared/decorative-shapes.tsx`) : halo (`radial-gradient` bleu à 10 %), anneau (2 px bleu à 14 %), point (bleu à 30 %) derrière le contenu d'une section blanche (`relative isolate overflow-hidden`, formes en `-z-10`, `aria-hidden`), flottement vertical lent (`lk-float` 11 s, `lk-float-slow` 13 s, ±14 px), immobiles avec un mouvement réduit. Simulateur d'économies et bandeau final de l'accueil seulement.
 
-**SearchBar mobile** : `SearchInput` (flex 1) + bouton filtres 48 × 48 `primary` avec compteur de filtres actifs (pastille navy 20 px, bordure 2 px blanche, en haut à droite). Dessous, rangée de `ChipToggle` défilante horizontalement sans barre visible.
+**SearchBar mobile** : `SearchInput` en pilule de 48 px (bordure 1,5 px `--lk-line-strong`, `shadow-lk-field`, flex 1) + bouton filtres rond 48 × 48 `--lk-blue` avec compteur de filtres actifs (pastille navy 20 px, bordure 2 px blanche, en haut à droite). Dessous, rangée de `ChipToggle` en pilules défilante horizontalement sans barre visible.
 
-**FilterBar desktop** : fond blanc, padding 16 × 40, bordure basse `--lk-line`. `SearchInput` 300 px, selects 44 px (actifs : fond `--lk-blue-tint`, bordure `--lk-blue`, texte `--lk-blue`), « Plus de filtres » (`outline`), « Créer une alerte » (`secondary` avec icône `Bell`) poussé à droite. Les libellés ne passent jamais à la ligne (`whitespace-nowrap`) ; sous 1280 px, « Plus de filtres » regroupe Surface et DPE.
+**FilterBar desktop** (direction C, L1-54, comme la barre « Acheter » de l'accueil) : une barre arrondie (bordure `--lk-line-strong`, `shadow-lk-field`, padding 6) : « Où ? » (le `SearchInput` sans cadre, 256 px, son nom au-dessus, suggestions dans un panneau rayon 16), puis Type de bien, Budget max, Pièces, et à partir de 1 280 px Surface et DPE, chacun un `FilterMenu segment`, séparés par un trait de 32 px `--lk-line`. À côté, « Filtres » : pilule blanche de 56 px, icône `SlidersHorizontal`, compteur des filtres actifs. « Créer une alerte » (`secondary` avec icône `Bell`) viendra à droite (L3-06). Les libellés ne passent jamais à la ligne ; sous 1 280 px, « Filtres » regroupe Surface et DPE.
+
+**Panneau des filtres** (L1-54) : feuille rayon 24 en haut sur mobile, boîte rayon 24 et `shadow-lk-block` sur desktop. Plus de select : Type de bien, Pièces, Chambres et DPE (« au plus ») en rangées de pilules (`SegmentedPicker shape="pill"` : blanches, bordure 1,5 px `--lk-line-strong`, la choisie en `--lk-blue` texte blanc), comme le rayon ; budget et surface en champs `UnitInput`.
 
 **ResultsHeader** : « 12 biens autour d'Épinay-sur-Orge » 14 px 600 ; tri à droite « Prix croissant » `ghost` avec `ChevronDown`.
 

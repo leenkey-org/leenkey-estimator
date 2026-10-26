@@ -11,7 +11,6 @@ import { ChipToggle } from "@/components/shared/chip-toggle";
 import { facadeScope } from "@/components/shared/facade-root";
 import { IconButton } from "@/components/shared/icon-button";
 import { SegmentedPicker } from "@/components/shared/segmented-picker";
-import { Select } from "@/components/shared/select";
 import { UnitInput } from "@/components/shared/unit-input";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -56,15 +55,21 @@ export function FiltersDialog() {
           onOpenAutoFocus={(event) => {
             if (!filtersFocus) return;
             const target = document.getElementById(FOCUS_TARGET[filtersFocus]);
-            if (target) {
+            // A field, or the chosen button of a row of choices (its first one).
+            const focusable = target?.matches("input, select, textarea, button")
+              ? target
+              : (target?.querySelector<HTMLElement>('[role="radio"][data-state="checked"]') ??
+                target?.querySelector<HTMLElement>('[role="radio"]'));
+            if (focusable) {
               event.preventDefault();
-              target.focus();
+              focusable.focus();
             }
           }}
           className={cn(
             facadeScope,
-            "fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col rounded-t-lk-md bg-lk-surface shadow-sheet outline-none",
-            "lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:max-h-[85vh] lg:w-130 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-lk-md lg:shadow-float",
+            // The rounded shapes of direction C (DECISIONS 2026-10-26).
+            "fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col rounded-t-lk-2xl bg-lk-surface shadow-sheet outline-none",
+            "lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:max-h-[85vh] lg:w-130 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-lk-2xl lg:shadow-lk-block",
             "duration-220 ease-out-lk data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
             "data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
@@ -144,6 +149,7 @@ function FiltersPanel() {
       >
         {query.filters.location && radiusAvailable && placeLabel ? (
           <SegmentedPicker
+            shape="pill"
             label={t.radius(placeLabel)}
             value={form.radius}
             onValueChange={(radius) => update({ radius })}
@@ -158,19 +164,18 @@ function FiltersPanel() {
           />
         ) : null}
 
-        <Select
+        <SegmentedPicker
           id="filtres-type"
+          shape="pill"
           label={t.type}
           value={form.type}
-          onChange={(event) => update({ type: event.target.value })}
-        >
-          <option value="">{t.typeAll}</option>
-          {PROPERTY_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {fr.search.types[type]}
-            </option>
-          ))}
-        </Select>
+          onValueChange={(type) => update({ type })}
+          options={[
+            { value: "", label: t.typeAll },
+            ...PROPERTY_TYPES.map((type) => ({ value: type, label: fr.search.types[type] })),
+          ]}
+          className="grid-flow-row grid-cols-2 sm:grid-cols-3"
+        />
 
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
           <UnitInput
@@ -220,34 +225,36 @@ function FiltersPanel() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Select
-            id={FOCUS_TARGET.rooms}
-            label={t.rooms}
-            value={form.roomsMin}
-            onChange={(event) => update({ roomsMin: event.target.value })}
-          >
-            <option value="">{t.any}</option>
-            {COUNTS.map((rooms) => (
-              <option key={rooms} value={rooms}>
-                {t.roomsAtLeast(rooms)}
-              </option>
-            ))}
-          </Select>
-          <Select
-            id="filtres-chambres"
-            label={t.bedrooms}
-            value={form.bedroomsMin}
-            onChange={(event) => update({ bedroomsMin: event.target.value })}
-          >
-            <option value="">{t.any}</option>
-            {COUNTS.map((bedrooms) => (
-              <option key={bedrooms} value={bedrooms}>
-                {t.bedroomsAtLeast(bedrooms)}
-              </option>
-            ))}
-          </Select>
-        </div>
+        <SegmentedPicker
+          id={FOCUS_TARGET.rooms}
+          shape="pill"
+          label={t.rooms}
+          value={form.roomsMin}
+          onValueChange={(roomsMin) => update({ roomsMin })}
+          options={[
+            { value: "", label: t.anyShort, ariaLabel: t.any },
+            ...COUNTS.map((rooms) => ({
+              value: String(rooms),
+              label: t.roomsShort(rooms),
+              ariaLabel: t.roomsAtLeast(rooms),
+            })),
+          ]}
+        />
+        <SegmentedPicker
+          id="filtres-chambres"
+          shape="pill"
+          label={t.bedrooms}
+          value={form.bedroomsMin}
+          onValueChange={(bedroomsMin) => update({ bedroomsMin })}
+          options={[
+            { value: "", label: t.anyShort, ariaLabel: t.any },
+            ...COUNTS.map((bedrooms) => ({
+              value: String(bedrooms),
+              label: t.roomsShort(bedrooms),
+              ariaLabel: t.bedroomsAtLeast(bedrooms),
+            })),
+          ]}
+        />
 
         <fieldset className="flex flex-col gap-1.5">
           <legend className="mb-1.5 text-lk-label font-medium text-lk-ink">{t.outdoor}</legend>
@@ -280,19 +287,22 @@ function FiltersPanel() {
           </div>
         </fieldset>
 
-        <Select
+        <SegmentedPicker
           id={FOCUS_TARGET.dpe}
-          label={t.dpe}
+          shape="pill"
+          label={t.dpeMax}
           value={form.dpeMax}
-          onChange={(event) => update({ dpeMax: event.target.value })}
-        >
-          <option value="">{t.dpeAll}</option>
-          {DPE_CLASSES.map((letter) => (
-            <option key={letter} value={letter}>
-              {t.dpeUpTo(letter)}
-            </option>
-          ))}
-        </Select>
+          onValueChange={(dpeMax) => update({ dpeMax })}
+          options={[
+            { value: "", label: t.anyShort, ariaLabel: t.dpeAll },
+            ...DPE_CLASSES.map((letter) => ({
+              value: letter,
+              label: letter,
+              ariaLabel: t.dpeUpTo(letter),
+            })),
+          ]}
+          className="gap-1"
+        />
       </form>
 
       <div className="flex items-center gap-2.5 border-t border-lk-line px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3.5 lg:px-6 lg:pb-5">

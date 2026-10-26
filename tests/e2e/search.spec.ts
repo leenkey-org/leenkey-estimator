@@ -63,10 +63,9 @@ async function seriousViolations(page: Page) {
     }));
 }
 
-async function openFilters(page: Page, isMobile: boolean) {
-  await page
-    .getByRole("button", isMobile ? { name: "Filtres", exact: true } : { name: "Plus de filtres" })
-    .click();
+async function openFilters(page: Page, _isMobile: boolean) {
+  // « Filtres », and the count of the active filters when there are some.
+  await page.getByRole("button", { name: /^Filtres(, \d+\sfiltres? actifs?)?$/ }).click();
   const dialog = page.getByRole("dialog", { name: "Filtres" });
   await expect(dialog).toBeVisible();
   return dialog;
@@ -95,6 +94,11 @@ test("panneau des filtres : aucune violation, focus gardé, Échap ferme @a11y",
   await settle(page);
   const dialog = await openFilters(page, isMobile);
   await expect(dialog.getByRole("radiogroup", { name: /^Rayon autour de/ })).toBeVisible();
+  // No list of the system left in the panel: rows of rounded choices (DECISIONS 2026-10-26).
+  await expect(dialog.getByRole("combobox")).toHaveCount(0);
+  for (const name of ["Type de bien", "Pièces", "Chambres", /^Classe énergie/]) {
+    await expect(dialog.getByRole("radiogroup", { name })).toBeVisible();
+  }
   // The panel slides in: contrasts are measured once it is in place.
   await page.waitForTimeout(300);
   expect(await seriousViolations(page)).toEqual([]);
@@ -207,10 +211,11 @@ test.describe("recherche /acheter (base de seed)", () => {
         "true",
       );
     } else {
-      await expect(page.getByRole("combobox", { name: "Budget maximum" })).toHaveValue("400000");
-      await expect(page.getByRole("combobox", { name: "Nombre de pièces minimum" })).toHaveValue(
-        "3",
+      const bar = page.getByRole("search");
+      await expect(bar.getByRole("button", { name: /^Budget max/ })).toContainText(
+        /Jusqu'à\s400\s000\s€/,
       );
+      await expect(bar.getByRole("button", { name: /^Pièces/ })).toContainText(/3\spièces et \+/);
     }
   });
 
@@ -239,7 +244,8 @@ test.describe("recherche /acheter (base de seed)", () => {
   test("trie par prix croissant", async ({ page }) => {
     await page.goto("/acheter");
     await settle(page);
-    await page.getByRole("combobox", { name: "Trier par" }).selectOption("prix_asc");
+    await page.getByRole("button", { name: /^Trier par/ }).click();
+    await page.getByRole("menuitemradio", { name: "Prix croissant" }).click();
     await expect(page).toHaveURL(/\/acheter\?tri=prix_asc$/);
     const prices = await cardPrices(page);
     expect(prices.length).toBeGreaterThan(1);
@@ -279,9 +285,22 @@ test.describe("recherche /acheter (base de seed)", () => {
     test.skip(isMobile, "barre de filtres à partir de 1024 px ; en mobile, le panneau");
     await page.goto("/acheter");
     await settle(page);
-    const type = page.getByRole("combobox", { name: "Type de bien" });
-    await type.selectOption("appartement");
+    // A rounded menu of the bar (DECISIONS 2026-10-26), from the keyboard:
+    // its options are radio items, Escape gives the focus back.
+    const type = page.getByRole("search").getByRole("button", { name: /^Type de bien/ });
+    await type.click();
+    const menu = page.getByRole("menu", { name: "Type de bien" });
+    await expect(menu.getByRole("menuitemradio", { name: "Tous les biens" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+    await expect(type).toBeFocused();
+    await type.press("Enter");
+    await menu.getByRole("menuitemradio", { name: "Appartement" }).click();
     await expect(page).toHaveURL(/\/acheter\?type=appartement$/);
+    await expect(type).toContainText("Appartement");
     await settle(page);
     const texts = await cards(page).allTextContents();
     expect(texts.length).toBeGreaterThan(0);

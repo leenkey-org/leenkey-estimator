@@ -20,6 +20,8 @@ export type SegmentedPickerProps = Omit<ComponentProps<typeof RadioGroup>, "chil
    * the navy, where the blue would not reach 3:1), a white focus ring.
    */
   tone?: "light" | "dark";
+  /** Light only: white pills, the chosen one blue (the filters of the search, direction C). */
+  shape?: "default" | "pill";
 };
 
 /**
@@ -33,6 +35,7 @@ export function SegmentedPicker({
   hideLabel = false,
   options,
   tone = "light",
+  shape = "default",
   className,
   ...props
 }: SegmentedPickerProps) {
@@ -75,12 +78,19 @@ export function SegmentedPicker({
                     "data-[state=unchecked]:enabled:hover:bg-white/10",
                     "data-[state=checked]:bg-lk-surface data-[state=checked]:text-lk-blue",
                   ]
-                : [
-                    "h-11 rounded-lk-sm bg-lk-stone-2 text-lk-ink-2",
-                    "data-[state=unchecked]:enabled:hover:bg-lk-stone",
-                    "data-[state=checked]:bg-lk-blue data-[state=checked]:text-white",
-                    "data-[state=checked]:enabled:hover:bg-lk-blue-hover",
-                  ],
+                : shape === "pill"
+                  ? [
+                      "h-11 rounded-full border-[1.5px] border-lk-line-strong bg-lk-surface text-lk-ink",
+                      "data-[state=unchecked]:enabled:hover:border-lk-ink-3",
+                      "data-[state=checked]:border-lk-blue data-[state=checked]:bg-lk-blue data-[state=checked]:text-white",
+                      "data-[state=checked]:enabled:hover:bg-lk-blue-hover",
+                    ]
+                  : [
+                      "h-11 rounded-lk-sm bg-lk-stone-2 text-lk-ink-2",
+                      "data-[state=unchecked]:enabled:hover:bg-lk-stone",
+                      "data-[state=checked]:bg-lk-blue data-[state=checked]:text-white",
+                      "data-[state=checked]:enabled:hover:bg-lk-blue-hover",
+                    ],
               "disabled:cursor-not-allowed disabled:opacity-45",
             )}
           >

@@ -1321,6 +1321,13 @@ export const fr = {
       surfaceAtLeast: (surface: string) => `${surface} et +`,
       dpeUpTo: (letter: string) => (letter === "A" ? "DPE A" : `DPE A à ${letter}`),
       more: "Plus de filtres",
+      // The rounded bar of direction C (DECISIONS 2026-10-26): a name above its value.
+      where: "Où ?",
+      budgetTitle: "Budget max",
+      typeAll: "Tous les biens",
+      any: "Indifférent",
+      dpeAll: "Toutes les classes",
+      dpeClass: (letter: string) => (letter === "A" ? "A" : `A à ${letter}`),
     },
     dialog: {
       title: "Filtres",
@@ -1341,6 +1348,10 @@ export const fr = {
       bedroomsAtLeast: (bedrooms: number) =>
         bedrooms === 1 ? "1 chambre et +" : `${bedrooms} chambres et +`,
       any: "Indifférent",
+      /** Short « all » of a row of buttons (pieces, bedrooms, DPE). */
+      anyShort: "Tous",
+      roomsShort: (rooms: number) => `${rooms}+`,
+      dpeMax: "Classe énergie (DPE), au plus",
       outdoor: "Extérieur",
       outdoorHelp: "Les biens qui ont au moins l'un des extérieurs choisis.",
       equipment: "Équipements",

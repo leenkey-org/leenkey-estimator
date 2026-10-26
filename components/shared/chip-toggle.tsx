@@ -11,8 +11,9 @@ export type ChipToggleProps = Omit<ComponentProps<typeof Toggle>, "variant" | "s
 export function chipClassName(compact = false) {
   return cn(
     "relative inline-flex min-w-0 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap",
-    // The strong line of direction C: the chip stays drawn on white (DESIGN.md 2.1).
-    "rounded-lk-sm border-[1.5px] border-lk-line-strong bg-lk-surface px-3.5",
+    // The strong line of direction C: the chip stays drawn on white (DESIGN.md 2.1),
+    // a pill since the rounded search (Younes, DECISIONS 2026-10-26).
+    "rounded-full border-[1.5px] border-lk-line-strong bg-lk-surface px-4",
     "text-lk-label font-medium text-lk-ink",
     "transition-colors duration-140 ease-out-lk",
     // components/ui/toggle.tsx greys the chip on hover: keep it white,
@@ -30,8 +31,8 @@ export function chipClassName(compact = false) {
 }
 
 /**
- * Strengths and quick filters (docs/DESIGN.md 10.1): a 4 px rectangle that the
- * Radix toggle exposes with aria-pressed. Extends components/ui/toggle.tsx.
+ * Strengths and quick filters (docs/DESIGN.md 10.1): a pill that the Radix
+ * toggle exposes with aria-pressed. Extends components/ui/toggle.tsx.
  */
 export function ChipToggle({ compact = false, className, ...props }: ChipToggleProps) {
   return (
