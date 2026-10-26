@@ -4,11 +4,11 @@ import { expect, test, type Page } from "@playwright/test";
 // The home page of direction C (docs/design-handoff/SPECS.md 3, DECISIONS
 // 2026-10-26), after L1-41 and L1-49. Two modes, like search.spec.ts:
 // - without a database (CI): the hero and its search card (the national
-//   address base simulated), the shortcuts, the savings with the price of the
-//   seed, the steps, the questions, the last banner, the header and the
-//   footer; neither the listings nor the plan cards;
-// - E2E_SEED=1 (local stack or preprod): the listings around Épinay-sur-Orge
-//   and the three plans read from the database.
+//   address base simulated), the shortcuts, the steps, the questions, the
+//   last banner, the header and the footer; neither the listings, nor the
+//   plans, nor the savings (the price of a plan is never in the code);
+// - E2E_SEED=1 (local stack or preprod): the listings around Épinay-sur-Orge,
+//   the savings and the three plans read from the database.
 
 const seeded = process.env.E2E_SEED === "1";
 
@@ -55,9 +55,6 @@ async function simulateAddressBase(page: Page) {
   );
 }
 
-const searchCard = (page: Page) =>
-  page.getByRole("tablist", { name: "Que voulez-vous faire ?" }).locator("..");
-
 test.describe("accueil", () => {
   test("hero : la photo, la pastille, le titre et la carte de recherche sur le premier écran", async ({
     page,
@@ -74,7 +71,7 @@ test.describe("accueil", () => {
     await expect(photo).toBeVisible();
     await expect(photo).toHaveAttribute("alt", "");
     // « Valoriser mon bien » open first, its action on the first screen, at 390 px too.
-    const tabs = page.getByRole("tablist", { name: "Que voulez-vous faire ?" });
+    const tabs = page.getByRole("tablist", { name: "Votre projet" });
     await expect(tabs.getByRole("tab")).toHaveCount(3);
     await expect(tabs.getByRole("tab", { name: "Acheter" })).toHaveAttribute(
       "aria-selected",
@@ -162,6 +159,13 @@ test.describe("accueil", () => {
       return;
     }
     const bar = page.getByRole("search");
+    // The commune at the keyboard: down to the first suggestion, Enter.
+    const where = bar.getByRole("combobox", { name: "Où\u00a0?" });
+    await where.fill("Savi");
+    await where.press("ArrowDown");
+    await expect(where).toHaveAttribute("aria-activedescendant", /.+/);
+    await where.press("Enter");
+    await expect(where).toHaveValue("Savigny-sur-Orge");
     await bar.getByRole("button", { name: /^Type de bien/ }).click();
     await page.getByRole("button", { name: "Maison", exact: true }).click();
     await expect(bar.getByRole("button", { name: /^Type de bien/ })).toContainText("Maison");
@@ -170,6 +174,7 @@ test.describe("accueil", () => {
     await bar.getByRole("button", { name: "Rechercher" }).click();
     await expect(page).toHaveURL(/\/acheter\?/);
     const params = new URL(page.url()).searchParams;
+    expect(params.get("ville")).toBe("savigny-sur-orge");
     expect(params.get("type")).toBe("maison");
     expect(params.get("budget_max")).toBe("400000");
   });
@@ -199,29 +204,6 @@ test.describe("accueil", () => {
       await expect(shortcuts.nth(index)).toHaveAttribute("href", href);
     }
     await expect(shortcuts).toHaveCount(4);
-  });
-
-  test("simulateur : 340 000 € d'abord, l'économie suit le prix choisi", async ({ page }) => {
-    await page.goto("/");
-    const section = page.getByRole("region", { name: "Combien vous économisez avec Leenkey" });
-    const prices = section.getByRole("group", { name: "Prix de vente" });
-    await expect(prices.getByRole("radio")).toHaveCount(4);
-    await expect(prices.getByRole("radio", { name: "340 000 €" })).toBeChecked();
-    // 5 % of 340 000 €, minus Accompagné (990 € in the seed and without the database).
-    const saved = section.getByText("Vous économisez environ").locator("..");
-    await expect(saved).toContainText("16 010 €");
-    await prices.getByText("600 000 €").click();
-    await expect(saved).toContainText("29 010 €");
-    // The arrows move from one price to the next, as native radio buttons.
-    await prices.getByRole("radio", { name: "600 000 €" }).press("ArrowLeft");
-    await expect(prices.getByRole("radio", { name: "450 000 €" })).toBeChecked();
-    await expect(saved).toContainText("21 510 €");
-    await expect(saved).toHaveAttribute("aria-live", "polite");
-    // The hypothesis is said.
-    await expect(section.getByText(/hyp/).filter({ visible: true })).toBeVisible();
-    await expect(section).toContainText(
-      "Les frais d'agence varient selon les agences et les biens.",
-    );
   });
 
   test("étapes, formules, questions et bandeau final", async ({ page }) => {
@@ -363,13 +345,19 @@ test.describe("accueil", () => {
     );
   });
 
-  test("sans base : ni biens ni cartes de formules, la page reste entière", async ({ page }) => {
+  test("sans base : ni biens, ni formules, ni simulateur, la page reste entière", async ({
+    page,
+  }) => {
     test.skip(seeded, "base de seed : voir plus bas");
     await page.goto("/");
     await expect(
       page.getByRole("heading", { name: "Biens à vendre près de chez vous" }),
     ).toHaveCount(0);
     await expect(page.getByText("Notre recommandation")).toHaveCount(0);
+    // Nor the savings: the price of Accompagné is never written in the code.
+    await expect(
+      page.getByRole("heading", { name: "Combien vous économisez avec Leenkey" }),
+    ).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Voir le détail des formules" })).toBeVisible();
   });
 });
@@ -397,9 +385,12 @@ test.describe("accueil (base de seed)", () => {
     const all = page.getByRole("link", { name: /^Voir les \d+( biens)?$/ });
     await expect(all).toHaveAttribute("href", "/acheter?ville=epinay-sur-orge&rayon=10");
     // From 1024 px, the arrows and the counter, the first arrow off at the start.
-    if (!isMobile && (page.viewportSize()?.width ?? 0) >= 1024) {
-      await expect(page.getByRole("button", { name: "Biens précédents" })).toBeDisabled();
-      await expect(page.getByRole("button", { name: "Biens suivants" })).toBeEnabled();
+    if (!isMobile && (page.viewportSize()?.width ?? 0) >= 768) {
+      // Off but in place at the start: the focus is never lost at an end.
+      const previous = page.getByRole("button", { name: "Biens précédents" });
+      await expect(previous).toHaveAttribute("aria-disabled", "true");
+      await page.getByRole("button", { name: "Biens suivants" }).click();
+      await expect(previous).not.toHaveAttribute("aria-disabled");
     }
     // A category filters the cards and the link.
     const categories = page.getByRole("group", { name: "Catégories de biens" });
@@ -420,6 +411,29 @@ test.describe("accueil (base de seed)", () => {
       expect(text).toMatch(/^Maison/m);
     }
     expect(await seriousViolations(page)).toEqual([]);
+  });
+
+  test("simulateur : 340 000 € d'abord, l'économie suit le prix choisi", async ({ page }) => {
+    await page.goto("/");
+    const section = page.getByRole("region", { name: "Combien vous économisez avec Leenkey" });
+    const prices = section.getByRole("group", { name: "Prix de vente" });
+    await expect(prices.getByRole("radio")).toHaveCount(4);
+    await expect(prices.getByRole("radio", { name: "340 000 €" })).toBeChecked();
+    // 5 % of 340 000 €, minus Accompagné (990 € in the seed).
+    const saved = section.getByText("Vous économisez environ").locator("..");
+    await expect(saved).toContainText("16 010 €");
+    await prices.getByText("600 000 €").click();
+    await expect(saved).toContainText("29 010 €");
+    // The arrows move from one price to the next, as native radio buttons.
+    await prices.getByRole("radio", { name: "600 000 €" }).press("ArrowLeft");
+    await expect(prices.getByRole("radio", { name: "450 000 €" })).toBeChecked();
+    await expect(saved).toContainText("21 510 €");
+    await expect(saved).toHaveAttribute("aria-live", "polite");
+    // The hypothesis is said.
+    await expect(section.getByText(/hyp/).filter({ visible: true })).toBeVisible();
+    await expect(section).toContainText(
+      "Les frais d'agence varient selon les agences et les biens.",
+    );
   });
 
   test("les formules et leurs prix viennent de la base, Accompagné mis en avant", async ({

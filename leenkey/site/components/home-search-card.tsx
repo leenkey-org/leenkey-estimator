@@ -35,7 +35,7 @@ export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
   return (
     <Tabs.Root
       defaultValue="valuation"
-      className="relative rounded-[22px] bg-lk-surface px-4 pt-1 pb-4.5 shadow-lk-search md:rounded-lk-3xl md:px-7 md:pt-2 md:pb-7"
+      className="relative rounded-lk-3xl bg-lk-surface px-4 pt-1 pb-4.5 shadow-lk-search md:rounded-lk-3xl md:px-7 md:pt-2 md:pb-7"
     >
       <Tabs.List aria-label={t.label} className="flex border-b border-lk-line md:gap-2">
         {TABS.map(({ value, icon: Icon }) => (
@@ -58,7 +58,14 @@ export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
           </Tabs.Trigger>
         ))}
       </Tabs.List>
-      <Tabs.Content value="valuation" className="pt-4 focus-visible:outline-none md:pt-5.5">
+      {/* Kept mounted: an address typed stays when another tab is chosen. Out of
+          the tab order: Tab goes from the tabs to the field of the panel. */}
+      <Tabs.Content
+        value="valuation"
+        forceMount
+        tabIndex={-1}
+        className="pt-4 data-[state=inactive]:hidden md:pt-5.5"
+      >
         <AddressForm
           label={t.valuation.label}
           action={t.valuation.action}
@@ -72,7 +79,12 @@ export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
           <Points points={t.valuation.points} />
         </p>
       </Tabs.Content>
-      <Tabs.Content value="sell" className="pt-4 focus-visible:outline-none md:pt-5.5">
+      <Tabs.Content
+        value="sell"
+        forceMount
+        tabIndex={-1}
+        className="pt-4 data-[state=inactive]:hidden md:pt-5.5"
+      >
         <AddressForm
           label={t.sell.label}
           action={t.sell.action}
@@ -82,7 +94,12 @@ export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
           {t.sell.note}
         </p>
       </Tabs.Content>
-      <Tabs.Content value="buy" className="pt-4 focus-visible:outline-none md:pt-5.5">
+      <Tabs.Content
+        value="buy"
+        forceMount
+        tabIndex={-1}
+        className="pt-4 data-[state=inactive]:hidden md:pt-5.5"
+      >
         <BuySearchBar />
         {/* Below 768 px, one button: the search page has the filters. */}
         <Link

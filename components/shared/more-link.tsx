@@ -27,7 +27,7 @@ export function MoreLink({
         "group inline-flex min-h-11 items-center gap-1.5 rounded-lk-sm text-lk-compact font-semibold",
         tone === "blue" ? "text-lk-blue" : "text-lk-ink",
         "underline-offset-2 hover:underline",
-        "focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+        "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
         className,
       )}
     >

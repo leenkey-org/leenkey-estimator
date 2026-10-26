@@ -11,7 +11,7 @@ import { getProfile } from "@/core/auth/session";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
-import { FALLBACK_ACCOMPANIED_CENTS } from "../savings";
+import { HOME_SECTION_TITLE } from "../home-styles";
 import { ContactForm } from "./contact-form";
 import { directListingHref } from "./home-hero";
 import { RichText } from "./rich-text";
@@ -19,12 +19,12 @@ import { SavingsSimulator } from "./savings-simulator";
 
 // Sections of the home page of direction C after the hero
 // (docs/design-handoff/SPECS.md 3, items 5 to 11), and the contact section
-// of /contact. Texts: fr.site.home.
+// of /contact. Texts: fr.site.home. The steps, the plans and the questions
+// keep the anchors of the V1 home page (#comment, #tarifs, #faq).
 
 const home = fr.site.home;
 
-/** Title of a section of direction C: 22 px then 28 px, 800, a little wide. */
-const sectionTitle = "text-[1.375rem] leading-tight text-heavy text-lk-ink md:text-[1.75rem]";
+const sectionTitle = HOME_SECTION_TITLE;
 
 /** « Que voulez-vous faire ? »: four shortcuts, two by two on a phone. */
 export async function ShortcutsSection() {
@@ -62,18 +62,21 @@ export async function ShortcutsSection() {
   );
 }
 
-/** Price of the Accompagné plan, from the plans table (reference data). */
-async function accompaniedCents(): Promise<number> {
+/** Price of the Accompagné plan, from the plans table (reference data), or null. */
+async function accompaniedCents(): Promise<number | null> {
   const plans = await activePlans();
-  return (
-    plans?.find((plan) => plan.code === "accompagne")?.priceCents ?? FALLBACK_ACCOMPANIED_CENTS
-  );
+  return plans?.find((plan) => plan.code === "accompagne")?.priceCents ?? null;
 }
 
-/** « Combien vous économisez avec Leenkey »: white, its shapes behind. */
+/**
+ * « Combien vous économisez avec Leenkey »: white, its shapes behind. Left
+ * out without the plans table, as the plan cards: a price is never written
+ * in the code (CLAUDE.md section 5).
+ */
 export async function SavingsSection() {
   const t = home.savings;
   const planCents = await accompaniedCents();
+  if (planCents === null) return null;
   return (
     <section
       aria-labelledby="economies"
@@ -95,12 +98,12 @@ export async function SavingsSection() {
       />
       <div className="mx-auto flex max-w-lk-wide flex-col gap-4 px-4 py-10 md:px-8 md:py-20 lg:flex-row lg:items-center lg:gap-14">
         <div data-reveal="" className="min-w-0 lg:flex-[1_1_440px]">
-          <p className="mb-2 text-lk-caption font-bold tracking-[0.08em] text-lk-blue uppercase md:mb-3 md:text-lk-compact">
+          <p className="mb-2 text-lk-compact font-bold text-lk-blue md:mb-3 md:text-lk-body-lg">
             {t.eyebrow}
           </p>
           <h2
             id="economies"
-            className="text-[1.75rem] leading-[1.1] text-heavy text-lk-ink md:text-[2.75rem] md:leading-[1.06]"
+            className="text-lk-c-feature text-heavy text-lk-ink md:text-lk-c-feature-lg"
           >
             {t.title}
           </h2>
@@ -123,7 +126,11 @@ const STEP_ICONS = [ChartLine, FileText, PenLine] as const;
 export function StepsSection() {
   const t = home.steps;
   return (
-    <section aria-labelledby="etapes" className="mx-auto max-w-lk-wide px-4 pt-12 md:px-8 md:pt-22">
+    <section
+      id="comment"
+      aria-labelledby="etapes"
+      className="mx-auto max-w-lk-wide px-4 pt-12 md:px-8 md:pt-22"
+    >
       <h2 id="etapes" data-reveal="" className={`${sectionTitle} mb-3.5 md:mb-7`}>
         {t.title}
       </h2>
@@ -153,7 +160,7 @@ export function StepsSection() {
                 <p className="text-lk-label font-extrabold text-lk-blue md:hidden">
                   {`${t.label(index + 1)} · ${step.tag}`}
                 </p>
-                <h3 className="text-[1.0625rem] font-extrabold text-lk-ink md:mb-1.5 md:text-[1.25rem]">
+                <h3 className="text-lk-c-card font-extrabold text-lk-ink md:mb-1.5 md:text-lk-c-card-lg">
                   {step.title}
                 </h3>
                 <p className="text-lk-compact text-lk-ink-2 md:text-lk-body-lg">{step.text}</p>
@@ -172,6 +179,7 @@ export async function PlansSection() {
   const plans = await activePlans();
   return (
     <section
+      id="tarifs"
       aria-labelledby="formules"
       className="mx-auto max-w-lk-wide px-4 pt-12 md:px-8 md:pt-22"
     >
@@ -181,7 +189,7 @@ export async function PlansSection() {
         </h2>
         <Link
           href={ROUTES.pricing}
-          className="text-lk-compact font-bold text-lk-blue underline-offset-3 hover:underline md:text-lk-body-lg"
+          className="inline-flex min-h-11 items-center text-lk-compact font-bold text-lk-blue underline-offset-3 hover:underline md:text-lk-body-lg"
         >
           {t.all}
         </Link>
@@ -216,7 +224,11 @@ export async function PlansSection() {
 export function HomeFaqSection() {
   const t = home.faq;
   return (
-    <section aria-labelledby="questions" className="mx-auto max-w-220 px-4 pt-12 md:px-8 md:pt-22">
+    <section
+      id="faq"
+      aria-labelledby="questions"
+      className="mx-auto max-w-220 px-4 pt-12 md:px-8 md:pt-22"
+    >
       <h2 id="questions" data-reveal="" className={`${sectionTitle} mb-2 md:mb-5`}>
         {t.title}
       </h2>
@@ -233,7 +245,7 @@ export function HomeFaqSection() {
       />
       <Link
         href={ROUTES.faq}
-        className="mt-5 inline-block text-lk-body font-bold text-lk-blue underline-offset-3 hover:underline"
+        className="mt-3 inline-flex min-h-11 items-center text-lk-body font-bold text-lk-blue underline-offset-3 hover:underline"
       >
         {t.all}
       </Link>
@@ -248,7 +260,7 @@ export function FinalBanner() {
     <section aria-labelledby="pret" className="mx-auto max-w-lk-wide px-4 pt-10 md:px-8 md:pt-22">
       <div
         data-reveal=""
-        className="relative isolate flex flex-col gap-4 overflow-hidden rounded-[22px] border border-lk-line bg-lk-surface px-5.5 py-7 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-8 md:rounded-lk-4xl md:p-16"
+        className="relative isolate flex flex-col gap-4 overflow-hidden rounded-lk-3xl border border-lk-line bg-lk-surface px-5.5 py-7 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-8 md:rounded-lk-4xl md:p-16"
       >
         <DecorativeShapes
           shapes={[
@@ -265,10 +277,7 @@ export function FinalBanner() {
           ]}
         />
         <div className="max-w-155">
-          <h2
-            id="pret"
-            className="text-[1.625rem] leading-[1.1] text-heavy text-lk-ink md:text-[2.5rem] md:leading-[1.08]"
-          >
+          <h2 id="pret" className="text-lk-c-banner text-heavy text-lk-ink md:text-lk-c-banner-lg">
             {t.title}
           </h2>
           <p className="mt-2 text-lk-body text-lk-ink-2 md:mt-3 md:text-lk-lead-lg">{t.text}</p>

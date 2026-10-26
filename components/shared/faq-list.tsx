@@ -75,7 +75,7 @@ export function FaqList({
                 "flex min-h-14 cursor-pointer list-none items-center justify-between gap-4.5 rounded-lk-lg px-5 py-5 md:px-6 md:py-5.5 [&::-webkit-details-marker]:hidden",
                 "text-lk-h3 font-semibold lg:text-lk-h3-lg",
                 dark ? "text-white" : "text-lk-ink",
-                "focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2",
+                "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2",
                 dark ? "focus-visible:outline-white" : "focus-visible:outline-lk-blue",
               )}
             >

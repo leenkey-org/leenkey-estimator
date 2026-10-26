@@ -496,8 +496,8 @@ test.describe("ancres sous les en-têtes collants", () => {
 
   for (const [path, id] of [
     ["/investir", "formulaire"],
-    // The plans of the home page of direction C, the form of /contact.
-    ["/", "formules"],
+    // An anchor of the V1 home page, kept by direction C; the form of /contact.
+    ["/", "tarifs"],
     ["/contact", "contact"],
   ] as const) {
     test(`${path}#${id} au chargement de la page`, async ({ page }) => {

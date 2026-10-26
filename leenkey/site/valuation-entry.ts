@@ -8,7 +8,7 @@ export type ValuationAddress = {
   label: string;
   postalCode: string;
   city: string;
-  /** « 91 », from the context of the national address base. */
+  /** « 91 », from the postal code (the engine of the estimator reads it). */
   department: string;
 };
 
@@ -16,43 +16,54 @@ export const VALUATION_PARAMS = {
   label: "adresse",
   postalCode: "cp",
   city: "ville",
-  department: "dep",
 } as const;
 
-/** An address of the national base: a label, 5 digits, a city, a department. */
-function complete(address: ValuationAddress): boolean {
-  return (
-    address.label.length >= 3 &&
-    address.label.length <= 200 &&
-    /^\d{5}$/.test(address.postalCode) &&
-    address.city.length > 0 &&
-    address.city.length <= 100 &&
-    /^(\d{2,3}|2[AB])$/.test(address.department)
-  );
+/**
+ * The department of a French postal code: its two first digits, three for
+ * the overseas departments (971 to 976), 2A or 2B for Corsica.
+ */
+export function departmentOf(postalCode: string): string | null {
+  if (!/^\d{5}$/.test(postalCode)) return null;
+  if (postalCode.startsWith("97")) return postalCode.slice(0, 3);
+  if (postalCode.startsWith("20")) return Number(postalCode) < 20200 ? "2A" : "2B";
+  if (postalCode.startsWith("00")) return null;
+  return postalCode.slice(0, 2);
 }
 
 /**
- * « /estimer?adresse=…&cp=…&ville=…&dep=… » for an address of the national
- * base, « /estimer » otherwise (the estimator asks it again).
+ * An address of the national base: a label that ends with its postal code
+ * and its city, the department taken from the postal code, never from the
+ * address of the page (it sets the prices of the estimator).
+ */
+function whole(label: string, postalCode: string, city: string): ValuationAddress | null {
+  const department = departmentOf(postalCode);
+  if (!department || label.length < 3 || label.length > 200) return null;
+  if (city.length === 0 || city.length > 100 || !label.endsWith(`${postalCode} ${city}`)) {
+    return null;
+  }
+  return { label, postalCode, city, department };
+}
+
+/**
+ * « /estimer?adresse=…&cp=…&ville=… » for an address of the national base,
+ * « /estimer » otherwise (the estimator asks it again).
  */
 export function valuationHref(address: ValuationAddress | null): string {
-  if (!address || !complete(address)) return "/estimer";
-  const params = new URLSearchParams();
-  for (const [key, name] of Object.entries(VALUATION_PARAMS) as Array<
-    [keyof ValuationAddress, string]
-  >) {
-    params.set(name, address[key]);
-  }
+  const checked = address ? whole(address.label, address.postalCode, address.city) : null;
+  if (!checked) return "/estimer";
+  const params = new URLSearchParams({
+    [VALUATION_PARAMS.label]: checked.label,
+    [VALUATION_PARAMS.postalCode]: checked.postalCode,
+    [VALUATION_PARAMS.city]: checked.city,
+  });
   return `/estimer?${params.toString()}`;
 }
 
 /** The address given to /estimer, or null when it is not a whole one. */
 export function readValuationAddress(params: URLSearchParams): ValuationAddress | null {
-  const address = {
-    label: params.get(VALUATION_PARAMS.label)?.trim() ?? "",
-    postalCode: params.get(VALUATION_PARAMS.postalCode)?.trim() ?? "",
-    city: params.get(VALUATION_PARAMS.city)?.trim() ?? "",
-    department: params.get(VALUATION_PARAMS.department)?.trim() ?? "",
-  };
-  return complete(address) ? address : null;
+  return whole(
+    params.get(VALUATION_PARAMS.label)?.trim() ?? "",
+    params.get(VALUATION_PARAMS.postalCode)?.trim() ?? "",
+    params.get(VALUATION_PARAMS.city)?.trim() ?? "",
+  );
 }

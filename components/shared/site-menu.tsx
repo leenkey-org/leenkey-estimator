@@ -34,7 +34,7 @@ export type SiteMenuProps = {
 const rowClass = cn(
   "flex min-h-12 items-center border-b border-lk-line text-lk-body-lg font-medium",
   "transition-colors duration-140 ease-out-lk hover:text-lk-blue",
-  "focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+  "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
 );
 
 /**
@@ -88,7 +88,7 @@ export function SiteMenu({
     >
       <Link
         href={homeHref}
-        className="inline-flex h-11 items-center rounded-lk-sm focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
+        className="inline-flex h-11 items-center rounded-lk-sm focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
       >
         <Logo className="h-7" />
       </Link>
@@ -125,7 +125,7 @@ export function SiteMenu({
               <Link
                 href={homeHref}
                 onClick={close}
-                className="inline-flex h-11 items-center rounded-lk-sm focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
+                className="inline-flex h-11 items-center rounded-lk-sm focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
               >
                 <Logo className="h-7" />
               </Link>

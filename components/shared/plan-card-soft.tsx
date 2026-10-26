@@ -30,7 +30,7 @@ export function PlanCardSoft({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 rounded-[18px] border bg-lk-surface p-4.5 md:flex-col md:items-stretch md:justify-start md:gap-2.5 md:rounded-lk-3xl md:p-7.5",
+        "flex items-center justify-between gap-3 rounded-lk-2xl border bg-lk-surface p-4.5 md:flex-col md:items-stretch md:justify-start md:gap-2.5 md:rounded-lk-3xl md:p-7.5",
         featured ? "border-lk-blue shadow-lk-featured" : "border-lk-line",
         className,
       )}
@@ -46,13 +46,13 @@ export function PlanCardSoft({
         >
           {tag}
         </span>
-        <Name className="text-[1.125rem] font-extrabold text-lk-ink md:text-[1.375rem]">
+        <Name className="text-lk-c-plan font-extrabold text-lk-ink md:text-lk-c-plan-lg">
           {name}
         </Name>
         <p className="text-lk-secondary text-lk-ink-2 md:min-h-13 md:text-lk-body">{text}</p>
       </div>
       <div className="flex shrink-0 flex-col items-end md:items-start md:gap-2.5">
-        <p className="text-[1.375rem] leading-tight tabular text-heavy text-lk-ink md:text-[2.5rem]">
+        <p className="text-lk-c-price tabular text-heavy text-lk-ink md:text-lk-c-price-lg">
           {price}
         </p>
         <p className="hidden text-lk-compact text-lk-ink-2 md:block">{note}</p>

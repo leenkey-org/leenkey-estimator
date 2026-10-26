@@ -28,6 +28,8 @@ export async function HomeHero() {
   const signedIn = profile !== null;
   return (
     <section
+      // The anchors of the V1 home page still land on their part (#valoriser).
+      id="valoriser"
       aria-labelledby="accueil-titre"
       className="mx-auto max-w-lk-wide px-3 pt-3 md:px-8 md:pt-6"
     >
@@ -44,10 +46,12 @@ export async function HomeHero() {
         ) : null}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,24,64,0.62)_0%,rgba(10,24,64,0.28)_55%,rgba(10,24,64,0)_100%)] lg:bg-[linear-gradient(90deg,rgba(10,24,64,0.62)_0%,rgba(10,24,64,0.3)_50%,rgba(10,24,64,0)_100%)]"
+          // Darker than the mock-up where the text sits: the lead keeps 4.5:1
+          // even over the lightest stone of the photo (navy at 66 % at least).
+          className="absolute inset-0 bg-linear-to-b from-lk-navy/75 via-lk-navy/68 via-60% to-lk-navy/10 lg:bg-linear-to-r lg:from-lk-navy/75 lg:via-lk-navy/66 lg:via-48% lg:to-transparent lg:to-90%"
         />
         <div className="relative max-w-170 px-5 pt-6 text-white md:px-10 md:pt-10 lg:px-16 lg:pt-15">
-          <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/18 py-1.5 pr-3.5 pl-2 text-lk-label font-semibold lg:mb-4.5 lg:bg-white/16 lg:text-lk-compact">
+          <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-lk-navy/55 py-1.5 pr-3.5 pl-2 text-lk-label font-semibold lg:mb-4.5 lg:text-lk-compact">
             <span className="flex size-5.5 items-center justify-center rounded-full bg-lk-blue">
               <Check aria-hidden="true" strokeWidth={2.6} className="size-3.25" />
             </span>
@@ -55,11 +59,11 @@ export async function HomeHero() {
           </p>
           <h1
             id="accueil-titre"
-            className="text-[2.125rem] leading-[1.06] text-heavy md:text-[2.75rem] lg:text-[3.75rem] lg:leading-[1.03]"
+            className="text-lk-c-hero text-heavy md:text-lk-c-hero-md lg:text-lk-c-hero-lg"
           >
             {t.hero.title}
           </h1>
-          <p className="mt-2.5 max-w-125 text-lk-body text-white/94 lg:mt-4.5 lg:text-[1.1875rem] lg:leading-normal">
+          <p className="mt-2.5 max-w-125 text-lk-body text-white/94 lg:mt-4.5 lg:text-lk-c-lead-lg">
             <span className="md:hidden">{t.hero.leadShort}</span>
             <span className="hidden md:inline">{t.hero.lead}</span>
           </p>

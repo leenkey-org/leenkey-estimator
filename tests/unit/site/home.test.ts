@@ -181,8 +181,5 @@ describe("pages of the site (L1-42)", () => {
     const faq = texts(site.faqPage.items[0].answer).join("");
     expect(faq).toContain(`Accompagné à ${accompagne} TTC`);
     expect(faq).toContain(`Sérénité à ${serenite} TTC`);
-    // The savings fall back on the price of the seed without the database.
-    const { FALLBACK_ACCOMPANIED_CENTS } = await import("@/leenkey/site/savings");
-    expect(FALLBACK_ACCOMPANIED_CENTS).toBe(price("accompagne"));
   });
 });

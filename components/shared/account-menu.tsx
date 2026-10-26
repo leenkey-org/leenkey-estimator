@@ -78,7 +78,7 @@ export function AccountMenu({
   const [signingOut, startSignOut] = useTransition();
   const onDark = variant !== "avatar";
   const triggerFocus = cn(
-    "focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2",
+    "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2",
     onDark ? "focus-visible:outline-white" : "focus-visible:outline-lk-blue",
   );
 

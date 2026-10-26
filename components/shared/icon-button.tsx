@@ -26,8 +26,8 @@ export const iconButtonVariants = cva(
         // The round button of direction C (SPECS.md 2): arrows of a carousel,
         // the microphone; disabled, its icon takes the colour of « Désactivé ».
         round: [
-          "rounded-full border border-lk-line-strong bg-lk-surface text-lk-ink not-disabled:hover:bg-lk-sand",
-          "disabled:text-lk-disabled disabled:opacity-100",
+          "rounded-full border border-lk-line-strong bg-lk-surface text-lk-ink not-disabled:not-aria-disabled:hover:bg-lk-sand",
+          "disabled:text-lk-disabled disabled:opacity-100 aria-disabled:cursor-default aria-disabled:text-lk-disabled",
         ],
       },
       size: {

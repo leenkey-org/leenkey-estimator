@@ -24,10 +24,9 @@ export function DecorativeShapes({ shapes }: { shapes: readonly DecorativeShape[
           data-shape={shape.kind}
           className={cn(
             "pointer-events-none absolute -z-10 rounded-full",
-            shape.kind === "halo" &&
-              "bg-[radial-gradient(circle,rgba(17,86,252,0.1)_0%,rgba(17,86,252,0)_70%)]",
-            shape.kind === "ring" && "border-2 border-[rgba(17,86,252,0.14)]",
-            shape.kind === "dot" && "bg-[rgba(17,86,252,0.3)]",
+            shape.kind === "halo" && "bg-radial from-lk-blue/10 to-transparent to-70%",
+            shape.kind === "ring" && "border-2 border-lk-blue/14",
+            shape.kind === "dot" && "bg-lk-blue/30",
             shape.slow ? "lk-float-slow" : "lk-float",
             shape.className,
           )}

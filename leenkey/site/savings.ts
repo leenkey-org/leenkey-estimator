@@ -10,9 +10,6 @@ export const AGENCY_RATE_BASIS_POINTS = 500;
 export const SAVINGS_PRICES_EUROS = [250_000, 340_000, 450_000, 600_000] as const;
 export const DEFAULT_SAVINGS_PRICE_EUROS = 340_000;
 
-/** Accompagné when the plans table cannot be read (990 € TTC, CLAUDE.md section 1). */
-export const FALLBACK_ACCOMPANIED_CENTS = 99_000;
-
 export type Savings = {
   agencyCents: number;
   savedCents: number;

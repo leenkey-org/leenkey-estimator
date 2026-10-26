@@ -47,7 +47,7 @@ export function LinkTabs({
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "relative inline-flex min-h-11 items-center rounded-lk-sm text-lk-compact whitespace-nowrap",
-                  "focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-lk-blue",
+                  "focus-visible:outline-solid focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-lk-blue",
                   active
                     ? "font-semibold text-lk-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-lk-blue"
                     : "font-medium text-lk-ink-3 hover:text-lk-ink",

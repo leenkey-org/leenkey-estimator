@@ -246,8 +246,6 @@ export function LeenkeyWizard() {
       // page cleaned so that it is read once.
       const fromHome = readValuationAddress(new URLSearchParams(window.location.search));
       if (fromHome) {
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(DASHBOARD_KEY);
         setForm({
           ...initialForm,
           adresse: fromHome.label,
@@ -257,6 +255,12 @@ export function LeenkeyWizard() {
         });
         window.history.replaceState(window.history.state, "", window.location.pathname);
         setHydrated(true);
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(DASHBOARD_KEY);
+        } catch {
+          /* storage blocked: the analysis goes on without it */
+        }
         return;
       }
       // 1. Restore dashboard if exists (priorité — F5 sur la page résultat)

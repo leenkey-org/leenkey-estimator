@@ -89,7 +89,7 @@ export function NotificationItem({
             frame,
             "transition-colors duration-140 ease-out-lk",
             unread ? "hover:bg-lk-blue-line" : "hover:bg-lk-stone-2",
-            "focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-lk-blue",
+            "focus-visible:outline-solid focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-lk-blue",
           )}
         >
           {content}

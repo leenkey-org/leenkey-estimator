@@ -3,21 +3,18 @@ import { buyerSignUpHref } from "@/leenkey/listings/presentation";
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import { listingHref } from "@/leenkey/search/cards";
 import { HOME_LISTINGS_FILTERS, homeListings } from "@/leenkey/search/queries";
-import { parisDaysAgo } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { searchHref } from "@/lib/validations/search";
 import {
   categoryFilters,
   HOME_CATEGORIES,
+  isNewListing,
   listingCategories,
   type HomeCategory,
 } from "../home-categories";
 import { HomeListingsCarousel, type CarouselListing } from "./home-listings-carousel";
 
 const t = fr.site.home.listings;
-
-/** « Nouveau »: online for less than seven days (docs/design-handoff/SPECS.md 4.4). */
-const NEW_DAYS = 7;
 
 /**
  * « Biens à vendre près de chez vous » (docs/design-handoff/SPECS.md 3, item
@@ -43,8 +40,7 @@ export async function HomeListings() {
     dpe: item.dpe,
     // Decorative: the card says what the photo shows.
     photos: (photos[item.id] ?? []).map((photo) => ({ src: photoUrl(photo.path), alt: "" })),
-    badge:
-      item.publishedAt && parisDaysAgo(item.publishedAt, now) < NEW_DAYS ? t.badgeNew : undefined,
+    badge: isNewListing(item.publishedAt, now) ? t.badgeNew : undefined,
     categories: listingCategories(item),
     favorite: saved === null ? null : saved.has(item.id),
     // The sign-up comes back to the home page.

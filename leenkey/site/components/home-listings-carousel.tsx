@@ -19,6 +19,7 @@ import { formatInteger } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import { HOME_CATEGORIES, type HomeCategory } from "../home-categories";
+import { HOME_SECTION_TITLE } from "../home-styles";
 
 const t = fr.site.home.listings;
 
@@ -84,18 +85,22 @@ export function HomeListingsCarousel({
     measure();
   }, [category, measure]);
 
+  // Observed again when the list comes back after an empty category.
+  const empty = shown.length === 0;
   useEffect(() => {
     const list = track.current;
-    if (!list) return;
+    if (!list || empty) return;
     const observer = new ResizeObserver(measure);
     observer.observe(list);
     return () => observer.disconnect();
-  }, [measure]);
+  }, [measure, empty]);
 
   function turn(direction: 1 | -1) {
     const list = track.current;
     if (!list) return;
-    list.scrollBy({ left: direction * list.clientWidth, behavior: "smooth" });
+    // Smooth, unless the visitor asked for less motion (scrollBy ignores the CSS rule).
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    list.scrollBy({ left: direction * list.clientWidth, behavior: smooth ? "smooth" : "auto" });
   }
 
   const allLabel = count === null ? t.browse : t.all(count, formatInteger(count));
@@ -135,10 +140,7 @@ export function HomeListingsCarousel({
 
       <div className="flex items-end justify-between gap-4 px-4 pt-5.5 pb-3.5 md:px-0 md:pt-7 md:pb-5">
         <div>
-          <h2
-            id="pres-de-chez-vous"
-            className="text-[1.375rem] leading-tight text-heavy text-lk-ink md:text-[1.75rem]"
-          >
+          <h2 id="pres-de-chez-vous" className={HOME_SECTION_TITLE}>
             {t.title}
           </h2>
           <p className="mt-0.5 text-lk-compact text-lk-ink-3 md:mt-1.5 md:text-lk-body-lg">
@@ -148,13 +150,13 @@ export function HomeListingsCarousel({
         <div className="flex shrink-0 items-center gap-3">
           <Link
             href={links[category]}
-            className="py-2.5 text-lk-compact font-bold text-lk-blue underline-offset-3 hover:underline md:text-lk-body-lg"
+            className="inline-flex min-h-11 items-center text-lk-compact font-bold text-lk-blue underline-offset-3 hover:underline md:text-lk-body-lg"
           >
             <span className="md:hidden">{allShort}</span>
             <span className="hidden md:inline">{allLabel}</span>
           </Link>
           {pages > 1 ? (
-            <div className="hidden items-center gap-3 lg:flex">
+            <div className="hidden items-center gap-3 md:flex">
               <span
                 className="min-w-10 text-center text-lk-compact tabular text-lk-ink-2"
                 aria-hidden="true"
@@ -165,15 +167,16 @@ export function HomeListingsCarousel({
                 icon={ChevronLeft}
                 variant="round"
                 aria-label={t.previous}
-                disabled={page === 0}
-                onClick={() => turn(-1)}
+                // Off but in place at the ends: the focus stays on it.
+                aria-disabled={page === 0 || undefined}
+                onClick={() => page > 0 && turn(-1)}
               />
               <IconButton
                 icon={ChevronRight}
                 variant="round"
                 aria-label={t.next}
-                disabled={page >= pages - 1}
-                onClick={() => turn(1)}
+                aria-disabled={page >= pages - 1 || undefined}
+                onClick={() => page < pages - 1 && turn(1)}
               />
             </div>
           ) : null}

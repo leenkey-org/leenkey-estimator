@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState, type ReactNode } from "react";
+import { useId, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import * as Popover from "@radix-ui/react-popover";
 import { Building2, Check, House, LandPlot, LayoutGrid, Search } from "lucide-react";
@@ -36,8 +36,9 @@ const optionClassName =
 /**
  * The segmented bar of the « Acheter » tab, from 768 px (docs/design-handoff/
  * SPECS.md 2): « Où ? | Type de bien | Budget max » in one pill, then
- * « Rechercher ». The place suggests the communes of the launch zone; the
- * type and the budget open a small panel each. The search page takes them
+ * « Rechercher ». The place suggests the communes of the launch zone (a
+ * combobox: arrows, Enter, Escape); the type and the budget open a small
+ * panel each. The search page takes them
  * over (its own filters for the rest).
  */
 export function BuySearchBar() {
@@ -46,9 +47,38 @@ export function BuySearchBar() {
   const [place, setPlace] = useState("");
   const [placeSlug, setPlaceSlug] = useState<string | undefined>(undefined);
   const [placeOpen, setPlaceOpen] = useState(false);
+  const [active, setActive] = useState(-1);
   const [type, setType] = useState<BuyType>(null);
   const [budget, setBudget] = useState<number | null>(null);
   const suggestions = useMemo(() => suggestCommunes(place, 6), [place]);
+  const listId = `${id}-communes`;
+  const expanded = placeOpen && suggestions.length > 0;
+
+  function choose(commune: (typeof suggestions)[number]) {
+    setPlace(commune.name);
+    setPlaceSlug(commune.slug);
+    setPlaceOpen(false);
+    setActive(-1);
+  }
+
+  function onPlaceKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      if (suggestions.length === 0) return;
+      event.preventDefault();
+      setPlaceOpen(true);
+      const step = event.key === "ArrowDown" ? 1 : -1;
+      setActive((current) => (current + step + suggestions.length) % suggestions.length);
+    } else if (event.key === "Enter" && expanded && active >= 0) {
+      // The commune, not the search yet.
+      event.preventDefault();
+      const commune = suggestions[active];
+      if (commune) choose(commune);
+    } else if (event.key === "Escape" && expanded) {
+      event.preventDefault();
+      setPlaceOpen(false);
+      setActive(-1);
+    }
+  }
 
   function search() {
     const location = placeSlug ?? locationFromText(place);
@@ -73,7 +103,7 @@ export function BuySearchBar() {
       }}
       className="hidden items-center rounded-full border border-lk-line-strong bg-lk-surface py-1.5 pr-1.5 shadow-lk-field md:flex"
     >
-      <Popover.Root open={placeOpen && suggestions.length > 0} onOpenChange={setPlaceOpen}>
+      <Popover.Root open={expanded} onOpenChange={setPlaceOpen}>
         <Popover.Anchor asChild>
           <label
             htmlFor={`${id}-place`}
@@ -85,10 +115,17 @@ export function BuySearchBar() {
               value={place}
               placeholder={t.wherePlaceholder}
               autoComplete="off"
+              role="combobox"
+              aria-expanded={expanded}
+              aria-controls={listId}
+              aria-autocomplete="list"
+              aria-activedescendant={expanded && active >= 0 ? `${listId}-${active}` : undefined}
+              onKeyDown={onPlaceKeyDown}
               onChange={(event) => {
                 setPlace(event.target.value);
                 setPlaceSlug(undefined);
                 setPlaceOpen(true);
+                setActive(-1);
               }}
               onFocus={() => setPlaceOpen(true)}
               className="block w-full bg-transparent text-lk-body text-lk-ink outline-none placeholder:text-lk-ink-3"
@@ -100,31 +137,38 @@ export function BuySearchBar() {
             align="start"
             sideOffset={10}
             onOpenAutoFocus={(event) => event.preventDefault()}
-            aria-label={t.suggestions}
             className={cn(panelClassName, "w-80")}
           >
-            <ul>
-              {suggestions.map((commune) => (
-                <li key={commune.slug}>
-                  <button
-                    type="button"
-                    className={optionClassName}
-                    onClick={() => {
-                      setPlace(commune.name);
-                      setPlaceSlug(commune.slug);
-                      setPlaceOpen(false);
-                    }}
+            <ul id={listId} role="listbox" aria-label={t.suggestions}>
+              {suggestions.map((commune, index) => (
+                <li
+                  key={commune.slug}
+                  id={`${listId}-${index}`}
+                  role="option"
+                  aria-selected={index === active}
+                  // Before the blur of the field, which would close the list.
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    choose(commune);
+                  }}
+                  className={cn(
+                    optionClassName,
+                    "cursor-pointer",
+                    index === active && "bg-lk-blue-tint",
+                  )}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-lk-lg bg-lk-blue-tint text-lk-blue"
                   >
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lk-lg bg-lk-blue-tint text-lk-blue">
-                      <Search aria-hidden="true" className="size-4" />
+                    <Search aria-hidden="true" className="size-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold">{commune.name}</span>
+                    <span className="block text-lk-secondary text-lk-ink-3">
+                      {commune.postalCodes.join(", ")}
                     </span>
-                    <span className="min-w-0">
-                      <span className="block truncate font-semibold">{commune.name}</span>
-                      <span className="block text-lk-secondary text-lk-ink-3">
-                        {commune.postalCodes.join(", ")}
-                      </span>
-                    </span>
-                  </button>
+                  </span>
                 </li>
               ))}
             </ul>

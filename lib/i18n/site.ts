@@ -45,7 +45,8 @@ export const site = {
       leadShort: "Vendez sans agence, accompagné à chaque étape.",
     },
     search: {
-      label: `Que voulez-vous faire${NBSP}?`,
+      // Not « Que voulez-vous faire ? »: the title of the shortcuts under it.
+      label: "Votre projet",
       tabs: { buy: "Acheter", sell: "Vendre", valuation: "Valoriser mon bien" },
       // The labels of the tabs below 768 px, three in the width of a phone.
       tabsShort: { buy: "Acheter", sell: "Vendre", valuation: "Valoriser" },

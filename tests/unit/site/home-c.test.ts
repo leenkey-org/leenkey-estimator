@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   categoryFilters,
   HOME_CATEGORIES,
+  isNewListing,
   listingCategories,
 } from "@/leenkey/site/home-categories";
 import {
@@ -10,7 +11,7 @@ import {
   SAVINGS_PRICES_EUROS,
   savings,
 } from "@/leenkey/site/savings";
-import { readValuationAddress, valuationHref } from "@/leenkey/site/valuation-entry";
+import { departmentOf, readValuationAddress, valuationHref } from "@/leenkey/site/valuation-entry";
 import { fr } from "@/lib/i18n/fr";
 import { parseSearchParams, searchHref } from "@/lib/validations/search";
 
@@ -69,6 +70,16 @@ describe("categories of the listings", () => {
     expect(listingCategories({ type: "autre", hasGarden: null, hasParking: null })).toEqual([]);
   });
 
+  it("« Nouveau »: online for less than seven days of Paris", () => {
+    const now = new Date("2026-10-26T10:00:00Z");
+    expect(isNewListing("2026-10-25T08:00:00Z", now)).toBe(true);
+    // The days of Paris: 20 October at 00:30 there is six days back, the
+    // 19th at 23:30 seven.
+    expect(isNewListing("2026-10-19T22:30:00Z", now)).toBe(true);
+    expect(isNewListing("2026-10-19T21:30:00Z", now)).toBe(false);
+    expect(isNewListing(null, now)).toBe(false);
+  });
+
   it("no category without its data (« Plain-pied », « Proche gare » wait)", () => {
     expect(Object.keys(home.listings.category)).toEqual([...HOME_CATEGORIES]);
   });
@@ -96,15 +107,32 @@ describe("the address of the « Valoriser » tab, into the estimator", () => {
 
   it("an address that is not a whole one is not read", () => {
     const params = (values: Record<string, string>) => new URLSearchParams(values);
-    const whole = { adresse: chosen.label, cp: "91360", ville: chosen.city, dep: "91" };
+    const whole = { adresse: chosen.label, cp: "91360", ville: chosen.city };
     expect(readValuationAddress(params(whole))).toEqual(chosen);
-    expect(readValuationAddress(params({ ...whole, dep: "2A" }))?.department).toBe("2A");
     expect(readValuationAddress(params({ ...whole, cp: "9136" }))).toBeNull();
     expect(readValuationAddress(params({ ...whole, ville: "" }))).toBeNull();
-    expect(readValuationAddress(params({ ...whole, dep: "<b>" }))).toBeNull();
     expect(readValuationAddress(params({ ...whole, adresse: "ab" }))).toBeNull();
     expect(readValuationAddress(params({ ...whole, adresse: "x".repeat(201) }))).toBeNull();
     expect(readValuationAddress(params({}))).toBeNull();
+    // The label must end with its postal code and its city.
+    expect(readValuationAddress(params({ ...whole, cp: "75011" }))).toBeNull();
+  });
+
+  it("the department comes from the postal code, never from the address of the page", () => {
+    // A department given by a link is ignored: the prices of Paris never reach Épinay.
+    const params = new URLSearchParams({
+      adresse: chosen.label,
+      cp: "91360",
+      ville: chosen.city,
+      dep: "75",
+    });
+    expect(readValuationAddress(params)?.department).toBe("91");
+    expect(departmentOf("75011")).toBe("75");
+    expect(departmentOf("20090")).toBe("2A");
+    expect(departmentOf("20600")).toBe("2B");
+    expect(departmentOf("97400")).toBe("974");
+    expect(departmentOf("00100")).toBeNull();
+    expect(departmentOf("9136")).toBeNull();
   });
 });
 

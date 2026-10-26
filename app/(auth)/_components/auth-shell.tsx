@@ -60,7 +60,7 @@ export function AuthLink({ href, children }: { href: string; children: ReactNode
   return (
     <Link
       href={href}
-      className="rounded-lk-sm font-semibold text-lk-blue underline underline-offset-2 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
+      className="rounded-lk-sm font-semibold text-lk-blue underline underline-offset-2 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
     >
       {children}
     </Link>

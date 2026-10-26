@@ -33,7 +33,7 @@ export function ShortcutCard({
         className,
       )}
     >
-      <span className="flex size-10 items-center justify-center rounded-lk-lg bg-lk-blue-tint text-lk-blue md:size-12 md:rounded-[14px]">
+      <span className="flex size-10 items-center justify-center rounded-lk-lg bg-lk-blue-tint text-lk-blue md:size-12 md:rounded-lk-xl">
         <Icon aria-hidden="true" strokeWidth={1.8} className="size-5.5 md:size-6" />
       </span>
       <span className="flex flex-col gap-1">

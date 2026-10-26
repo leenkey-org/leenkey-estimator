@@ -1,4 +1,5 @@
 import type { SearchListing } from "@/leenkey/search/queries";
+import { parisDaysAgo } from "@/lib/format";
 import type { SearchFilters } from "@/lib/validations/search";
 
 // The categories of « Biens à vendre près de chez vous » (docs/design-handoff/
@@ -43,4 +44,11 @@ export function listingCategories(
   if (listing.hasGarden) categories.push("jardin");
   if (listing.hasParking) categories.push("parking");
   return categories;
+}
+
+/** « Nouveau »: online for less than seven days, in days of Paris (docs/design-handoff/SPECS.md 4.4). */
+export const NEW_LISTING_DAYS = 7;
+
+export function isNewListing(publishedAt: string | null, now: Date): boolean {
+  return publishedAt !== null && parisDaysAgo(publishedAt, now) < NEW_LISTING_DAYS;
 }

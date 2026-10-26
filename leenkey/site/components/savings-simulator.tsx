@@ -80,7 +80,7 @@ export function SavingsSimulator({ accompaniedCents }: { accompaniedCents: numbe
           <span className="text-lk-compact font-bold text-lk-ink md:text-lk-body-lg">
             {t.saved}
           </span>
-          <span className="text-[1.5rem] leading-none font-extrabold tabular text-lk-blue-dark text-heavy md:text-[2.25rem]">
+          <span className="text-lk-c-amount font-extrabold tabular text-lk-blue-dark text-heavy md:text-lk-c-amount-lg">
             {formatPrice(result.savedCents)}
           </span>
         </p>

@@ -502,7 +502,7 @@ export function InvestFaqSection() {
 
 /** A direct way to Cédric on navy: a glass card, its icon in its colour. */
 const direct =
-  "flex min-h-18 items-center gap-4 rounded-lk-xl border border-white/12 bg-white/[0.06] p-4 text-white transition-colors hover:border-white/30 hover:bg-white/10 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white md:p-5";
+  "flex min-h-18 items-center gap-4 rounded-lk-xl border border-white/12 bg-white/[0.06] p-4 text-white transition-colors hover:border-white/30 hover:bg-white/10 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white md:p-5";
 
 /**
  * #formulaire, on navy as in the V1: WhatsApp and email in glass cards (the
