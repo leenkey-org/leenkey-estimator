@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-26 · L1-55 · PR #PRNUM · Fiches de biens façon Airbnb
+### 2026-10-26 · L1-55 · PR #53 · Fiches de biens façon Airbnb
 - Modifié : les résultats de `/acheter` prennent les cartes de l'accueil, la photo d'abord. Jusqu'à cinq photos par bien tournent d'un glissement du doigt sur téléphone, avec des flèches au survol en desktop. Le cadre devient bleu au survol et à la pression, avec « Nouveau » pour un bien en ligne depuis moins de 7 jours. Une colonne sur téléphone, deux ensuite.
 - Modifié : plus de gris sur les fiches. Les chiffres clés sont en bleu Leenkey clair, sur l'annonce comme sur la fiche du vendeur et le Cockpit. Le cœur de la colonne du prix et les tuiles du conseiller sont bleu clair aussi. Les atouts de la `PropertyCard` large passent en pilules bleues (catalogue `/design` seulement : la recherche ne s'en sert plus).
 - Modifié : « Ce que vous savez avant de visiter », sur la page de l'annonce, est une grille à pictogrammes groupée (« Caractéristiques », « Énergie », « Coûts et copropriété », ou « Coûts » pour un terrain ou un bien hors copropriété). La fiche du vendeur et le Cockpit gardent le tableau.
