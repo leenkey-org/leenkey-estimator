@@ -33,10 +33,11 @@ const PILL = cn(
   "data-active:z-10 data-active:scale-105 data-active:border-lk-blue data-active:bg-lk-blue data-active:text-white",
   "focus-visible:z-20 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
   "lg:px-3 lg:py-2",
-  // The dot: 14 px navy on a white ring, a target of 26 px (written out in
-  // full for Tailwind to find them).
-  "data-collapsed:not-data-active:not-hover:not-focus-visible:size-3.5 data-collapsed:not-data-active:not-hover:not-focus-visible:overflow-hidden data-collapsed:not-data-active:not-hover:not-focus-visible:border-2 data-collapsed:not-data-active:not-hover:not-focus-visible:border-lk-surface data-collapsed:not-data-active:not-hover:not-focus-visible:bg-lk-navy data-collapsed:not-data-active:not-hover:not-focus-visible:p-0 data-collapsed:not-data-active:not-hover:not-focus-visible:text-transparent",
-  "after:absolute after:-inset-1.5",
+  // The dot: 14 px navy on a white ring, under the pills, a target of 44 px
+  // (written out in full for Tailwind to find them).
+  "data-collapsed:not-data-active:not-hover:not-focus-visible:z-0 data-collapsed:not-data-active:not-hover:not-focus-visible:size-3.5 data-collapsed:not-data-active:not-hover:not-focus-visible:border-2 data-collapsed:not-data-active:not-hover:not-focus-visible:border-lk-surface data-collapsed:not-data-active:not-hover:not-focus-visible:bg-lk-navy data-collapsed:not-data-active:not-hover:not-focus-visible:p-0 data-collapsed:not-data-active:not-hover:not-focus-visible:text-[0px] data-collapsed:not-data-active:not-hover:not-focus-visible:after:-inset-[15px]",
+  // A pill above the dots, its target 44 px high at least.
+  "z-1 after:absolute after:-inset-2",
 );
 
 export function SearchMap({

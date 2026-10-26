@@ -6,7 +6,8 @@ import type { BrowserContext } from "@playwright/test";
 // core/maps calls: Map (Web Mercator, fitBounds), OverlayView (the price
 // pills), Circle, LatLng, LatLngBounds, Street View. It marks its element
 // with data-fake-map, the circle with data-circle, the open Street View with
-// data-street-view="open".
+// data-street-view="open". Flags set by a test before the page loads:
+// __fakeMapsNoStreetView (no panorama near), __fakeMapsAuthFailure (key refused).
 
 export const MAPS_SCRIPT = /maps\.googleapis\.com\/maps\/api\/js/;
 /** Any host of Google Maps: none may be asked before « Afficher la carte ». */
@@ -51,6 +52,8 @@ const FAKE_MAPS = String.raw`(() => {
   }
   class StreetViewPanorama {
     constructor(element) { this.element = element; this.visible = false; this.events = events(); }
+    setPano(pano) { this.pano = pano; }
+    setOptions(options) { this.options = { ...this.options, ...options }; }
     setPosition(position) { this.position = literal(position); }
     setPov() {}
     setVisible(visible) {
@@ -166,10 +169,13 @@ const FAKE_MAPS = String.raw`(() => {
   class StreetViewService {
     getPanorama(request) {
       if (window.__fakeMapsNoStreetView) {
-        return Promise.reject(new Error("StreetViewService.getPanorama: ZERO_RESULTS"));
+        // As MapsRequestError: the status in code, the message free.
+        return Promise.reject(Object.assign(new Error("no panorama"), { code: "ZERO_RESULTS" }));
       }
       const { lat, lng } = request.location;
-      return Promise.resolve({ data: { location: { latLng: new LatLng(lat + 0.0005, lng) } } });
+      return Promise.resolve({
+        data: { location: { latLng: new LatLng(lat + 0.0005, lng), pano: "fake-pano" } },
+      });
     }
   }
 
@@ -186,6 +192,8 @@ const FAKE_MAPS = String.raw`(() => {
   window.google.maps = { importLibrary: (name) => Promise.resolve(libraries[name]) };
   window.__fakeMapsScripts = (window.__fakeMapsScripts || 0) + 1;
   if (callback && typeof window[callback] === "function") window[callback]();
+  // A key refused (domain, billing, quota): Google calls gm_authFailure once the map is drawn.
+  if (window.__fakeMapsAuthFailure) setTimeout(() => window.gm_authFailure?.(), 50);
 })();`;
 
 /** Serves the stand-in for the script of Google Maps; returns the URLs asked. */

@@ -109,6 +109,14 @@ export interface Circle {
 }
 
 export interface StreetViewPanorama {
+  /** The panorama found by StreetViewService, without a new search around a point. */
+  setPano(pano: string): void;
+  setOptions(options: {
+    addressControl?: boolean;
+    enableCloseButton?: boolean;
+    fullscreenControl?: boolean;
+    motionTrackingControl?: boolean;
+  }): void;
   setPosition(position: LatLng): void;
   setPov(pov: { heading: number; pitch: number }): void;
   setVisible(visible: boolean): void;
@@ -117,8 +125,11 @@ export interface StreetViewPanorama {
 }
 
 export interface StreetViewPanoramaData {
-  location?: { latLng?: LatLng };
+  location?: { latLng?: LatLng; pano?: string };
 }
+
+/** What a request of the API rejects with (MapsRequestError): `code` is the status. */
+export type MapsRequestError = Error & { code?: string };
 
 export interface StreetViewService {
   getPanorama(request: {

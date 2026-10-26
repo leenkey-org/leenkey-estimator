@@ -1451,6 +1451,7 @@ export const fr = {
       gateTitle: "Voir le secteur sur la carte",
       sector: (place: string) => `Secteur approximatif, ${place}`,
       streetView: "Voir la rue",
+      backToMap: "Revenir à la carte",
       noStreetView: "Pas de vue de la rue dans ce secteur.",
       streetViewError: "La vue de la rue n'a pas pu s'ouvrir. Réessayez dans un instant.",
     },

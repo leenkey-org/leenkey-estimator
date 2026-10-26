@@ -75,7 +75,8 @@ export function MapGate({
         )}
         <p className="text-lk-title font-semibold text-lk-ink">{title}</p>
         <p className="text-lk-caption text-lk-ink-3">{note}</p>
-        <Button shape="pill" size="sm" onClick={onAllow} className="mt-1">
+        {/* Never a second primary button beside the action of the page (DESIGN 16). */}
+        <Button variant="outline-blue" shape="pill" size="sm" onClick={onAllow} className="mt-1">
           <MapPin aria-hidden="true" />
           {action}
         </Button>

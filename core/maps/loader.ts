@@ -45,19 +45,18 @@ function namespaceOf(win: MapsWindow): GoogleMapsNamespace | null {
   return maps?.importLibrary ? (maps as GoogleMapsNamespace) : null;
 }
 
+/**
+ * The script of Google, added once: a slow one is waited for again by the
+ * next try, never added a second time (Google warns of a script included
+ * twice). Only a script that failed to load is removed, for a new try.
+ */
+let injected: Promise<GoogleMapsNamespace> | null = null;
+
 function injectScript(key: string): Promise<GoogleMapsNamespace> {
   const win = window as MapsWindow;
-  return new Promise((resolve, reject) => {
+  injected ??= new Promise<GoogleMapsNamespace>((resolve, reject) => {
     const script = document.createElement("script");
-    const fail = (reason: string) => {
-      window.clearTimeout(timer);
-      delete win.__lkGoogleMapsReady;
-      script.remove();
-      reject(new Error(`google maps: ${reason}`));
-    };
-    const timer = window.setTimeout(() => fail("timeout"), TIMEOUT_MS);
     win.__lkGoogleMapsReady = () => {
-      window.clearTimeout(timer);
       delete win.__lkGoogleMapsReady;
       const namespace = namespaceOf(win);
       if (namespace) resolve(namespace);
@@ -65,13 +64,36 @@ function injectScript(key: string): Promise<GoogleMapsNamespace> {
     };
     script.src = googleMapsScriptUrl(key);
     script.async = true;
-    script.onerror = () => fail("script not loaded");
+    script.onerror = () => {
+      delete win.__lkGoogleMapsReady;
+      script.remove();
+      injected = null;
+      reject(new Error("google maps: script not loaded"));
+    };
     document.head.append(script);
+  });
+  return injected;
+}
+
+/** The script, or an error after TIMEOUT_MS (the script may still come for the next try). */
+function withTimeout<T>(promise: Promise<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error("google maps: timeout")), TIMEOUT_MS);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
   });
 }
 
 async function load(key: string): Promise<GoogleMapsApi> {
-  const namespace = namespaceOf(window as MapsWindow) ?? (await injectScript(key));
+  const namespace = namespaceOf(window as MapsWindow) ?? (await withTimeout(injectScript(key)));
   const [maps, core, streetView] = await Promise.all([
     namespace.importLibrary("maps"),
     namespace.importLibrary("core"),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { List, Map as MapIcon, X } from "lucide-react";
 import type { MapListing } from "../map-listings";
@@ -118,6 +118,15 @@ export function ResultsMapDialog(props: Props) {
   const [open, setOpen] = useState(false);
   const [chosenId, setChosenId] = useState<string | null>(null);
   const chosen = props.listings.find((listing) => listing.id === chosenId) ?? null;
+  // A tablet turned to 1024 px and more: the map is beside the list, this
+  // one closes (hidden, it would keep the page locked and a map loaded).
+  const desktop = useDesktop();
+  useEffect(() => {
+    if (desktop) {
+      setOpen(false);
+      setChosenId(null);
+    }
+  }, [desktop]);
 
   return (
     <DialogPrimitive.Root

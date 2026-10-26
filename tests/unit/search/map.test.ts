@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { LEENKEY_MAP_STYLE, MAP_TOKENS } from "@/components/shared/map-style";
+import { headingTo } from "@/core/maps/geometry";
 import { googleMapsScriptUrl } from "@/core/maps/loader";
 import { mapCentre, toMapListings } from "@/leenkey/search/map-listings";
 import type { SearchListing } from "@/leenkey/search/queries";
@@ -77,6 +78,16 @@ describe("the script of Google Maps", () => {
       region: "FR",
       callback: "__lkGoogleMapsReady",
     });
+  });
+});
+
+describe("the street turned towards the area", () => {
+  const here = { lat: 48.681, lng: 2.35 };
+  it("north, east, south and west in degrees from the north", () => {
+    expect(headingTo(here, { lat: 48.682, lng: 2.35 })).toBeCloseTo(0, 5);
+    expect(headingTo(here, { lat: 48.681, lng: 2.351 })).toBeCloseTo(90, 1);
+    expect(headingTo(here, { lat: 48.68, lng: 2.35 })).toBeCloseTo(180, 5);
+    expect(headingTo(here, { lat: 48.681, lng: 2.349 })).toBeCloseTo(270, 1);
   });
 });
 

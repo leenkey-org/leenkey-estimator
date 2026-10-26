@@ -76,6 +76,8 @@ export default async function SearchPage({ searchParams }: Props) {
   // The profile is read once per request (cache), by the TopNav too.
   const [result, profile] = await Promise.all([searchListings(query), getProfile()]);
   const now = new Date();
+  const mapButton =
+    Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) && result.ok && result.data.total > 0;
   const map = {
     // Public key, restricted to the domain of the site (L1-16).
     apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || null,
@@ -160,11 +162,12 @@ export default async function SearchPage({ searchParams }: Props) {
               <ResultsMapPanel {...map} />
             </div>
           </div>
-          {result.ok && result.data.total > 0 ? <ResultsMapDialog {...map} /> : null}
+          {mapButton ? <ResultsMapDialog {...map} /> : null}
         </MapSyncProvider>
         <FiltersDialog />
       </SearchProvider>
-      <SiteFooter />
+      {/* Room for the floating « Carte » button at the end of the page. */}
+      <SiteFooter className={mapButton ? "pb-20 lg:pb-0" : undefined} />
       <BottomNav label={fr.nav.label} items={bottomTabs("buyer", Boolean(profile))} />
     </FacadeRoot>
   );
