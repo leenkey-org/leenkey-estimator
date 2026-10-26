@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { listingKeyFacts } from "@/leenkey/listings/key-facts";
+import { bySection, listingKeyFacts } from "@/leenkey/listings/key-facts";
 import {
   buyerSignUpHref,
   communeSearchHref,
@@ -154,6 +154,21 @@ describe("key figures", () => {
 });
 
 describe("Ce que vous savez avant de visiter", () => {
+  it("in the grid of the page: a pictogram and a group each, the property first (L1-55)", () => {
+    for (const listing of [flat, land]) {
+      for (const fact of listingKeyFacts(listing)) {
+        expect(fact.icon, fact.label).toBeDefined();
+        expect(fact.section, fact.label).toBeDefined();
+      }
+    }
+    const sections = bySection(listingKeyFacts(flat)).map((fact) => fact.section);
+    expect([...new Set(sections)]).toEqual(["Caractéristiques", "Énergie", "Coûts et copropriété"]);
+    expect(bySection(listingKeyFacts(flat))[0]?.label).toBe("Type de bien");
+    // Outside a co-ownership, the costs are the property tax alone.
+    expect(new Set(listingKeyFacts(land).map((fact) => fact.section))).toContain("Coûts");
+    expect(listingKeyFacts(land).map((fact) => fact.section)).not.toContain("Coûts et copropriété");
+  });
+
   const facts = (listing: PublicListing) =>
     Object.fromEntries(listingKeyFacts(listing).map((fact) => [fact.label, plain(fact.value)]));
 

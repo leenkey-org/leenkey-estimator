@@ -1,3 +1,27 @@
+import {
+  Archive,
+  ArrowUpDown,
+  BedDouble,
+  Building2,
+  Compass,
+  DoorOpen,
+  Factory,
+  Flame,
+  Hammer,
+  HardHat,
+  House,
+  LandPlot,
+  Landmark,
+  Layers,
+  Leaf,
+  Receipt,
+  Ruler,
+  Scale,
+  SquareDashed,
+  SquareParking,
+  Trees,
+  type LucideIcon,
+} from "lucide-react";
 import type { PublicListing } from "./queries";
 import type { KeyFact } from "@/components/shared/key-facts-table";
 import { formatPrice, formatSurface } from "@/lib/format";
@@ -38,8 +62,59 @@ export type FactsInput = Pick<
   | "coproLots"
 >;
 
+// Groups and pictograms of the grid of the listing page (KeyFactsGrid, L1-55);
+// the table of the seller's page and of the Cockpit ignores them.
+const PROPERTY = t.sections.property;
+const ENERGY = t.sections.energy;
+const COSTS = t.sections.costs;
+const SECTIONS: readonly string[] = [PROPERTY, ENERGY, COSTS, t.sections.costsOnly];
+
+/** « Coûts » alone for a property outside a co-ownership. */
+function withoutCoOwnership(facts: KeyFact[]): KeyFact[] {
+  return facts.map((fact) =>
+    fact.section === COSTS ? { ...fact, section: t.sections.costsOnly } : fact,
+  );
+}
+
+const PRESENTATION: Record<string, { icon: LucideIcon; section: string }> = {
+  [t.charges]: { icon: Receipt, section: COSTS },
+  [t.propertyTax]: { icon: Landmark, section: COSTS },
+  [t.coproLots]: { icon: Building2, section: COSTS },
+  [t.votedWorks]: { icon: HardHat, section: COSTS },
+  [t.procedures]: { icon: Scale, section: COSTS },
+  [t.dpe]: { icon: Leaf, section: ENERGY },
+  [t.ges]: { icon: Factory, section: ENERGY },
+  [t.heating]: { icon: Flame, section: ENERGY },
+  [t.type]: { icon: House, section: PROPERTY },
+  [t.surface]: { icon: Ruler, section: PROPERTY },
+  [t.landSurface]: { icon: LandPlot, section: PROPERTY },
+  [t.carrez]: { icon: SquareDashed, section: PROPERTY },
+  [t.rooms]: { icon: DoorOpen, section: PROPERTY },
+  [t.bedrooms]: { icon: BedDouble, section: PROPERTY },
+  [t.floor]: { icon: Layers, section: PROPERTY },
+  [t.levels]: { icon: Layers, section: PROPERTY },
+  [t.elevator]: { icon: ArrowUpDown, section: PROPERTY },
+  [t.orientation]: { icon: Compass, section: PROPERTY },
+  [t.construction]: { icon: Hammer, section: PROPERTY },
+  [t.outdoor]: { icon: Trees, section: PROPERTY },
+  [t.parking]: { icon: SquareParking, section: PROPERTY },
+  [t.cellar]: { icon: Archive, section: PROPERTY },
+};
+
 function fact(label: string, value: string | null | undefined): KeyFact {
-  return value ? { label, value } : { label, value: t.notProvided, tone: notProvided };
+  const presentation = PRESENTATION[label];
+  return value
+    ? { label, value, ...presentation }
+    : { label, value: t.notProvided, tone: notProvided, ...presentation };
+}
+
+/** The facts in the order of the groups of the grid: the property, its energy, its costs. */
+export function bySection(facts: readonly KeyFact[]): KeyFact[] {
+  const rank = (fact: KeyFact) => {
+    const index = SECTIONS.indexOf(fact.section ?? "");
+    return index === -1 ? SECTIONS.length : index;
+  };
+  return [...facts].sort((a, b) => rank(a) - rank(b));
 }
 
 function yesNo(value: boolean | null): string | null {
@@ -86,11 +161,11 @@ export function listingKeyFacts(
   const taxes = fact(t.propertyTax, money(listing.propertyTaxYearlyCents, t.propertyTaxValue));
 
   if (listing.type === "terrain") {
-    return [
+    return withoutCoOwnership([
       taxes,
       fact(t.type, fr.propertyType.terrain),
       fact(t.landSurface, formatSurface(listing.surfaceM2)),
-    ];
+    ]);
   }
 
   const flat = listing.type === "appartement";
@@ -125,5 +200,6 @@ export function listingKeyFacts(
     coOwnership && documents ? fact(t.votedWorks, null) : null,
     coOwnership && documents ? fact(t.procedures, null) : null,
   ];
-  return facts.filter((item): item is KeyFact => item !== null);
+  const shown = facts.filter((item): item is KeyFact => item !== null);
+  return coOwnership ? shown : withoutCoOwnership(shown);
 }

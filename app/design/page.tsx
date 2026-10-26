@@ -63,7 +63,7 @@ import { MoreLink } from "@/components/shared/more-link";
 import { PlanCard } from "@/components/shared/plan-card";
 import { SiteMenu } from "@/components/shared/site-menu";
 import { Input } from "@/components/shared/input";
-import { KeyFactsTable } from "@/components/shared/key-facts-table";
+import { KeyFactsGrid, KeyFactsTable } from "@/components/shared/key-facts-table";
 import { KeyFigures } from "@/components/shared/key-figures";
 import { NotificationBell } from "@/components/shared/notification-bell";
 import { NotificationItemsDemo, NotificationsDemo } from "./_notifications-demo";
@@ -707,6 +707,12 @@ export default function DesignPage() {
               ]}
             />
             <Caption>{content.keyFacts.caption}</Caption>
+            <KeyFactsGrid
+              items={content.keyFacts.grid}
+              headingLevel="h4"
+              className="max-w-lk-prose"
+            />
+            <Caption>{content.keyFacts.gridCaption}</Caption>
           </Section>
 
           <Section id="cartes" title={content.sections.cards} level="h3">

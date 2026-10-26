@@ -32,7 +32,8 @@ export function ContactCard({
         "flex items-center gap-3",
         variant === "card"
           ? "rounded-lk-md border border-lk-line px-4 py-3.5"
-          : "rounded-lk-sm bg-lk-stone-2 p-3",
+          : // The light blue of Leenkey rather than stone (« pas de gris », L1-55).
+            "rounded-lk-lg bg-lk-blue-tint p-3",
         className,
       )}
     >

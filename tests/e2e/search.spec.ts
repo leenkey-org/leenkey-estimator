@@ -21,7 +21,7 @@ const COUNT = /^(?:(\d[\d\s]*)\sbiens?|Aucun bien)/;
 /** « 12 biens à Savigny-sur-Orge » (results header, role status). */
 const resultsStatus = (page: Page) => page.getByRole("main").getByRole("status");
 
-/** Links of the cards shown (compact up to 1023 px, wide beyond). */
+/** Links of the cards shown: the title of each card (L1-55). */
 const cards = (page: Page) => page.getByRole("list", { name: "Résultats" }).locator("a:visible");
 
 const location = (page: Page) => page.getByRole("combobox", { name: "Ville ou code postal" });
@@ -40,10 +40,11 @@ async function resultCount(page: Page): Promise<number> {
   return match[1] ? Number(match[1].replace(/\D/g, "")) : 0;
 }
 
-/** Price of each card shown, in euros, in the order of the page. */
+/** Price of each card shown, in euros, in the order of the page (under its link, L1-55). */
 async function cardPrices(page: Page): Promise<number[]> {
   await settle(page);
-  return (await cards(page).allTextContents()).map((text) => {
+  const items = page.getByRole("list", { name: "Résultats" }).getByRole("listitem");
+  return (await items.allTextContents()).map((text) => {
     const price = /(\d[\d\s]*)€/.exec(text);
     if (!price) throw new Error(`No price in card: ${text}`);
     return Number(price[1].replace(/\D/g, ""));

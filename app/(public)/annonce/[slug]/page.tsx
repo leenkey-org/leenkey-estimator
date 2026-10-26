@@ -85,7 +85,7 @@ export default async function ListingPage({ params }: Props) {
   const checkedAt = Date.now();
   const [favorite, profile] = await Promise.all([favoriteState(listing.id), getProfile()]);
   const links = contactLinks(listing, profile !== null);
-  const heart = (variant: "white-float" | "stone") => (
+  const heart = (variant: "white-float" | "tint") => (
     <FavoriteButton
       listingId={listing.id}
       favorite={favorite}
@@ -114,7 +114,8 @@ export default async function ListingPage({ params }: Props) {
           listing={listing}
           galleryTopLeft={<BackLink />}
           galleryTopRight={heart("white-float")}
-          aside={<PriceColumn listing={listing} links={links} favorite={heart("stone")} />}
+          // The light blue of Leenkey rather than stone (« pas de gris », L1-55).
+          aside={<PriceColumn listing={listing} links={links} favorite={heart("tint")} />}
           map={
             listing.location ? (
               <ListingMap

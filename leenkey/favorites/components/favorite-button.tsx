@@ -26,7 +26,7 @@ export type FavoriteButtonProps = {
    * price column; photo: the heart alone over the photo of a card of
    * direction C (SPECS.md 2), white outline on a shaded fill, blue once saved.
    */
-  variant?: "white-float" | "stone" | "photo";
+  variant?: "white-float" | "stone" | "tint" | "photo";
   className?: string;
 };
 

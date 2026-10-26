@@ -21,7 +21,7 @@ export function LoadMore({ shown, hasMore }: { shown: number; hasMore: boolean }
     const index = focusIndex.current;
     if (index === null || shown <= index) return;
     focusIndex.current = null;
-    // Mobile and desktop cards are both in the list: focus the visible link.
+    // The link of the card (its title), the first of its item.
     const links = document.querySelectorAll<HTMLAnchorElement>(`[data-result-index="${index}"] a`);
     [...links].find((link) => link.offsetParent !== null)?.focus();
   }, [shown]);
@@ -31,9 +31,10 @@ export function LoadMore({ shown, hasMore }: { shown: number; hasMore: boolean }
   return (
     <>
       {loading ? (
-        <div className="mt-3 grid gap-3 md:grid-cols-2 lg:mt-3.5 lg:gap-3.5">
-          <Skeleton className="h-29 rounded-lk-md lg:h-41" />
-          <Skeleton className="h-29 rounded-lk-md lg:h-41" />
+        // The size of the cards (L1-55): the next ones take their place without a jump.
+        <div className="mt-5 grid gap-x-4 gap-y-5 md:grid-cols-2 lg:mt-6 lg:gap-x-5 lg:gap-y-6">
+          <Skeleton className="aspect-[1/1.25] rounded-lk-2xl" />
+          <Skeleton className="hidden aspect-[1/1.25] rounded-lk-2xl md:block" />
         </div>
       ) : null}
       <div className="mt-6 flex justify-center">

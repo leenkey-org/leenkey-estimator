@@ -164,7 +164,7 @@ export function PropertyCard({
               {card.highlights.slice(0, 3).map((highlight) => (
                 <li
                   key={highlight}
-                  className="rounded-lk-sm bg-lk-stone-2 px-2 py-1 text-lk-micro text-lk-ink-2"
+                  className="rounded-full bg-lk-blue-tint px-2.5 py-1 text-lk-micro font-semibold text-lk-blue-dark"
                 >
                   {highlight}
                 </li>

@@ -2,13 +2,13 @@ import type { ReactNode } from "react";
 import { ContactCard } from "@/components/shared/contact-card";
 import { DpeBadge } from "@/components/shared/dpe-badge";
 import { Gallery } from "@/components/shared/gallery";
-import { KeyFactsTable } from "@/components/shared/key-facts-table";
+import { KeyFactsGrid } from "@/components/shared/key-facts-table";
 import { KeyFigures } from "@/components/shared/key-figures";
 import { PriceBlock } from "@/components/shared/price-block";
 import { SectionTitle } from "@/components/shared/section-title";
 import { NBSP } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
-import { listingKeyFacts } from "../key-facts";
+import { bySection, listingKeyFacts } from "../key-facts";
 import { galleryPhotos, listingKeyFigures, listingPlace } from "../presentation";
 import type { PublicListing } from "../queries";
 import { ListingDescription } from "./listing-description";
@@ -97,7 +97,12 @@ export function ListingBody({
             <SectionTitle id="avant-visite" as={section}>
               {t.facts.title}
             </SectionTitle>
-            <KeyFactsTable items={listingKeyFacts(listing)} className="lg:max-w-lk-prose" />
+            {/* In the way of Airbnb: grouped, a pictogram each (L1-55). */}
+            <KeyFactsGrid
+              items={bySection(listingKeyFacts(listing))}
+              headingLevel={level === 1 ? "h3" : "h5"}
+              className="mt-1"
+            />
           </section>
 
           {map ? (

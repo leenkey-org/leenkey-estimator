@@ -13,8 +13,9 @@ export type KeyFiguresProps = {
 };
 
 /**
- * Key figures of a property (docs/DESIGN.md 10.2): stone tiles, the value in
- * wide Archivo above its label. A description list, so that screen readers
+ * Key figures of a property (docs/DESIGN.md 10.2): tiles of the light blue of
+ * Leenkey (stone until L1-55, « pas de gris », Younes), the value in wide
+ * Archivo above its label. A description list, so that screen readers
  * read « surface, 68 m² ».
  */
 export function KeyFigures({ items, className }: KeyFiguresProps) {
@@ -24,13 +25,13 @@ export function KeyFigures({ items, className }: KeyFiguresProps) {
         <div
           key={`${item.label}-${index}`}
           className={cn(
-            "flex min-w-0 flex-col-reverse gap-1 rounded-lk-sm bg-lk-stone-2 px-1.5 py-2.5 text-center",
+            "flex min-w-0 flex-col-reverse gap-1 rounded-lk-lg bg-lk-blue-tint px-1.5 py-2.5 text-center",
             "lg:p-3 lg:text-left",
             index >= 4 && "hidden lg:flex",
           )}
         >
           <dt className="truncate text-lk-micro text-lk-ink-3">{item.label}</dt>
-          <dd className="text-lk-figure font-bold text-wide tabular text-lk-ink lg:text-lk-figure-lg">
+          <dd className="text-lk-figure font-bold text-wide tabular text-lk-blue-dark lg:text-lk-figure-lg">
             {item.value}
           </dd>
         </div>
