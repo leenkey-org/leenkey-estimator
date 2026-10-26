@@ -10,20 +10,54 @@ export type FaqItem = { question: string; answer: ReactNode };
  * question, the blue « + » of the V1 that becomes a « − » once open (no
  * movement with reduced motion). Light: white cards with the cool line,
  * blue line and shadow once open; dark (on navy): glass cards, white text,
- * the sign in the light blue. Closed at first, an answer is found by the
- * search of the browser. The cards rise one after the other on the public
- * pages (DESIGN.md 9).
+ * the sign in the light blue. Rows (direction C, docs/design-handoff/SPECS.md
+ * 3, item 10): one question a row of 64 then 68 px over a line, the sign in a
+ * round blue tint button. Closed at first, an answer is found by the search
+ * of the browser. The cards rise one after the other on the public pages
+ * (DESIGN.md 9).
  */
 export function FaqList({
   items,
   tone = "light",
+  look = "cards",
   className,
 }: {
   items: readonly FaqItem[];
   tone?: "light" | "dark";
+  look?: "cards" | "rows";
   className?: string;
 }) {
   const dark = tone === "dark";
+  if (look === "rows") {
+    return (
+      <ul data-reveal-stagger="" className={cn("flex flex-col", className)}>
+        {items.map((item) => (
+          <li key={item.question} className="border-b border-lk-line">
+            <details className="group">
+              <summary
+                className={cn(
+                  "flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 py-3 text-lk-body-lg font-bold text-lk-ink md:min-h-17 md:gap-4 md:px-1 md:text-[1.0625rem] [&::-webkit-details-marker]:hidden",
+                  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue focus-visible:outline-solid",
+                )}
+              >
+                <span>{item.question}</span>
+                <span
+                  aria-hidden="true"
+                  className="relative flex size-7.5 shrink-0 items-center justify-center rounded-full bg-lk-blue-tint md:size-8"
+                >
+                  <span className="absolute h-0.5 w-3.5 rounded-lk-xs bg-lk-blue" />
+                  <span className="absolute h-3.5 w-0.5 rounded-lk-xs bg-lk-blue transition-transform duration-220 ease-out-lk group-open:scale-y-0 motion-reduce:transition-none" />
+                </span>
+              </summary>
+              <div className="max-w-lk-prose pb-5 text-lk-body text-pretty text-lk-ink-2 md:px-1">
+                {item.answer}
+              </div>
+            </details>
+          </li>
+        ))}
+      </ul>
+    );
+  }
   return (
     <ul data-reveal-stagger="" className={cn("flex flex-col gap-3.5", className)}>
       {items.map((item) => (

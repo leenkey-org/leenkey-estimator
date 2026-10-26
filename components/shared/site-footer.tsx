@@ -7,23 +7,24 @@ import { CookieSettingsButton } from "./cookie-settings-button";
 
 const t = fr.footer;
 
-// 44 px high: touch target of DESIGN.md 15.
+// 44 px high: touch target of DESIGN.md 15. The legal links: 14 px, secondary.
 const linkClass =
-  "inline-flex min-h-11 items-center rounded-lk-sm text-lk-secondary text-lk-ink-2 underline-offset-2 hover:text-lk-ink hover:underline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue";
+  "inline-flex min-h-11 items-center rounded-lk-sm text-lk-compact text-lk-ink-2 underline-offset-2 hover:text-lk-ink hover:underline focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue";
 
-// The pages of the site, above: 14 px 500 ink.
+// The pages of the site, above: 15 px 600 ink.
 const siteLinkClass =
-  "inline-flex min-h-11 items-center rounded-lk-sm text-lk-compact font-medium text-lk-ink underline-offset-2 hover:underline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue";
+  "inline-flex min-h-11 items-center rounded-lk-sm text-lk-title font-semibold text-lk-ink underline-offset-2 hover:underline focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue";
 
 /**
  * Footer of the V2 pages (L1-36, docs/DESIGN.md 10.6): the pages of the site
  * (DECISIONS 2026-10-19), the legal links, « Gérer mes cookies » and the
- * legal identity of Leenkey, on stone.
+ * legal identity of Leenkey, on sand (direction C, docs/design-handoff/SPECS.md
+ * 3, item 12).
  */
 export function SiteFooter({ className }: { className?: string }) {
   return (
-    <footer className={cn("border-t border-lk-line bg-lk-bg", className)}>
-      <div className="mx-auto flex max-w-lk-page flex-col gap-4 px-5 py-8 md:px-10">
+    <footer className={cn("border-t border-lk-sand-line bg-lk-sand", className)}>
+      <div className="mx-auto flex max-w-lk-wide flex-col gap-3 px-4 pt-8 pb-10 md:gap-4 md:px-8 md:pt-10 md:pb-12">
         <nav aria-label={fr.site.links.label}>
           <ul className="flex flex-wrap gap-x-6">
             {SITE_LINKS.map((link) => (
@@ -55,7 +56,7 @@ export function SiteFooter({ className }: { className?: string }) {
             </li>
           </ul>
         </nav>
-        <p className="text-lk-caption text-lk-ink-3">
+        <p className="text-lk-caption text-lk-ink-2">
           {fr.legal.company} · {fr.legal.address}
           <br />
           {t.rights}

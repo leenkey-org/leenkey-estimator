@@ -12,7 +12,7 @@ export const buttonVariants = cva(
     "relative rounded-lk-sm font-semibold shadow-none",
     // Pressed, it gives a little (DESIGN.md 9), as the V1 buttons did.
     "transition-[color,background-color,border-color,scale] duration-140 ease-out-lk not-disabled:active:scale-[0.98]",
-    "focus-visible:ring-0 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+    "focus-visible:ring-0 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
     // Disabled: 0.45 opacity, "not allowed" cursor, no hover (not-disabled: below).
     "disabled:pointer-events-auto disabled:cursor-not-allowed disabled:opacity-45",
     // Loading is disabled too, but keeps its colours: the spinner says it is working.
@@ -33,6 +33,10 @@ export const buttonVariants = cva(
         ],
         secondary:
           "border-[1.5px] border-lk-blue-line bg-lk-surface text-lk-blue not-disabled:hover:bg-lk-blue-tint not-disabled:active:bg-lk-blue-tint",
+        // The secondary button of direction C (SPECS.md 2): its outline in
+        // the brand blue (« Publier une annonce » of the header).
+        "outline-blue":
+          "border-[1.5px] border-lk-blue bg-lk-surface text-lk-blue not-disabled:hover:bg-lk-blue-tint not-disabled:active:bg-lk-blue-tint",
         "outline-ink":
           "border-[1.5px] border-lk-ink bg-lk-surface text-lk-ink not-disabled:hover:bg-lk-stone-2 not-disabled:active:bg-lk-stone-2",
         ghost:
@@ -52,14 +56,21 @@ export const buttonVariants = cva(
           "border-[1.5px] border-white bg-transparent text-white not-disabled:hover:bg-white/12 not-disabled:active:bg-white/12 focus-visible:outline-white",
       },
       size: {
+        // Direction C (SPECS.md 2): the primary button of a screen, 56 then 64 px.
+        "2xl": "h-16 px-7.5 text-lk-body-lg",
+        xl: "h-14 px-6 text-lk-body-lg",
         lg: "h-13 px-5 text-lk-button-lg",
         md: "h-11 px-4 text-lk-button-md",
         // 40 px high, 44 px touch target (DESIGN.md 15).
         sm: "h-10 px-3.5 text-lk-button-sm after:absolute after:inset-x-0 after:-inset-y-0.5",
       },
       muted: { true: "", false: "" },
+      // Pills of direction C (SPECS.md 1, 2): rounded ends, bold label.
+      shape: { default: "", pill: "rounded-full font-bold" },
     },
     compoundVariants: [
+      // The primary pill in its blue shadow (SPECS.md 1).
+      { variant: "primary", shape: "pill", className: "shadow-lk-primary" },
       {
         variant: "ghost",
         muted: true,
@@ -67,7 +78,7 @@ export const buttonVariants = cva(
           "text-lk-ink-3 not-disabled:hover:bg-lk-stone-2 not-disabled:active:bg-lk-stone-2",
       },
     ],
-    defaultVariants: { variant: "primary", size: "md", muted: false },
+    defaultVariants: { variant: "primary", size: "md", muted: false, shape: "default" },
   },
 );
 
@@ -78,6 +89,8 @@ export type ButtonProps = Omit<ComponentProps<"button">, "children"> & {
   size?: NonNullable<ButtonVariants["size"]>;
   /** Grey ghost button, for « Ignorer ». */
   muted?: boolean;
+  /** pill: rounded ends and a bold label, the buttons of direction C. */
+  shape?: NonNullable<ButtonVariants["shape"]>;
   /** Lucide icon on the left, 16 px. */
   icon?: LucideIcon;
   /**
@@ -96,6 +109,7 @@ export function Button({
   variant,
   size,
   muted,
+  shape,
   icon: Icon,
   trailingIcon: TrailingIcon,
   loading = false,
@@ -113,7 +127,7 @@ export function Button({
       disabled={asChild ? undefined : disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        buttonVariants({ variant, size, muted }),
+        buttonVariants({ variant, size, muted, shape }),
         TrailingIcon && "group/button",
         className,
       )}

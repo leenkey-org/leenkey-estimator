@@ -9,7 +9,7 @@ export const iconButtonVariants = cva(
   [
     "relative shrink-0 rounded-lk-sm p-0 shadow-none [&_svg]:size-5",
     "transition-colors duration-140 ease-out-lk",
-    "focus-visible:ring-0 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+    "focus-visible:ring-0 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
     "disabled:pointer-events-auto disabled:cursor-not-allowed disabled:opacity-45",
   ],
   {
@@ -23,6 +23,12 @@ export const iconButtonVariants = cva(
         outline:
           "rounded-full border-[1.5px] border-lk-ink bg-lk-surface text-lk-ink not-disabled:hover:bg-lk-stone-2",
         transparent: "bg-transparent text-lk-ink not-disabled:hover:bg-lk-stone-2",
+        // The round button of direction C (SPECS.md 2): arrows of a carousel,
+        // the microphone; disabled, its icon takes the colour of « Désactivé ».
+        round: [
+          "rounded-full border border-lk-line-strong bg-lk-surface text-lk-ink not-disabled:hover:bg-lk-sand",
+          "disabled:text-lk-disabled disabled:opacity-100",
+        ],
       },
       size: {
         md: "size-11",

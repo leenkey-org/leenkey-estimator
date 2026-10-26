@@ -1,321 +1,227 @@
 import Link from "next/link";
-import { ArrowRight, ChartLine, CircleCheck, CircleX, FileText, ShieldCheck } from "lucide-react";
+import { ArrowRight, ChartLine, FileText, PenLine, Search, Tag, UserRound } from "lucide-react";
 import { Button } from "@/components/shared/button";
+import { DecorativeShapes } from "@/components/shared/decorative-shapes";
 import { FaqList } from "@/components/shared/faq-list";
 import { MarketingSection } from "@/components/shared/marketing-section";
+import { PlanCardSoft } from "@/components/shared/plan-card-soft";
+import { ShortcutCard } from "@/components/shared/shortcut-card";
+import { activePlans } from "@/core/billing/plans";
+import { getProfile } from "@/core/auth/session";
 import { ROUTES } from "@/leenkey/navigation/spaces";
+import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
-import { cn } from "@/lib/utils";
+import { FALLBACK_ACCOMPANIED_CENTS } from "../savings";
 import { ContactForm } from "./contact-form";
-import { CtaPanel } from "./cta-panel";
-import { NumberBadge } from "./number-badge";
+import { directListingHref } from "./home-hero";
 import { RichText } from "./rich-text";
-import { SellerSpacePreview } from "./seller-space-preview";
-import { StagePicker } from "./stage-picker";
-import { ValueCurve } from "./value-curve";
+import { SavingsSimulator } from "./savings-simulator";
 
-// Sections of the home page after the hero, in the order of the V1 page and
-// with its anchors (#etape, #comment…), in its direction (DECISIONS
-// 2026-10-23): the V1 section heads, its label above the title, its cards
-// in a blue shadow, its numbering and its calls to action. Texts:
-// fr.site.home.
+// Sections of the home page of direction C after the hero
+// (docs/design-handoff/SPECS.md 3, items 5 to 11), and the contact section
+// of /contact. Texts: fr.site.home.
 
 const home = fr.site.home;
 
-/** The white card of the V1 sections: 12 px, a cool line, a blue shadow. */
-const v1Card = "rounded-lk-lg border border-lk-mist-line bg-lk-surface shadow-lk-card";
+/** Title of a section of direction C: 22 px then 28 px, 800, a little wide. */
+const sectionTitle = "text-[1.375rem] leading-tight text-heavy text-lk-ink md:text-[1.75rem]";
 
-/** « Où en êtes-vous dans votre vente ? » (#etape), right after the hero as in the V1. */
-export function StagesSection() {
-  const t = home.stages;
+/** « Que voulez-vous faire ? »: four shortcuts, two by two on a phone. */
+export async function ShortcutsSection() {
+  const t = home.shortcuts;
+  const signedIn = (await getProfile()) !== null;
+  const items = [
+    { key: "valuation", href: ROUTES.valuation, icon: ChartLine },
+    { key: "sell", href: directListingHref(signedIn), icon: Tag },
+    { key: "support", href: ROUTES.pricing, icon: UserRound },
+    { key: "buy", href: ROUTES.search, icon: Search },
+  ] as const;
   return (
-    <MarketingSection
-      id="etape"
-      look="showcase"
-      tone="mist"
-      eyebrow={t.eyebrow}
-      title={t.title}
-      accent={t.accent}
-      lead={t.lead}
+    <section
+      aria-labelledby="que-faire"
+      className="mx-auto max-w-lk-wide px-4 pt-10 md:px-8 md:pt-18"
     >
-      <StagePicker />
-    </MarketingSection>
+      <h2 id="que-faire" data-reveal="" className={`${sectionTitle} mb-3.5 md:mb-6`}>
+        {t.title}
+      </h2>
+      <ul data-reveal-stagger="" className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
+        {items.map(({ key, href, icon }) => (
+          <li key={key} className="flex">
+            <ShortcutCard
+              className="flex-1"
+              href={href}
+              icon={icon}
+              title={t.items[key].title}
+              text={t.items[key].text}
+              action={t.items[key].action}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
-/** The icons of the three steps, as in the V1: the value, the file, the signature. */
-const STEP_ICONS = [ChartLine, FileText, ShieldCheck] as const;
+/** Price of the Accompagné plan, from the plans table (reference data). */
+async function accompaniedCents(): Promise<number> {
+  const plans = await activePlans();
+  return (
+    plans?.find((plan) => plan.code === "accompagne")?.priceCents ?? FALLBACK_ACCOMPANIED_CENTS
+  );
+}
 
-/**
- * « Trois étapes » (#comment): the V1 cards, the number of the step in a
- * square in the blue gradient (the real steps of the sale), its icon, its
- * text and its tag in blue; a dashed line from one card to the next from
- * 1024 px. The list says the order to screen readers, the numbers are not
- * read.
- */
+/** « Combien vous économisez avec Leenkey »: white, its shapes behind. */
+export async function SavingsSection() {
+  const t = home.savings;
+  const planCents = await accompaniedCents();
+  return (
+    <section
+      aria-labelledby="economies"
+      className="relative isolate mt-10 overflow-hidden border-y border-lk-line bg-lk-surface md:mt-22"
+    >
+      <DecorativeShapes
+        shapes={[
+          {
+            kind: "halo",
+            className: "-top-22 -right-27 size-75 md:-top-38 md:-right-27 md:size-120",
+          },
+          {
+            kind: "ring",
+            slow: true,
+            className: "bottom-8 -left-15 size-35 md:bottom-10 md:-left-17 md:size-55",
+          },
+          { kind: "dot", slow: true, className: "top-18 left-[44%] hidden size-3.5 md:block" },
+        ]}
+      />
+      <div className="mx-auto flex max-w-lk-wide flex-col gap-4 px-4 py-10 md:px-8 md:py-20 lg:flex-row lg:items-center lg:gap-14">
+        <div data-reveal="" className="min-w-0 lg:flex-[1_1_440px]">
+          <p className="mb-2 text-lk-caption font-bold tracking-[0.08em] text-lk-blue uppercase md:mb-3 md:text-lk-compact">
+            {t.eyebrow}
+          </p>
+          <h2
+            id="economies"
+            className="text-[1.75rem] leading-[1.1] text-heavy text-lk-ink md:text-[2.75rem] md:leading-[1.06]"
+          >
+            {t.title}
+          </h2>
+          <p className="mt-2.5 text-lk-body text-lk-ink-2 md:mt-4 md:text-lk-lead-lg">
+            <span className="md:hidden">{t.leadShort}</span>
+            <span className="hidden md:inline">{t.lead}</span>
+          </p>
+        </div>
+        <div data-reveal="" className="min-w-0 lg:flex-[1_1_520px]">
+          <SavingsSimulator accompaniedCents={planCents} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const STEP_ICONS = [ChartLine, FileText, PenLine] as const;
+
+/** « Trois étapes. Vous gardez les clés du début à la fin. » */
 export function StepsSection() {
   const t = home.steps;
   return (
-    <MarketingSection
-      id="comment"
-      look="showcase"
-      eyebrow={t.eyebrow}
-      title={t.title}
-      accent={t.accent}
-      revealContent={false}
-    >
-      <ol data-reveal-stagger="" className="grid gap-5 lg:grid-cols-3">
+    <section aria-labelledby="etapes" className="mx-auto max-w-lk-wide px-4 pt-12 md:px-8 md:pt-22">
+      <h2 id="etapes" data-reveal="" className={`${sectionTitle} mb-3.5 md:mb-7`}>
+        {t.title}
+      </h2>
+      <ol data-reveal-stagger="" className="flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-6">
         {t.items.map((step, index) => {
           const Icon = STEP_ICONS[index] ?? ChartLine;
           return (
             <li
               key={step.title}
-              className={cn(v1Card, "relative flex flex-col rounded-lk-xl px-6 py-7")}
+              className="flex gap-3.5 overflow-hidden rounded-lk-xl border border-lk-line bg-lk-surface p-4 md:flex-col md:gap-0 md:rounded-lk-2xl md:p-0"
             >
-              {index < t.items.length - 1 ? (
+              <div className="relative flex shrink-0 items-center justify-center md:h-37.5 md:bg-lk-blue-tint">
                 <span
                   aria-hidden="true"
-                  className="absolute top-11.5 left-[calc(100%-0.5rem)] hidden h-0.5 w-8 bg-[repeating-linear-gradient(90deg,var(--color-lk-blue-line)_0_6px,transparent_6px_12px)] lg:block"
-                />
-              ) : null}
-              <NumberBadge value={index + 1} className="self-start" />
-              <Icon aria-hidden="true" className="mt-4.5 mb-3.5 size-6.5 text-lk-blue" />
-              <h3 className="text-lk-h3-lg font-semibold text-lk-ink lg:text-lk-h2">
-                {step.title}
-              </h3>
-              <p className="mt-2 text-lk-body text-pretty text-lk-ink-2">{step.text}</p>
-              <p className="mt-auto pt-3.5 text-lk-caption font-semibold text-lk-blue">
-                {step.tag}
-              </p>
+                  className="absolute top-4 left-4.5 hidden text-lk-body font-extrabold text-lk-blue md:block"
+                >
+                  {`0${index + 1}`}
+                </span>
+                <span className="absolute top-3.5 right-4 hidden rounded-full bg-lk-surface px-2.5 py-1 text-lk-label font-bold text-lk-blue-dark md:block">
+                  {step.tag}
+                </span>
+                <span className="flex size-14 items-center justify-center rounded-lk-xl bg-lk-blue-tint text-lk-blue md:size-19 md:rounded-lk-3xl md:bg-lk-surface md:shadow-lk-tile">
+                  <Icon aria-hidden="true" strokeWidth={1.6} className="size-6.5 md:size-9" />
+                </span>
+              </div>
+              <div className="min-w-0 md:px-6 md:pt-5.5 md:pb-6.5">
+                <p className="text-lk-label font-extrabold text-lk-blue md:hidden">
+                  {`${t.label(index + 1)} · ${step.tag}`}
+                </p>
+                <h3 className="text-[1.0625rem] font-extrabold text-lk-ink md:mb-1.5 md:text-[1.25rem]">
+                  {step.title}
+                </h3>
+                <p className="text-lk-compact text-lk-ink-2 md:text-lk-body-lg">{step.text}</p>
+              </div>
             </li>
           );
         })}
       </ol>
-    </MarketingSection>
+    </section>
   );
 }
 
-/**
- * « Ce que vous obtenez en quelques minutes. » (#fonctionnalites): the dark
- * section of the V1 page, its label, its curve and its four items
- * (DECISIONS 2026-10-20).
- */
-export function FeaturesSection() {
-  const t = home.features;
+/** « Choisissez votre niveau d'accompagnement »: the three plans, read from the plans table. */
+export async function PlansSection() {
+  const t = home.plans;
+  const plans = await activePlans();
   return (
-    <MarketingSection
-      id="fonctionnalites"
-      look="showcase"
-      tone="navy"
-      eyebrow={t.eyebrow}
-      title={t.title}
-      accent={t.accent}
-      lead={t.lead}
-      revealContent={false}
+    <section
+      aria-labelledby="formules"
+      className="mx-auto max-w-lk-wide px-4 pt-12 md:px-8 md:pt-22"
     >
-      <ValueCurve items={t.items} />
-      <div data-reveal="" className="mt-10 flex justify-center lg:mt-12">
-        <Button
-          asChild
-          variant="cta"
-          size="lg"
-          trailingIcon={ArrowRight}
-          className="focus-visible:outline-white"
+      <div data-reveal="" className="mb-3.5 flex flex-wrap items-end justify-between gap-4 md:mb-6">
+        <h2 id="formules" className={sectionTitle}>
+          {t.title}
+        </h2>
+        <Link
+          href={ROUTES.pricing}
+          className="text-lk-compact font-bold text-lk-blue underline-offset-3 hover:underline md:text-lk-body-lg"
         >
-          <Link href={ROUTES.valuation}>{t.action}</Link>
-        </Button>
+          {t.all}
+        </Link>
       </div>
-    </MarketingSection>
-  );
-}
-
-/**
- * « Vous savez toujours quoi faire ensuite. » (#espace-vendeur): the dark
- * section of the V1 page and its preview of the seller area, with example
- * data said as such (DECISIONS 2026-10-20).
- */
-export function SellerSpaceSection() {
-  const t = home.space;
-  return (
-    <MarketingSection
-      id="espace-vendeur"
-      look="showcase"
-      tone="navy"
-      eyebrow={t.eyebrow}
-      title={t.title}
-      accent={t.accent}
-      lead={t.lead}
-    >
-      <SellerSpacePreview />
-    </MarketingSection>
-  );
-}
-
-/**
- * « Bénéficiez d'un support total… » (#comparatif): the V1 table, three ways
- * to sell against four criteria, a green check or a grey cross before each
- * value, Leenkey in a 2 px blue frame on the blue tint. A table from 768 px;
- * below, a card for each way, Leenkey framed, the criteria in each.
- */
-export function ComparisonSection() {
-  const t = home.comparison;
-  return (
-    <MarketingSection
-      id="comparatif"
-      look="showcase"
-      tone="mist"
-      eyebrow={t.eyebrow}
-      title={t.title}
-      accent={t.accent}
-      lead={t.lead}
-    >
-      <div
-        className={cn(v1Card, "mx-auto hidden max-w-275 overflow-hidden rounded-lk-xl md:block")}
-      >
-        <table className="w-full table-fixed border-separate border-spacing-0 text-left">
-          {/* The figures of the table hold for this sale (« ≈ 15 000 € »). */}
-          <caption className="sr-only">
-            {t.title} {t.example}
-          </caption>
-          <colgroup>
-            <col className="w-[27%]" />
-            <col />
-            <col />
-            <col />
-          </colgroup>
-          <thead>
-            <tr>
-              <td className="bg-lk-mist px-6 pt-7 pb-4 align-bottom text-lk-caption text-lk-ink-3">
-                {t.example}
-              </td>
-              {t.columns.map((column) => (
-                <th
-                  key={column.key}
-                  scope="col"
-                  className={cn(
-                    "px-6 pt-7 pb-4 align-bottom font-normal",
-                    column.key === "leenkey" &&
-                      "border-x-2 border-t-2 border-lk-blue bg-lk-blue-tint rounded-t-lk-xl",
-                  )}
-                >
-                  <span className="block text-lk-h2 font-bold text-lk-ink">{column.name}</span>
-                  <span className="mt-1 block text-lk-secondary text-lk-ink-3">
-                    {column.detail}
-                  </span>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {t.rows.map((row, index) => {
-              const last = index === t.rows.length - 1;
-              return (
-                <tr key={row}>
-                  <th
-                    scope="row"
-                    className="border-t border-lk-mist-line bg-lk-mist px-6 py-4.5 text-lk-compact font-semibold text-lk-ink"
-                  >
-                    {row}
-                  </th>
-                  {t.columns.map((column) => (
-                    <td
-                      key={column.key}
-                      className={cn(
-                        "border-t border-lk-mist-line px-6 py-4.5",
-                        column.key === "leenkey" &&
-                          cn(
-                            "border-x-2 border-x-lk-blue bg-lk-blue-tint",
-                            last && "rounded-b-lk-xl border-b-2 border-b-lk-blue",
-                          ),
-                      )}
-                    >
-                      <ComparisonValue
-                        value={column.values[index] ?? ""}
-                        good={column.good[index] ?? false}
-                      />
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      <p className="mb-4 text-center text-lk-caption text-lk-ink-3 md:hidden">{t.example}</p>
-      <ul className="flex flex-col gap-4 md:hidden">
-        {t.columns.map((column) => {
-          const leenkey = column.key === "leenkey";
-          return (
-            <li
-              key={column.key}
-              className={cn(
-                v1Card,
-                "rounded-lk-xl px-5 py-6",
-                leenkey && "border-2 border-lk-blue bg-lk-blue-tint",
-              )}
-            >
-              <h3 className="text-lk-h2 font-bold text-lk-ink">{column.name}</h3>
-              <p className="mt-1 text-lk-secondary text-lk-ink-3">{column.detail}</p>
-              <dl className="mt-3">
-                {t.rows.map((row, index) => (
-                  <div
-                    key={row}
-                    className="flex items-start justify-between gap-4 border-t border-lk-mist-line py-3"
-                  >
-                    <dt className="text-lk-secondary font-semibold text-lk-ink-2">{row}</dt>
-                    <dd className="text-right">
-                      <ComparisonValue
-                        value={column.values[index] ?? ""}
-                        good={column.good[index] ?? false}
-                      />
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+      {plans && plans.length > 0 ? (
+        <ul
+          data-reveal-stagger=""
+          className="flex flex-col gap-2.5 md:grid md:grid-cols-3 md:gap-6"
+        >
+          {plans.map((plan) => (
+            <li key={plan.code} className="flex">
+              <PlanCardSoft
+                className="flex-1"
+                tag={t.items[plan.code].tag}
+                name={plan.name}
+                text={t.items[plan.code].text}
+                price={
+                  plan.priceCents === 0 ? t.free : `${formatPrice(plan.priceCents)}\u00a0${t.taxes}`
+                }
+                note={t.items[plan.code].note}
+                featured={plan.code === "accompagne"}
+              />
             </li>
-          );
-        })}
-      </ul>
-    </MarketingSection>
+          ))}
+        </ul>
+      ) : null}
+    </section>
   );
 }
 
-/** A value of the comparison: the check or the cross of the V1, said in words to screen readers. */
-function ComparisonValue({ value, good }: { value: string; good: boolean }) {
-  const t = home.comparison;
-  const Icon = good ? CircleCheck : CircleX;
-  return (
-    <span className="inline-flex items-center gap-2.5 text-lk-compact font-semibold text-lk-ink tabular-nums">
-      <Icon
-        aria-hidden="true"
-        className={cn("size-4.5 shrink-0", good ? "text-lk-success" : "text-lk-ink-3")}
-      />
-      <span>
-        <span className="sr-only">{good ? t.good : t.bad} </span>
-        {value}
-      </span>
-    </span>
-  );
-}
-
-/**
- * « Les trois questions essentielles. » (#faq): the V1 list, a white card for
- * each question that unfolds its answer (FaqList), « Toutes les questions »
- * under it.
- */
+/** « Les trois questions essentielles. »: rows that unfold, « Toutes les questions » under them. */
 export function HomeFaqSection() {
   const t = home.faq;
   return (
-    <MarketingSection
-      id="faq"
-      look="showcase"
-      eyebrow={t.eyebrow}
-      title={t.title}
-      accent={t.accent}
-      revealContent={false}
-    >
+    <section aria-labelledby="questions" className="mx-auto max-w-220 px-4 pt-12 md:px-8 md:pt-22">
+      <h2 id="questions" data-reveal="" className={`${sectionTitle} mb-2 md:mb-5`}>
+        {t.title}
+      </h2>
       <FaqList
-        className="mx-auto max-w-220"
+        look="rows"
         items={t.items.map((item) => ({
           question: item.question,
           answer: (
@@ -325,17 +231,64 @@ export function HomeFaqSection() {
           ),
         }))}
       />
-      <div data-reveal="" className="mt-8 flex justify-center">
-        <Button asChild variant="secondary" size="lg" trailingIcon={ArrowRight}>
-          <Link href={ROUTES.faq}>{t.all}</Link>
+      <Link
+        href={ROUTES.faq}
+        className="mt-5 inline-block text-lk-body font-bold text-lk-blue underline-offset-3 hover:underline"
+      >
+        {t.all}
+      </Link>
+    </section>
+  );
+}
+
+/** « Prêt à garder les clés de votre vente ? »: the white banner and its shapes. */
+export function FinalBanner() {
+  const t = home.final;
+  return (
+    <section aria-labelledby="pret" className="mx-auto max-w-lk-wide px-4 pt-10 md:px-8 md:pt-22">
+      <div
+        data-reveal=""
+        className="relative isolate flex flex-col gap-4 overflow-hidden rounded-[22px] border border-lk-line bg-lk-surface px-5.5 py-7 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-8 md:rounded-lk-4xl md:p-16"
+      >
+        <DecorativeShapes
+          shapes={[
+            {
+              kind: "halo",
+              className: "-top-20 -right-20 size-55 md:-top-30 md:right-[18%] md:size-85",
+            },
+            {
+              kind: "ring",
+              slow: true,
+              className:
+                "-bottom-12.5 -left-10 size-30 md:-right-10 md:-bottom-15 md:left-auto md:size-45",
+            },
+          ]}
+        />
+        <div className="max-w-155">
+          <h2
+            id="pret"
+            className="text-[1.625rem] leading-[1.1] text-heavy text-lk-ink md:text-[2.5rem] md:leading-[1.08]"
+          >
+            {t.title}
+          </h2>
+          <p className="mt-2 text-lk-body text-lk-ink-2 md:mt-3 md:text-lk-lead-lg">{t.text}</p>
+        </div>
+        <Button
+          asChild
+          shape="pill"
+          size="xl"
+          trailingIcon={ArrowRight}
+          className="w-full font-extrabold md:h-15 md:w-auto md:px-7"
+        >
+          <Link href={ROUTES.valuation}>{t.action}</Link>
         </Button>
       </div>
-    </MarketingSection>
+    </section>
   );
 }
 
 /**
- * « Parlons-en ensemble. » (#contact): the contact form of the site, also
+ * « Parlons-en ensemble. » (#contact): the contact form of the site, on
  * /contact, in the white card of the V1 under its centred head.
  */
 export function ContactSection({ titleAs = "h2" }: { titleAs?: "h1" | "h2" }) {
@@ -353,19 +306,5 @@ export function ContactSection({ titleAs = "h2" }: { titleAs?: "h1" | "h2" }) {
     >
       <ContactForm source="contact" look="showcase" className="mx-auto max-w-lk-settings" />
     </MarketingSection>
-  );
-}
-
-/** Last call to action of the home page, the V1 one (CtaPanel). */
-export function FinalCta() {
-  const t = home.final;
-  return (
-    <CtaPanel
-      title={t.title}
-      text={t.text}
-      action={t.action}
-      href={ROUTES.valuation}
-      note={t.note}
-    />
   );
 }

@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { latestOf, LATEST_COUNT } from "@/leenkey/search/latest";
 import { fr } from "@/lib/i18n/fr";
 import {
   CONTACT_MOTIFS,
@@ -8,33 +7,10 @@ import {
   type ContactFormValues,
 } from "@/lib/validations/contact";
 
-// L1-41: the home page rebuilt in V2 (SPEC-V2 8.1, DECISIONS 2026-10-19).
+// L1-41: the home page rebuilt in V2 (SPEC-V2 8.1, DECISIONS 2026-10-19), and
+// the texts of the public site.
 
 const site = fr.site;
-
-describe("« Les derniers biens »", () => {
-  it("the three most recent, or nothing below three", () => {
-    expect(LATEST_COUNT).toBe(3);
-    expect(latestOf(["a", "b", "c", "d", "e"])).toEqual(["a", "b", "c"]);
-    expect(latestOf(["a", "b", "c"])).toEqual(["a", "b", "c"]);
-    expect(latestOf(["a", "b"])).toEqual([]);
-    expect(latestOf([])).toEqual([]);
-  });
-
-  // L1-46: the most recent with a photo first, each group in its order.
-  it("prend d'abord les plus récents qui ont une photo", () => {
-    const photo = (item: string) => item.endsWith("+");
-    expect(latestOf(["a", "b+", "c", "d+", "e+", "f+"], photo)).toEqual(["b+", "d+", "e+"]);
-    expect(latestOf(["a", "b+", "c", "d"], photo)).toEqual(["b+", "a", "c"]);
-    expect(latestOf(["a", "b", "c"], photo)).toEqual(["a", "b", "c"]);
-    expect(latestOf(["a+", "b+"], photo)).toEqual([]);
-  });
-
-  it("« Voir les 12 biens », one listing alone named as such", () => {
-    expect(site.home.latest.all(12, "12")).toBe("Voir les 12 biens");
-    expect(site.home.latest.all(1, "1")).toBe("Voir le bien");
-  });
-});
 
 describe("contact form of the site", () => {
   const filled = {
@@ -114,28 +90,6 @@ describe("contact form of the site", () => {
     expect(site.contact.motifs.map((motif) => motif.value)).toEqual([...CONTACT_MOTIFS]);
     for (const motif of site.contact.motifs) {
       expect(motif.label).not.toMatch(/\p{Extended_Pictographic}/u);
-    }
-  });
-});
-
-describe("situations of « Où en êtes-vous dans votre vente ? »", () => {
-  it("four situations, each with its answer and its way on", () => {
-    const items = site.home.stages.items;
-    expect(items.map((item) => item.label)).toEqual([
-      "Je réfléchis",
-      "Je veux connaître mon prix",
-      "Je prépare ma vente",
-      "Mon bien est déjà en vente",
-    ]);
-    expect(items.map((item) => item.href)).toEqual([
-      "/estimer",
-      "/estimer",
-      "/estimer",
-      "#contact",
-    ]);
-    for (const item of items) {
-      expect(item.title.length).toBeGreaterThan(0);
-      expect(item.text.length).toBeGreaterThan(0);
     }
   });
 });
@@ -227,52 +181,8 @@ describe("pages of the site (L1-42)", () => {
     const faq = texts(site.faqPage.items[0].answer).join("");
     expect(faq).toContain(`Accompagné à ${accompagne} TTC`);
     expect(faq).toContain(`Sérénité à ${serenite} TTC`);
-    const leenkey = site.home.comparison.columns.find((column) => column.key === "leenkey");
-    expect(leenkey?.values[0]).toBe(`${accompagne.replace(" €", "")} à ${serenite}`);
-  });
-});
-
-// L1-47 (DECISIONS 2026-10-20): the dark sections of the V1 page.
-describe("aperçu de l'espace vendeur", () => {
-  const space = site.home.space;
-  const texts = JSON.stringify(space);
-
-  it("dit, comme la V1, que ses données sont des exemples, dès sa barre d'adresse", () => {
-    expect(space.caption).toBe("Aperçu de l'espace vendeur, avec des données d'exemple.");
-    expect(space.sample).toBe("Exemple");
-    expect(space.label).toMatch(/^Exemple de tableau de bord vendeur/);
-  });
-
-  it("ne parle ni de portails (annonces exclusives) ni d'« estimation »", () => {
-    expect(texts).not.toMatch(/portail/i);
-    expect(texts).not.toMatch(/estim/i);
-  });
-
-  it("jamais plus de deux séparateurs « · » dans un libellé (DESIGN.md 1)", () => {
-    for (const text of texts.match(/"[^"]*"/g) ?? []) {
-      expect((text.match(/·/g) ?? []).length, text).toBeLessThanOrEqual(2);
-    }
-  });
-
-  // Dashboard.png, DESIGN.md 10.4 and SPEC 8.7: what a seller finds in V2.
-  it("montre « Ma vente » de la V2 : 6 étapes, 3 chiffres, la tâche en cours après celle qui est faite", () => {
-    expect(space.step).toBe("Étape 3 sur 6 · Contacts et visites");
-    expect(space.figures.map((figure) => figure.label)).toEqual([
-      "vues · 7\u202fj",
-      "contacts",
-      "qualifiés",
-    ]);
-    expect(space.todo.tasks.map((task) => task.state)).toEqual(["done", "current", "todo"]);
-    expect(space.next.label).toBe("Prochaine action");
-  });
-
-  it("ne dit jamais d'un financement qu'il est « validé » (CLAUDE.md section 6)", () => {
-    expect(texts).not.toMatch(/validé/i);
-  });
-});
-
-describe("ce que vous obtenez en quelques minutes", () => {
-  it("les quatre éléments de la courbe, un repère chacun", () => {
-    expect(site.home.features.items).toHaveLength(4);
+    // The savings fall back on the price of the seed without the database.
+    const { FALLBACK_ACCOMPANIED_CENTS } = await import("@/leenkey/site/savings");
+    expect(FALLBACK_ACCOMPANIED_CENTS).toBe(price("accompagne"));
   });
 });

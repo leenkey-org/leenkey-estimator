@@ -12,6 +12,7 @@ import { Loader2 } from "lucide-react";
 import { buttonVariants } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { cn } from "@/lib/utils";
+import { readValuationAddress } from "@/leenkey/site/valuation-entry";
 
 export type { DvfComparable, DvfResult } from "./dvf";
 
@@ -239,6 +240,25 @@ export function LeenkeyWizard() {
   // hydrate from localStorage
   useEffect(() => {
     try {
+      // 0. An address chosen on the home page (DECISIONS 2026-10-26): a new
+      // analysis, the address filled in as if picked at the step « Localisation »;
+      // the draft and the result of before are put aside, the address of the
+      // page cleaned so that it is read once.
+      const fromHome = readValuationAddress(new URLSearchParams(window.location.search));
+      if (fromHome) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(DASHBOARD_KEY);
+        setForm({
+          ...initialForm,
+          adresse: fromHome.label,
+          code_postal: fromHome.postalCode,
+          ville: fromHome.city,
+          departement: fromHome.department,
+        });
+        window.history.replaceState(window.history.state, "", window.location.pathname);
+        setHydrated(true);
+        return;
+      }
       // 1. Restore dashboard if exists (priorité — F5 sur la page résultat)
       const dashRaw = localStorage.getItem(DASHBOARD_KEY);
       if (dashRaw) {

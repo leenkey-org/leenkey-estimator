@@ -329,11 +329,19 @@ html:has([data-sticky-subheader="conversation"]) {
 /* static: every token exists as a CSS variable (var(--color-lk-line)), even
    when no utility uses it yet. */
 @theme static {
-  /* Palette (DESIGN.md 2.1): bg-lk-blue, text-lk-ink-3, border-lk-line… */
+  /* Palette (DESIGN.md 2.1): bg-lk-blue, text-lk-ink-3, border-lk-line…
+     Since the redesign of direction C (docs/design-handoff/SPECS.md 1,
+     DECISIONS 2026-10-26): warm neutrals, the blue as an accent. */
   --color-lk-blue: #1156fc;
-  --color-lk-blue-hover: #0d47e0;
-  --color-lk-blue-tint: #eef4ff;
+  /* Dark blue: hover, key figures, text of a badge (8.6:1 on white) */
+  --color-lk-blue-hover: #0b3fc4;
+  --color-lk-blue-dark: #0b3fc4;
+  --color-lk-blue-tint: #eef3ff;
+  /* Light blue: rings of a focused field, fills of a bar, hover of an
+     unread notification (ink-3 4.8:1 on it) */
   --color-lk-blue-line: #dbeafe;
+  /* Soft blue border: a card or a pill hovered (direction C) */
+  --color-lk-blue-border: #c9d8fe;
   --color-lk-on-blue-2: #f0f4ff;
   /* Accent, lines and rings on navy: 6.9:1 on --lk-navy (L1-47) */
   --color-lk-blue-light: #93b4ff;
@@ -343,19 +351,31 @@ html:has([data-sticky-subheader="conversation"]) {
   --color-lk-blue-mid: #2464fc;
   --color-lk-blue-bright: #4c80fd;
   --color-lk-navy: #1a2b4a;
-  --color-lk-ink: #0f1e35;
-  --color-lk-ink-2: #3e4757;
-  --color-lk-ink-3: #5b6474;
-  --color-lk-bg: #f4f4f1;
+  /* Text (direction C): main 17:1, secondary 7:1, tertiary and placeholders
+     5.9:1 on white, 5.5:1 on the page */
+  --color-lk-ink: #1c1b19;
+  --color-lk-ink-2: #5e574d;
+  --color-lk-ink-3: #6b6459;
+  --color-lk-disabled: #b5ada2;
+  /* Warm neutral of the page, white surfaces (cards, header) */
+  --color-lk-bg: #faf8f5;
   --color-lk-surface: #ffffff;
-  --color-lk-stone: #e3e4de;
-  --color-lk-stone-2: #ecede8;
+  --color-lk-stone: #e4ddd2;
+  /* Sand: the footer, the tracks of the bars, the tiles */
+  --color-lk-stone-2: #f1ede7;
+  --color-lk-sand: #f1ede7;
+  --color-lk-sand-line: #e4ddd2;
+  /* The bar « Agence » of the comparison (decorative, with its amount) */
+  --color-lk-agency: #cfc7bb;
   /* The light cool flat of the sections of the V1 home page and the line of
      its cards (L1-49) */
   --color-lk-mist: #f5f7fb;
   --color-lk-mist-line: #e2e8f0;
-  --color-lk-line: #d9dbd3;
-  --color-lk-field: #8a909a;
+  --color-lk-line: #ece6dd;
+  /* Strong border: pills, filters, the fields of the home search card */
+  --color-lk-line-strong: #ddd5ca;
+  /* Border of a form field: 3.5:1 on white, 3.3:1 on the page (WCAG 1.4.11) */
+  --color-lk-field: #8f877b;
   --color-lk-success: #047857;
   --color-lk-success-bg: #d1fae5;
   --color-lk-success-fg: #065f46;
@@ -366,21 +386,23 @@ html:has([data-sticky-subheader="conversation"]) {
   --color-lk-danger-bg: #fee2e2;
   --color-lk-danger-fg: #991b1b;
 
-  /* DPE badges (DESIGN.md 2.1): bg-lk-dpe-c-bg text-lk-dpe-c-fg… */
-  --color-lk-dpe-a-bg: #d1fae5;
-  --color-lk-dpe-a-fg: #065f46;
-  --color-lk-dpe-b-bg: #dcfce7;
-  --color-lk-dpe-b-fg: #166534;
-  --color-lk-dpe-c-bg: #ecfccb;
-  --color-lk-dpe-c-fg: #3f6212;
-  --color-lk-dpe-d-bg: #fef9c3;
-  --color-lk-dpe-d-fg: #854d0e;
-  --color-lk-dpe-e-bg: #fef3c7;
-  --color-lk-dpe-e-fg: #92400e;
-  --color-lk-dpe-f-bg: #ffedd5;
-  --color-lk-dpe-f-fg: #9a3412;
-  --color-lk-dpe-g-bg: #fee2e2;
-  --color-lk-dpe-g-fg: #991b1b;
+  /* DPE badges (DESIGN.md 2.1): bg-lk-dpe-c-bg text-lk-dpe-c-fg… Direction C:
+     the pastel scale of SPECS.md for B to E, A, F and G after the official
+     colours, the letter in the main text colour (11:1 or more). */
+  --color-lk-dpe-a-bg: #b8e2cb;
+  --color-lk-dpe-a-fg: #1c1b19;
+  --color-lk-dpe-b-bg: #c9e8b0;
+  --color-lk-dpe-b-fg: #1c1b19;
+  --color-lk-dpe-c-bg: #e3f0c2;
+  --color-lk-dpe-c-fg: #1c1b19;
+  --color-lk-dpe-d-bg: #fbf0a8;
+  --color-lk-dpe-d-fg: #1c1b19;
+  --color-lk-dpe-e-bg: #fbdda6;
+  --color-lk-dpe-e-fg: #1c1b19;
+  --color-lk-dpe-f-bg: #f8cba6;
+  --color-lk-dpe-f-fg: #1c1b19;
+  --color-lk-dpe-g-bg: #f4b8b5;
+  --color-lk-dpe-g-fg: #1c1b19;
 
   /* Radii (DESIGN.md 5): 4 px controls, 6 px containers, rounded-full pills;
      2 px for the corner of a message bubble on the side of its sender */
@@ -391,6 +413,11 @@ html:has([data-sticky-subheader="conversation"]) {
      panels (16 px) */
   --radius-lk-lg: 12px;
   --radius-lk-xl: 16px;
+  /* Direction C (SPECS.md 1): cards of a property and shortcuts 16 px
+     (rounded-lk-xl), large blocks 20 to 28 px; pills rounded-full */
+  --radius-lk-2xl: 20px;
+  --radius-lk-3xl: 24px;
+  --radius-lk-4xl: 28px;
 
   /* Elevation (DESIGN.md 5): floating elements only, never cards */
   --shadow-float: 0 2px 6px rgba(15, 30, 53, 0.18);
@@ -403,6 +430,18 @@ html:has([data-sticky-subheader="conversation"]) {
   --shadow-lk-raised: 0 8px 24px rgba(0, 0, 0, 0.16);
   --shadow-lk-lift: 0 24px 50px rgba(15, 30, 53, 0.3);
   --shadow-lk-photo: 0 24px 60px -20px rgba(0, 0, 0, 0.4);
+  /* Direction C (SPECS.md 1): the floating search card, a field in a pill,
+     the primary button, the featured plan, a white block set down, the
+     floating assistant; a badge on a photo, a card hovered, an icon tile */
+  --shadow-lk-search: 0 14px 44px rgba(11, 42, 122, 0.2), 0 1px 3px rgba(28, 27, 25, 0.08);
+  --shadow-lk-field: 0 4px 14px rgba(28, 27, 25, 0.08);
+  --shadow-lk-primary: 0 8px 20px rgba(17, 86, 252, 0.3);
+  --shadow-lk-featured: 0 12px 32px rgba(17, 86, 252, 0.12);
+  --shadow-lk-block: 0 12px 40px rgba(28, 27, 25, 0.08);
+  --shadow-lk-fab: 0 10px 30px rgba(28, 27, 25, 0.28);
+  --shadow-lk-badge: 0 2px 8px rgba(28, 27, 25, 0.14);
+  --shadow-lk-hover: 0 8px 24px rgba(17, 86, 252, 0.14);
+  --shadow-lk-tile: 0 6px 20px rgba(17, 86, 252, 0.16);
 
   /* Home page in the direction of the V1 (L1-49): letter spacing of its
      labels in capitals, above the titles and in its cards */
@@ -417,6 +456,7 @@ html:has([data-sticky-subheader="conversation"]) {
 
   /* Containers (DESIGN.md 4.3): max-w-lk-page… */
   --container-lk-page: 75rem; /* 1200 px, public pages */
+  --container-lk-wide: 80rem; /* 1280 px, the pages of direction C (SPECS.md 1) */
   --container-lk-home: 51.25rem; /* 820 px, buyer home */
   --container-lk-settings: 45rem; /* 720 px, account and settings */
   --container-lk-heading: 50rem; /* 800 px, 40 px titles of the public pages */
@@ -862,8 +902,9 @@ html:has([data-sticky-subheader="conversation"]) {
     text-wrap: pretty;
   }
 
+  /* 3 px since direction C (SPECS.md 1). */
   .facade :focus-visible {
-    outline: 2px solid var(--color-lk-blue);
+    outline: 3px solid var(--color-lk-blue);
     outline-offset: 2px;
   }
 
@@ -889,4 +930,44 @@ html:has([data-sticky-subheader="conversation"]) {
       scroll-behavior: auto !important;
     }
   }
+}
+
+/* ─── Direction C (docs/design-handoff/SPECS.md 4.7, DECISIONS 2026-10-26) ───
+   The decorative shapes of the savings and of the final banner (a halo, a
+   ring, a dot) float slowly behind the content: 12 px up and down on a phone,
+   16 px from 768 px, in 10 s or 13 s backwards; still with reduced motion. */
+@keyframes lk-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(var(--lk-float-distance));
+  }
+}
+@utility lk-float {
+  --lk-float-distance: -12px;
+  animation: lk-float 10s ease-in-out infinite;
+  @media (min-width: 48rem) {
+    --lk-float-distance: -16px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+@utility lk-float-slow {
+  --lk-float-distance: -12px;
+  animation: lk-float 13s ease-in-out infinite reverse;
+  @media (min-width: 48rem) {
+    --lk-float-distance: -16px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+/* Titles of direction C: 800, a little wider (SPECS.md 1, 110 to 115 %). */
+@utility text-heavy {
+  font-weight: 800;
+  font-stretch: 112%;
+  letter-spacing: -0.01em;
 }
