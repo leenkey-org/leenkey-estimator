@@ -256,7 +256,10 @@ where m.conversation_id in (select c.id from public.conversations c
 order by m.age desc
 on conflict do nothing;
 
--- Task progress coherent with each status (core/steps, L1-23, ticks them in real use).
+-- Task progress coherent with each status. The engine (L1-23) ticks the tasks
+-- of the events above itself; here only the tasks of the steps already passed
+-- that nothing ticks yet: done by hand (by the seller or by Leenkey) and the
+-- documents (lot 3). The current step follows them (sale_task_status_refresh).
 insert into public.sale_task_status (property_id, task_id, done_at, done_by)
 select sp.property_id, t.id, coalesce(l.submitted_at, now()),
        case when coalesce(t.owner, s.owner) = 'leenkey' then '5eed0000-0000-4000-8000-0000000000ad'::uuid
@@ -268,11 +271,8 @@ join public.sale_steps cur on cur.plan = sp.plan and cur.code = sp.current_step_
 join public.sale_steps s on s.plan = sp.plan
 join public.sale_step_tasks t on t.step_id = s.id
 where sp.property_id in (select property_id from seed_new)
-  and (s.position < cur.position
-       or (s.code = 'publish' and l.status = 'pending' and t.code in ('listing_written', 'listing_submitted'))
-       or (s.code = 'publish' and l.status = 'rejected' and t.code = 'listing_written')
-       or (t.code = 'first_contact' and exists (select 1 from public.conversations c
-                                                where c.property_id = p.id and c.kind = 'listing')))
+  and s.position < cur.position
+  and (t.auto_trigger is null or t.auto_trigger like 'documents.%')
 on conflict do nothing;
 
 -- Favorites

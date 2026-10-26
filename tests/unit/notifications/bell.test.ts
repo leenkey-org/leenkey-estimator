@@ -122,7 +122,13 @@ describe("wording of the notifications (from type and data)", () => {
 
   it("each type written by the database has its words", () => {
     expect(NOTIFICATION_TYPES.sort()).toEqual(
-      ["listing.pending", "listing.published", "listing.rejected", "message.new"].sort(),
+      [
+        "listing.pending",
+        "listing.published",
+        "listing.rejected",
+        "message.new",
+        "step.advanced",
+      ].sort(),
     );
     expect(describeNotification(view({}))).toMatchObject({
       title: "Nouveau message de Chloé",
@@ -162,6 +168,35 @@ describe("wording of the notifications (from type and data)", () => {
     expect(
       describeNotification(view({ type: "listing.rejected", data: { title: "Maison" } })),
     ).toMatchObject({ title: t.listingRejected.title, tone: "warning" });
+    // L1-23, the facts written by sale_refresh_progress.
+    expect(
+      describeNotification(
+        view({
+          type: "step.advanced",
+          data: {
+            step_title: "Gérer mes contacts et mes visites",
+            step_position: 3,
+            steps_total: 6,
+            title: "Maison 5 pièces",
+            city: "Épinay-sur-Orge",
+          },
+        }),
+      ),
+    ).toMatchObject({
+      title: "Nouvelle étape : Gérer mes contacts et mes visites",
+      detail: "Étape 3 sur 6 · Maison 5 pièces",
+      tone: "stone",
+    });
+    // Without a listing, its town; without facts, a title still.
+    expect(
+      describeNotification(
+        view({ type: "step.advanced", data: { step_title: "Finaliser ma vente", city: "Grigny" } }),
+      ).detail,
+    ).toBe("Grigny");
+    expect(describeNotification(view({ type: "step.advanced", data: {} }))).toMatchObject({
+      title: "Votre vente passe à l'étape suivante",
+      detail: null,
+    });
   });
 
   it("a row written with its own words keeps them; an unknown type has a default", () => {

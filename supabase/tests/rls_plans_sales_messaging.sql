@@ -36,11 +36,13 @@ returning id as task_step_owned \gset
 insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms)
 values (tests.uid('seller_a'), 'appartement', '12 rue de la Gare', '91600', 'Savigny-sur-Orge', 68, 3)
 returning id as prop_a \gset
+-- Before its listing, written: the engine then moves the sale on (L1-23,
+-- tests in rls_sale_engine.sql).
+select is((select plan::text || '/' || current_step_code from sale_progress where property_id = :'prop_a'),
+          'autonomie/prepare', 'sale_progress created with the property (Autonomie, first step)');
 insert into listings (property_id, title, description, price_cents)
 values (:'prop_a', 'Appartement 3 pièces', 'Proche gare.', 35000000)
 returning id as listing_a \gset
-select is((select plan::text || '/' || current_step_code from sale_progress where property_id = :'prop_a'),
-          'autonomie/prepare', 'sale_progress created with the property (Autonomie, first step)');
 select lives_ok(format($$insert into sale_task_status (property_id, task_id, done_at, done_by)
                          values (%L, %L, now(), tests.uid('seller_a'))$$, :'prop_a', :'task_seller'),
                 'seller_a: ticks a seller task');
