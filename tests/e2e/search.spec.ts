@@ -65,9 +65,13 @@ async function seriousViolations(page: Page) {
 
 async function openFilters(page: Page, _isMobile: boolean) {
   // « Filtres », and the count of the active filters when there are some.
-  await page.getByRole("button", { name: /^Filtres(, \d+\sfiltres? actifs?)?$/ }).click();
+  const button = page.getByRole("button", { name: /^Filtres(, \d+\sfiltres? actifs?)?$/ });
   const dialog = page.getByRole("dialog", { name: "Filtres" });
-  await expect(dialog).toBeVisible();
+  // A click before the page is hydrated opens nothing: clicked again until it does.
+  await expect(async () => {
+    if (!(await dialog.isVisible())) await button.click();
+    await expect(dialog).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 10_000 });
   return dialog;
 }
 
