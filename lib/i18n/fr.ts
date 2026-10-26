@@ -309,6 +309,13 @@ export const fr = {
         detail: (title: string) =>
           `Nous avons relu «\u00A0${title}\u00A0» : voyez ce qu'il faut corriger.`,
       },
+      // L1-23: the sale reaches a step (SPEC-V2 section 9).
+      stepAdvanced: {
+        title: (step: string | null) =>
+          step ? `Nouvelle étape : ${step}` : "Votre vente passe à l'étape suivante",
+        position: (position: number, total: number) => `Étape ${position} sur ${total}`,
+        detail: (parts: readonly (string | null)[]) => parts.filter(Boolean).join(" · "),
+      },
       fallback: "Nouvelle notification",
     },
     preferences: {
