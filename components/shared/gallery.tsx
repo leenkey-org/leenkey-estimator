@@ -36,7 +36,8 @@ function NoPhoto({ className }: { className?: string }) {
 /**
  * Listing photos (docs/DESIGN.md 10.3, 7.1). Mobile: one photo across the
  * width, 280 px, snap scrolling, counter « 1 / 12 », touch to enlarge.
- * Desktop: one large photo and four small ones, « + N photos » on the last.
+ * Desktop: one large photo and four small ones, « + N photos » on the last;
+ * taller from 1 536 px, where the page takes the width of the screen (L1-56).
  * Enlarged: full-screen viewer on ink 95 %, arrows, counter, Escape, focus
  * kept inside, keyboard arrows and swipe. Without photos: facade.svg.
  */
@@ -89,7 +90,7 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
       {total ? (
         <div
           className={cn(
-            "hidden h-77.5 gap-2.5 lg:grid min-[1440px]:h-92.5",
+            "hidden h-77.5 gap-2.5 lg:grid min-[1440px]:h-92.5 2xl:h-[min(30vw,35rem)]",
             total === 1 && "grid-cols-1",
             total > 1 && total < 5 && "grid-cols-[2fr_1fr]",
             total === 2 && "grid-rows-1",
@@ -135,7 +136,7 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
           })}
         </div>
       ) : (
-        <NoPhoto className="hidden h-77.5 rounded-lk-md lg:flex min-[1440px]:h-92.5" />
+        <NoPhoto className="hidden h-77.5 rounded-lk-md lg:flex min-[1440px]:h-92.5 2xl:h-[min(30vw,35rem)]" />
       )}
 
       {total ? <Viewer photos={photos} index={viewer} onIndexChange={setViewer} /> : null}

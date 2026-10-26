@@ -66,7 +66,7 @@ export function SubmitListing({ propertyId }: { propertyId: string }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-lk-page flex-1 flex-col gap-4 px-5 pt-5 md:px-10 md:pb-16">
+    <div className="lk-frame flex flex-1 flex-col gap-4 pt-5 md:pb-16">
       {error ? (
         <InlineAlert
           tone="danger"

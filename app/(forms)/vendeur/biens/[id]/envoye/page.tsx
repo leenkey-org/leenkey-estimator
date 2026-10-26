@@ -48,7 +48,7 @@ export default async function PropertySentPage({ params }: Props) {
       {property && listing ? (
         <section
           aria-labelledby="annonce-envoyee"
-          className="mx-auto hidden w-full max-w-lk-page flex-col gap-3 px-10 py-10 md:flex"
+          className="lk-frame hidden flex-col gap-3 py-10 md:flex"
         >
           <h2 id="annonce-envoyee" className="text-lk-h3 font-semibold text-lk-ink">
             {t.recap}

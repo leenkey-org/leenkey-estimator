@@ -180,6 +180,37 @@ html:has([data-sticky-subheader="conversation"]) {
   --lk-sticky-subheader: --spacing(18.25);
 }
 
+/* The gutters of a page frame (L1-56, DESIGN.md 4.1): 20 px on a phone,
+   32 px from 768 px, 64 px from 1 536 px. A section sets its own on a phone
+   (max-md:[--lk-gutter:--spacing(4)], direction C). With viewport-fit=cover
+   (app/layout.tsx), a phone in landscape draws the page under its notch and
+   rounded corners: a gutter is never narrower than their safe area. */
+html {
+  --lk-gutter: --spacing(5);
+  @variant md {
+    --lk-gutter: --spacing(8);
+  }
+  @variant 2xl {
+    --lk-gutter: --spacing(16);
+  }
+}
+
+@utility lk-gutter {
+  padding-left: max(var(--lk-gutter), env(safe-area-inset-left));
+  padding-right: max(var(--lk-gutter), env(safe-area-inset-right));
+}
+
+/* A page frame (L1-56, « en full page en fonction du device »): the whole
+   width of the device up to 1 920 px, centred beyond, inside its gutters.
+   The text of a page keeps its measure inside (max-w-lk-prose…). */
+@utility lk-frame {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--container-lk-frame);
+  padding-left: max(var(--lk-gutter), env(safe-area-inset-left));
+  padding-right: max(var(--lk-gutter), env(safe-area-inset-right));
+}
+
 /* Ensure smooth scroll behavior site-wide */
 @media (prefers-reduced-motion: no-preference) {
   html {
@@ -454,9 +485,8 @@ html:has([data-sticky-subheader="conversation"]) {
   --ease-out-lk: cubic-bezier(0.2, 0.7, 0.2, 1);
   --ease-reveal-lk: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* Containers (DESIGN.md 4.3): max-w-lk-page… */
-  --container-lk-page: 75rem; /* 1200 px, public pages */
-  --container-lk-wide: 80rem; /* 1280 px, the pages of direction C (SPECS.md 1) */
+  /* Containers (DESIGN.md 4.3): max-w-lk-frame… */
+  --container-lk-frame: 120rem; /* 1920 px, the frame of every page (L1-56), see lk-frame */
   --container-lk-home: 51.25rem; /* 820 px, buyer home */
   --container-lk-settings: 45rem; /* 720 px, account and settings */
   --container-lk-heading: 50rem; /* 800 px, 40 px titles of the public pages */

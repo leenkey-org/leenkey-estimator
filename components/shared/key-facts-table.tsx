@@ -51,9 +51,9 @@ export function KeyFactsTable({ items, className }: KeyFactsTableProps) {
 
 /**
  * The facts of a listing in the way of Airbnb (Younes, L1-55, DECISIONS
- * 2026-10-26): grouped under their title, two columns from 768 px, each a
- * pictogram in a light blue round, its name above its value. A description
- * list per group, read as « Taxe foncière, 1 150 € / an ».
+ * 2026-10-26): grouped under their title, two columns from 768 px (three from
+ * 1 536 px, L1-56), each a pictogram in a light blue round, its name above its
+ * value. A description list per group, read as « Taxe foncière, 1 150 € / an ».
  */
 export function KeyFactsGrid({
   items,
@@ -73,7 +73,7 @@ export function KeyFactsGrid({
           {title ? (
             <Heading className="text-lk-title font-semibold text-lk-ink">{title}</Heading>
           ) : null}
-          <dl className="grid gap-x-8 gap-y-4 md:grid-cols-2">
+          <dl className="grid gap-x-8 gap-y-4 md:grid-cols-2 2xl:grid-cols-3">
             {facts.map((item) => {
               const Icon = item.icon;
               return (

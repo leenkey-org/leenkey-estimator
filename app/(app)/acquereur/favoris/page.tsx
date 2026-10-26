@@ -30,7 +30,7 @@ export default async function FavouritesPage() {
   const now = new Date(checkedAt);
 
   return (
-    <SpacePage title={t.title} roles={profile.roles} profileId={profile.id}>
+    <SpacePage title={t.title} roles={profile.roles} profileId={profile.id} wide>
       {!result.ok ? (
         <InlineAlert
           tone="danger"
@@ -62,7 +62,10 @@ export default async function FavouritesPage() {
           <p className="mt-2 text-lk-secondary text-lk-ink-3">
             {t.count(result.data.items.length)}
           </p>
-          <ul aria-label={t.list} className="mt-5 grid gap-3 md:grid-cols-2">
+          <ul
+            aria-label={t.list}
+            className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+          >
             {result.data.items.map((item) => (
               <li key={item.id}>
                 <PropertyCard

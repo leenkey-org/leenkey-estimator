@@ -50,7 +50,7 @@ export default async function PropertyPreviewPage({ params }: Props) {
     <>
       {header}
       <div className="flex flex-1 flex-col">
-        <div className="mx-auto flex w-full max-w-lk-page flex-col gap-1.5 px-5 pt-6 md:px-10 md:pt-10">
+        <div className="lk-frame flex flex-col gap-1.5 pt-6 md:pt-10">
           <h2 className="text-lk-h2 font-bold text-wide text-lk-ink">{t.preview.title}</h2>
           <p className="max-w-lk-prose text-lk-secondary text-lk-ink-2">{t.preview.lead}</p>
           {property.listing?.status === "rejected" ? (
@@ -65,7 +65,7 @@ export default async function PropertyPreviewPage({ params }: Props) {
             </InlineAlert>
           ) : null}
         </div>
-        <div className="mx-auto mt-5 w-full max-w-lk-page md:px-10">
+        <div className="mx-auto mt-5 w-full max-w-lk-frame md:lk-gutter">
           <ListingBody
             listing={listing}
             level={3}

@@ -33,7 +33,7 @@ export function EndOfFlow({
         className,
       )}
     >
-      <div className="relative mx-auto flex w-full max-w-lk-page flex-1 flex-col justify-center gap-8 px-5 py-12 md:px-10">
+      <div className="lk-frame relative flex flex-1 flex-col justify-center gap-8 py-12">
         <FacadeDrawing className="h-auto w-44 opacity-55 duration-360 ease-out-lk motion-safe:animate-in motion-safe:fade-in-0 md:absolute md:right-10 md:bottom-0 md:w-95" />
         <div className="flex max-w-lk-form flex-col gap-3">
           <Title className="text-lk-display font-bold text-wide lg:text-lk-display-lg">

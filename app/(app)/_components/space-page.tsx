@@ -2,17 +2,21 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
+import { cn } from "@/lib/utils";
 
 /**
  * Page of a signed-in area until its screen exists: H1, the bell on its right
  * below 768 px (DECISIONS Q26; in the TopNav from there), then the content.
  * The bell is on every page of the areas: the buyer home is not a tab.
+ * `wide`: a page of lists takes the width of the screen (L1-56); the account
+ * and its settings keep the width of a form.
  */
 export function SpacePage({
   title,
   roles,
   profileId,
   back,
+  wide = false,
   children,
 }: {
   title: string;
@@ -22,10 +26,16 @@ export function SpacePage({
   profileId: string;
   /** A page under another one (« Mon compte »): the way back, above the title. */
   back?: { href: string; label: string };
+  wide?: boolean;
   children: ReactNode;
 }) {
   return (
-    <div className="mx-auto w-full max-w-lk-settings px-5 py-8 md:px-10 md:py-10">
+    <div
+      className={cn(
+        "py-8 md:py-10",
+        wide ? "lk-frame" : "mx-auto w-full max-w-lk-settings px-5 md:px-10",
+      )}
+    >
       {back ? (
         <Link
           href={back.href}

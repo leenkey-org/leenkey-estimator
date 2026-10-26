@@ -55,7 +55,7 @@ export async function HomeListings() {
   return (
     <section
       aria-labelledby="pres-de-chez-vous"
-      className="mx-auto max-w-lk-wide pt-10 md:px-8 md:pt-20"
+      className="mx-auto w-full max-w-lk-frame pt-10 md:lk-gutter md:pt-20"
     >
       <HomeListingsCarousel
         listings={listings}

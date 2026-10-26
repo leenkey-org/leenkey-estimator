@@ -71,8 +71,9 @@ export function TopNav({
     >
       <div
         className={cn(
-          "mx-auto flex h-full items-center gap-6 px-5 lg:gap-10 lg:px-8",
-          !fullWidth && "max-w-lk-wide",
+          "flex h-full items-center gap-6 lg:gap-10",
+          // The page frame (L1-56); the search keeps 32 px beside its map.
+          fullWidth ? "w-full lk-gutter 2xl:[--lk-gutter:2rem]" : "lk-frame",
         )}
       >
         <Link href={homeHref} className="inline-flex h-11 shrink-0 items-center rounded-lk-sm">

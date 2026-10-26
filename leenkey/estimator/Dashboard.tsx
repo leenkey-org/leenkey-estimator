@@ -267,14 +267,14 @@ export function EstimationDashboard({
     <main className="min-h-screen bg-lk-surface">
       {/* Header */}
       <header className="border-b border-lk-line bg-lk-surface">
-        <div className="mx-auto flex max-w-6xl justify-end px-5 py-3">
+        <div className="lk-frame flex justify-end py-3">
           <div className="text-lk-compact text-lk-ink-2">
             Réf. dossier · <span className="font-semibold text-lk-ink">{ref_}</span>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-6xl px-5 py-10">
+      <div className="lk-frame py-10">
         {/* Demande de rappel : la case cochée à l'étape coordonnées ne
             produisait aucun retour visible. */}
         {form.contact_conseiller && (

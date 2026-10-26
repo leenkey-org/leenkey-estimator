@@ -62,7 +62,7 @@ export function ShowcaseHero({
       <div aria-hidden="true" className="lk-dots pointer-events-none absolute inset-0 -z-10" />
       <div
         className={cn(
-          "mx-auto grid max-w-lk-page items-center gap-12 px-5 pt-10 pb-16 md:px-10 md:pt-14 md:pb-20 lg:gap-12 lg:pt-16 lg:pb-24",
+          "lk-frame grid items-center gap-12 pt-10 pb-16 md:pt-14 md:pb-20 lg:gap-12 lg:pt-16 lg:pb-24",
           aside && "lg:grid-cols-[1.05fr_0.95fr]",
         )}
       >

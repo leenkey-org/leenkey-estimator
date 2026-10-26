@@ -31,7 +31,7 @@ export async function HomeHero() {
       // The anchors of the V1 home page still land on their part (#valoriser).
       id="valoriser"
       aria-labelledby="accueil-titre"
-      className="mx-auto max-w-lk-wide px-3 pt-3 md:px-8 md:pt-6"
+      className="lk-frame max-md:[--lk-gutter:0.75rem] pt-3 md:pt-6"
     >
       <div className="relative h-95 overflow-hidden rounded-lk-3xl bg-lk-navy lg:h-130 lg:rounded-lk-4xl">
         {photo ? (

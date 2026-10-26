@@ -86,15 +86,7 @@ const twMerge = extendTailwindMerge<"lk-width">({
       ],
       ease: ["out-lk", "reveal-lk"],
       tracking: ["lk-eyebrow", "lk-caps"],
-      container: [
-        "lk-page",
-        "lk-wide",
-        "lk-home",
-        "lk-settings",
-        "lk-heading",
-        "lk-prose",
-        "lk-form",
-      ],
+      container: ["lk-frame", "lk-home", "lk-settings", "lk-heading", "lk-prose", "lk-form"],
     },
     classGroups: {
       "lk-width": ["text-wide", "text-display"],

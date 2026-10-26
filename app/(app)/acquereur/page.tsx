@@ -19,6 +19,7 @@ export default async function BuyerHomePage() {
       title={fr.spaces.greeting(profile.firstName)}
       roles={profile.roles}
       profileId={profile.id}
+      wide
     >
       <EmptyState
         className="mt-12"

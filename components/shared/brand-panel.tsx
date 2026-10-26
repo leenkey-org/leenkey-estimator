@@ -65,7 +65,7 @@ export function BrandPanel({
     >
       <div
         className={cn(
-          "relative mx-auto flex min-h-52.5 max-w-lk-page flex-col justify-center px-5 md:px-10",
+          "lk-frame relative flex min-h-52.5 flex-col justify-center",
           hero ? "py-12 lg:py-20" : "py-8",
         )}
       >

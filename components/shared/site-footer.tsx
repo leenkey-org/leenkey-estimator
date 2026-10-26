@@ -19,12 +19,24 @@ const siteLinkClass =
  * Footer of the V2 pages (L1-36, docs/DESIGN.md 10.6): the pages of the site
  * (DECISIONS 2026-10-19), the legal links, « Gérer mes cookies » and the
  * legal identity of Leenkey, on sand (direction C, docs/design-handoff/SPECS.md
- * 3, item 12).
+ * 3, item 12). In the frame of the page (L1-56), or the whole width under
+ * the search, aligned on its list.
  */
-export function SiteFooter({ className }: { className?: string }) {
+export function SiteFooter({
+  fullWidth = false,
+  className,
+}: {
+  fullWidth?: boolean;
+  className?: string;
+}) {
   return (
     <footer className={cn("border-t border-lk-sand-line bg-lk-sand", className)}>
-      <div className="mx-auto flex max-w-lk-wide flex-col gap-3 px-4 pt-8 pb-10 md:gap-4 md:px-8 md:pt-10 md:pb-12">
+      <div
+        className={cn(
+          "flex flex-col gap-3 pt-8 pb-10 max-md:[--lk-gutter:1rem] md:gap-4 md:pt-10 md:pb-12",
+          fullWidth ? "w-full lk-gutter 2xl:[--lk-gutter:2rem]" : "lk-frame",
+        )}
+      >
         <nav aria-label={fr.site.links.label}>
           <ul className="flex flex-wrap gap-x-6">
             {SITE_LINKS.map((link) => (

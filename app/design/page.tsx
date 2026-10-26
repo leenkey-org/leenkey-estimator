@@ -208,7 +208,7 @@ export default function DesignPage() {
 
   return (
     <FacadeRoot className="min-h-screen">
-      <main className="mx-auto flex max-w-lk-page flex-col gap-16 px-5 pb-24 pt-10 md:px-10">
+      <main className="lk-frame flex flex-col gap-16 pb-24 pt-10">
         <header className="flex flex-col gap-3 border-b border-lk-line pb-8 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
           <h1 className="text-lk-h1 font-bold text-wide lg:text-lk-h1-lg">{content.page.title}</h1>
           <p className="text-lk-secondary text-lk-ink-3 lg:max-w-lk-form lg:text-right">

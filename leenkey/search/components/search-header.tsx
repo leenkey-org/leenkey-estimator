@@ -39,7 +39,7 @@ export function SearchHeader() {
     <div role="search" aria-label={t.bar.label} className="border-b border-lk-line bg-lk-surface">
       {/* Aligned with the results (same container and gutters), from 1024 px
           over the list and the map, the whole width of the page. */}
-      <div className="mx-auto max-w-lk-page px-5 pb-3 pt-4.5 md:px-10 lg:max-w-none lg:px-8 lg:py-4">
+      <div className="w-full lk-gutter pb-3 pt-4.5 lg:py-4 2xl:[--lk-gutter:2rem]">
         <div className="flex items-center gap-2.5 lg:gap-3">
           <div className="flex min-w-0 flex-1 items-center lg:flex-initial lg:rounded-full lg:border lg:border-lk-line-strong lg:bg-lk-surface lg:p-1.5 lg:shadow-lk-field">
             {/* Room for « Sainte-Geneviève-des-Bois · 20 km ». */}

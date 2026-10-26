@@ -35,7 +35,14 @@ export const metadata: Metadata = {
   twitter: { card: "summary" },
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1 };
+// viewport-fit=cover: the page fills the screen of a phone, under its notch
+// and rounded corners in landscape (L1-56); the gutters (lk-frame) and the
+// bars at the bottom keep their content inside the safe area.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   // GA4 and GTM only count real visitors (off on the preprod and in local),
