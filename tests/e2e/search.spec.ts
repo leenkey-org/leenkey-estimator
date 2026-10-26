@@ -112,6 +112,31 @@ test("panneau des filtres : aucune violation, focus gardé, Échap ferme @a11y",
   await expect(dialog).toBeHidden();
 });
 
+test("« Filtres » dit le nombre de filtres actifs ; la puce « DPE » ouvre le panneau sur la classe énergie", async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto("/acheter?budget_max=400000");
+  const button = page.getByRole("button", { name: "Filtres, 1 filtre actif", exact: true });
+  await expect(button).toBeVisible();
+  test.skip(!isMobile, "puces des téléphones");
+  const chip = page.getByRole("group", { name: "Filtres rapides" }).getByRole("button", {
+    name: "DPE",
+    exact: true,
+  });
+  const dialog = page.getByRole("dialog", { name: "Filtres" });
+  await expect(async () => {
+    if (!(await dialog.isVisible())) await chip.click();
+    await expect(dialog).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 10_000 });
+  // The chosen button of the row (« Tous » without a filter) takes the focus.
+  await expect(
+    dialog
+      .getByRole("radiogroup", { name: /^Classe énergie/ })
+      .getByRole("radio", { name: "Tous", exact: true }),
+  ).toBeFocused();
+});
+
 test("une adresse d'annonce mal formée répond 404", async ({ page, request }) => {
   const response = await page.goto("/annonce/Pas_Une_Annonce");
   expect(response?.status()).toBe(404);

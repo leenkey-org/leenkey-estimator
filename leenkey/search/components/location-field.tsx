@@ -112,7 +112,9 @@ export function LocationField({ className }: { className?: string }) {
       <div
         // The whole part of the bar takes the pointer to the field.
         onMouseDown={(event) => {
-          if (event.target === event.currentTarget) {
+          // Anywhere but the field itself and the clear button.
+          const target = event.target as HTMLElement;
+          if (target !== inputRef.current && !target.closest("button")) {
             event.preventDefault();
             inputRef.current?.focus();
           }
@@ -170,7 +172,7 @@ export function LocationField({ className }: { className?: string }) {
               setText(atRest(chosenLabel.current ?? placeLabel));
             }}
             onKeyDown={onKeyDown}
-            className="h-full min-w-0 flex-1 bg-transparent text-lk-compact font-medium text-lk-ink outline-none placeholder:font-normal placeholder:text-lk-ink-3 lg:h-auto lg:flex-none"
+            className="h-full min-w-0 flex-1 bg-transparent text-lk-compact font-medium text-lk-ink outline-none placeholder:font-normal placeholder:text-lk-ink-3 lg:h-auto lg:flex-none text-ellipsis"
           />
         </div>
         {filters.location ? (
@@ -213,7 +215,9 @@ export function LocationField({ className }: { className?: string }) {
             onMouseMove={() => setActive(index)}
             className={cn(
               "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lk-lg px-3 py-2",
-              index === active && "bg-lk-sand",
+              // The option reached with the arrows: the ring of DESIGN.md 15, inside.
+              index === active &&
+                "bg-lk-sand outline-3 -outline-offset-3 outline-lk-blue outline-solid",
             )}
           >
             <span className="text-lk-compact text-lk-ink">{commune.name}</span>

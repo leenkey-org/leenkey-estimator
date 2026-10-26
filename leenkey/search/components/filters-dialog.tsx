@@ -23,7 +23,22 @@ import {
 } from "@/lib/validations/search";
 
 const t = fr.search.dialog;
-const COUNTS = [1, 2, 3, 4, 5] as const;
+const COUNTS = [1, 2, 3, 4, 5];
+
+/**
+ * « Tous », « 1+ » to « 5+ », and a value of the address beyond them
+ * (« ?pieces_min=8 ») so that it shows chosen. The visible text is the name
+ * of each button (WCAG 2.5.3); the name of the row says what is counted.
+ */
+function countOptions(current: string) {
+  const value = Number(current);
+  const counts =
+    current && Number.isInteger(value) && !COUNTS.includes(value) ? [...COUNTS, value] : COUNTS;
+  return [
+    { value: "", label: t.anyShort },
+    ...counts.map((count) => ({ value: String(count), label: t.roomsShort(count) })),
+  ];
+}
 
 /** Field focused when a chip opens the panel on it. */
 const FOCUS_TARGET: Record<FilterField, string> = {
@@ -68,8 +83,8 @@ export function FiltersDialog() {
           className={cn(
             facadeScope,
             // The rounded shapes of direction C (DECISIONS 2026-10-26).
-            "fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col rounded-t-lk-2xl bg-lk-surface shadow-sheet outline-none",
-            "lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:max-h-[85vh] lg:w-130 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-lk-2xl lg:shadow-lk-block",
+            "fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col rounded-t-lk-3xl bg-lk-surface shadow-sheet outline-none",
+            "lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:max-h-[85vh] lg:w-130 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-lk-3xl lg:shadow-lk-block",
             "duration-220 ease-out-lk data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
             "data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
@@ -235,14 +250,7 @@ function FiltersPanel() {
           label={t.rooms}
           value={form.roomsMin}
           onValueChange={(roomsMin) => update({ roomsMin })}
-          options={[
-            { value: "", label: t.anyShort, ariaLabel: t.any },
-            ...COUNTS.map((rooms) => ({
-              value: String(rooms),
-              label: t.roomsShort(rooms),
-              ariaLabel: t.roomsAtLeast(rooms),
-            })),
-          ]}
+          options={countOptions(form.roomsMin)}
         />
         <SegmentedPicker
           id="filtres-chambres"
@@ -250,14 +258,7 @@ function FiltersPanel() {
           label={t.bedrooms}
           value={form.bedroomsMin}
           onValueChange={(bedroomsMin) => update({ bedroomsMin })}
-          options={[
-            { value: "", label: t.anyShort, ariaLabel: t.any },
-            ...COUNTS.map((bedrooms) => ({
-              value: String(bedrooms),
-              label: t.roomsShort(bedrooms),
-              ariaLabel: t.bedroomsAtLeast(bedrooms),
-            })),
-          ]}
+          options={countOptions(form.bedroomsMin)}
         />
 
         <fieldset className="flex flex-col gap-1.5">
@@ -298,14 +299,11 @@ function FiltersPanel() {
           value={form.dpeMax}
           onValueChange={(dpeMax) => update({ dpeMax })}
           options={[
-            { value: "", label: t.anyShort, ariaLabel: t.dpeAll },
-            ...DPE_CLASSES.map((letter) => ({
-              value: letter,
-              label: letter,
-              ariaLabel: t.dpeUpTo(letter),
-            })),
+            { value: "", label: t.anyShort },
+            ...DPE_CLASSES.map((letter) => ({ value: letter, label: letter })),
           ]}
-          className="gap-1"
+          // Two rows of four: 44 px wide at least on a phone.
+          className="grid-flow-row grid-cols-4"
         />
       </form>
 

@@ -42,6 +42,8 @@ const panelClassName = cn(
 const itemClassName = cn(
   "relative flex min-h-11 cursor-pointer select-none items-center gap-3 rounded-lk-lg py-2 pl-3 pr-10 text-lk-body text-lk-ink outline-none",
   "transition-colors duration-140 ease-out-lk data-[highlighted]:bg-lk-sand",
+  // The option reached from the keyboard: the ring of DESIGN.md 15, inside.
+  "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-blue focus-visible:outline-solid",
   "data-[state=checked]:font-semibold data-[state=checked]:text-lk-blue",
 );
 
@@ -70,7 +72,7 @@ export function FilterMenu({
           "group outline-none transition-colors duration-140 ease-out-lk",
           "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue focus-visible:outline-solid",
           variant === "segment"
-            ? "flex min-h-14 min-w-0 flex-col items-start justify-center rounded-full px-5 py-1.5 text-left hover:bg-lk-sand data-[state=open]:bg-lk-surface data-[state=open]:shadow-lk-field"
+            ? "flex min-h-14 min-w-0 max-w-52 shrink flex-col items-start justify-center rounded-full px-5 py-1.5 text-left hover:bg-lk-sand data-[state=open]:bg-lk-surface data-[state=open]:shadow-lk-field"
             : "relative inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3 text-lk-button-sm font-semibold text-lk-blue hover:bg-lk-blue-tint data-[state=open]:bg-lk-blue-tint",
           className,
         )}
@@ -108,10 +110,15 @@ export function FilterMenu({
           align={align}
           sideOffset={10}
           collisionPadding={16}
-          aria-label={label}
           className={panelClassName}
         >
-          <MenuPrimitive.RadioGroup value={value} onValueChange={onValueChange}>
+          {/* The option already chosen changes nothing (a new search would drop « Voir plus »). */}
+          <MenuPrimitive.RadioGroup
+            value={value}
+            onValueChange={(next) => {
+              if (next !== value) onValueChange(next);
+            }}
+          >
             {options.map(({ value: optionValue, label: optionLabel, icon: Icon, adornment }) => (
               <MenuPrimitive.RadioItem
                 key={optionValue}

@@ -14,8 +14,8 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 
 ### 2026-10-26 · L1-54 · PR #PRNUM · Recherche aux formes arrondies
 - Modifié : sur `/acheter` en desktop, une barre arrondie comme celle de l'accueil : « Où ? », Type de bien, Budget max, Pièces, puis Surface et DPE à partir de 1 280 px. Chaque partie ouvre un menu arrondi (icônes des types, pastilles DPE, coche du choix, flèches, Entrée et Échap au clavier) à la place des listes natives. Le tri ouvre le même menu, et « Filtres » devient une pilule avec le nombre de filtres actifs.
-- Modifié : sur mobile, le champ de la commune en pilule, le bouton « Filtres » rond, les puces en pilules (aussi pour les atouts de la création du bien).
-- Modifié : le panneau des filtres n'a plus de liste native : type, pièces, chambres et DPE en rangées de pilules ; coins de 24 px.
+- Modifié : sur mobile, le champ de la commune en pilule, le bouton « Filtres » rond, les puces en pilules (aussi pour les atouts de la création du bien et les choix de l'estimateur).
+- Modifié : le panneau des filtres n'a plus de liste native : type, pièces, chambres et DPE en rangées de pilules, budget et surface en champs arrondis ; coins de 24 px.
 - Retiré : `FilterSelect`, remplacé par `FilterMenu` (catalogue `/design`).
 - Tests : E2E de la recherche (menus du type et du tri au clavier, valeurs lues dans la barre, panneau sans liste native).
 

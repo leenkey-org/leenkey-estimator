@@ -41,13 +41,16 @@ export function SearchHeader() {
           over the list and the map, the whole width of the page. */}
       <div className="mx-auto max-w-lk-page px-5 pb-3 pt-4.5 md:px-10 lg:max-w-none lg:px-8 lg:py-4">
         <div className="flex items-center gap-2.5 lg:gap-3">
-          <div className="flex min-w-0 flex-1 items-center lg:flex-none lg:rounded-full lg:border lg:border-lk-line-strong lg:bg-lk-surface lg:p-1.5 lg:shadow-lk-field">
-            <LocationField className="min-w-0 flex-1 lg:w-64 lg:flex-none" />
+          <div className="flex min-w-0 flex-1 items-center lg:flex-initial lg:rounded-full lg:border lg:border-lk-line-strong lg:bg-lk-surface lg:p-1.5 lg:shadow-lk-field">
+            {/* Room for « Sainte-Geneviève-des-Bois · 20 km ». */}
+            <LocationField className="min-w-0 flex-1 lg:w-72 lg:flex-none xl:w-80" />
             <FilterBar className="hidden lg:flex" />
           </div>
           <button
             type="button"
             aria-haspopup="dialog"
+            // One name: « Filtres », and the count when filters are on.
+            aria-label={active ? `${t.filtersButton}, ${t.activeFilters(active)}` : t.filtersButton}
             onClick={() => openFilters()}
             className={cn(
               "relative flex shrink-0 items-center justify-center gap-2 rounded-full transition-colors duration-140 ease-out-lk",
@@ -59,8 +62,9 @@ export function SearchHeader() {
             )}
           >
             <SlidersHorizontal aria-hidden="true" />
-            <span className="sr-only lg:not-sr-only">{t.filtersButton}</span>
-            {active ? <span className="sr-only">{`, ${t.activeFilters(active)}`}</span> : null}
+            <span aria-hidden="true" className="hidden lg:inline">
+              {t.filtersButton}
+            </span>
             <Count value={active} />
           </button>
         </div>
