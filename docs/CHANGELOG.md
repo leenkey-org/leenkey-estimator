@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-26 · L1-16 · PR #PRNUM · Carte Google Maps (recherche et annonce)
+### 2026-10-26 · L1-16 · PR #51 · Carte Google Maps (recherche et annonce)
 - Ajouté : la carte de la recherche `/acheter`, par Google Maps au style de Leenkey. Une pastille de prix par bien (« 239 k€ »), cadrée sur les résultats ; une pastille qui en couvrirait une autre devient un point jusqu'au zoom. À partir de 1 024 px, la liste (620 px) et la carte se partagent toute la largeur de l'écran, la carte collée sous la barre haute. Sur téléphone et tablette, le bouton flottant « Carte » l'ouvre en plein écran ; une pastille y montre la carte de son bien, « Liste » revient.
 - Ajouté : liste et carte liées. La carte de bien survolée met sa pastille en bleu ; une pastille choisie amène sa carte dans la liste, avec un contour bleu et le focus sur son lien.
 - Ajouté : « Localisation » sur l'annonce. Un cercle de 400 m autour du point public du bien, jamais l'adresse, avec « Secteur approximatif, … ». « Voir la rue » ouvre la vue Street View la plus proche du point public.

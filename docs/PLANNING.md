@@ -40,7 +40,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 ## S3 · semaine du 26 oct. · Recherche, annonce, back office minimum
 
 - [x] **L1-15** Fonction `search_listings`, index, schéma `SearchFilters`, page `/acheter` liste + filtres + tri + URL · PR : #15 · Testé en préprod : ☐
-- [x] **L1-16** Carte Google Maps avec les marqueurs de prix, synchronisation liste/carte, localisation de l'annonce et Street View, chargée au clic (regroupement et recherche dans la zone : L1-16b, S6) · PR : à venir · Testé en préprod : ☐
+- [x] **L1-16** Carte Google Maps avec les marqueurs de prix, synchronisation liste/carte, localisation de l'annonce et Street View, chargée au clic (regroupement et recherche dans la zone : L1-16b, S6) · PR : #51 · Testé en préprod : ☐
 - [x] **L1-17** Page annonce complète (galerie photo, KeyFigures, KeyFacts, carte approximative, barre d'action), métadonnées,… · PR : #15 (carte de l'annonce avec L1-16, `DECISIONS.md`) · Testé en préprod : ☐
 - [x] **L1-18** Favoris · PR : #18 · Testé en préprod : ☐
 - [x] **L1-19** Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`suspended`) / remettre en ligne, audit, emails · PR : #19 (partie vendeur avec L1-14, `DECISIONS.md`) · Testé en préprod : ☐
