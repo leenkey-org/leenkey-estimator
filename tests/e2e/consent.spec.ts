@@ -63,29 +63,64 @@ async function openPreferences(page: Page) {
   }).toPass({ timeout: 15_000 });
 }
 
-/** Records whether the banner (not the preferences) was ever in the page. */
-async function watchBanner(page: Page) {
-  await page.addInitScript(() => {
-    const seen = { banner: false };
-    Object.assign(window, { lkBanner: seen });
-    // The region named « Cookies » by its title, as getByRole reads it: the
-    // preferences have the same region, named « Vos préférences ».
-    const check = () => {
+type Watched = Window & {
+  lkConsent?: { banner: boolean; read: boolean; loading: number; quietSince: number };
+};
+
+/**
+ * Records whether the banner (not the preferences) was ever in the page, and
+ * since when ConsentManager has read the consent cookie with no script
+ * loading. Once the cookie is read, the banner comes in its own chunk, which
+ * React may reveal up to 300 ms after (FALLBACK_THROTTLE_MS of React 19): a
+ * click before would hide it from the test.
+ */
+async function watchConsent(page: Page) {
+  // CONSENT_OPEN_EVENT of lib/consent.ts.
+  await page.addInitScript((openEvent) => {
+    const state = { banner: false, read: false, loading: 0, quietSince: 0 };
+    Object.assign(window, { lkConsent: state });
+    const quiet = () => {
+      if (state.read && state.loading === 0) state.quietSince = performance.now();
+    };
+    // ConsentManager listens for « Gérer mes cookies » in the effect where it
+    // has read the cookie and chosen whether to show the banner.
+    const listen = window.addEventListener.bind(window);
+    window.addEventListener = ((...args: Parameters<typeof listen>) => {
+      if (args[0] === openEvent && !state.read) {
+        state.read = true;
+        quiet();
+      }
+      listen(...args);
+    }) as typeof listen;
+    new MutationObserver((records) => {
+      for (const node of records.flatMap((record) => [...record.addedNodes])) {
+        if (!state.read || !(node instanceof HTMLScriptElement) || !node.src) continue;
+        state.loading += 1;
+        const done = () => {
+          state.loading -= 1;
+          quiet();
+        };
+        node.addEventListener("load", done, { once: true });
+        node.addEventListener("error", done, { once: true });
+      }
+      // The region named « Cookies » by its title, as getByRole reads it: the
+      // preferences have the same region, named « Vos préférences ».
       for (const region of document.querySelectorAll('section[role="region"][aria-labelledby]')) {
         const title = document.getElementById(region.getAttribute("aria-labelledby") ?? "");
-        if (title?.textContent?.trim() === "Cookies") seen.banner = true;
+        if (title?.textContent?.trim() === "Cookies") state.banner = true;
       }
-    };
-    new MutationObserver(check).observe(document, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-  });
+    }).observe(document, { childList: true, subtree: true, characterData: true });
+  }, "lk:cookies");
 }
 
-const bannerSeen = (page: Page) =>
-  page.evaluate(() => (window as unknown as { lkBanner: { banner: boolean } }).lkBanner.banner);
+/** Whether the banner showed: 600 ms after the cookie is read and no script loads, twice the 300 ms. */
+async function bannerShown(page: Page) {
+  await page.waitForFunction(() => {
+    const watch = (window as Watched).lkConsent;
+    return !!watch?.read && watch.loading === 0 && performance.now() - watch.quietSince >= 600;
+  });
+  return page.evaluate(() => (window as Watched).lkConsent?.banner);
+}
 
 /** Nothing of Google in the page: no tag, no gtag, no cookie, no request. */
 async function expectNoGoogle(page: Page, requests: string[]) {
@@ -124,10 +159,10 @@ test("Refuser : rien ne se charge, et le choix est gardé six mois", async ({ pa
 
   // Again, once the refusal is read: no banner, the audience unchecked, and
   // still nothing of Google.
-  await watchBanner(page);
+  await watchConsent(page);
   await page.reload();
+  expect(await bannerShown(page)).toBe(false);
   await openPreferences(page);
-  expect(await bannerSeen(page)).toBe(false);
   await expect(
     preferences(page).getByRole("checkbox", { name: /Mesure d'audience/ }),
   ).not.toBeChecked();
