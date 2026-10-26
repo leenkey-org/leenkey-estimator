@@ -296,8 +296,12 @@ function Pill({
       aria-pressed={active}
       data-state={active ? "on" : "off"}
       onClick={onClick}
-      // A long label goes on two lines on a narrow screen.
-      className={cn(chipClassName(), "h-auto min-h-10 max-w-full py-2 whitespace-normal")}
+      // A long label goes on two lines on a narrow screen: rounded corners
+      // there rather than the pill of the chips (L1-54), which would be a capsule.
+      className={cn(
+        chipClassName(),
+        "h-auto min-h-10 max-w-full rounded-lk-xl py-2 whitespace-normal",
+      )}
     >
       {children}
     </button>

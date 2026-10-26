@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 export type UnitInputProps = InputProps & {
   /** « m² », « € », « % »: shown inside the field, on the right. */
   unit: string;
+  /** A pill, in the rounded shapes of the search (direction C, L1-54). */
+  pill?: boolean;
 };
 
 /**
@@ -23,6 +25,7 @@ export function UnitInput({
   help,
   error,
   compact = false,
+  pill = false,
   className,
   containerClassName,
   "aria-describedby": describedBy,
@@ -49,6 +52,7 @@ export function UnitInput({
           "has-[input[aria-invalid=true]]:border-lk-danger has-[input[aria-invalid=true]:focus-visible]:ring-lk-danger-bg",
           "has-[input:disabled]:bg-lk-stone-2",
           compact && "h-11",
+          pill && "rounded-full border-lk-line-strong pr-4.5",
         )}
       >
         <UiInput
@@ -57,6 +61,7 @@ export function UnitInput({
           aria-describedby={fieldDescribedBy(inputId, { help, error }, describedBy, unitId)}
           className={cn(
             "h-full min-w-0 flex-1 rounded-lk-sm border-0 bg-transparent py-0 pl-3.5 pr-0 shadow-none",
+            pill && "rounded-full pl-4.5",
             "text-lk-body text-lk-ink md:text-lk-body placeholder:text-lk-ink-3",
             "focus-visible:outline-none focus-visible:ring-0",
             "disabled:cursor-not-allowed disabled:text-lk-ink-3 disabled:opacity-100",

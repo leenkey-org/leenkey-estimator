@@ -1,4 +1,4 @@
-import type { FilterSelectDemoOption } from "./_filter-select-demo";
+import type { FilterMenuOption } from "@/components/shared/filter-menu";
 import type { GalleryPhoto } from "@/components/shared/gallery";
 import type { KeyFact } from "@/components/shared/key-facts-table";
 import type { PropertyCardData } from "@/components/shared/property-card";
@@ -600,38 +600,38 @@ const bar = fr.search.bar;
 
 export const filterBar = {
   selectCaption:
-    "FilterSelect · barre de filtres desktop, 44 px, aussi large que son texte ; teinte bleue quand une valeur est choisie",
+    "FilterMenu · parties de la barre arrondie de la recherche desktop : le nom au-dessus de la valeur, en bleu quand une valeur est choisie ; un menu arrondi aux choix cochés (flèches, Entrée, Échap)",
   type: {
     label: bar.type,
     defaultValue: "appartement",
     options: [
-      { value: "", label: bar.type },
+      { value: "", label: bar.typeAll },
       ...(["appartement", "maison", "terrain"] as const).map((type) => ({
         value: type,
         label: fr.search.types[type],
       })),
-    ] satisfies FilterSelectDemoOption[],
+    ] satisfies FilterMenuOption[],
   },
   budget: {
-    label: bar.budgetLabel,
+    label: bar.budgetTitle,
     defaultValue: "",
     options: [
-      { value: "", label: bar.budget },
+      { value: "", label: bar.any },
       ...[300_000, 400_000, 500_000].map((euros) => ({
         value: String(euros),
         label: bar.priceUpTo(formatPrice(euros * 100)),
       })),
-    ] satisfies FilterSelectDemoOption[],
+    ] satisfies FilterMenuOption[],
   },
   rooms: {
-    label: bar.roomsLabel,
+    label: bar.rooms,
     defaultValue: "3",
     options: [
-      { value: "", label: bar.rooms },
+      { value: "", label: bar.any },
       ...[1, 2, 3, 4, 5].map((rooms) => ({ value: String(rooms), label: bar.roomsAtLeast(rooms) })),
-    ] satisfies FilterSelectDemoOption[],
+    ] satisfies FilterMenuOption[],
   },
-  more: bar.more,
+  more: fr.search.filtersButton,
   chipCaption:
     "ChipButton · même forme qu'un filtre rapide inactif, ouvre le panneau des filtres sur son champ (barre mobile)",
   chips: [fr.search.chips.budget, fr.search.chips.rooms, fr.search.chips.dpe],

@@ -63,12 +63,15 @@ async function seriousViolations(page: Page) {
     }));
 }
 
-async function openFilters(page: Page, isMobile: boolean) {
-  await page
-    .getByRole("button", isMobile ? { name: "Filtres", exact: true } : { name: "Plus de filtres" })
-    .click();
+async function openFilters(page: Page, _isMobile: boolean) {
+  // « Filtres », and the count of the active filters when there are some.
+  const button = page.getByRole("button", { name: /^Filtres(, \d+\sfiltres? actifs?)?$/ });
   const dialog = page.getByRole("dialog", { name: "Filtres" });
-  await expect(dialog).toBeVisible();
+  // A click before the page is hydrated opens nothing: clicked again until it does.
+  await expect(async () => {
+    if (!(await dialog.isVisible())) await button.click();
+    await expect(dialog).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 10_000 });
   return dialog;
 }
 
@@ -95,6 +98,11 @@ test("panneau des filtres : aucune violation, focus gardé, Échap ferme @a11y",
   await settle(page);
   const dialog = await openFilters(page, isMobile);
   await expect(dialog.getByRole("radiogroup", { name: /^Rayon autour de/ })).toBeVisible();
+  // No list of the system left in the panel: rows of rounded choices (DECISIONS 2026-10-26).
+  await expect(dialog.getByRole("combobox")).toHaveCount(0);
+  for (const name of ["Type de bien", "Pièces", "Chambres", /^Classe énergie/]) {
+    await expect(dialog.getByRole("radiogroup", { name })).toBeVisible();
+  }
   // The panel slides in: contrasts are measured once it is in place.
   await page.waitForTimeout(300);
   expect(await seriousViolations(page)).toEqual([]);
@@ -102,6 +110,31 @@ test("panneau des filtres : aucune violation, focus gardé, Échap ferme @a11y",
   expect(await dialog.evaluate((node) => node.contains(document.activeElement))).toBe(true);
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
+});
+
+test("« Filtres » dit le nombre de filtres actifs ; la puce « DPE » ouvre le panneau sur la classe énergie", async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto("/acheter?budget_max=400000");
+  const button = page.getByRole("button", { name: "Filtres, 1 filtre actif", exact: true });
+  await expect(button).toBeVisible();
+  test.skip(!isMobile, "puces des téléphones");
+  const chip = page.getByRole("group", { name: "Filtres rapides" }).getByRole("button", {
+    name: "DPE",
+    exact: true,
+  });
+  const dialog = page.getByRole("dialog", { name: "Filtres" });
+  await expect(async () => {
+    if (!(await dialog.isVisible())) await chip.click();
+    await expect(dialog).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 10_000 });
+  // The chosen button of the row (« Tous » without a filter) takes the focus.
+  await expect(
+    dialog
+      .getByRole("radiogroup", { name: /^Classe énergie/ })
+      .getByRole("radio", { name: "Tous", exact: true }),
+  ).toBeFocused();
 });
 
 test("une adresse d'annonce mal formée répond 404", async ({ page, request }) => {
@@ -207,10 +240,11 @@ test.describe("recherche /acheter (base de seed)", () => {
         "true",
       );
     } else {
-      await expect(page.getByRole("combobox", { name: "Budget maximum" })).toHaveValue("400000");
-      await expect(page.getByRole("combobox", { name: "Nombre de pièces minimum" })).toHaveValue(
-        "3",
+      const bar = page.getByRole("search");
+      await expect(bar.getByRole("button", { name: /^Budget max/ })).toContainText(
+        /Jusqu'à\s400\s000\s€/,
       );
+      await expect(bar.getByRole("button", { name: /^Pièces/ })).toContainText(/3\spièces et \+/);
     }
   });
 
@@ -239,7 +273,8 @@ test.describe("recherche /acheter (base de seed)", () => {
   test("trie par prix croissant", async ({ page }) => {
     await page.goto("/acheter");
     await settle(page);
-    await page.getByRole("combobox", { name: "Trier par" }).selectOption("prix_asc");
+    await page.getByRole("button", { name: /^Trier par/ }).click();
+    await page.getByRole("menuitemradio", { name: "Prix croissant" }).click();
     await expect(page).toHaveURL(/\/acheter\?tri=prix_asc$/);
     const prices = await cardPrices(page);
     expect(prices.length).toBeGreaterThan(1);
@@ -279,9 +314,22 @@ test.describe("recherche /acheter (base de seed)", () => {
     test.skip(isMobile, "barre de filtres à partir de 1024 px ; en mobile, le panneau");
     await page.goto("/acheter");
     await settle(page);
-    const type = page.getByRole("combobox", { name: "Type de bien" });
-    await type.selectOption("appartement");
+    // A rounded menu of the bar (DECISIONS 2026-10-26), from the keyboard:
+    // its options are radio items, Escape gives the focus back.
+    const type = page.getByRole("search").getByRole("button", { name: /^Type de bien/ });
+    await type.click();
+    const menu = page.getByRole("menu", { name: "Type de bien" });
+    await expect(menu.getByRole("menuitemradio", { name: "Tous les biens" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+    await expect(type).toBeFocused();
+    await type.press("Enter");
+    await menu.getByRole("menuitemradio", { name: "Appartement" }).click();
     await expect(page).toHaveURL(/\/acheter\?type=appartement$/);
+    await expect(type).toContainText("Appartement");
     await settle(page);
     const texts = await cards(page).allTextContents();
     expect(texts.length).toBeGreaterThan(0);

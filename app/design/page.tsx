@@ -20,7 +20,7 @@ import * as content from "./_content";
 import { ComposerDemo } from "./_composer-demo";
 import { ConfirmDemo } from "./_confirm-demo";
 import { ConsentDemo } from "./_consent-demo";
-import { FilterSelectDemo } from "./_filter-select-demo";
+import { FilterMenuDemo } from "./_filter-menu-demo";
 import { AccountMenu } from "@/components/shared/account-menu";
 import { AppHeader } from "@/components/shared/app-header";
 import { AdminMobileHeader } from "@/components/shared/admin-mobile-header";
@@ -551,13 +551,15 @@ export default function DesignPage() {
           <Section id="filtres" title={content.sections.filters} level="h3">
             <Caption>{content.filterBar.selectCaption}</Caption>
             <div className="flex flex-wrap items-center gap-3">
-              <FilterSelectDemo {...content.filterBar.type} />
-              <FilterSelectDemo {...content.filterBar.budget} />
-              <FilterSelectDemo {...content.filterBar.rooms} />
-              <Button
-                variant="outline-ink"
-                className="shrink-0 whitespace-nowrap px-3.5 text-lk-label"
-              >
+              {/* Wider than a phone: it scrolls sideways there, the page never does. */}
+              <div className="flex max-w-full items-center overflow-x-auto rounded-full border border-lk-line-strong bg-lk-surface p-1.5 shadow-lk-field">
+                <FilterMenuDemo {...content.filterBar.type} />
+                <span aria-hidden="true" className="h-8 w-px bg-lk-line" />
+                <FilterMenuDemo {...content.filterBar.budget} />
+                <span aria-hidden="true" className="h-8 w-px bg-lk-line" />
+                <FilterMenuDemo {...content.filterBar.rooms} />
+              </div>
+              <Button variant="outline-ink" shape="pill" className="h-14 shrink-0 px-5">
                 {content.filterBar.more}
               </Button>
             </div>
