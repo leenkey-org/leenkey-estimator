@@ -1,5 +1,7 @@
 import type { SearchListing } from "./queries";
 import type { PropertyCardData } from "@/components/shared/property-card";
+import type { ShowcaseCardProps } from "@/components/shared/showcase-card";
+import { isNewListing } from "@/leenkey/site/home-categories";
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import { NBSP, formatDateShort, parisDaysAgo } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
@@ -67,5 +69,28 @@ export function toPropertyCard(listing: SearchListing, now: Date = new Date()): 
     photoCount: listing.cover?.total,
     highlights: highlights(listing),
     note: note ? { text: note } : undefined,
+  };
+}
+
+/**
+ * Search result → ShowcaseCard (direction C, L1-55): its photos to turn
+ * (decorative, the card says what they show), the commune and its district,
+ * « Nouveau » when online for less than seven days of Paris.
+ */
+export function toShowcaseCard(
+  listing: SearchListing,
+  now: Date = new Date(),
+): Omit<ShowcaseCardProps, "className" | "sizes" | "action" | "swipe" | "framed"> {
+  const paths = listing.photos ?? (listing.cover ? [listing.cover.path] : []);
+  return {
+    href: listingHref(listing.slug),
+    priceCents: listing.priceCents,
+    propertyType: listing.type,
+    rooms: listing.type === "terrain" ? null : listing.rooms,
+    surfaceM2: listing.surfaceM2,
+    city: placeLabel(listing.city, listing.district),
+    dpe: listing.dpe,
+    photos: paths.map((path) => ({ src: photoUrl(path), alt: "" })),
+    badge: isNewListing(listing.publishedAt, now) ? fr.propertyCard.badgeNew : undefined,
   };
 }

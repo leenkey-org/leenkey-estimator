@@ -60,6 +60,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-46b** Photos des autres biens du seed (appartements, terrain, meulière, maison sur sous-sol, biens en attente) : 28 photos Unsplash (licence Unsplash) pour les 13 biens sans photo, de 1 à 5 par bien · PR : #44 · Testé en préprod : ☐
 - [x] **L1-53** Refonte design, direction C (demande de Younes du 26 octobre, maquettes de `docs/design-handoff/`) : palette chaude sur tout le site, accueil refait (photo et carte de recherche à trois onglets, raccourcis, simulateur d'économies, biens autour d'Épinay-sur-Orge, étapes, formules, FAQ, bandeau final), adresse de l'accueil reprise par l'estimateur et la création du bien, barre haute, barre basse et pied de page restylés · PR : #50 · Testé en préprod : ☐
 - [x] **L1-54** Recherche aux formes arrondies (demande de Younes du 26 octobre, « comme sur Airbnb ») : barre arrondie « Où ? · Type de bien · Budget max · Pièces » et menus arrondis à la place des listes natives (filtres, tri), champ et puces en pilules sur mobile, panneau des filtres sans liste native · PR : #52 · Testé en préprod : ☐
+- [x] **L1-55** Fiches de biens façon Airbnb (demandes de Younes du 26 octobre) : résultats de la recherche en cartes à photos qui tournent (glissement du doigt, flèches), cadre bleu au survol et à la pression ; chiffres clés et atouts en bleu Leenkey au lieu du gris ; « Ce que vous savez avant de visiter » en grille à pictogrammes groupée · PR : · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
 

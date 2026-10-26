@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode, type TouchEvent } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DpeBadge, type DpeClass } from "./dpe-badge";
@@ -28,9 +28,19 @@ export type ShowcaseCardProps = Pick<
   badge?: string;
   /** The heart, 44 px over the top right corner of the photo, outside the link. */
   action?: ReactNode;
+  /**
+   * The photos turn with a swipe on a phone too, their dots shown (the list
+   * of the search, L1-55); off in a carousel of cards swiped sideways.
+   */
+  swipe?: boolean;
+  /** A frame that turns blue on hover and press (the list of the search, L1-55). */
+  framed?: boolean;
   sizes?: string;
   className?: string;
 };
+
+/** A swipe of more than this, mostly sideways, turns the photo. */
+const SWIPE_PX = 40;
 
 /**
  * Card of a property of direction C (docs/design-handoff/SPECS.md 2): the
@@ -53,6 +63,8 @@ export function ShowcaseCard({
   photos,
   badge,
   action,
+  swipe = false,
+  framed = false,
   sizes = "(min-width: 1024px) 300px, (min-width: 768px) 45vw, 272px",
   className,
 }: ShowcaseCardProps) {
@@ -60,8 +72,37 @@ export function ShowcaseCard({
   const [index, setIndex] = useState(0);
   const title = propertySummary({ propertyType, rooms, surfaceM2 }, "short", true);
   const several = shown.length > 1;
+  const touch = useRef<{ x: number; y: number } | null>(null);
+
+  function onTouchStart(event: TouchEvent) {
+    const point = event.touches[0];
+    touch.current = point ? { x: point.clientX, y: point.clientY } : null;
+  }
+
+  function onTouchEnd(event: TouchEvent) {
+    const start = touch.current;
+    const point = event.changedTouches[0];
+    touch.current = null;
+    if (!start || !point) return;
+    const dx = point.clientX - start.x;
+    if (Math.abs(dx) < SWIPE_PX || Math.abs(dx) < Math.abs(point.clientY - start.y)) return;
+    setIndex((current) =>
+      dx < 0 ? Math.min(shown.length - 1, current + 1) : Math.max(0, current - 1),
+    );
+  }
+
   return (
-    <article className={cn("group relative flex flex-col gap-3", className)}>
+    <article
+      onTouchStart={swipe && several ? onTouchStart : undefined}
+      onTouchEnd={swipe && several ? onTouchEnd : undefined}
+      className={cn(
+        "group relative flex flex-col gap-3",
+        // The frame of the cards of the search (Younes: « encadré qui devient bleu »).
+        framed &&
+          "rounded-lk-2xl border border-lk-line bg-lk-surface p-2 pb-3 transition-[border-color,box-shadow] duration-140 ease-out-lk hover:border-lk-blue hover:shadow-lk-hover has-[a:active]:border-lk-blue",
+        className,
+      )}
+    >
       <div className="relative aspect-[1/0.95] overflow-hidden rounded-lk-xl bg-lk-line">
         {shown.length ? (
           <div
@@ -76,14 +117,10 @@ export function ShowcaseCard({
                 className="relative h-full w-full shrink-0 overflow-hidden"
               >
                 <span className="absolute inset-0 transition-transform duration-300 ease-out-lk motion-safe:group-hover:scale-[1.03] motion-reduce:transition-none">
-                  {/* Below 768 px, only the main photo is loaded. */}
-                  {position === 0 || index > 0 ? (
+                  {/* The photo shown and the next one: a turn never waits. */}
+                  {position <= index + 1 ? (
                     <Photo src={photo.src} alt={photo.alt} sizes={sizes} />
-                  ) : (
-                    <span className="hidden md:contents">
-                      <Photo src={photo.src} alt={photo.alt} sizes={sizes} />
-                    </span>
-                  )}
+                  ) : null}
                 </span>
               </div>
             ))}
@@ -102,7 +139,10 @@ export function ShowcaseCard({
           <>
             <span
               aria-hidden="true"
-              className="absolute bottom-3 left-1/2 z-10 hidden -translate-x-1/2 gap-1.5 md:flex"
+              className={cn(
+                "absolute bottom-3 left-1/2 z-10 -translate-x-1/2 gap-1.5",
+                swipe ? "flex" : "hidden md:flex",
+              )}
             >
               {shown.map((photo, position) => (
                 <span
@@ -133,14 +173,15 @@ export function ShowcaseCard({
           </>
         ) : null}
       </div>
-      <div className="flex flex-col gap-0.5">
+      <div className={cn("flex flex-col gap-0.5", framed && "px-1.5")}>
         <div className="flex items-center justify-between gap-2">
           <Link
             href={href}
             className={cn(
               "min-w-0 truncate text-lk-body-lg font-bold text-lk-ink",
               // The link covers the whole card (its arrows and heart stay above).
-              "after:absolute after:inset-0 after:rounded-lk-xl after:content-['']",
+              "after:absolute after:inset-0 after:content-['']",
+              framed ? "after:rounded-lk-2xl" : "after:rounded-lk-xl",
               "focus-visible:outline-none focus-visible:after:outline-3 focus-visible:after:outline-offset-2 focus-visible:after:outline-lk-blue focus-visible:after:outline-solid",
             )}
           >
@@ -158,7 +199,11 @@ export function ShowcaseCard({
           {formatPrice(priceCents)}
         </p>
       </div>
-      {action ? <div className="absolute right-1.5 top-1.5 z-20">{action}</div> : null}
+      {action ? (
+        <div className={cn("absolute z-20", framed ? "right-3.5 top-3.5" : "right-1.5 top-1.5")}>
+          {action}
+        </div>
+      ) : null}
     </article>
   );
 }

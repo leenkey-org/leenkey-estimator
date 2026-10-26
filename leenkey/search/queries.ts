@@ -45,7 +45,12 @@ export type SearchListing = {
   dpe: DpeClass | null;
   /** Main photo (base of its files, photo-files.ts) and number of photos; null without. */
   cover: { path: string; total: number } | null;
+  /** Up to five photos, the main one first, for the photos of a card (search, L1-55). */
+  photos?: string[];
 };
+
+/** The photos a card turns through (ShowcaseCard, its dots count them). */
+export const CARD_PHOTOS = 5;
 
 export type SearchResults = { items: SearchListing[]; total: number };
 export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavailable" };
@@ -126,6 +131,46 @@ export async function withCovers(items: SearchListing[]): Promise<SearchListing[
   return items.map((item) => ({ ...item, cover: covers.get(item.id) ?? null }));
 }
 
+/**
+ * The photos of listings shown as cards that turn through them (L1-55): up
+ * to five each, the main one first, and their number. Without them the cards
+ * keep their drawing: a list never fails for a photo.
+ */
+export async function withPhotos(items: SearchListing[]): Promise<SearchListing[]> {
+  if (items.length === 0) return items;
+  const supabase = await createClient();
+  const answers = await Promise.all(
+    chunk(
+      items.map((item) => item.id),
+      100,
+    ).map((ids) =>
+      supabase.rpc("public_listing_photos", { p_listing_ids: ids, p_cover_only: false }),
+    ),
+  );
+  const photos = new Map<string, { paths: string[]; total: number }>();
+  for (const { data, error } of answers) {
+    if (error) {
+      console.error("[search] photos failed", { code: error.code });
+      return items;
+    }
+    for (const row of [...data].sort((a, b) => a.position - b.position)) {
+      const entry = photos.get(row.listing_id) ?? { paths: [], total: 0 };
+      entry.total += 1;
+      if (entry.paths.length < CARD_PHOTOS) entry.paths.push(row.path);
+      photos.set(row.listing_id, entry);
+    }
+  }
+  return items.map((item) => {
+    const entry = photos.get(item.id);
+    const first = entry?.paths[0];
+    return {
+      ...item,
+      cover: entry && first ? { path: first, total: entry.total } : null,
+      photos: entry?.paths ?? [],
+    };
+  });
+}
+
 async function fetchPage(filters: SearchFilters, sort: SearchQuery["sort"], page: number) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("search_listings", {
@@ -152,7 +197,7 @@ export async function searchListings(query: SearchQuery): Promise<QueryResult<Se
         fetchPage(query.filters, query.sort, index + 2),
       ),
     );
-    const items = await withCovers([first, ...others].flat().map(toListing));
+    const items = await withPhotos([first, ...others].flat().map(toListing));
     return { ok: true, data: { items, total } };
   } catch (error) {
     console.error("[search] searchListings failed", {

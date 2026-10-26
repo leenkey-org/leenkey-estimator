@@ -92,7 +92,7 @@ export function ResultItem({
       onPointerLeave={() => setHoveredId(null)}
       onFocus={() => setHoveredId(id)}
       onBlur={() => setHoveredId(null)}
-      className="rounded-lk-md data-flash:outline-2 data-flash:outline-offset-2 data-flash:outline-lk-blue"
+      className="rounded-lk-2xl data-flash:outline-2 data-flash:outline-offset-2 data-flash:outline-lk-blue"
     >
       {children}
     </li>

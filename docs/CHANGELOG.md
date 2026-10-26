@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-26 · L1-55 · PR #PRNUM · Fiches de biens façon Airbnb
+- Modifié : les résultats de `/acheter` prennent les cartes de l'accueil, la photo d'abord. Jusqu'à cinq photos par bien tournent d'un glissement du doigt sur téléphone, avec des flèches au survol en desktop. Le cadre devient bleu au survol et à la pression, avec « Nouveau » pour un bien en ligne depuis moins de 7 jours. Une colonne sur téléphone, deux ensuite.
+- Modifié : plus de gris sur les fiches. Les chiffres clés de l'annonce sont en bleu Leenkey clair et les atouts des cartes (Favoris) en pilules bleues.
+- Modifié : « Ce que vous savez avant de visiter », sur la page de l'annonce, est une grille à pictogrammes groupée (« Le bien », « Énergie », « Coûts et copropriété »). La fiche du vendeur et le Cockpit gardent le tableau.
+- Tests : unitaires (un pictogramme et un groupe pour chaque caractéristique, ordre des groupes) ; E2E des prix lus sous le lien des nouvelles cartes.
+
 ### 2026-10-26 · L1-54 · PR #52 · Recherche aux formes arrondies
 - Modifié : sur `/acheter` en desktop, une barre arrondie comme celle de l'accueil : « Où ? », Type de bien, Budget max, Pièces, puis Surface et DPE à partir de 1 280 px. Chaque partie ouvre un menu arrondi (icônes des types, pastilles DPE, coche du choix, flèches, Entrée et Échap au clavier) à la place des listes natives. Le tri ouvre le même menu, et « Filtres » devient une pilule avec le nombre de filtres actifs.
 - Modifié : sur mobile, le champ de la commune en pilule, le bouton « Filtres » rond, les puces en pilules (aussi pour les atouts de la création du bien et les choix de l'estimateur).

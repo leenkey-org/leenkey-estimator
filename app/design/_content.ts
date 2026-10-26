@@ -3,6 +3,7 @@ import type { GalleryPhoto } from "@/components/shared/gallery";
 import type { KeyFact } from "@/components/shared/key-facts-table";
 import type { PropertyCardData } from "@/components/shared/property-card";
 import type { KeyFigure } from "@/components/shared/key-figures";
+import { bySection, listingKeyFacts, type FactsInput } from "@/leenkey/listings/key-facts";
 import { formatPrice, formatPriceShort, formatSurface } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 
@@ -671,19 +672,64 @@ export const contact = {
   unknownCaption: "Prénom absent",
 };
 
-export const keyFacts: { items: KeyFact[]; linkLabel: string; linkValue: string; caption: string } =
-  {
-    items: [
-      { label: "Charges de copropriété", value: `${formatPrice(18_000)} / mois` },
-      { label: "Taxe foncière", value: `${formatPrice(115_000)} / an` },
-      { label: "Classe énergie (DPE)", value: "C" },
-      { label: "Diagnostics", value: "Complets", tone: "success" },
-      { label: "Travaux votés", value: fr.listing.facts.notProvided, tone: "muted" },
-    ],
-    linkLabel: "Procès-verbaux d'AG",
-    linkValue: "Demander l'accès",
-    caption: "Valeur : normale, « Non renseigné » en encre 3, succès, ou lien",
-  };
+/** A flat of the seed, for the grid of facts of the listing page. */
+const demoFlat: FactsInput = {
+  type: "appartement",
+  surfaceM2: 68,
+  carrezM2: 66.5,
+  rooms: 3,
+  bedrooms: 2,
+  floor: 2,
+  floorsTotal: 4,
+  hasElevator: true,
+  hasBalcony: true,
+  hasTerrace: false,
+  hasGarden: false,
+  hasParking: true,
+  hasCellar: true,
+  orientation: "Sud-ouest",
+  buildYear: 1972,
+  isNewBuild: false,
+  dpe: "C",
+  ges: "C",
+  heating: "Collectif gaz",
+  chargesMonthlyCents: 18_000,
+  propertyTaxYearlyCents: 115_000,
+  coproLots: 48,
+};
+const GRID_DEMO = new Set<string>([
+  fr.listing.facts.surface,
+  fr.listing.facts.rooms,
+  fr.listing.facts.bedrooms,
+  fr.listing.facts.floor,
+  fr.listing.facts.dpe,
+  fr.listing.facts.heating,
+  fr.listing.facts.charges,
+  fr.listing.facts.propertyTax,
+]);
+
+export const keyFacts: {
+  items: KeyFact[];
+  linkLabel: string;
+  linkValue: string;
+  caption: string;
+  grid: KeyFact[];
+  gridCaption: string;
+} = {
+  items: [
+    { label: "Charges de copropriété", value: `${formatPrice(18_000)} / mois` },
+    { label: "Taxe foncière", value: `${formatPrice(115_000)} / an` },
+    { label: "Classe énergie (DPE)", value: "C" },
+    { label: "Diagnostics", value: "Complets", tone: "success" },
+    { label: "Travaux votés", value: fr.listing.facts.notProvided, tone: "muted" },
+  ],
+  linkLabel: "Procès-verbaux d'AG",
+  linkValue: "Demander l'accès",
+  caption: "Valeur : normale, « Non renseigné » en encre 3, succès, ou lien",
+  grid: bySection(listingKeyFacts(demoFlat)).filter((fact) => GRID_DEMO.has(fact.label)),
+  gridCaption:
+    "KeyFactsGrid · page de l'annonce (L1-55) : groupes titrés, deux colonnes à partir de 768 px, pictogramme dans un rond bleu clair, le nom au-dessus de la valeur",
+};
 
 export const alerts = {
   danger: fr.search.error,
