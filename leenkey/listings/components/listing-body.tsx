@@ -27,6 +27,7 @@ export function ListingBody({
   galleryTopLeft,
   galleryTopRight,
   aside,
+  map,
   level = 1,
   className,
 }: {
@@ -36,6 +37,8 @@ export function ListingBody({
   galleryTopRight?: ReactNode;
   /** The price column (PriceColumn), from 1024 px. */
   aside: ReactNode;
+  /** « Localisation »: the map of the area (L1-16), on the public page. */
+  map?: ReactNode;
   /**
    * Level of the title: 1 on the page of the listing; 3 in the preview, under
    * « Mon bien » and « Aperçu de votre annonce ». Its sections come one below.
@@ -96,6 +99,15 @@ export function ListingBody({
             </SectionTitle>
             <KeyFactsTable items={listingKeyFacts(listing)} className="lg:max-w-lk-prose" />
           </section>
+
+          {map ? (
+            <section aria-labelledby="localisation" className="flex flex-col gap-2">
+              <SectionTitle id="localisation" as={section}>
+                {t.map.title}
+              </SectionTitle>
+              {map}
+            </section>
+          ) : null}
         </div>
 
         <aside className="hidden lg:block">{aside}</aside>

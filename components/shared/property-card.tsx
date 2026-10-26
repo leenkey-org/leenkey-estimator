@@ -90,8 +90,10 @@ function Photo({
   );
 }
 
+// Hovered or pressed, the frame turns blue and the card rises a little
+// (Younes, DECISIONS 2026-10-26: « encadré qui devient bleu »).
 const cardLink =
-  "group rounded-lk-md border border-lk-line bg-lk-surface transition-colors duration-140 ease-out-lk hover:border-lk-ink-3";
+  "group rounded-lk-md border border-lk-line bg-lk-surface transition-[border-color,box-shadow] duration-140 ease-out-lk hover:border-lk-blue hover:shadow-lk-hover active:border-lk-blue";
 
 /**
  * Property card (docs/DESIGN.md 10.3): compact (mobile search), wide (desktop

@@ -39,7 +39,7 @@ Trois lots contractuels. **Le périmètre à construire est celui de `docs/SPEC-
 | Paiement | Stripe Checkout + webhooks | Mode test en dev et preprod, live en prod uniquement |
 | IA | Anthropic API (SDK `@anthropic-ai/sdk`) | Tool use pour les actions, voir section 8 |
 | Emails | Resend + React Email | Templates dans `emails/` |
-| Cartes et géocodage | Mapbox GL JS (cartes) ; adresses et géocodage : Base Adresse Nationale (Géoplateforme de l'IGN, `core/geo/`) | Clé Mapbox publique côté client restreinte par domaine. Géocodage sans clé, appelé côté serveur, résultats stockables (provisoire, `docs/DECISIONS.md` Q46) |
+| Cartes et géocodage | Google Maps, Maps JavaScript API (cartes, `core/maps/`, sans paquet npm ; `docs/DECISIONS.md` 2026-10-26) ; adresses et géocodage : Base Adresse Nationale (Géoplateforme de l'IGN, `core/geo/`) | Clé Google Maps publique côté client restreinte par domaine, chargée seulement après le clic « Afficher la carte ». Géocodage sans clé, appelé côté serveur, résultats stockables (provisoire, `docs/DECISIONS.md` Q46) |
 | Images | `sharp` côté serveur | Redimensionnement à l'upload, jamais d'image brute servie |
 | Validation | Zod | Tout input utilisateur passe par un schéma Zod, côté serveur |
 | Hébergement | Vercel Pro (compte Nebula Creativ) | Preview par PR (build seulement), préprod sur la branche `v2` (projet `leenkey-v2`), prod sur `main` (projet `leenkey-estimator-main`) |
@@ -135,7 +135,7 @@ Dans ce document, « staging » désigne l'environnement de préprod : branche G
 | Stripe | mode test | mode test | mode live |
 | Anthropic | clé dev, quota bas | clé staging | clé prod |
 | Resend | domaine de test, envois vers une boîte de test uniquement | idem, préfixe `[PREPROD]` dans les sujets ; exception : les emails d'authentification de Supabase partent à l'adresse saisie (`DECISIONS.md` 2026-10-16, à valider par Younes) | domaine `leenkey.fr` vérifié |
-| Mapbox | clé restreinte à `localhost` | clé restreinte à `leenkey-v2.vercel.app` | clé restreinte à `leenkey.fr` |
+| Google Maps | clé facultative restreinte à `localhost` (sans clé : « carte non disponible ») | clé restreinte à `leenkey-v2.vercel.app` | clé restreinte à `leenkey.fr` |
 | Données | seed de test | seed de test + données saisies par Cédric en recette | données réelles |
 | Robots | `noindex` | `noindex` + protection par mot de passe dans le middleware (`PREPROD_USER` / `PREPROD_PASSWORD`) | indexable |
 
@@ -147,8 +147,7 @@ Fichier `.env.example` à jour dans le repo, sans valeur. Les valeurs réelles s
 # Public (exposées au navigateur, préfixe obligatoire)
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-NEXT_PUBLIC_MAPBOX_TOKEN=
-NEXT_PUBLIC_MAPBOX_STYLE=
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 NEXT_PUBLIC_SITE_URL=
 NEXT_PUBLIC_ENV=local|staging|production
 
@@ -195,7 +194,7 @@ Protection de la préprod : `leenkey-v2.vercel.app` est une URL publique. On n'u
 
 Attention : sur le projet Vercel `leenkey-v2`, la préprod est l'environnement « Production » du projet. Ses variables (dont `NEXT_PUBLIC_ENV=staging`, les clés de test Stripe et le Supabase `leenkey-staging`) se saisissent donc dans l'onglet *Production* de **ce** projet, jamais dans `leenkey-estimator-main`.
 
-Les tests manuels se font sur la préprod **après fusion** dans `v2`, pas sur les previews de PR (pas de Supabase ni de clé Mapbox pour les previews).
+Les tests manuels se font sur la préprod **après fusion** dans `v2`, pas sur les previews de PR (pas de Supabase ni de clé Google Maps pour les previews).
 
 ---
 

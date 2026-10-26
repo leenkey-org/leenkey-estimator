@@ -36,6 +36,8 @@ export type TopNavProps = {
   /** Primary action on the right, with its Plus icon (« Vendre mon bien »). */
   cta?: { href: string; label: string };
   account: TopNavAccount;
+  /** The whole width of the screen, aligned with a page that uses it (search and its map). */
+  fullWidth?: boolean;
   className?: string;
 };
 
@@ -56,6 +58,7 @@ export function TopNav({
   activeHref,
   cta,
   account,
+  fullWidth = false,
   className,
 }: TopNavProps) {
   return (
@@ -66,7 +69,12 @@ export function TopNav({
         className,
       )}
     >
-      <div className="mx-auto flex h-full max-w-lk-wide items-center gap-6 px-5 lg:gap-10 lg:px-8">
+      <div
+        className={cn(
+          "mx-auto flex h-full items-center gap-6 px-5 lg:gap-10 lg:px-8",
+          !fullWidth && "max-w-lk-wide",
+        )}
+      >
         <Link href={homeHref} className="inline-flex h-11 shrink-0 items-center rounded-lk-sm">
           <Logo className="h-8" />
         </Link>
