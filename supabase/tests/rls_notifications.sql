@@ -53,7 +53,9 @@ select is((select data->>'reference' is not null and data->>'city' = 'Savigny-su
 select is((select link from notifications
             where profile_id = tests.uid('admin') and data->>'listing_id' = :'listing_a'),
           '/admin/annonces/' || :'listing_a', 'its link: the listing in the back office');
-select is((select count(*) from notifications where profile_id = tests.uid('seller_a'))::int, 0,
+-- The seller is told of the step reached (step.advanced, L1-23), nothing else.
+select is((select count(*) from notifications
+            where profile_id = tests.uid('seller_a') and type <> 'step.advanced')::int, 0,
           'nothing to the seller who sends it');
 
 \set who admin
