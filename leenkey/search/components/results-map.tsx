@@ -10,7 +10,7 @@ import { facadeScope } from "@/components/shared/facade-root";
 import { IconButton } from "@/components/shared/icon-button";
 import { MapGate, MapNotice } from "@/components/shared/map-gate";
 import { PropertyCard } from "@/components/shared/property-card";
-import type { LatLngLiteral } from "@/core/maps/google-maps";
+import type { LatLngLiteral, Padding } from "@/core/maps/google-maps";
 import { useMapsConsent } from "@/core/maps/use-maps-consent";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -56,6 +56,7 @@ function MapContent({
   onHover,
   onSelect,
   shown = true,
+  padding,
   className,
 }: Props & {
   activeId: string | null;
@@ -63,6 +64,7 @@ function MapContent({
   onSelect: (id: string) => void;
   /** False while hidden by the layout: no map is loaded for nothing. */
   shown?: boolean;
+  padding?: Padding;
   className?: string;
 }) {
   const { allowed, allow } = useMapsConsent();
@@ -87,6 +89,7 @@ function MapContent({
       activeId={activeId}
       onHover={onHover}
       onSelect={onSelect}
+      padding={padding}
       className={className}
     />
   );
@@ -153,6 +156,8 @@ export function ResultsMapDialog(props: Props) {
             activeId={chosenId}
             onHover={() => {}}
             onSelect={setChosenId}
+            // Room for the card shown and « Liste » at the bottom of the screen.
+            padding={{ top: 48, right: 40, bottom: 220, left: 40 }}
             className="absolute inset-0"
           />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
@@ -168,7 +173,7 @@ export function ResultsMapDialog(props: Props) {
                   variant="white-float"
                   size="sm"
                   onClick={() => setChosenId(null)}
-                  className="absolute -right-2 -top-3 rounded-full"
+                  className="absolute -top-13 right-0 rounded-full"
                 />
               </section>
             ) : null}

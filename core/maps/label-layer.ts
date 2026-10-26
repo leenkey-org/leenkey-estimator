@@ -16,11 +16,24 @@ export type LabelLayer = {
   remove(): void;
 };
 
+/** Room kept between two labels before the later one is collapsed. */
+const GAP_PX = 4;
+
+type Box = { left: number; right: number; top: number; bottom: number };
+
+const overlap = (a: Box, b: Box) =>
+  a.left < b.right + GAP_PX &&
+  a.right > b.left - GAP_PX &&
+  a.top < b.bottom + GAP_PX &&
+  a.bottom > b.top - GAP_PX;
+
 /**
  * Labels drawn in HTML over a map, one button each, in a single overlay:
  * lighter than one marker per point, and styled like the rest of the page by
- * the class given (`data-active` on the highlighted one). A click, a hover
- * or the focus of a label is told to the page; it never reaches the map.
+ * the class given (`data-active` on the highlighted one). A label that would
+ * cover one before it in the list is marked `data-collapsed` (drawn as a dot
+ * by the class), until the zoom makes room. A click, a hover or the focus of
+ * a label is told to the page; it never reaches the map.
  */
 export function createLabelLayer(
   api: GoogleMapsApi,
@@ -33,7 +46,10 @@ export function createLabelLayer(
 ): LabelLayer {
   const { OverlayView } = api.maps;
   const { LatLng } = api.core;
-  const nodes = new Map<string, { button: HTMLButtonElement; position: LatLngLiteral }>();
+  const nodes = new Map<
+    string,
+    { button: HTMLButtonElement; position: LatLngLiteral; size?: { width: number; height: number } }
+  >();
   const container = document.createElement("div");
   container.style.position = "absolute";
   container.style.left = "0";
@@ -48,10 +64,29 @@ export function createLabelLayer(
     draw() {
       const projection = this.getProjection();
       if (!projection) return;
-      for (const { button, position } of nodes.values()) {
+      const placed: Box[] = [];
+      for (const node of nodes.values()) {
+        const { button, position } = node;
         const point = projection.fromLatLngToDivPixel(new LatLng(position.lat, position.lng));
         if (!point) continue;
         button.style.transform = `translate(${Math.round(point.x)}px, ${Math.round(point.y)}px) translate(-50%, -50%)`;
+        // The size of the whole label, read once it is drawn in full.
+        if (!node.size && !button.hasAttribute("data-collapsed") && button.offsetWidth > 0) {
+          node.size = { width: button.offsetWidth, height: button.offsetHeight };
+        }
+        if (!node.size) continue;
+        const box = {
+          left: point.x - node.size.width / 2,
+          right: point.x + node.size.width / 2,
+          top: point.y - node.size.height / 2,
+          bottom: point.y + node.size.height / 2,
+        };
+        if (placed.some((other) => overlap(box, other))) {
+          button.setAttribute("data-collapsed", "");
+        } else {
+          button.removeAttribute("data-collapsed");
+          placed.push(box);
+        }
       }
     }
 
@@ -87,10 +122,12 @@ export function createLabelLayer(
         }
       }
       for (const label of labels) {
-        const button = nodes.get(label.id)?.button ?? create(label.id);
+        const known = nodes.get(label.id);
+        const button = known?.button ?? create(label.id);
+        const size = known && button.textContent === label.text ? known.size : undefined;
         button.textContent = label.text;
         button.setAttribute("aria-label", label.name);
-        nodes.set(label.id, { button, position: label.position });
+        nodes.set(label.id, { button, position: label.position, size });
       }
       layer.draw();
     },

@@ -102,8 +102,7 @@ test.describe("carte de la recherche (base de seed)", () => {
     const last = page.locator("[data-listing-id]").last();
     const lastId = await last.getAttribute("data-listing-id");
     expect(lastId).not.toBe(id);
-    // From the keyboard: pills of the same area of 200 m sit on one another
-    // until their grouping (L1-16b).
+    // From the keyboard: a pill may be a dot under another one (label-layer.ts).
     await fakeMap(page).locator(`[data-label-id="${lastId}"]`).focus();
     await page.keyboard.press("Enter");
     await expect(last).toHaveAttribute("data-flash", "true");

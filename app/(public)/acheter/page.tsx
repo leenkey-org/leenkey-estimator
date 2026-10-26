@@ -140,7 +140,8 @@ export default async function SearchPage({ searchParams }: Props) {
 
   return (
     <FacadeRoot className={cn("flex min-h-screen flex-col bg-lk-surface", BOTTOM_NAV_OFFSET)}>
-      <SiteTopNav />
+      {/* The whole width, like the list and the map below it (L1-16). */}
+      <SiteTopNav fullWidth />
       <SearchProvider
         query={query}
         total={result.ok ? result.data.total : null}

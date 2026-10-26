@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { MapListing } from "../map-listings";
 import { MapNotice } from "@/components/shared/map-gate";
 import { LEENKEY_MAP_STYLE } from "@/components/shared/map-style";
-import type { GoogleMap, LatLngLiteral } from "@/core/maps/google-maps";
+import type { GoogleMap, LatLngLiteral, Padding } from "@/core/maps/google-maps";
 import { createLabelLayer, type LabelLayer } from "@/core/maps/label-layer";
 import { useGoogleMaps } from "@/core/maps/use-google-maps";
 import { fr } from "@/lib/i18n/fr";
@@ -21,7 +21,9 @@ const FIT_PADDING = 56;
 /**
  * Price pill (DESIGN.md 8): white, 1.5 px line, floating; blue with white
  * text and above the others when its card is hovered, when chosen, or under
- * the pointer. `scale` leaves `transform` to the position of the pill.
+ * the pointer. `scale` leaves `transform` to the position of the pill. A pill
+ * that would cover an earlier one is a dot (label-layer.ts) until the zoom
+ * makes room, or while it is hovered, focused or active.
  */
 const PILL = cn(
   "absolute left-0 top-0 cursor-pointer whitespace-nowrap rounded-full border-[1.5px] border-lk-line bg-lk-surface px-2.5 py-1.5",
@@ -31,6 +33,10 @@ const PILL = cn(
   "data-active:z-10 data-active:scale-105 data-active:border-lk-blue data-active:bg-lk-blue data-active:text-white",
   "focus-visible:z-20 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
   "lg:px-3 lg:py-2",
+  // The dot: 14 px navy on a white ring, a target of 26 px (written out in
+  // full for Tailwind to find them).
+  "data-collapsed:not-data-active:not-hover:not-focus-visible:size-3.5 data-collapsed:not-data-active:not-hover:not-focus-visible:overflow-hidden data-collapsed:not-data-active:not-hover:not-focus-visible:border-2 data-collapsed:not-data-active:not-hover:not-focus-visible:border-lk-surface data-collapsed:not-data-active:not-hover:not-focus-visible:bg-lk-navy data-collapsed:not-data-active:not-hover:not-focus-visible:p-0 data-collapsed:not-data-active:not-hover:not-focus-visible:text-transparent",
+  "after:absolute after:-inset-1.5",
 );
 
 export function SearchMap({
@@ -40,6 +46,7 @@ export function SearchMap({
   activeId,
   onHover,
   onSelect,
+  padding = FIT_PADDING,
   className,
 }: {
   apiKey: string;
@@ -49,6 +56,8 @@ export function SearchMap({
   activeId: string | null;
   onHover: (id: string | null) => void;
   onSelect: (id: string) => void;
+  /** Room kept around the pills when the map is framed on them. */
+  padding?: Padding;
   className?: string;
 }) {
   const maps = useGoogleMaps(apiKey);
@@ -56,10 +65,10 @@ export function SearchMap({
   const [view, setView] = useState<{ map: GoogleMap; layer: LabelLayer } | null>(null);
   // The latest handlers and listings, for the pills created once.
   const handlers = useRef({ onHover, onSelect });
-  const latest = useRef({ listings, centre });
+  const latest = useRef({ listings, centre, padding });
   useEffect(() => {
     handlers.current = { onHover, onSelect };
-    latest.current = { listings, centre };
+    latest.current = { listings, centre, padding };
   });
 
   useEffect(() => {
@@ -110,7 +119,7 @@ export function SearchMap({
     } else {
       const bounds = new maps.api.core.LatLngBounds();
       for (const listing of current) bounds.extend(listing.position);
-      map.fitBounds(bounds, FIT_PADDING);
+      map.fitBounds(bounds, latest.current.padding);
     }
   }, [view, maps, ids, place]);
 

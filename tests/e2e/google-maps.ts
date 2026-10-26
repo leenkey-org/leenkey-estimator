@@ -79,18 +79,27 @@ const FAKE_MAPS = String.raw`(() => {
     }
     size() { return { width: this.element.clientWidth, height: this.element.clientHeight }; }
     redraw() { for (const overlay of this.overlays) overlay.draw?.(); }
-    setCenter(center) { this.center = literal(center); this.redraw(); }
+    setCenter(center) { this.center = literal(center); this.offset = null; this.redraw(); }
     setZoom(zoom) { this.zoom = zoom; this.redraw(); }
     getZoom() { return this.zoom; }
     panTo(center) { this.setCenter(center); }
     fitBounds(bounds, padding = 0) {
+      const room =
+        typeof padding === "number"
+          ? { top: padding, right: padding, bottom: padding, left: padding }
+          : padding;
       const points = bounds.points.map(world);
       const xs = points.map((p) => p.x);
       const ys = points.map((p) => p.y);
       const { width, height } = this.size();
       const spanX = Math.max(Math.max(...xs) - Math.min(...xs), 1e-9);
       const spanY = Math.max(Math.max(...ys) - Math.min(...ys), 1e-9);
-      const zoom = Math.log2(Math.min((width - 2 * padding) / spanX, (height - 2 * padding) / spanY));
+      const zoom = Math.log2(
+        Math.min(
+          (width - room.left - room.right) / spanX,
+          (height - room.top - room.bottom) / spanY,
+        ),
+      );
       this.zoom = Math.min(Math.floor(zoom), this.options.maxZoom ?? 21);
       const lats = bounds.points.map((p) => p.lat);
       const lngs = bounds.points.map((p) => p.lng);
@@ -98,6 +107,8 @@ const FAKE_MAPS = String.raw`(() => {
         lat: (Math.min(...lats) + Math.max(...lats)) / 2,
         lng: (Math.min(...lngs) + Math.max(...lngs)) / 2,
       };
+      // Asymmetric room moves the bounds into the free area, as Google does.
+      this.offset = { x: (room.left - room.right) / 2, y: (room.top - room.bottom) / 2 };
       this.redraw();
     }
     project(point) {
@@ -105,7 +116,11 @@ const FAKE_MAPS = String.raw`(() => {
       const at = world(literal(point));
       const centre = world(this.center);
       const { width, height } = this.size();
-      return { x: width / 2 + (at.x - centre.x) * scale, y: height / 2 + (at.y - centre.y) * scale };
+      const offset = this.offset ?? { x: 0, y: 0 };
+      return {
+        x: width / 2 + offset.x + (at.x - centre.x) * scale,
+        y: height / 2 + offset.y + (at.y - centre.y) * scale,
+      };
     }
     addListener(name, handler) { return this.events.add(name, handler); }
     getStreetView() { return this.streetView; }

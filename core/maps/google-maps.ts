@@ -48,8 +48,11 @@ export interface MapOptions {
   streetViewControlOptions?: { position: ControlPosition };
 }
 
+/** Room left around bounds fitted, in pixels. */
+export type Padding = number | { top: number; right: number; bottom: number; left: number };
+
 export interface GoogleMap {
-  fitBounds(bounds: LatLngBounds, padding?: number): void;
+  fitBounds(bounds: LatLngBounds, padding?: Padding): void;
   /** The Street View of the map, shown in its place when visible. */
   getStreetView(): StreetViewPanorama;
   setCenter(center: LatLngLiteral): void;

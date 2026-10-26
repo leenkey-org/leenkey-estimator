@@ -17,7 +17,7 @@ import { SpaceNotificationBell } from "./space";
  * built from the session: avatar, bell and favourites when signed in,
  * « Mon compte » back to this page otherwise. Shown from 768 px.
  */
-export async function SiteTopNav() {
+export async function SiteTopNav({ fullWidth = false }: { fullWidth?: boolean } = {}) {
   const [profile, path] = await Promise.all([getProfile(), currentPath()]);
   const account: TopNavAccount = profile
     ? {
@@ -36,6 +36,7 @@ export async function SiteTopNav() {
       links={TOP_NAV_LINKS}
       cta={sellCta()}
       account={account}
+      fullWidth={fullWidth}
     />
   );
 }
