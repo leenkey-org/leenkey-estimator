@@ -580,9 +580,10 @@ export const spacing = {
     { name: "md", value: "768 px · 2 colonnes, navigation haute" },
     { name: "lg", value: "1024 px · mises en page desktop" },
     { name: "xl", value: "1280 px · largeur de référence" },
+    { name: "2xl", value: "1536 px · grand écran, une colonne de cartes de plus" },
   ],
   containers: [
-    { name: "max-w-lk-page", value: "1200 px · pages publiques" },
+    { name: "lk-frame", value: "toute la largeur jusqu'à 1 920 px · cadre de page" },
     { name: "max-w-lk-home", value: "820 px · accueil acquéreur" },
     { name: "max-w-lk-settings", value: "720 px · compte et réglages" },
     { name: "max-w-lk-prose", value: "640 px · texte long" },

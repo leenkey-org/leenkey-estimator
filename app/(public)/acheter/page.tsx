@@ -141,7 +141,14 @@ export default async function SearchPage({ searchParams }: Props) {
   }
 
   return (
-    <FacadeRoot className={cn("flex min-h-screen flex-col bg-lk-surface", BOTTOM_NAV_OFFSET)}>
+    // 32 px of gutter beside the map, even from 1 536 px (L1-56): the top bar,
+    // the search bar, the list and the footer read it.
+    <FacadeRoot
+      className={cn(
+        "flex min-h-screen flex-col bg-lk-surface 2xl:[--lk-gutter:2rem]",
+        BOTTOM_NAV_OFFSET,
+      )}
+    >
       {/* The whole width, like the list and the map below it (L1-16). */}
       <SiteTopNav fullWidth />
       <SearchProvider
@@ -154,7 +161,7 @@ export default async function SearchPage({ searchParams }: Props) {
         <MapSyncProvider>
           {/* From 1 536 px, the list takes three fifths and three cards a row (L1-56). */}
           <div className="flex-1 lg:grid lg:grid-cols-[620px_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-            <main className="w-full lk-gutter pb-12 pt-3.5 lg:pt-5 2xl:[--lk-gutter:2rem]">
+            <main className="w-full lk-gutter pb-12 pt-3.5 lg:pt-5">
               <h1 className="sr-only">{t.pageTitle}</h1>
               <ResultsRegion>{content}</ResultsRegion>
             </main>

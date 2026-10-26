@@ -457,7 +457,9 @@ export function EstimationDashboard({
                   Alimenté par IA
                 </span>
               </div>
-              <p className="text-lk-compact leading-relaxed text-lk-ink-2">{aiAnalyse}</p>
+              <p className="max-w-lk-prose text-lk-compact leading-relaxed text-lk-ink-2">
+                {aiAnalyse}
+              </p>
             </Card>
           )}
 
@@ -982,7 +984,7 @@ export function EstimationDashboard({
               Avertissement légal
             </h3>
           </div>
-          <p className="text-lk-compact leading-relaxed text-lk-warning-fg">
+          <p className="max-w-lk-prose text-lk-compact leading-relaxed text-lk-warning-fg">
             Ce document constitue une <strong>analyse automatisée</strong> basée sur les
             informations renseignées et les données de marché disponibles. Il est fourni{" "}
             <strong>à titre informatif uniquement</strong> et ne constitue ni une expertise

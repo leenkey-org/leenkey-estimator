@@ -34,7 +34,7 @@ export function SiteFooter({
       <div
         className={cn(
           "flex flex-col gap-3 pt-8 pb-10 max-md:[--lk-gutter:1rem] md:gap-4 md:pt-10 md:pb-12",
-          fullWidth ? "w-full lk-gutter 2xl:[--lk-gutter:2rem]" : "lk-frame",
+          fullWidth ? "w-full lk-gutter" : "lk-frame",
         )}
       >
         <nav aria-label={fr.site.links.label}>

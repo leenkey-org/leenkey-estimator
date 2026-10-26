@@ -116,7 +116,7 @@ export function BrandPanel({
           <FacadeDrawing
             data-reveal-draw={hero ? undefined : ""}
             className={cn(
-              "lk-drawing pointer-events-none absolute bottom-0 right-10 hidden h-52.5 w-95 opacity-55 lg:block",
+              "lk-drawing pointer-events-none absolute bottom-0 right-(--lk-gutter) hidden h-52.5 w-95 opacity-55 lg:block",
               hero && "lk-drawing-in",
             )}
           />

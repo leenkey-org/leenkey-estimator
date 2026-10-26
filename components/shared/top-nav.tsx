@@ -43,12 +43,13 @@ export type TopNavProps = {
 
 /**
  * Desktop navigation (docs/DESIGN.md 10.6, direction C), from 768 px: 72 px,
- * white, bottom border, sticky, its content in the 1 280 px of the pages.
+ * white, bottom border, sticky, its content in the frame of the pages (the
+ * width of the screen up to 1 920 px, L1-56).
  * Logo 32 px high, links, then on the right: the action in a blue outlined
  * pill, and when signed in the bell, the favourites and the pill of the
  * account menu; when signed out, the same pill (menu and avatar) to « Mon
- * compte ». Padding 0 32 and gap 40 from 1024 px, tighter below so that it
- * fits in 768 px. Layer 30, above the sticky headers of the pages (20): the
+ * compte ». Gutters of the frame from 1024 px (32 px, 64 px from 1536 px),
+ * gap 40; 20 px and 24 below, so that it fits in 768 px. Layer 30, above the sticky headers of the pages (20): the
  * panel of a group of its links covers them (L1-51); no BottomNav from 768 px.
  */
 export function TopNav({
@@ -72,8 +73,11 @@ export function TopNav({
       <div
         className={cn(
           "flex h-full items-center gap-6 lg:gap-10",
-          // The page frame (L1-56); the search keeps 32 px beside its map.
-          fullWidth ? "w-full lk-gutter 2xl:[--lk-gutter:2rem]" : "lk-frame",
+          // The page frame (L1-56), or the whole width (the search sets its
+          // own gutter on its page). 20 px below 1 024 px: the links of an
+          // account do not fit in 768 px with 32.
+          fullWidth ? "w-full lk-gutter" : "lk-frame",
+          "max-lg:[--lk-gutter:1.25rem]",
         )}
       >
         <Link href={homeHref} className="inline-flex h-11 shrink-0 items-center rounded-lk-sm">

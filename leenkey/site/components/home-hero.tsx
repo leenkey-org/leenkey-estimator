@@ -40,7 +40,7 @@ export async function HomeHero() {
             alt=""
             fill
             priority
-            sizes="(min-width: 1280px) 1216px, 100vw"
+            sizes="(min-width: 1920px) 1792px, 100vw"
             className="object-cover object-[50%_62%]"
           />
         ) : null}

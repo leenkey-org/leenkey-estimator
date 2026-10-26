@@ -180,11 +180,10 @@ html:has([data-sticky-subheader="conversation"]) {
   --lk-sticky-subheader: --spacing(18.25);
 }
 
-/* The gutters of a page frame (L1-56, DESIGN.md 4.1): 20 px on a phone,
-   32 px from 768 px, 64 px from 1 536 px. A section sets its own on a phone
-   (max-md:[--lk-gutter:--spacing(4)], direction C). With viewport-fit=cover
-   (app/layout.tsx), a phone in landscape draws the page under its notch and
-   rounded corners: a gutter is never narrower than their safe area. */
+/* The gutters of a page frame (L1-56, DESIGN.md 4.3): 20 px on a phone,
+   32 px from 768 px, 64 px from 1 536 px. A section sets its own on the
+   element (max-md:[--lk-gutter:1rem] for direction C, the TopNav 20 px below
+   1 024 px, the search 32 px on its root): the utilities read it there. */
 html {
   --lk-gutter: --spacing(5);
   @variant md {
@@ -196,8 +195,7 @@ html {
 }
 
 @utility lk-gutter {
-  padding-left: max(var(--lk-gutter), env(safe-area-inset-left));
-  padding-right: max(var(--lk-gutter), env(safe-area-inset-right));
+  padding-inline: var(--lk-gutter);
 }
 
 /* A page frame (L1-56, « en full page en fonction du device »): the whole
@@ -207,8 +205,7 @@ html {
   margin-inline: auto;
   width: 100%;
   max-width: var(--container-lk-frame);
-  padding-left: max(var(--lk-gutter), env(safe-area-inset-left));
-  padding-right: max(var(--lk-gutter), env(safe-area-inset-right));
+  padding-inline: var(--lk-gutter);
 }
 
 /* Ensure smooth scroll behavior site-wide */

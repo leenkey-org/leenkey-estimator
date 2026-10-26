@@ -110,7 +110,15 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
               <Photo
                 src={photo.src}
                 alt={photo.alt}
-                sizes="(min-width: 1280px) 600px, 50vw"
+                // Its share of the width of the page (L1-56): all of it alone,
+                // two thirds beside one column, half beside two.
+                sizes={
+                  total === 1
+                    ? "(min-width: 1920px) 1792px, 100vw"
+                    : total < 5
+                      ? "(min-width: 1920px) 1200px, 66vw"
+                      : "(min-width: 1920px) 900px, 50vw"
+                }
                 priority
               />
             </button>
@@ -125,7 +133,7 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
                 onClick={() => setViewer(index + 1)}
                 className="relative overflow-hidden rounded-lk-sm"
               >
-                <Photo src={photo.src} alt={photo.alt} sizes="300px" />
+                <Photo src={photo.src} alt={photo.alt} sizes="(min-width: 1920px) 600px, 33vw" />
                 {more ? (
                   <span className="absolute inset-0 flex items-center justify-center bg-lk-ink/55 text-lk-label font-semibold text-white">
                     {t.more(more)}

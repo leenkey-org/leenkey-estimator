@@ -197,7 +197,7 @@ export async function PlansSection() {
       {plans && plans.length > 0 ? (
         <ul
           data-reveal-stagger=""
-          className="flex flex-col gap-2.5 md:grid md:grid-cols-3 md:gap-6"
+          className="flex flex-col gap-2.5 md:gap-4 lg:grid lg:grid-cols-3 lg:gap-6"
         >
           {plans.map((plan) => (
             <li key={plan.code} className="flex">
