@@ -55,6 +55,9 @@ describe("palette (DESIGN.md 2.1)", () => {
     ["danger-fg", "danger-bg"],
     ["danger", "danger-bg"],
     ["navy", "blue-tint"],
+    // Key figures, facts and strengths on the light blue (L1-55, « pas de gris »).
+    ["blue-dark", "blue-tint"],
+    ["ink-3", "blue-tint"],
     // Home page in the direction of the V1 (L1-49): its labels and texts on
     // the mist flat, the light blue on the deep navy, the pill « Exemple ».
     ["blue", "mist"],

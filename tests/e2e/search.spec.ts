@@ -21,7 +21,7 @@ const COUNT = /^(?:(\d[\d\s]*)\sbiens?|Aucun bien)/;
 /** « 12 biens à Savigny-sur-Orge » (results header, role status). */
 const resultsStatus = (page: Page) => page.getByRole("main").getByRole("status");
 
-/** Links of the cards shown (compact up to 1023 px, wide beyond). */
+/** Links of the cards shown: the title of each card (L1-55). */
 const cards = (page: Page) => page.getByRole("list", { name: "Résultats" }).locator("a:visible");
 
 const location = (page: Page) => page.getByRole("combobox", { name: "Ville ou code postal" });

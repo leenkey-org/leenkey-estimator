@@ -74,7 +74,7 @@ Ce document est la **référence visuelle exécutable** de la V2 : valeurs exact
 | `--lk-blue` | `#1156FC` | Aplats de marque, bouton principal, liens, sélection, focus | blanc dessus 5,58:1 ; sur blanc 5,58:1 |
 | `--lk-blue-hover` | `#0B3FC4` | Survol et pression du bleu (direction C) | blanc dessus 8,33:1 |
 | `--lk-blue-dark` | `#0B3FC4` | Direction C : texte d'un badge ou d'une étiquette sur blanc ou `--lk-blue-tint`, chiffres clés | 8,33:1 sur blanc ; 7,49:1 sur `--lk-blue-tint` |
-| `--lk-blue-tint` | `#EEF3FF` | Fond de sélection, encart d'aide, suggestion de l'assistant ; pastilles d'icône (direction C) | bleu dessus 5,03:1 |
+| `--lk-blue-tint` | `#EEF3FF` | Fond de sélection, encart d'aide, suggestion de l'assistant ; pastilles d'icône (direction C) | bleu dessus 5,03:1 ; `--lk-ink-3` dessus 5,26:1 (libellés des chiffres clés, L1-55) |
 | `--lk-blue-line` | `#DBEAFE` | Bordure des boutons secondaires et des encarts bleus, anneau de focus des champs, jauges ; survol d'une notification non lue | décoratif ; `--lk-ink-3` dessus 4,79:1 |
 | `--lk-blue-border` | `#C9D8FE` | Direction C : bordure d'une carte ou d'une pilule survolée | décoratif |
 | `--lk-on-blue-2` | `#F0F4FF` | Texte secondaire sur aplat bleu | 5,08:1 sur bleu |
@@ -396,8 +396,8 @@ Couches (`z-index`) : contenu 0 · en-tête collant 20 · `BottomNav` 30 · bout
 |---|---|
 | Galerie annonce mobile | pleine largeur × 280 px |
 | Galerie annonce desktop | grille `2fr 1fr 1fr`, 2 rangées de 150 px (180 px à partir de 1440), 10 px d'écart, rayon 6 |
-| Carte de recherche mobile | 110 × 96 px, rayon 4 |
-| Carte de recherche desktop | 200 × 140 px, rayon 4 |
+| Carte de recherche (`ShowcaseCard`, L1-55) | pleine largeur de carte, ratio 1 / 0,95, rayon 16 ; jusqu'à 5 photos |
+| `PropertyCard compact` (Favoris, aperçu de la carte plein écran) | 110 × 96 px, rayon 4 |
 | Tuile « Nouveaux biens » (accueil) | pleine largeur de tuile × 120 px, rayon 6 en haut |
 | Tuile « Les derniers biens » (accueil public) | pleine largeur de tuile, ratio 3:2, rayon 6 en haut (L1-45 : tuiles plus larges, la photo d'abord ; L1-46 : les annonces récentes qui ont une photo avant les autres) |
 | Grille « Résultats de votre dernière recherche » | ratio 4:3 environ (150 px de haut sur 1280) |
@@ -605,8 +605,8 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 | Variante | Mise en page | Contenu |
 |---|---|---|
-| `compact` (recherche mobile) | ligne, padding 10, écart 12, rayon 6, bordure `--lk-line`, fond blanc ; photo 110 × 96 rayon 4 | prix 17 px 700 large + DpeBadge (lettre seule) à droite ; « Appartement 3 p · 68 m² » 13 px 600 ; ville 12 px `--lk-ink-3` ; une ligne d'info 11 px (« Dossier complet » en `--lk-success` 600, ou « Publié il y a 2 jours » en `--lk-ink-3`) |
-| `wide` (recherche desktop) | ligne, padding 12, écart 16, rayon 6 ; photo 200 × 140 rayon 4 | prix 22 px 700 large + DpeBadge « DPE C » ; titre 15 px 600 « Appartement 3 pièces · 68 m² » ; lieu + étage 13 px `--lk-ink-3` ; 2–3 puces d'atouts (fond `--lk-stone-2`, 11 px, rayon 4, padding 4 × 8) ; info de dossier 12 px |
+| `compact` (Favoris, aperçu de la carte plein écran ; la recherche jusqu'à L1-55) | ligne, padding 10, écart 12, rayon 6, bordure `--lk-line`, fond blanc ; photo 110 × 96 rayon 4 | prix 17 px 700 large + DpeBadge (lettre seule) à droite ; « Appartement 3 p · 68 m² » 13 px 600 ; ville 12 px `--lk-ink-3` ; une ligne d'info 11 px (« Dossier complet » en `--lk-success` 600, ou « Publié il y a 2 jours » en `--lk-ink-3`) |
+| `wide` (catalogue `/design` ; la recherche desktop jusqu'à L1-55) | ligne, padding 12, écart 16, rayon 6 ; photo 200 × 140 rayon 4 | prix 22 px 700 large + DpeBadge « DPE C » ; titre 15 px 600 « Appartement 3 pièces · 68 m² » ; lieu + étage 13 px `--lk-ink-3` ; 2–3 puces d'atouts (fond `--lk-stone-2`, 11 px, rayon 4, padding 4 × 8) ; info de dossier 12 px |
 | `tile` (accueil, biens similaires) | colonne, rayon 6, bordure `--lk-line` ; photo 120 px de haut | prix 16 px 700 large ; « 3 p · 64 m² · DPE C » 12 px `--lk-ink-2` ; ville 12 px `--lk-ink-3` ; badges sur photo (section 7.1) |
 
 - Toute la carte est un lien (`<a>` englobant), focus visible sur la carte entière. Le bouton favori, s'il est présent, est un bouton séparé (44 × 44) en haut à droite de la photo.
@@ -845,10 +845,10 @@ En-tête blanc padding 18 × 20 × 12 : `SearchBar` + puces (Appartement, ≤ 40
 `TopNav` ; `FilterBar` ; grille `620px | 1fr` sur toute la largeur de l'écran (gouttières de 32 px, plus de conteneur de 1 200 px ; la `TopNav` aussi, `fullWidth`, pour que logo et champ de recherche s'alignent). Liste : `ResultsHeader`, `ShowcaseCard` en deux colonnes (L1-55, à la place des `PropertyCard wide` ; écart 20 × 24). Carte : hauteur de l'écran sous la `TopNav`, collée pendant le défilement de la liste, bordure gauche `--lk-blue-line`. Corriger l'écart connu (section 17) : « Créer une alerte » ne passe pas à la ligne.
 
 ### 12.7 Annonce mobile `/annonce/[slug]` (`Annonce.png`, G3)
-Galerie 280 px (retour, favori, compteur). Bloc padding 20 × 20 × 0, écart 14 : prix 26 px + `DpeBadge` « DPE C » ; titre 15 px 600 ; lieu 13 px `--lk-ink-3`. `KeyFigures` (68 m², 3 pièces, 2 chambres, 3e étage). `ContactCard`. « Le bien » : description 14 px / 1,6 tronquée à 6 lignes + « Lire la suite ». « Ce que vous savez avant de visiter » : `KeyFactsTable`. « Localisation » : carte 240 px avec secteur et « Voir la rue » (DESIGN 8). `ActionBar` collée.
+Galerie 280 px (retour, favori, compteur). Bloc padding 20 × 20 × 0, écart 14 : prix 26 px + `DpeBadge` « DPE C » ; titre 15 px 600 ; lieu 13 px `--lk-ink-3`. `KeyFigures` (68 m², 3 pièces, 2 chambres, 3e étage). `ContactCard`. « Le bien » : description 14 px / 1,6 tronquée à 6 lignes + « Lire la suite ». « Ce que vous savez avant de visiter » : `KeyFactsGrid` (L1-55). « Localisation » : carte 240 px avec secteur et « Voir la rue » (DESIGN 8). `ActionBar` collée.
 
 ### 12.8 Annonce desktop (`AnnonceDesktop.png`, G3)
-`TopNav` ; « Retour aux annonces » (chevron 16 px + 14 px 600 `--lk-blue`, zone de 44 px de haut ; un retour en arrière vers la recherche quand c'est la page d'avant, filtres et défilement gardés ; sinon la dernière recherche de la visite, `/acheter` à défaut ; un clic avec Cmd, Ctrl ou Maj l'ouvre dans un nouvel onglet ; Younes, `DECISIONS.md` 2026-10-26) puis, à 24 px, le fil d'Ariane 13 px `--lk-ink-3` (« Acheter › Savigny-sur-Orge › Appartement 3 pièces, centre ») ; galerie mosaïque ; grille `1fr | 380px`, écart 40. Colonne gauche : H1 26 px large + lieu 14 px ; badges DPE et « Dossier complet » à droite ; `KeyFigures` 6 tuiles ; « Le bien » ; `KeyFactsTable`, puis « Localisation » sur la largeur de la colonne (carte 320 px, DESIGN 8). Colonne droite : `PriceColumn` + `AssistantNote`.
+`TopNav` ; « Retour aux annonces » (chevron 16 px + 14 px 600 `--lk-blue`, zone de 44 px de haut ; un retour en arrière vers la recherche quand c'est la page d'avant, filtres et défilement gardés ; sinon la dernière recherche de la visite, `/acheter` à défaut ; un clic avec Cmd, Ctrl ou Maj l'ouvre dans un nouvel onglet ; Younes, `DECISIONS.md` 2026-10-26) puis, à 24 px, le fil d'Ariane 13 px `--lk-ink-3` (« Acheter › Savigny-sur-Orge › Appartement 3 pièces, centre ») ; galerie mosaïque ; grille `1fr | 380px`, écart 40. Colonne gauche : H1 26 px large + lieu 14 px ; badges DPE et « Dossier complet » à droite ; `KeyFigures` 6 tuiles ; « Le bien » ; `KeyFactsGrid` (L1-55), puis « Localisation » sur la largeur de la colonne (carte 320 px, DESIGN 8). Colonne droite : `PriceColumn` + `AssistantNote`.
 
 ### 12.9 Messagerie `/messages/[id]` (`Messagerie.png`, G6)
 Fond `--lk-bg`. `ConversationHeader`. Fil padding 16, écart 12. `AssistantSuggestion` collée en bas du fil. `Composer`.

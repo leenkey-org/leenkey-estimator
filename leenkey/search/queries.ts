@@ -1,5 +1,6 @@
 import "server-only";
 import { unstable_rethrow } from "next/navigation";
+import { groupPhotos, type PhotoRow } from "./photos";
 import { SQL_SORT, toSqlFilters } from "./sql-filters";
 import type { DpeClass } from "@/components/shared/dpe-badge";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -48,9 +49,6 @@ export type SearchListing = {
   /** Up to five photos, the main one first, for the photos of a card (search, L1-55). */
   photos?: string[];
 };
-
-/** The photos a card turns through (ShowcaseCard, its dots count them). */
-export const CARD_PHOTOS = 5;
 
 export type SearchResults = { items: SearchListing[]; total: number };
 export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavailable" };
@@ -132,6 +130,13 @@ export async function withCovers(items: SearchListing[]): Promise<SearchListing[
 }
 
 /**
+ * Listings per call of public_listing_photos with all their photos: 15 each
+ * at most (MAX_PHOTOS of leenkey/properties/photo-files.ts), under the 1 000
+ * rows of a PostgREST answer.
+ */
+const PHOTO_BATCH = 60;
+
+/**
  * The photos of listings shown as cards that turn through them (L1-55): up
  * to five each, the main one first, and their number. Without them the cards
  * keep their drawing: a list never fails for a photo.
@@ -142,24 +147,20 @@ export async function withPhotos(items: SearchListing[]): Promise<SearchListing[
   const answers = await Promise.all(
     chunk(
       items.map((item) => item.id),
-      100,
+      PHOTO_BATCH,
     ).map((ids) =>
       supabase.rpc("public_listing_photos", { p_listing_ids: ids, p_cover_only: false }),
     ),
   );
-  const photos = new Map<string, { paths: string[]; total: number }>();
+  const rows: PhotoRow[] = [];
   for (const { data, error } of answers) {
     if (error) {
       console.error("[search] photos failed", { code: error.code });
       return items;
     }
-    for (const row of [...data].sort((a, b) => a.position - b.position)) {
-      const entry = photos.get(row.listing_id) ?? { paths: [], total: 0 };
-      entry.total += 1;
-      if (entry.paths.length < CARD_PHOTOS) entry.paths.push(row.path);
-      photos.set(row.listing_id, entry);
-    }
+    rows.push(...data);
   }
+  const photos = groupPhotos(rows);
   return items.map((item) => {
     const entry = photos.get(item.id);
     const first = entry?.paths[0];

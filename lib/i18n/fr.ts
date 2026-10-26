@@ -1498,6 +1498,8 @@ export const fr = {
         property: "Caractéristiques",
         energy: "Énergie",
         costs: "Coûts et copropriété",
+        /** Without a co-ownership: the property tax alone. */
+        costsOnly: "Coûts",
       },
       notProvided: "Non renseigné",
       yes: "Oui",

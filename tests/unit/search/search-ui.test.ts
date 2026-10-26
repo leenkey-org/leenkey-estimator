@@ -6,6 +6,7 @@ import {
   placeLabel,
   publishedNote,
   toPropertyCard,
+  toShowcaseCard,
 } from "@/leenkey/search/cards";
 import {
   bedroomsLabel,
@@ -16,6 +17,7 @@ import {
   surfaceLabel,
 } from "@/leenkey/search/filter-labels";
 import { filtersFromForm, formFromFilters, wholeNumberInput } from "@/leenkey/search/filters-form";
+import { groupPhotos } from "@/leenkey/search/photos";
 import type { SearchListing } from "@/leenkey/search/queries";
 import { fr } from "@/lib/i18n/fr";
 import { SearchFilters } from "@/lib/validations/search";
@@ -190,5 +192,45 @@ describe("search cards", () => {
     expect(plain(card.location)).toBe("Savigny-sur-Orge · centre");
     expect(placeLabel("Grigny", null)).toBe("Grigny");
     expect(toPropertyCard({ ...flat, type: "terrain", rooms: 0 }, now).rooms).toBeNull();
+  });
+});
+
+describe("cards of the search with their photos (L1-55)", () => {
+  const now = new Date("2026-10-16T10:00:00Z");
+
+  it("five photos at most per listing, in their order, and how many there are", () => {
+    const rows = [3, 1, 6, 2, 5, 4].map((position) => ({
+      listing_id: "a",
+      path: `a/${position}`,
+      position,
+      total: 6,
+    }));
+    rows.push({ listing_id: "b", path: "b/1", position: 1, total: 1 });
+    const photos = groupPhotos(rows);
+    expect(photos.get("a")).toEqual({ paths: ["a/1", "a/2", "a/3", "a/4", "a/5"], total: 6 });
+    expect(photos.get("b")).toEqual({ paths: ["b/1"], total: 1 });
+    expect(photos.has("c")).toBe(false);
+  });
+
+  it("the card: its photos, the commune and its district, « Nouveau » for a week", () => {
+    const card = toShowcaseCard(
+      { ...flat, photos: ["p/1", "p/2"], publishedAt: "2026-10-14T08:00:00Z" },
+      now,
+    );
+    expect(card.href).toBe("/annonce/appartement-3-pieces-savigny-sur-orge-lk0005");
+    expect(card.city).toBe("Savigny-sur-Orge\u00A0· centre");
+    expect(card.photos.map((photo) => photo.alt)).toEqual(["", ""]);
+    expect(card.photos[0]?.src).toContain("p/1");
+    expect(card.badge).toBe("Nouveau");
+    expect(
+      toShowcaseCard({ ...flat, publishedAt: "2026-09-01T08:00:00Z" }, now).badge,
+    ).toBeUndefined();
+  });
+
+  it("without photos read for it, its cover; without either, the drawing", () => {
+    expect(toShowcaseCard({ ...flat, cover: { path: "c/1", total: 3 } }, now).photos).toHaveLength(
+      1,
+    );
+    expect(toShowcaseCard(flat, now).photos).toEqual([]);
   });
 });

@@ -36,7 +36,7 @@ export function useMapSync(): MapSyncValue {
   return value;
 }
 
-/** The link of a card that is shown (compact on a phone, wide from 1024 px). */
+/** The link of a card: its title, first of the card (L1-55). */
 function visibleLink(item: HTMLElement): HTMLAnchorElement | null {
   return (
     Array.from(item.querySelectorAll<HTMLAnchorElement>("a[href]")).find(

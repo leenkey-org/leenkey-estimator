@@ -67,7 +67,14 @@ export type FactsInput = Pick<
 const PROPERTY = t.sections.property;
 const ENERGY = t.sections.energy;
 const COSTS = t.sections.costs;
-const SECTIONS: readonly string[] = [PROPERTY, ENERGY, COSTS];
+const SECTIONS: readonly string[] = [PROPERTY, ENERGY, COSTS, t.sections.costsOnly];
+
+/** « Coûts » alone for a property outside a co-ownership. */
+function withoutCoOwnership(facts: KeyFact[]): KeyFact[] {
+  return facts.map((fact) =>
+    fact.section === COSTS ? { ...fact, section: t.sections.costsOnly } : fact,
+  );
+}
 
 const PRESENTATION: Record<string, { icon: LucideIcon; section: string }> = {
   [t.charges]: { icon: Receipt, section: COSTS },
@@ -154,11 +161,11 @@ export function listingKeyFacts(
   const taxes = fact(t.propertyTax, money(listing.propertyTaxYearlyCents, t.propertyTaxValue));
 
   if (listing.type === "terrain") {
-    return [
+    return withoutCoOwnership([
       taxes,
       fact(t.type, fr.propertyType.terrain),
       fact(t.landSurface, formatSurface(listing.surfaceM2)),
-    ];
+    ]);
   }
 
   const flat = listing.type === "appartement";
@@ -193,5 +200,6 @@ export function listingKeyFacts(
     coOwnership && documents ? fact(t.votedWorks, null) : null,
     coOwnership && documents ? fact(t.procedures, null) : null,
   ];
-  return facts.filter((item): item is KeyFact => item !== null);
+  const shown = facts.filter((item): item is KeyFact => item !== null);
+  return coOwnership ? shown : withoutCoOwnership(shown);
 }

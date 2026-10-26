@@ -23,6 +23,8 @@ export function ResultsList({ items, now }: { items: SearchListing[]; now: Date 
             {...toShowcaseCard(item, now)}
             swipe
             framed
+            // The first photo of the page is its largest image (LCP).
+            priority={index === 0}
             sizes="(min-width: 1024px) 280px, (min-width: 768px) 45vw, 92vw"
           />
         </ResultItem>

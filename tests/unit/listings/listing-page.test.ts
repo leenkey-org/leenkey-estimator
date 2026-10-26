@@ -164,6 +164,9 @@ describe("Ce que vous savez avant de visiter", () => {
     const sections = bySection(listingKeyFacts(flat)).map((fact) => fact.section);
     expect([...new Set(sections)]).toEqual(["Caractéristiques", "Énergie", "Coûts et copropriété"]);
     expect(bySection(listingKeyFacts(flat))[0]?.label).toBe("Type de bien");
+    // Outside a co-ownership, the costs are the property tax alone.
+    expect(new Set(listingKeyFacts(land).map((fact) => fact.section))).toContain("Coûts");
+    expect(listingKeyFacts(land).map((fact) => fact.section)).not.toContain("Coûts et copropriété");
   });
 
   const facts = (listing: PublicListing) =>
