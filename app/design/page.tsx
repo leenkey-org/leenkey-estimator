@@ -551,7 +551,8 @@ export default function DesignPage() {
           <Section id="filtres" title={content.sections.filters} level="h3">
             <Caption>{content.filterBar.selectCaption}</Caption>
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center rounded-full border border-lk-line-strong bg-lk-surface p-1.5 shadow-lk-field">
+              {/* Wider than a phone: it scrolls sideways there, the page never does. */}
+              <div className="flex max-w-full items-center overflow-x-auto rounded-full border border-lk-line-strong bg-lk-surface p-1.5 shadow-lk-field">
                 <FilterMenuDemo {...content.filterBar.type} />
                 <span aria-hidden="true" className="h-8 w-px bg-lk-line" />
                 <FilterMenuDemo {...content.filterBar.budget} />

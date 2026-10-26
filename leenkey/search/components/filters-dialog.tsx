@@ -179,6 +179,7 @@ function FiltersPanel() {
 
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
           <UnitInput
+            pill
             id={FOCUS_TARGET.budget}
             label={t.budgetMin}
             unit="€"
@@ -189,6 +190,7 @@ function FiltersPanel() {
             onChange={(event) => update({ priceMin: event.target.value })}
           />
           <UnitInput
+            pill
             id="filtres-budget-max"
             label={t.budgetMax}
             unit="€"
@@ -203,6 +205,7 @@ function FiltersPanel() {
 
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
           <UnitInput
+            pill
             id="filtres-surface-min"
             label={t.surfaceMin}
             unit="m²"
@@ -213,6 +216,7 @@ function FiltersPanel() {
             onChange={(event) => update({ surfaceMin: event.target.value })}
           />
           <UnitInput
+            pill
             id="filtres-surface-max"
             label={t.surfaceMax}
             unit="m²"
