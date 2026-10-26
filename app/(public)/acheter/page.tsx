@@ -13,11 +13,14 @@ import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
 import { bottomTabs } from "@/leenkey/navigation/config";
 import { FiltersDialog } from "@/leenkey/search/components/filters-dialog";
 import { LoadMore } from "@/leenkey/search/components/load-more";
+import { MapSyncProvider } from "@/leenkey/search/components/map-sync";
+import { ResultsMapDialog, ResultsMapPanel } from "@/leenkey/search/components/results-map";
 import { ResultsList } from "@/leenkey/search/components/results-list";
 import { ResultsRegion, SearchProvider } from "@/leenkey/search/components/search-context";
 import { SearchHeader } from "@/leenkey/search/components/search-header";
 import { SortSelect } from "@/leenkey/search/components/sort-select";
 import { resolveLocation, type ResolvedLocation } from "@/leenkey/search/location";
+import { mapCentre, toMapListings } from "@/leenkey/search/map-listings";
 import { searchListings } from "@/leenkey/search/queries";
 import { formatInteger } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
@@ -32,7 +35,8 @@ import {
 
 // L1-15: search of the published listings (SPEC-V2 8.4, docs/DESIGN.md 12.5,
 // 12.6). Server-rendered from the URL; the controls change the URL.
-// The map (L1-16) and « Créer une alerte » (L3-06) come later. Navigation
+// The map (L1-16): beside the list from 1024 px, the whole width of the page;
+// full screen from « Carte » below. « Créer une alerte » (L3-06) comes later. Navigation
 // (L1-10): TopNav from 768 px, buyer tabs below for every visitor (the
 // middleware sends a signed-out visitor from Favoris, Messages or Compte to
 // the login page; « Vendre » opens the landing page for the sellers),
@@ -72,6 +76,12 @@ export default async function SearchPage({ searchParams }: Props) {
   // The profile is read once per request (cache), by the TopNav too.
   const [result, profile] = await Promise.all([searchListings(query), getProfile()]);
   const now = new Date();
+  const map = {
+    // Public key, restricted to the domain of the site (L1-16).
+    apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || null,
+    listings: result.ok ? toMapListings(result.data.items, now) : [],
+    centre: mapCentre(place),
+  };
 
   let content: ReactNode;
   if (!result.ok) {
@@ -138,10 +148,19 @@ export default async function SearchPage({ searchParams }: Props) {
         radiusAvailable={Boolean(place?.centre)}
       >
         <SearchHeader />
-        <main className="mx-auto w-full max-w-lk-page flex-1 px-5 pb-12 pt-3.5 md:px-10 lg:pt-5">
-          <h1 className="sr-only">{t.pageTitle}</h1>
-          <ResultsRegion>{content}</ResultsRegion>
-        </main>
+        <MapSyncProvider>
+          <div className="flex-1 lg:grid lg:grid-cols-[620px_minmax(0,1fr)]">
+            <main className="mx-auto w-full max-w-lk-page px-5 pb-12 pt-3.5 md:px-10 lg:mx-0 lg:max-w-none lg:px-8 lg:pt-5">
+              <h1 className="sr-only">{t.pageTitle}</h1>
+              <ResultsRegion>{content}</ResultsRegion>
+            </main>
+            {/* Held under the top bar (72 px) while the list scrolls. */}
+            <div className="hidden border-l border-lk-blue-line lg:sticky lg:top-18 lg:block lg:h-[calc(100dvh-4.5rem)] lg:self-start">
+              <ResultsMapPanel {...map} />
+            </div>
+          </div>
+          {result.ok && result.data.total > 0 ? <ResultsMapDialog {...map} /> : null}
+        </MapSyncProvider>
         <FiltersDialog />
       </SearchProvider>
       <SiteFooter />

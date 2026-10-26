@@ -40,7 +40,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 ## S3 · semaine du 26 oct. · Recherche, annonce, back office minimum
 
 - [x] **L1-15** Fonction `search_listings`, index, schéma `SearchFilters`, page `/acheter` liste + filtres + tri + URL · PR : #15 · Testé en préprod : ☐
-- [ ] **L1-16** Carte Mapbox avec les marqueurs de prix (regroupement, synchronisation liste/carte et recherche dans la zone : S6) · PR : · Testé en préprod : ☐
+- [x] **L1-16** Carte Google Maps avec les marqueurs de prix, synchronisation liste/carte, localisation de l'annonce et Street View, chargée au clic (regroupement et recherche dans la zone : L1-16b, S6) · PR : à venir · Testé en préprod : ☐
 - [x] **L1-17** Page annonce complète (galerie photo, KeyFigures, KeyFacts, carte approximative, barre d'action), métadonnées,… · PR : #15 (carte de l'annonce avec L1-16, `DECISIONS.md`) · Testé en préprod : ☐
 - [x] **L1-18** Favoris · PR : #18 · Testé en préprod : ☐
 - [x] **L1-19** Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`suspended`) / remettre en ligne, audit, emails · PR : #19 (partie vendeur avec L1-14, `DECISIONS.md`) · Testé en préprod : ☐
@@ -88,7 +88,7 @@ Toujours la semaine la plus risquée du projet. Ordre imposé : L1-26 et L1-33 (
 
 Recette du lot 1 par Cédric du 16 au 20 novembre ; mise en ligne de la V2 la semaine du 23 novembre (P-05b, ci-dessous). Reportés du lot 1 (recalage du 15 octobre) :
 
-- [ ] **L1-16b** Carte avancée : regroupement, synchronisation liste/carte, recherche dans la zone · PR : · Testé en préprod : ☐
+- [ ] **L1-16b** Carte avancée : regroupement, recherche dans la zone (synchronisation liste/carte livrée avec L1-16) · PR : · Testé en préprod : ☐
 - [ ] **L1-29** Suggestion de réponse en messagerie + rédaction de description · PR : · Testé en préprod : ☐
 - [ ] **L1-35** `listing_revisions` simplifié : historique des champs prix, titre, description d’une annonce publiée, vendeur et admin · PR : · Testé en préprod : ☐
 - [ ] **L1-30b** Résumé du jour par l'assistant dans le back office · PR : · Testé en préprod : ☐

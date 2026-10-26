@@ -26,7 +26,7 @@
 - [ ] Webhook Stripe : signature vérifiée, idempotence testée (même événement envoyé deux fois)
 - [ ] Routes `/api/cron/*` protégées par `CRON_SECRET`
 - [ ] En-têtes : CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy (la CSP autorise l'origine du stockage Supabase dans `img-src` : les photos signées en viennent ; et le WebSocket de Supabase Realtime dans `connect-src`, `wss://<projet>.supabase.co` : la messagerie en dépend, L1-21)
-- [ ] Clés Mapbox restreintes au domaine
+- [ ] Clés Google Maps restreintes au domaine (référents HTTP) et à la Maps JavaScript API, quota journalier et budget fixés
 - [ ] Préprod : mot de passe du middleware actif, `X-Robots-Tag: noindex`, aucune variable de prod dans le projet Vercel `leenkey-v2`
 
 ## RGPD

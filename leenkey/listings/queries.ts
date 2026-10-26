@@ -52,6 +52,11 @@ export type PublicListing = {
   accompanied: boolean;
   /** In their order, the first is the main one (L1-12). */
   photos: ListingPhoto[];
+  /**
+   * The public location (about 200 m from the property, never its address),
+   * for the map of the area (L1-16); read on the public page only.
+   */
+  location?: { lat: number; lng: number } | null;
 };
 
 export type ListingPhoto = {
@@ -64,9 +69,10 @@ export type ListingPhoto = {
 
 export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavailable" };
 
-// Every public column but the raw geography (public_location).
+// Every public column but the raw geography (public_location), read as
+// public_lat and public_lng.
 const COLUMNS =
-  "id, slug, reference, title, description, price_cents, published_at, type, city, postal_code, district, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, has_elevator, has_balcony, has_terrace, has_garden, has_parking, has_cellar, orientation, build_year, is_new_build, dpe_class, ges_class, heating, charges_monthly_cents, property_tax_yearly_cents, copro_lots, seller_first_name, plan";
+  "id, slug, reference, title, description, price_cents, published_at, type, city, postal_code, district, public_lat, public_lng, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, has_elevator, has_balcony, has_terrace, has_garden, has_parking, has_cellar, orientation, build_year, is_new_build, dpe_class, ges_class, heating, charges_monthly_cents, property_tax_yearly_cents, copro_lots, seller_first_name, plan";
 
 /** Same shape as listings.slug (L1-04). */
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -130,6 +136,10 @@ export const getPublicListing = cache(
           city: row.city,
           postalCode: row.postal_code,
           district: row.district,
+          location:
+            row.public_lat === null || row.public_lng === null
+              ? null
+              : { lat: row.public_lat, lng: row.public_lng },
           surfaceM2: Number(row.surface_m2),
           carrezM2: row.carrez_m2 === null ? null : Number(row.carrez_m2),
           rooms: row.rooms,

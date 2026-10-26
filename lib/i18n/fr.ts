@@ -1262,6 +1262,15 @@ export const fr = {
     photoCount: (total: number) => `1 / ${total}`,
   },
   // L1-15: search /acheter (SPEC-V2 8.4, docs/DESIGN.md 10.3, 12.5, 12.6).
+  // L1-16: maps of Google Maps, shown after the choice of the visitor
+  // (core/maps/use-maps-consent.ts, DECISIONS 2026-10-26).
+  maps: {
+    gateNote:
+      "La carte est fournie par Google Maps : l'afficher transmet votre adresse IP à Google.",
+    gateAction: "Afficher la carte",
+    loading: "Chargement de la carte…",
+    unavailable: "La carte n'est pas disponible pour le moment.",
+  },
   search: {
     metaTitle: "Biens à vendre · Leenkey",
     metaTitleIn: (place: string) => `Biens à vendre ${place} · Leenkey`,
@@ -1387,6 +1396,17 @@ export const fr = {
       loadMore: "Voir plus",
       list: "Résultats",
     },
+    // L1-16: the map of the results (docs/DESIGN.md 8, 12.5, 12.6).
+    map: {
+      region: "Carte des biens",
+      gateTitle: "Voir les biens sur la carte",
+      open: "Carte",
+      close: "Liste",
+      /** Name of a price pill: what the card of the list says first. */
+      pill: (price: string, summary: string, place: string) => `${price}, ${summary}, ${place}`,
+      preview: "Bien choisi sur la carte",
+      closePreview: "Fermer l'aperçu",
+    },
     empty: {
       title: "Aucun bien ne correspond.",
       // SPEC 8.4 ends with « ou créez une alerte pour être prévenu » : alerts
@@ -1423,6 +1443,16 @@ export const fr = {
     backToListings: "Retour aux annonces",
     summary: {
       rooms: (rooms: number) => (rooms === 1 ? "1 pièce" : `${rooms} pièces`),
+    },
+    // L1-16: the area of the listing, never its address (docs/DESIGN.md 8).
+    map: {
+      title: "Localisation",
+      region: "Carte du secteur du bien",
+      gateTitle: "Voir le secteur sur la carte",
+      sector: (place: string) => `Secteur approximatif, ${place}`,
+      streetView: "Voir la rue",
+      noStreetView: "Pas de vue de la rue dans ce secteur.",
+      streetViewError: "La vue de la rue n'a pas pu s'ouvrir. Réessayez dans un instant.",
     },
     gallery: {
       none: "Pas encore de photo pour ce bien.",

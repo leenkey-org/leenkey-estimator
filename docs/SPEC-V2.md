@@ -58,7 +58,7 @@ Ces étapes sont faites par Younes. Si elles ne sont pas faites, Claude Code tra
 |---|---|---|
 | Créer les projets Supabase `leenkey-dev`, `leenkey-staging`, `leenkey-prod` | Younes (prod : compte de Cédric) | Avant L1-01 |
 | Créer le compte Stripe Leenkey (au nom de la SAS), les produits et prix en mode test | Younes avec Cédric | Avant L1-26 |
-| Créer les clés Resend (L1-09, emails d'auth), Mapbox (L1-11) et Anthropic (L1-28) par environnement | Younes | Avant la tâche concernée |
+| Créer les clés Resend (L1-09, emails d'auth), Google Maps (L1-16, `DECISIONS.md` 2026-10-26) et Anthropic (L1-28) par environnement | Younes | Avant la tâche concernée |
 | Configurer le projet Vercel `leenkey-v2` (branche `v2`) : variables de préprod dans son onglet « Production », dont `NEXT_PUBLIC_ENV=staging`, `PREPROD_USER`, `PREPROD_PASSWORD` | Younes | Avant L1-02 |
 | Vérifier le domaine `leenkey.fr` dans Resend | Younes | Avant la mise en production |
 | Fournir les contenus client (section 24) | Cédric via Younes | Au kick-off |
@@ -151,7 +151,7 @@ Le parcours suit les six étapes de vente de la section 9, identiques dans leur 
 
 ### Stack
 
-Voir `CLAUDE.md` section 2. Résumé : Next.js 15 (App Router, TypeScript strict), Tailwind + shadcn/ui, Supabase (Postgres, Auth, Storage, Realtime, pgvector), Stripe Checkout, Anthropic API, Resend + React Email, Mapbox, Vercel Pro, Zod, Vitest, Playwright.
+Voir `CLAUDE.md` section 2. Résumé : Next.js 15 (App Router, TypeScript strict), Tailwind + shadcn/ui, Supabase (Postgres, Auth, Storage, Realtime, pgvector), Stripe Checkout, Anthropic API, Resend + React Email, Google Maps (cartes) et Base Adresse Nationale (adresses), Vercel Pro, Zod, Vitest, Playwright.
 
 ### Embeddings de la base de connaissances
 
@@ -1182,7 +1182,7 @@ Maquettes : `Recherche.dc.html`, `RechercheDesktop.dc.html`.
 - Tri : plus récents (défaut), prix croissant, prix décroissant, surface, prix au m².
 - Filtres sérialisés dans l'URL (`?ville=savigny-sur-orge&rayon=5&budget_max=400000&pieces_min=3`), schéma Zod `SearchFilters` partagé avec les alertes.
 - Liste : `PropertyCard`, pagination par 20 avec « Voir plus ».
-- Carte Mapbox : marqueurs en pastille de prix (« 350 k€ »), marqueur de l'annonce survolée en bleu plein, regroupement au dézoom. Mobile : carte réduite de 200 px au-dessus de la liste, bouton « Carte » pour la plein écran. Desktop : liste 620 px à gauche, carte à droite, recherche « dans cette zone » au déplacement.
+- Carte Google Maps (`DECISIONS.md` 2026-10-26, `docs/DESIGN.md` 8), chargée seulement après le clic « Afficher la carte » : marqueurs en pastille de prix (« 350 k€ »), marqueur de l'annonce survolée en bleu plein ; un marqueur choisi montre son bien. Mobile et tablette : bouton flottant « Carte » qui l'ouvre en plein écran. Desktop : liste 620 px à gauche, carte à droite sur le reste de la largeur. Regroupement au dézoom et recherche « dans cette zone » au déplacement : L1-16b.
 - Bouton « Créer une alerte » (L3 ; en L1, bouton masqué).
 - Requête : fonction SQL `search_listings(filters jsonb, bbox, sort, page)` qui lit `public_listings`, avec index GIST sur `public_location` et index sur `price_cents`, `surface_m2`, `rooms`, `city`.
 - Vide : « Aucun bien ne correspond. Élargissez le rayon ou le budget, ou créez une alerte pour être prévenu. »
@@ -1198,7 +1198,7 @@ Ordre du contenu (mise en page mobile et desktop : `docs/DESIGN.md` 12.7 et 12.8
 4. Vendeur (`ContactCard`) : prénom, « Vente accompagnée par Leenkey » si formule payante, « Répond en général sous 24 h » uniquement si le temps de réponse médian réel est < 24 h (sinon rien).
 5. Description (repliée à 6 lignes sur mobile).
 6. **« Ce que vous savez avant de visiter »** : une seule `KeyFactsTable` qui regroupe les caractéristiques complètes et les informations utiles avant visite : charges, taxe foncière, lots, travaux votés et procédures (issus de l'analyse des documents en L3 ; « Non renseigné » sinon), documents disponibles avec « Demander l'accès ». En desktop, grille de 2 colonnes : `KeyFactsTable` à gauche, carte à droite.
-7. Carte avec la zone approximative (cercle de 400 m de rayon autour de `public_location`), jamais l'adresse.
+7. Carte avec la zone approximative (cercle de 400 m de rayon autour de `public_location`), jamais l'adresse, et « Voir la rue » (Street View le plus proche du point public), après le clic « Afficher la carte » (L1-16).
 8. Résumé de l'assistant (L2) : 2 phrases factuelles générées à la publication, stockées, régénérées à chaque modification. `AssistantNote` (encart `--lk-blue-tint`) ; en desktop, sous la `PriceColumn`.
 9. Barre d'action : mobile, `ActionBar` fixée en bas (« Contacter le vendeur » + bouton visite) ; desktop, `PriceColumn` collante à droite avec `PriceBlock`, `ContactCard` et les boutons « Contacter le vendeur », « Demander une visite », « Faire une offre » (L2).
 
@@ -1951,7 +1951,7 @@ Usages : centre et zoom par défaut de la carte de recherche (Épinay-sur-Orge, 
 
 - Objectifs mobile (Lighthouse, 4G simulée) sur la page annonce et la recherche : LCP < 2,5 s, CLS < 0,1, INP < 200 ms.
 - Images : `next/image` sur la route `/img`, tailles adaptées, `priority` sur la photo principale uniquement.
-- Mapbox chargé dynamiquement (`next/dynamic`, `ssr: false`) au premier affichage de la carte.
+- Google Maps chargé seulement au clic « Afficher la carte » (script de Google injecté par `core/maps/loader.ts`, aucun paquet npm).
 - Pas de bibliothèque de plus de 50 ko gzip côté client sans justification dans la PR.
 
 ### Accessibilité
@@ -2033,7 +2033,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | ID | Tâche | Dépend de | Accepté quand |
 |---|---|---|---|
 | L1-15 | Fonction `search_listings`, index, schéma `SearchFilters`, page `/acheter` liste + filtres + tri + URL | L1-04 | Filtres combinés corrects sur le seed, URL partageable |
-| L1-16 | Carte Mapbox (marqueurs prix, regroupement, synchronisation liste/carte, recherche dans la zone) | L1-15 | Mobile et desktop conformes à `docs/DESIGN.md` (8, 12.5, 12.6) |
+| L1-16 | Carte Google Maps (marqueurs prix, synchronisation liste/carte, localisation de l'annonce et Street View ; regroupement et recherche dans la zone en L1-16b) | L1-15 | Mobile et desktop conformes à `docs/DESIGN.md` (8, 12.5, 12.6) |
 | L1-17 | Page annonce complète (galerie photo, KeyFigures, KeyFacts, carte approximative, barre d'action), métadonnées, JSON-LD, OG image, compteur de vues | L1-15 | Lighthouse objectifs atteints, validation Rich Results OK |
 | L1-18 | Favoris | L1-17 | Ajout / retrait, liste dans l'espace acquéreur |
 | L1-19 | Back office v0 : `/admin/annonces` + détail, valider / refuser avec motif / suspendre (`listing_suspend`, motif obligatoire) / remettre en ligne, audit, emails | L1-14a | Parcours vendeur → admin → publication de bout en bout ; le vendeur ne peut pas lever une suspension (test RLS) |

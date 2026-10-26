@@ -9,6 +9,7 @@ import { BackLink } from "@/leenkey/listings/components/back-link";
 import { ActionBar, PriceColumn } from "@/leenkey/listings/components/listing-actions";
 import { ListingBody } from "@/leenkey/listings/components/listing-body";
 import { ListingBreadcrumb } from "@/leenkey/listings/components/listing-breadcrumb";
+import { ListingMap } from "@/leenkey/listings/components/listing-map";
 import { ListingViewTracker } from "@/leenkey/listings/components/listing-view-tracker";
 import {
   buyerSignUpHref,
@@ -17,6 +18,7 @@ import {
   listingJsonLd,
   listingMetaDescription,
   listingMetaTitle,
+  listingPlace,
   listingSummary,
   serializeJsonLd,
 } from "@/leenkey/listings/presentation";
@@ -27,8 +29,10 @@ import { absoluteUrl } from "@/lib/site";
 
 // L1-17: public listing page (SPEC-V2 8.5, docs/DESIGN.md 12.7, 12.8).
 // Published listings only: any other status, or an unknown address, is a 404.
-// Photos (L1-12): the gallery, facade.svg without them. Not yet here: map of
-// the area (with Mapbox), assistant summary (L2-05), offer (L2), documents (L3). Favourite
+// Photos (L1-12): the gallery, facade.svg without them. Map of the area
+// (L1-16): Google Maps after « Afficher la carte », a circle of 400 m around
+// the public location. Not yet here: assistant summary (L2-05), offer (L2),
+// documents (L3). Favourite
 // (L1-18): over the mobile gallery, next to the desktop price. Contact and
 // visit (L1-21): the first message to the seller, after the sign-up without
 // a session. Navigation
@@ -111,6 +115,16 @@ export default async function ListingPage({ params }: Props) {
           galleryTopLeft={<BackLink />}
           galleryTopRight={heart("white-float")}
           aside={<PriceColumn listing={listing} links={links} favorite={heart("stone")} />}
+          map={
+            listing.location ? (
+              <ListingMap
+                // Public key, restricted to the domain of the site.
+                apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || null}
+                position={listing.location}
+                place={listingPlace(listing).place}
+              />
+            ) : null
+          }
         />
       </main>
       <SiteFooter className="pb-24 lg:pb-0" />
