@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { HomeHero } from "@/leenkey/site/components/home-hero";
 import { HomeListings } from "@/leenkey/site/components/home-listings";
 import {
@@ -16,16 +15,16 @@ import { PublicPage } from "@/leenkey/site/components/public-page";
 // the shortcuts, the savings, the listings around Épinay-sur-Orge, the three
 // steps, the plans, the questions and the last call. On the warm neutral of
 // the page. Title, description and canonical address: app/layout.tsx. The
-// listings stream in after the rest: the page never waits for their photos.
+// listings are rendered with the rest, not streamed after it: coming in
+// later, they would push down the sections under them, and an anchor
+// (/#tarifs) with them.
 export default function HomePage() {
   return (
     <PublicPage tone="warm">
       <HomeHero />
       <ShortcutsSection />
       <SavingsSection />
-      <Suspense fallback={null}>
-        <HomeListings />
-      </Suspense>
+      <HomeListings />
       <StepsSection />
       <PlansSection />
       <HomeFaqSection />
