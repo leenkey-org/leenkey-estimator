@@ -387,13 +387,13 @@ test.describe("accueil", () => {
       "/investir",
     );
     await expect(menu.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
-    await expect(menu.getByRole("link", { name: "Vendre", exact: true })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    // « Vendre » leads to its two ways (DECISIONS 2026-10-26), not the home page.
+    const sell = menu.getByRole("link", { name: "Vendre", exact: true });
+    await expect(sell).toHaveAttribute("href", "/vendre");
+    await expect(sell).not.toHaveAttribute("aria-current");
     await expect(menu.getByRole("link", { name: "Vendre mon bien" })).toHaveAttribute(
       "href",
-      "/inscription?role=seller",
+      "/vendre",
     );
     await expect(menu.getByRole("link", { name: "Mon compte" })).toHaveAttribute(
       "href",
@@ -410,7 +410,10 @@ test.describe("accueil", () => {
     await expect(menu).toBeHidden();
   });
 
-  test("en desktop : la barre haute, « Vendre » courant", async ({ page, isMobile }) => {
+  test("en desktop : la barre haute, « Vendre » courant sur sa page", async ({
+    page,
+    isMobile,
+  }) => {
     test.skip(isMobile, "barre haute à partir de 768 px");
     await page.goto("/");
     const nav = page.getByRole("banner").getByRole("navigation", { name: "Navigation principale" });
@@ -423,11 +426,14 @@ test.describe("accueil", () => {
     ]);
     // Its two pages open from a button (L1-51).
     await expect(nav.getByRole("button", { name: "Qui sommes-nous" })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Vendre", exact: true })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    // « Vendre » leads to its two ways (DECISIONS 2026-10-26): no longer the home page.
+    const sell = nav.getByRole("link", { name: "Vendre", exact: true });
+    await expect(sell).toHaveAttribute("href", "/vendre");
+    await expect(sell).not.toHaveAttribute("aria-current");
     await expect(page.getByRole("button", { name: "Menu" })).toBeHidden();
+    await sell.click();
+    await expect(page).toHaveURL("/vendre");
+    await expect(sell).toHaveAttribute("aria-current", "page");
   });
 
   test("accueil : aucune violation sérieuse ou critique @a11y", async ({ page }) => {

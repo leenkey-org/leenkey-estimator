@@ -369,7 +369,7 @@ describe("emails of the sending", () => {
     expect(listingToReviewSubject("LK-0042")).toBe("Annonce à valider (LK-0042)");
     expect(text).toContain("LK-0042 · Épinay-sur-Orge (91360) · 239 000 €");
     expect(text).toContain(`https://leenkey.fr/admin/annonces/${listingId}`);
-    expect(text).toContain("Notification interne du back office de Leenkey.");
+    expect(text).toContain("Notification interne du Cockpit de Leenkey.");
     expect(text).not.toContain("Gérer mes notifications");
   });
 

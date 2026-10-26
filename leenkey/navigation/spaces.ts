@@ -17,6 +17,8 @@ export const ROUTES = {
   invest: "/investir",
   about: "/qui-sommes-nous",
   contact: "/contact",
+  /** The two ways to start a sale (DECISIONS 2026-10-26). */
+  sell: "/vendre",
   sellerSignUp: "/inscription?role=seller",
   seller: "/vendeur",
   sellerProperties: "/vendeur/biens",

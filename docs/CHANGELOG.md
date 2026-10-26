@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-26 · L1-52 · PR #49 · Retours, Cockpit et deux chemins pour vendre
+- Ajouté : « Retour aux annonces » au-dessus d'une annonce à partir de 1 024 px. Si la page d'avant est la recherche, il y revient avec ses filtres et son défilement ; sinon il ouvre la dernière recherche de la visite, `/acheter` à défaut (jamais la conversation ni l'accueil d'où l'on vient). Le bouton de la galerie mobile porte le même nom.
+- Ajouté : « Voir l'annonce » (acquéreur) ou « Voir mon bien » (vendeur) dans une conversation, en bouton à partir de 768 px et en première ligne du menu en dessous ; « Voir le site » dans le Cockpit (barre latérale, en-tête mobile, menu du compte).
+- Ajouté : la page `/vendre` (« Comment voulez-vous commencer ? ») : « Valoriser mon bien gratuitement » ou « Publier mon annonce » (`ChoiceCard`, au catalogue `/design`) ; « Reprendre ma vente » pour un compte qui a déjà un bien. « Vendre », « Vendre mon bien » et l'onglet « Vendre » d'un visiteur y mènent ; l'espace vendeur sans bien propose les deux. Dans le plan du site.
+- Modifié : le back office s'appelle « Cockpit » dans l'interface (menu du compte d'un admin, menu mobile des pages publiques, barre latérale, en-tête mobile, titres d'onglet, email interne) ; son tableau de bord à venir mène aux annonces à valider.
+- Tests : unitaires (navigation, plan du site, emails, nom du lien d'une conversation) ; E2E (page `/vendre` sans base et connecté, « Retour aux annonces » depuis la recherche, l'accueil et une conversation, liens d'une conversation pour chaque côté, Cockpit en mobile et en desktop, menus).
+
 ### 2026-10-26 · L1-23 · PR #48 · Moteur d'étapes de la vente
 - Ajouté : les tâches de la vente se cochent toutes seules, depuis les événements que la base tient : analyse de valeur liée, fiche du bien complète (type, surface, pièces), 6 photos, annonce rédigée (prix et description), envoyée, en ligne, premier message d'un acquéreur, bien vendu. L'étape en cours suit : un événement d'une étape plus loin y amène la vente, les tâches sautées restent à faire, une tâche cochée par un événement ne se décoche plus (`DECISIONS.md` 2026-10-26).
 - Ajouté : la notification « Nouvelle étape : … » (`step.advanced`, « Étape 3 sur 6 · » titre de l'annonce, lien vers le tableau de bord du bien) à chaque étape atteinte, dans la cloche seulement ; aucune pendant `db:seed`, ni une fois le bien vendu.

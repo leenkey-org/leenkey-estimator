@@ -173,12 +173,12 @@ describe("bottom tabs (DESIGN.md 10.6)", () => {
   it("every account buys and sells: the other side in the middle (DECISIONS 2026-10-19)", () => {
     expect(bottomTabs("seller")[2]).toMatchObject({ href: "/acheter", label: "Acheter" });
     expect(bottomTabs("buyer")[2]).toMatchObject({ href: "/vendeur", label: "Vendre" });
-    // Signed out, on the search: the landing page written for the sellers.
-    expect(bottomTabs("buyer", false)[2]).toMatchObject({ href: "/", label: "Vendre" });
+    // Signed out, on the search: the two ways to start a sale (DECISIONS 2026-10-26).
+    expect(bottomTabs("buyer", false)[2]).toMatchObject({ href: "/vendre", label: "Vendre" });
     expect(bottomTabs("buyer", false).map((tab) => tab.href)).toEqual([
       "/acheter",
       "/acquereur/favoris",
-      "/",
+      "/vendre",
       "/messages",
       "/compte",
     ]);
@@ -206,10 +206,10 @@ describe("bottom tabs (DESIGN.md 10.6)", () => {
 });
 
 describe("TopNav", () => {
-  it("links: Acheter, Vendre (the home page), Tarifs, Valoriser mon bien, Qui sommes-nous, Contact; no Guides", () => {
+  it("links: Acheter, Vendre (its two ways), Tarifs, Valoriser mon bien, Qui sommes-nous, Contact; no Guides", () => {
     expect(TOP_NAV_LINKS.map(({ href, label, from }) => ({ href, label, from }))).toEqual([
       { href: "/acheter", label: "Acheter", from: undefined },
-      { href: "/", label: "Vendre", from: undefined },
+      { href: "/vendre", label: "Vendre", from: undefined },
       // Where the bar has room for them (DESIGN.md 10.6).
       { href: "/tarifs", label: "Tarifs", from: "lg" },
       { href: "/estimer", label: "Valoriser mon bien", from: undefined },
@@ -263,9 +263,8 @@ describe("TopNav", () => {
     for (const label of labels) expect(label).not.toMatch(/estim/i);
   });
 
-  it("« Vendre mon bien »: the seller sign-up, or the seller area once signed in", () => {
-    expect(sellCta(false)).toEqual({ href: "/inscription?role=seller", label: "Vendre mon bien" });
-    expect(sellCta(true)).toEqual({ href: "/vendeur", label: "Vendre mon bien" });
+  it("« Vendre mon bien »: the two ways to start a sale, signed in or not", () => {
+    expect(sellCta()).toEqual({ href: "/vendre", label: "Vendre mon bien" });
   });
 
   it("« Mon compte » signed out comes back to the page, its filters included", () => {
@@ -342,10 +341,11 @@ describe("current item: longest prefix of the path", () => {
     expect(currentHref("/admin/messages", ADMIN_NAV_ITEMS)).toBeNull();
   });
 
-  it("TopNav: « Acheter » on the search and on a listing, « / » only on itself", () => {
+  it("TopNav: « Acheter » on the search and on a listing, « Vendre » on its page only", () => {
     expect(currentHref("/acheter", TOP_NAV_LINKS)).toBe("/acheter");
     expect(currentHref("/annonce/maison-5-pieces-lk0002", TOP_NAV_LINKS)).toBe("/acheter");
-    expect(currentHref("/", TOP_NAV_LINKS)).toBe("/");
+    expect(currentHref("/vendre", TOP_NAV_LINKS)).toBe("/vendre");
+    expect(currentHref("/", TOP_NAV_LINKS)).toBeNull();
     expect(currentHref("/estimer", TOP_NAV_LINKS)).toBe("/estimer");
     expect(currentHref("/vendeur", TOP_NAV_LINKS)).toBeNull();
     expect(currentHref("/annonces", TOP_NAV_LINKS)).toBeNull();
@@ -426,10 +426,12 @@ describe("bell and account menu", () => {
     expect(accountInitial(null)).toBeNull();
   });
 
-  it("« Mon espace » leads to the home of the role", () => {
+  it("« Mon espace » leads to the home of the role; an admin's is the Cockpit", () => {
+    // « Voir le site » is added by the Cockpit only (app/(admin)/admin/layout.tsx).
     expect(accountMenu({ firstName: "Cédric", roles: ["admin"] })).toEqual({
       initial: "C",
       homeHref: "/admin",
+      homeLabel: "Cockpit",
       accountHref: "/compte",
     });
     expect(accountMenu({ firstName: "Alice", roles: ["seller"] }).homeHref).toBe("/vendeur");
@@ -437,6 +439,7 @@ describe("bell and account menu", () => {
     expect(accountMenu({ firstName: null, roles: ["buyer", "seller"] })).toEqual({
       initial: null,
       homeHref: "/vendeur",
+      homeLabel: "Mon espace",
       accountHref: "/compte",
     });
   });
@@ -464,8 +467,7 @@ describe("every link of the navigation leads to a page", () => {
     ...ADMIN_NAV_ITEMS.map((item) => item.href),
     ...SPACES.flatMap((space) => bottomTabs(space).map((tab) => tab.href)),
     ...bottomTabs("buyer", false).map((tab) => tab.href),
-    sellCta(false).href,
-    sellCta(true).href,
+    sellCta().href,
     FAVOURITES_LINK.href,
     ROUTES.account,
   ])("%s", (href) => {

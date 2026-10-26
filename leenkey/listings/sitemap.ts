@@ -10,6 +10,8 @@ type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]["changeFrequenc
 const PAGES: ReadonlyArray<{ path: string; changeFrequency: ChangeFrequency; priority: number }> = [
   { path: "/", changeFrequency: "weekly", priority: 1 },
   { path: "/estimer", changeFrequency: "weekly", priority: 0.9 },
+  // The two ways to start a sale (DECISIONS 2026-10-26).
+  { path: "/vendre", changeFrequency: "monthly", priority: 0.8 },
   { path: "/acheter", changeFrequency: "daily", priority: 0.9 },
   { path: "/concept", changeFrequency: "monthly", priority: 0.8 },
   { path: "/tarifs", changeFrequency: "monthly", priority: 0.8 },

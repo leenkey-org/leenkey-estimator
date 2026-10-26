@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import * as MenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { MoreVertical } from "lucide-react";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -21,16 +22,21 @@ const itemClassName = cn(
 );
 
 /**
- * Menu of a conversation (MoreVertical, docs/DESIGN.md 10.5): « Signaler la
- * conversation » (SPEC-V2 8.6), with its reason, for the Leenkey team. The
- * menu as the AccountMenu (Radix, not modal); the reason in a dialog
- * (10.8), after which the focus comes back to the menu button.
+ * Menu of a conversation (MoreVertical, docs/DESIGN.md 10.5): the way back to
+ * what it is about (« Voir l'annonce », « Voir mon bien », DECISIONS
+ * 2026-10-26), then « Signaler la conversation » (SPEC-V2 8.6), with its
+ * reason, for the Leenkey team. The menu as the AccountMenu (Radix, not
+ * modal); the reason in a dialog (10.8), after which the focus comes back to
+ * the menu button.
  */
 export function ConversationMenu({
   conversationId,
+  link,
   onReported,
 }: {
   conversationId: string;
+  /** The listing, or the seller's own property. */
+  link?: { href: string; label: string };
   onReported: () => void;
 }) {
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -92,6 +98,11 @@ export function ConversationMenu({
               "motion-reduce:animate-none",
             )}
           >
+            {link ? (
+              <MenuPrimitive.Item asChild className={itemClassName}>
+                <Link href={link.href}>{link.label}</Link>
+              </MenuPrimitive.Item>
+            ) : null}
             <MenuPrimitive.Item
               className={itemClassName}
               onSelect={() => {

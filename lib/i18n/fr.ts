@@ -149,7 +149,8 @@ export const fr = {
     seller: {
       metaTitle: "Ma vente · Leenkey",
       title: "Mettez votre bien en vente",
-      text: "Commencez par son adresse et ses caractéristiques : tout est enregistré au fur et à mesure, vous reprenez quand vous voulez.",
+      // The two ways to start (DECISIONS 2026-10-26).
+      text: "Créez votre annonce, ou commencez par une analyse de valeur gratuite : tout est enregistré au fur et à mesure, vous reprenez quand vous voulez.",
     },
     buyer: {
       metaTitle: "Mon espace · Leenkey",
@@ -158,9 +159,35 @@ export const fr = {
       action: "Voir les biens",
     },
     admin: {
-      metaTitle: "Back office · Leenkey",
-      title: "Le back office arrive",
-      text: "La validation des annonces arrive avec la prochaine étape.",
+      metaTitle: "Cockpit · Leenkey",
+      // The dashboard of the Cockpit comes with L1-30; the listings are already there (L1-19).
+      title: "Le tableau de bord arrive",
+      text: "Nous préparons le tableau de bord du Cockpit. Les annonces à valider sont déjà dans « Annonces ».",
+      action: "Voir les annonces à valider",
+    },
+  },
+  // « Vendre » (Younes, DECISIONS 2026-10-26): the two ways to start a sale,
+  // the analysis of value first or the listing straight away.
+  sellStart: {
+    metaTitle: "Vendre votre bien · Leenkey",
+    description:
+      "Commencez par une analyse de valeur gratuite, ou publiez directement votre annonce sur Leenkey.",
+    title: "Comment voulez-vous commencer ?",
+    lead: "Les deux chemins mènent à votre annonce sur Leenkey.",
+    valuation: {
+      title: "Connaître la valeur de mon bien",
+      text: "Une analyse de valeur gratuite en quelques minutes. Votre annonce reprend ensuite vos réponses.",
+      action: "Valoriser mon bien gratuitement",
+    },
+    // A seller who has a property already: the way back to their sale.
+    resume: {
+      text: "Vous avez déjà un bien en vente sur Leenkey.",
+      action: "Reprendre ma vente",
+    },
+    direct: {
+      title: "Publier directement mon annonce",
+      text: "Vous connaissez votre prix : créez votre annonce, nous la relisons sous 24\u00A0h avant sa mise en ligne.",
+      action: "Publier mon annonce",
     },
   },
   // A page that does not exist, or that could not be shown (app/not-found.tsx,
@@ -183,9 +210,12 @@ export const fr = {
   // L1-10: navigation shells (docs/DESIGN.md 10.6 to 10.8).
   nav: {
     label: "Navigation principale",
-    adminLabel: "Navigation du back office",
+    adminLabel: "Navigation du Cockpit",
     brand: "Leenkey",
-    backOffice: "Back office",
+    // The back office, as Leenkey names it (Younes, 2026-10-26).
+    backOffice: "Cockpit",
+    // From the Cockpit, back to the site (DECISIONS 2026-10-26).
+    site: "Voir le site",
     links: {
       buy: "Acheter",
       sell: "Vendre",
@@ -741,6 +771,9 @@ export const fr = {
       report: "Signaler la conversation",
       reported: "Votre signalement est transmis à l'équipe Leenkey.",
       closed: "Cette conversation est close : vous ne pouvez plus y écrire.",
+      // Back to what the conversation is about (DECISIONS 2026-10-26).
+      listing: "Voir l'annonce",
+      property: "Voir mon bien",
     },
     composer: {
       label: "Votre message",
@@ -800,34 +833,34 @@ export const fr = {
     },
     admin: {
       users: {
-        metaTitle: "Utilisateurs · Back office · Leenkey",
+        metaTitle: "Utilisateurs · Cockpit · Leenkey",
         title: "Utilisateurs",
         comingTitle: "La liste des comptes arrive",
         comingText:
           "Nous préparons l'écran des vendeurs et des acquéreurs, avec leurs biens et leur financement.",
       },
       cases: {
-        metaTitle: "Dossiers · Back office · Leenkey",
+        metaTitle: "Dossiers · Cockpit · Leenkey",
         title: "Dossiers",
         comingTitle: "Le suivi des dossiers arrive",
         comingText:
           "Nous préparons l'écran des dossiers d'accompagnement : formules payantes et demandes de conseiller.",
       },
       offers: {
-        metaTitle: "Offres · Back office · Leenkey",
+        metaTitle: "Offres · Cockpit · Leenkey",
         title: "Offres",
         comingTitle: "Le suivi des offres arrive",
         comingText: "Nous préparons l'écran qui réunira les offres d'achat et leur historique.",
       },
       reports: {
-        metaTitle: "Signalements · Back office · Leenkey",
+        metaTitle: "Signalements · Cockpit · Leenkey",
         title: "Signalements",
         comingTitle: "Le traitement des signalements arrive",
         comingText:
           "Nous préparons l'écran des signalements, avec leur motif et les suites données.",
       },
       assistant: {
-        metaTitle: "Assistant · Back office · Leenkey",
+        metaTitle: "Assistant · Cockpit · Leenkey",
         title: "Assistant",
         comingTitle: "Le suivi de l'assistant arrive",
         comingText:
@@ -979,8 +1012,8 @@ export const fr = {
   },
   // L1-19: back office v0 of the listings (SPEC-V2 section 17, DESIGN.md 12.12, 12.13).
   adminListings: {
-    metaTitle: "Annonces · Back office · Leenkey",
-    detailMetaTitle: (reference: string) => `${reference} · Annonces · Back office · Leenkey`,
+    metaTitle: "Annonces · Cockpit · Leenkey",
+    detailMetaTitle: (reference: string) => `${reference} · Annonces · Cockpit · Leenkey`,
     title: "Annonces",
     summary: {
       pending: (count: number) => `${count}\u00A0en attente de validation`,
@@ -1114,7 +1147,7 @@ export const fr = {
       why: "Vous recevez cet email parce que vous vendez un bien sur Leenkey.",
       whyBuyer: "Vous recevez cet email parce que vous avez contacté un vendeur sur Leenkey.",
       preferences: "Gérer mes notifications",
-      internal: "Notification interne du back office de Leenkey.",
+      internal: "Notification interne du Cockpit de Leenkey.",
     },
     // The reference in the subjects: one thread per listing in the inbox.
     // L1-13: a listing sent for review (SPEC-V2 section 18).
@@ -1380,7 +1413,8 @@ export const fr = {
       `${summary} ${place} · ${price} · Leenkey`,
     breadcrumb: "Fil d'Ariane",
     breadcrumbRoot: "Acheter",
-    back: "Retour",
+    // The back link of a listing, the button over the mobile gallery included.
+    backToListings: "Retour aux annonces",
     summary: {
       rooms: (rooms: number) => (rooms === 1 ? "1 pièce" : `${rooms} pièces`),
     },

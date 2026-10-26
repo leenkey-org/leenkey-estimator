@@ -61,6 +61,15 @@ export function propertyHref(
   return listingSlug && listingStatus === "published" ? `/annonce/${listingSlug}` : null;
 }
 
+/**
+ * Name of the way back to what the conversation is about (DECISIONS
+ * 2026-10-26): « Voir mon bien » for the seller, « Voir l'annonce » for the
+ * buyer.
+ */
+export function propertyHrefLabel(conversation: Pick<ConversationSummary, "role">): string {
+  return conversation.role === "seller" ? t.thread.property : t.thread.listing;
+}
+
 /** The thumbnail of a property: its main photo through /img, or facade.svg. */
 export function coverSrc(coverPath: string | null): string | null {
   return coverPath ? photoUrl(coverPath) : null;

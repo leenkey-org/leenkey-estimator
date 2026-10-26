@@ -11,6 +11,7 @@ import {
   messagePreview,
   newConversationPath,
   propertyHref,
+  propertyHrefLabel,
 } from "@/leenkey/messaging/presentation";
 import type { ConversationSummary } from "@/leenkey/messaging/types";
 import {
@@ -108,6 +109,11 @@ describe("a conversation in the messaging", () => {
     expect(propertyHref(conversation({ role: "seller" }))).toBe(
       "/vendeur/biens/5eed1000-0000-4000-8000-000000000001",
     );
+  });
+
+  it("names that link by the side of the viewer (DECISIONS 2026-10-26)", () => {
+    expect(propertyHrefLabel(conversation())).toBe("Voir l'annonce");
+    expect(propertyHrefLabel(conversation({ role: "seller" }))).toBe("Voir mon bien");
   });
 });
 

@@ -1,8 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Globe } from "lucide-react";
 import { AccountMenu, type AccountMenuProps } from "./account-menu";
+import { iconButtonVariants } from "./icon-button";
 import { currentHref, type NavItem } from "./nav-items";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -22,10 +25,11 @@ export type AdminMobileHeaderProps = {
 };
 
 /**
- * Back office header below 768 px (docs/DESIGN.md 10.6): ink, padding
- * 20 × 20 × 16, « Back office » (11 px, white 60 %) over the title of the
- * page (20 px 700 wide), the bell and the avatar on the right. The counter
- * tiles come with the back office data.
+ * Cockpit header below 768 px (docs/DESIGN.md 10.6): ink, padding
+ * 20 × 20 × 16, « Cockpit » (11 px, white 60 %) over the title of the page
+ * (20 px 700 wide); on the right « Voir le site » (Globe, 44 px, DECISIONS
+ * 2026-10-26), the bell and the avatar. The counter tiles come with the
+ * back office data.
  */
 export function AdminMobileHeader({
   items,
@@ -50,6 +54,18 @@ export function AdminMobileHeader({
         <p className="truncate text-lk-h2 font-bold text-wide">{heading}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
+        {account.siteHref ? (
+          <Link
+            href={account.siteHref}
+            aria-label={fr.nav.site}
+            className={cn(
+              iconButtonVariants({ variant: "on-dark" }),
+              "inline-flex items-center justify-center",
+            )}
+          >
+            <Globe aria-hidden="true" />
+          </Link>
+        ) : null}
         {notifications}
         <AccountMenu {...account} variant="header" />
       </div>
