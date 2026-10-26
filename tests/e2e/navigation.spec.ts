@@ -474,6 +474,7 @@ test.describe("page annonce (base de seed)", () => {
 
   test("« Retour aux annonces » ramène à la recherche, jamais à la page d'avant si ce n'est pas elle (DECISIONS 2026-10-26)", async ({
     page,
+    isMobile,
   }) => {
     // The text link from 1 024 px, the button over the mobile gallery: the same name.
     const back = page.getByRole("link", { name: "Retour aux annonces" }).locator("visible=true");
@@ -486,14 +487,18 @@ test.describe("page annonce (base de seed)", () => {
     // Back in the history: the same search, its filters kept.
     await expect(page).toHaveURL(search);
 
-    // From the home page, a listing leads to the last search of the visit, not home.
-    await page.getByRole("banner").locator('a[href="/"]').locator("visible=true").first().click();
-    await expect(page).toHaveURL("/");
-    await page.locator('main a[href^="/annonce/"]:visible').first().click();
-    await expect(page).toHaveURL(/\/annonce\//);
-    await expect(back).toHaveAttribute("href", search);
-    await back.click();
-    await expect(page).toHaveURL(search);
+    // From the home page (its logo, from 768 px: the search has no header
+    // below), a listing leads to the last search of the visit, not home. In
+    // mobile, the conversation test covers a page before that is not the search.
+    if (!isMobile) {
+      await page.getByRole("banner").locator('a[href="/"]').first().click();
+      await expect(page).toHaveURL("/");
+      await page.locator('main a[href^="/annonce/"]:visible').first().click();
+      await expect(page).toHaveURL(/\/annonce\//);
+      await expect(back).toHaveAttribute("href", search);
+      await back.click();
+      await expect(page).toHaveURL(search);
+    }
 
     // Opened directly (a new visit), it leads to the search.
     await page.goto(listing);
@@ -719,22 +724,8 @@ test.describe("comptes connectés (base de seed)", () => {
     expect(await seriousViolations(page)).toEqual([]);
   });
 
-  test("une conversation mène à l'annonce, pour l'acquéreur, et l'annonce à la recherche (DECISIONS 2026-10-26)", async ({
-    page,
-    isMobile,
-  }) => {
-    await signIn(page, "buyer_c", "/messages");
-    await page.locator('main a[href^="/messages/"]:visible').first().click();
-    await expect(page).toHaveURL(/\/messages\/[0-9a-f-]{36}$/);
-    const listing = await conversationLink(page, isMobile, "Voir l'annonce");
-    await expect(listing).toHaveAttribute("href", /^\/annonce\//);
-    await listing.click();
-    await expect(page).toHaveURL(/\/annonce\//);
-    // Never back to the conversation: to the search.
-    await page.getByRole("link", { name: "Retour aux annonces" }).locator("visible=true").click();
-    await expect(page).toHaveURL("/acheter");
-  });
-
+  // The buyer side, conversation to listing to search: messaging-live.spec.ts
+  // (opening the conversation of buyer_c reads it).
   test("une conversation mène au bien, pour le vendeur", async ({ page, isMobile }) => {
     await signIn(page, "seller_a", "/messages");
     await page.locator('main a[href^="/messages/"]:visible').first().click();
