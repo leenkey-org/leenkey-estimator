@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, House } from "lucide-react";
+import { buttonVariants } from "@/components/shared/button";
 import { Composer } from "@/components/shared/composer";
 import { ConversationHeader } from "@/components/shared/conversation-header";
 import { iconButtonVariants } from "@/components/shared/icon-button";
@@ -28,7 +29,14 @@ export type ConversationViewProps = {
   viewerId: string;
   /** « Thomas », « L'acquéreur »: the author of the messages received. */
   counterpart: string;
-  header: { title: string; subtitle: string; thumbSrc: string | null; href: string | null };
+  header: {
+    title: string;
+    subtitle: string;
+    thumbSrc: string | null;
+    href: string | null;
+    /** « Voir l'annonce » (buyer) or « Voir mon bien » (seller). */
+    hrefLabel: string;
+  };
   initialMessages: ThreadMessage[];
   /** Unread when the page was read: marked read on opening. */
   unread: boolean;
@@ -203,6 +211,31 @@ export function ConversationView({
           title={header.title}
           subtitle={header.subtitle}
           href={header.href}
+          action={
+            header.href ? (
+              <>
+                <Link
+                  href={header.href}
+                  aria-label={header.hrefLabel}
+                  className={cn(
+                    iconButtonVariants({ variant: "stone" }),
+                    "inline-flex items-center justify-center md:hidden",
+                  )}
+                >
+                  <House aria-hidden="true" />
+                </Link>
+                <Link
+                  href={header.href}
+                  className={cn(
+                    buttonVariants({ variant: "secondary", size: "sm" }),
+                    "relative hidden shrink-0 md:inline-flex",
+                  )}
+                >
+                  {header.hrefLabel}
+                </Link>
+              </>
+            ) : null
+          }
           menu={
             <ConversationMenu
               conversationId={conversationId}

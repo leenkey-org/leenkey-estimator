@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { House } from "lucide-react";
 import { AccountMenu, type AccountMenuProps } from "./account-menu";
 import { Logo } from "./logo";
 import { NavIcon } from "./nav-icon";
@@ -29,11 +30,11 @@ const darkFocus =
   "focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
 
 /**
- * Back office sidebar (docs/DESIGN.md 10.6): 240 px on ink, padding 24 × 16,
- * gap 24. Logo and « Back office » (11 px, white 60 %), the bell on their
- * right (L1-22); links of 42 px, icon
+ * Sidebar of the Cockpit, the back office (docs/DESIGN.md 10.6): 240 px on
+ * ink, padding 24 × 16, gap 24. Logo and « Cockpit » (11 px, white 60 %), the
+ * bell on their right (L1-22); links of 42 px, icon
  * 18 and 14 px label in white 80 %, the current one on blue in 600, count
- * pill on the right; user card at the bottom.
+ * pill on the right; « Voir le site » and the user card at the bottom.
  */
 export function AdminSidebar({
   label,
@@ -99,7 +100,20 @@ export function AdminSidebar({
           })}
         </ul>
       </nav>
-      <div className="mt-auto">
+      <div className="mt-auto flex flex-col gap-3">
+        {account.siteHref ? (
+          <Link
+            href={account.siteHref}
+            className={cn(
+              "flex h-10.5 items-center gap-2.5 rounded-lk-sm px-3 text-lk-compact text-white/80",
+              "transition-colors duration-140 ease-out-lk hover:bg-white/6 hover:text-white",
+              darkFocus,
+            )}
+          >
+            <House aria-hidden="true" className="size-4.5" />
+            {fr.nav.site}
+          </Link>
+        ) : null}
         <AccountMenu {...account} variant="card" />
       </div>
     </div>

@@ -38,9 +38,15 @@ export default async function SellerHomePage() {
           title={t.title}
           description={t.text}
           action={
-            <Button asChild>
-              <Link href={ROUTES.newProperty}>{list.create}</Link>
-            </Button>
+            // The two ways to start a sale (DECISIONS 2026-10-26).
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button asChild>
+                <Link href={ROUTES.newProperty}>{list.create}</Link>
+              </Button>
+              <Button asChild variant="secondary">
+                <Link href={ROUTES.valuation}>{fr.sellStart.valuation.action}</Link>
+              </Button>
+            </div>
           }
         />
       ) : (

@@ -17,6 +17,7 @@ describe("sitemapEntries", () => {
     for (const path of [
       "/",
       "/estimer",
+      "/vendre",
       "/concept",
       "/tarifs",
       "/qui-sommes-nous",
@@ -40,7 +41,7 @@ describe("sitemapEntries", () => {
   });
 
   it("still lists the pages without any listing (database unavailable)", () => {
-    expect(sitemapEntries([]).length).toBe(11);
+    expect(sitemapEntries([]).length).toBe(12);
   });
 });
 
@@ -79,6 +80,7 @@ describe("robots", () => {
       "/acheter",
       "/annonce/appartement-3-pieces-savigny-sur-orge-lk0005",
       "/estimer",
+      "/vendre",
       "/concept",
       "/tarifs",
       "/faq",

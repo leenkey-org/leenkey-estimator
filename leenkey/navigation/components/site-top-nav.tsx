@@ -34,7 +34,7 @@ export async function SiteTopNav() {
       homeHref={ROUTES.home}
       label={fr.nav.label}
       links={TOP_NAV_LINKS}
-      cta={sellCta(Boolean(profile))}
+      cta={sellCta()}
       account={account}
     />
   );

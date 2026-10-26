@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-26 · L1-52 · PR #49 · Retours, Cockpit et deux chemins pour vendre
+- Ajouté : « Retour aux annonces » au-dessus d'une annonce à partir de 1 024 px (la recherche d'où l'on vient, ses filtres gardés) ; « Voir l'annonce » (acquéreur) ou « Voir mon bien » (vendeur) dans l'en-tête d'une conversation ; « Voir le site » au bas de la barre latérale du Cockpit et dans le menu du compte d'un admin.
+- Ajouté : la page `/vendre` (« Comment voulez-vous commencer ? ») : « Valoriser mon bien gratuitement » ou « Publier mon annonce ». « Vendre », « Vendre mon bien » et l'onglet « Vendre » d'un visiteur y mènent ; l'espace vendeur sans bien propose les deux. Dans le plan du site.
+- Modifié : le back office s'appelle « Cockpit » dans l'interface (menu du compte d'un admin, barre latérale, en-tête mobile, titres d'onglet, email interne).
+- Tests : unitaires (navigation, plan du site, emails) ; E2E (page `/vendre` sans base et connecté, retour depuis une annonce, liens d'une conversation pour chaque côté, Cockpit, menus).
+
 ### 2026-10-25 · L1-46b · PR #44 · Photos des biens de test
 - Ajouté : 26 photos libres de droits (Unsplash, licence Unsplash) pour les 13 biens du seed qui n'en avaient pas : appartements (façade de la résidence, séjour, cuisine, chambre, salle de bains ou d'eau), maisons (n° 6 et 10), meulière de Ballainvilliers (pièces de vie), terrain de Montlhéry, biens en attente et à corriger. Recadrées en 4:3, déposées par `db:seed` comme les envoie un vendeur (WebP 400, 800 et 1 600 px). Provenance dans `supabase/seed/photos/CREDITS.md` ; l'auteur n'est pas relevé (Q59).
 - Corrigé : `scripts/seed-photos.mjs` insère les photos d'un bien dans l'ordre du manifeste, la première en photo principale (une seule insertion les visitait à l'envers).

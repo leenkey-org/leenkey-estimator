@@ -908,7 +908,7 @@ export default function DesignPage() {
                 label={content.navigation.labels.topSignedIn}
                 links={TOP_NAV_LINKS}
                 activeHref={TOP_NAV_LINKS[0].href}
-                cta={sellCta(true)}
+                cta={sellCta()}
                 account={{
                   signedIn: true,
                   notifications: (
@@ -927,7 +927,7 @@ export default function DesignPage() {
                 label={content.navigation.labels.topSignedOut}
                 links={TOP_NAV_LINKS}
                 activeHref={TOP_NAV_LINKS[0].href}
-                cta={sellCta(false)}
+                cta={sellCta()}
                 account={{ signedIn: false, ...signInLink("/design") }}
               />
             </div>
@@ -1222,7 +1222,7 @@ export default function DesignPage() {
                 homeHref="/design"
                 label={content.publicPages.menuLabel}
                 links={MENU_LINKS}
-                cta={sellCta(false)}
+                cta={sellCta()}
                 account={{ href: "#pages-publiques", label: fr.site.menu.signIn }}
                 texts={{ open: fr.site.menu.open, close: fr.site.menu.close }}
               />

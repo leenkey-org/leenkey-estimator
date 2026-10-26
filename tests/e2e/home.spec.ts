@@ -387,13 +387,13 @@ test.describe("accueil", () => {
       "/investir",
     );
     await expect(menu.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
-    await expect(menu.getByRole("link", { name: "Vendre", exact: true })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    // « Vendre » leads to its two ways (DECISIONS 2026-10-26), not the home page.
+    const sell = menu.getByRole("link", { name: "Vendre", exact: true });
+    await expect(sell).toHaveAttribute("href", "/vendre");
+    await expect(sell).not.toHaveAttribute("aria-current");
     await expect(menu.getByRole("link", { name: "Vendre mon bien" })).toHaveAttribute(
       "href",
-      "/inscription?role=seller",
+      "/vendre",
     );
     await expect(menu.getByRole("link", { name: "Mon compte" })).toHaveAttribute(
       "href",

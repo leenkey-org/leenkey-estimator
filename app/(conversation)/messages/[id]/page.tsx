@@ -76,6 +76,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
             subtitle: conversationSubtitle(conversation),
             thumbSrc: coverSrc(conversation.coverPath),
             href: propertyHref(conversation),
+            hrefLabel: conversation.role === "seller" ? t.thread.property : t.thread.listing,
           }}
           initialMessages={thread.data}
           unread={conversation.unread}

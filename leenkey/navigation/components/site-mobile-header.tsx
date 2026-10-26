@@ -21,7 +21,7 @@ export async function SiteMobileHeader() {
       homeHref={ROUTES.home}
       label={fr.nav.label}
       links={MENU_LINKS}
-      cta={sellCta(Boolean(profile))}
+      cta={sellCta()}
       account={account}
       texts={{ open: t.open, close: t.close }}
     />

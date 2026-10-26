@@ -7,8 +7,9 @@ import { cn } from "@/lib/utils";
  * Header of a conversation (docs/DESIGN.md 10.5): white, bottom border,
  * padding 16 × 16 × 12. Back (IconButton stone), thumbnail of the property
  * 44 × 44, title 14 px 600 (the H1 of the page) and subtitle 12 px
- * --lk-ink-3, both cut on one line, the menu (MoreVertical) on the right.
- * With `href`, the thumbnail and the title lead to the property.
+ * --lk-ink-3, both cut on one line, then `action` (« Voir l'annonce ») and
+ * the menu (MoreVertical) on the right. With `href`, the thumbnail and the
+ * title lead to the property.
  */
 export function ConversationHeader({
   back,
@@ -17,6 +18,7 @@ export function ConversationHeader({
   titleAs: Title = "h1",
   subtitle,
   href,
+  action,
   menu,
   className,
 }: {
@@ -29,6 +31,8 @@ export function ConversationHeader({
   /** « Avec Thomas », « Avec Thomas · Justificatif vérifié ». */
   subtitle?: string;
   href?: string | null;
+  /** A link beside the menu: what the conversation is about. */
+  action?: ReactNode;
   menu?: ReactNode;
   className?: string;
 }) {
@@ -63,6 +67,7 @@ export function ConversationHeader({
           {subtitle ? <p className="truncate text-lk-caption text-lk-ink-3">{subtitle}</p> : null}
         </div>
       </div>
+      {action}
       {menu}
     </header>
   );

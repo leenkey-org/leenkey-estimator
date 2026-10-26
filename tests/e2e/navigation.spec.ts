@@ -14,7 +14,7 @@ const SEED_PASSWORD = process.env.SEED_PASSWORD;
 const SEED_REQUIRED = "comptes de seed requis (E2E_SEED=1 et SEED_PASSWORD)";
 
 const MAIN_NAV = "Navigation principale";
-const ADMIN_NAV = "Navigation du back office";
+const ADMIN_NAV = "Navigation du Cockpit";
 
 async function seriousViolations(page: Page) {
   await page.evaluate(() => document.fonts.ready);
@@ -122,8 +122,11 @@ test.describe("visiteur sans session", () => {
       "href",
       "/acquereur/favoris",
     );
-    // Every visitor may sell (DECISIONS 2026-10-19): the landing page for the sellers.
-    await expect(mainNav(page).getByRole("link", { name: "Vendre" })).toHaveAttribute("href", "/");
+    // Every visitor may sell (DECISIONS 2026-10-19): the two ways to start (2026-10-26).
+    await expect(mainNav(page).getByRole("link", { name: "Vendre" })).toHaveAttribute(
+      "href",
+      "/vendre",
+    );
     // TopNav, its call to action and « Mon compte » are not displayed.
     await expect(page.getByRole("link", { name: "Valoriser mon bien" })).toBeHidden();
     await expect(page.getByRole("link", { name: "Vendre mon bien" })).toBeHidden();
@@ -156,7 +159,7 @@ test.describe("visiteur sans session", () => {
       "aria-current",
       "page",
     );
-    await expect(nav.getByRole("link", { name: "Vendre" })).toHaveAttribute("href", "/");
+    await expect(nav.getByRole("link", { name: "Vendre" })).toHaveAttribute("href", "/vendre");
     await expect(nav.getByRole("link", { name: "Valoriser mon bien" })).toHaveAttribute(
       "href",
       "/estimer",
@@ -172,7 +175,7 @@ test.describe("visiteur sans session", () => {
     );
     await expect(page.getByRole("link", { name: "Vendre mon bien" })).toHaveAttribute(
       "href",
-      "/inscription?role=seller",
+      "/vendre",
     );
     // Back to the same search, filters included, after signing in.
     const account = page.getByRole("link", { name: "Mon compte" });
@@ -386,6 +389,31 @@ test.describe("visiteur sans session", () => {
     expect(await seriousViolations(page)).toEqual([]);
   });
 
+  test("/vendre : l'analyse de valeur ou l'annonce directe (DECISIONS 2026-10-26)", async ({
+    page,
+  }) => {
+    await page.goto("/vendre");
+    await expect(page).toHaveTitle("Vendre votre bien · Leenkey");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Comment voulez-vous commencer ?",
+    );
+    const main = page.getByRole("main");
+    await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+      "Connaître la valeur de mon bien",
+      "Publier directement mon annonce",
+    ]);
+    await expect(
+      main.getByRole("link", { name: "Valoriser mon bien gratuitement" }),
+    ).toHaveAttribute("href", "/estimer");
+    // Signed out: the seller sign-up first, then the creation of the property.
+    await expect(main.getByRole("link", { name: "Publier mon annonce" })).toHaveAttribute(
+      "href",
+      `/inscription?role=seller&next=${encodeURIComponent("/vendeur/biens/nouveau")}`,
+    );
+    await expectFooter(page);
+    expect(await seriousViolations(page)).toEqual([]);
+  });
+
   test("annonce en CI : la page d'erreur reste sans navigation basse", async ({ page }) => {
     test.skip(seeded, "annonce lue dans la base de seed (voir plus bas)");
     const response = await page.goto("/annonce/appartement-3-pieces-savigny-sur-orge-lk0001");
@@ -442,6 +470,29 @@ test.describe("page annonce (base de seed)", () => {
         `/connexion?next=${encodeURIComponent(href ?? "")}`,
       );
     }
+  });
+
+  test("« Retour aux annonces » ramène à la recherche d'où l'on vient (DECISIONS 2026-10-26)", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "en mobile, le bouton retour sur la galerie (DESIGN.md 12.7)");
+    const search = "/acheter?ville=epinay-sur-orge&rayon=10";
+    await page.goto(search);
+    await page.getByRole("list", { name: "Résultats" }).locator("a:visible").first().click();
+    await expect(page).toHaveURL(/\/annonce\//);
+    const back = page.getByRole("link", { name: "Retour aux annonces" });
+    await expect(back).toBeVisible();
+    await back.click();
+    // The same search, its filters kept.
+    await expect(page).toHaveURL(search);
+    // Opened directly, it leads to the search.
+    await page.goBack();
+    await page.reload();
+    await expect(page.getByRole("link", { name: "Retour aux annonces" })).toHaveAttribute(
+      "href",
+      "/acheter",
+    );
   });
 });
 
@@ -511,7 +562,7 @@ test.describe("comptes connectés (base de seed)", () => {
       await expect(mainNav(page).getByRole("link")).toHaveText([...TOP_NAV[1280]]);
       await expect(page.getByRole("link", { name: "Vendre mon bien" })).toHaveAttribute(
         "href",
-        "/vendeur",
+        "/vendre",
       );
       await expect(page.getByRole("link", { name: "Favoris" })).toHaveAttribute(
         "href",
@@ -590,7 +641,7 @@ test.describe("comptes connectés (base de seed)", () => {
     const nav = page.getByRole("navigation", { name: ADMIN_NAV });
     await expectFooter(page);
     if (isMobile) {
-      await expect(page.getByRole("banner")).toContainText("Back office");
+      await expect(page.getByRole("banner")).toContainText("Cockpit");
       await expect(page.getByRole("banner")).toContainText("Tableau de bord");
       await expect(nav.getByRole("link")).toHaveText([
         "Annonces",
@@ -633,10 +684,40 @@ test.describe("comptes connectés (base de seed)", () => {
       );
       await expect(page.getByRole("heading", { level: 1, name: "Signalements" })).toBeVisible();
       await expect(page.getByRole("button", { name: /Cédric/ })).toBeVisible();
+      // Always a way back to the site (DECISIONS 2026-10-26).
+      await expect(page.getByRole("link", { name: "Voir le site" })).toHaveAttribute("href", "/");
       // No buyer or seller tabs in the back office.
       await expect(page.getByRole("navigation", { name: MAIN_NAV })).toHaveCount(0);
     }
     expect(await seriousViolations(page)).toEqual([]);
+  });
+
+  test("une conversation mène à l'annonce, pour l'acquéreur (DECISIONS 2026-10-26)", async ({
+    page,
+  }) => {
+    await signIn(page, "buyer_c", "/messages");
+    await page.locator('main a[href^="/messages/"]:visible').first().click();
+    await expect(page).toHaveURL(/\/messages\/[0-9a-f-]{36}$/);
+    const listing = page.getByRole("link", { name: "Voir l'annonce" }).locator("visible=true");
+    await expect(listing).toHaveAttribute("href", /^\/annonce\//);
+    await listing.click();
+    await expect(page).toHaveURL(/\/annonce\//);
+  });
+
+  test("une conversation mène au bien, pour le vendeur", async ({ page }) => {
+    await signIn(page, "seller_a", "/messages");
+    await page.locator('main a[href^="/messages/"]:visible').first().click();
+    await expect(page).toHaveURL(/\/messages\/[0-9a-f-]{36}$/);
+    await expect(
+      page.getByRole("link", { name: "Voir mon bien" }).locator("visible=true"),
+    ).toHaveAttribute("href", /^\/vendeur\/biens\/[0-9a-f-]{36}$/);
+  });
+
+  test("vendeur : « Publier mon annonce » mène à la création du bien", async ({ page }) => {
+    await signIn(page, "seller_a", "/vendre");
+    await expect(
+      page.getByRole("main").getByRole("link", { name: "Publier mon annonce" }),
+    ).toHaveAttribute("href", "/vendeur/biens/nouveau");
   });
 
   test("l'espace suit la page sans rechargement : les filtres de la cloche changent", async ({
@@ -658,7 +739,8 @@ test.describe("comptes connectés (base de seed)", () => {
     await bell.click();
     await expect(filters).toHaveText(["Toutes", "Mes recherches", "Visites et offres"]);
     await page.keyboard.press("Escape");
-    await page.getByRole("link", { name: "Vendre mon bien" }).click();
+    await page.getByRole("button", { name: "Menu du compte" }).click();
+    await page.getByRole("menuitem", { name: "Mon espace" }).click();
     await expect(page).toHaveURL("/vendeur");
     await bell.click();
     await expect(filters).toHaveText(["Toutes", "Messages", "Offres et visites"]);
@@ -707,12 +789,20 @@ test.describe("comptes connectés (base de seed)", () => {
     await page.keyboard.press("Enter");
     const menu = page.getByRole("menu");
     await expect(menu).toBeVisible();
-    await expect(menu.getByRole("menuitem")).toHaveText([
-      "Mon espace",
-      "Mon compte",
-      "Se déconnecter",
-    ]);
-    await expect(menu.getByRole("menuitem", { name: "Mon espace" })).toHaveAttribute("href", home);
+    // The space of an admin is the Cockpit, with the way back to the site.
+    const homeLabel = isMobile ? "Cockpit" : "Mon espace";
+    await expect(menu.getByRole("menuitem")).toHaveText(
+      isMobile
+        ? ["Cockpit", "Voir le site", "Mon compte", "Se déconnecter"]
+        : ["Mon espace", "Mon compte", "Se déconnecter"],
+    );
+    await expect(menu.getByRole("menuitem", { name: homeLabel })).toHaveAttribute("href", home);
+    if (isMobile) {
+      await expect(menu.getByRole("menuitem", { name: "Voir le site" })).toHaveAttribute(
+        "href",
+        "/",
+      );
+    }
     await expect(menu.getByRole("menuitem", { name: "Mon compte" })).toHaveAttribute(
       "href",
       "/compte",
@@ -764,10 +854,7 @@ test.describe("comptes connectés (base de seed)", () => {
         "Cette page n'existe pas.",
       );
       await expect(page.getByRole("main"), path).toHaveCount(1);
-      await expect(
-        page.getByRole("navigation", { name: "Navigation du back office" }),
-        path,
-      ).toHaveCount(0);
+      await expect(page.getByRole("navigation", { name: ADMIN_NAV }), path).toHaveCount(0);
     }
   });
 
@@ -819,7 +906,7 @@ test.describe("comptes connectés (base de seed)", () => {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(200);
       await expect(page.getByRole("heading", { level: 1 }), path).toHaveText(title);
-      await expect(page, path).toHaveTitle(`${title} · Back office · Leenkey`);
+      await expect(page, path).toHaveTitle(`${title} · Cockpit · Leenkey`);
     }
     // The bell of the back office (L1-22), on the account page too: the
     // listings sent for review of the seed, unread.
