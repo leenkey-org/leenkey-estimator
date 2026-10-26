@@ -1131,17 +1131,19 @@ Pour toute question d'UX, `docs/DESIGN.md` fait foi (décision du 2026-10-08) ; 
 
 Pour chaque écran : route, contenu dans l'ordre, états (chargement, vide, erreur), règles. Tous les écrans sont conçus d'abord à 390 px (largeur des maquettes) puis étendus à 768 et 1280 px.
 
-### 8.1 Accueil `/` (refait en V2)
+### 8.1 Accueil `/` (refait en V2, puis en direction C)
 
-Page refaite avec les composants « Façade » (décision de Younes du 2026-10-19, « V2 finale ») : les sections de la page V1, dans son ordre, avec ses ancres (`#valoriser`, `#etape`, `#comment`, `#fonctionnalites`, `#comparatif`, `#tarifs`, `#faq`, `#contact`) et les textes de Cédric repris mot pour mot, sauf les corrections listées dans `docs/DECISIONS.md` (2026-10-19). En plus :
-- Direction de la V1 (décision de Younes du 2026-10-23, L1-49) : le hero de la V1, puis « Où en êtes-vous dans votre vente ? » juste après lui, puis ses sections dans son ordre, avec leurs surtitres, leurs cartes, leur comparatif en tableau, leurs questions dépliables et le dernier appel de la V1 (`docs/DESIGN.md` 1 et 13.1 : exception aux interdits « Façade » sur l'accueil seulement).
-- Hero de la V1 (L1-49) avec la photo d'une maison à droite, sous le texte en mobile (L1-46), ses droits confirmés par Younes (`DECISIONS.md` Q57) ; une photo aux droits non confirmés laisserait le dessin `facade.svg` en production. Sur la photo, la carte de la V1 en « Exemple » : une maison de la zone de lancement avec la valeur et la fourchette calculées par le moteur de l'estimateur sur ses prix de référence, sans les ventes du secteur (Q58), et « Rapport PDF · Quatre pages, par email » à la place du chiffre non sourcé de la V1 ; rien sur la photo ne rattache le chiffre aux ventes du secteur.
-- Dans le hero, l'action des vendeurs « Voir ma valorisation » (→ `/estimer`) sur le premier écran, puis l'entrée des acquéreurs en lien, « Je cherche un bien à acheter » (→ `/acheter`) (L1-49 ; jusqu'à L1-48, deux entrées égales « Je vends » / « J'achète »).
-- Bloc « Les derniers biens » : 3 `PropertyCard` (variante `tile`) publiées les plus récentes, celles qui ont une photo d'abord (L1-46), après l'aperçu de l'espace vendeur (L1-49) ; masqué s'il y en a moins de 3.
-- Formules : noms et prix lus dans la table `plans`, sur l'aplat navy de la V1, prix en grand, dans les cartes sombres de la V1 (L1-49), bouton « Voir le détail des formules » (L1-48).
-- Formulaire de contact : mêmes champs, mêmes noms et même envoi vers `/api/contact` qu'en V1.
-- Sections sombres de la V1 (décision de Younes du 2026-10-20, L1-47) : « Ce que vous obtenez en quelques minutes. » avec sa courbe et ses quatre éléments, « Vous savez toujours quoi faire ensuite. » avec l'aperçu de l'espace vendeur (« Ma vente » de la maquette du tableau de bord) et ses données d'exemple, dites comme telles (étiquette « Exemple », légende de la V1), sur l'aplat navy (`docs/DESIGN.md` 13.1).
-- Finitions (décision de Younes du 2026-10-20, L1-45) : les mots mis en valeur des titres de la V1 (« votre vente ? », « Jamais de commission. »…) en bleu (en dégradé du bleu depuis L1-49), les titres de section agrandis, le mouvement de l'accueil V1 adapté à « Façade » (`docs/DESIGN.md` 9), la colonne Leenkey du comparatif en aplat bleu (encadrée de bleu sur le bleu pâle, comme dans le tableau de la V1, depuis L1-49) ; « Qui sommes-nous » et « Contact » (`/contact`) dans le menu ; photos de biens pour l'accueil et les biens de démonstration en tâche L1-46.
+Depuis la refonte du 2026-10-26 (`docs/DECISIONS.md`, maquettes de `docs/design-handoff/`, mise en page en `docs/DESIGN.md` 13.1), l'accueil suit la direction C. Il remplace l'accueil dans la direction de la V1 (L1-41, L1-49), dont les sections « Où en êtes-vous », les deux sections sombres, le comparatif et la carte d'exemple sont retirés. Dans l'ordre :
+- Photo d'une maison (droits confirmés par Younes, Q57), la pastille « Ni agence, ni seul · 0 € de commission », le titre « Leenkey vous donne les clés de votre vente. » et son sous-titre.
+- Carte de recherche à trois onglets, « Valoriser mon bien » ouvert d'abord :
+  - Valoriser : l'adresse choisie dans les suggestions de la Base Adresse Nationale ouvre `/estimer` avec elle (`?adresse=&cp=&ville=`, lus une fois, le département déduit du code postal), comme si elle avait été choisie à l'étape « Localisation » ; une adresse tapée sans suggestion choisie en demande une.
+  - Vendre : l'adresse tapée ouvre la création du bien (`/vendeur/biens/nouveau?adresse=`, cherchée à l'étape 1), après l'inscription vendeur sans session.
+  - Acheter : commune de la zone, type de bien, budget maximal, puis la recherche `/acheter` avec ces filtres (sur téléphone, un bouton vers la recherche).
+- Accès directs (valoriser, déposer une annonce, formules), puis « Que voulez-vous faire ? » (quatre raccourcis).
+- « Combien vous économisez avec Leenkey » : quatre prix de vente au choix ; frais d'agence pris à 5 % du prix, hypothèse dite sur la page (Q61), comparés au prix d'Accompagné lu dans `plans` (section absente si la table ne se lit pas) ; l'économie n'est jamais négative.
+- « Biens à vendre près de chez vous » : les annonces en ligne à 10 km d'Épinay-sur-Orge, les plus récentes d'abord, filtrées par catégorie (tous, maisons, appartements, avec jardin, avec parking, terrains), le badge « Nouveau » pour une annonce en ligne depuis moins de 7 jours, « Voir les N biens » avec le nombre réel vers la recherche ; masqué sans annonce.
+- Les trois étapes, les formules (noms et prix lus dans `plans`, Accompagné mis en avant, Q60), les trois questions de la V1 et le bandeau final, avec leurs textes de Cédric.
+- Le formulaire de contact n'est plus sur l'accueil : il est sur `/contact`, mêmes champs et même envoi vers `/api/contact`.
 
 ### 8.2 Inscription `/inscription`
 

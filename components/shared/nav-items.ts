@@ -84,8 +84,9 @@ export function currentHref(
 
 /**
  * Bottom padding of a page with a fixed BottomNav, so that the bar never hides
- * the end of the content: the bar's own height (top border, 10 px, icon 22,
- * gap 4, 11 px label, then 22 px or the iOS safe area). Nothing from 768 px.
+ * the end of the content: the bar's own height (top border, 10 px, icon 24,
+ * gap 4, 12 px label on 18, then 22 px or the iOS safe area). Nothing from
+ * 768 px.
  */
 export const BOTTOM_NAV_OFFSET =
-  "pb-[calc(3.25rem_+_max(1.375rem,env(safe-area-inset-bottom)))] md:pb-0";
+  "pb-[calc(3.625rem_+_max(1.375rem,env(safe-area-inset-bottom)))] md:pb-0";

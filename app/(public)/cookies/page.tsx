@@ -42,7 +42,7 @@ export default function CookiesPage() {
       <p className="text-lk-body text-lk-ink-2">{t.noCookie}</p>
       <p className="text-lk-body text-lk-ink-2">
         {t.manageText}{" "}
-        <CookieSettingsButton className="cursor-pointer rounded-lk-sm font-semibold text-lk-blue underline underline-offset-2 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue" />
+        <CookieSettingsButton className="cursor-pointer rounded-lk-sm font-semibold text-lk-blue underline underline-offset-2 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue" />
         .
       </p>
     </LegalPage>

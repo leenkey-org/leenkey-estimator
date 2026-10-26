@@ -1250,6 +1250,12 @@ export const fr = {
   dpe: {
     label: "DPE",
   },
+  // The card of a property of direction C (components/shared/showcase-card.tsx).
+  showcaseCard: {
+    previousPhoto: "Photo précédente",
+    nextPhoto: "Photo suivante",
+    photoPosition: (position: number, total: number) => `Photo ${position} sur ${total}`,
+  },
   propertyCard: {
     badgeNew: "Nouveau",
     badgePriceDrop: "Prix en baisse",

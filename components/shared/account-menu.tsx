@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import Link from "next/link";
 import * as MenuPrimitive from "@radix-ui/react-dropdown-menu";
-import { User } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import { facadeScope } from "./facade-root";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -24,8 +24,9 @@ export type AccountMenuProps = {
   /** Server action that ends the session, then leaves the page. */
   signOut: () => Promise<void>;
   /**
-   * avatar: 42 px ink avatar (TopNav); header: 40 px blue avatar on a dark
-   * header (AdminMobileHeader); card: user card of the AdminSidebar.
+   * avatar: the pill of direction C, menu icon and 34 px blue avatar (TopNav);
+   * header: 40 px blue avatar on a dark header (AdminMobileHeader); card:
+   * user card of the AdminSidebar.
    */
   variant?: "avatar" | "header" | "card";
   /** Card only: first name and role under it. */
@@ -77,7 +78,7 @@ export function AccountMenu({
   const [signingOut, startSignOut] = useTransition();
   const onDark = variant !== "avatar";
   const triggerFocus = cn(
-    "focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2",
+    "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2",
     onDark ? "focus-visible:outline-white" : "focus-visible:outline-lk-blue",
   );
 
@@ -103,28 +104,33 @@ export function AccountMenu({
               {role ? <span className="truncate text-lk-micro text-white/60">{role}</span> : null}
             </span>
           </button>
+        ) : variant === "avatar" ? (
+          <button
+            type="button"
+            aria-label={t.trigger}
+            className={cn(
+              // The avatar alone below 1 024 px, where the links of the TopNav need the room.
+              "flex h-12 shrink-0 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface pr-1.5 pl-1.5 text-lk-ink lg:pl-4",
+              "transition-shadow duration-140 ease-out-lk hover:shadow-lk-field data-[state=open]:shadow-lk-field",
+              "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+              className,
+            )}
+          >
+            <Menu aria-hidden="true" className="hidden size-4.5 lg:block" />
+            <Avatar initial={initial} className="size-8.5 bg-lk-blue text-lk-label" />
+          </button>
         ) : (
           <button
             type="button"
             aria-label={t.trigger}
             className={cn(
-              "relative shrink-0 rounded-full",
-              // 44 px touch target around the 42 or 40 px avatar.
-              variant === "avatar"
-                ? "after:absolute after:-inset-px"
-                : "after:absolute after:-inset-0.5",
+              // 44 px touch target around the 40 px avatar.
+              "relative shrink-0 rounded-full after:absolute after:-inset-0.5",
               triggerFocus,
               className,
             )}
           >
-            <Avatar
-              initial={initial}
-              className={
-                variant === "avatar"
-                  ? "size-10.5 bg-lk-ink text-lk-compact"
-                  : "size-10 bg-lk-blue text-lk-label"
-              }
-            />
+            <Avatar initial={initial} className="size-10 bg-lk-blue text-lk-label" />
           </button>
         )}
       </MenuPrimitive.Trigger>

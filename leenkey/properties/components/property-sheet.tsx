@@ -104,7 +104,7 @@ export function PropertySheetHeader({
     <div className="flex flex-col gap-4">
       <Link
         href="/vendeur"
-        className="-ml-1 inline-flex min-h-11 items-center gap-1 self-start rounded-lk-sm pr-2 text-lk-secondary font-medium text-lk-ink-2 hover:text-lk-ink focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
+        className="-ml-1 inline-flex min-h-11 items-center gap-1 self-start rounded-lk-sm pr-2 text-lk-secondary font-medium text-lk-ink-2 hover:text-lk-ink focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
       >
         <ChevronLeft aria-hidden="true" className="size-4" />
         {t.back}

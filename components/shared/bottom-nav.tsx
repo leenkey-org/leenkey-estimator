@@ -19,11 +19,12 @@ export type BottomNavProps = {
 };
 
 /**
- * Mobile navigation (docs/DESIGN.md 10.6): fixed at the bottom below 768 px,
- * white with a top border, padding 10 × 20 × 22 with the iOS safe area, four
- * or five tabs (icon 22 and 11 px label). The current tab is the longest
- * prefix of the address, in blue with aria-current. A page that shows it adds
- * BOTTOM_NAV_OFFSET (nav-items.ts) so that its end stays visible.
+ * Mobile navigation (docs/DESIGN.md 10.6, direction C): fixed at the bottom
+ * below 768 px, white with a top border, padding 10 × 20 × 22 with the iOS
+ * safe area, four or five tabs (icon 24 and 12 px 600 label, secondary text).
+ * The current tab is the longest prefix of the address, in blue with
+ * aria-current. A page that shows it adds BOTTOM_NAV_OFFSET (nav-items.ts) so
+ * that its end stays visible.
  */
 export function BottomNav({ label, items, activeHref, inline = false, className }: BottomNavProps) {
   const pathname = usePathname();
@@ -48,11 +49,11 @@ export function BottomNav({ label, items, activeHref, inline = false, className 
                 className={cn(
                   // 48 px high touch target, the bar keeps its height.
                   "-my-1 flex w-full min-w-0 flex-col items-center gap-1 rounded-lk-sm py-1",
-                  "text-lk-micro transition-colors duration-140 ease-out-lk",
-                  active ? "font-semibold text-lk-blue" : "font-medium text-lk-ink-3",
+                  "text-lk-caption font-semibold transition-colors duration-140 ease-out-lk",
+                  active ? "text-lk-blue" : "text-lk-ink-2",
                 )}
               >
-                {item.icon ? <NavIcon name={item.icon} className="size-5.5 shrink-0" /> : null}
+                {item.icon ? <NavIcon name={item.icon} className="size-6 shrink-0" /> : null}
                 <span className="max-w-full truncate">{item.label}</span>
               </Link>
             </li>

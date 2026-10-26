@@ -49,6 +49,32 @@ export async function favoriteState(listingId: string): Promise<boolean | null> 
   return data !== null;
 }
 
+/**
+ * Which of these listings the signed-in account saved, for the hearts of a
+ * list of cards (home page); null without a session (the hearts then lead to
+ * the sign-up). A read that fails shows them empty.
+ */
+export async function favoriteStates(listingIds: readonly string[]): Promise<Set<string> | null> {
+  const profile = await getProfile();
+  if (!profile) return null;
+  const saved = new Set<string>();
+  if (listingIds.length === 0) return saved;
+  const supabase = await createClient();
+  for (const ids of chunk([...listingIds], IDS_PER_REQUEST)) {
+    const { data, error } = await supabase
+      .from("favorites")
+      .select("listing_id")
+      .eq("buyer_id", profile.id)
+      .in("listing_id", ids);
+    if (error) {
+      console.error("[favorites] read failed", { user_id: profile.id, code: error.code });
+      return saved;
+    }
+    for (const row of data) saved.add(row.listing_id);
+  }
+  return saved;
+}
+
 /** The favourites page: saved listings still online, as search cards. */
 export async function listFavorites(profileId: string): Promise<QueryResult<FavoriteListings>> {
   try {

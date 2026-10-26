@@ -36,7 +36,7 @@ export function Checkbox({
             className={cn(
               "peer size-5 cursor-pointer appearance-none rounded-lk-sm border-[1.5px] border-lk-field bg-lk-surface",
               "transition-colors duration-140 ease-out-lk checked:border-lk-blue checked:bg-lk-blue",
-              "focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+              "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
               "aria-invalid:border-lk-danger disabled:cursor-not-allowed disabled:opacity-45",
               // 44 px touch target (DESIGN.md 15).
               "after:absolute after:-inset-3 after:content-['']",

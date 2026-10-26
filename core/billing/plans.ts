@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { unstable_rethrow } from "next/navigation";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
@@ -15,9 +16,10 @@ export type ActivePlan = PlanView;
 
 /**
  * Active plans in their order, or null when they cannot be read (database
- * unreachable, or not configured: CI build, PR previews).
+ * unreachable, or not configured: CI build, PR previews). Read once per
+ * request, however many sections of a page ask for them.
  */
-export async function activePlans(): Promise<ActivePlan[] | null> {
+export const activePlans = cache(async function activePlans(): Promise<ActivePlan[] | null> {
   if (!isSupabaseConfigured()) return null;
   try {
     const supabase = await createClient();
@@ -45,4 +47,4 @@ export async function activePlans(): Promise<ActivePlan[] | null> {
     });
     return null;
   }
-}
+});

@@ -367,7 +367,7 @@ export function PhotoUploader({
                 onDragEnd={() => setDragged(null)}
                 className={cn(
                   "group relative block size-full cursor-grab overflow-hidden rounded-lk-sm bg-lk-stone-2",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+                  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
                   dragged === index && "opacity-45",
                 )}
               >
@@ -408,7 +408,7 @@ export function PhotoUploader({
         className={cn(
           "mt-1 flex h-12 w-full items-center justify-center gap-2 rounded-lk-sm border-[1.5px] border-dashed border-lk-blue-line text-lk-button-md font-semibold text-lk-blue",
           "transition-colors duration-140 ease-out-lk not-disabled:hover:bg-lk-blue-tint",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+          "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
           "disabled:cursor-not-allowed disabled:opacity-45",
         )}
       >

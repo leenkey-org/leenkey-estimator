@@ -76,6 +76,18 @@ describe("palette (DESIGN.md 2.1)", () => {
     expect(contrast(foreground, background)).toBeGreaterThanOrEqual(4.5);
   });
 
+  // The hover of an unread notification, its dates on the light blue.
+  it("ink-3 on blue-line reaches 4.5:1", () => {
+    expect(contrast("ink-3", "blue-line")).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("the swatches of /design show the values of the tokens", async () => {
+    const { paletteSwatches } = await import("@/app/design/_content");
+    for (const swatch of paletteSwatches) {
+      expect(swatch.hex.toLowerCase(), swatch.token).toBe(token(swatch.token.slice(3)));
+    }
+  });
+
   // Field borders are user interface components: WCAG 1.4.11, 3:1.
   it("field borders reach 3:1 on white", () => {
     expect(contrast("field", "surface")).toBeGreaterThanOrEqual(3);

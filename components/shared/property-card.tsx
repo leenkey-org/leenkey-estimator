@@ -49,7 +49,11 @@ export type PropertyCardProps = PropertyCardData & {
 const SEPARATOR = `${NBSP}· `;
 
 /** « Appartement 3 p · 68 m² », « Terrain · 450 m² », or « 3 p · 64 m² » without the type. */
-function summary(card: PropertyCardData, roomsStyle: "long" | "short", withType: boolean) {
+export function propertySummary(
+  card: Pick<PropertyCardData, "propertyType" | "rooms" | "surfaceM2">,
+  roomsStyle: "long" | "short",
+  withType: boolean,
+) {
   const rooms = card.rooms ? formatRooms(card.rooms, roomsStyle) : null;
   const surface = card.surfaceM2 ? formatSurface(card.surfaceM2) : null;
   const head = withType
@@ -118,7 +122,9 @@ export function PropertyCard({
             <p className="text-lk-card-price font-bold text-wide tabular text-lk-ink">{price}</p>
             {card.dpe ? <DpeBadge value={card.dpe} compact /> : null}
           </div>
-          <p className="text-lk-label font-semibold text-lk-ink">{summary(card, "short", true)}</p>
+          <p className="text-lk-label font-semibold text-lk-ink">
+            {propertySummary(card, "short", true)}
+          </p>
           <p className="truncate text-lk-caption text-lk-ink-3">{card.location}</p>
           {card.note ? (
             <p
@@ -144,7 +150,7 @@ export function PropertyCard({
             {card.dpe ? <DpeBadge value={card.dpe} /> : null}
           </div>
           <p className="mt-1.5 text-lk-title font-semibold text-lk-ink">
-            {summary(card, "long", true)}
+            {propertySummary(card, "long", true)}
           </p>
           <p className="mt-1 text-lk-secondary text-lk-ink-3">
             {card.locationDetail
@@ -182,7 +188,7 @@ export function PropertyCard({
   } else {
     actionPosition = "right-2 top-2";
     const meta = [
-      summary(card, "short", false),
+      propertySummary(card, "short", false),
       card.dpe ? `${fr.dpe.label}${NBSP}${card.dpe}` : null,
     ]
       .filter(Boolean)

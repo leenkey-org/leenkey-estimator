@@ -31,91 +31,129 @@ export const site = {
     signIn: "Mon compte",
     mySpace: "Mon espace",
   },
+  // The home page of direction C (docs/design-handoff/SPECS.md 3, DECISIONS
+  // 2026-10-26): the texts of the site kept where they exist; « Valoriser »
+  // where the mock-up says « Estimer » (CLAUDE.md section 16).
   home: {
     metaDescription:
       "La plateforme qui accompagne les propriétaires dans la vente de leur bien, sans agence : analyse de valeur, dossier, annonce, négociation, jusqu'à la signature. Forfait fixe et transparent.",
-    // The V1 hero (landing.html of the main branch, DECISIONS 2026-10-23).
     hero: {
-      badge: "Ni agence, ni seul · Vendre accompagné",
+      badge: "Ni agence, ni seul · 0\u00A0€ de commission",
       title: "Leenkey vous donne les clés de votre vente.",
-      // The highlighted words of the V1 titles (DECISIONS 2026-10-20).
-      accent: "votre vente.",
       lead: "Vendez sans agence, accompagné à chaque étape\u00A0— de l'analyse de valeur jusqu'à la signature.",
-      action: "Voir ma valorisation",
-      // The entry of the buyers, under the one of the sellers (V2).
-      buy: "Je cherche un bien à acheter",
-      points: [
-        "Forfait fixe · jamais de commission",
-        "Plus de contrôle · vous validez tout",
-        "Accompagné à chaque étape",
-      ],
-      // The card on the photo: the V1 one, with the value the engine gives
-      // for this house (leenkey/site/valuation-example.ts), said as an example.
-      example: {
-        label: "Exemple de valorisation",
-        sample: "Exemple",
-        title: "Maison contemporaine",
-        place: "Saint-Michel-sur-Orge, 91240",
-        specs: [`120${N}m²`, "4 pièces", "3 chambres"],
-        value: "Ma valeur immobilière",
-        range: (low: string, high: string) => `Fourchette${NBSP}: ${low} à ${high}`,
-        meta: "Analyse gratuite en 2 minutes",
-      },
-      // In place of « + 5,2 % vs prix agence », a figure the V1 did not
-      // source: what the valuation gives, nothing about the figure of the card.
-      fact: { title: "Rapport PDF", text: "Quatre pages, par email" },
+      // The shorter lead of the mobile mock-up.
+      leadShort: "Vendez sans agence, accompagné à chaque étape.",
     },
-    latest: {
-      eyebrow: "En vente sur Leenkey",
-      title: "Les derniers biens",
+    search: {
+      // Not « Que voulez-vous faire ? »: the title of the shortcuts under it.
+      label: "Votre projet",
+      tabs: { buy: "Acheter", sell: "Vendre", valuation: "Valoriser mon bien" },
+      // The labels of the tabs below 768 px, three in the width of a phone.
+      tabsShort: { buy: "Acheter", sell: "Vendre", valuation: "Valoriser" },
+      addressPlaceholder: "Adresse de votre bien",
+      valuation: {
+        label: "Adresse du bien à valoriser",
+        action: "Voir ma valorisation",
+        points: ["Gratuit", "2 minutes", "Rapport PDF de 4 pages par email"],
+        pointsShort: ["Gratuit", "2 minutes", "Rapport PDF par email"],
+        /** Text typed, a suggestion not chosen: the estimator needs its postal code. */
+        choose: "Choisissez votre adresse dans la liste.",
+      },
+      sell: {
+        label: "Adresse du bien à vendre",
+        action: "Publier mon bien gratuitement",
+        note: "Formule Autonomie gratuite, sans engagement. Un conseiller si vous le souhaitez.",
+      },
+      buy: {
+        where: `Où${NBSP}?`,
+        wherePlaceholder: "Ville ou code postal",
+        type: "Type de bien",
+        typeAny: "Maison, appartement…",
+        budget: "Budget max",
+        budgetAny: "Ajouter un budget",
+        budgetNone: "Sans limite",
+        action: "Rechercher",
+        mobileTitle: `Où cherchez-vous${NBSP}?`,
+        mobileText: "Ville · Type de bien · Budget max",
+        suggestions: "Communes de la zone de lancement",
+      },
+      suggestionsLabel: "Adresses proposées",
+    },
+    services: {
+      label: "Accès directs",
+      valuation: "Valoriser votre bien",
+      listing: "Déposer une annonce",
+      pricing: "Nos formules",
+    },
+    shortcuts: {
+      title: `Que voulez-vous faire${NBSP}?`,
+      items: {
+        valuation: {
+          title: "Valoriser mon bien",
+          text: "Gratuit, en 2 minutes, sur les ventes réelles du quartier.",
+          action: "Valoriser",
+        },
+        sell: {
+          title: "Vendre mon bien",
+          text: "Publiez gratuitement, gardez la main sur chaque étape.",
+          action: "Publier",
+        },
+        support: {
+          title: "Être accompagné",
+          text: "Un conseiller dédié à vos côtés, du prix à la signature.",
+          action: "Découvrir",
+        },
+        buy: {
+          title: "Trouver un bien",
+          text: "Maisons et appartements vendus par leurs propriétaires.",
+          action: "Chercher",
+        },
+      },
+    },
+    savings: {
+      eyebrow: "Un forfait fixe. Jamais de commission.",
+      title: "Combien vous économisez avec Leenkey",
+      lead: `Le prix ne dépend jamais de la valeur de votre bien. Choisissez un prix de vente${NBSP}:`,
+      leadShort: `Choisissez un prix de vente${NBSP}:`,
+      prices: "Prix de vente",
+      agency: `Agence (hypothèse${NBSP}: 5${N}% du prix)`,
+      agencyShort: `Agence (hyp. 5${N}%)`,
+      approximately: (amount: string) => `≈${NBSP}${amount}`,
+      accompanied: "Leenkey Accompagné",
+      autonomy: "Leenkey Autonomie",
+      saved: "Vous économisez environ",
+      note: "Comparaison avec la formule Accompagné. Les frais d'agence varient selon les agences et les biens.",
+    },
+    listings: {
+      title: "Biens à vendre près de chez vous",
+      place: `Autour d'Épinay-sur-Orge · 10${N}km`,
+      categories: "Catégories de biens",
+      category: {
+        all: "Tous les biens",
+        maison: "Maisons",
+        appartement: "Appartements",
+        jardin: "Avec jardin",
+        parking: "Avec parking",
+        terrain: "Terrains",
+      },
+      list: "Biens à vendre près de chez vous",
       all: (count: number, formatted: string) =>
         count > 1 ? `Voir les ${formatted} biens` : "Voir le bien",
-    },
-    stages: {
-      eyebrow: "Votre projet",
-      title: "Où en êtes-vous dans votre vente ?",
-      accent: "votre vente ?",
-      lead: "Choisissez votre situation. Leenkey vous indique par où commencer.",
-      label: "Votre situation",
-      items: [
-        {
-          key: "reflexion",
-          label: "Je réfléchis",
-          title: "Commencez par comprendre votre marché.",
-          text: "Une première analyse de valeur, et les étapes à anticiper avant toute mise en vente.",
-          action: "Commencer gratuitement",
-          href: "/estimer",
-        },
-        {
-          key: "prix",
-          label: "Je veux connaître mon prix",
-          title: "Situez votre bien au bon prix.",
-          text: "Renseignez ses caractéristiques : vous verrez le montant, sa fourchette, et ce qui le fait monter ou baisser.",
-          action: "Valoriser mon bien",
-          href: "/estimer",
-        },
-        {
-          key: "preparation",
-          label: "Je prépare ma vente",
-          title: "Préparez votre vente sans rien oublier.",
-          text: "Diagnostics, documents, annonce : le parcours vous indique ce qui reste à faire avant de publier.",
-          action: "Préparer ma vente",
-          href: "/estimer",
-        },
-        {
-          key: "en_vente",
-          label: "Mon bien est déjà en vente",
-          title: "Faites le point sur votre vente en cours.",
-          text: "Un conseiller regarde votre positionnement face au marché et vous dit quels leviers actionner si les visites ne suivent pas.",
-          action: "Parler à un conseiller",
-          href: "#contact",
-        },
-      ],
+      allShort: (count: number, formatted: string) =>
+        count > 1 ? `Voir les ${formatted}` : "Voir le bien",
+      browse: "Voir les biens",
+      empty: "Aucun bien de cette catégorie pour l'instant.",
+      page: (page: number, pages: number) => `${page}${NBSP}/${NBSP}${pages}`,
+      previous: "Biens précédents",
+      next: "Biens suivants",
+      badgeNew: "Nouveau",
     },
     steps: {
       eyebrow: "Comment ça marche",
       title: "Trois étapes. Vous gardez les clés du début à la fin.",
       accent: "du début à la fin.",
+      // Above the title of a step on a phone: « Étape 1 · Gratuit · 2 minutes ».
+      label: (position: number) => `Étape ${position}`,
       items: [
         {
           title: "Estimez",
@@ -134,152 +172,26 @@ export const site = {
         },
       ],
     },
-    features: {
-      eyebrow: "Le point de départ",
-      title: "Ce que vous obtenez en quelques minutes.",
-      accent: "en quelques minutes.",
-      lead: "Tout commence par une analyse sérieuse de votre bien. Gratuite et sans engagement.",
-      items: [
-        {
-          title: "Une fourchette de valeur, pas un prix figé",
-          text: "Une valeur indicative accompagnée d'une fourchette, dont la précision s'affine selon les informations renseignées sur votre bien.",
-        },
-        {
-          title: "Les ventes réelles de votre quartier",
-          text: "Les transactions immobilières publiées par l'administration fiscale, localisées à l'adresse et analysées pour retenir les références les plus pertinentes.",
-        },
-        {
-          title: "Ce qui fait monter ou baisser le prix",
-          text: "État, DPE, extérieurs, prestations, étage : chaque critère est chiffré séparément.",
-        },
-        {
-          title: "Un rapport complet en PDF",
-          text: "Quatre pages reçues par email : valorisation, marché local, stratégie de vente et plan d'action.",
-        },
-      ],
-      action: "Valoriser mon bien gratuitement",
-    },
-    space: {
-      eyebrow: "Votre espace Leenkey",
-      title: "Vous savez toujours quoi faire ensuite.",
-      accent: "quoi faire ensuite.",
-      lead: "Votre vente se pilote depuis un seul endroit : le dossier, l'annonce, les visites et les offres, avec la prochaine action toujours affichée.",
-      // « Ma vente » of the seller area with the example data of its mock-up
-      // (Dashboard.png, DESIGN.md 10.4, SPEC 8.7). The V1 preview, « avec des
-      // données d'exemple » as it said, showed a journey in four steps, a
-      // chart and figures that the V2 area does not have (DECISIONS
-      // 2026-10-20): the preview shows what a seller finds.
-      address: "leenkey.fr/vendeur",
-      sample: "Exemple",
-      label: `Exemple de tableau de bord vendeur${NBSP}: un appartement de 3${N}pièces à Savigny-sur-Orge, en ligne, à l'étape 3 sur 6, contacts et visites. Prochaine action${NBSP}: confirmer la visite de Thomas. 248${N}vues en 7${N}jours, 8${N}contacts, 3${N}acquéreurs qualifiés.`,
-      greeting: "Bonjour Camille",
-      heading: "Ma vente",
-      property: {
-        title: `Appartement 3${N}p · Savigny-sur-Orge`,
-        detail: `350${N}000${N}€ · publié le 18${N}sept.`,
-      },
-      step: "Étape 3 sur 6 · Contacts et visites",
-      next: {
-        label: "Prochaine action",
-        title: "Confirmer la visite de Thomas",
-        text: `Samedi 27${N}sept. à 10${N}h. Son justificatif de financement a été vérifié par Leenkey.`,
-      },
-      figures: [
-        { value: "248", label: `vues · 7${N}j` },
-        { value: "8", label: "contacts" },
-        { value: "3", label: "qualifiés" },
-      ],
-      todo: {
-        title: "À faire",
-        tasks: [
-          { title: "Diagnostics déposés", detail: null, state: "done" },
-          { title: "Répondre à 2 contacts en attente", detail: "Depuis hier", state: "current" },
-          {
-            title: "Ajouter le PV de la dernière AG",
-            detail: "Demandé par 1 acquéreur",
-            state: "todo",
-          },
-        ],
-      },
-      conversations: {
-        title: "Conversations",
-        items: [
-          {
-            initials: "TH",
-            name: "Thomas",
-            time: "10:05",
-            text: `Serait-il possible de visiter samedi matin${NBSP}?`,
-            unread: true,
-          },
-          {
-            initials: "SL",
-            name: "Sarah",
-            time: "Hier",
-            text: "Merci pour les précisions, je reviens vers vous.",
-            unread: false,
-          },
-        ],
-      },
-      caption: "Aperçu de l'espace vendeur, avec des données d'exemple.",
-    },
-    comparison: {
-      eyebrow: "Position de Leenkey",
-      title: "Bénéficiez d'un support total et gardez votre indépendance.",
-      accent: "indépendance.",
-      lead: "Pourquoi se lancer seul, sans outils, et finir par se tourner vers une agence en payant des honoraires importants\u00A0— alors qu'une solution intermédiaire existe ?",
-      example: `Sur une vente à 350${N}000${N}€`,
-      rows: ["Frais de vente", "Accompagnement", "Contrôle de la vente", "Sécurité juridique"],
-      columns: [
-        {
-          key: "seul",
-          name: "Vente seul",
-          detail: "Aucun intermédiaire",
-          values: ["Minimes", "Aucun", "Total", "À votre charge"],
-          good: [true, false, true, false],
-        },
-        {
-          key: "leenkey",
-          name: "Leenkey",
-          detail: "Forfait fixe, accompagné",
-          values: [
-            `990 à 1${N}500${N}€`,
-            "Outils + conseiller",
-            `100${N}% à vous`,
-            "Notaire coordonné",
-          ],
-          good: [true, true, true, true],
-        },
-        {
-          key: "agence",
-          name: "Agence",
-          detail: "Commission au pourcentage",
-          values: [`≈ 15${N}000${N}€`, "Complet", "Délégué à l'agent", "Mandat d'agence"],
-          good: [false, true, false, true],
-        },
-      ],
-      // The V1 check (green) or cross (grey) before each value, read first.
-      good: `Point fort${NBSP}:`,
-      bad: `Point faible${NBSP}:`,
-    },
     plans: {
-      eyebrow: "Nos formules",
-      title: "Un forfait fixe. Jamais de commission.",
-      accent: "Jamais de commission.",
-      lead: "Vous choisissez votre niveau d'accompagnement. Le prix ne dépend jamais de la valeur de votre bien.",
+      title: "Choisissez votre niveau d'accompagnement",
       free: "Gratuit",
       taxes: "TTC",
       // By plan code: the short texts of the home page (the names and the
-      // prices come from the plans table, the reference data).
+      // prices come from the plans table, the reference data). The label of
+      // the plan put forward is to be validated (SPECS.md 2, DECISIONS Q60).
       items: {
         autonomie: {
+          tag: "Pour piloter seul",
           text: "Pour piloter votre vente en toute autonomie.",
           note: "Sans engagement · sans carte bancaire",
         },
         accompagne: {
+          tag: "Notre recommandation",
           text: "Un conseiller dédié à vos côtés, du prix à la signature.",
           note: "Forfait fixe · payé à la souscription",
         },
         serenite: {
+          tag: "Pour déléguer",
           text: "Nous nous occupons de presque tout, vous gardez la décision.",
           note: "Forfait fixe · payé à la souscription",
         },

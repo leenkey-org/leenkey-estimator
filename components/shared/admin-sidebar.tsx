@@ -27,7 +27,7 @@ export type AdminSidebarProps = {
 };
 
 const darkFocus =
-  "focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+  "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white";
 
 /**
  * Sidebar of the Cockpit, the back office (docs/DESIGN.md 10.6): 240 px on

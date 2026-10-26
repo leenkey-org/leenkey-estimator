@@ -21,8 +21,12 @@ export type FavoriteButtonProps = {
   signUpHref: string;
   /** The property, in the name of the button when several hearts share a page (favourites). */
   property?: string;
-  /** white-float over a photo (gallery, card, DESIGN.md 7.1); stone in the price column. */
-  variant?: "white-float" | "stone";
+  /**
+   * white-float over a photo (gallery, card, DESIGN.md 7.1); stone in the
+   * price column; photo: the heart alone over the photo of a card of
+   * direction C (SPECS.md 2), white outline on a shaded fill, blue once saved.
+   */
+  variant?: "white-float" | "stone" | "photo";
   className?: string;
 };
 
@@ -47,16 +51,28 @@ export function FavoriteButton({
   const [, startTransition] = useTransition();
   const [message, setMessage] = useState("");
   const label = property ? t.addProperty(property) : t.add;
+  const onPhoto = variant === "photo";
   const classes = cn(
-    iconButtonVariants({ variant }),
-    "inline-flex items-center justify-center text-lk-blue",
+    onPhoto
+      ? "relative inline-flex size-11 items-center justify-center rounded-full text-white focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-lk-blue focus-visible:outline-solid"
+      : cn(iconButtonVariants({ variant }), "inline-flex items-center justify-center text-lk-blue"),
     className,
   );
+  const heart = (filled: boolean) =>
+    onPhoto ? (
+      <Heart
+        aria-hidden="true"
+        strokeWidth={2}
+        className={cn("size-6 md:size-6.5", filled ? "fill-lk-blue" : "fill-black/35")}
+      />
+    ) : (
+      <Heart aria-hidden="true" className={cn(filled && "fill-current")} />
+    );
 
   if (favorite === null) {
     return (
       <Link href={signUpHref} prefetch={false} aria-label={label} className={classes}>
-        <Heart aria-hidden="true" />
+        {heart(false)}
       </Link>
     );
   }
@@ -94,7 +110,7 @@ export function FavoriteButton({
           });
         }}
       >
-        <Heart aria-hidden="true" className={cn(shown && "fill-current")} />
+        {heart(shown)}
       </button>
       <span role="status" className="sr-only">
         {message}

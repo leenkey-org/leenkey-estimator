@@ -17,7 +17,7 @@ export function SortSelect() {
   const { query, applySort } = useSearch();
   const id = useId();
   return (
-    <div className="relative inline-flex h-11 shrink-0 items-center gap-1.5 rounded-lk-sm px-2.5 text-lk-button-sm font-semibold text-lk-blue transition-colors duration-140 ease-out-lk hover:bg-lk-blue-tint has-[select:focus-visible]:outline-2 has-[select:focus-visible]:outline-offset-2 has-[select:focus-visible]:outline-lk-blue has-[select:focus-visible]:outline-solid">
+    <div className="relative inline-flex h-11 shrink-0 items-center gap-1.5 rounded-lk-sm px-2.5 text-lk-button-sm font-semibold text-lk-blue transition-colors duration-140 ease-out-lk hover:bg-lk-blue-tint has-[select:focus-visible]:outline-3 has-[select:focus-visible]:outline-offset-2 has-[select:focus-visible]:outline-lk-blue has-[select:focus-visible]:outline-solid">
       <label htmlFor={id} className="sr-only">
         {t.sort}
       </label>

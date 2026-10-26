@@ -1,6 +1,5 @@
 import "server-only";
 import { unstable_rethrow } from "next/navigation";
-import { latestOf } from "./latest";
 import { SQL_SORT, toSqlFilters } from "./sql-filters";
 import type { DpeClass } from "@/components/shared/dpe-badge";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -180,25 +179,55 @@ export async function countListings(filters: SearchFilters): Promise<QueryResult
   }
 }
 
+export type HomeListings = {
+  items: SearchListing[];
+  /** Up to five photos per listing, the main one first. */
+  photos: Record<string, Array<{ path: string; caption: string }>>;
+  total: number;
+};
+
+/** Where the home page looks: around Épinay-sur-Orge, 10 km (docs/design-handoff/SPECS.md 3). */
+export const HOME_LISTINGS_FILTERS = { location: "epinay-sur-orge", radiusKm: 10 } as const;
+
 /**
- * « Les derniers biens » of the home page (SPEC-V2 8.1): among the listings
- * most recently published (the first page of the search), the three most
- * recent with a main photo, then without (L1-46), and the number online for
- * « Voir les 12 biens ». None below three.
+ * « Biens à vendre près de chez vous » of the home page of direction C
+ * (docs/design-handoff/SPECS.md 3, item 7): the listings online around
+ * Épinay-sur-Orge within 10 km, the most recent first, two pages at most,
+ * their photos (five each at most) and how many there are. Without a
+ * database (CI build, previews), nothing: the section is left out.
  */
-export async function latestListings(): Promise<QueryResult<SearchResults>> {
-  // No database (CI build, PR previews): the block is simply left out.
+export async function homeListings(): Promise<QueryResult<HomeListings>> {
   if (!isSupabaseConfigured()) return { ok: false, error: "unavailable" };
   try {
-    const rows = await fetchPage({}, "recent", 1);
-    const total = Number(rows[0]?.total_count ?? 0);
-    const recent = await withCovers(rows.map(toListing));
-    const latest = latestOf(recent, (listing) => listing.cover !== null);
-    return { ok: true, data: { items: latest, total } };
+    const first = await fetchPage(HOME_LISTINGS_FILTERS, "recent", 1);
+    const total = Number(first[0]?.total_count ?? 0);
+    const second =
+      total > SEARCH_PAGE_SIZE ? await fetchPage(HOME_LISTINGS_FILTERS, "recent", 2) : [];
+    const items = [...first, ...second].map(toListing);
+    const supabase = await createClient();
+    const photos: HomeListings["photos"] = {};
+    for (const ids of chunk(
+      items.map((item) => item.id),
+      100,
+    )) {
+      const { data, error } = await supabase.rpc("public_listing_photos", {
+        p_listing_ids: ids,
+        p_cover_only: false,
+      });
+      // Without them the cards keep their drawing: a list never fails for a photo.
+      if (error) {
+        console.error("[search] home photos failed", { code: error.code });
+        break;
+      }
+      for (const row of [...data].sort((a, b) => a.position - b.position)) {
+        const list = (photos[row.listing_id] ??= []);
+        if (list.length < 5) list.push({ path: row.path, caption: row.caption });
+      }
+    }
+    return { ok: true, data: { items, photos, total } };
   } catch (error) {
-    // The signals of Next.js (a page rendered at request time) go through.
     unstable_rethrow(error);
-    console.error("[search] latestListings failed", {
+    console.error("[search] homeListings failed", {
       error: error instanceof Error ? error.message : String(error),
     });
     return { ok: false, error: "unavailable" };

@@ -20,13 +20,14 @@ test("les adresses des pages HTML de la V1 mènent à leur page V2", async ({ re
   }
 });
 
-test("le formulaire de contact de l'accueil part vers /api/contact", async ({ page }) => {
+// On /contact since the home page of direction C (DECISIONS 2026-10-26).
+test("le formulaire de contact du site part vers /api/contact", async ({ page }) => {
   let body: { source?: string; data?: Record<string, string> } = {};
   await page.route("**/api/contact", async (route) => {
     body = route.request().postDataJSON();
     await route.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
   });
-  await page.goto("/");
+  await page.goto("/contact");
   const form = page.locator("#contact-form");
   await form.scrollIntoViewIfNeeded();
   await form.locator('[name="motif"]').selectOption({ index: 1 });

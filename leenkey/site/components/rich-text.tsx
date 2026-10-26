@@ -7,9 +7,9 @@ export type { Rich } from "@/lib/i18n/rich";
 
 const linkClassName = {
   light:
-    "rounded-lk-sm text-lk-blue underline underline-offset-2 hover:text-lk-blue-hover focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+    "rounded-lk-sm text-lk-blue underline underline-offset-2 hover:text-lk-blue-hover focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
   // On navy (L1-50): the light blue (6.9:1), white on hover and for the focus ring.
-  dark: "rounded-lk-sm text-lk-blue-light underline underline-offset-2 hover:text-white focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
+  dark: "rounded-lk-sm text-lk-blue-light underline underline-offset-2 hover:text-white focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white",
 } as const;
 
 export function RichText({

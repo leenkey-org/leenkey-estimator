@@ -1,37 +1,35 @@
 import { HomeHero } from "@/leenkey/site/components/home-hero";
+import { HomeListings } from "@/leenkey/site/components/home-listings";
 import {
-  ComparisonSection,
-  ContactSection,
-  FeaturesSection,
-  FinalCta,
+  FinalBanner,
   HomeFaqSection,
-  SellerSpaceSection,
-  StagesSection,
+  PlansSection,
+  SavingsSection,
+  ShortcutsSection,
   StepsSection,
 } from "@/leenkey/site/components/home-sections";
-import { LatestListings } from "@/leenkey/site/components/latest-listings";
-import { PlansSection } from "@/leenkey/site/components/plans-section";
 import { PublicPage } from "@/leenkey/site/components/public-page";
 
-// Home page (SPEC-V2 8.1, L1-41), rebuilt in V2 (DECISIONS 2026-10-19) and
-// in the direction of the V1 (DECISIONS 2026-10-23): the V1 hero, then its
-// sections in its order and with its anchors, « Où en êtes-vous » first; the
-// latest listings after the seller area. Title, description and canonical
-// address: app/layout.tsx.
+// Home page of direction C (docs/design-handoff/SPECS.md 3, DECISIONS
+// 2026-10-26), in its order: the photo and the search card, the services,
+// the shortcuts, the savings, the listings around Épinay-sur-Orge, the three
+// steps, the plans, the questions and the last call. On the warm neutral of
+// the page. Title, description and canonical address: app/layout.tsx. The
+// listings are rendered with the rest, not streamed after it: coming in
+// later, they would push down the sections under them, and an anchor
+// (/#tarifs) with them.
 export default function HomePage() {
   return (
-    <PublicPage>
+    <PublicPage tone="warm">
       <HomeHero />
-      <StagesSection />
+      <ShortcutsSection />
+      <SavingsSection />
+      <HomeListings />
       <StepsSection />
-      <FeaturesSection />
-      <SellerSpaceSection />
-      <LatestListings />
-      <ComparisonSection />
       <PlansSection />
       <HomeFaqSection />
-      <ContactSection />
-      <FinalCta />
+      <FinalBanner />
+      <div className="h-10 md:h-16" />
     </PublicPage>
   );
 }

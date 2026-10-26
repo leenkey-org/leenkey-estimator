@@ -10,14 +10,10 @@ import { fr } from "@/lib/i18n/fr";
 const home = fr.site.home;
 
 describe("mots mis en valeur des titres", () => {
+  // The home page of direction C keeps its words in blue only on the pages
+  // that still use them (steps and questions are titles without them there).
   const titles: Array<[string, { title: string; accent: string }]> = [
-    ["hero", home.hero],
-    ["situation", home.stages],
     ["étapes", home.steps],
-    ["valorisation", home.features],
-    ["espace vendeur", home.space],
-    ["comparatif", home.comparison],
-    ["formules", home.plans],
     ["questions", home.faq],
     ["contact", home.contact],
     ["concept", fr.site.concept.hero],
@@ -35,12 +31,12 @@ describe("mots mis en valeur des titres", () => {
   });
 
   it("les titres de l'accueil gardent leur accent à la fin, comme en V1", () => {
-    for (const [, { title, accent }] of titles.slice(0, 9))
+    for (const [, { title, accent }] of titles.slice(0, 3))
       expect(title.endsWith(accent)).toBe(true);
   });
 
   it("une espace insécable avant le point d'interrogation : il ne passe jamais seul à la ligne", () => {
-    for (const title of [home.stages.title, home.final.title, fr.site.concept.hero.title]) {
+    for (const title of [home.shortcuts.title, home.final.title, fr.site.concept.hero.title]) {
       expect(title).toContain("\u00a0?");
       expect(title).not.toMatch(/ \?/);
     }
