@@ -86,27 +86,25 @@ test.describe("carte de la recherche (base de seed)", () => {
       expect(box.x + box.width).toBeLessThanOrEqual(frame.x + frame.width);
     }
 
-    // The card under the pointer lights its pill, the name of which repeats the card.
+    // The card under the pointer lights its pill, the name of which starts with its text.
     const first = page.locator("[data-listing-id]").first();
     const id = await first.getAttribute("data-listing-id");
     await first.hover();
     const active = fakeMap(page).locator("button[data-active]");
     await expect(active).toHaveCount(1);
-    const price = (await first.locator("a:visible p").first().textContent()) ?? "";
-    await expect(active).toHaveAccessibleName(new RegExp(`^${price.replace(/\s/g, "\\s")}, `));
+    await expect(active).toHaveAttribute("data-label-id", id ?? "");
+    const text = (await active.textContent()) ?? "";
+    await expect(active).toHaveAccessibleName(new RegExp(`^${text.replace(/\s/g, "\\s")}, `));
 
     // A pill of the end of the list: its card comes into view, outlined, its link focused.
     await page.mouse.move(0, 0);
+    await expect(active).toHaveCount(0);
     const last = page.locator("[data-listing-id]").last();
     const lastId = await last.getAttribute("data-listing-id");
     expect(lastId).not.toBe(id);
-    const lastPrice = (await last.locator("a:visible p").first().textContent()) ?? "";
     // From the keyboard: pills of the same area of 200 m sit on one another
     // until their grouping (L1-16b).
-    await fakeMap(page)
-      .getByRole("button", { name: new RegExp(`^${lastPrice.replace(/\s/g, "\\s")}, `) })
-      .first()
-      .focus();
+    await fakeMap(page).locator(`[data-label-id="${lastId}"]`).focus();
     await page.keyboard.press("Enter");
     await expect(last).toHaveAttribute("data-flash", "true");
     await expect(last).toBeInViewport();

@@ -3,7 +3,7 @@ import type { SearchListing } from "./queries";
 import { propertySummary, type PropertyCardData } from "@/components/shared/property-card";
 import type { LatLngLiteral } from "@/core/maps/google-maps";
 import { LAUNCH_ZONE_CENTRE } from "@/lib/config/launch-zone";
-import { formatPrice, formatPriceShort } from "@/lib/format";
+import { formatPriceShort } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 
 // The results on the map (L1-16): one price pill per listing at its public
@@ -15,7 +15,7 @@ export type MapListing = {
   position: LatLngLiteral;
   /** « 350 k€ » on the pill. */
   label: string;
-  /** Name of the pill: price, kind and place, as the card says them. */
+  /** Name of the pill: its text, then kind and place as the card says them. */
   name: string;
   /** The card shown over the map on a phone. */
   card: PropertyCardData;
@@ -25,13 +25,14 @@ export function toMapListings(items: readonly SearchListing[], now: Date): MapLi
   return items.flatMap((item) => {
     if (item.lat === null || item.lng === null) return [];
     const card = toPropertyCard(item, now);
+    const label = formatPriceShort(item.priceCents);
     return [
       {
         id: item.id,
         position: { lat: item.lat, lng: item.lng },
-        label: formatPriceShort(item.priceCents),
+        label,
         name: fr.search.map.pill(
-          formatPrice(item.priceCents),
+          label,
           propertySummary(card, "long", true),
           placeLabel(item.city, item.district),
         ),

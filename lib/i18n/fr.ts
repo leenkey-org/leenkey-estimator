@@ -1402,8 +1402,8 @@ export const fr = {
       gateTitle: "Voir les biens sur la carte",
       open: "Carte",
       close: "Liste",
-      /** Name of a price pill: what the card of the list says first. */
-      pill: (price: string, summary: string, place: string) => `${price}, ${summary}, ${place}`,
+      /** Name of a price pill: its text first (WCAG 2.5.3), then what the card says. */
+      pill: (label: string, summary: string, place: string) => `${label}, ${summary}, ${place}`,
       preview: "Bien choisi sur la carte",
       closePreview: "Fermer l'aperçu",
     },

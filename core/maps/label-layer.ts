@@ -5,7 +5,7 @@ export type MapLabel = {
   position: LatLngLiteral;
   /** Text of the label. */
   text: string;
-  /** Accessible name of its button, when the text alone says too little. */
+  /** Accessible name of its button: its text first (WCAG 2.5.3), then more. */
   name: string;
 };
 
@@ -67,6 +67,7 @@ export function createLabelLayer(
     const button = document.createElement("button");
     button.type = "button";
     button.className = options.className;
+    button.dataset.labelId = id;
     button.addEventListener("click", () => options.onSelect(id));
     button.addEventListener("pointerenter", () => options.onHover(id));
     button.addEventListener("pointerleave", () => options.onHover(null));

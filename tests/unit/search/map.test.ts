@@ -39,13 +39,13 @@ const flat: SearchListing = {
 describe("the results on the map", () => {
   const now = new Date("2026-10-26T10:00:00Z");
 
-  it("a price pill at the public location, named as the card says it", () => {
+  it("a price pill at the public location, its name starting with its text", () => {
     const [pill] = toMapListings([flat], now);
     expect(pill?.id).toBe(flat.id);
     expect(pill?.position).toEqual({ lat: 48.681, lng: 2.35 });
     expect(plain(pill?.label ?? "")).toBe("239 k€");
     expect(plain(pill?.name ?? "")).toBe(
-      "239 000 €, Appartement 3 pièces · 68 m², Savigny-sur-Orge · centre",
+      "239 k€, Appartement 3 pièces · 68 m², Savigny-sur-Orge · centre",
     );
     expect(pill?.card.href).toBe("/annonce/appartement-3-pieces-savigny-sur-orge-lk0005");
   });
