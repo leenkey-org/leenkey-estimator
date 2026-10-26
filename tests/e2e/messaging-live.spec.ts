@@ -150,6 +150,22 @@ test("deux navigateurs échangent en temps réel, lu et non lu", async ({ browse
     await expect(line.getByText("Non lu")).toHaveCount(0);
   });
 
+  // Here and not in navigation.spec.ts: opening the conversation reads it,
+  // which the first step needs unread.
+  await test.step("la conversation mène à l'annonce, l'annonce à la recherche (DECISIONS 2026-10-26)", async () => {
+    await inbox(buyer).getByRole("link").filter({ hasText: "Alice" }).click();
+    await expect(buyer).toHaveURL(SEED_CONVERSATION);
+    // On a phone, the link is in the menu of the conversation.
+    await buyer.getByRole("button", { name: "Plus d'actions" }).click();
+    const listing = buyer.getByRole("menu").getByRole("menuitem", { name: "Voir l'annonce" });
+    await expect(listing).toHaveAttribute("href", /^\/annonce\//);
+    await listing.click();
+    await expect(buyer).toHaveURL(/\/annonce\//);
+    // Never back to the conversation: to the search.
+    await buyer.getByRole("link", { name: "Retour aux annonces" }).locator("visible=true").click();
+    await expect(buyer).toHaveURL("/acheter");
+  });
+
   await buyer.context().close();
   await seller.context().close();
 });

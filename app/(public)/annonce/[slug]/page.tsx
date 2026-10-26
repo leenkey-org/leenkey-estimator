@@ -97,12 +97,15 @@ export default async function ListingPage({ params }: Props) {
     <FacadeRoot className="min-h-screen bg-lk-surface">
       <SiteTopNav />
       <main className="mx-auto max-w-lk-page pb-10 lg:px-10 lg:pb-16">
-        <ListingBreadcrumb
-          city={listing.city}
-          cityHref={communeSearchHref(listing.city)}
-          title={listing.title}
-          className="hidden pt-5 lg:block"
-        />
+        <div className="hidden items-center gap-6 pt-5 lg:flex">
+          <BackLink variant="text" />
+          <ListingBreadcrumb
+            city={listing.city}
+            cityHref={communeSearchHref(listing.city)}
+            title={listing.title}
+            className="min-w-0"
+          />
+        </div>
         <ListingBody
           listing={listing}
           galleryTopLeft={<BackLink />}

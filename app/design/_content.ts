@@ -358,6 +358,9 @@ export const cardCaptions = {
   noPhoto: "Sans photo : le dessin de marque sur pierre",
   favourite:
     "FavoriteButton (L1-18) : sans session (lien vers l'inscription), non sauvegardé, sauvegardé ; white-float sur une photo, stone dans la colonne prix",
+  choice:
+    "ChoiceCard : un chemin parmi deux (/vendre), tuile d'icône 44 px sur bleu clair, titre, une phrase, son action en bas ; le chemin recommandé en primary",
+  choiceHref: "/design#cartes",
   /** Not a real listing: a tap in the catalogue fails and the heart comes back. */
   favouriteListingId: "00000000-0000-4000-8000-000000000000",
 };
@@ -489,8 +492,9 @@ export const navigation = {
     admin: "BottomNav du back office",
   },
   sidebarCaption:
-    "AdminShell à partir de 768 px : barre latérale de 240 px ; pastilles de compteurs avec les données du back office",
-  headerCaption: "AdminMobileHeader sous 768 px : titre de la page et avatar du menu du compte",
+    "AdminShell à partir de 768 px : barre latérale de 240 px ; pastilles de compteurs avec les données du Cockpit ; « Voir le site » au-dessus de la carte du compte",
+  headerCaption:
+    "AdminMobileHeader sous 768 px : titre de la page, « Voir le site », la cloche et l'avatar du menu du compte",
   labels: {
     topSignedIn: "Exemple de barre haute, connecté",
     topSignedOut: "Exemple de barre haute, sans session",
@@ -642,7 +646,9 @@ export const galleryPhotos: GalleryPhoto[] = [
 export const gallery = {
   caption:
     "Mobile : une photo sur la largeur, 280 px, défilement, compteur. À partir de 1024 px : une grande photo et les suivantes. Toucher ou cliquer agrandit en plein écran.",
-  back: "Retour",
+  back: "Retour aux annonces",
+  backCaption:
+    "BackLink : sur la galerie en mobile (white-float, 44 px), en lien texte au-dessus de la galerie à partir de 1024 px ; retour à la recherche d'où l'on vient",
   noPhotoCaption:
     "Sans photo, ou si une photo ne se charge pas : le dessin de marque sur pierre. Une photo apparaît en fondu de 160 ms.",
   thumbsCaption:
@@ -877,6 +883,9 @@ export const messaging = {
   sent: "Bonjour Thomas, oui plein sud, ensoleillé de midi au coucher.",
   sentMeta: "Vous\u00A0· 9:40",
   system: "Visite confirmée le samedi 26 septembre à 10\u00A0h.",
+  action: "Voir l'annonce",
+  actionCaption:
+    "À partir de 768 px, l'en-tête porte le chemin vers ce dont parle la conversation (« Voir l'annonce », « Voir mon bien » pour le vendeur) ; en dessous, c'est la première ligne du menu",
   caption:
     "ConversationHeader (retour, vignette 44 × 44, titre 14 px 600, sous-titre 12 px, menu), séparateur de date, MessageBubble reçue (blanche, coin 2 px en bas à gauche) et envoyée (bleue, coin 2 px en bas à droite), SystemMessage (pierre, pleine largeur), puis le Composer : champ de 44 px qui grandit jusqu'à cinq lignes, Entrée envoie au clavier",
 };

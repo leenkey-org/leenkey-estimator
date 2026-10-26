@@ -7,7 +7,10 @@ export type EmptyStateProps = {
   titleAs?: "h1" | "h2" | "h3" | "h4";
   /** One useful sentence (SPEC-V2 section 6, « Le ton »). */
   description?: string;
-  /** A single action: Button primary, or inverse on the blue flat. */
+  /**
+   * One action: Button primary, or inverse on the blue flat. Two only where a
+   * screen offers two ways to start, the primary first (docs/DESIGN.md 10.8).
+   */
   action?: ReactNode;
   /** light: on white or --lk-bg; blue: on a BrandPanel or the blue flat. */
   tone?: "light" | "blue";

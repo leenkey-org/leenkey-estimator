@@ -15,8 +15,12 @@ export type AccountMenuProps = {
   initial: string | null;
   /** « Mon espace »: home of the account's role. */
   homeHref: string;
+  /** Its name: « Mon espace », « Cockpit » for an admin. */
+  homeLabel?: string;
   /** « Mon compte ». */
   accountHref: string;
+  /** « Voir le site », from the Cockpit. */
+  siteHref?: string;
   /** Server action that ends the session, then leaves the page. */
   signOut: () => Promise<void>;
   /**
@@ -62,7 +66,9 @@ function Avatar({ initial, className }: { initial: string | null; className: str
 export function AccountMenu({
   initial,
   homeHref,
+  homeLabel,
   accountHref,
+  siteHref,
   signOut,
   variant = "avatar",
   name,
@@ -143,8 +149,13 @@ export function AccountMenu({
           )}
         >
           <MenuPrimitive.Item asChild className={itemClassName}>
-            <Link href={homeHref}>{t.home}</Link>
+            <Link href={homeHref}>{homeLabel ?? t.home}</Link>
           </MenuPrimitive.Item>
+          {siteHref ? (
+            <MenuPrimitive.Item asChild className={itemClassName}>
+              <Link href={siteHref}>{fr.nav.site}</Link>
+            </MenuPrimitive.Item>
+          ) : null}
           <MenuPrimitive.Item asChild className={itemClassName}>
             <Link href={accountHref}>{t.account}</Link>
           </MenuPrimitive.Item>

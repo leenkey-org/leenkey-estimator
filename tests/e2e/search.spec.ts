@@ -394,7 +394,7 @@ test.describe("page annonce (base de seed)", () => {
     expect(await viewCookie()).toBe(first);
   });
 
-  test("mobile : « Retour » ramène à la recherche telle qu'elle était", async ({
+  test("mobile : « Retour aux annonces » ramène à la recherche telle qu'elle était", async ({
     page,
     isMobile,
   }) => {
@@ -404,7 +404,7 @@ test.describe("page annonce (base de seed)", () => {
     await settle(page);
     await cards(page).first().click();
     await expect(page).toHaveURL(/\/annonce\//);
-    await page.getByRole("link", { name: "Retour", exact: true }).click();
+    await page.getByRole("link", { name: "Retour aux annonces" }).click();
     await expect(page).toHaveURL(new RegExp(`${search.replace(/[?]/g, "\\?")}$`));
   });
 

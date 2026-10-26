@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { Button } from "@/components/shared/button";
 import { Composer } from "@/components/shared/composer";
 import { ConversationHeader } from "@/components/shared/conversation-header";
 import { iconButtonVariants } from "@/components/shared/icon-button";
@@ -28,7 +29,14 @@ export type ConversationViewProps = {
   viewerId: string;
   /** « Thomas », « L'acquéreur »: the author of the messages received. */
   counterpart: string;
-  header: { title: string; subtitle: string; thumbSrc: string | null; href: string | null };
+  header: {
+    title: string;
+    subtitle: string;
+    thumbSrc: string | null;
+    href: string | null;
+    /** « Voir l'annonce » (buyer) or « Voir mon bien » (seller). */
+    hrefLabel: string;
+  };
   initialMessages: ThreadMessage[];
   /** Unread when the page was read: marked read on opening. */
   unread: boolean;
@@ -203,9 +211,28 @@ export function ConversationView({
           title={header.title}
           subtitle={header.subtitle}
           href={header.href}
+          // From 768 px, the way back to what the conversation is about; below,
+          // it is the first item of the menu (no room for it beside the title).
+          action={
+            header.href && header.hrefLabel ? (
+              <Button
+                asChild
+                variant="secondary"
+                size="sm"
+                className="hidden shrink-0 md:inline-flex"
+              >
+                <Link href={header.href}>{header.hrefLabel}</Link>
+              </Button>
+            ) : null
+          }
           menu={
             <ConversationMenu
               conversationId={conversationId}
+              link={
+                header.href && header.hrefLabel
+                  ? { href: header.href, label: header.hrefLabel }
+                  : undefined
+              }
               onReported={() => setReported(true)}
             />
           }

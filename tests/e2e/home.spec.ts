@@ -269,6 +269,91 @@ test.describe("accueil", () => {
     await expect(footer.getByRole("link", { name: "Mentions légales" })).toBeVisible();
   });
 
+  test("en mobile : le logo, « Menu » et tous les liens du site", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "en-tête mobile sous 768 px");
+    await page.goto("/");
+    // Nothing wider than the screen.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      page.viewportSize()?.width ?? 0,
+    );
+    const menuButton = page.getByRole("button", { name: "Menu" });
+    await menuButton.click();
+    const menu = page.getByRole("dialog", { name: "Menu" });
+    await expect(menu.getByRole("navigation").getByRole("link")).toHaveText([
+      "Acheter",
+      "Vendre",
+      "Tarifs",
+      "Valoriser mon bien",
+      "Leenkey et son fondateur",
+      "Investir dans Leenkey",
+      "Contact",
+      "Concept",
+      "FAQ",
+    ]);
+    // The two pages of « Qui sommes-nous » under its label (L1-51).
+    const about = menu.getByRole("list", { name: "Qui sommes-nous" });
+    await expect(about.getByRole("link", { name: "Leenkey et son fondateur" })).toHaveAttribute(
+      "href",
+      "/qui-sommes-nous",
+    );
+    await expect(about.getByRole("link", { name: "Investir dans Leenkey" })).toHaveAttribute(
+      "href",
+      "/investir",
+    );
+    await expect(menu.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
+    // « Vendre » leads to its two ways (DECISIONS 2026-10-26), not the home page.
+    const sell = menu.getByRole("link", { name: "Vendre", exact: true });
+    await expect(sell).toHaveAttribute("href", "/vendre");
+    await expect(sell).not.toHaveAttribute("aria-current");
+    await expect(menu.getByRole("link", { name: "Vendre mon bien" })).toHaveAttribute(
+      "href",
+      "/vendre",
+    );
+    await expect(menu.getByRole("link", { name: "Mon compte" })).toHaveAttribute(
+      "href",
+      "/connexion?next=%2F",
+    );
+    expect(await seriousViolations(page)).toEqual([]);
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+    await expect(menuButton).toBeFocused();
+    // A link followed closes the menu.
+    await menuButton.click();
+    await menu.getByRole("link", { name: "Acheter" }).click();
+    await expect(page).toHaveURL("/acheter");
+    await expect(menu).toBeHidden();
+  });
+
+  test("en desktop : la barre haute, « Vendre » courant sur sa page", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "barre haute à partir de 768 px");
+    await page.goto("/");
+    const nav = page.getByRole("banner").getByRole("navigation", { name: "Navigation principale" });
+    await expect(nav.getByRole("link")).toHaveText([
+      "Acheter",
+      "Vendre",
+      "Tarifs",
+      "Valoriser mon bien",
+      "Contact",
+    ]);
+    // Its two pages open from a button (L1-51).
+    await expect(nav.getByRole("button", { name: "Qui sommes-nous" })).toBeVisible();
+    // « Vendre » leads to its two ways (DECISIONS 2026-10-26): no longer the home page.
+    const sell = nav.getByRole("link", { name: "Vendre", exact: true });
+    await expect(sell).toHaveAttribute("href", "/vendre");
+    await expect(sell).not.toHaveAttribute("aria-current");
+    await expect(page.getByRole("button", { name: "Menu" })).toBeHidden();
+    // Signed out, the pill of the account (menu and avatar) to the login page.
+    await expect(
+      page.getByRole("banner").getByRole("link", { name: "Mon compte" }),
+    ).toHaveAttribute("href", "/connexion?next=%2F");
+    await sell.click();
+    await expect(page).toHaveURL("/vendre");
+    await expect(sell).toHaveAttribute("aria-current", "page");
+  });
+
   test("accueil : aucune violation sérieuse ou critique @a11y", async ({ page }) => {
     await page.goto("/");
     expect(await seriousViolations(page)).toEqual([]);

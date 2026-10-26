@@ -36,8 +36,9 @@ const ADMIN_TABS: readonly NavItem[] = [
  * Tabs of the BottomNav of a space (DESIGN.md 10.6). Every account buys and
  * sells (DECISIONS 2026-10-19): in the middle of the seller and buyer bars,
  * the way to the other side. « Acheter » opens the search; « Vendre » the
- * seller area once signed in, otherwise the landing page written for the
- * sellers (the search shows the buyer tabs to every visitor).
+ * seller area once signed in, otherwise the two ways to start a sale
+ * (/vendre, DECISIONS 2026-10-26; the search shows the buyer tabs to every
+ * visitor).
  */
 export function bottomTabs(space: Space, signedIn = true): readonly NavItem[] {
   switch (space) {
@@ -59,7 +60,7 @@ export function bottomTabs(space: Space, signedIn = true): readonly NavItem[] {
         { href: ROUTES.search, label: tabs.search, icon: "search" },
         { href: ROUTES.favourites, label: tabs.favourites, icon: "heart" },
         {
-          href: signedIn ? ROUTES.seller : ROUTES.home,
+          href: signedIn ? ROUTES.seller : ROUTES.sell,
           label: tabs.sell,
           icon: "square-plus",
         },
@@ -71,7 +72,8 @@ export function bottomTabs(space: Space, signedIn = true): readonly NavItem[] {
 }
 
 /**
- * Links of the TopNav. « Vendre » is the home page, written for the sellers;
+ * Links of the TopNav. « Vendre » leads to its two ways, the analysis of
+ * value or the listing straight away (/vendre, DECISIONS 2026-10-26);
  * « Acheter » stays current on a listing (AnnonceDesktop); « Tarifs » joins
  * them with the public site in V2 (DECISIONS 2026-10-19), then « Qui
  * sommes-nous » and « Contact » (DECISIONS 2026-10-20). « Qui sommes-nous »
@@ -81,7 +83,7 @@ export function bottomTabs(space: Space, signedIn = true): readonly NavItem[] {
  */
 export const TOP_NAV_LINKS: readonly NavItem[] = [
   { href: ROUTES.search, label: fr.nav.links.buy, match: [ROUTES.listing] },
-  { href: ROUTES.home, label: fr.nav.links.sell },
+  { href: ROUTES.sell, label: fr.nav.links.sell },
   // Below their width, they would run into « Vendre mon bien »: the footer
   // and the mobile menu have them.
   { href: ROUTES.pricing, label: fr.site.links.pricing, from: "lg" },
@@ -136,12 +138,9 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
   { href: ROUTES.adminAssistant, label: admin.assistant, icon: "sparkles" },
 ];
 
-/**
- * « Vendre mon bien »: the seller sign-up when signed out, the seller area
- * otherwise (the property creation of L1-11 will take its place).
- */
-export function sellCta(signedIn: boolean): { href: string; label: string } {
-  return { href: signedIn ? ROUTES.seller : ROUTES.sellerSignUp, label: fr.nav.sellCta };
+/** « Vendre mon bien »: the two ways to start a sale, signed in or not (DECISIONS 2026-10-26). */
+export function sellCta(): { href: string; label: string } {
+  return { href: ROUTES.sell, label: fr.nav.sellCta };
 }
 
 /** « Mon compte » when signed out: the login page, which comes back to `path`. */
@@ -179,15 +178,22 @@ export function accountInitial(firstName: string | null | undefined): string | n
   return first ? first.toLocaleUpperCase("fr-FR") : null;
 }
 
-/** Account menu of a profile, without its sign-out action (a Server Action). */
+/**
+ * Account menu of a profile, without its sign-out action (a Server Action).
+ * An admin's space is the Cockpit, named so (Younes, 2026-10-26); the way
+ * back to the site is given by the Cockpit itself (app/(admin)/admin/layout.tsx),
+ * not on the pages of the site.
+ */
 export function accountMenu(profile: { firstName: string | null; roles: readonly string[] }): {
   initial: string | null;
   homeHref: string;
+  homeLabel: string;
   accountHref: string;
 } {
   return {
     initial: accountInitial(profile.firstName),
     homeHref: homePathForRoles(profile.roles),
+    homeLabel: profile.roles.includes("admin") ? fr.nav.backOffice : fr.nav.menu.home,
     accountHref: ROUTES.account,
   };
 }
