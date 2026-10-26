@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Accueil — Direction C, ordinateur</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FAF8F5}
+*{box-sizing:border-box}
+button,input{font:inherit;color:inherit}
+a{color:#1156FC}a:hover{color:#0B3FC4}
+:focus-visible{outline:3px solid #1156FC;outline-offset:2px}
+.lk-card:hover .lk-img{transform:scale(1.03)}
+.lk-img{transition:transform .3s ease}
+.lk-short:hover{box-shadow:0 8px 24px rgba(17,86,252,.14);border-color:#C9D8FE}
+@keyframes lkFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+.lk-float{animation:lkFloat 10s ease-in-out infinite}
+.lk-float2{animation:lkFloat 13s ease-in-out infinite reverse}
+@media (prefers-reduced-motion: reduce){.lk-float,.lk-float2{animation:none}}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #FAF8F5; color: #1C1B19; font-family: 'Archivo', system-ui, sans-serif; font-size: 16px; line-height: 1.5">
+
+<header style="background: #FFFFFF; border-bottom: 1px solid #ECE6DD">
+<div style="max-width: 1280px; margin: 0 auto; padding: 0 32px; height: 76px; display: flex; align-items: center; gap: 40px; flex-wrap: wrap">
+<a href="#" aria-label="Leenkey, accueil" style="display: flex; align-items: center"><img src="/_blob/62cdb4053204c229a62dde32fe00cbf6" alt="Leenkey" style="height: 32px; width: auto; display: block"></a>
+<nav aria-label="Navigation principale" style="display: flex; gap: 28px; flex: 1 1 auto; flex-wrap: wrap; font-weight: 600; font-size: 15px">
+<a href="#" style="color: #1C1B19; text-decoration: none">Acheter</a>
+<a href="#" style="color: #1C1B19; text-decoration: none">Vendre</a>
+<a href="#" style="color: #1C1B19; text-decoration: none">Estimer</a>
+<a href="#" style="color: #1C1B19; text-decoration: none">Tarifs</a>
+<a href="#" style="color: #1C1B19; text-decoration: none; display: flex; align-items: center; gap: 4px">Qui sommes-nous <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></a>
+</nav>
+<div style="display: flex; align-items: center; gap: 12px">
+<a href="#" style="display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 999px; border: 1.5px solid #1156FC; color: #1156FC; text-decoration: none; font-weight: 700; font-size: 15px"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Publier une annonce</a>
+<button type="button" aria-label="Ouvrir le menu du compte" style="display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 6px 0 16px; border: 1px solid #DDD5CA; border-radius: 999px; background: #FFFFFF; cursor: pointer">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+<span style="width: 34px; height: 34px; border-radius: 999px; background: #1156FC; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0"></path></svg></span>
+</button>
+</div>
+</div>
+</header>
+
+<section aria-label="Commencer" style="max-width: 1280px; margin: 0 auto; padding: 24px 32px 0">
+<div style="position: relative; border-radius: 28px; overflow: hidden; height: 520px; background: #0B2A7A">
+<img src="/_blob/50fcb47365fe6cf4e100ee505a199064" alt="Façade d'une maison familiale en pierre claire" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block">
+<div style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10,24,64,.62) 0%, rgba(10,24,64,.30) 50%, rgba(10,24,64,0) 100%)"></div>
+<div style="position: relative; padding: 60px 64px 0; max-width: 680px; color: #FFFFFF">
+<p style="margin: 0 0 18px; display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 8px; border-radius: 999px; background: rgba(255,255,255,.16); font-size: 14px; font-weight: 600"><span style="width: 22px; height: 22px; border-radius: 999px; background: #1156FC; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg></span>Ni agence, ni seul · 0 € de commission</p>
+<h1 style="margin: 0; font-size: 60px; line-height: 1.03; font-weight: 800; font-stretch: 115%; letter-spacing: -0.01em">Leenkey vous donne les clés de votre vente.</h1>
+<p style="margin: 18px 0 0; font-size: 19px; line-height: 1.5; max-width: 500px; color: rgba(255,255,255,.94)">Vendez sans agence, accompagné à chaque étape — de l'analyse de valeur jusqu'à la signature.</p>
+</div>
+</div>
+
+<div style="position: relative; margin: -124px auto 0; max-width: 960px; background: #FFFFFF; border-radius: 24px; box-shadow: 0 14px 44px rgba(11,42,122,.20), 0 1px 3px rgba(28,27,25,.08); padding: 8px 28px 28px">
+<div role="tablist" aria-label="Que voulez-vous faire ?" style="display: flex; gap: 8px; border-bottom: 1px solid #ECE6DD">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+<button type="button" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}" style="display: flex; align-items: center; gap: 10px; padding: 18px 18px 16px; border: 0; background: transparent; cursor: pointer; font-size: 16px; font-weight: 700; color: {{t.color}}; border-bottom: 3px solid {{t.border}}; margin-bottom: -1px">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{t.icon}}"></path></svg>{{t.label}}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{isEst}}" hint-placeholder-val="{{true}}">
+<div style="padding-top: 22px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+<label style="flex: 1 1 360px; display: flex; align-items: center; gap: 12px; height: 64px; padding: 0 24px; border: 1px solid #DDD5CA; border-radius: 999px; box-shadow: 0 4px 14px rgba(28,27,25,.08)">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1156FC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"></path></svg>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Adresse du bien à estimer</span>
+<input type="text" placeholder="Adresse de votre bien" style="flex: 1 1 auto; min-width: 0; border: 0; background: transparent; font-size: 16px">
+</label>
+<button type="button" style="height: 64px; padding: 0 30px; border: 0; border-radius: 999px; background: #1156FC; color: #FFFFFF; font-weight: 700; font-size: 16px; cursor: pointer; box-shadow: 0 8px 20px rgba(17,86,252,.30)">Obtenir mon estimation</button>
+<p style="flex: 1 1 100%; margin: 4px 0 0 24px; display: flex; gap: 18px; font-size: 14px; color: #5E574D"><span style="color: #1156FC; font-weight: 700">Gratuit</span><span aria-hidden="true">·</span><span>2 minutes</span><span aria-hidden="true">·</span><span>Rapport PDF de 4 pages par email</span></p>
+</div>
+</sc-if>
+
+<sc-if value="{{isSell}}" hint-placeholder-val="{{false}}">
+<div style="padding-top: 22px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+<label style="flex: 1 1 360px; display: flex; align-items: center; gap: 12px; height: 64px; padding: 0 24px; border: 1px solid #DDD5CA; border-radius: 999px; box-shadow: 0 4px 14px rgba(28,27,25,.08)">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1156FC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"></path></svg>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Adresse du bien à vendre</span>
+<input type="text" placeholder="Adresse de votre bien" style="flex: 1 1 auto; min-width: 0; border: 0; background: transparent; font-size: 16px">
+</label>
+<button type="button" style="height: 64px; padding: 0 30px; border: 0; border-radius: 999px; background: #1156FC; color: #FFFFFF; font-weight: 700; font-size: 16px; cursor: pointer; box-shadow: 0 8px 20px rgba(17,86,252,.30)">Publier mon bien gratuitement</button>
+<p style="flex: 1 1 100%; margin: 4px 0 0 24px; font-size: 14px; color: #5E574D">Formule Autonomie gratuite, sans engagement. Un conseiller si vous le souhaitez.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{isBuy}}" hint-placeholder-val="{{false}}">
+<div style="padding-top: 22px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; border: 1px solid #DDD5CA; border-radius: 999px; box-shadow: 0 4px 14px rgba(28,27,25,.08); padding: 6px 6px 6px 0; background: #FFFFFF">
+<button type="button" style="flex: 1.3 1 0; min-width: 0; text-align: left; border: 0; background: transparent; padding: 10px 28px; border-radius: 999px; cursor: pointer"><span style="display: block; font-size: 13px; font-weight: 700">Où ?</span><span style="display: block; font-size: 15px; color: #6B6459">Ville, code postal ou « autour de moi »</span></button>
+<span aria-hidden="true" style="width: 1px; height: 34px; background: #ECE6DD"></span>
+<button type="button" style="flex: 1 1 0; min-width: 0; text-align: left; border: 0; background: transparent; padding: 10px 24px; border-radius: 999px; cursor: pointer"><span style="display: block; font-size: 13px; font-weight: 700">Type de bien</span><span style="display: block; font-size: 15px; color: #6B6459">Maison, appartement…</span></button>
+<span aria-hidden="true" style="width: 1px; height: 34px; background: #ECE6DD"></span>
+<button type="button" style="flex: 1 1 0; min-width: 0; text-align: left; border: 0; background: transparent; padding: 10px 24px; border-radius: 999px; cursor: pointer"><span style="display: block; font-size: 13px; font-weight: 700">Budget max</span><span style="display: block; font-size: 15px; color: #6B6459">Ajouter un budget</span></button>
+<button type="button" aria-label="Lancer la recherche" style="flex: 0 0 auto; display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 24px 0 20px; border: 0; border-radius: 999px; background: #1156FC; color: #FFFFFF; font-weight: 700; font-size: 16px; cursor: pointer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4"></path></svg>Rechercher</button>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 4px 6px 0 18px">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1156FC" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"></path></svg>
+<label for="c-nl" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Décrivez votre recherche en quelques mots</label>
+<input id="c-nl" type="text" placeholder="Ou décrivez-la : « Maison 4 pièces avec jardin à Savigny »" style="flex: 1 1 auto; min-width: 0; height: 48px; border: 0; background: transparent; font-size: 16px">
+<button type="button" aria-label="Dicter la recherche" style="width: 48px; height: 48px; border-radius: 999px; border: 1px solid #DDD5CA; background: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></button>
+</div>
+</div>
+</sc-if>
+</div>
+
+<div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 24px">
+<sc-for list="{{services}}" as="s" hint-placeholder-count="3">
+<a href="#" style="display: inline-flex; align-items: center; gap: 10px; height: 48px; padding: 0 20px; border: 1px solid #DDD5CA; border-radius: 999px; background: #FFFFFF; color: #1C1B19; text-decoration: none; font-weight: 600; font-size: 15px"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1156FC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{s.icon}}"></path></svg>{{s.label}}</a>
+</sc-for>
+</div>
+</section>
+
+<section aria-labelledby="c-short" style="max-width: 1280px; margin: 0 auto; padding: 72px 32px 0">
+<h2 id="c-short" style="margin: 0 0 24px; font-size: 28px; font-weight: 800; font-stretch: 110%">Que voulez-vous faire ?</h2>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px">
+<sc-for list="{{shortcuts}}" as="c" hint-placeholder-count="4">
+<a href="#" class="lk-short" style="display: flex; flex-direction: column; gap: 14px; padding: 24px; border-radius: 16px; background: {{c.cardBg}}; border: 1px solid {{c.cardLine}}; text-decoration: none; color: {{c.cardFg}}; transition: box-shadow .2s ease">
+<span style="width: 48px; height: 48px; border-radius: 14px; background: {{c.bg}}; color: {{c.fg}}; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{c.icon}}"></path></svg></span>
+<span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 18px; font-weight: 700">{{c.title}}</span><span style="font-size: 15px; opacity: .82">{{c.sub}}</span></span>
+<span style="margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 15px; color: {{c.cta}}">{{c.ctaLabel}} <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+</a>
+</sc-for>
+</div>
+</section>
+
+<section aria-labelledby="c-save" style="margin-top: 88px; position: relative; isolation: isolate; overflow: hidden; background: #FFFFFF; color: #1C1B19; border-top: 1px solid #ECE6DD; border-bottom: 1px solid #ECE6DD">
+<div aria-hidden="true" class="lk-float" style="position: absolute; z-index: -1; top: -150px; right: -110px; width: 480px; height: 480px; border-radius: 999px; background: radial-gradient(circle, rgba(17,86,252,.10) 0%, rgba(17,86,252,0) 70%)"></div>
+<div aria-hidden="true" class="lk-float2" style="position: absolute; z-index: -1; bottom: 40px; left: -70px; width: 220px; height: 220px; border-radius: 999px; border: 2px solid rgba(17,86,252,.14)"></div>
+<div aria-hidden="true" class="lk-float2" style="position: absolute; z-index: -1; top: 72px; left: 44%; width: 14px; height: 14px; border-radius: 999px; background: rgba(17,86,252,.30)"></div>
+<div style="max-width: 1280px; margin: 0 auto; padding: 80px 32px; display: flex; gap: 56px; align-items: center; flex-wrap: wrap">
+<div style="flex: 1 1 440px; min-width: 0">
+<p style="margin: 0 0 12px; font-size: 14px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #1156FC">Un forfait fixe. Jamais de commission.</p>
+<h2 id="c-save" style="margin: 0; font-size: 44px; line-height: 1.06; font-weight: 800; font-stretch: 112%">Combien vous économisez avec Leenkey</h2>
+<p style="margin: 16px 0 26px; font-size: 18px; color: #5E574D">Le prix ne dépend jamais de la valeur de votre bien. Choisissez un prix de vente :</p>
+<div role="radiogroup" aria-label="Prix de vente" style="display: flex; gap: 10px; flex-wrap: wrap">
+<sc-for list="{{prices}}" as="p" hint-placeholder-count="4">
+<button type="button" role="radio" aria-checked="{{p.checked}}" onClick="{{p.pick}}" style="height: 48px; padding: 0 20px; border-radius: 999px; border: 1.5px solid {{p.line}}; background: {{p.bg}}; color: {{p.fg}}; font-weight: 700; cursor: pointer">{{p.label}}</button>
+</sc-for>
+</div>
+</div>
+<div style="flex: 1 1 520px; min-width: 0; background: #FFFFFF; color: #1C1B19; border-radius: 24px; padding: 32px; display: flex; flex-direction: column; gap: 20px; border: 1px solid #ECE6DD; box-shadow: 0 12px 40px rgba(28,27,25,.08)">
+<div><div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 8px"><span>Agence (hypothèse : 5 % du prix)</span><span>≈ {{agency}}</span></div><div style="height: 14px; border-radius: 999px; background: #CFC7BB"></div></div>
+<div><div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 8px"><span>Leenkey Accompagné</span><span style="color: #1156FC">990 €</span></div><div style="height: 14px; border-radius: 999px; background: #F1EDE7"><div style="height: 100%; border-radius: 999px; background: #1156FC; width: {{barW}}"></div></div></div>
+<div><div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 8px"><span>Leenkey Autonomie</span><span style="color: #1156FC">0 €</span></div><div style="height: 14px; border-radius: 999px; background: #F1EDE7"></div></div>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 22px; border-radius: 16px; background: #EEF3FF; flex-wrap: wrap">
+<span style="font-weight: 700">Vous économisez environ</span>
+<span style="font-size: 36px; font-weight: 800; font-stretch: 110%; color: #0B3FC4">{{saved}}</span>
+</div>
+<p style="margin: 0; font-size: 13px; color: #5E574D">Comparaison avec la formule Accompagné. Les frais d'agence varient selon les agences et les biens.</p>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="c-near" style="max-width: 1280px; margin: 0 auto; padding: 80px 32px 0">
+<div style="display: flex; gap: 32px; border-bottom: 1px solid #ECE6DD; margin-bottom: 28px; flex-wrap: wrap">
+<sc-for list="{{cats}}" as="k" hint-placeholder-count="8">
+<button type="button" onClick="{{k.pick}}" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 6px 2px 14px; border: 0; background: transparent; cursor: pointer; font-size: 14px; font-weight: 600; color: {{k.color}}; border-bottom: 2px solid {{k.border}}; margin-bottom: -1px; min-width: 64px"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="{{k.icon}}"></path></svg>{{k.label}}</button>
+</sc-for>
+</div>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap">
+<div><h2 id="c-near" style="margin: 0; font-size: 28px; font-weight: 800; font-stretch: 110%">Biens à vendre près de chez vous</h2><p style="margin: 6px 0 0; color: #6B6459">Autour d'Épinay-sur-Orge · 10 km</p></div>
+<div style="display: flex; align-items: center; gap: 12px">
+<a href="#" style="font-weight: 700; color: #1156FC">Voir les 12 biens</a>
+<span style="font-size: 14px; color: #5E574D; min-width: 40px; text-align: center">{{pageLabel}}</span>
+<button type="button" aria-label="Biens précédents" onClick="{{prev}}" style="width: 44px; height: 44px; border-radius: 999px; border: 1px solid #DDD5CA; background: #FFFFFF; color: {{prevColor}}; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<button type="button" aria-label="Biens suivants" onClick="{{next}}" style="width: 44px; height: 44px; border-radius: 999px; border: 1px solid #DDD5CA; background: #FFFFFF; color: {{nextColor}}; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px">
+<sc-for list="{{listings}}" as="l" hint-placeholder-count="4">
+<article class="lk-card" style="display: flex; flex-direction: column; gap: 12px">
+<div style="position: relative; aspect-ratio: 1 / 0.95; border-radius: 16px; overflow: hidden; background: #ECE6DD">
+<img class="lk-img" src="{{l.img}}" alt="{{l.alt}}" style="width: 100%; height: 100%; object-fit: cover; display: block">
+<sc-if value="{{l.badge}}" hint-placeholder-val="{{true}}"><span style="position: absolute; top: 12px; left: 12px; padding: 6px 12px; border-radius: 999px; background: #FFFFFF; color: #0B3FC4; font-size: 13px; font-weight: 700; box-shadow: 0 2px 8px rgba(28,27,25,.14)">{{l.badge}}</span></sc-if>
+<button type="button" aria-label="Ajouter aux favoris" style="position: absolute; top: 6px; right: 6px; width: 44px; height: 44px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="rgba(0,0,0,.35)" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"></path></svg></button>
+<span aria-hidden="true" style="position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px"><span style="width: 7px; height: 7px; border-radius: 999px; background: #FFFFFF"></span><span style="width: 7px; height: 7px; border-radius: 999px; background: rgba(255,255,255,.6)"></span><span style="width: 7px; height: 7px; border-radius: 999px; background: rgba(255,255,255,.6)"></span></span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><a href="#" style="color: #1C1B19; text-decoration: none; font-weight: 700; font-size: 16px">{{l.title}}</a><span style="flex: 0 0 auto; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 800; background: {{l.dpeBg}}; color: #1C1B19">DPE {{l.dpe}}</span></div>
+<span style="color: #6B6459; font-size: 15px">{{l.city}}</span>
+<span style="margin-top: 4px; font-size: 17px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px">{{l.price}}</span>
+</div>
+</article>
+</sc-for>
+</div>
+</section>
+
+<section aria-labelledby="c-how" style="max-width: 1280px; margin: 0 auto; padding: 88px 32px 0">
+<h2 id="c-how" style="margin: 0 0 28px; font-size: 28px; font-weight: 800; font-stretch: 110%">Trois étapes. Vous gardez les clés du début à la fin.</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="3">
+<div style="background: #FFFFFF; border: 1px solid #ECE6DD; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column">
+<div style="height: 150px; background: #EEF3FF; position: relative; display: flex; align-items: center; justify-content: center">
+<span style="position: absolute; top: 16px; left: 18px; font-size: 15px; font-weight: 800; color: #1156FC">0{{s.n}}</span>
+<span style="position: absolute; top: 14px; right: 16px; padding: 4px 10px; border-radius: 999px; background: #FFFFFF; font-size: 13px; font-weight: 700; color: #0B3FC4">{{s.tag}}</span>
+<span style="width: 76px; height: 76px; border-radius: 24px; background: #FFFFFF; color: #1156FC; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(17,86,252,.16)"><svg aria-hidden="true" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="{{s.icon}}"></path></svg></span>
+</div>
+<div style="padding: 22px 24px 26px"><h3 style="margin: 0 0 6px; font-size: 20px; font-weight: 800">{{s.title}}</h3><p style="margin: 0; color: #5E574D">{{s.text}}</p></div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section aria-labelledby="c-plans" style="max-width: 1280px; margin: 0 auto; padding: 88px 32px 0">
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; gap: 16px; flex-wrap: wrap">
+<h2 id="c-plans" style="margin: 0; font-size: 28px; font-weight: 800; font-stretch: 110%">Choisissez votre niveau d'accompagnement</h2>
+<a href="#" style="font-weight: 700; color: #1156FC">Voir le détail des formules</a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+<sc-for list="{{plans}}" as="p" hint-placeholder-count="3">
+<div style="background: {{p.bg}}; color: {{p.fg}}; border-radius: 24px; padding: 30px; border: 1px solid {{p.line}}; display: flex; flex-direction: column; gap: 10px; box-shadow: {{p.shadow}}">
+<span style="align-self: flex-start; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; background: {{p.tagBg}}; color: {{p.tagFg}}">{{p.tag}}</span>
+<span style="font-size: 22px; font-weight: 800">{{p.name}}</span>
+<span style="min-height: 52px; opacity: .9">{{p.desc}}</span>
+<span style="font-size: 40px; font-weight: 800; font-stretch: 110%">{{p.price}}</span>
+<span style="font-size: 14px; opacity: .85">{{p.note}}</span>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section aria-labelledby="c-faq" style="max-width: 880px; margin: 0 auto; padding: 88px 32px 0">
+<h2 id="c-faq" style="margin: 0 0 20px; font-size: 28px; font-weight: 800; font-stretch: 110%">Les trois questions essentielles</h2>
+<sc-for list="{{faq}}" as="q" hint-placeholder-count="3">
+<button type="button" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%; min-height: 68px; padding: 0 4px; border: 0; border-bottom: 1px solid #ECE6DD; background: transparent; text-align: left; font-size: 17px; font-weight: 700; cursor: pointer">{{q}}<span style="flex: 0 0 auto; width: 32px; height: 32px; border-radius: 999px; background: #EEF3FF; color: #1156FC; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></button>
+</sc-for>
+<a href="#" style="display: inline-block; margin-top: 20px; font-weight: 700; color: #1156FC">Toutes les questions</a>
+</section>
+
+<section aria-labelledby="c-cta" style="max-width: 1280px; margin: 0 auto; padding: 88px 32px 0">
+<div style="position: relative; isolation: isolate; border-radius: 28px; overflow: hidden; background: #FFFFFF; color: #1C1B19; border: 1px solid #ECE6DD; padding: 64px; display: flex; justify-content: space-between; align-items: center; gap: 32px; flex-wrap: wrap">
+<div aria-hidden="true" class="lk-float" style="position: absolute; z-index: -1; top: -120px; right: 18%; width: 340px; height: 340px; border-radius: 999px; background: radial-gradient(circle, rgba(17,86,252,.10) 0%, rgba(17,86,252,0) 70%)"></div>
+<div aria-hidden="true" class="lk-float2" style="position: absolute; z-index: -1; bottom: -60px; right: -40px; width: 180px; height: 180px; border-radius: 999px; border: 2px solid rgba(17,86,252,.14)"></div>
+<div style="max-width: 620px">
+<h2 id="c-cta" style="margin: 0; font-size: 40px; line-height: 1.08; font-weight: 800; font-stretch: 112%">Prêt à garder les clés de votre vente ?</h2>
+<p style="margin: 12px 0 0; font-size: 18px; color: #5E574D">Deux minutes pour connaître la valeur réelle de votre bien. Gratuit, sans engagement.</p>
+</div>
+<a href="#" style="display: inline-flex; align-items: center; gap: 10px; height: 60px; padding: 0 28px; border-radius: 999px; background: #1156FC; color: #FFFFFF; text-decoration: none; font-weight: 800; font-size: 17px; box-shadow: 0 8px 20px rgba(17,86,252,.25)">Obtenir mon estimation <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</div>
+</section>
+
+<div style="position: sticky; bottom: 24px; display: flex; justify-content: flex-end; max-width: 1376px; margin: 32px auto 0; padding: 0 24px; pointer-events: none">
+<button type="button" style="pointer-events: auto; display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 22px 0 16px; border: 0; border-radius: 999px; background: #1C1B19; color: #FFFFFF; font-weight: 700; font-size: 15px; box-shadow: 0 10px 30px rgba(28,27,25,.28); cursor: pointer"><span style="width: 32px; height: 32px; border-radius: 999px; background: #1156FC; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"></path></svg></span>Une question ? L'assistant vous répond</button>
+</div>
+
+<footer style="margin-top: 40px; background: #F1EDE7; border-top: 1px solid #E4DDD2">
+<div style="max-width: 1280px; margin: 0 auto; padding: 40px 32px 48px; display: flex; flex-direction: column; gap: 20px">
+<nav aria-label="Pied de page" style="display: flex; gap: 24px; flex-wrap: wrap; font-weight: 600"><a href="#" style="color: #1C1B19">Concept</a><a href="#" style="color: #1C1B19">Tarifs</a><a href="#" style="color: #1C1B19">FAQ</a><a href="#" style="color: #1C1B19">Investir</a><a href="#" style="color: #1C1B19">Qui sommes-nous</a><a href="#" style="color: #1C1B19">Contact</a></nav>
+<div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 14px"><a href="#" style="color: #5E574D">Mentions légales</a><a href="#" style="color: #5E574D">Conditions d'utilisation</a><a href="#" style="color: #5E574D">Conditions générales de vente</a><a href="#" style="color: #5E574D">Confidentialité</a><a href="#" style="color: #5E574D">Cookies</a><a href="#" style="color: #5E574D">Signalement et modération</a><a href="#" style="color: #5E574D">Intelligence artificielle</a></div>
+<p style="margin: 0; font-size: 13px; color: #5E574D">SAS LEENKEY, RCS Évry 107 616 211 · 36 rue Pierre Brossolette, 91360 Épinay-sur-Orge · © 2026 Leenkey</p>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":4700}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { tab: 'est', price: 340000, cat: 0, page: 0 }; }
+  renderVals() {
+    const I = {
+      home: 'M3 11l9-7 9 7M5 10v10h14V10',
+      tag: 'M3 12V4h8l10 10-8 8L3 12zM7.5 7.5h.01',
+      chart: 'M4 19h16M7 15v-4M12 15V7M17 15v-6',
+      user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+      search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4',
+      map: 'M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14',
+      plus: 'M12 5v14M5 12h14',
+      flat: 'M5 21V4h10v17M15 9h4v12M8 8h4M8 12h4M8 16h4M3 21h18',
+      tree: 'M12 22v-7M12 3a6 6 0 0 0-6 6c0 3.3 2.7 6 6 6s6-2.7 6-6a6 6 0 0 0-6-6z',
+      car: 'M5 17h14v-5l-2-5H7l-2 5v5zM5 17v2M19 17v2M5 12h14',
+      plain: 'M2 12l10-7 10 7M5 11v9h14v-9M10 20v-5h4v5',
+      train: 'M7 3h10a2 2 0 0 1 2 2v9a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2zM5 10h14M8 21l2-4M16 21l-2-4',
+      land: 'M3 20h18M5 20l4-8 4 5 3-4 3 7',
+      doc: 'M7 3h7l5 5v13H7V3zM14 3v5h5M10 13h6M10 17h6',
+      pen: 'M4 20h4L19 9l-4-4L4 16v4z'
+    };
+    const fmt = (n) => Math.round(n).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' €';
+    const tabs = [['buy', 'Acheter', I.home], ['sell', 'Vendre', I.tag], ['est', 'Estimer mon bien', I.chart]].map(([id, label, icon]) => {
+      const on = this.state.tab === id;
+      return { label, icon, selected: on ? 'true' : 'false', color: on ? '#1156FC' : '#5E574D', border: on ? '#1156FC' : 'transparent', pick: () => this.setState({ tab: id }) };
+    });
+    const pr = this.state.price;
+    const prices = [250000, 340000, 450000, 600000].map((v) => {
+      const on = v === pr;
+      return { label: fmt(v), checked: on ? 'true' : 'false', bg: on ? '#EEF3FF' : '#FFFFFF', fg: on ? '#0B3FC4' : '#1C1B19', line: on ? '#1156FC' : '#DDD5CA', pick: () => this.setState({ price: v }) };
+    });
+    const agency = pr * 0.05;
+    const cats = [['Tous les biens', I.home], ['Maisons', I.plain], ['Appartements', I.flat], ['Avec jardin', I.tree], ['Avec parking', I.car], ['Plain-pied', I.plain], ['Proche gare', I.train], ['Terrains', I.land]].map(([label, icon], i) => {
+      const on = this.state.cat === i;
+      return { label, icon, color: on ? '#1156FC' : '#5E574D', border: on ? '#1156FC' : 'transparent', pick: () => this.setState({ cat: i }) };
+    });
+    const dpe = { B: '#C9E8B0', C: '#E3F0C2', D: '#FBF0A8', E: '#FBDDA6' };
+    const L = (img, title, city, price, d, badge, alt) => ({ img, title, city, price, dpe: d, dpeBg: dpe[d], badge, alt });
+    const all = [
+      L('/_blob/50fcb47365fe6cf4e100ee505a199064', 'Maison 5 p · 112 m²', 'Épinay-sur-Orge', '429 000 €', 'D', 'Dossier complet', 'Maison en pierre claire avec garage'),
+      L('/_blob/a74c8df7dbc3cac9395317e9da674288', 'Appartement 4 p · 82 m²', 'Juvisy-sur-Orge', '279 000 €', 'C', 'Nouveau', 'Séjour lumineux avec canapés'),
+      L('/_blob/529fd1029bd6866a505ec50c916ecf40', 'Maison 5 p · 104 m²', 'Morangis', '399 000 €', 'E', '', 'Maison à colombages et toit de tuiles'),
+      L('/_blob/8f757684c080e3d2b59ea64aaa9d07fa', 'Appartement 3 p · 63 m²', 'Chilly-Mazarin', '255 000 €', 'B', '', 'Immeuble récent aux lignes contemporaines'),
+      L('/_blob/c7e184d42e9d639c0c8205cab067a1c3', 'Maison 7 p · 150 m²', 'Ballainvilliers', '599 000 €', 'E', '', 'Salle à manger lumineuse avec parquet'),
+      L('/_blob/de586333ea08a721e4c4091196b18009', 'Appartement 3 p · 68 m²', 'Savigny-sur-Orge', '239 000 €', 'D', '', 'Résidence en briques avec balcons'),
+      L('/_blob/95ca2cd173bc2beade4388d0a9c9a421', 'Maison 6 p · 135 m²', 'Sainte-Geneviève-des-Bois', '489 000 €', 'C', '', 'Maison contemporaine à bardage bois'),
+      L('/_blob/27ea4fb11598809ad487e17d213c2a7c', 'Appartement 2 p · 45 m²', 'Morsang-sur-Orge', '159 000 €', 'E', '', 'Salon avec plantes et fauteuil'),
+      L('/_blob/e538bf6ccdf492bf169e210446d284bb', 'Appartement 2 p · 38 m²', 'Athis-Mons', '139 000 €', 'E', '', 'Séjour clair avec fauteuil rouge'),
+      L('/_blob/0d4d34bd1253efefc1e6caadc0bee778', 'Maison 4 p · 88 m²', 'La Ville-du-Bois', '339 000 €', 'D', '', 'Maison contemporaine éclairée le soir')
+    ];
+    const per = 4, pages = Math.ceil(all.length / per), pg = this.state.page;
+    return {
+      tabs, prices, cats,
+      isBuy: this.state.tab === 'buy', isSell: this.state.tab === 'sell', isEst: this.state.tab === 'est',
+      agency: fmt(agency), saved: fmt(agency - 990), barW: Math.max(2, (990 / agency) * 100).toFixed(1) + '%',
+      services: [{ label: 'Estimer votre bien', icon: I.chart }, { label: 'Déposer une annonce', icon: I.plus }, { label: 'Carte des prix', icon: I.map }],
+      shortcuts: [
+        { title: 'Estimer mon bien', sub: 'Gratuit, en 2 minutes, sur les ventes réelles du quartier.', icon: I.chart, ctaLabel: 'Estimer', cardBg: '#FFFFFF', cardFg: '#1C1B19', cardLine: '#ECE6DD', bg: '#EEF3FF', fg: '#1156FC', cta: '#1156FC' },
+        { title: 'Vendre mon bien', sub: 'Publiez gratuitement, gardez la main sur chaque étape.', icon: I.tag, ctaLabel: 'Publier', cardBg: '#FFFFFF', cardFg: '#1C1B19', cardLine: '#ECE6DD', bg: '#EEF3FF', fg: '#1156FC', cta: '#1156FC' },
+        { title: 'Être accompagné', sub: 'Un conseiller dédié à vos côtés, du prix à la signature.', icon: I.user, ctaLabel: 'Découvrir', cardBg: '#FFFFFF', cardFg: '#1C1B19', cardLine: '#ECE6DD', bg: '#EEF3FF', fg: '#1156FC', cta: '#1156FC' },
+        { title: 'Trouver un bien', sub: 'Maisons et appartements vendus par leurs propriétaires.', icon: I.search, ctaLabel: 'Chercher', cardBg: '#FFFFFF', cardFg: '#1C1B19', cardLine: '#ECE6DD', bg: '#EEF3FF', fg: '#1156FC', cta: '#1156FC' }
+      ],
+      listings: all.slice(pg * per, pg * per + per),
+      pageLabel: (pg + 1) + ' / ' + pages,
+      prev: () => this.setState({ page: Math.max(0, pg - 1) }),
+      next: () => this.setState({ page: Math.min(pages - 1, pg + 1) }),
+      prevColor: pg === 0 ? '#B5ADA2' : '#1C1B19',
+      nextColor: pg === pages - 1 ? '#B5ADA2' : '#1C1B19',
+      steps: [
+        { n: 1, tag: 'Gratuit · 2 minutes', title: 'Estimez', text: 'Une analyse de valeur fondée sur les ventes réelles de votre secteur, en quelques minutes. Gratuite et sans engagement.', icon: I.chart },
+        { n: 2, tag: 'Dossier vendeur', title: 'Préparez', text: 'Diagnostics, documents, annonce et visites : un dossier complet, prêt pour le notaire, sans oubli.', icon: I.doc },
+        { n: 3, tag: 'Accompagné', title: 'Signez', text: 'Analyse des offres, négociation et coordination du notaire. Un conseiller à vos côtés au moindre doute.', icon: I.pen }
+      ],
+      plans: [
+        { tag: 'Pour piloter seul', name: 'Autonomie', desc: 'Pour piloter votre vente en toute autonomie.', price: 'Gratuit', note: 'Sans engagement · sans carte bancaire', bg: '#FFFFFF', fg: '#1C1B19', line: '#ECE6DD', shadow: 'none', tagBg: '#F1EDE7', tagFg: '#1C1B19' },
+        { tag: 'Notre recommandation', name: 'Accompagné', desc: 'Un conseiller dédié à vos côtés, du prix à la signature.', price: '990 € TTC', note: 'Forfait fixe · payé à la souscription', bg: '#FFFFFF', fg: '#1C1B19', line: '#1156FC', shadow: '0 12px 32px rgba(17,86,252,.12)', tagBg: '#EEF3FF', tagFg: '#0B3FC4' },
+        { tag: 'Pour déléguer', name: 'Sérénité', desc: 'Nous nous occupons de presque tout, vous gardez la décision.', price: '1 500 € TTC', note: 'Forfait fixe · payé à la souscription', bg: '#FFFFFF', fg: '#1C1B19', line: '#ECE6DD', shadow: 'none', tagBg: '#F1EDE7', tagFg: '#1C1B19' }
+      ],
+      faq: ['Est-ce vraiment gratuit pour commencer ?', 'Suis-je vraiment accompagné, ou seul face à la plateforme ?', 'Quelle différence avec une agence ?']
+    };
+  }
+}
+</script>
+</body>
+</html>
