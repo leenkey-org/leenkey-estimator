@@ -29,7 +29,7 @@ const panelClassName = cn(
   facadeScope,
   // Opened out of the page: the charte of the home page (redesign D).
   "lk-d",
-  "z-50 rounded-lk-xl border border-lk-line bg-lk-surface p-2 shadow-lk-block",
+  "z-50 rounded-lk-xl border border-lk-line bg-lk-surface p-2 shadow-lk-d-block",
   "duration-220 ease-out-lk data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 motion-reduce:animate-none",
 );
 const optionClassName =
@@ -103,7 +103,7 @@ export function BuySearchBar() {
         event.preventDefault();
         search();
       }}
-      className="hidden items-center rounded-full border border-lk-line-strong bg-lk-surface py-1.5 pr-1.5 shadow-lk-field md:flex"
+      className="hidden items-center rounded-full border border-lk-line-strong bg-lk-surface py-1.5 pr-1.5 shadow-lk-d-field md:flex"
     >
       <Popover.Root open={expanded} onOpenChange={setPlaceOpen}>
         <Popover.Anchor asChild>

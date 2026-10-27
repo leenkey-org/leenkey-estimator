@@ -24,7 +24,7 @@ const TABS: ReadonlyArray<{ value: Tab; icon: typeof House }> = [
 ];
 
 /**
- * The search card of the home page (redesign D, docs/design-handoff/SPECS.md
+ * The search card of the home page (redesign D, docs/design-handoff-d/SPECS.md
  * 2, 3): set over the bottom of the night band, three tabs, « Valoriser mon
  * bien » open first; the tab open in ink, its icon in the gradient and an
  * indigo line under it. Valoriser: the address of the property, then the estimator with
@@ -36,7 +36,7 @@ export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
   return (
     <Tabs.Root
       defaultValue="valuation"
-      className="relative rounded-[1.375rem] bg-lk-surface px-4 pt-1 pb-4.5 text-lk-ink shadow-lk-search md:rounded-lk-3xl md:px-7 md:pt-1.5 md:pb-6.5"
+      className="relative rounded-lk-d-search bg-lk-surface px-4 pt-1 pb-4.5 text-lk-ink shadow-lk-d-search md:rounded-lk-3xl md:px-7 md:pt-1.5 md:pb-6.5"
     >
       <Tabs.List aria-label={t.label} className="flex border-b border-lk-line md:gap-2">
         {TABS.map(({ value, icon: Icon }) => (
@@ -109,7 +109,7 @@ export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
         {/* Below 768 px, one button: the search page has the filters. */}
         <Link
           href={SEARCH_PATH}
-          className="flex min-h-15 items-center gap-3 rounded-full border border-lk-line-strong bg-lk-surface py-2 pr-2 pl-5 shadow-lk-field md:hidden"
+          className="flex min-h-15 items-center gap-3 rounded-full border border-lk-line-strong bg-lk-surface py-2 pr-2 pl-5 shadow-lk-d-field md:hidden"
         >
           <span className="min-w-0 flex-1">
             <span className="block text-lk-body font-bold text-lk-ink">{t.buy.mobileTitle}</span>
@@ -272,7 +272,7 @@ function AddressForm({
       <div className="relative md:min-w-90 md:flex-1">
         <label
           htmlFor={inputId}
-          className="flex h-13.5 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface px-4.5 shadow-lk-field focus-within:border-lk-blue has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-lk-blue has-[input:focus-visible]:outline-solid md:h-15.5 md:gap-3 md:px-6"
+          className="flex h-13.5 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface px-4.5 shadow-lk-d-field focus-within:border-lk-blue has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-lk-blue has-[input:focus-visible]:outline-solid md:h-15.5 md:gap-3 md:px-6"
         >
           <span className="sr-only">{label}</span>
           <MapPin
@@ -319,7 +319,7 @@ function AddressForm({
             role="listbox"
             aria-label={t.suggestionsLabel}
             hidden={!expanded}
-            className="absolute inset-x-0 top-full z-30 mt-2 overflow-hidden rounded-lk-xl border border-lk-line bg-lk-surface py-1.5 shadow-lk-block"
+            className="absolute inset-x-0 top-full z-30 mt-2 overflow-hidden rounded-lk-xl border border-lk-line bg-lk-surface py-1.5 shadow-lk-d-block"
           >
             {options.map((option, index) => (
               <li

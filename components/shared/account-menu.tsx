@@ -5,6 +5,7 @@ import Link from "next/link";
 import * as MenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Menu, User } from "lucide-react";
 import { facadeScope } from "./facade-root";
+import { usePortalScope } from "./portal-scope";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +78,8 @@ export function AccountMenu({
 }: AccountMenuProps) {
   const [signingOut, startSignOut] = useTransition();
   const onDark = variant !== "avatar";
+  // Opened out of the page: the scope of its redesign (PortalScope).
+  const scope = usePortalScope();
   const triggerFocus = cn(
     "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2",
     onDark ? "focus-visible:outline-white" : "focus-visible:outline-lk-blue",
@@ -142,6 +145,7 @@ export function AccountMenu({
           collisionPadding={12}
           className={cn(
             facadeScope,
+            scope,
             "z-50 min-w-55 rounded-lk-md border border-lk-line bg-lk-surface p-1.5 shadow-float",
             "duration-220 ease-out-lk data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",

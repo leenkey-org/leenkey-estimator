@@ -10,11 +10,13 @@ export const archivo = Archivo({
   variable: "--font-archivo",
 });
 
-// Redesign D (docs/design-handoff/SPECS.md 1, L1-57): Sora, 400 to 800, the
-// font of the charte; read by `.lk-d` (app/globals.css) on the pages already
-// moved to it. Its files are only fetched by a page that uses it.
+// Redesign D (docs/design-handoff-d/SPECS.md 1, L1-57): Sora, 400 to 800,
+// the font of the charte; read by `.lk-d` (app/globals.css) on the pages
+// already moved to it. Not preloaded: the other pages would fetch it for
+// nothing; a page in the charte loads it from its styles.
 export const sora = Sora({
   subsets: ["latin", "latin-ext"],
   display: "swap",
+  preload: false,
   variable: "--font-sora",
 });

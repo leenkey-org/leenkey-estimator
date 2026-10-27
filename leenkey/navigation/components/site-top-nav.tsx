@@ -26,7 +26,13 @@ export async function SiteTopNav({
     ? {
         signedIn: true,
         notifications: (
-          <SpaceNotificationBell roles={profile.roles} profileId={profile.id} size="nav" />
+          <SpaceNotificationBell
+            roles={profile.roles}
+            profileId={profile.id}
+            size="nav"
+            // White on the night of the home page D; an unread one on its light tint.
+            tone={tone === "night" ? "dark" : "light"}
+          />
         ),
         favourites: FAVOURITES_LINK,
         menu: { ...accountMenu(profile), signOut },

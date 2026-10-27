@@ -171,7 +171,7 @@ export function ShowcaseCard({
           className={cn(
             "mt-1 tabular text-lk-ink",
             redesign
-              ? "text-[1.0625rem] font-bold tracking-[-0.01em]"
+              ? "text-lk-d-lead font-bold tracking-lk-d-snug"
               : "text-lk-card-price font-extrabold underline underline-offset-3",
           )}
         >
@@ -182,7 +182,7 @@ export function ShowcaseCard({
         ref={frame}
         className={cn(
           "relative order-1 aspect-[1/0.95] overflow-hidden bg-lk-line",
-          redesign ? "rounded-[1.125rem]" : "rounded-lk-xl",
+          redesign ? "rounded-lk-d-card" : "rounded-lk-xl",
         )}
       >
         {shown.length ? (

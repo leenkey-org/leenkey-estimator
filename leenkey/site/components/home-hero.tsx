@@ -4,7 +4,9 @@ import { PillLink } from "@/components/shared/pill-link";
 import { getProfile } from "@/core/auth/session";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { sitePhoto } from "@/leenkey/site/photos";
+import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
+import { VALUATION_EXAMPLE, valuationExample } from "../valuation-example";
 import { HomeSearchCard } from "./home-search-card";
 
 const t = fr.site.home;
@@ -19,7 +21,7 @@ export function directListingHref(signedIn: boolean): string {
 const WAVE = "M0 0 H100 C58 16 26 38 40 60 C52 80 34 93 0 100 Z";
 
 /**
- * Top of the home page of the redesign D (docs/design-handoff/SPECS.md 3,
+ * Top of the home page of the redesign D (docs/design-handoff-d/SPECS.md 3,
  * items 1 to 3): the night band under the headers, its halos breathing, the
  * badge « Ni agence, ni seul », the title and its line in the gradient, the
  * lead. From 1 024 px, the photo on the right (46 %) cut by the wave, its
@@ -49,30 +51,6 @@ export async function HomeHero() {
           aria-hidden="true"
           className="lk-halo-violet lk-glow pointer-events-none absolute -top-30 -right-40 -z-10 size-105 rounded-full lg:-top-60 lg:right-auto lg:left-[32%] lg:size-140"
         />
-        {photo ? (
-          // Under the halos, which glow over the wave and the photo.
-          <div
-            aria-hidden="true"
-            className="absolute inset-y-0 right-0 -z-20 hidden w-[46%] lg:block"
-          >
-            <Image
-              src={photo.src}
-              alt=""
-              fill
-              priority
-              sizes="46vw"
-              className="object-cover object-[50%_62%]"
-            />
-            <svg
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-              className="absolute top-0 -left-px block h-full w-60 fill-lk-night"
-            >
-              <path d={WAVE} />
-            </svg>
-            <span className="lk-dots-white absolute top-26 right-10 h-22 w-33" />
-          </div>
-        ) : null}
         <div className="lk-frame relative max-md:[--lk-gutter:1rem] pt-3 lg:pt-10">
           <div className="max-w-160 lg:max-w-[48%] xl:max-w-160">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/6 py-1.25 pr-3.5 pl-1.25 text-lk-label font-medium lg:mb-5.5 lg:gap-2.5 lg:border-white/18 lg:bg-lk-night/35 lg:pr-4 lg:pl-1.5 lg:text-lk-compact">
@@ -83,7 +61,7 @@ export async function HomeHero() {
             </p>
             <h1
               id="accueil-titre"
-              className="text-lk-c-hero font-bold tracking-[-0.03em] lg:text-lk-c-hero-md xl:text-lk-d-hero-lg"
+              className="text-lk-c-hero font-bold tracking-lk-d-tight lg:text-lk-c-hero-md xl:text-lk-d-hero-lg"
             >
               {/* A space before the line break: the name of the title reads two sentences. */}
               {`${t.hero.title} `}
@@ -98,17 +76,29 @@ export async function HomeHero() {
           {photo ? <ExampleCard /> : null}
         </div>
         {photo ? (
-          <div className="relative mt-5 ml-10 h-52.5 overflow-hidden rounded-tl-[8.125rem] rounded-bl-lk-3xl bg-lk-indigo-deep md:ml-[30%] md:h-80 lg:hidden">
+          // One photo, the image of the page loaded first: under the text below
+          // 1 024 px, its top left corner rounded 130 px; from there on the
+          // right (46 %), cut by the wave, under the halos that glow over it.
+          <div className="relative mt-5 ml-10 h-52.5 overflow-hidden rounded-tl-lk-d-photo rounded-bl-lk-3xl bg-lk-indigo-deep md:ml-[30%] md:h-80 lg:absolute lg:inset-y-0 lg:right-0 lg:-z-20 lg:mt-0 lg:ml-0 lg:h-auto lg:w-[46%] lg:rounded-none lg:bg-transparent">
             <Image
               src={photo.src}
               alt=""
               fill
-              sizes="(min-width: 768px) 70vw, 90vw"
-              className="object-cover object-[70%_60%]"
+              priority
+              sizes="(min-width: 1024px) 46vw, (min-width: 768px) 70vw, 90vw"
+              className="object-cover object-[70%_60%] lg:object-[50%_62%]"
             />
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              className="absolute top-0 -left-px hidden h-full w-60 fill-lk-night lg:block"
+            >
+              <path d={WAVE} />
+            </svg>
             <span
               aria-hidden="true"
-              className="lk-dots-white absolute top-4.5 right-4 h-13.5 w-22.5 bg-[length:15px_15px]"
+              className="lk-dots-white absolute top-4.5 right-4 h-13.5 w-22.5 bg-[length:15px_15px] lg:top-26 lg:right-10 lg:h-22 lg:w-33 lg:bg-[length:18px_18px]"
             />
           </div>
         ) : null}
@@ -137,21 +127,31 @@ export async function HomeHero() {
 }
 
 /**
- * The « Exemple » card on the photo (SPECS.md 2), from 1 280 px: an
- * illustration of what the analysis of value gives, never a real property.
+ * The « Exemple » card on the photo (SPECS.md 2), from 1 280 px (beside the
+ * title below, the photo has no room for it): a fictitious house of the
+ * launch zone and the value the engine of the estimator gives it, from its
+ * reference prices only (DECISIONS Q58), always said to be an example.
  */
 function ExampleCard() {
   const e = t.hero.example;
+  const house = VALUATION_EXAMPLE;
+  const { value } = valuationExample();
   return (
-    <div className="absolute top-12 right-(--lk-gutter) hidden w-68 rounded-lk-2xl bg-lk-surface px-5 py-4.5 text-lk-ink shadow-lk-d-example xl:block">
+    <div
+      role="group"
+      aria-label={e.label}
+      className="absolute top-12 right-(--lk-gutter) hidden w-68 rounded-lk-2xl bg-lk-surface px-5 py-4.5 text-lk-ink shadow-lk-d-example xl:block"
+    >
       <span className="lk-gradient inline-block rounded-full px-3 py-0.75 text-lk-caption font-semibold text-white">
         {e.badge}
       </span>
       <p className="mt-2.5 font-semibold">{e.title}</p>
-      <p className="mt-0.5 text-lk-compact text-lk-ink-3">{e.detail}</p>
-      <p className="mt-3 text-lk-caption text-lk-ink-3">{e.label}</p>
-      <p className="text-[1.625rem] leading-tight font-bold tracking-[-0.02em] tabular">
-        {e.value}
+      <p className="mt-0.5 text-lk-compact text-lk-ink-3">
+        {e.detail(house.ville, house.surface_habitable, house.pieces)}
+      </p>
+      <p className="mt-3 text-lk-caption text-lk-ink-3">{e.valueLabel}</p>
+      <p className="text-lk-d-feature font-bold tracking-lk-d-snug tabular">
+        {formatPrice(value * 100)}
       </p>
       <p className="mt-0.5 flex items-center gap-1.5 text-lk-caption text-lk-ink-2">
         <CircleCheck aria-hidden="true" strokeWidth={2.2} className="size-3.75 text-lk-success" />

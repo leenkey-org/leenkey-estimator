@@ -9,7 +9,7 @@ import { DEFAULT_SAVINGS_PRICE_EUROS, SAVINGS_PRICES_EUROS, savings } from "../s
 const t = fr.site.home.savings;
 
 /**
- * The prices to choose from and the comparison (docs/design-handoff/SPECS.md
+ * The prices to choose from and the comparison (docs/design-handoff-d/SPECS.md
  * 3, item 5): native radio buttons drawn as pills (arrows move between them)
  * under the head of the section (`intro`), then the bars of the agency, of
  * the Accompagné plan and of Autonomie (from 768 px), and the amount saved,
@@ -61,7 +61,7 @@ export function SavingsSimulator({
       </div>
       <div
         data-reveal=""
-        className="flex min-w-0 flex-col gap-3.5 rounded-[1.25rem] border border-lk-line bg-lk-surface p-4.5 shadow-lk-block md:gap-5 md:rounded-lk-3xl md:p-8 lg:flex-[1_1_520px]"
+        className="flex min-w-0 flex-col gap-3.5 rounded-lk-2xl border border-lk-line bg-lk-surface p-4.5 shadow-lk-d-block md:gap-5 md:rounded-lk-3xl md:p-8 lg:flex-[1_1_520px]"
       >
         <Bar
           label={
@@ -94,7 +94,7 @@ export function SavingsSimulator({
           <span className="text-lk-compact font-semibold text-lk-ink md:text-lk-body-lg">
             {t.saved}
           </span>
-          <span className="lk-gradient-text text-lk-c-amount font-bold tracking-[-0.03em] tabular md:text-lk-c-amount-lg">
+          <span className="lk-gradient-text text-lk-c-amount font-bold tracking-lk-d-tight tabular md:text-lk-c-amount-lg">
             {formatPrice(result.savedCents)}
           </span>
         </p>

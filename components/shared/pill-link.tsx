@@ -25,7 +25,7 @@ export function PillLink({
       href={href}
       aria-current={selected ? "page" : undefined}
       className={cn(
-        "inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-lk-secondary font-medium shadow-[0_1px_2px_rgb(15_23_42/0.04)] md:h-12 md:gap-2.5 md:px-5 md:text-lk-compact",
+        "inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-lk-secondary font-medium shadow-lk-d-pill md:h-12 md:gap-2.5 md:px-5 md:text-lk-compact",
         "transition-colors duration-140 ease-out-lk",
         selected
           ? "border-lk-blue bg-lk-blue-tint text-lk-blue-dark"

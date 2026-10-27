@@ -12,10 +12,7 @@ const t = fr.site.menu;
  * the account menu), « Mon compte » (the login page, back to this page)
  * otherwise.
  */
-export async function SiteMobileHeader({
-  tone = "light",
-  panelClassName,
-}: { tone?: "light" | "night"; panelClassName?: string } = {}) {
+export async function SiteMobileHeader({ tone = "light" }: { tone?: "light" | "night" } = {}) {
   const [profile, path] = await Promise.all([getProfile(), currentPath()]);
   const menu = profile ? accountMenu(profile) : null;
   const account = menu
@@ -30,7 +27,6 @@ export async function SiteMobileHeader({
       account={account}
       texts={{ open: t.open, close: t.close }}
       tone={tone}
-      panelClassName={panelClassName}
     />
   );
 }

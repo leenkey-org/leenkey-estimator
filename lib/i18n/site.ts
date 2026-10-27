@@ -39,7 +39,7 @@ export const site = {
       "La plateforme qui accompagne les propriétaires dans la vente de leur bien, sans agence : analyse de valeur, dossier, annonce, négociation, jusqu'à la signature. Forfait fixe et transparent.",
     hero: {
       badge: "Ni agence, ni seul · 0\u00A0€ de commission",
-      // Redesign D (docs/design-handoff/SPECS.md 3, item 1): the title of the
+      // Redesign D (docs/design-handoff-d/SPECS.md 3, item 1): the title of the
       // charte, its second line in the gradient.
       title: "Vendez votre bien autrement.",
       titleAccent: "Moins de frais, plus de contrôle.",
@@ -51,10 +51,12 @@ export const site = {
       // analysis of value, always said to be an example (SPECS.md 2).
       example: {
         badge: "Exemple",
+        // Its name for assistive technologies: the card says it is an example.
+        label: "Exemple de valorisation",
         title: "Maison contemporaine",
-        detail: "Saint-Michel-sur-Orge · 120\u00A0m² · 4\u00A0pièces",
-        label: "Ma valeur immobilière",
-        value: "453\u202F000\u00A0€",
+        detail: (town: string, surface: number | null, rooms: number | null) =>
+          `${town}\u00A0· ${surface}\u00A0m²\u00A0· ${rooms}\u00A0pièces`,
+        valueLabel: "Ma valeur immobilière",
         note: "Analyse gratuite en 2\u00A0minutes",
       },
     },

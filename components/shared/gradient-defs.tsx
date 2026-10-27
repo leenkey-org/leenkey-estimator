@@ -17,8 +17,8 @@ export function GradientDefs() {
           x2="22"
           y2="22"
         >
-          <stop offset="0" stopColor="#2563eb" />
-          <stop offset="1" stopColor="#7c3aed" />
+          <stop offset="0" style={{ stopColor: "var(--color-lk-action-blue)" }} />
+          <stop offset="1" style={{ stopColor: "var(--color-lk-action-violet)" }} />
         </linearGradient>
       </defs>
     </svg>

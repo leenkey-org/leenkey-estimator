@@ -19,7 +19,7 @@ import { RichText } from "./rich-text";
 import { SavingsSimulator } from "./savings-simulator";
 
 // Sections of the home page after the hero, in the charte of the redesign D
-// (docs/design-handoff/SPECS.md 3, items 4 to 10), and the contact section
+// (docs/design-handoff-d/SPECS.md 3, items 4 to 10), and the contact section
 // of /contact. Texts: fr.site.home. The steps, the plans and the questions
 // keep the anchors of the V1 home page (#comment, #tarifs, #faq).
 
@@ -112,11 +112,11 @@ export async function SavingsSection() {
               </p>
               <h2
                 id="economies"
-                className="max-w-75 text-lk-d-feature font-bold tracking-[-0.03em] text-lk-ink md:max-w-none md:text-lk-d-feature-lg"
+                className="max-w-75 text-lk-d-feature font-bold tracking-lk-d-tight text-lk-ink md:max-w-none md:text-lk-d-feature-lg"
               >
                 <Accented text={t.title} accent={t.accent} className="lk-gradient-text" />
               </h2>
-              <p className="mt-2.5 text-lk-body text-lk-ink-2 md:mt-4 md:text-[1.0625rem]">
+              <p className="mt-2.5 text-lk-body text-lk-ink-2 md:mt-4 md:text-lk-d-lead">
                 <span className="md:hidden">{t.leadShort}</span>
                 <span className="hidden md:inline">{t.lead}</span>
               </p>
@@ -148,7 +148,7 @@ export function StepsSection() {
           return (
             <li
               key={step.title}
-              className="flex gap-3.5 rounded-[1.125rem] border border-lk-line bg-lk-surface p-4 md:flex-col md:rounded-[1.25rem] md:p-7"
+              className="flex gap-3.5 rounded-lk-d-card border border-lk-line bg-lk-surface p-4 md:flex-col md:rounded-lk-2xl md:p-7"
             >
               {/* The number in a square of the gradient, its tag beside it. */}
               <div className="flex shrink-0 items-start justify-between md:items-center">
@@ -271,7 +271,7 @@ export function FinalBanner() {
     <section aria-labelledby="pret" className="lk-frame max-md:[--lk-gutter:1rem] pt-10 md:pt-22">
       <div
         data-reveal=""
-        className="relative isolate flex flex-col gap-5 overflow-hidden rounded-lk-3xl bg-lk-night px-5.5 py-8 text-white md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-8 md:rounded-[1.75rem] md:p-16"
+        className="relative isolate flex flex-col gap-5 overflow-hidden rounded-lk-3xl bg-lk-night px-5.5 py-8 text-white md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-8 md:rounded-lk-4xl md:p-16"
       >
         <DecorativeShapes
           shapes={[
@@ -289,11 +289,11 @@ export function FinalBanner() {
         <div className="max-w-160">
           <h2
             id="pret"
-            className="text-[1.5625rem] leading-[1.15] font-bold tracking-[-0.03em] md:text-lk-c-banner-lg"
+            className="text-lk-d-banner font-bold tracking-lk-d-tight md:text-lk-c-banner-lg"
           >
             <Accented text={t.title} accent={t.accent} className="lk-gradient-text-night" />
           </h2>
-          <p className="mt-2 text-lk-body text-lk-night-muted md:mt-3 md:text-[1.0625rem]">
+          <p className="mt-2 text-lk-body text-lk-night-muted md:mt-3 md:text-lk-d-lead">
             {t.text}
           </p>
         </div>

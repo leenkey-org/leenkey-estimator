@@ -86,13 +86,27 @@ test.describe("accueil", () => {
     );
     const action = page.getByRole("button", { name: "Valoriser mon bien gratuitement" });
     const box = await action.boundingBox();
-    expect((box?.y ?? Infinity) + (box?.height ?? 0)).toBeLessThan(
-      page.viewportSize()?.height ?? 0,
-    );
+    // On the first screen, above the bottom tabs of a phone.
+    const tabsBar = page
+      .locator("nav:visible")
+      .filter({ has: page.getByRole("link", { name: "Chercher" }) });
+    const limit =
+      (await tabsBar.count()) > 0
+        ? ((await tabsBar.first().boundingBox())?.y ?? 0)
+        : (page.viewportSize()?.height ?? 0);
+    expect((box?.y ?? Infinity) + (box?.height ?? 0)).toBeLessThan(limit);
     await expect(page.getByRole("tabpanel")).toContainText("2 minutes");
-    // The pages of the V1 home are gone: no invented figure, no example card.
+    // The invented figure of the V1 home is gone (« + 5,2 % vs prix agence »).
     await expect(page.getByText("vs prix agence")).toHaveCount(0);
-    await expect(page.getByRole("group", { name: "Exemple de valorisation" })).toHaveCount(0);
+    // The example on the photo from 1 280 px, said to be one, its value from the engine (Q58).
+    const example = page.getByRole("group", { name: "Exemple de valorisation" });
+    if ((page.viewportSize()?.width ?? 0) >= 1280) {
+      await expect(example).toBeVisible();
+      await expect(example).toContainText("Exemple");
+      await expect(example).toContainText(/453\s000\s€/);
+    } else {
+      await expect(example).toBeHidden();
+    }
   });
 
   test("Valoriser : l'adresse choisie remplit l'étape « Localisation » de l'estimateur", async ({

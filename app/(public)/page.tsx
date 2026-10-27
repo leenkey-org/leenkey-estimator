@@ -10,7 +10,7 @@ import {
 } from "@/leenkey/site/components/home-sections";
 import { PublicPage } from "@/leenkey/site/components/public-page";
 
-// Home page of the redesign D (docs/design-handoff/SPECS.md 3, DECISIONS
+// Home page of the redesign D (docs/design-handoff-d/SPECS.md 3, DECISIONS
 // 2026-10-27), in its order: the night band and the search card, the
 // services, the shortcuts, the savings, the listings around Épinay-sur-Orge,
 // the three steps, the plans, the questions and the last call; the first

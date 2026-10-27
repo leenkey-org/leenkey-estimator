@@ -28,8 +28,8 @@ export function ShortcutCard({
     <Link
       href={href}
       className={cn(
-        "group flex min-h-34 flex-col gap-2.5 rounded-[1.125rem] border border-lk-line bg-lk-surface p-4 text-lk-ink md:gap-3.5 md:p-6",
-        "transition-[box-shadow,border-color] duration-220 ease-out-lk hover:border-lk-indigo-line hover:shadow-lk-hover",
+        "group flex min-h-34 flex-col gap-2.5 rounded-lk-d-card border border-lk-line bg-lk-surface p-4 text-lk-ink md:gap-3.5 md:p-6",
+        "transition-[box-shadow,border-color] duration-220 ease-out-lk hover:border-lk-indigo-line hover:shadow-lk-d-hover",
         className,
       )}
     >
@@ -41,9 +41,7 @@ export function ShortcutCard({
         />
       </span>
       <span className="flex flex-col gap-1">
-        <span className="text-lk-title leading-tight font-semibold md:text-[1.0625rem]">
-          {title}
-        </span>
+        <span className="text-lk-title leading-tight font-semibold md:text-lk-d-lead">{title}</span>
         <span className="text-lk-caption leading-snug text-lk-ink-2 md:text-lk-compact">
           {text}
         </span>
