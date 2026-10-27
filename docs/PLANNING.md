@@ -63,7 +63,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-55** Fiches de biens façon Airbnb (demandes de Younes du 26 octobre) : résultats de la recherche en cartes à photos qui tournent (glissement du doigt, flèches), cadre bleu au survol et à la pression ; chiffres clés et atouts en bleu Leenkey au lieu du gris ; « Ce que vous savez avant de visiter » en grille à pictogrammes groupée · PR : #53 · Testé en préprod : ☐
 - [x] **L1-56** Pleine page selon l'appareil (demande de Younes du 26 octobre) : pages sur toute la largeur de l'écran jusqu'à 1 920 px, marges par appareil, barre haute, contenu et pied de page alignés, une colonne de cartes de plus sur grand écran, espaces en pleine largeur · PR : #54 · Testé en préprod : ☐
 - [x] **L1-57** Refonte D de l'accueil (demande de Younes du 27 octobre, `docs/design-handoff-d/`) : charte nuit, bleu → violet et Sora sur l'accueil seulement, jetons prêts pour le reste du site après validation · PR : #55 · Testé en préprod : ☐
-- [x] **L1-58** Charte D sur tout le site (validation de Younes du 27 octobre : « on valide pour l'ensemble du site ») : jetons, Sora, boutons, en-têtes, bandeaux nuit, composants, back office · PR : · Testé en préprod : ☐
+- [x] **L1-58** Charte D sur tout le site (validation de Younes du 27 octobre : « on valide pour l'ensemble du site ») : jetons, Sora, boutons, en-têtes, bandeaux nuit, composants, back office · PR : #56 · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
 
@@ -96,7 +96,7 @@ Recette du lot 1 par Cédric du 16 au 20 novembre ; mise en ligne de la V2 la se
 - [ ] **L1-16b** Carte avancée : regroupement, recherche dans la zone (synchronisation liste/carte livrée avec L1-16) · PR : · Testé en préprod : ☐
 - [ ] **L1-29** Suggestion de réponse en messagerie + rédaction de description · PR : · Testé en préprod : ☐
 - [ ] **L1-35** `listing_revisions` simplifié : historique des champs prix, titre, description d’une annonce publiée, vendeur et admin · PR : · Testé en préprod : ☐
-- [ ] **L1-30b** Résumé du jour par l'assistant dans le back office · PR : · Testé en préprod : ☐
+- [ ] **L1-30b** Résumé du jour par l'assistant dans le back office · PR : #56 · Testé en préprod : ☐
 
 Mise en ligne :
 

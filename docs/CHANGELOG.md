@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-27 · L1-58 · PR #PRNUM · Charte D sur tout le site
+### 2026-10-27 · L1-58 · PR #56 · Charte D sur tout le site
 - Modifié : tout le site passe dans la charte de Leenkey validée sur l'accueil : nuit, dégradé bleu → violet, police Sora.
   - Couleurs, police, arrondis et ombres de la charte sur toutes les pages, menus et fenêtres compris.
   - Boutons en pilule, le principal en dégradé ; pastilles de filtre, choix et barres de progression en dégradé ; avatar du compte en dégradé.
