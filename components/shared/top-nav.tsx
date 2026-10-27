@@ -55,7 +55,8 @@ export type TopNavProps = {
  * pill, and when signed in the bell, the favourites and the pill of the
  * account menu; when signed out, the same pill (menu and avatar) to « Mon
  * compte ». Gutters of the frame from 1024 px (32 px, 64 px from 1536 px),
- * gap 40; 20 px and 24 below, so that it fits in 768 px. Layer 30, above the sticky headers of the pages (20): the
+ * gap 40 from 1 280 px, 24 then 16 below (and the logo 28 px high below
+ * 1 024 px), so that it fits in 768 px with an account. Layer 30, above the sticky headers of the pages (20): the
  * panel of a group of its links covers them (L1-51); no BottomNav from 768 px.
  */
 export function TopNav({
@@ -81,7 +82,8 @@ export function TopNav({
     >
       <div
         className={cn(
-          "flex h-full items-center gap-6 lg:gap-10",
+          // Tighter below 1 280 px: Sora is wider than the font before it (L1-58).
+          "flex h-full items-center gap-4 lg:gap-6 xl:gap-10",
           // The page frame (L1-56), or the whole width (the search sets its
           // own gutter on its page). 20 px below 1 024 px: the links of an
           // account do not fit in 768 px with 32.
@@ -90,7 +92,7 @@ export function TopNav({
         )}
       >
         <Link href={homeHref} className="inline-flex h-11 shrink-0 items-center rounded-lk-sm">
-          <Logo tone={night ? "white" : "color"} className="h-8" />
+          <Logo tone={night ? "white" : "color"} className="h-7 lg:h-8" />
         </Link>
         <TopNavLinks label={label} links={links} activeHref={activeHref} night={night} />
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
@@ -100,7 +102,7 @@ export function TopNav({
               variant={night ? "night" : "outline-blue"}
               shape="pill"
               icon={Plus}
-              className="mr-2"
+              className="xl:mr-2"
             >
               <Link href={cta.href}>{cta.label}</Link>
             </Button>

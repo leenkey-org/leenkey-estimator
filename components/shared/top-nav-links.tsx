@@ -230,7 +230,7 @@ export function TopNavLinks({
   const current = activeHref === undefined ? currentHref(pathname, links) : activeHref;
   return (
     <nav aria-label={label} className="min-w-0">
-      <ul className="flex items-center gap-5 lg:gap-6">
+      <ul className="flex items-center gap-3 lg:gap-4 xl:gap-6">
         {links.map((link) => {
           const active = link.href === current;
           const shown = cn(

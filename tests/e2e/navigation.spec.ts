@@ -169,10 +169,10 @@ test.describe("visiteur sans session", () => {
       "false",
     );
     await expect(nav.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
-    await expect(page.getByRole("link", { name: "Leenkey", exact: true })).toHaveAttribute(
-      "href",
-      "/",
-    );
+    // The logo of the header (the footer has its own since L1-58).
+    await expect(
+      page.getByRole("banner").getByRole("link", { name: "Leenkey", exact: true }),
+    ).toHaveAttribute("href", "/");
     await expect(page.getByRole("link", { name: "Vendre mon bien" })).toHaveAttribute(
       "href",
       "/vendre",
