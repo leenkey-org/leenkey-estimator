@@ -24,7 +24,8 @@ const WAVE = "M0 0 H100 C58 16 26 38 40 60 C52 80 34 93 0 100 Z";
  * badge « Ni agence, ni seul », the title and its line in the gradient, the
  * lead. From 1 024 px, the photo on the right (46 %) cut by the wave, its
  * grid of dots, and from 1 280 px the « Exemple » card on it; below, the
- * photo under the text, its top left corner rounded 130 px. The search card
+ * photo under the text, its top left corner rounded 130 px, the card over its
+ * bottom (its action on the first screen of a phone). The search card
  * set over the bottom of the band, then the service pills. Without the photo
  * (rights not confirmed in production), the night alone.
  */
@@ -37,7 +38,9 @@ export async function HomeHero() {
       id="valoriser"
       aria-labelledby="accueil-titre"
     >
-      <div className="relative isolate overflow-hidden bg-lk-night pb-26 text-white lg:pb-42.5">
+      {/* Below 1 024 px the card covers the bottom of the photo: its action stays on
+          the first screen of a phone, above the bottom tabs. */}
+      <div className="relative isolate overflow-hidden bg-lk-night pb-10 text-white md:pb-16 lg:pb-42.5">
         <span
           aria-hidden="true"
           className="lk-halo-blue lk-glow pointer-events-none absolute top-50 -left-45 -z-10 size-130 rounded-full lg:top-auto lg:-bottom-75 lg:-left-55 lg:size-210"
@@ -95,7 +98,7 @@ export async function HomeHero() {
           {photo ? <ExampleCard /> : null}
         </div>
         {photo ? (
-          <div className="relative mt-6 ml-10 h-62.5 overflow-hidden rounded-tl-[8.125rem] rounded-bl-lk-3xl bg-lk-indigo-deep md:ml-[30%] md:h-80 lg:hidden">
+          <div className="relative mt-5 ml-10 h-52.5 overflow-hidden rounded-tl-[8.125rem] rounded-bl-lk-3xl bg-lk-indigo-deep md:ml-[30%] md:h-80 lg:hidden">
             <Image
               src={photo.src}
               alt=""

@@ -237,12 +237,16 @@ test.describe("accueil", () => {
     await expect(page.locator("#contact-form")).toHaveCount(0);
   });
 
-  test("pied de page : sur sable, les pages du site, puis les liens légaux", async ({ page }) => {
+  test("pied de page : blanc, le logo, les pages du site, puis les liens légaux", async ({
+    page,
+  }) => {
     await page.goto("/");
     const footer = page.getByRole("contentinfo");
+    // White in the redesign D (SPECS.md 3, item 11), the logo first.
     expect(await footer.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
-      "rgb(241, 237, 231)",
+      "rgb(255, 255, 255)",
     );
+    await expect(footer.getByRole("link").first()).toHaveAccessibleName("Leenkey");
     const site = footer.getByRole("navigation", { name: "Découvrir Leenkey" });
     await expect(site.getByRole("link")).toHaveText([
       "Concept",
