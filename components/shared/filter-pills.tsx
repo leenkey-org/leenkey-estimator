@@ -41,11 +41,11 @@ export function FilterPills({
               aria-current={item.active ? "page" : undefined}
               className={cn(
                 // 44 px touch target around the 34 px pill.
-                "relative inline-flex h-8.5 items-center whitespace-nowrap rounded-lk-sm px-3.5 text-lk-caption",
+                "relative inline-flex h-8.5 items-center whitespace-nowrap rounded-full px-3.5 text-lk-caption",
                 "after:absolute after:-inset-y-1.25 after:inset-x-0",
                 "transition-colors duration-140 ease-out-lk",
                 item.active
-                  ? "bg-lk-navy font-semibold text-white"
+                  ? "lk-gradient font-semibold text-white"
                   : "border-[1.5px] border-lk-line bg-lk-surface font-medium text-lk-ink hover:bg-lk-stone-2",
               )}
             >
@@ -95,11 +95,11 @@ export function FilterPillButtons<K extends string>({
                 aria-pressed={current}
                 onClick={() => onSelect(item.key)}
                 className={cn(
-                  "relative inline-flex h-8.5 items-center whitespace-nowrap rounded-lk-sm px-3.5 text-lk-caption",
+                  "relative inline-flex h-8.5 items-center whitespace-nowrap rounded-full px-3.5 text-lk-caption",
                   "after:absolute after:-inset-y-1.25 after:inset-x-0",
                   "transition-colors duration-140 ease-out-lk",
                   current
-                    ? "bg-lk-navy font-semibold text-white"
+                    ? "lk-gradient font-semibold text-white"
                     : "border-[1.5px] border-lk-line bg-lk-surface font-medium text-lk-ink hover:bg-lk-stone-2",
                 )}
               >

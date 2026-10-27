@@ -5,7 +5,7 @@ import { AlertCircle } from "lucide-react";
 import type { ReactNode, InputHTMLAttributes } from "react";
 
 // Building blocks of the steps of the wizard, in Façade since L1-44
-// (docs/DESIGN.md 13.1): Archivo, the tokens and the radii of DESIGN.md 2 and
+// (docs/DESIGN.md 13.1): Sora, the tokens and the radii of DESIGN.md 2 and
 // 5, the shapes of RoleCard, ChipToggle, SegmentedPicker and Field (10.1,
 // 10.4), without the emoji of the V1 (DESIGN.md 1). Behaviour and texts are
 // those of the V1.
@@ -173,7 +173,7 @@ export function Stepper({
               "h-11 min-w-13 rounded-lk-sm px-4 text-lk-button-md font-semibold",
               "transition-colors duration-140 ease-out-lk",
               active
-                ? "bg-lk-blue text-white hover:bg-lk-blue-hover"
+                ? "lk-gradient text-white hover:brightness-108"
                 : "bg-lk-stone-2 text-lk-ink-2 hover:bg-lk-stone",
             )}
           >

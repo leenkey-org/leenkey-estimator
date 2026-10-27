@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 // /qui-sommes-nous in V2 (L1-43, DECISIONS 2026-10-19): the V1 page in its order.
 export default function AboutPage() {
   return (
-    <PublicPage>
+    <PublicPage header="night">
       <AboutHero />
       <AboutFigures />
       <StorySection />

@@ -206,7 +206,7 @@ export function PropertyCard({
             <span
               className={cn(
                 "absolute bottom-2 left-2 rounded-full px-2 py-1 text-lk-micro font-semibold text-white",
-                card.badge === "new" ? "bg-lk-blue" : "bg-lk-success",
+                card.badge === "new" ? "lk-gradient" : "bg-lk-success",
               )}
             >
               {card.badge === "new" ? fr.propertyCard.badgeNew : fr.propertyCard.badgePriceDrop}

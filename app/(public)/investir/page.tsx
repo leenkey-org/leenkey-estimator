@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 // /investir in V2 (L1-43, DECISIONS 2026-10-19): the V1 page in its order.
 export default function InvestPage() {
   return (
-    <PublicPage>
+    <PublicPage header="night">
       <InvestHero />
       <HookSection />
       <MarketSection />

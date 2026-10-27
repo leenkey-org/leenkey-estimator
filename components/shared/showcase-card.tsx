@@ -38,11 +38,6 @@ export type ShowcaseCardProps = Pick<
   framed?: boolean;
   /** The main photo is the largest image of the page: loaded first. */
   priority?: boolean;
-  /**
-   * The card of the redesign D (SPECS.md 2): its badge in the gradient, the
-   * price in bold without underline, the photo rounded 18 px.
-   */
-  redesign?: boolean;
   sizes?: string;
   className?: string;
 };
@@ -51,10 +46,10 @@ export type ShowcaseCardProps = Pick<
 const SWIPE_PX = 40;
 
 /**
- * Card of a property of direction C (docs/design-handoff/SPECS.md 2): the
- * photo rounded 16 px (ratio 1 / 0.95, 272 px wide in a carousel on a phone),
- * a white badge at the top left, the heart at the top right; below, « Maison 5
- * p · 112 m² » and its DPE, the city, the price underlined. The whole card
+ * Card of a property of the charte D (docs/design-handoff-d/SPECS.md 2): the
+ * photo rounded 18 px (ratio 1 / 0.95, 272 px wide in a carousel on a phone),
+ * a badge in the gradient at the top left, the heart at the top right; below,
+ * « Maison 5 p · 112 m² » and its DPE, the city, the price in bold. The whole card
  * opens the listing: its title is the link, first in the order of the page,
  * stretched over the card and described by the city and the price. Its
  * photos turn with arrows from 768 px (always shown on a touch screen),
@@ -75,7 +70,6 @@ export function ShowcaseCard({
   swipe = false,
   framed = false,
   priority = false,
-  redesign = false,
   sizes = "(min-width: 1536px) 18vw, (min-width: 1024px) 23vw, (min-width: 768px) 45vw, 272px",
   className,
 }: ShowcaseCardProps) {
@@ -135,13 +129,13 @@ export function ShowcaseCard({
             aria-describedby={`${id}-place ${id}-price`}
             className={cn(
               "min-w-0 text-lk-ink",
-              redesign ? "text-lk-title font-semibold" : "text-lk-body-lg font-bold",
+              "text-lk-title font-semibold",
               // Two lines in the narrower cards of the search, beside their DPE.
               framed ? "line-clamp-2" : "truncate",
               // The link covers the whole card, photo included (its arrows and
               // heart stay above it).
               "after:absolute after:inset-0 after:z-5 after:content-['']",
-              framed ? "after:rounded-lk-2xl" : "after:rounded-lk-xl",
+              framed ? "after:rounded-lk-2xl" : "after:rounded-lk-d-card",
               "focus-visible:outline-none focus-visible:after:outline-3 focus-visible:after:outline-offset-2 focus-visible:after:outline-lk-blue focus-visible:after:outline-solid",
             )}
           >
@@ -150,40 +144,23 @@ export function ShowcaseCard({
           {dpe ? (
             <DpeBadge
               value={dpe}
-              className={cn(
-                "shrink-0 rounded-lk-md px-2 py-0.5",
-                redesign ? "text-lk-micro font-bold" : "text-lk-caption font-extrabold",
-              )}
+              className="shrink-0 rounded-lk-md px-2 py-0.5 text-lk-micro font-bold"
             />
           ) : null}
         </div>
-        <p
-          id={`${id}-place`}
-          className={cn(
-            "truncate text-lk-compact",
-            redesign ? "text-lk-ink-3" : "text-lk-ink-2 md:text-lk-body",
-          )}
-        >
+        <p id={`${id}-place`} className="truncate text-lk-compact text-lk-ink-3">
           {city}
         </p>
         <p
           id={`${id}-price`}
-          className={cn(
-            "mt-1 tabular text-lk-ink",
-            redesign
-              ? "text-lk-d-lead font-bold tracking-lk-d-snug"
-              : "text-lk-card-price font-extrabold underline underline-offset-3",
-          )}
+          className="mt-1 text-lk-d-lead font-bold tracking-lk-d-snug tabular text-lk-ink"
         >
           {formatPrice(priceCents)}
         </p>
       </div>
       <div
         ref={frame}
-        className={cn(
-          "relative order-1 aspect-[1/0.95] overflow-hidden bg-lk-line",
-          redesign ? "rounded-lk-d-card" : "rounded-lk-xl",
-        )}
+        className="relative order-1 aspect-[1/0.95] overflow-hidden rounded-lk-d-card bg-lk-line"
       >
         {shown.length ? (
           <div
@@ -223,14 +200,7 @@ export function ShowcaseCard({
         )}
         {badge ? (
           // Over the link, but a touch on it still opens the listing.
-          <span
-            className={cn(
-              "pointer-events-none absolute left-3 top-3 z-10 rounded-full",
-              redesign
-                ? "lk-gradient px-3 py-1.25 text-lk-caption font-semibold text-white shadow-lk-d-badge"
-                : "bg-lk-surface px-3 py-1.5 text-lk-caption font-bold text-lk-blue-dark shadow-lk-badge md:text-lk-label",
-            )}
-          >
+          <span className="lk-gradient pointer-events-none absolute top-3 left-3 z-10 rounded-full px-3 py-1.25 text-lk-caption font-semibold text-white shadow-lk-d-badge">
             {badge}
           </span>
         ) : null}

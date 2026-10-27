@@ -144,7 +144,7 @@ export function MarketSection() {
           data-reveal-delay="1"
           className="flex flex-col gap-3 rounded-lk-xl bg-linear-135 from-lk-blue to-lk-blue-mid px-7 py-10 text-white shadow-lk-cta lg:px-9 lg:py-14"
         >
-          <p className="text-lk-display font-extrabold text-wide tabular-nums md:text-lk-display-md lg:text-lk-display-lg">
+          <p className="text-lk-display font-bold text-wide tabular-nums md:text-lk-display-md lg:text-lk-display-lg">
             {m.example.value}
           </p>
           <p className="text-lk-body-lg text-pretty">{m.example.label}</p>
@@ -380,7 +380,7 @@ export function RoadmapSection() {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <p
                 className={cn(
-                  "rounded-full px-3.5 py-1.5 text-lk-micro font-extrabold tracking-lk-caps uppercase",
+                  "rounded-full px-3.5 py-1.5 text-lk-micro font-bold tracking-lk-caps uppercase",
                   PHASE[index] ?? PHASE[2],
                 )}
               >
@@ -447,7 +447,7 @@ export function MessageSection() {
       >
         <span
           aria-hidden="true"
-          className="h-10 text-lk-display-lg font-extrabold text-lk-blue-light/70 lg:h-12"
+          className="h-10 text-lk-display-lg font-bold text-lk-blue-light/70 lg:h-12"
         >
           “
         </span>

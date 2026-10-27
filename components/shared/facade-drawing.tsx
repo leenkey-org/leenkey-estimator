@@ -23,7 +23,7 @@ function rectPath({
 /**
  * Brand drawing (docs/DESIGN.md 7.3), inline so that it takes the text colour
  * (currentColor): white on a blue flat, --lk-ink-3 on a light background. The
- * label inherits Archivo from the Façade scope. Always decorative. Every line
+ * label inherits Sora from the Façade scope. Always decorative. Every line
  * is a path of length 1 (pathLength): the class lk-drawing traces it
  * (app/globals.css, DESIGN.md 9).
  */

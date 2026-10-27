@@ -7,7 +7,6 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Menu, Plus, User, X } from "lucide-react";
 import { Button } from "./button";
 import { facadeScope } from "./facade-root";
-import { usePortalScope } from "./portal-scope";
 import { IconButton } from "./icon-button";
 import { Logo } from "./logo";
 import { currentHref, type NavItem } from "./nav-items";
@@ -60,8 +59,6 @@ export function SiteMenu({
   className,
 }: SiteMenuProps) {
   const night = tone === "night";
-  // Opened out of the page: the scope of its redesign (PortalScope).
-  const scope = usePortalScope();
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const current = currentHref(pathname, links);
@@ -112,12 +109,7 @@ export function SiteMenu({
             )}
           >
             <Menu aria-hidden="true" className="size-4.5" />
-            <span
-              className={cn(
-                "flex size-8 items-center justify-center rounded-full text-white",
-                night ? "lk-gradient-brand" : "bg-lk-blue",
-              )}
-            >
+            <span className="lk-gradient-brand flex size-8 items-center justify-center rounded-full text-white">
               <User aria-hidden="true" className="size-4" />
             </span>
           </button>
@@ -127,7 +119,6 @@ export function SiteMenu({
             aria-describedby={undefined}
             className={cn(
               facadeScope,
-              scope,
               "fixed inset-0 z-50 flex flex-col overflow-y-auto bg-lk-surface outline-none",
               "duration-220 ease-out-lk data-[state=open]:animate-in data-[state=closed]:animate-out",
               "data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2",

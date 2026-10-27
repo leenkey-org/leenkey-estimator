@@ -114,13 +114,13 @@ test.describe("catalogue /design", () => {
     await expect(frame.getByText("Ce message contient un lien ou une adresse")).toBeVisible();
   });
 
-  test("le titre et les prix utilisent Archivo élargie", async ({ page }) => {
+  test("le titre utilise Sora en gras, la police de la charte D", async ({ page }) => {
     const title = page.getByRole("heading", { level: 1, name: "Design system" });
     const style = await title.evaluate((element) => {
       const computed = getComputedStyle(element);
-      return { family: computed.fontFamily, stretch: computed.fontStretch };
+      return { family: computed.fontFamily, weight: computed.fontWeight };
     });
-    expect(style.family).toMatch(/archivo/i);
-    expect(style.stretch).toBe("116%");
+    expect(style.family).toMatch(/^"?sora/i);
+    expect(style.weight).toBe("700");
   });
 });

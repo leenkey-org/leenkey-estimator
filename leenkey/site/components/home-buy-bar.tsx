@@ -27,8 +27,6 @@ const BUDGETS = [200_000, 300_000, 400_000, 500_000, 700_000] as const;
 
 const panelClassName = cn(
   facadeScope,
-  // Opened out of the page: the charte of the home page (redesign D).
-  "lk-d",
   "z-50 rounded-lk-xl border border-lk-line bg-lk-surface p-2 shadow-lk-d-block",
   "duration-220 ease-out-lk data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 motion-reduce:animate-none",
 );

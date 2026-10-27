@@ -49,7 +49,7 @@ export function LinkTabs({
                   "relative inline-flex min-h-11 items-center rounded-lk-sm text-lk-compact whitespace-nowrap",
                   "focus-visible:outline-solid focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-lk-blue",
                   active
-                    ? "font-semibold text-lk-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-lk-blue"
+                    ? "font-semibold text-lk-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.75 after:rounded-full after:bg-lk-indigo-mark"
                     : "font-medium text-lk-ink-3 hover:text-lk-ink",
                 )}
               >

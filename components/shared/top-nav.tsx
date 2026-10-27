@@ -39,15 +39,16 @@ export type TopNavProps = {
   /** The whole width of the screen, aligned with a page that uses it (search and its map). */
   fullWidth?: boolean;
   /**
-   * night: in the night band of the home page D (SPECS.md 3, item 1): white
-   * logo and links, the action and the account of glass, no line under it.
+   * night: in the night band of the first section (the home page, SPECS.md 3,
+   * item 1, and the heroes of the showcase pages): white logo and links, the
+   * action and the account of glass, no line under it.
    */
   tone?: "light" | "night";
   className?: string;
 };
 
 /**
- * Desktop navigation (docs/DESIGN.md 10.6, direction C), from 768 px: 72 px,
+ * Desktop navigation (docs/DESIGN.md 10.6, charte D), from 768 px: 72 px,
  * white, bottom border, sticky, its content in the frame of the pages (the
  * width of the screen up to 1 920 px, L1-56).
  * Logo 32 px high, links, then on the right: the action in a blue outlined
@@ -131,12 +132,7 @@ export function TopNav({
               )}
             >
               <Menu aria-hidden="true" className="hidden size-4.5 lg:block" />
-              <span
-                className={cn(
-                  "flex size-8.5 items-center justify-center rounded-full text-white",
-                  night ? "lk-gradient-brand" : "bg-lk-blue",
-                )}
-              >
+              <span className="lk-gradient-brand flex size-8.5 items-center justify-center rounded-full text-white">
                 <User aria-hidden="true" className="size-4.5" />
               </span>
             </Link>

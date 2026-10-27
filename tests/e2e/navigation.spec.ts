@@ -60,7 +60,7 @@ const ABOUT = "Qui sommes-nous";
 async function expectTopNavFits(page: Page) {
   for (const width of [768, 1024, 1280] as const) {
     await page.setViewportSize({ width, height: 900 });
-    // Measured with Archivo and its width axis, not with the fallback font.
+    // Measured with Sora, not with the fallback font.
     await page.evaluate(() => document.fonts.ready);
     await expect(mainNav(page).getByRole("link"), `${width}`).toHaveText([...TOP_NAV[width]]);
     const about = mainNav(page).getByRole("button", { name: ABOUT });

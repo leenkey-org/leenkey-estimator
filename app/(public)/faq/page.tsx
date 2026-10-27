@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 // since L1-50.
 export default function FaqPage() {
   return (
-    <PublicPage>
+    <PublicPage header="night">
       <MarketingSection
         id="faq"
         titleAs="h1"

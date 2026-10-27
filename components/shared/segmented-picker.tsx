@@ -82,14 +82,15 @@ export function SegmentedPicker({
                   ? [
                       "h-11 rounded-full border-[1.5px] border-lk-line-strong bg-lk-surface text-lk-ink",
                       "data-[state=unchecked]:enabled:hover:border-lk-ink-3",
-                      "data-[state=checked]:border-lk-blue data-[state=checked]:bg-lk-blue data-[state=checked]:text-white",
-                      "data-[state=checked]:enabled:hover:bg-lk-blue-hover",
+                      // Chosen: the gradient of an action (charte D, SPECS.md 2).
+                      "data-[state=checked]:lk-gradient data-[state=checked]:border-transparent data-[state=checked]:text-white",
+                      "data-[state=checked]:enabled:hover:brightness-108",
                     ]
                   : [
                       "h-11 rounded-lk-sm bg-lk-stone-2 text-lk-ink-2",
                       "data-[state=unchecked]:enabled:hover:bg-lk-stone",
-                      "data-[state=checked]:bg-lk-blue data-[state=checked]:text-white",
-                      "data-[state=checked]:enabled:hover:bg-lk-blue-hover",
+                      "data-[state=checked]:lk-gradient data-[state=checked]:text-white",
+                      "data-[state=checked]:enabled:hover:brightness-108",
                     ],
               "disabled:cursor-not-allowed disabled:opacity-45",
             )}

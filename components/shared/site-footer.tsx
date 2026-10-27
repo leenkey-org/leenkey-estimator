@@ -17,50 +17,34 @@ const siteLinkClass =
   "inline-flex min-h-11 items-center rounded-lk-sm text-lk-title font-semibold text-lk-ink underline-offset-2 hover:underline focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue";
 
 /**
- * Footer of the V2 pages (L1-36, docs/DESIGN.md 10.6): the pages of the site
- * (DECISIONS 2026-10-19), the legal links, « Gérer mes cookies » and the
- * legal identity of Leenkey, on sand (direction C, docs/design-handoff/SPECS.md
- * 3, item 12). In the frame of the page (L1-56), or the whole width under
- * the search, aligned on its list.
+ * Footer of the V2 pages (L1-36, docs/DESIGN.md 10.6), white in the charte D
+ * (docs/design-handoff-d/SPECS.md 3, item 11): the logo and the pages of the
+ * site (DECISIONS 2026-10-19), the legal links, « Gérer mes cookies » and the
+ * legal identity of Leenkey. In the frame of the page (L1-56), or the whole
+ * width under the search, aligned on its list.
  */
 export function SiteFooter({
   fullWidth = false,
-  tone = "sand",
   className,
 }: {
   fullWidth?: boolean;
-  /** white: the footer of the redesign D (SPECS.md 3, item 11), the logo first. */
-  tone?: "sand" | "white";
   className?: string;
 }) {
-  const white = tone === "white";
   return (
-    <footer
-      className={cn(
-        "border-t",
-        white ? "border-lk-line bg-lk-surface" : "border-lk-sand-line bg-lk-sand",
-        className,
-      )}
-    >
+    <footer className={cn("border-t border-lk-line bg-lk-surface", className)}>
       <div
         className={cn(
           "flex flex-col gap-3 pt-8 pb-10 max-md:[--lk-gutter:1rem] md:gap-4 md:pt-10 md:pb-12",
           fullWidth ? "w-full lk-gutter" : "lk-frame",
         )}
       >
-        <div
-          className={cn(
-            white && "flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-6",
-          )}
-        >
-          {white ? (
-            <Link
-              href="/"
-              className="inline-flex h-11 shrink-0 items-center self-start rounded-lk-sm md:self-auto"
-            >
-              <Logo className="h-8.5" />
-            </Link>
-          ) : null}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-6">
+          <Link
+            href="/"
+            className="inline-flex h-11 shrink-0 items-center self-start rounded-lk-sm md:self-auto"
+          >
+            <Logo className="h-8.5" />
+          </Link>
           <nav aria-label={fr.site.links.label}>
             <ul className="flex flex-wrap gap-x-6">
               {SITE_LINKS.map((link) => (

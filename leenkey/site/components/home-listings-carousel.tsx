@@ -205,7 +205,6 @@ export function HomeListingsCarousel({
             >
               <ShowcaseCard
                 {...card}
-                redesign
                 action={
                   <FavoriteButton
                     listingId={id}

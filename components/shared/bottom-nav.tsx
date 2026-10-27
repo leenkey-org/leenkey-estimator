@@ -49,11 +49,17 @@ export function BottomNav({ label, items, activeHref, inline = false, className 
                 className={cn(
                   // 48 px high touch target, the bar keeps its height.
                   "-my-1 flex w-full min-w-0 flex-col items-center gap-1 rounded-lk-sm py-1",
-                  "text-lk-caption font-semibold transition-colors duration-140 ease-out-lk",
-                  active ? "text-lk-blue" : "text-lk-ink-2",
+                  "text-lk-caption transition-colors duration-140 ease-out-lk",
+                  // The current tab: in ink, its icon in the gradient (charte D, SPECS.md 2).
+                  active ? "font-semibold text-lk-ink" : "font-medium text-lk-ink-3",
                 )}
               >
-                {item.icon ? <NavIcon name={item.icon} className="size-6 shrink-0" /> : null}
+                {item.icon ? (
+                  <NavIcon
+                    name={item.icon}
+                    className={cn("size-6 shrink-0", active && "lk-icon-gradient")}
+                  />
+                ) : null}
                 <span className="max-w-full truncate">{item.label}</span>
               </Link>
             </li>

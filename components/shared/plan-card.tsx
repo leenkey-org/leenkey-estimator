@@ -100,7 +100,7 @@ export function PlanCard({
       )}
     >
       {badge ? (
-        <span className="absolute -top-3 left-4 rounded-full bg-lk-blue px-2.5 py-1 text-lk-micro font-semibold text-white">
+        <span className="lk-gradient absolute -top-3 left-4 rounded-full px-2.5 py-1 text-lk-micro font-semibold text-white">
           {badge}
         </span>
       ) : null}

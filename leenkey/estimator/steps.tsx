@@ -788,7 +788,7 @@ export function DpeRow({
           className={cn(
             "size-11 rounded-lk-sm text-lk-button-md font-semibold transition-colors duration-140 ease-out-lk",
             value === d.v
-              ? "bg-lk-blue text-white hover:bg-lk-blue-hover"
+              ? "lk-gradient text-white hover:brightness-108"
               : "bg-lk-stone-2 text-lk-ink-2 hover:bg-lk-stone",
           )}
         >
@@ -802,7 +802,7 @@ export function DpeRow({
         className={cn(
           "h-11 rounded-lk-sm border-[1.5px] px-4 text-lk-button-md font-semibold transition-colors duration-140 ease-out-lk",
           value === "inconnu"
-            ? "border-lk-blue bg-lk-blue text-white"
+            ? "lk-gradient border-transparent text-white"
             : "border-lk-line bg-lk-surface text-lk-ink hover:border-lk-ink-3",
         )}
       >

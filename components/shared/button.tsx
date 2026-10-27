@@ -6,10 +6,20 @@ import { Button as UiButton } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 // docs/DESIGN.md 10.1. Extends components/ui/button.tsx: its own variants are
-// switched off (null) and its base classes overridden below.
+// switched off (null) and its base classes overridden below. In the charte D
+// since L1-58 (docs/design-handoff-d/SPECS.md 2): every button is a pill, the
+// primary one in the gradient of the charte.
+
+/** The gradient of an action, white text (AA), a little brighter on hover. */
+const GRADIENT = [
+  "lk-gradient text-white",
+  "transition-[color,filter,scale,translate,box-shadow]",
+  "not-disabled:hover:brightness-108",
+];
+
 export const buttonVariants = cva(
   [
-    "relative rounded-lk-sm font-semibold shadow-none",
+    "relative rounded-full font-semibold shadow-none",
     // Pressed, it gives a little (DESIGN.md 9), as the V1 buttons did.
     "transition-[color,background-color,border-color,scale] duration-140 ease-out-lk not-disabled:active:scale-[0.98]",
     "focus-visible:ring-0 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
@@ -21,20 +31,18 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary:
-          "bg-lk-blue text-white not-disabled:hover:bg-lk-blue-hover not-disabled:active:bg-lk-blue-hover",
-        // The main call to action of the showcase pages (L1-49, L1-50), as in
-        // the V1: the gradient of the brand blue in its blue shadow, rising a
-        // little on hover.
+        primary: GRADIENT,
+        // The main call to action of a screen (SPECS.md 2, « Un seul par
+        // écran »): the gradient in its violet shadow, rising a little on
+        // hover (still with reduced motion).
         cta: [
-          "bg-linear-90 from-lk-blue to-lk-blue-mid text-white shadow-lk-cta",
-          "transition-[color,background-color,border-color,scale,translate,box-shadow]",
-          "not-disabled:hover:-translate-y-0.5 not-disabled:hover:shadow-lk-cta-hover not-disabled:active:translate-y-0 not-disabled:active:shadow-none",
+          ...GRADIENT,
+          "shadow-lk-cta",
+          "not-disabled:hover:-translate-y-px not-disabled:hover:shadow-lk-cta-hover not-disabled:active:translate-y-0 motion-reduce:not-disabled:hover:translate-y-0",
         ],
         secondary:
           "border-[1.5px] border-lk-blue-line bg-lk-surface text-lk-blue not-disabled:hover:bg-lk-blue-tint not-disabled:active:bg-lk-blue-tint",
-        // The secondary button of direction C (SPECS.md 2): its outline in
-        // the brand blue (« Publier une annonce » of the header).
+        // A secondary button outlined in the blue of the actions.
         "outline-blue":
           "border-[1.5px] border-lk-blue bg-lk-surface text-lk-blue not-disabled:hover:bg-lk-blue-tint not-disabled:active:bg-lk-blue-tint",
         "outline-ink":
@@ -50,14 +58,8 @@ export const buttonVariants = cva(
         // On a blue flat only: the focus ring turns white to stay visible.
         inverse:
           "bg-lk-surface text-lk-blue not-disabled:hover:bg-lk-blue-tint not-disabled:active:bg-lk-blue-tint focus-visible:outline-white",
-        // Redesign D (SPECS.md 2): the main action in the gradient of the
-        // charte, rising a little on hover; the secondary one on the night,
-        // of glass with a white line.
-        gradient: [
-          "lk-gradient text-white shadow-lk-d-button",
-          "transition-[color,filter,scale,translate,box-shadow]",
-          "not-disabled:hover:-translate-y-px not-disabled:hover:brightness-108 motion-reduce:not-disabled:hover:translate-y-0",
-        ],
+        // The secondary button on the night (SPECS.md 2), of glass with a
+        // white line.
         night:
           "border border-white/35 bg-lk-night/55 text-white not-disabled:hover:bg-white/10 not-disabled:active:bg-white/10",
         // White outline on a blue flat, beside an inverse button (hero of the
@@ -66,7 +68,7 @@ export const buttonVariants = cva(
           "border-[1.5px] border-white bg-transparent text-white not-disabled:hover:bg-white/12 not-disabled:active:bg-white/12 focus-visible:outline-white",
       },
       size: {
-        // Direction C (SPECS.md 2): the primary button of a screen, 56 then 64 px.
+        // The main call to action of a screen, 56 then 64 px.
         "2xl": "h-16 px-7.5 text-lk-body-lg",
         xl: "h-14 px-6 text-lk-body-lg",
         lg: "h-13 px-5 text-lk-button-lg",
@@ -75,11 +77,11 @@ export const buttonVariants = cva(
         sm: "h-10 px-3.5 text-lk-button-sm after:absolute after:inset-x-0 after:-inset-y-0.5",
       },
       muted: { true: "", false: "" },
-      // Pills of direction C (SPECS.md 1, 2): rounded ends, bold label.
-      shape: { default: "", pill: "rounded-full font-bold" },
+      // pill: the bold label of a call to action (every button is rounded).
+      shape: { default: "", pill: "font-bold" },
     },
     compoundVariants: [
-      // The primary pill in its blue shadow (SPECS.md 1).
+      // The primary pill in its violet shadow (SPECS.md 1).
       { variant: "primary", shape: "pill", className: "shadow-lk-primary" },
       {
         variant: "ghost",
@@ -99,7 +101,7 @@ export type ButtonProps = Omit<ComponentProps<"button">, "children"> & {
   size?: NonNullable<ButtonVariants["size"]>;
   /** Grey ghost button, for « Ignorer ». */
   muted?: boolean;
-  /** pill: rounded ends and a bold label, the buttons of direction C. */
+  /** pill: a bold label (and the shadow of a primary button), a call to action. */
   shape?: NonNullable<ButtonVariants["shape"]>;
   /** Lucide icon on the left, 16 px. */
   icon?: LucideIcon;

@@ -359,7 +359,7 @@ function AddressForm({
       </div>
       <Button
         type="submit"
-        variant="gradient"
+        variant="cta"
         shape="pill"
         size="xl"
         trailingIcon={ArrowRight}

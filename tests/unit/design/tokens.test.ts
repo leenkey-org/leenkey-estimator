@@ -25,8 +25,12 @@ function contrast(foreground: string, background: string): number {
 }
 
 describe("palette (DESIGN.md 2.1)", () => {
-  it("keeps the Leenkey blue", () => {
-    expect(token("blue")).toBe("#1156fc");
+  // The charte D since L1-58 (docs/design-handoff-d/SPECS.md 1): the blue of
+  // the actions, the night, the ink.
+  it("keeps the colours of the charte D", () => {
+    expect(token("blue")).toBe("#2563eb");
+    expect(token("night")).toBe("#020d21");
+    expect(token("ink")).toBe("#0f172a");
   });
 
   // Text pairs used by the components: WCAG AA, 4.5:1.
@@ -64,7 +68,6 @@ describe("palette (DESIGN.md 2.1)", () => {
     ["ink", "mist"],
     ["ink-2", "mist"],
     ["ink-3", "mist"],
-    ["blue", "blue-line"],
     ["blue-light", "navy"],
     ["blue-light", "ink"],
     // White on the lighter end of the gradients of the calls to action.

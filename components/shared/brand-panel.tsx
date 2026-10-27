@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 export type BrandPanelProps = {
   /** Anchor of the panel (« #valoriser » on the home page). */
   id?: string;
-  /** blue: buyer home, end of a flow; navy: dark headers. */
+  /** blue: the night of the charte D and its halos (buyer home); navy: the plain night (dark headers). */
   variant?: "blue" | "navy";
   title: string;
   /**
@@ -59,7 +59,7 @@ export function BrandPanel({
       id={id}
       className={cn(
         "relative overflow-hidden text-white",
-        variant === "blue" ? "bg-lk-blue" : "bg-lk-navy",
+        variant === "blue" ? "lk-hero-bg" : "bg-lk-night",
         className,
       )}
     >

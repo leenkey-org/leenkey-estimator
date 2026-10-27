@@ -15,7 +15,7 @@ export type KeyFiguresProps = {
 /**
  * Key figures of a property (docs/DESIGN.md 10.2): tiles of the light blue of
  * Leenkey (stone until L1-55, « pas de gris », Younes), the value in wide
- * Archivo above its label. A description list, so that screen readers
+ * Sora above its label. A description list, so that screen readers
  * read « surface, 68 m² ».
  */
 export function KeyFigures({ items, className }: KeyFiguresProps) {

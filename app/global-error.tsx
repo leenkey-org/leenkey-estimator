@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/shared/button";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { InlineAlert } from "@/components/shared/inline-alert";
-import { archivo } from "@/lib/fonts";
+import { sora } from "@/lib/fonts";
 import { fr } from "@/lib/i18n/fr";
 import "./globals.css";
 
@@ -20,7 +20,7 @@ export default function GlobalError({ error }: { error: Error & { digest?: strin
   }, [error]);
 
   return (
-    <html lang="fr" className={archivo.variable}>
+    <html lang="fr" className={sora.variable}>
       <body>
         <FacadeRoot className="min-h-dvh bg-lk-surface">
           <main className="mx-auto flex max-w-lk-form flex-col gap-4 px-5 py-16">

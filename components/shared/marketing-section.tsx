@@ -8,8 +8,8 @@ export type MarketingSectionProps = {
   /**
    * surface: white; stone: the neutral flat of the marketing pages (DESIGN.md
    * 2.1); mist: the light cool flat of the V1 home page (L1-49); navy: the
-   * dark flat of the V1 showcase sections (white text, accent in
-   * --lk-blue-light).
+   * night of the charte D and its halos (white text, accent in the gradient
+   * of the night).
    */
   tone?: "surface" | "stone" | "mist" | "navy";
   /**
@@ -49,9 +49,9 @@ export type MarketingSectionProps = {
 
 const BACKGROUND = {
   surface: "bg-lk-surface",
-  stone: "bg-lk-stone",
+  stone: "bg-lk-stone-2",
   mist: "bg-lk-mist",
-  navy: "bg-lk-navy",
+  navy: "lk-hero-bg",
 } as const;
 
 /**
@@ -113,8 +113,9 @@ export function MarketingSection({
             {showcase && eyebrow ? (
               <p
                 className={cn(
-                  "mb-1 text-lk-eyebrow font-extrabold tracking-lk-eyebrow uppercase lg:mb-2 lg:text-lk-eyebrow-lg",
-                  dark ? "text-lk-blue-light" : "text-lk-blue",
+                  "mb-1 text-lk-label font-semibold tracking-lk-caps uppercase lg:mb-2 lg:text-lk-compact",
+                  // Small coloured texts in the indigo of the charte (SPECS.md 1).
+                  dark ? "text-lk-blue-light" : "text-lk-blue-dark",
                 )}
               >
                 {eyebrow}
@@ -148,7 +149,7 @@ export function MarketingSection({
               <p
                 className={cn(
                   "max-w-lk-prose text-lk-body text-pretty md:text-lk-body-lg lg:text-lk-lead-lg",
-                  dark ? "text-white/72" : "text-lk-ink-2",
+                  dark ? "text-lk-night-muted" : "text-lk-ink-2",
                 )}
               >
                 {lead}
