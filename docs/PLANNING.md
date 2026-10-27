@@ -62,7 +62,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-54** Recherche aux formes arrondies (demande de Younes du 26 octobre, « comme sur Airbnb ») : barre arrondie « Où ? · Type de bien · Budget max · Pièces » et menus arrondis à la place des listes natives (filtres, tri), champ et puces en pilules sur mobile, panneau des filtres sans liste native · PR : #52 · Testé en préprod : ☐
 - [x] **L1-55** Fiches de biens façon Airbnb (demandes de Younes du 26 octobre) : résultats de la recherche en cartes à photos qui tournent (glissement du doigt, flèches), cadre bleu au survol et à la pression ; chiffres clés et atouts en bleu Leenkey au lieu du gris ; « Ce que vous savez avant de visiter » en grille à pictogrammes groupée · PR : #53 · Testé en préprod : ☐
 - [x] **L1-56** Pleine page selon l'appareil (demande de Younes du 26 octobre) : pages sur toute la largeur de l'écran jusqu'à 1 920 px, marges par appareil, barre haute, contenu et pied de page alignés, une colonne de cartes de plus sur grand écran, espaces en pleine largeur · PR : #54 · Testé en préprod : ☐
-- [x] **L1-57** Refonte D de l'accueil (demande de Younes du 27 octobre, `docs/design-handoff-d/`) : charte nuit, bleu → violet et Sora sur l'accueil seulement, jetons prêts pour le reste du site après validation · PR : · Testé en préprod : ☐
+- [x] **L1-57** Refonte D de l'accueil (demande de Younes du 27 octobre, `docs/design-handoff-d/`) : charte nuit, bleu → violet et Sora sur l'accueil seulement, jetons prêts pour le reste du site après validation · PR : #55 · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
 

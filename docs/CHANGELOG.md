@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-27 · L1-57 · PR #PRNUM · Refonte D de l'accueil
+### 2026-10-27 · L1-57 · PR #55 · Refonte D de l'accueil
 - Modifié : l'accueil passe dans la charte de Leenkey (refonte D) : nuit, dégradé bleu → violet, police Sora.
   - Grand bandeau nuit avec l'en-tête intégré, la photo à droite découpée par une vague et la carte « Exemple ».
   - Titre « Vendez votre bien autrement. Moins de frais, plus de contrôle. ».
