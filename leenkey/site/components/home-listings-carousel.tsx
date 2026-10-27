@@ -129,7 +129,7 @@ export function HomeListingsCarousel({
                 active
                   ? "border-lk-indigo-mark text-lk-ink"
                   : "border-transparent text-lk-ink-3 hover:text-lk-ink",
-                "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-blue focus-visible:outline-solid",
+                "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
               )}
             >
               <Icon

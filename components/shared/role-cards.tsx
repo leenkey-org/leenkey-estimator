@@ -42,7 +42,7 @@ export function RoleCards({
               "border-[1.5px] border-lk-line bg-lk-surface transition-colors duration-140 ease-out-lk",
               "hover:border-lk-ink-3",
               "has-checked:border-2 has-checked:border-lk-blue has-checked:bg-lk-blue-tint has-checked:px-[13.5px]",
-              "has-focus-visible:outline-solid has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-lk-blue",
+              "has-focus-visible:outline-solid has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-lk-brand-blue",
               error && "border-lk-danger",
             )}
           >

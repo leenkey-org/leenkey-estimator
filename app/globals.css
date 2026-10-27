@@ -349,7 +349,7 @@ html {
      --color-border, --ease-out…) that overrode a shared name. Colours keep their DESIGN.md names
      (bg-lk-blue…); radii are rounded-lk-sm / rounded-lk-md and font sizes
      text-lk-* instead of rounded-sm / rounded-md / text-[13px];
-   - base styles (Archivo, colours, shadcn/ui variables, focus ring, reduced
+   - base styles (Sora since L1-58, colours, shadcn/ui variables, focus ring, reduced
      motion) only apply inside the `.facade` scope set by <FacadeRoot>.
    Breakpoints are Tailwind's defaults, which are DESIGN.md 4.2's values:
    md 768 px, lg 1024 px, xl 1280 px.
@@ -395,8 +395,8 @@ html {
   --color-lk-stone: #e2e8f0;
   /* The tracks of the bars, the tiles, a hover */
   --color-lk-stone-2: #f1f5f9;
-  /* A hover behind a placeholder */
-  --color-lk-sand: #f8fafc;
+  /* A hover on white, behind a placeholder too (ink-3 5.1:1 on it) */
+  --color-lk-sand: #f1f5f9;
   --color-lk-sand-line: #e2e8f0;
   /* The bar « Agence » of the comparison (decorative, with its amount) */
   --color-lk-agency: #cbd5e1;
@@ -1121,13 +1121,15 @@ html {
   }
 }
 
-/* The gradient of an action (button, badge, chosen pill): white text, AA. */
+/* The gradient of an action (button, badge, chosen pill): white text, AA.
+   Under a transparent border too (no stripe of the other end at its edges). */
 @utility lk-gradient {
   background-image: linear-gradient(
     90deg,
     var(--color-lk-action-blue),
     var(--color-lk-action-violet)
   );
+  background-origin: border-box;
 }
 /* The gradient of the charte: orbs, avatar, decorative tiles. */
 @utility lk-gradient-brand {

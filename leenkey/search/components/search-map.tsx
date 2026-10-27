@@ -31,7 +31,7 @@ const PILL = cn(
   "duration-140 ease-out-lk motion-safe:transition-[scale,background-color,border-color,color]",
   "hover:z-20 hover:scale-105 hover:border-lk-blue hover:bg-lk-blue hover:text-white",
   "data-active:z-10 data-active:scale-105 data-active:border-lk-blue data-active:bg-lk-blue data-active:text-white",
-  "focus-visible:z-20 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+  "focus-visible:z-20 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue",
   "lg:px-3 lg:py-2",
   // The dot: 14 px navy on a white ring, under the pills, a target of 44 px
   // (written out in full for Tailwind to find them).

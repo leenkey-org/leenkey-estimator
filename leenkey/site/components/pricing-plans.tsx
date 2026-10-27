@@ -79,7 +79,12 @@ export function PricingPlans({ plans }: { plans: readonly PlanView[] }) {
                       <Link href={ROUTES.valuation}>{texts.action}</Link>
                     </Button>
                   ) : (
-                    <Button asChild size="lg" variant="outline-inverse">
+                    <Button
+                      asChild
+                      size="lg"
+                      variant="night"
+                      className="focus-visible:outline-white"
+                    >
                       <Link href={ROUTES.valuation}>{texts.action}</Link>
                     </Button>
                   )

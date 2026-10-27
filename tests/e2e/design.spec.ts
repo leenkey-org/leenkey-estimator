@@ -22,7 +22,7 @@ test.describe("catalogue /design", () => {
     const response = await page.goto("/design");
     expect(response?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1, name: "Design system" })).toBeVisible();
-    // Contrast is computed on the final rendering: photos and Archivo loaded.
+    // Contrast is computed on the final rendering: photos and Sora loaded.
     await page.waitForLoadState("networkidle");
     await page.evaluate(() => document.fonts.ready);
   });

@@ -57,7 +57,7 @@ export function SegmentedPicker({
         aria-labelledby={labelId}
         className={cn(
           "grid auto-cols-fr grid-flow-col",
-          dark ? "gap-1 rounded-lk-lg border border-white/12 bg-white/[0.06] p-1" : "gap-1.5",
+          dark ? "gap-1 rounded-full border border-white/12 bg-white/[0.06] p-1" : "gap-1.5",
           className,
         )}
         {...props}
@@ -74,7 +74,7 @@ export function SegmentedPicker({
               dark
                 ? [
                     // Its long labels may take two lines at 390 px.
-                    "min-h-11 rounded-lk-md py-1.5 leading-tight text-white/80 focus-visible:outline-white",
+                    "min-h-11 rounded-full py-1.5 leading-tight text-white/80 focus-visible:outline-white",
                     "data-[state=unchecked]:enabled:hover:bg-white/10",
                     "data-[state=checked]:bg-lk-surface data-[state=checked]:text-lk-blue",
                   ]

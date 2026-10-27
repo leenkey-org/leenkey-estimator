@@ -10,11 +10,11 @@ const t = fr.footer;
 
 // 44 px high: touch target of DESIGN.md 15. The legal links: 14 px, secondary.
 const linkClass =
-  "inline-flex min-h-11 items-center rounded-lk-sm text-lk-compact text-lk-ink-2 underline-offset-2 hover:text-lk-ink hover:underline focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue";
+  "inline-flex min-h-11 items-center rounded-lk-sm text-lk-compact text-lk-ink-2 underline-offset-2 hover:text-lk-ink hover:underline focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue";
 
 // The pages of the site, above: 15 px 600 ink.
 const siteLinkClass =
-  "inline-flex min-h-11 items-center rounded-lk-sm text-lk-title font-semibold text-lk-ink underline-offset-2 hover:underline focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue";
+  "inline-flex min-h-11 items-center rounded-lk-sm text-lk-title font-semibold text-lk-ink underline-offset-2 hover:underline focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue";
 
 /**
  * Footer of the V2 pages (L1-36, docs/DESIGN.md 10.6), white in the charte D

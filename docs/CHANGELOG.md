@@ -17,7 +17,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
   - Couleurs, police, arrondis et ombres de la charte sur toutes les pages, menus et fenêtres compris.
   - Boutons en pilule, le principal en dégradé ; pastilles de filtre, choix et barres de progression en dégradé ; avatar du compte en dégradé.
   - Heros des pages vitrines, sections sombres, dernier appel, page 404 et fins de parcours sur la nuit et ses halos, avec l'en-tête nuit sur les pages vitrines.
-  - Pied de page blanc partout ; sur mobile, barre de navigation du bas sur toutes les pages publiques.
+  - Pied de page blanc partout ; sur mobile, barre de navigation du bas sur l'accueil, `/vendre`, `/contact` et les pages vitrines, comme sur `/acheter`.
   - Cartes de biens de la recherche au modèle de l'accueil ; back office sur la nuit ; carte Google aux couleurs de la charte.
 - Non modifié : emails, rapport PDF et image de partage d'une annonce (en attente de Cédric, Q65).
 

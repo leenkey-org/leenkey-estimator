@@ -79,7 +79,7 @@ export function AccountMenu({
   const onDark = variant !== "avatar";
   const triggerFocus = cn(
     "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2",
-    onDark ? "focus-visible:outline-white" : "focus-visible:outline-lk-blue",
+    onDark ? "focus-visible:outline-white" : "focus-visible:outline-lk-brand-blue",
   );
 
   return (
@@ -98,7 +98,7 @@ export function AccountMenu({
               className,
             )}
           >
-            <Avatar initial={initial} className="lk-gradient-brand size-8.5 text-lk-caption" />
+            <Avatar initial={initial} className="lk-gradient size-8.5 text-lk-caption" />
             <span className="flex min-w-0 flex-col">
               <span className="truncate text-lk-label font-semibold">{name}</span>
               {role ? <span className="truncate text-lk-micro text-white/60">{role}</span> : null}
@@ -112,12 +112,12 @@ export function AccountMenu({
               // The avatar alone below 1 024 px, where the links of the TopNav need the room.
               "flex h-12 shrink-0 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface pr-1.5 pl-1.5 text-lk-ink lg:pl-4",
               "transition-shadow duration-140 ease-out-lk hover:shadow-lk-field data-[state=open]:shadow-lk-field",
-              "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+              "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue",
               className,
             )}
           >
             <Menu aria-hidden="true" className="hidden size-4.5 lg:block" />
-            <Avatar initial={initial} className="lk-gradient-brand size-8.5 text-lk-label" />
+            <Avatar initial={initial} className="lk-gradient size-8.5 text-lk-label" />
           </button>
         ) : (
           <button
@@ -130,7 +130,7 @@ export function AccountMenu({
               className,
             )}
           >
-            <Avatar initial={initial} className="lk-gradient-brand size-10 text-lk-label" />
+            <Avatar initial={initial} className="lk-gradient size-10 text-lk-label" />
           </button>
         )}
       </MenuPrimitive.Trigger>

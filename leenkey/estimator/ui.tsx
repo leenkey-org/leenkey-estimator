@@ -125,7 +125,7 @@ export function ToggleCard({
       </span>
       <span
         className={cn(
-          "flex size-5 shrink-0 items-center justify-center rounded-lk-sm border-[1.5px]",
+          "flex size-5 shrink-0 items-center justify-center rounded-lk-xs border-[1.5px]",
           selected ? "border-lk-blue bg-lk-blue" : "border-lk-field bg-lk-surface",
         )}
       >

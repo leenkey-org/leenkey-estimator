@@ -19,11 +19,11 @@ export type BottomNavProps = {
 };
 
 /**
- * Mobile navigation (docs/DESIGN.md 10.6, direction C): fixed at the bottom
+ * Mobile navigation (docs/DESIGN.md 10.6, charte D): fixed at the bottom
  * below 768 px, white with a top border, padding 10 × 20 × 22 with the iOS
  * safe area, four or five tabs (icon 24 and 12 px 600 label, secondary text).
- * The current tab is the longest prefix of the address, in blue with
- * aria-current. A page that shows it adds BOTTOM_NAV_OFFSET (nav-items.ts) so
+ * The current tab is the longest prefix of the address, in ink with its
+ * icon in the gradient, and aria-current. A page that shows it adds BOTTOM_NAV_OFFSET (nav-items.ts) so
  * that its end stays visible.
  */
 export function BottomNav({ label, items, activeHref, inline = false, className }: BottomNavProps) {

@@ -130,11 +130,11 @@ export function TopNav({
                 // The avatar alone below 1 024 px, where the links need the room.
                 "flex h-12 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface pr-1.5 pl-1.5 text-lk-ink lg:pl-4",
                 "transition-shadow duration-140 ease-out-lk hover:shadow-lk-field",
-                "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue focus-visible:outline-solid",
+                "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
               )}
             >
               <Menu aria-hidden="true" className="hidden size-4.5 lg:block" />
-              <span className="lk-gradient-brand flex size-8.5 items-center justify-center rounded-full text-white">
+              <span className="lk-gradient flex size-8.5 items-center justify-center rounded-full text-white">
                 <User aria-hidden="true" className="size-4.5" />
               </span>
             </Link>

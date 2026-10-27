@@ -32,7 +32,7 @@ type StreetView = "idle" | "searching" | "open" | "none" | "error";
 
 /** Floating white pill over the map (« Voir la rue », « Revenir à la carte »). */
 const MAP_BUTTON =
-  "absolute left-2.5 top-2.5 flex h-10 items-center gap-1.5 rounded-full bg-lk-surface px-3.5 text-lk-button-sm font-bold text-lk-ink shadow-float transition-colors duration-140 ease-out-lk not-aria-disabled:hover:bg-lk-blue-tint not-aria-disabled:hover:text-lk-blue focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue aria-disabled:cursor-default aria-disabled:opacity-60 after:absolute after:-inset-y-0.5 after:inset-x-0 [&_svg]:size-4";
+  "absolute left-2.5 top-2.5 flex h-10 items-center gap-1.5 rounded-full bg-lk-surface px-3.5 text-lk-button-sm font-bold text-lk-ink shadow-float transition-colors duration-140 ease-out-lk not-aria-disabled:hover:bg-lk-blue-tint not-aria-disabled:hover:text-lk-blue focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue aria-disabled:cursor-default aria-disabled:opacity-60 after:absolute after:-inset-y-0.5 after:inset-x-0 [&_svg]:size-4";
 
 function isZeroResults(error: unknown): boolean {
   return (error as MapsRequestError | null)?.code === "ZERO_RESULTS";

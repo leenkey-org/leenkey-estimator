@@ -22,7 +22,7 @@ export default async function AccountPage() {
     <SpacePage title={t.title} roles={profile.roles} profileId={profile.id}>
       <Link
         href={ROUTES.notificationSettings}
-        className="mt-6 flex min-h-14 items-center gap-3 rounded-lk-md border border-lk-line bg-lk-surface px-4 py-3 text-lk-ink transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
+        className="mt-6 flex min-h-14 items-center gap-3 rounded-lk-md border border-lk-line bg-lk-surface px-4 py-3 text-lk-ink transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue"
       >
         <Bell aria-hidden="true" className="size-4.5 shrink-0 text-lk-ink-2" />
         <span className="min-w-0 flex-1 text-lk-compact font-semibold">

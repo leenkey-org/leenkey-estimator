@@ -31,7 +31,7 @@ const panelClassName = cn(
   "duration-220 ease-out-lk data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 motion-reduce:animate-none",
 );
 const optionClassName =
-  "flex min-h-11 w-full items-center gap-3 rounded-lk-lg px-3 text-left text-lk-body text-lk-ink hover:bg-lk-sand focus-visible:bg-lk-sand focus-visible:outline-none";
+  "flex min-h-11 w-full items-center gap-3 rounded-lk-lg px-3 text-left text-lk-body text-lk-ink hover:bg-lk-stone-2 focus-visible:bg-lk-blue-tint focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid";
 
 /**
  * The segmented bar of the « Acheter » tab, from 768 px (docs/design-handoff/
@@ -107,7 +107,7 @@ export function BuySearchBar() {
         <Popover.Anchor asChild>
           <label
             htmlFor={`${id}-place`}
-            className="min-w-0 flex-[1.3] cursor-text rounded-full px-7 py-2.5 hover:bg-lk-sand has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-lk-blue has-[input:focus-visible]:outline-solid"
+            className="min-w-0 flex-[1.3] cursor-text rounded-full px-7 py-2.5 hover:bg-lk-sand has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-lk-brand-blue has-[input:focus-visible]:outline-solid"
           >
             <span className="block text-lk-label font-bold text-lk-ink">{t.where}</span>
             <input
@@ -237,7 +237,7 @@ export function BuySearchBar() {
         className={cn(
           "lk-gradient ml-1 flex h-13.5 shrink-0 items-center gap-2 rounded-full pr-6 pl-5 text-lk-title font-semibold text-white",
           "transition-[filter] duration-140 ease-out-lk hover:brightness-108",
-          "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue focus-visible:outline-solid",
+          "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
         )}
       >
         <Search aria-hidden="true" strokeWidth={2.4} className="size-5" />
@@ -271,7 +271,7 @@ function Segment({
           type="button"
           className={cn(
             "min-w-0 flex-1 rounded-full px-6 py-2.5 text-left hover:bg-lk-sand",
-            "focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-lk-blue focus-visible:outline-solid",
+            "focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
           )}
         >
           <span className="block text-lk-label font-bold text-lk-ink">{label}</span>

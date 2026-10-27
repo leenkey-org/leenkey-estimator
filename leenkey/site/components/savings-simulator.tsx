@@ -49,7 +49,7 @@ export function SavingsSimulator({
                     // Chosen: the gradient of an action, white text (redesign D).
                     "peer-checked:lk-gradient peer-checked:border-transparent peer-checked:text-white",
                     "border-lk-line-strong bg-lk-surface text-lk-ink hover:border-lk-blue-border",
-                    "peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-lk-blue peer-focus-visible:outline-solid",
+                    "peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-lk-brand-blue peer-focus-visible:outline-solid",
                   )}
                 >
                   {formatPrice(value * 100)}

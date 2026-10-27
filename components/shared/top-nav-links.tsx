@@ -39,14 +39,15 @@ function linkClassName(active: boolean, night = false) {
 }
 
 /**
- * A link of an open group: the rows of the AccountMenu; the one of the page in
- * blue and underlined (never told by the colour alone, DESIGN.md 15).
+ * A link of an open group: the rows of the AccountMenu; the one of the page
+ * underlined in indigo (never told by the colour alone, DESIGN.md 15).
  */
 function groupLinkClassName(page: boolean) {
   return cn(
     "flex h-11 items-center whitespace-nowrap rounded-lk-sm px-3 text-lk-compact font-medium",
     "transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2 focus-visible:bg-lk-stone-2",
-    page ? "text-lk-blue underline decoration-2 underline-offset-6" : "text-lk-ink",
+    "text-lk-ink",
+    page && "underline decoration-lk-indigo-mark decoration-2 underline-offset-6",
   );
 }
 

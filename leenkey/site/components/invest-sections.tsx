@@ -463,10 +463,10 @@ export function MessageSection() {
         </div>
         <Button
           asChild
-          variant="inverse"
+          variant="cta"
           size="lg"
           trailingIcon={ArrowRight}
-          className="mt-8 shadow-lk-raised"
+          className="mt-8 focus-visible:outline-white"
         >
           <a href={`#${FORM}`}>{t.message.action}</a>
         </Button>

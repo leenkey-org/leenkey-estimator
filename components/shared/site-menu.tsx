@@ -36,7 +36,7 @@ export type SiteMenuProps = {
 const rowClass = cn(
   "flex min-h-12 items-center border-b border-lk-line text-lk-body-lg font-medium",
   "transition-colors duration-140 ease-out-lk hover:text-lk-blue",
-  "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+  "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue",
 );
 
 /**
@@ -71,10 +71,12 @@ export function SiteMenu({
         href={link.href}
         aria-current={active ? "page" : undefined}
         onClick={close}
-        // In blue and underlined: never told by the colour alone (DESIGN.md 15).
+        // Underlined with the indigo line of the charte: never told by the
+        // colour alone (DESIGN.md 15).
         className={cn(
           rowClass,
-          active ? "text-lk-blue underline decoration-2 underline-offset-6" : "text-lk-ink",
+          "text-lk-ink",
+          active && "underline decoration-lk-indigo-mark decoration-2 underline-offset-6",
         )}
       >
         {link.label}
@@ -93,7 +95,7 @@ export function SiteMenu({
     >
       <Link
         href={homeHref}
-        className="inline-flex h-11 items-center rounded-lk-sm focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
+        className="inline-flex h-11 items-center rounded-lk-sm focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue"
       >
         <Logo tone={night ? "white" : "color"} className="h-7" />
       </Link>
@@ -105,11 +107,11 @@ export function SiteMenu({
             aria-label={texts.open}
             className={cn(
               "flex h-11 items-center gap-2 rounded-full border border-lk-line-strong bg-lk-surface pr-1.25 pl-3.5 text-lk-ink",
-              "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue focus-visible:outline-solid",
+              "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
             )}
           >
             <Menu aria-hidden="true" className="size-4.5" />
-            <span className="lk-gradient-brand flex size-8 items-center justify-center rounded-full text-white">
+            <span className="lk-gradient flex size-8 items-center justify-center rounded-full text-white">
               <User aria-hidden="true" className="size-4" />
             </span>
           </button>
@@ -130,7 +132,7 @@ export function SiteMenu({
               <Link
                 href={homeHref}
                 onClick={close}
-                className="inline-flex h-11 items-center rounded-lk-sm focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
+                className="inline-flex h-11 items-center rounded-lk-sm focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue"
               >
                 <Logo className="h-7" />
               </Link>

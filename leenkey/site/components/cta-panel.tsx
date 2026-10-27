@@ -31,7 +31,7 @@ export function CtaPanel({
   titleAs?: "h2" | "h3" | "h4";
   tone?: "blue" | "light";
   title: string;
-  /** The highlighted words of the V1 title, over the dimension line. */
+  /** The highlighted words of the title, in the gradient. */
   accent?: string;
   text: string;
   action: string;
@@ -84,7 +84,8 @@ export function CtaPanel({
             variant="cta"
             size="lg"
             trailingIcon={ArrowRight}
-            // On the night, the focus ring turns white (the blue would not reach 3:1).
+            // On the night and its halos, the focus ring turns white (the blue of
+            // the charte keeps 3.5:1 there, white more).
             className={light ? undefined : "focus-visible:outline-white"}
           >
             <Link href={href}>{action}</Link>

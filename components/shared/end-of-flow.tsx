@@ -40,7 +40,8 @@ export function EndOfFlow({
             {title}
           </Title>
           <p className="text-lk-body text-lk-night-muted">{text}</p>
-          <div className="mt-5">{action}</div>
+          {/* Over the halos, the focus ring of its action in white. */}
+          <div className="mt-5 [&_:focus-visible]:outline-white">{action}</div>
         </div>
       </div>
     </section>

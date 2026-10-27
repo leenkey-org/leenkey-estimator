@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 // L1-44: the valuation wizard and its result in Façade (docs/DESIGN.md 13.1),
 // with the logic and the words of the V1 (the engine has its own regression
-// tests): Archivo only, no emoji (DESIGN.md 1), no serious accessibility
+// tests): Sora only (charte D, L1-58), no emoji (DESIGN.md 1), no serious accessibility
 // violation, in mobile and desktop. The result is restored from this
 // browser, as after a reload.
 
@@ -105,7 +105,6 @@ test("le wizard est en Sora, sans police de la V1, et sans violation sérieuse",
 
   // The home page loads no V1 font either.
   await page.goto("/");
-  // Sora is declared for the pages of the redesign D (L1-57), not used here.
   expect(await fontFamilies(page)).toEqual(SITE_FONTS);
 });
 

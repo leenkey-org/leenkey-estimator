@@ -260,13 +260,14 @@ export const buttons = {
     cta: "Voir ma valorisation",
   },
   ctaCaption:
-    "Variante cta avec trailingIcon ArrowRight · appels à l'action de l'accueil seulement, dans la direction de la V1 (L1-49) : dégradé du bleu de marque (4,9:1 sous le texte blanc), ombre bleue, s'élève de 2 px au survol, la flèche avance",
+    "Variante cta avec trailingIcon ArrowRight · l'appel principal d'un écran, charte D (L1-58) : dégradé #2563EB → #7C3AED (5,2:1 au moins sous le texte blanc), ombre violette, s'élève de 1 px au survol, la flèche avance",
   sizes: { lg: "Grand · 52 px", md: "Moyen · 44 px", sm: "Petit · 40 px" },
   withIcon: "Vendre mon bien",
   disabled: "Désactivé",
   loading: "Envoi en cours",
   link: "Lien avec le style bouton",
-  onBlueCaption: "Variantes inverse et outline-inverse (contour blanc), sur aplat bleu uniquement",
+  onBlueCaption:
+    "Variantes inverse et outline-inverse (contour blanc), sur un aplat coloré ou une photo",
 };
 
 export const iconButtons = {
@@ -580,8 +581,8 @@ export const formats = {
 };
 
 export const shapes = {
-  radiusSm: "rounded-lk-sm · 4 px · contrôles, vignettes",
-  radiusMd: "rounded-lk-md · 6 px · cartes, panneaux",
+  radiusSm: "rounded-lk-sm · 12 px · contrôles, vignettes",
+  radiusMd: "rounded-lk-md · 16 px · cartes, panneaux",
   radiusFull: "rounded-full · pastilles, avatars",
   shadowFloat: "shadow-float · éléments flottants",
   shadowSheet: "shadow-sheet · feuille mobile",
@@ -847,7 +848,7 @@ export const publicPages = {
   // L1-50: the pieces of the showcase pages (DESIGN.md 1 and 10.6).
   showcase: {
     heroCaption:
-      "ShowcaseHero · hero des pages vitrines (accueil, /concept, /investir, /qui-sommes-nous) : fond bleu nuit à trame de points, surtitre en capitales --lk-blue-light (ou pastille), titre mot à mot 36, 44 puis 56 px 800, mots mis en valeur en dégradé clair sur la ligne de cote, actions cta ; une photo à droite à partir de 1 024 px (aside)",
+      "ShowcaseHero · hero des pages vitrines (accueil, /concept, /investir, /qui-sommes-nous) : la nuit de la charte D et ses halos, trame de points, surtitre en capitales --lk-blue-light (ou pastille), titre mot à mot 36, 44 puis 56 px 700, mots mis en valeur dans le dégradé de la nuit sur la ligne de cote, actions cta ; une photo à droite à partir de 1 024 px (aside)",
     heroEyebrow: "Qui sommes-nous",
     heroTitle: "Rendre la vente immobilière enfin simple.",
     heroAccent: "enfin simple.",

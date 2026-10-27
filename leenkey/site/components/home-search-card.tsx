@@ -50,7 +50,7 @@ export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
               "md:flex-none md:flex-row md:gap-2.25 md:px-4 md:pt-4.5 md:pb-4 md:text-lk-title",
               "transition-colors duration-140 ease-out-lk hover:text-lk-ink",
               "data-[state=active]:border-lk-indigo-mark data-[state=active]:text-lk-ink",
-              "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-blue focus-visible:outline-solid",
+              "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
             )}
           >
             <Icon
@@ -272,7 +272,7 @@ function AddressForm({
       <div className="relative md:min-w-90 md:flex-1">
         <label
           htmlFor={inputId}
-          className="flex h-13.5 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface px-4.5 shadow-lk-d-field focus-within:border-lk-blue has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-lk-blue has-[input:focus-visible]:outline-solid md:h-15.5 md:gap-3 md:px-6"
+          className="flex h-13.5 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface px-4.5 shadow-lk-d-field focus-within:border-lk-blue has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-lk-brand-blue has-[input:focus-visible]:outline-solid md:h-15.5 md:gap-3 md:px-6"
         >
           <span className="sr-only">{label}</span>
           <MapPin

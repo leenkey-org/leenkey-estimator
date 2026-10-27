@@ -39,7 +39,7 @@ export function SpacePage({
       {back ? (
         <Link
           href={back.href}
-          className="-ml-1 mb-2 inline-flex min-h-11 items-center gap-1 rounded-lk-sm pr-2 text-lk-secondary font-medium text-lk-ink-2 hover:text-lk-ink focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
+          className="-ml-1 mb-2 inline-flex min-h-11 items-center gap-1 rounded-lk-sm pr-2 text-lk-secondary font-medium text-lk-ink-2 hover:text-lk-ink focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue"
         >
           <ChevronLeft aria-hidden="true" className="size-4" />
           {back.label}

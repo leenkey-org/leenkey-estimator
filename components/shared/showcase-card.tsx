@@ -136,7 +136,7 @@ export function ShowcaseCard({
               // heart stay above it).
               "after:absolute after:inset-0 after:z-5 after:content-['']",
               framed ? "after:rounded-lk-2xl" : "after:rounded-lk-d-card",
-              "focus-visible:outline-none focus-visible:after:outline-3 focus-visible:after:outline-offset-2 focus-visible:after:outline-lk-blue focus-visible:after:outline-solid",
+              "focus-visible:outline-none focus-visible:after:outline-3 focus-visible:after:outline-offset-2 focus-visible:after:outline-lk-brand-blue focus-visible:after:outline-solid",
             )}
           >
             {title}
@@ -289,7 +289,7 @@ function PhotoArrow({
         atEnd
           ? "pointer-events-none cursor-default"
           : "group-hover:opacity-100 pointer-coarse:opacity-100",
-        "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue focus-visible:outline-solid",
+        "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
       )}
     >
       <span

@@ -238,8 +238,9 @@ test.describe("pages du site en V2", () => {
     );
     const question = page.locator("summary").first();
     await expect(question).toHaveCSS("color", "rgb(255, 255, 255)");
-    // The focus ring turns white on the night, where the blue would not reach 3:1
-    // (its colour alone would be white without any ring: currentColor).
+    // The focus ring turns white on the night and its halos (more than the
+    // 3.5:1 of the blue of the charte; its colour alone would be white without
+    // any ring: currentColor).
     await question.focus();
     await expect(question).toHaveCSS("outline-style", "solid");
     await expect(question).toHaveCSS("outline-color", "rgb(255, 255, 255)");

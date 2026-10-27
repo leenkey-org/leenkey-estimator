@@ -82,6 +82,43 @@ describe("palette (DESIGN.md 2.1)", () => {
     expect(contrast(foreground, background)).toBeGreaterThanOrEqual(4.5);
   });
 
+  // The charte D (L1-58): white text on both ends of the gradient of the
+  // actions (never on the lighter one of the charte, under an avatar too),
+  // the texts of the night, and the names that share a value.
+  it.each([
+    ["surface", "action-blue"],
+    ["surface", "action-violet"],
+    ["night-text", "night"],
+    ["night-muted", "night"],
+    ["blue-light", "night"],
+    ["ink-3", "sand"],
+  ])("%s on %s reaches 4.5:1 (charte D)", (foreground, background) => {
+    expect(contrast(foreground, background)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("white text never sits on the blue of the charte (3.7:1)", () => {
+    expect(contrast("surface", "brand-blue")).toBeLessThan(4.5);
+  });
+
+  // WCAG 1.4.11: the focus ring of every component, on the night and on the
+  // lightest tints.
+  it.each(["night", "surface", "bg", "blue-tint", "stone-2"])(
+    "the focus ring (brand-blue) reaches 3:1 on %s",
+    (background) => {
+      expect(contrast("brand-blue", background)).toBeGreaterThanOrEqual(3);
+    },
+  );
+
+  it.each([
+    ["blue", "action-blue"],
+    ["blue-mid", "action-violet"],
+    ["navy", "night"],
+    ["blue-dark", "indigo"],
+    ["blue-light", "night-blue"],
+  ])("%s keeps the value of %s", (name, alias) => {
+    expect(token(name)).toBe(token(alias));
+  });
+
   // The hover of an unread notification, its dates on the light blue.
   it("ink-3 on blue-line reaches 4.5:1", () => {
     expect(contrast("ink-3", "blue-line")).toBeGreaterThanOrEqual(4.5);
@@ -137,6 +174,10 @@ describe("cn() knows the Façade classes", () => {
     expect(cn("tracking-wide", "tracking-lk-eyebrow")).toBe("tracking-lk-eyebrow");
     expect(cn("tabular-nums", "tabular")).toBe("tabular");
     expect(cn("bg-primary", "bg-lk-blue")).toBe("bg-lk-blue");
+    // The white focus ring set on a night replaces the blue of the charte (L1-58).
+    expect(cn("focus-visible:outline-lk-brand-blue", "focus-visible:outline-white")).toBe(
+      "focus-visible:outline-white",
+    );
   });
 
   it("lists exactly the font sizes declared in globals.css", () => {

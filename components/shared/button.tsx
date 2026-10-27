@@ -22,7 +22,7 @@ export const buttonVariants = cva(
     "relative rounded-full font-semibold shadow-none",
     // Pressed, it gives a little (DESIGN.md 9), as the V1 buttons did.
     "transition-[color,background-color,border-color,scale] duration-140 ease-out-lk not-disabled:active:scale-[0.98]",
-    "focus-visible:ring-0 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+    "focus-visible:ring-0 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue",
     // Disabled: 0.45 opacity, "not allowed" cursor, no hover (not-disabled: below).
     "disabled:pointer-events-auto disabled:cursor-not-allowed disabled:opacity-45",
     // Loading is disabled too, but keeps its colours: the spinner says it is working.
@@ -55,15 +55,14 @@ export const buttonVariants = cva(
           "bg-lk-success text-white not-disabled:hover:bg-lk-success-fg not-disabled:active:bg-lk-success-fg",
         danger:
           "border-[1.5px] border-lk-danger bg-lk-surface text-lk-danger not-disabled:hover:bg-lk-danger-bg not-disabled:active:bg-lk-danger-bg",
-        // On a blue flat only: the focus ring turns white to stay visible.
+        // White on a coloured flat (a photo, a tint): the focus ring turns white.
         inverse:
           "bg-lk-surface text-lk-blue not-disabled:hover:bg-lk-blue-tint not-disabled:active:bg-lk-blue-tint focus-visible:outline-white",
         // The secondary button on the night (SPECS.md 2), of glass with a
         // white line.
         night:
           "border border-white/35 bg-lk-night/55 text-white not-disabled:hover:bg-white/10 not-disabled:active:bg-white/10",
-        // White outline on a blue flat, beside an inverse button (hero of the
-        // home page, DESIGN.md 13.1).
+        // White outline on a coloured flat, beside an inverse button.
         "outline-inverse":
           "border-[1.5px] border-white bg-transparent text-white not-disabled:hover:bg-white/12 not-disabled:active:bg-white/12 focus-visible:outline-white",
       },

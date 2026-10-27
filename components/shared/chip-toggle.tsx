@@ -21,7 +21,7 @@ export function chipClassName(compact = false) {
     "hover:bg-lk-surface hover:text-lk-ink data-[state=off]:enabled:hover:border-lk-ink-3",
     "data-[state=on]:border-lk-blue data-[state=on]:bg-lk-blue-tint data-[state=on]:text-lk-blue",
     "data-[state=on]:hover:bg-lk-blue-tint data-[state=on]:hover:text-lk-blue",
-    "focus-visible:ring-0 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+    "focus-visible:ring-0 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue",
     "disabled:pointer-events-auto disabled:cursor-not-allowed disabled:opacity-45",
     // 44 px touch target (DESIGN.md 15).
     compact

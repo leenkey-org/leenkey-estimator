@@ -76,7 +76,7 @@ export function ShowcaseHero({
               {badge.text}
             </p>
           ) : eyebrow ? (
-            <p className="lk-rise text-lk-secondary font-bold tracking-lk-eyebrow text-lk-blue-light uppercase">
+            <p className="lk-rise text-lk-secondary font-bold tracking-lk-caps text-lk-blue-light uppercase">
               {eyebrow}
             </p>
           ) : null}

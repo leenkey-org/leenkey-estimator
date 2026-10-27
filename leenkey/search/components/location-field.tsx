@@ -126,7 +126,7 @@ export function LocationField({ className }: { className?: string }) {
           // A part of the bar: no frame of its own, sand under the pointer.
           "lg:min-h-14 lg:h-auto lg:border-transparent lg:pl-5 lg:shadow-none lg:hover:bg-lk-sand",
           "lg:has-[input:focus-visible]:border-transparent lg:has-[input:focus-visible]:bg-lk-surface lg:has-[input:focus-visible]:shadow-lk-field lg:has-[input:focus-visible]:ring-0",
-          "lg:has-[input:focus-visible]:outline-3 lg:has-[input:focus-visible]:outline-offset-2 lg:has-[input:focus-visible]:outline-lk-blue lg:has-[input:focus-visible]:outline-solid",
+          "lg:has-[input:focus-visible]:outline-3 lg:has-[input:focus-visible]:outline-offset-2 lg:has-[input:focus-visible]:outline-lk-brand-blue lg:has-[input:focus-visible]:outline-solid",
         )}
       >
         <Search aria-hidden="true" className="size-4.5 shrink-0 text-lk-ink-3 lg:hidden" />
@@ -217,7 +217,7 @@ export function LocationField({ className }: { className?: string }) {
               "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lk-lg px-3 py-2",
               // The option reached with the arrows: the ring of DESIGN.md 15, inside.
               index === active &&
-                "bg-lk-sand outline-3 -outline-offset-3 outline-lk-blue outline-solid",
+                "bg-lk-sand outline-3 -outline-offset-3 outline-lk-brand-blue outline-solid",
             )}
           >
             <span className="text-lk-compact text-lk-ink">{commune.name}</span>
