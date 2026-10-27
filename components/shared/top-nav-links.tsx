@@ -14,7 +14,16 @@ const CLOSE_DELAY_MS = 150;
 const CLICK_GRACE_MS = 500;
 
 /** 14 px 500, then 600 from 1 024 px and 15 px from 1 280 px (direction C), 44 px high in the 72 px bar, the current one in blue. */
-function linkClassName(active: boolean) {
+function linkClassName(active: boolean, night = false) {
+  if (night) {
+    return cn(
+      "relative inline-flex h-11 items-center whitespace-nowrap rounded-lk-sm text-lk-compact font-medium text-white xl:text-lk-title",
+      // The violet light of the night under the current link (redesign D).
+      "after:absolute after:inset-x-0 after:bottom-2 after:h-0.5 after:origin-left after:bg-lk-night-violet",
+      "after:transition-transform after:duration-220 after:ease-out-lk",
+      active ? "after:scale-x-100" : "after:scale-x-0 hover:after:scale-x-100",
+    );
+  }
   return cn(
     // 44 px high touch target inside the 72 px bar.
     "relative inline-flex h-11 items-center whitespace-nowrap rounded-lk-sm text-lk-compact font-medium lg:font-semibold xl:text-lk-title",
@@ -59,6 +68,7 @@ function NavGroup({
   items,
   active,
   here,
+  night = false,
   className,
 }: {
   link: NavItem;
@@ -67,6 +77,7 @@ function NavGroup({
   active: boolean;
   /** Href of the link of this page. */
   here: string | null;
+  night?: boolean;
   className?: string;
 }) {
   const pathname = usePathname();
@@ -161,7 +172,7 @@ function NavGroup({
           }
           show(!open);
         }}
-        className={cn(linkClassName(active || open), "group cursor-pointer gap-1")}
+        className={cn(linkClassName(active || open, night), "group cursor-pointer gap-1")}
       >
         {link.label}
         <ChevronDown
@@ -175,7 +186,7 @@ function NavGroup({
         hidden={!open}
         className="absolute top-full -left-4.75 z-10 animate-in pt-2 duration-220 ease-out-lk fade-in-0 slide-in-from-top-2 motion-reduce:animate-none"
       >
-        <ul className="min-w-55 rounded-lk-md border border-lk-line bg-lk-surface p-1.5 shadow-float">
+        <ul className="lk-on-light min-w-55 rounded-lk-md border border-lk-line bg-lk-surface p-1.5 shadow-float">
           {items.map((item) => {
             const page = item.href === here;
             return (
@@ -207,10 +218,13 @@ export function TopNavLinks({
   label,
   links,
   activeHref,
+  night = false,
 }: {
   label: string;
   links: readonly NavItem[];
   activeHref?: string | null;
+  /** White, on the night of the home page D. */
+  night?: boolean;
 }) {
   const pathname = usePathname();
   const current = activeHref === undefined ? currentHref(pathname, links) : activeHref;
@@ -231,6 +245,7 @@ export function TopNavLinks({
                 items={link.items}
                 active={active}
                 here={active ? currentHref(pathname, link.items) : null}
+                night={night}
                 className={shown}
               />
             );
@@ -240,7 +255,7 @@ export function TopNavLinks({
               <Link
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                className={linkClassName(active)}
+                className={linkClassName(active, night)}
               >
                 {link.label}
               </Link>

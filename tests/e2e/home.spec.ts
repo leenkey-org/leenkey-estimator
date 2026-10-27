@@ -61,13 +61,16 @@ test.describe("accueil", () => {
   }) => {
     const response = await page.goto("/");
     expect(response?.status()).toBe(200);
-    const hero = page.getByRole("region", { name: "Leenkey vous donne les clés de votre vente." });
+    const hero = page.getByRole("region", {
+      name: "Vendez votre bien autrement. Moins de frais, plus de contrôle.",
+    });
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Leenkey vous donne les clés de votre vente.",
+      "Vendez votre bien autrement. Moins de frais, plus de contrôle.",
     );
     await expect(hero.getByText("Ni agence, ni seul · 0 € de commission")).toBeVisible();
     // Its rights confirmed (Q57): in production too, so in CI. Decorative.
-    const photo = hero.locator('img[src*="/images/accueil/maison-"]');
+    // Beside the text from 1 024 px, under it below: the one shown.
+    const photo = hero.locator('img[src*="/images/accueil/maison-"]:visible');
     await expect(photo).toBeVisible();
     await expect(photo).toHaveAttribute("alt", "");
     // « Valoriser mon bien » open first, its action on the first screen, at 390 px too.
@@ -81,7 +84,7 @@ test.describe("accueil", () => {
       "aria-selected",
       "true",
     );
-    const action = page.getByRole("button", { name: "Voir ma valorisation" });
+    const action = page.getByRole("button", { name: "Valoriser mon bien gratuitement" });
     const box = await action.boundingBox();
     expect((box?.y ?? Infinity) + (box?.height ?? 0)).toBeLessThan(
       page.viewportSize()?.height ?? 0,
@@ -115,7 +118,7 @@ test.describe("accueil", () => {
     await field.press("Enter");
     await expect(field).toHaveValue(ADDRESS.label);
     await expect(list).toBeHidden();
-    await page.getByRole("button", { name: "Voir ma valorisation" }).click();
+    await page.getByRole("button", { name: "Valoriser mon bien gratuitement" }).click();
     // Read once: the address of the page is cleaned, the draft holds it.
     await expect(page).toHaveURL("/estimer");
     await expect

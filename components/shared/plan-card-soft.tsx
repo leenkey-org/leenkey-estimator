@@ -31,32 +31,29 @@ export function PlanCardSoft({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 rounded-lk-2xl border bg-lk-surface p-4.5 lg:flex-col lg:items-stretch lg:justify-start lg:gap-2.5 lg:rounded-lk-3xl lg:p-7.5",
-        featured ? "border-lk-blue shadow-lk-featured" : "border-lk-line",
+        "flex items-center justify-between gap-3 rounded-lk-2xl bg-lk-surface p-4.5 lg:flex-col lg:items-stretch lg:justify-start lg:gap-2.5 lg:rounded-lk-3xl lg:p-7.5",
+        // The plan put forward in the outline of the gradient (redesign D).
+        featured ? "lk-gradient-border shadow-lk-featured" : "border border-lk-line",
         className,
       )}
     >
       <div className="flex min-w-0 flex-col lg:gap-2.5">
         <span
           className={cn(
-            "text-lk-caption font-bold lg:self-start lg:rounded-full lg:px-3 lg:py-1 lg:text-lk-label",
-            featured
-              ? "text-lk-blue-dark lg:bg-lk-blue-tint"
-              : "text-lk-ink-2 lg:bg-lk-sand lg:text-lk-ink",
+            "self-start rounded-full px-2.5 py-0.5 text-lk-micro font-semibold lg:px-3 lg:py-1 lg:text-lk-caption",
+            featured ? "lk-gradient text-white" : "bg-lk-stone-2 text-lk-ink-tag",
           )}
         >
           {tag}
         </span>
-        <Name className="text-lk-c-plan font-extrabold text-lk-ink lg:text-lk-c-plan-lg">
-          {name}
-        </Name>
+        <Name className="text-lk-c-plan font-bold text-lk-ink lg:text-[1.3125rem]">{name}</Name>
         <p className="text-lk-secondary text-lk-ink-2 lg:min-h-13 lg:text-lk-body">{text}</p>
       </div>
       <div className="flex shrink-0 flex-col items-end lg:items-start lg:gap-2.5">
-        <p className="text-lk-c-price tabular text-heavy text-lk-ink lg:text-lk-c-price-lg">
+        <p className="text-lk-c-price font-bold tracking-[-0.03em] tabular text-lk-ink lg:text-[2.375rem]">
           {price}
         </p>
-        <p className="hidden text-lk-compact text-lk-ink-2 lg:block">{note}</p>
+        <p className="hidden text-lk-secondary text-lk-ink-3 lg:block">{note}</p>
       </div>
     </div>
   );

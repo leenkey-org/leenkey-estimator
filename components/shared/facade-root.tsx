@@ -1,12 +1,12 @@
 import type { ComponentProps } from "react";
-import { archivo } from "@/lib/fonts";
+import { archivo, sora } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
 /**
  * Classes of the Façade scope (Archivo and the base styles of app/globals.css).
  * Also for the container of a portal (dialog, sheet) rendered outside the root.
  */
-export const facadeScope = cn(archivo.variable, "facade");
+export const facadeScope = cn(archivo.variable, sora.variable, "facade");
 
 /**
  * Root of every V2 screen: the Façade design system applies to its subtree

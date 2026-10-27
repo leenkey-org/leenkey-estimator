@@ -25,15 +25,16 @@ export function PillLink({
       href={href}
       aria-current={selected ? "page" : undefined}
       className={cn(
-        "inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-lk-compact font-semibold md:h-12 md:gap-2.5 md:px-5 md:text-lk-body",
+        "inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-lk-secondary font-medium shadow-[0_1px_2px_rgb(15_23_42/0.04)] md:h-12 md:gap-2.5 md:px-5 md:text-lk-compact",
         "transition-colors duration-140 ease-out-lk",
         selected
           ? "border-lk-blue bg-lk-blue-tint text-lk-blue-dark"
-          : "border-lk-line-strong bg-lk-surface text-lk-ink hover:border-lk-blue-border hover:bg-lk-blue-tint",
+          : "border-lk-line bg-lk-surface text-lk-ink hover:border-lk-blue-border hover:bg-lk-blue-tint",
         className,
       )}
     >
-      <Icon aria-hidden="true" strokeWidth={1.8} className="size-4.5 text-lk-blue md:size-5" />
+      {/* In the gradient of the charte (GradientDefs on the page). */}
+      <Icon aria-hidden="true" strokeWidth={1.9} className="lk-icon-gradient size-4.5 md:size-5" />
       {children}
     </Link>
   );

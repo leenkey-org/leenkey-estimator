@@ -27,6 +27,8 @@ const BUDGETS = [200_000, 300_000, 400_000, 500_000, 700_000] as const;
 
 const panelClassName = cn(
   facadeScope,
+  // Opened out of the page: the charte of the home page (redesign D).
+  "lk-d",
   "z-50 rounded-lk-xl border border-lk-line bg-lk-surface p-2 shadow-lk-block",
   "duration-220 ease-out-lk data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 motion-reduce:animate-none",
 );
@@ -235,8 +237,8 @@ export function BuySearchBar() {
       <button
         type="submit"
         className={cn(
-          "ml-1 flex h-14 shrink-0 items-center gap-2 rounded-full bg-lk-blue pr-6 pl-5 text-lk-body-lg font-bold text-white",
-          "transition-colors duration-140 ease-out-lk hover:bg-lk-blue-hover",
+          "lk-gradient ml-1 flex h-13.5 shrink-0 items-center gap-2 rounded-full pr-6 pl-5 text-lk-title font-semibold text-white",
+          "transition-[filter] duration-140 ease-out-lk hover:brightness-108",
           "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue focus-visible:outline-solid",
         )}
       >

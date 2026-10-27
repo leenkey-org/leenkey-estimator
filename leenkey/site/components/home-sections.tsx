@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, ChartLine, FileText, PenLine, Search, Tag, UserRound } from "lucide-react";
+import { Accented } from "@/components/shared/accented";
 import { Button } from "@/components/shared/button";
 import { DecorativeShapes } from "@/components/shared/decorative-shapes";
 import { FaqList } from "@/components/shared/faq-list";
@@ -17,8 +18,8 @@ import { directListingHref } from "./home-hero";
 import { RichText } from "./rich-text";
 import { SavingsSimulator } from "./savings-simulator";
 
-// Sections of the home page of direction C after the hero
-// (docs/design-handoff/SPECS.md 3, items 5 to 11), and the contact section
+// Sections of the home page after the hero, in the charte of the redesign D
+// (docs/design-handoff/SPECS.md 3, items 4 to 10), and the contact section
 // of /contact. Texts: fr.site.home. The steps, the plans and the questions
 // keep the anchors of the V1 home page (#comment, #tarifs, #faq).
 
@@ -85,36 +86,43 @@ export async function SavingsSection() {
       <DecorativeShapes
         shapes={[
           {
-            kind: "halo",
-            className: "-top-22 -right-27 size-75 md:-top-38 md:-right-27 md:size-120",
+            kind: "orb",
+            className: "-top-22 -right-22 size-60 md:-top-30 md:-right-25 md:size-90",
           },
           {
-            kind: "ring",
+            kind: "dots",
             slow: true,
-            className: "bottom-8 -left-15 size-35 md:bottom-10 md:-left-17 md:size-55",
+            className: "bottom-12 left-10 hidden h-25 w-37.5 md:block",
           },
-          { kind: "dot", slow: true, className: "top-18 left-[44%] hidden size-3.5 md:block" },
+          {
+            kind: "orb-solid",
+            slow: true,
+            className:
+              "top-9 right-6 size-8.5 md:top-17.5 md:right-auto md:left-[44%] md:size-11.5",
+          },
         ]}
       />
-      <div className="lk-frame max-md:[--lk-gutter:1rem] flex flex-col gap-4 py-10 md:py-20 lg:flex-row lg:items-center lg:gap-14">
-        <div data-reveal="" className="min-w-0 lg:flex-[1_1_440px]">
-          <p className="mb-2 text-lk-compact font-bold text-lk-blue md:mb-3 md:text-lk-body-lg">
-            {t.eyebrow}
-          </p>
-          <h2
-            id="economies"
-            className="text-lk-c-feature text-heavy text-lk-ink md:text-lk-c-feature-lg"
-          >
-            {t.title}
-          </h2>
-          <p className="mt-2.5 text-lk-body text-lk-ink-2 md:mt-4 md:text-lk-lead-lg">
-            <span className="md:hidden">{t.leadShort}</span>
-            <span className="hidden md:inline">{t.lead}</span>
-          </p>
-        </div>
-        <div data-reveal="" className="min-w-0 lg:flex-[1_1_520px]">
-          <SavingsSimulator accompaniedCents={planCents} />
-        </div>
+      <div className="lk-frame max-md:[--lk-gutter:1rem] py-10 md:py-22">
+        <SavingsSimulator
+          accompaniedCents={planCents}
+          intro={
+            <>
+              <p className="mb-2 text-lk-micro font-semibold tracking-lk-caps text-lk-blue-dark uppercase md:mb-3 md:text-lk-secondary">
+                {t.eyebrow}
+              </p>
+              <h2
+                id="economies"
+                className="max-w-75 text-lk-d-feature font-bold tracking-[-0.03em] text-lk-ink md:max-w-none md:text-lk-d-feature-lg"
+              >
+                <Accented text={t.title} accent={t.accent} className="lk-gradient-text" />
+              </h2>
+              <p className="mt-2.5 text-lk-body text-lk-ink-2 md:mt-4 md:text-[1.0625rem]">
+                <span className="md:hidden">{t.leadShort}</span>
+                <span className="hidden md:inline">{t.lead}</span>
+              </p>
+            </>
+          }
+        />
       </div>
     </section>
   );
@@ -140,30 +148,33 @@ export function StepsSection() {
           return (
             <li
               key={step.title}
-              className="flex gap-3.5 overflow-hidden rounded-lk-xl border border-lk-line bg-lk-surface p-4 md:flex-col md:gap-0 md:rounded-lk-2xl md:p-0"
+              className="flex gap-3.5 rounded-[1.125rem] border border-lk-line bg-lk-surface p-4 md:flex-col md:rounded-[1.25rem] md:p-7"
             >
-              <div className="relative flex shrink-0 items-center justify-center md:h-37.5 md:bg-lk-blue-tint">
+              {/* The number in a square of the gradient, its tag beside it. */}
+              <div className="flex shrink-0 items-start justify-between md:items-center">
                 <span
                   aria-hidden="true"
-                  className="absolute top-4 left-4.5 hidden text-lk-body font-extrabold text-lk-blue md:block"
+                  className="lk-gradient flex size-9 items-center justify-center rounded-lk-lg text-lk-title font-bold text-white md:size-10"
                 >
-                  {`0${index + 1}`}
+                  {index + 1}
                 </span>
-                <span className="absolute top-3.5 right-4 hidden rounded-full bg-lk-surface px-2.5 py-1 text-lk-label font-bold text-lk-blue-dark md:block">
+                <span className="hidden rounded-full bg-lk-blue-tint px-3 py-1 text-lk-caption font-semibold text-lk-blue-dark md:inline">
                   {step.tag}
                 </span>
-                <span className="flex size-14 items-center justify-center rounded-lk-xl bg-lk-blue-tint text-lk-blue md:size-19 md:rounded-lk-3xl md:bg-lk-surface md:shadow-lk-tile">
-                  <Icon aria-hidden="true" strokeWidth={1.6} className="size-6.5 md:size-9" />
-                </span>
               </div>
-              <div className="min-w-0 md:px-6 md:pt-5.5 md:pb-6.5">
-                <p className="text-lk-label font-extrabold text-lk-blue md:hidden">
+              <Icon
+                aria-hidden="true"
+                strokeWidth={1.7}
+                className="lk-icon-gradient hidden size-7.5 md:block"
+              />
+              <div className="min-w-0">
+                <p className="text-lk-caption font-semibold text-lk-blue-dark md:hidden">
                   {`${t.label(index + 1)} · ${step.tag}`}
                 </p>
-                <h3 className="text-lk-c-card font-extrabold text-lk-ink md:mb-1.5 md:text-lk-c-card-lg">
+                <h3 className="text-lk-c-card font-bold text-lk-ink md:mb-1.5 md:text-lk-c-card-lg">
                   {step.title}
                 </h3>
-                <p className="text-lk-compact text-lk-ink-2 md:text-lk-body-lg">{step.text}</p>
+                <p className="text-lk-compact text-lk-ink-2 md:text-lk-body">{step.text}</p>
               </div>
             </li>
           );
@@ -189,7 +200,7 @@ export async function PlansSection() {
         </h2>
         <Link
           href={ROUTES.pricing}
-          className="inline-flex min-h-11 items-center text-lk-compact font-bold text-lk-blue underline-offset-3 hover:underline md:text-lk-body-lg"
+          className="inline-flex min-h-11 items-center text-lk-compact font-semibold text-lk-blue underline-offset-3 hover:underline md:text-lk-body"
         >
           {t.all}
         </Link>
@@ -245,7 +256,7 @@ export function HomeFaqSection() {
       />
       <Link
         href={ROUTES.faq}
-        className="mt-3 inline-flex min-h-11 items-center text-lk-body font-bold text-lk-blue underline-offset-3 hover:underline"
+        className="mt-3 inline-flex min-h-11 items-center text-lk-body font-semibold text-lk-blue underline-offset-3 hover:underline"
       >
         {t.all}
       </Link>
@@ -260,34 +271,39 @@ export function FinalBanner() {
     <section aria-labelledby="pret" className="lk-frame max-md:[--lk-gutter:1rem] pt-10 md:pt-22">
       <div
         data-reveal=""
-        className="relative isolate flex flex-col gap-4 overflow-hidden rounded-lk-3xl border border-lk-line bg-lk-surface px-5.5 py-7 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-8 md:rounded-lk-4xl md:p-16"
+        className="relative isolate flex flex-col gap-5 overflow-hidden rounded-lk-3xl bg-lk-night px-5.5 py-8 text-white md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-8 md:rounded-[1.75rem] md:p-16"
       >
         <DecorativeShapes
           shapes={[
             {
-              kind: "halo",
-              className: "-top-20 -right-20 size-55 md:-top-30 md:right-[18%] md:size-85",
+              kind: "halo-blue",
+              className: "-bottom-40 -left-30 size-90 md:-bottom-55 md:size-130",
             },
             {
-              kind: "ring",
-              slow: true,
-              className:
-                "-bottom-12.5 -left-10 size-30 md:-right-10 md:-bottom-15 md:left-auto md:size-45",
+              kind: "halo-violet",
+              className: "-top-40 -right-20 size-80 md:-top-50 md:right-[10%] md:size-110",
             },
+            { kind: "dots-white", className: "top-7 right-9 hidden h-20 w-30 md:block" },
           ]}
         />
-        <div className="max-w-155">
-          <h2 id="pret" className="text-lk-c-banner text-heavy text-lk-ink md:text-lk-c-banner-lg">
-            {t.title}
+        <div className="max-w-160">
+          <h2
+            id="pret"
+            className="text-[1.5625rem] leading-[1.15] font-bold tracking-[-0.03em] md:text-lk-c-banner-lg"
+          >
+            <Accented text={t.title} accent={t.accent} className="lk-gradient-text-night" />
           </h2>
-          <p className="mt-2 text-lk-body text-lk-ink-2 md:mt-3 md:text-lk-lead-lg">{t.text}</p>
+          <p className="mt-2 text-lk-body text-lk-night-muted md:mt-3 md:text-[1.0625rem]">
+            {t.text}
+          </p>
         </div>
         <Button
           asChild
+          variant="gradient"
           shape="pill"
           size="xl"
           trailingIcon={ArrowRight}
-          className="w-full font-extrabold md:h-15 md:w-auto md:px-7"
+          className="w-full font-semibold md:h-14.5 md:w-auto md:px-7"
         >
           <Link href={ROUTES.valuation}>{t.action}</Link>
         </Button>

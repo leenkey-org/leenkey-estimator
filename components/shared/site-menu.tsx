@@ -28,6 +28,10 @@ export type SiteMenuProps = {
   /** « Mon compte » signed out, « Mon espace » signed in. */
   account: { href: string; label: string };
   texts: SiteMenuTexts;
+  /** night: on the night band of the home page D, white logo, pill of glass. */
+  tone?: "light" | "night";
+  /** Classes of the opened menu (the scope of a redesign, `lk-d`). */
+  panelClassName?: string;
   className?: string;
 };
 
@@ -53,8 +57,11 @@ export function SiteMenu({
   cta,
   account,
   texts,
+  tone = "light",
+  panelClassName,
   className,
 }: SiteMenuProps) {
+  const night = tone === "night";
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const current = currentHref(pathname, links);
@@ -82,7 +89,8 @@ export function SiteMenu({
     <header
       data-sticky-header="site-menu"
       className={cn(
-        "sticky top-0 z-20 flex h-15 items-center justify-between gap-4 border-b border-lk-line bg-lk-surface px-4 md:hidden",
+        "sticky top-0 z-20 flex h-15 items-center justify-between gap-4 border-b px-4 md:hidden",
+        night ? "lk-on-night border-transparent bg-lk-night" : "border-lk-line bg-lk-surface",
         className,
       )}
     >
@@ -90,7 +98,7 @@ export function SiteMenu({
         href={homeHref}
         className="inline-flex h-11 items-center rounded-lk-sm focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
       >
-        <Logo className="h-7" />
+        <Logo tone={night ? "white" : "color"} className="h-7" />
       </Link>
       <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
         <DialogPrimitive.Trigger asChild>
@@ -104,7 +112,12 @@ export function SiteMenu({
             )}
           >
             <Menu aria-hidden="true" className="size-4.5" />
-            <span className="flex size-8 items-center justify-center rounded-full bg-lk-blue text-white">
+            <span
+              className={cn(
+                "flex size-8 items-center justify-center rounded-full text-white",
+                night ? "lk-gradient-brand" : "bg-lk-blue",
+              )}
+            >
               <User aria-hidden="true" className="size-4" />
             </span>
           </button>
@@ -114,6 +127,7 @@ export function SiteMenu({
             aria-describedby={undefined}
             className={cn(
               facadeScope,
+              panelClassName,
               "fixed inset-0 z-50 flex flex-col overflow-y-auto bg-lk-surface outline-none",
               "duration-220 ease-out-lk data-[state=open]:animate-in data-[state=closed]:animate-out",
               "data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2",

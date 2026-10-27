@@ -4,6 +4,7 @@ import { SITE_LINKS } from "@/leenkey/navigation/config";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import { CookieSettingsButton } from "./cookie-settings-button";
+import { Logo } from "./logo";
 
 const t = fr.footer;
 
@@ -24,30 +25,54 @@ const siteLinkClass =
  */
 export function SiteFooter({
   fullWidth = false,
+  tone = "sand",
   className,
 }: {
   fullWidth?: boolean;
+  /** white: the footer of the redesign D (SPECS.md 3, item 11), the logo first. */
+  tone?: "sand" | "white";
   className?: string;
 }) {
+  const white = tone === "white";
   return (
-    <footer className={cn("border-t border-lk-sand-line bg-lk-sand", className)}>
+    <footer
+      className={cn(
+        "border-t",
+        white ? "border-lk-line bg-lk-surface" : "border-lk-sand-line bg-lk-sand",
+        className,
+      )}
+    >
       <div
         className={cn(
           "flex flex-col gap-3 pt-8 pb-10 max-md:[--lk-gutter:1rem] md:gap-4 md:pt-10 md:pb-12",
           fullWidth ? "w-full lk-gutter" : "lk-frame",
         )}
       >
-        <nav aria-label={fr.site.links.label}>
-          <ul className="flex flex-wrap gap-x-6">
-            {SITE_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href} className={siteLinkClass}>
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <div
+          className={cn(
+            white && "flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-6",
+          )}
+        >
+          {white ? (
+            <Link
+              href="/"
+              className="inline-flex h-11 shrink-0 items-center self-start rounded-lk-sm md:self-auto"
+            >
+              <Logo className="h-8.5" />
+            </Link>
+          ) : null}
+          <nav aria-label={fr.site.links.label}>
+            <ul className="flex flex-wrap gap-x-6">
+              {SITE_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className={siteLinkClass}>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
         <nav aria-label={t.label}>
           <ul className="flex flex-wrap gap-x-5">
             {FOOTER_LINKS.map((link) => (

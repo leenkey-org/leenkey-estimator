@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 // The font is loaded by the compiler of Next.js, absent here.
 vi.mock("next/font/google", () => ({
   Archivo: () => ({ className: "archivo", variable: "--font-archivo", style: {} }),
+  Sora: () => ({ className: "sora", variable: "--font-sora", style: {} }),
 }));
 const { Gallery } = await import("@/components/shared/gallery");
 

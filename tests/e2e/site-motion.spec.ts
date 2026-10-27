@@ -40,7 +40,9 @@ test.describe("mouvement des pages publiques", () => {
     await page.goto("/");
     // The hero and its search card, on the screen on arrival: never hidden.
     const title = page.getByRole("heading", { level: 1 });
-    await expect(title).toHaveText("Leenkey vous donne les clés de votre vente.");
+    await expect(title).toHaveText(
+      "Vendez votre bien autrement. Moins de frais, plus de contrôle.",
+    );
     await expect(page.locator("[data-reveal-pending]:has(h1)")).toHaveCount(0);
     await expect(page.locator("[data-reveal-pending]:has([role=tablist])")).toHaveCount(0);
     // The title of the questions, far below: waiting, transparent.

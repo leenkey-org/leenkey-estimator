@@ -431,6 +431,26 @@ html {
   --color-lk-dpe-f-fg: #1c1b19;
   --color-lk-dpe-g-bg: #f4b8b5;
   --color-lk-dpe-g-fg: #1c1b19;
+  /* Charte of the redesign D (docs/design-handoff/SPECS.md 1, L1-57): the
+     night of the bands, the blue and violet of the brand for gradients,
+     halos and orbs; their darker tones carry white text (AA); the indigo of
+     small coloured texts and of the line under a tab */
+  --color-lk-night: #020d21;
+  --color-lk-indigo-deep: #1e1b4b;
+  --color-lk-brand-blue: #3b82f6;
+  --color-lk-brand-violet: #8b5cf6;
+  --color-lk-action-blue: #2563eb;
+  --color-lk-action-violet: #7c3aed;
+  --color-lk-indigo: #4338ca;
+  --color-lk-indigo-mark: #4f46e5;
+  --color-lk-indigo-line: #c7d2fe;
+  --color-lk-night-blue: #60a5fa;
+  --color-lk-night-violet: #a78bfa;
+  /* Texts on the night: a lead, then the smaller ones */
+  --color-lk-night-text: #e2e8f0;
+  --color-lk-night-muted: #cbd5e1;
+  /* Text of a grey tag (the plans) */
+  --color-lk-ink-tag: #334155;
 
   /* Radii (DESIGN.md 5): 4 px controls, 6 px containers, rounded-full pills;
      2 px for the corner of a message bubble on the side of its sender */
@@ -470,6 +490,16 @@ html {
   --shadow-lk-badge: 0 2px 8px rgba(28, 27, 25, 0.14);
   --shadow-lk-hover: 0 8px 24px rgba(17, 86, 252, 0.14);
   --shadow-lk-tile: 0 6px 20px rgba(17, 86, 252, 0.16);
+  /* Redesign D (SPECS.md 1): the search card, a gradient button, the plan
+     put forward, a white block, the « Exemple » card on the photo, a card
+     hovered */
+  --shadow-lk-d-search: 0 20px 50px rgba(15, 23, 42, 0.18), 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-lk-d-button: 0 10px 24px rgba(79, 70, 229, 0.32);
+  --shadow-lk-d-featured: 0 18px 44px rgba(79, 70, 229, 0.16);
+  --shadow-lk-d-block: 0 20px 50px rgba(15, 23, 42, 0.08);
+  --shadow-lk-d-example: 0 24px 50px rgba(2, 13, 33, 0.35);
+  --shadow-lk-d-hover: 0 10px 30px rgba(59, 130, 246, 0.14);
+  --shadow-lk-d-badge: 0 4px 12px rgba(79, 70, 229, 0.3);
 
   /* Home page in the direction of the V1 (L1-49): letter spacing of its
      labels in capitals, above the titles and in its cards */
@@ -598,6 +628,16 @@ html {
   --text-lk-c-amount: 1.5rem; /* 24 px, the amount saved */
   --text-lk-c-amount--line-height: 1;
   --text-lk-c-amount-lg: 2.25rem; /* 36 px */
+  /* Redesign D (SPECS.md 1, Sora): title of the hero from 1 024 px, of the
+     savings, of a section on a phone */
+  --text-lk-d-hero-lg: 3.25rem; /* 52 px */
+  --text-lk-d-hero-lg--line-height: 1.08;
+  --text-lk-d-feature: 1.625rem; /* 26 px */
+  --text-lk-d-feature--line-height: 1.15;
+  --text-lk-d-feature-lg: 2.625rem; /* 42 px */
+  --text-lk-d-feature-lg--line-height: 1.1;
+  --text-lk-d-section: 1.3125rem; /* 21 px */
+  --text-lk-d-section--line-height: 1.2;
   --text-lk-c-amount-lg--line-height: 1;
 }
 
@@ -1034,4 +1074,174 @@ html {
   font-weight: 800;
   font-stretch: 112%;
   letter-spacing: -0.01em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Redesign D (docs/design-handoff/SPECS.md, L1-57): the charte of Leenkey
+   (night, blue to violet, Sora), on the home page first. `.lk-d` on the root
+   of a page: Sora and the colours of the charte for the tokens of the
+   components (their names stay, their values change), so that the whole site
+   moves to it by putting the class on every page once validated.
+   ═══════════════════════════════════════════════════════════════════════ */
+.lk-d {
+  font-family:
+    var(--font-sora),
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+  /* Buttons and links with white text or on white: the darker blue (AA) */
+  --color-lk-blue: #2563eb;
+  --color-lk-blue-hover: #1d4ed8;
+  --color-lk-blue-mid: #7c3aed;
+  /* Small coloured texts, tags, key figures */
+  --color-lk-blue-dark: #4338ca;
+  --color-lk-blue-tint: #eef2ff;
+  --color-lk-blue-line: #e0e7ff;
+  --color-lk-blue-border: #c7d2fe;
+  --color-lk-blue-light: #60a5fa;
+  --color-lk-navy: #020d21;
+  --color-lk-ink: #0f172a;
+  --color-lk-ink-2: #475569;
+  --color-lk-ink-3: #64748b;
+  --color-lk-disabled: #94a3b8;
+  --color-lk-bg: #f8fafc;
+  --color-lk-stone: #e2e8f0;
+  --color-lk-stone-2: #f1f5f9;
+  --color-lk-sand: #f1f5f9;
+  --color-lk-sand-line: #e2e8f0;
+  --color-lk-agency: #cbd5e1;
+  --color-lk-line: #e2e8f0;
+  --color-lk-line-strong: #cbd5e1;
+  /* A field told by its border: 3:1 at least (WCAG 1.4.11), not the
+     #CBD5E1 of the mock-up (1.5:1) */
+  --color-lk-field: #94a3b8;
+  --color-lk-success: #059669;
+  --color-lk-dpe-a-fg: #0f172a;
+  --color-lk-dpe-b-fg: #0f172a;
+  --color-lk-dpe-c-fg: #0f172a;
+  --color-lk-dpe-d-fg: #0f172a;
+  --color-lk-dpe-e-fg: #0f172a;
+  --color-lk-dpe-f-fg: #0f172a;
+  --color-lk-dpe-g-fg: #0f172a;
+  --shadow-lk-search: var(--shadow-lk-d-search);
+  --shadow-lk-hover: var(--shadow-lk-d-hover);
+  --shadow-lk-block: var(--shadow-lk-d-block);
+  --shadow-lk-featured: var(--shadow-lk-d-featured);
+  --shadow-lk-primary: var(--shadow-lk-d-button);
+  color: var(--color-lk-ink);
+}
+.lk-d :focus-visible {
+  outline-color: var(--color-lk-brand-blue);
+}
+
+/* On the night of a band (header of the home page D): white texts, the
+   lines and fields of glass; the blue of the actions stays. */
+.lk-on-night {
+  --color-lk-ink: #ffffff;
+  --color-lk-ink-2: #e2e8f0;
+  --color-lk-ink-3: #cbd5e1;
+  --color-lk-surface: rgb(2 13 33 / 0.55);
+  --color-lk-line: rgb(255 255 255 / 0.18);
+  --color-lk-line-strong: rgb(255 255 255 / 0.35);
+  --color-lk-stone-2: rgb(255 255 255 / 0.1);
+  --color-lk-blue-tint: rgb(255 255 255 / 0.12);
+  --shadow-lk-field: 0 0 0 1px rgb(255 255 255 / 0.5);
+}
+/* A white panel opened from it (the group « Qui sommes-nous »). */
+.lk-on-night .lk-on-light {
+  --color-lk-ink: #0f172a;
+  --color-lk-ink-2: #475569;
+  --color-lk-ink-3: #64748b;
+  --color-lk-surface: #ffffff;
+  --color-lk-line: #e2e8f0;
+  --color-lk-line-strong: #cbd5e1;
+  --color-lk-stone-2: #f1f5f9;
+  --color-lk-blue-tint: #eef2ff;
+  --shadow-lk-field: var(--shadow-lk-d-block);
+}
+
+/* The gradient of an action (button, badge, chosen pill): white text, AA. */
+@utility lk-gradient {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-lk-action-blue),
+    var(--color-lk-action-violet)
+  );
+}
+/* The gradient of the charte: orbs, avatar, decorative tiles. */
+@utility lk-gradient-brand {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-lk-brand-blue),
+    var(--color-lk-brand-violet)
+  );
+}
+/* The light gradient behind an icon. */
+@utility lk-gradient-soft {
+  background-image: linear-gradient(135deg, rgb(59 130 246 / 0.12), rgb(139 92 246 / 0.14));
+}
+/* A word in the gradient, on white then on the night. */
+@utility lk-gradient-text {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-lk-action-blue),
+    var(--color-lk-action-violet)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility lk-gradient-text-night {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-lk-night-blue),
+    var(--color-lk-night-violet) 80%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* The outline of the plan put forward. */
+@utility lk-gradient-border {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--color-lk-surface), var(--color-lk-surface)) padding-box,
+    linear-gradient(135deg, var(--color-lk-brand-blue), var(--color-lk-brand-violet)) border-box;
+}
+/* An icon drawn in the gradient: the <linearGradient> of GradientDefs. */
+@utility lk-icon-gradient {
+  stroke: url(#lk-icon-gradient);
+}
+/* The grids of dots of the charte, white on the night, blue on white. */
+@utility lk-dots-white {
+  background-image: radial-gradient(rgb(255 255 255 / 0.55) 1.3px, transparent 1.6px);
+  background-size: 18px 18px;
+}
+@utility lk-dots-blue {
+  background-image: radial-gradient(rgb(59 130 246 / 0.45) 1.4px, transparent 1.7px);
+  background-size: 18px 18px;
+}
+/* The halos of the night: a slow breath of their opacity. */
+@utility lk-halo-blue {
+  background-image: radial-gradient(circle, rgb(59 130 246 / 0.3), transparent 65%);
+}
+@utility lk-halo-violet {
+  background-image: radial-gradient(circle, rgb(139 92 246 / 0.2), transparent 65%);
+}
+@keyframes lk-glow {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@utility lk-glow {
+  animation: lk-glow 8s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }

@@ -5,7 +5,7 @@ import { EnvBanner } from "@/components/shared/env-banner";
 import { RouteHistory } from "@/leenkey/navigation/components/route-history";
 import { SpaceProvider } from "@/leenkey/navigation/components/space-context";
 import { isProduction } from "@/lib/env";
-import { archivo } from "@/lib/fonts";
+import { archivo, sora } from "@/lib/fonts";
 import "./globals.css";
 
 const GA_ID = "G-27N3E3WP2D";
@@ -43,8 +43,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const analytics = isProduction();
   return (
     // Archivo, self-hosted by next/font (no request to Google before
-    // consent, L1-37), for every page and the portals outside <FacadeRoot>.
-    <html lang="fr" className={archivo.variable}>
+    // consent, L1-37), for every page and the portals outside <FacadeRoot>;
+    // Sora for the pages of the redesign D (L1-57).
+    <html lang="fr" className={`${archivo.variable} ${sora.variable}`}>
       <body>
         <EnvBanner />
         {/* Space of the navigation, kept across client navigations (L1-10). */}
