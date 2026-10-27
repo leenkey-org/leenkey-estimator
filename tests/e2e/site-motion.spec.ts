@@ -40,7 +40,9 @@ test.describe("mouvement des pages publiques", () => {
     await page.goto("/");
     // The hero and its search card, on the screen on arrival: never hidden.
     const title = page.getByRole("heading", { level: 1 });
-    await expect(title).toHaveText("Leenkey vous donne les clés de votre vente.");
+    await expect(title).toHaveText(
+      "Vendez votre bien autrement. Moins de frais, plus de contrôle.",
+    );
     await expect(page.locator("[data-reveal-pending]:has(h1)")).toHaveCount(0);
     await expect(page.locator("[data-reveal-pending]:has([role=tablist])")).toHaveCount(0);
     // The title of the questions, far below: waiting, transparent.
@@ -61,12 +63,13 @@ test.describe("mouvement des pages publiques", () => {
     ).toEqual([0, 0.08, 0.16]);
     await scrollToEnd(page);
     expect(await waiting(page)).toBe(0);
-    // The shapes behind the simulator and the last banner float.
-    expect(
-      await page
-        .locator("[data-shape]")
-        .evaluateAll((all) => all.map((shape) => getComputedStyle(shape).animationName)),
-    ).toEqual(expect.arrayContaining(["lk-float"]));
+    // The halos of the last banner breathe (redesign D); the orbs behind the
+    // simulator, there with the plans of the database, float.
+    const animations = await page
+      .locator("[data-shape]")
+      .evaluateAll((all) => all.map((shape) => getComputedStyle(shape).animationName));
+    expect(animations).toEqual(expect.arrayContaining(["lk-glow"]));
+    if (animations.length > 3) expect(animations).toEqual(expect.arrayContaining(["lk-float"]));
     // A link of a section that has risen works as before.
     await page.getByRole("link", { name: "Toutes les questions" }).click();
     await expect(page).toHaveURL("/faq");

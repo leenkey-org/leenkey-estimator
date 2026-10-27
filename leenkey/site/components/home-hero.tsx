@@ -1,10 +1,12 @@
 import Image from "next/image";
-import { Check, ChartLine, LayoutList, Plus } from "lucide-react";
+import { Check, CircleCheck, ChartLine, LayoutList, Plus } from "lucide-react";
 import { PillLink } from "@/components/shared/pill-link";
 import { getProfile } from "@/core/auth/session";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { sitePhoto } from "@/leenkey/site/photos";
+import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
+import { VALUATION_EXAMPLE, valuationExample } from "../valuation-example";
 import { HomeSearchCard } from "./home-search-card";
 
 const t = fr.site.home;
@@ -15,13 +17,19 @@ export function directListingHref(signedIn: boolean): string {
   return `${ROUTES.sellerSignUp}&next=${encodeURIComponent(ROUTES.newProperty)}`;
 }
 
+/** The curve that cuts the photo on its left (SPECS.md 1, « Vague »). */
+const WAVE = "M0 0 H100 C58 16 26 38 40 60 C52 80 34 93 0 100 Z";
+
 /**
- * Top of the home page of direction C (docs/design-handoff/SPECS.md 3, items
- * 2 to 4): the large photo rounded 28 px (380 px high on a phone, 520 px from
- * 1 024 px) under a dark veil on its text side, the badge « Ni agence, ni
- * seul », the title and its lead; the search card set over the bottom of the
- * photo; then the service pills. Without the photo (rights not confirmed in
- * production), the deep blue of the frame.
+ * Top of the home page of the redesign D (docs/design-handoff-d/SPECS.md 3,
+ * items 1 to 3): the night band under the headers, its halos breathing, the
+ * badge « Ni agence, ni seul », the title and its line in the gradient, the
+ * lead. From 1 024 px, the photo on the right (46 %) cut by the wave, its
+ * grid of dots, and from 1 280 px the « Exemple » card on it; below, the
+ * photo under the text, its top left corner rounded 130 px, the card over its
+ * bottom (its action on the first screen of a phone). The search card
+ * set over the bottom of the band, then the service pills. Without the photo
+ * (rights not confirmed in production), the night alone.
  */
 export async function HomeHero() {
   const [profile, photo] = [await getProfile(), sitePhoto("home")];
@@ -31,61 +39,124 @@ export async function HomeHero() {
       // The anchors of the V1 home page still land on their part (#valoriser).
       id="valoriser"
       aria-labelledby="accueil-titre"
-      className="lk-frame max-md:[--lk-gutter:0.75rem] pt-3 md:pt-6"
     >
-      <div className="relative h-95 overflow-hidden rounded-lk-3xl bg-lk-navy lg:h-130 lg:rounded-lk-4xl">
-        {photo ? (
-          <Image
-            src={photo.src}
-            alt=""
-            fill
-            priority
-            sizes="(min-width: 1920px) 1792px, 100vw"
-            className="object-cover object-[50%_62%]"
-          />
-        ) : null}
-        <div
+      {/* Below 1 024 px the card covers the bottom of the photo: its action stays on
+          the first screen of a phone, above the bottom tabs. */}
+      <div className="relative isolate overflow-hidden bg-lk-night pb-10 text-white md:pb-16 lg:pb-42.5">
+        <span
           aria-hidden="true"
-          // Darker than the mock-up where the text sits: the lead keeps 4.5:1
-          // even over the lightest stone of the photo (navy at 66 % at least).
-          className="absolute inset-0 bg-linear-to-b from-lk-navy/75 via-lk-navy/68 via-60% to-lk-navy/10 lg:bg-linear-to-r lg:from-lk-navy/75 lg:via-lk-navy/66 lg:via-48% lg:to-transparent lg:to-90%"
+          className="lk-halo-blue lk-glow pointer-events-none absolute top-50 -left-45 -z-10 size-130 rounded-full lg:top-auto lg:-bottom-75 lg:-left-55 lg:size-210"
         />
-        <div className="relative max-w-170 px-5 pt-6 text-white md:px-10 md:pt-10 lg:px-16 lg:pt-15">
-          <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-lk-navy/55 py-1.5 pr-3.5 pl-2 text-lk-label font-semibold lg:mb-4.5 lg:text-lk-compact">
-            <span className="flex size-5.5 items-center justify-center rounded-full bg-lk-blue">
-              <Check aria-hidden="true" strokeWidth={2.6} className="size-3.25" />
-            </span>
-            {t.hero.badge}
-          </p>
-          <h1
-            id="accueil-titre"
-            className="text-lk-c-hero text-heavy md:text-lk-c-hero-md lg:text-lk-c-hero-lg"
-          >
-            {t.hero.title}
-          </h1>
-          <p className="mt-2.5 max-w-125 text-lk-body text-white/94 lg:mt-4.5 lg:text-lk-c-lead-lg">
-            <span className="md:hidden">{t.hero.leadShort}</span>
-            <span className="hidden md:inline">{t.hero.lead}</span>
-          </p>
+        <span
+          aria-hidden="true"
+          className="lk-halo-violet lk-glow pointer-events-none absolute -top-30 -right-40 -z-10 size-105 rounded-full lg:-top-60 lg:right-auto lg:left-[32%] lg:size-140"
+        />
+        <div className="lk-frame relative max-md:[--lk-gutter:1rem] pt-3 lg:pt-10">
+          <div className="max-w-160 lg:max-w-[48%] xl:max-w-160">
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/6 py-1.25 pr-3.5 pl-1.25 text-lk-label font-medium lg:mb-5.5 lg:gap-2.5 lg:border-white/18 lg:bg-lk-night/35 lg:pr-4 lg:pl-1.5 lg:text-lk-compact">
+              <span className="lk-gradient-brand flex size-5.5 items-center justify-center rounded-full lg:size-6">
+                <Check aria-hidden="true" strokeWidth={2.8} className="size-3 lg:size-3.25" />
+              </span>
+              {t.hero.badge}
+            </p>
+            <h1
+              id="accueil-titre"
+              className="text-lk-c-hero font-bold tracking-lk-d-tight lg:text-lk-c-hero-md xl:text-lk-d-hero-lg"
+            >
+              {/* A space before the line break: the name of the title reads two sentences. */}
+              {`${t.hero.title} `}
+              <br />
+              <span className="lk-gradient-text-night">{t.hero.titleAccent}</span>
+            </h1>
+            <p className="mt-3.5 max-w-130 text-lk-body text-lk-night-muted lg:mt-4.5 lg:text-lk-lead-lg lg:text-lk-night-text">
+              <span className="md:hidden">{t.hero.leadShort}</span>
+              <span className="hidden md:inline">{t.hero.lead}</span>
+            </p>
+          </div>
+          {photo ? <ExampleCard /> : null}
         </div>
+        {photo ? (
+          // One photo, the image of the page loaded first: under the text below
+          // 1 024 px, its top left corner rounded 130 px; from there on the
+          // right (46 %), cut by the wave, under the halos that glow over it.
+          <div className="relative mt-5 ml-10 h-52.5 overflow-hidden rounded-tl-lk-d-photo rounded-bl-lk-3xl bg-lk-indigo-deep md:ml-[30%] md:h-80 lg:absolute lg:inset-y-0 lg:right-0 lg:-z-20 lg:mt-0 lg:ml-0 lg:h-auto lg:w-[46%] lg:rounded-none lg:bg-transparent">
+            <Image
+              src={photo.src}
+              alt=""
+              fill
+              priority
+              sizes="(min-width: 1024px) 46vw, (min-width: 768px) 70vw, 90vw"
+              className="object-cover object-[70%_60%] lg:object-[50%_62%]"
+            />
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              className="absolute top-0 -left-px hidden h-full w-60 fill-lk-night lg:block"
+            >
+              <path d={WAVE} />
+            </svg>
+            <span
+              aria-hidden="true"
+              className="lk-dots-white absolute top-4.5 right-4 h-13.5 w-22.5 bg-[length:15px_15px] lg:top-26 lg:right-10 lg:h-22 lg:w-33 lg:bg-[length:18px_18px]"
+            />
+          </div>
+        ) : null}
       </div>
-      <div className="relative mx-2 -mt-27.5 md:mx-auto md:-mt-31 md:max-w-240">
-        <HomeSearchCard signedIn={signedIn} />
+      <div className="lk-frame max-md:[--lk-gutter:0.75rem]">
+        <div className="relative mx-auto -mt-21 max-w-240 lg:-mt-28">
+          <HomeSearchCard signedIn={signedIn} />
+        </div>
+        <nav
+          aria-label={t.services.label}
+          className="-mx-3 mt-4.5 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:mt-6 md:flex-wrap md:justify-center md:gap-3 md:overflow-visible md:px-0"
+        >
+          <PillLink href={ROUTES.valuation} icon={ChartLine}>
+            {t.services.valuation}
+          </PillLink>
+          <PillLink href={directListingHref(signedIn)} icon={Plus}>
+            {t.services.listing}
+          </PillLink>
+          <PillLink href={ROUTES.pricing} icon={LayoutList}>
+            {t.services.pricing}
+          </PillLink>
+        </nav>
       </div>
-      <nav
-        aria-label={t.services.label}
-        className="-mx-3 mt-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:mt-6 md:flex-wrap md:justify-center md:gap-3 md:overflow-visible md:px-0"
-      >
-        <PillLink href={ROUTES.valuation} icon={ChartLine}>
-          {t.services.valuation}
-        </PillLink>
-        <PillLink href={directListingHref(signedIn)} icon={Plus}>
-          {t.services.listing}
-        </PillLink>
-        <PillLink href={ROUTES.pricing} icon={LayoutList}>
-          {t.services.pricing}
-        </PillLink>
-      </nav>
     </section>
+  );
+}
+
+/**
+ * The « Exemple » card on the photo (SPECS.md 2), from 1 280 px (beside the
+ * title below, the photo has no room for it): a fictitious house of the
+ * launch zone and the value the engine of the estimator gives it, from its
+ * reference prices only (DECISIONS Q58), always said to be an example.
+ */
+function ExampleCard() {
+  const e = t.hero.example;
+  const house = VALUATION_EXAMPLE;
+  const { value } = valuationExample();
+  return (
+    <div
+      role="group"
+      aria-label={e.label}
+      className="absolute top-12 right-(--lk-gutter) hidden w-68 rounded-lk-2xl bg-lk-surface px-5 py-4.5 text-lk-ink shadow-lk-d-example xl:block"
+    >
+      <span className="lk-gradient inline-block rounded-full px-3 py-0.75 text-lk-caption font-semibold text-white">
+        {e.badge}
+      </span>
+      <p className="mt-2.5 font-semibold">{e.title}</p>
+      <p className="mt-0.5 text-lk-compact text-lk-ink-3">
+        {e.detail(house.ville, house.surface_habitable, house.pieces)}
+      </p>
+      <p className="mt-3 text-lk-caption text-lk-ink-3">{e.valueLabel}</p>
+      <p className="text-lk-d-feature font-bold tracking-lk-d-snug tabular">
+        {formatPrice(value * 100)}
+      </p>
+      <p className="mt-0.5 flex items-center gap-1.5 text-lk-caption text-lk-ink-2">
+        <CircleCheck aria-hidden="true" strokeWidth={2.2} className="size-3.75 text-lk-success" />
+        {e.note}
+      </p>
+    </div>
   );
 }

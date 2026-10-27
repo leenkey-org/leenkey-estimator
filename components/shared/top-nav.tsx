@@ -38,6 +38,11 @@ export type TopNavProps = {
   account: TopNavAccount;
   /** The whole width of the screen, aligned with a page that uses it (search and its map). */
   fullWidth?: boolean;
+  /**
+   * night: in the night band of the home page D (SPECS.md 3, item 1): white
+   * logo and links, the action and the account of glass, no line under it.
+   */
+  tone?: "light" | "night";
   className?: string;
 };
 
@@ -60,13 +65,16 @@ export function TopNav({
   cta,
   account,
   fullWidth = false,
+  tone = "light",
   className,
 }: TopNavProps) {
+  const night = tone === "night";
   return (
     <header
       data-sticky-header="top-nav"
       className={cn(
-        "hidden h-18 border-b border-lk-line bg-lk-surface md:sticky md:top-0 md:z-30 md:block",
+        "hidden h-18 border-b md:sticky md:top-0 md:z-30 md:block",
+        night ? "lk-on-night border-transparent bg-lk-night" : "border-lk-line bg-lk-surface",
         className,
       )}
     >
@@ -81,12 +89,18 @@ export function TopNav({
         )}
       >
         <Link href={homeHref} className="inline-flex h-11 shrink-0 items-center rounded-lk-sm">
-          <Logo className="h-8" />
+          <Logo tone={night ? "white" : "color"} className="h-8" />
         </Link>
-        <TopNavLinks label={label} links={links} activeHref={activeHref} />
+        <TopNavLinks label={label} links={links} activeHref={activeHref} night={night} />
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
           {cta ? (
-            <Button asChild variant="outline-blue" shape="pill" icon={Plus} className="mr-2">
+            <Button
+              asChild
+              variant={night ? "night" : "outline-blue"}
+              shape="pill"
+              icon={Plus}
+              className="mr-2"
+            >
               <Link href={cta.href}>{cta.label}</Link>
             </Button>
           ) : null}
@@ -117,7 +131,12 @@ export function TopNav({
               )}
             >
               <Menu aria-hidden="true" className="hidden size-4.5 lg:block" />
-              <span className="flex size-8.5 items-center justify-center rounded-full bg-lk-blue text-white">
+              <span
+                className={cn(
+                  "flex size-8.5 items-center justify-center rounded-full text-white",
+                  night ? "lk-gradient-brand" : "bg-lk-blue",
+                )}
+              >
                 <User aria-hidden="true" className="size-4.5" />
               </span>
             </Link>

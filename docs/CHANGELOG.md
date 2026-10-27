@@ -12,6 +12,15 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-27 · L1-57 · PR #55 · Refonte D de l'accueil
+- Modifié : l'accueil passe dans la charte de Leenkey (refonte D) : nuit, dégradé bleu → violet, police Sora.
+  - Grand bandeau nuit avec l'en-tête intégré, la photo à droite découpée par une vague et la carte « Exemple ».
+  - Titre « Vendez votre bien autrement. Moins de frais, plus de contrôle. ».
+  - Carte de recherche à cheval sur le bas du bandeau, onglet « Valoriser mon bien » ouvert d'abord, bouton en dégradé.
+  - Raccourcis, simulateur, annonces, étapes, formules (contour dégradé pour Accompagné), FAQ et bandeau final nuit dans la charte.
+  - Pied de page blanc avec le logo ; barre de navigation basse sur mobile.
+- Ajouté : les jetons et effets de la charte (`lk-d`, dégradés, halos, trame de points, orbes), prêts pour le reste du site après validation. Le reste du site ne change pas.
+
 ### 2026-10-26 · L1-56 · PR #54 · Pleine page selon l'appareil
 - Modifié : toutes les pages prennent la largeur de l'écran jusqu'à 1 920 px, au lieu de 1 200 à 1 280 px. Les marges suivent l'appareil : 20 px sur téléphone, 32 px sur tablette et ordinateur portable, 64 px à partir de 1 536 px. La barre haute, le contenu et le pied de page sont alignés (sur tablette, la barre haute garde 20 px).
 - Modifié : sur grand écran (à partir de 1 536 px), une colonne de cartes de plus. La recherche passe à trois colonnes, le carrousel de l'accueil à cinq cartes et les Favoris à quatre. Les photos de l'annonce sont plus hautes et ses caractéristiques sur trois colonnes. Les biens du vendeur s'affichent en cartes, deux puis trois par rangée.

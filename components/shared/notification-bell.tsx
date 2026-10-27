@@ -7,6 +7,7 @@ import { Bell, Settings, X } from "lucide-react";
 import { Button } from "./button";
 import { EmptyState } from "./empty-state";
 import { facadeScope } from "./facade-root";
+import { usePortalScope } from "./portal-scope";
 import { IconButton, iconButtonVariants } from "./icon-button";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,8 @@ export function NotificationBell({
   onOpenChange,
   className,
 }: NotificationBellProps) {
+  // Opened out of the page: the scope of its redesign (PortalScope).
+  const scope = usePortalScope();
   const [open, setOpen] = useState(false);
   const unread = count > 0;
   const change = (next: boolean) => {
@@ -119,6 +122,7 @@ export function NotificationBell({
           aria-describedby={undefined}
           className={cn(
             facadeScope,
+            scope,
             "fixed inset-0 z-50 flex flex-col bg-lk-surface outline-none",
             "md:left-auto md:w-105 md:border-l md:border-lk-line",
             "duration-220 ease-out-lk data-[state=open]:animate-in data-[state=closed]:animate-out",

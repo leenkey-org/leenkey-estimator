@@ -28,19 +28,25 @@ export function ShortcutCard({
     <Link
       href={href}
       className={cn(
-        "group flex min-h-35 flex-col gap-2.5 rounded-lk-xl border border-lk-line bg-lk-surface p-4 text-lk-ink md:gap-3.5 md:p-6",
-        "transition-[box-shadow,border-color] duration-220 ease-out-lk hover:border-lk-blue-border hover:shadow-lk-hover",
+        "group flex min-h-34 flex-col gap-2.5 rounded-lk-d-card border border-lk-line bg-lk-surface p-4 text-lk-ink md:gap-3.5 md:p-6",
+        "transition-[box-shadow,border-color] duration-220 ease-out-lk hover:border-lk-indigo-line hover:shadow-lk-d-hover",
         className,
       )}
     >
-      <span className="flex size-10 items-center justify-center rounded-lk-lg bg-lk-blue-tint text-lk-blue md:size-12 md:rounded-lk-xl">
-        <Icon aria-hidden="true" strokeWidth={1.8} className="size-5.5 md:size-6" />
+      <span className="lk-gradient-soft flex size-10.5 items-center justify-center rounded-lk-lg md:size-12.5 md:rounded-[0.875rem]">
+        <Icon
+          aria-hidden="true"
+          strokeWidth={1.9}
+          className="lk-icon-gradient size-5.5 md:size-6"
+        />
       </span>
       <span className="flex flex-col gap-1">
-        <span className="text-lk-body-lg font-bold leading-tight md:text-lk-lead-lg">{title}</span>
-        <span className="text-lk-secondary text-lk-ink-2 md:text-lk-body">{text}</span>
+        <span className="text-lk-title leading-tight font-semibold md:text-lk-d-lead">{title}</span>
+        <span className="text-lk-caption leading-snug text-lk-ink-2 md:text-lk-compact">
+          {text}
+        </span>
       </span>
-      <span className="mt-auto hidden items-center gap-1.5 text-lk-body font-bold text-lk-blue md:inline-flex">
+      <span className="mt-auto hidden items-center gap-1.5 text-lk-compact font-semibold text-lk-blue md:inline-flex">
         {action}
         <ArrowRight
           aria-hidden="true"

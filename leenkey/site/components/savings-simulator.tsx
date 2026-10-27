@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -9,46 +9,60 @@ import { DEFAULT_SAVINGS_PRICE_EUROS, SAVINGS_PRICES_EUROS, savings } from "../s
 const t = fr.site.home.savings;
 
 /**
- * The prices to choose from and the comparison (docs/design-handoff/SPECS.md
- * 3, item 6): native radio buttons drawn as pills (arrows move between them),
- * then the bars of the agency, of the Accompagné plan and of Autonomie (from
- * 768 px), and the amount saved, read again when it changes.
+ * The prices to choose from and the comparison (docs/design-handoff-d/SPECS.md
+ * 3, item 5): native radio buttons drawn as pills (arrows move between them)
+ * under the head of the section (`intro`), then the bars of the agency, of
+ * the Accompagné plan and of Autonomie (from 768 px), and the amount saved,
+ * read again when it changes. From 1 024 px, the bars on the right.
  */
-export function SavingsSimulator({ accompaniedCents }: { accompaniedCents: number }) {
+export function SavingsSimulator({
+  accompaniedCents,
+  intro,
+}: {
+  accompaniedCents: number;
+  intro: ReactNode;
+}) {
   const name = useId();
   const [priceEuros, setPriceEuros] = useState<number>(DEFAULT_SAVINGS_PRICE_EUROS);
   const result = savings(priceEuros * 100, accompaniedCents);
   return (
-    <div className="flex flex-col gap-4 md:gap-6.5">
-      <fieldset>
-        <legend className="sr-only">{t.prices}</legend>
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:flex-wrap md:gap-2.5 md:overflow-visible md:px-0">
-          {SAVINGS_PRICES_EUROS.map((value) => (
-            <label key={value} className="shrink-0">
-              <input
-                type="radio"
-                name={name}
-                value={value}
-                checked={priceEuros === value}
-                onChange={() => setPriceEuros(value)}
-                className="peer sr-only"
-              />
-              <span
-                className={cn(
-                  "flex h-11 cursor-pointer items-center rounded-full border-[1.5px] px-4 text-lk-compact font-bold tabular md:h-12 md:px-5 md:text-lk-body",
-                  "transition-colors duration-140 ease-out-lk",
-                  "peer-checked:border-lk-blue peer-checked:bg-lk-blue-tint peer-checked:text-lk-blue-dark",
-                  "border-lk-line-strong bg-lk-surface text-lk-ink hover:border-lk-blue-border",
-                  "peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-lk-blue peer-focus-visible:outline-solid",
-                )}
-              >
-                {formatPrice(value * 100)}
-              </span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-      <div className="flex flex-col gap-3.5 rounded-lk-2xl border border-lk-line bg-lk-surface p-4.5 shadow-lk-block md:gap-5 md:rounded-lk-3xl md:p-8">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-14">
+      <div data-reveal="" className="min-w-0 lg:flex-[1_1_440px]">
+        {intro}
+        <fieldset className="mt-4 md:mt-6.5">
+          <legend className="sr-only">{t.prices}</legend>
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:flex-wrap md:gap-2.5 md:overflow-visible md:px-0">
+            {SAVINGS_PRICES_EUROS.map((value) => (
+              <label key={value} className="shrink-0">
+                <input
+                  type="radio"
+                  name={name}
+                  value={value}
+                  checked={priceEuros === value}
+                  onChange={() => setPriceEuros(value)}
+                  className="peer sr-only"
+                />
+                <span
+                  className={cn(
+                    "flex h-11 cursor-pointer items-center rounded-full border px-4 text-lk-compact font-semibold tabular md:h-11.5 md:px-5",
+                    "transition-colors duration-140 ease-out-lk",
+                    // Chosen: the gradient of an action, white text (redesign D).
+                    "peer-checked:lk-gradient peer-checked:border-transparent peer-checked:text-white",
+                    "border-lk-line-strong bg-lk-surface text-lk-ink hover:border-lk-blue-border",
+                    "peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-lk-blue peer-focus-visible:outline-solid",
+                  )}
+                >
+                  {formatPrice(value * 100)}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      </div>
+      <div
+        data-reveal=""
+        className="flex min-w-0 flex-col gap-3.5 rounded-lk-2xl border border-lk-line bg-lk-surface p-4.5 shadow-lk-d-block md:gap-5 md:rounded-lk-3xl md:p-8 lg:flex-[1_1_520px]"
+      >
         <Bar
           label={
             <>
@@ -63,28 +77,28 @@ export function SavingsSimulator({ accompaniedCents }: { accompaniedCents: numbe
           label={t.accompanied}
           amount={formatPrice(accompaniedCents)}
           blue
-          track="bg-lk-sand"
+          track="bg-lk-stone-2"
           fill={result.planBarPercent}
         />
         <Bar
           label={t.autonomy}
           amount={formatPrice(0)}
           blue
-          track="bg-lk-sand"
+          track="bg-lk-stone-2"
           className="hidden md:block"
         />
         <p
           aria-live="polite"
-          className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lk-xl bg-lk-blue-tint px-4 py-3.5 md:px-5.5 md:py-4.5"
+          className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lk-xl bg-linear-90 from-lk-brand-blue/8 to-lk-brand-violet/10 px-4 py-3.5 md:rounded-lk-2xl md:px-5.5 md:py-4.5"
         >
-          <span className="text-lk-compact font-bold text-lk-ink md:text-lk-body-lg">
+          <span className="text-lk-compact font-semibold text-lk-ink md:text-lk-body-lg">
             {t.saved}
           </span>
-          <span className="text-lk-c-amount font-extrabold tabular text-lk-blue-dark text-heavy md:text-lk-c-amount-lg">
+          <span className="lk-gradient-text text-lk-c-amount font-bold tracking-lk-d-tight tabular md:text-lk-c-amount-lg">
             {formatPrice(result.savedCents)}
           </span>
         </p>
-        <p className="text-lk-caption text-lk-ink-2 md:text-lk-secondary">{t.note}</p>
+        <p className="text-lk-caption text-lk-ink-3">{t.note}</p>
       </div>
     </div>
   );
@@ -108,14 +122,14 @@ function Bar({
 }) {
   return (
     <div className={className}>
-      <div className="mb-1.5 flex justify-between gap-3 text-lk-compact font-bold text-lk-ink md:mb-2 md:text-lk-body-lg">
+      <div className="mb-1.5 flex justify-between gap-3 text-lk-compact font-semibold text-lk-ink md:mb-2 md:text-lk-title">
         <span>{label}</span>
-        <span className={cn("tabular", blue && "text-lk-blue")}>{amount}</span>
+        <span className={cn("tabular", blue && "text-lk-blue-dark")}>{amount}</span>
       </div>
       <div aria-hidden="true" className={cn("h-3 overflow-hidden rounded-full md:h-3.5", track)}>
         {fill !== undefined ? (
           <div
-            className="h-full rounded-full bg-lk-blue transition-[width] duration-220 ease-out-lk motion-reduce:transition-none"
+            className="h-full rounded-full bg-linear-90 from-lk-brand-blue to-lk-brand-violet transition-[width] duration-220 ease-out-lk motion-reduce:transition-none"
             style={{ width: `${fill}%` }}
           />
         ) : null}

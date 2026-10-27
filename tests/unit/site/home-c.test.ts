@@ -136,15 +136,20 @@ describe("the address of the « Valoriser » tab, into the estimator", () => {
   });
 });
 
-describe("texts of the home page of direction C", () => {
+describe("texts of the home page (direction C, then the redesign D)", () => {
   it("« Valoriser mon bien », never « Estimer mon bien » (CLAUDE.md section 16)", () => {
     expect(home.search.tabs.valuation).toBe("Valoriser mon bien");
     expect(JSON.stringify(home)).not.toMatch(/Estimer mon bien|Obtenir mon estimation/);
   });
 
-  it("the badge and the sentence of the hero of the mock-up, the title of the site", () => {
+  it("the badge of the hero and the title of the charte D, its second line in the gradient", () => {
     expect(home.hero.badge).toBe("Ni agence, ni seul · 0 € de commission");
-    expect(home.hero.title).toBe("Leenkey vous donne les clés de votre vente.");
+    expect(home.hero.title).toBe("Vendez votre bien autrement.");
+    expect(home.hero.titleAccent).toBe("Moins de frais, plus de contrôle.");
+  });
+
+  it("the card on the photo always says it is an example (SPECS.md 2, CLAUDE.md section 16)", () => {
+    expect(home.hero.example.badge).toBe("Exemple");
   });
 
   it("« Voir les 12 biens », one listing alone named as such", () => {

@@ -38,6 +38,11 @@ export type ShowcaseCardProps = Pick<
   framed?: boolean;
   /** The main photo is the largest image of the page: loaded first. */
   priority?: boolean;
+  /**
+   * The card of the redesign D (SPECS.md 2): its badge in the gradient, the
+   * price in bold without underline, the photo rounded 18 px.
+   */
+  redesign?: boolean;
   sizes?: string;
   className?: string;
 };
@@ -70,6 +75,7 @@ export function ShowcaseCard({
   swipe = false,
   framed = false,
   priority = false,
+  redesign = false,
   sizes = "(min-width: 1536px) 18vw, (min-width: 1024px) 23vw, (min-width: 768px) 45vw, 272px",
   className,
 }: ShowcaseCardProps) {
@@ -128,7 +134,8 @@ export function ShowcaseCard({
             href={href}
             aria-describedby={`${id}-place ${id}-price`}
             className={cn(
-              "min-w-0 text-lk-body-lg font-bold text-lk-ink",
+              "min-w-0 text-lk-ink",
+              redesign ? "text-lk-title font-semibold" : "text-lk-body-lg font-bold",
               // Two lines in the narrower cards of the search, beside their DPE.
               framed ? "line-clamp-2" : "truncate",
               // The link covers the whole card, photo included (its arrows and
@@ -143,23 +150,40 @@ export function ShowcaseCard({
           {dpe ? (
             <DpeBadge
               value={dpe}
-              className="shrink-0 rounded-lk-md px-2 py-0.5 text-lk-caption font-extrabold"
+              className={cn(
+                "shrink-0 rounded-lk-md px-2 py-0.5",
+                redesign ? "text-lk-micro font-bold" : "text-lk-caption font-extrabold",
+              )}
             />
           ) : null}
         </div>
-        <p id={`${id}-place`} className="truncate text-lk-compact text-lk-ink-2 md:text-lk-body">
+        <p
+          id={`${id}-place`}
+          className={cn(
+            "truncate text-lk-compact",
+            redesign ? "text-lk-ink-3" : "text-lk-ink-2 md:text-lk-body",
+          )}
+        >
           {city}
         </p>
         <p
           id={`${id}-price`}
-          className="mt-1 text-lk-card-price font-extrabold tabular text-lk-ink underline underline-offset-3"
+          className={cn(
+            "mt-1 tabular text-lk-ink",
+            redesign
+              ? "text-lk-d-lead font-bold tracking-lk-d-snug"
+              : "text-lk-card-price font-extrabold underline underline-offset-3",
+          )}
         >
           {formatPrice(priceCents)}
         </p>
       </div>
       <div
         ref={frame}
-        className="relative order-1 aspect-[1/0.95] overflow-hidden rounded-lk-xl bg-lk-line"
+        className={cn(
+          "relative order-1 aspect-[1/0.95] overflow-hidden bg-lk-line",
+          redesign ? "rounded-lk-d-card" : "rounded-lk-xl",
+        )}
       >
         {shown.length ? (
           <div
@@ -199,7 +223,14 @@ export function ShowcaseCard({
         )}
         {badge ? (
           // Over the link, but a touch on it still opens the listing.
-          <span className="pointer-events-none absolute left-3 top-3 z-10 rounded-full bg-lk-surface px-3 py-1.5 text-lk-caption font-bold text-lk-blue-dark shadow-lk-badge md:text-lk-label">
+          <span
+            className={cn(
+              "pointer-events-none absolute left-3 top-3 z-10 rounded-full",
+              redesign
+                ? "lk-gradient px-3 py-1.25 text-lk-caption font-semibold text-white shadow-lk-d-badge"
+                : "bg-lk-surface px-3 py-1.5 text-lk-caption font-bold text-lk-blue-dark shadow-lk-badge md:text-lk-label",
+            )}
+          >
             {badge}
           </span>
         ) : null}

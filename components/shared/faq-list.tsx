@@ -36,17 +36,17 @@ export function FaqList({
             <details className="group">
               <summary
                 className={cn(
-                  "flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 py-3 text-lk-body-lg font-bold text-lk-ink md:min-h-17 md:gap-4 md:px-1 md:text-[1.0625rem] [&::-webkit-details-marker]:hidden",
+                  "flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 py-3 text-lk-body font-semibold text-lk-ink md:min-h-17 md:gap-4 md:px-1 md:text-lk-body-lg [&::-webkit-details-marker]:hidden",
                   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue focus-visible:outline-solid",
                 )}
               >
                 <span>{item.question}</span>
                 <span
                   aria-hidden="true"
-                  className="relative flex size-7.5 shrink-0 items-center justify-center rounded-full bg-lk-blue-tint md:size-8"
+                  className="lk-gradient-soft relative flex size-7.5 shrink-0 items-center justify-center rounded-full md:size-8"
                 >
-                  <span className="absolute h-0.5 w-3.5 rounded-lk-xs bg-lk-blue" />
-                  <span className="absolute h-3.5 w-0.5 rounded-lk-xs bg-lk-blue transition-transform duration-220 ease-out-lk group-open:scale-y-0 motion-reduce:transition-none" />
+                  <span className="absolute h-0.5 w-3.5 rounded-lk-xs bg-lk-blue-dark" />
+                  <span className="absolute h-3.5 w-0.5 rounded-lk-xs bg-lk-blue-dark transition-transform duration-220 ease-out-lk group-open:scale-y-0 motion-reduce:transition-none" />
                 </span>
               </summary>
               <div className="max-w-lk-prose pb-5 text-lk-body text-pretty text-lk-ink-2 md:px-1">

@@ -61,13 +61,16 @@ test.describe("accueil", () => {
   }) => {
     const response = await page.goto("/");
     expect(response?.status()).toBe(200);
-    const hero = page.getByRole("region", { name: "Leenkey vous donne les clés de votre vente." });
+    const hero = page.getByRole("region", {
+      name: "Vendez votre bien autrement. Moins de frais, plus de contrôle.",
+    });
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Leenkey vous donne les clés de votre vente.",
+      "Vendez votre bien autrement. Moins de frais, plus de contrôle.",
     );
     await expect(hero.getByText("Ni agence, ni seul · 0 € de commission")).toBeVisible();
     // Its rights confirmed (Q57): in production too, so in CI. Decorative.
-    const photo = hero.locator('img[src*="/images/accueil/maison-"]');
+    // Beside the text from 1 024 px, under it below: the one shown.
+    const photo = hero.locator('img[src*="/images/accueil/maison-"]:visible');
     await expect(photo).toBeVisible();
     await expect(photo).toHaveAttribute("alt", "");
     // « Valoriser mon bien » open first, its action on the first screen, at 390 px too.
@@ -81,15 +84,29 @@ test.describe("accueil", () => {
       "aria-selected",
       "true",
     );
-    const action = page.getByRole("button", { name: "Voir ma valorisation" });
+    const action = page.getByRole("button", { name: "Valoriser mon bien gratuitement" });
     const box = await action.boundingBox();
-    expect((box?.y ?? Infinity) + (box?.height ?? 0)).toBeLessThan(
-      page.viewportSize()?.height ?? 0,
-    );
+    // On the first screen, above the bottom tabs of a phone.
+    const tabsBar = page
+      .locator("nav:visible")
+      .filter({ has: page.getByRole("link", { name: "Chercher" }) });
+    const limit =
+      (await tabsBar.count()) > 0
+        ? ((await tabsBar.first().boundingBox())?.y ?? 0)
+        : (page.viewportSize()?.height ?? 0);
+    expect((box?.y ?? Infinity) + (box?.height ?? 0)).toBeLessThan(limit);
     await expect(page.getByRole("tabpanel")).toContainText("2 minutes");
-    // The pages of the V1 home are gone: no invented figure, no example card.
+    // The invented figure of the V1 home is gone (« + 5,2 % vs prix agence »).
     await expect(page.getByText("vs prix agence")).toHaveCount(0);
-    await expect(page.getByRole("group", { name: "Exemple de valorisation" })).toHaveCount(0);
+    // The example on the photo from 1 280 px, said to be one, its value from the engine (Q58).
+    const example = page.getByRole("group", { name: "Exemple de valorisation" });
+    if ((page.viewportSize()?.width ?? 0) >= 1280) {
+      await expect(example).toBeVisible();
+      await expect(example).toContainText("Exemple");
+      await expect(example).toContainText(/453\s000\s€/);
+    } else {
+      await expect(example).toBeHidden();
+    }
   });
 
   test("Valoriser : l'adresse choisie remplit l'étape « Localisation » de l'estimateur", async ({
@@ -115,7 +132,7 @@ test.describe("accueil", () => {
     await field.press("Enter");
     await expect(field).toHaveValue(ADDRESS.label);
     await expect(list).toBeHidden();
-    await page.getByRole("button", { name: "Voir ma valorisation" }).click();
+    await page.getByRole("button", { name: "Valoriser mon bien gratuitement" }).click();
     // Read once: the address of the page is cleaned, the draft holds it.
     await expect(page).toHaveURL("/estimer");
     await expect
@@ -234,12 +251,16 @@ test.describe("accueil", () => {
     await expect(page.locator("#contact-form")).toHaveCount(0);
   });
 
-  test("pied de page : sur sable, les pages du site, puis les liens légaux", async ({ page }) => {
+  test("pied de page : blanc, le logo, les pages du site, puis les liens légaux", async ({
+    page,
+  }) => {
     await page.goto("/");
     const footer = page.getByRole("contentinfo");
+    // White in the redesign D (SPECS.md 3, item 11), the logo first.
     expect(await footer.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
-      "rgb(241, 237, 231)",
+      "rgb(255, 255, 255)",
     );
+    await expect(footer.getByRole("link").first()).toHaveAccessibleName("Leenkey");
     const site = footer.getByRole("navigation", { name: "Découvrir Leenkey" });
     await expect(site.getByRole("link")).toHaveText([
       "Concept",

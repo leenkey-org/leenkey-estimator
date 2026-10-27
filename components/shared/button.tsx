@@ -50,6 +50,16 @@ export const buttonVariants = cva(
         // On a blue flat only: the focus ring turns white to stay visible.
         inverse:
           "bg-lk-surface text-lk-blue not-disabled:hover:bg-lk-blue-tint not-disabled:active:bg-lk-blue-tint focus-visible:outline-white",
+        // Redesign D (SPECS.md 2): the main action in the gradient of the
+        // charte, rising a little on hover; the secondary one on the night,
+        // of glass with a white line.
+        gradient: [
+          "lk-gradient text-white shadow-lk-d-button",
+          "transition-[color,filter,scale,translate,box-shadow]",
+          "not-disabled:hover:-translate-y-px not-disabled:hover:brightness-108 motion-reduce:not-disabled:hover:translate-y-0",
+        ],
+        night:
+          "border border-white/35 bg-lk-night/55 text-white not-disabled:hover:bg-white/10 not-disabled:active:bg-white/10",
         // White outline on a blue flat, beside an inverse button (hero of the
         // home page, DESIGN.md 13.1).
         "outline-inverse":

@@ -39,10 +39,26 @@ export const site = {
       "La plateforme qui accompagne les propriétaires dans la vente de leur bien, sans agence : analyse de valeur, dossier, annonce, négociation, jusqu'à la signature. Forfait fixe et transparent.",
     hero: {
       badge: "Ni agence, ni seul · 0\u00A0€ de commission",
-      title: "Leenkey vous donne les clés de votre vente.",
-      lead: "Vendez sans agence, accompagné à chaque étape\u00A0— de l'analyse de valeur jusqu'à la signature.",
+      // Redesign D (docs/design-handoff-d/SPECS.md 3, item 1): the title of the
+      // charte, its second line in the gradient.
+      title: "Vendez votre bien autrement.",
+      titleAccent: "Moins de frais, plus de contrôle.",
+      lead: "Leenkey vous donne les outils et l'accompagnement pour vendre votre bien en toute simplicité, sans agence et à votre rythme.",
       // The shorter lead of the mobile mock-up.
-      leadShort: "Vendez sans agence, accompagné à chaque étape.",
+      leadShort:
+        "Les outils et l'accompagnement pour vendre en toute simplicité, sans agence et à votre rythme.",
+      // The card set on the photo from 1 280 px: an illustration of the
+      // analysis of value, always said to be an example (SPECS.md 2).
+      example: {
+        badge: "Exemple",
+        // Its name for assistive technologies: the card says it is an example.
+        label: "Exemple de valorisation",
+        title: "Maison contemporaine",
+        detail: (town: string, surface: number | null, rooms: number | null) =>
+          `${town}\u00A0· ${surface}\u00A0m²\u00A0· ${rooms}\u00A0pièces`,
+        valueLabel: "Ma valeur immobilière",
+        note: "Analyse gratuite en 2\u00A0minutes",
+      },
     },
     search: {
       // Not « Que voulez-vous faire ? »: the title of the shortcuts under it.
@@ -53,7 +69,7 @@ export const site = {
       addressPlaceholder: "Adresse de votre bien",
       valuation: {
         label: "Adresse du bien à valoriser",
-        action: "Voir ma valorisation",
+        action: "Valoriser mon bien gratuitement",
         points: ["Gratuit", "2 minutes", "Rapport PDF de 4 pages par email"],
         pointsShort: ["Gratuit", "2 minutes", "Rapport PDF par email"],
         /** Text typed, a suggestion not chosen: the estimator needs its postal code. */
@@ -113,6 +129,8 @@ export const site = {
     savings: {
       eyebrow: "Un forfait fixe. Jamais de commission.",
       title: "Combien vous économisez avec Leenkey",
+      // In the gradient (redesign D).
+      accent: "économisez",
       lead: `Le prix ne dépend jamais de la valeur de votre bien. Choisissez un prix de vente${NBSP}:`,
       leadShort: `Choisissez un prix de vente${NBSP}:`,
       prices: "Prix de vente",
@@ -236,6 +254,7 @@ export const site = {
     },
     final: {
       title: "Prêt à garder les clés de votre vente ?",
+      accent: "les clés de votre vente",
       text: "Deux minutes pour connaître la valeur réelle de votre bien. Gratuit, sans engagement.",
       action: "Valoriser mon bien gratuitement",
       note: "Réponse sous 24 h par un conseiller · Aucune carte requise",

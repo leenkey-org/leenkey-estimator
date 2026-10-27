@@ -17,13 +17,22 @@ import { SpaceNotificationBell } from "./space";
  * built from the session: avatar, bell and favourites when signed in,
  * « Mon compte » back to this page otherwise. Shown from 768 px.
  */
-export async function SiteTopNav({ fullWidth = false }: { fullWidth?: boolean } = {}) {
+export async function SiteTopNav({
+  fullWidth = false,
+  tone = "light",
+}: { fullWidth?: boolean; tone?: "light" | "night" } = {}) {
   const [profile, path] = await Promise.all([getProfile(), currentPath()]);
   const account: TopNavAccount = profile
     ? {
         signedIn: true,
         notifications: (
-          <SpaceNotificationBell roles={profile.roles} profileId={profile.id} size="nav" />
+          <SpaceNotificationBell
+            roles={profile.roles}
+            profileId={profile.id}
+            size="nav"
+            // White on the night of the home page D; an unread one on its light tint.
+            tone={tone === "night" ? "dark" : "light"}
+          />
         ),
         favourites: FAVOURITES_LINK,
         menu: { ...accountMenu(profile), signOut },
@@ -37,6 +46,7 @@ export async function SiteTopNav({ fullWidth = false }: { fullWidth?: boolean } 
       cta={sellCta()}
       account={account}
       fullWidth={fullWidth}
+      tone={tone}
     />
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as Tabs from "@radix-ui/react-tabs";
-import { ChartLine, House, MapPin, Search, Tag } from "lucide-react";
+import { ArrowRight, ChartLine, House, MapPin, Search, Tag } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { fr } from "@/lib/i18n/fr";
@@ -24,9 +24,10 @@ const TABS: ReadonlyArray<{ value: Tab; icon: typeof House }> = [
 ];
 
 /**
- * The search card of the home page of direction C (docs/design-handoff/SPECS.md
- * 2, 3): set over the bottom of the photo, three tabs, « Valoriser mon bien »
- * open first. Valoriser: the address of the property, then the estimator with
+ * The search card of the home page (redesign D, docs/design-handoff-d/SPECS.md
+ * 2, 3): set over the bottom of the night band, three tabs, « Valoriser mon
+ * bien » open first; the tab open in ink, its icon in the gradient and an
+ * indigo line under it. Valoriser: the address of the property, then the estimator with
  * it already chosen. Vendre: the address, then the creation of the listing
  * (the seller sign-up first when signed out). Acheter: the segmented bar, then
  * the search. Tabs of Radix (arrows between them, the panel after them).
@@ -35,7 +36,7 @@ export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
   return (
     <Tabs.Root
       defaultValue="valuation"
-      className="relative rounded-lk-3xl bg-lk-surface px-4 pt-1 pb-4.5 shadow-lk-search md:rounded-lk-3xl md:px-7 md:pt-2 md:pb-7"
+      className="relative rounded-lk-d-search bg-lk-surface px-4 pt-1 pb-4.5 text-lk-ink shadow-lk-d-search md:rounded-lk-3xl md:px-7 md:pt-1.5 md:pb-6.5"
     >
       <Tabs.List aria-label={t.label} className="flex border-b border-lk-line md:gap-2">
         {TABS.map(({ value, icon: Icon }) => (
@@ -45,14 +46,18 @@ export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
             // The whole label for assistive technologies, on a phone too.
             aria-label={t.tabs[value]}
             className={cn(
-              "-mb-px flex min-h-16 flex-1 flex-col items-center justify-center gap-1 border-b-3 border-transparent px-1 pt-3 pb-2.5 text-lk-compact font-bold text-lk-ink-2",
-              "md:flex-none md:flex-row md:gap-2.5 md:px-4.5 md:pt-4.5 md:pb-4 md:text-lk-body-lg",
+              "group -mb-px flex min-h-16 flex-1 flex-col items-center justify-center gap-1 border-b-3 border-transparent px-1 pt-3 pb-2.5 text-lk-label font-semibold text-lk-ink-3",
+              "md:flex-none md:flex-row md:gap-2.25 md:px-4 md:pt-4.5 md:pb-4 md:text-lk-title",
               "transition-colors duration-140 ease-out-lk hover:text-lk-ink",
-              "data-[state=active]:border-lk-blue data-[state=active]:text-lk-blue",
+              "data-[state=active]:border-lk-indigo-mark data-[state=active]:text-lk-ink",
               "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-blue focus-visible:outline-solid",
             )}
           >
-            <Icon aria-hidden="true" strokeWidth={1.8} className="size-5.5" />
+            <Icon
+              aria-hidden="true"
+              strokeWidth={1.8}
+              className="size-5.5 md:size-5.25 group-data-[state=active]:lk-icon-gradient"
+            />
             <span className="md:hidden">{t.tabsShort[value]}</span>
             <span className="hidden md:inline">{t.tabs[value]}</span>
           </Tabs.Trigger>
@@ -104,13 +109,13 @@ export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
         {/* Below 768 px, one button: the search page has the filters. */}
         <Link
           href={SEARCH_PATH}
-          className="flex min-h-15 items-center gap-3 rounded-full border border-lk-line-strong bg-lk-surface py-2 pr-2 pl-5 shadow-lk-field md:hidden"
+          className="flex min-h-15 items-center gap-3 rounded-full border border-lk-line-strong bg-lk-surface py-2 pr-2 pl-5 shadow-lk-d-field md:hidden"
         >
           <span className="min-w-0 flex-1">
             <span className="block text-lk-body font-bold text-lk-ink">{t.buy.mobileTitle}</span>
             <span className="block text-lk-secondary text-lk-ink-3">{t.buy.mobileText}</span>
           </span>
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-lk-blue text-white">
+          <span className="lk-gradient flex size-11 shrink-0 items-center justify-center rounded-full text-white">
             <Search aria-hidden="true" strokeWidth={2.4} className="size-5" />
           </span>
         </Link>
@@ -122,7 +127,7 @@ export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
 /** « Gratuit · 2 minutes · … », the first one in blue. */
 function Points({ points }: { points: readonly string[] }) {
   return points.map((point, index) => (
-    <span key={point} className={cn(index === 0 && "font-bold text-lk-blue")}>
+    <span key={point} className={cn(index === 0 && "font-semibold text-lk-blue-dark")}>
       {index > 0 ? (
         <>
           <span aria-hidden="true" className="mx-2 md:mx-4">
@@ -267,13 +272,13 @@ function AddressForm({
       <div className="relative md:min-w-90 md:flex-1">
         <label
           htmlFor={inputId}
-          className="flex h-14 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface px-4.5 shadow-lk-field focus-within:border-lk-blue has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-lk-blue has-[input:focus-visible]:outline-solid md:h-16 md:gap-3 md:px-6"
+          className="flex h-13.5 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface px-4.5 shadow-lk-d-field focus-within:border-lk-blue has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-lk-blue has-[input:focus-visible]:outline-solid md:h-15.5 md:gap-3 md:px-6"
         >
           <span className="sr-only">{label}</span>
           <MapPin
             aria-hidden="true"
             strokeWidth={1.8}
-            className="size-5 shrink-0 text-lk-blue md:size-5.5"
+            className="lk-icon-gradient size-5 shrink-0 md:size-5.5"
           />
           <input
             ref={input}
@@ -314,7 +319,7 @@ function AddressForm({
             role="listbox"
             aria-label={t.suggestionsLabel}
             hidden={!expanded}
-            className="absolute inset-x-0 top-full z-30 mt-2 overflow-hidden rounded-lk-xl border border-lk-line bg-lk-surface py-1.5 shadow-lk-block"
+            className="absolute inset-x-0 top-full z-30 mt-2 overflow-hidden rounded-lk-xl border border-lk-line bg-lk-surface py-1.5 shadow-lk-d-block"
           >
             {options.map((option, index) => (
               <li
@@ -352,7 +357,14 @@ function AddressForm({
           </p>
         ) : null}
       </div>
-      <Button type="submit" shape="pill" size="xl" className="md:h-16 md:px-7.5">
+      <Button
+        type="submit"
+        variant="gradient"
+        shape="pill"
+        size="xl"
+        trailingIcon={ArrowRight}
+        className="h-13.5 font-semibold md:h-15.5 md:px-7"
+      >
         {action}
       </Button>
     </form>

@@ -123,15 +123,20 @@ export function HomeListingsCarousel({
               aria-pressed={active}
               onClick={() => setCategory(value)}
               className={cn(
-                "-mb-px flex min-w-14 shrink-0 flex-col items-center gap-1.5 border-b-2 px-0.5 pt-1 pb-3 text-lk-label font-semibold md:min-w-16 md:gap-2 md:pt-1.5 md:pb-3.5 md:text-lk-compact",
+                "-mb-px flex min-w-14 shrink-0 flex-col items-center gap-1.5 border-b-2 px-0.5 pt-1 pb-3 text-lk-caption font-medium md:min-w-16 md:gap-2 md:pt-1.5 md:pb-3.5 md:text-lk-label",
                 "transition-colors duration-140 ease-out-lk",
+                // In ink, its icon in the gradient and the indigo line (redesign D).
                 active
-                  ? "border-lk-blue text-lk-blue"
-                  : "border-transparent text-lk-ink-2 hover:text-lk-ink",
+                  ? "border-lk-indigo-mark text-lk-ink"
+                  : "border-transparent text-lk-ink-3 hover:text-lk-ink",
                 "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-blue focus-visible:outline-solid",
               )}
             >
-              <Icon aria-hidden="true" strokeWidth={1.6} className="size-6 md:size-6.5" />
+              <Icon
+                aria-hidden="true"
+                strokeWidth={1.6}
+                className={cn("size-6 md:size-6.5", active && "lk-icon-gradient")}
+              />
               {t.category[value]}
             </button>
           );
@@ -143,14 +148,14 @@ export function HomeListingsCarousel({
           <h2 id="pres-de-chez-vous" className={HOME_SECTION_TITLE}>
             {t.title}
           </h2>
-          <p className="mt-0.5 text-lk-compact text-lk-ink-3 md:mt-1.5 md:text-lk-body-lg">
+          <p className="mt-0.5 text-lk-secondary text-lk-ink-3 md:mt-1.5 md:text-lk-body">
             {t.place}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3">
           <Link
             href={links[category]}
-            className="inline-flex min-h-11 items-center text-lk-compact font-bold text-lk-blue underline-offset-3 hover:underline md:text-lk-body-lg"
+            className="inline-flex min-h-11 items-center text-lk-compact font-semibold text-lk-blue underline-offset-3 hover:underline md:text-lk-body"
           >
             <span className="md:hidden">{allShort}</span>
             <span className="hidden md:inline">{allLabel}</span>
@@ -200,6 +205,7 @@ export function HomeListingsCarousel({
             >
               <ShowcaseCard
                 {...card}
+                redesign
                 action={
                   <FavoriteButton
                     listingId={id}
