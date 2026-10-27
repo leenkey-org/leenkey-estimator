@@ -54,7 +54,7 @@ export function FavoriteButton({
   const onPhoto = variant === "photo";
   const classes = cn(
     onPhoto
-      ? "relative inline-flex size-11 items-center justify-center rounded-full text-white focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-lk-blue focus-visible:outline-solid"
+      ? "relative inline-flex size-11 items-center justify-center rounded-full text-white focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-lk-brand-blue focus-visible:outline-solid"
       : cn(iconButtonVariants({ variant }), "inline-flex items-center justify-center text-lk-blue"),
     className,
   );

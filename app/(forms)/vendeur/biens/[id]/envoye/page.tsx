@@ -40,7 +40,7 @@ export default async function PropertySentPage({ params }: Props) {
         title={t.title}
         text={t.text}
         action={
-          <Button asChild variant="inverse" size="lg">
+          <Button asChild variant="cta" size="lg">
             <Link href="/vendeur">{t.action}</Link>
           </Button>
         }

@@ -850,7 +850,7 @@ export default function DesignPage() {
               titleAs="h4"
               title={fr.properties.sent.title}
               text={fr.properties.sent.text}
-              action={<Button variant="inverse">{fr.properties.sent.action}</Button>}
+              action={<Button variant="cta">{fr.properties.sent.action}</Button>}
               className="min-h-96 md:min-h-96"
             />
             <Caption>{content.endOfFlow.caption}</Caption>

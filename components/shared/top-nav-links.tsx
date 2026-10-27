@@ -13,12 +13,12 @@ const CLOSE_DELAY_MS = 150;
 /** A click this soon after an opening by the mouse meant to open it too: it keeps it open. */
 const CLICK_GRACE_MS = 500;
 
-/** 14 px 500, then 600 from 1 024 px and 15 px from 1 280 px (direction C), 44 px high in the 72 px bar, the current one in blue. */
+/** 14 px 500, then 600 from 1 024 px and 15 px from 1 280 px, 44 px high in the 72 px bar, the current one underlined (charte D). */
 function linkClassName(active: boolean, night = false) {
   if (night) {
     return cn(
       "relative inline-flex h-11 items-center whitespace-nowrap rounded-lk-sm text-lk-compact font-medium text-white xl:text-lk-title",
-      // The violet light of the night under the current link (redesign D).
+      // The violet light of the night under the current link (charte D).
       "after:absolute after:inset-x-0 after:bottom-2 after:h-0.5 after:origin-left after:bg-lk-night-violet",
       "after:transition-transform after:duration-220 after:ease-out-lk",
       active ? "after:scale-x-100" : "after:scale-x-0 hover:after:scale-x-100",
@@ -28,25 +28,26 @@ function linkClassName(active: boolean, night = false) {
     // 44 px high touch target inside the 72 px bar.
     "relative inline-flex h-11 items-center whitespace-nowrap rounded-lk-sm text-lk-compact font-medium lg:font-semibold xl:text-lk-title",
     "transition-colors duration-140 ease-out-lk",
-    // A 2 px blue line under the label, drawn from the left on hover, kept
-    // under the current link (DESIGN.md 9).
-    "after:absolute after:inset-x-0 after:bottom-2 after:h-0.5 after:origin-left after:bg-lk-blue",
+    // A 2 px indigo line under the label (the line of a tab of the charte),
+    // drawn from the left on hover, kept under the current link (DESIGN.md 9).
+    "after:absolute after:inset-x-0 after:bottom-2 after:h-0.5 after:origin-left after:bg-lk-indigo-mark",
     "after:transition-transform after:duration-220 after:ease-out-lk",
     active
-      ? "text-lk-blue after:scale-x-100"
-      : "text-lk-ink after:scale-x-0 hover:text-lk-blue hover:after:scale-x-100",
+      ? "text-lk-ink after:scale-x-100"
+      : "text-lk-ink after:scale-x-0 hover:after:scale-x-100",
   );
 }
 
 /**
- * A link of an open group: the rows of the AccountMenu; the one of the page in
- * blue and underlined (never told by the colour alone, DESIGN.md 15).
+ * A link of an open group: the rows of the AccountMenu; the one of the page
+ * underlined in indigo (never told by the colour alone, DESIGN.md 15).
  */
 function groupLinkClassName(page: boolean) {
   return cn(
     "flex h-11 items-center whitespace-nowrap rounded-lk-sm px-3 text-lk-compact font-medium",
     "transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2 focus-visible:bg-lk-stone-2",
-    page ? "text-lk-blue underline decoration-2 underline-offset-6" : "text-lk-ink",
+    "text-lk-ink",
+    page && "underline decoration-lk-indigo-mark decoration-2 underline-offset-6",
   );
 }
 
@@ -230,7 +231,7 @@ export function TopNavLinks({
   const current = activeHref === undefined ? currentHref(pathname, links) : activeHref;
   return (
     <nav aria-label={label} className="min-w-0">
-      <ul className="flex items-center gap-5 lg:gap-6">
+      <ul className="flex items-center gap-3 lg:gap-4 xl:gap-6">
         {links.map((link) => {
           const active = link.href === current;
           const shown = cn(

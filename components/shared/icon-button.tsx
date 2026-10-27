@@ -7,9 +7,10 @@ import { cn } from "@/lib/utils";
 // docs/DESIGN.md 10.1 (IconButton) and 10.6 (transparent, top navigation).
 export const iconButtonVariants = cva(
   [
-    "relative shrink-0 rounded-lk-sm p-0 shadow-none [&_svg]:size-5",
+    // Round (charte D, SPECS.md 2).
+    "relative shrink-0 rounded-full p-0 shadow-none [&_svg]:size-5",
     "transition-colors duration-140 ease-out-lk",
-    "focus-visible:ring-0 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+    "focus-visible:ring-0 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue",
     "disabled:pointer-events-auto disabled:cursor-not-allowed disabled:opacity-45",
   ],
   {

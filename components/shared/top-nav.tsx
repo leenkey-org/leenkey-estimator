@@ -39,22 +39,24 @@ export type TopNavProps = {
   /** The whole width of the screen, aligned with a page that uses it (search and its map). */
   fullWidth?: boolean;
   /**
-   * night: in the night band of the home page D (SPECS.md 3, item 1): white
-   * logo and links, the action and the account of glass, no line under it.
+   * night: in the night band of the first section (the home page, SPECS.md 3,
+   * item 1, and the heroes of the showcase pages): white logo and links, the
+   * action and the account of glass, no line under it.
    */
   tone?: "light" | "night";
   className?: string;
 };
 
 /**
- * Desktop navigation (docs/DESIGN.md 10.6, direction C), from 768 px: 72 px,
+ * Desktop navigation (docs/DESIGN.md 10.6, charte D), from 768 px: 72 px,
  * white, bottom border, sticky, its content in the frame of the pages (the
  * width of the screen up to 1 920 px, L1-56).
  * Logo 32 px high, links, then on the right: the action in a blue outlined
  * pill, and when signed in the bell, the favourites and the pill of the
  * account menu; when signed out, the same pill (menu and avatar) to « Mon
  * compte ». Gutters of the frame from 1024 px (32 px, 64 px from 1536 px),
- * gap 40; 20 px and 24 below, so that it fits in 768 px. Layer 30, above the sticky headers of the pages (20): the
+ * gap 40 from 1 280 px, 24 then 16 below (and the logo 28 px high below
+ * 1 024 px), so that it fits in 768 px with an account. Layer 30, above the sticky headers of the pages (20): the
  * panel of a group of its links covers them (L1-51); no BottomNav from 768 px.
  */
 export function TopNav({
@@ -80,7 +82,8 @@ export function TopNav({
     >
       <div
         className={cn(
-          "flex h-full items-center gap-6 lg:gap-10",
+          // Tighter below 1 280 px: Sora is wider than the font before it (L1-58).
+          "flex h-full items-center gap-4 lg:gap-6 xl:gap-10",
           // The page frame (L1-56), or the whole width (the search sets its
           // own gutter on its page). 20 px below 1 024 px: the links of an
           // account do not fit in 768 px with 32.
@@ -89,7 +92,7 @@ export function TopNav({
         )}
       >
         <Link href={homeHref} className="inline-flex h-11 shrink-0 items-center rounded-lk-sm">
-          <Logo tone={night ? "white" : "color"} className="h-8" />
+          <Logo tone={night ? "white" : "color"} className="h-7 lg:h-8" />
         </Link>
         <TopNavLinks label={label} links={links} activeHref={activeHref} night={night} />
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
@@ -99,7 +102,7 @@ export function TopNav({
               variant={night ? "night" : "outline-blue"}
               shape="pill"
               icon={Plus}
-              className="mr-2"
+              className="xl:mr-2"
             >
               <Link href={cta.href}>{cta.label}</Link>
             </Button>
@@ -127,16 +130,11 @@ export function TopNav({
                 // The avatar alone below 1 024 px, where the links need the room.
                 "flex h-12 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface pr-1.5 pl-1.5 text-lk-ink lg:pl-4",
                 "transition-shadow duration-140 ease-out-lk hover:shadow-lk-field",
-                "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue focus-visible:outline-solid",
+                "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
               )}
             >
               <Menu aria-hidden="true" className="hidden size-4.5 lg:block" />
-              <span
-                className={cn(
-                  "flex size-8.5 items-center justify-center rounded-full text-white",
-                  night ? "lk-gradient-brand" : "bg-lk-blue",
-                )}
-              >
+              <span className="lk-gradient flex size-8.5 items-center justify-center rounded-full text-white">
                 <User aria-hidden="true" className="size-4.5" />
               </span>
             </Link>

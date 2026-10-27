@@ -33,7 +33,7 @@ Trois lots contractuels. **Le périmètre à construire est celui de `docs/SPEC-
 | Couche | Choix | Notes |
 |---|---|---|
 | Framework | Next.js 15, App Router, TypeScript strict | Server Components par défaut, `"use client"` seulement si nécessaire |
-| UI | Tailwind CSS + shadcn/ui, police Archivo (axe de largeur), direction « Façade » (SPEC-V2 section 6) | Composants dans `components/ui/`, jamais modifiés à la main : on les étend. Seule exception : l'ajustement des rayons demandé par `docs/DESIGN.md` section 2.2, fait une fois à l'installation de chaque composant et signalé dans la PR |
+| UI | Tailwind CSS + shadcn/ui, police Sora, charte D sur les composants « Façade » (`docs/DESIGN.md` section 1, depuis L1-58) | Composants dans `components/ui/`, jamais modifiés à la main : on les étend. Seule exception : l'ajustement des rayons demandé par `docs/DESIGN.md` section 2.2, fait une fois à l'installation de chaque composant et signalé dans la PR |
 | Base, auth, storage, realtime | Supabase (Postgres, RLS, Auth, Storage, Realtime) | Un projet par environnement, voir section 4 |
 | Vecteurs | pgvector dans Supabase | Base de connaissances de l'assistant |
 | Paiement | Stripe Checkout + webhooks | Mode test en dev et preprod, live en prod uniquement |
@@ -448,7 +448,7 @@ S'appliquent à tous les textes : interface, emails, prompts de l'assistant, PDF
 - Pas de chiffres ni de témoignages inventés sur le site.
 - Pas de mention « Prix ferme » sur les écrans.
 - Pas de pixel publicitaire tiers (Meta Pixel ou autre) hors décision écrite dans `docs/DECISIONS.md`.
-- Bleu de marque : `#1156FC` (pas le bleu Tailwind `#3B82F6`).
+- Couleurs de marque : la charte D depuis le 2026-10-27 (validation de Younes, `docs/DECISIONS.md` L1-58) : nuit `#020D21`, dégradé `#2563EB` → `#7C3AED` sous un texte blanc, `#3B82F6` → `#8B5CF6` pour le décor (`docs/DESIGN.md` 2.1). Les emails, le rapport PDF et l'image de partage gardent `#1156FC` en attendant la confirmation de Cédric (Q65).
 
 ### Pièges connus
 

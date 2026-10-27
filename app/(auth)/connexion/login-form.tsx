@@ -36,7 +36,7 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
               <button
                 type="submit"
                 disabled={resending}
-                className="rounded-lk-sm font-semibold underline underline-offset-2 hover:no-underline focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue disabled:opacity-60"
+                className="rounded-lk-sm font-semibold underline underline-offset-2 hover:no-underline focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue disabled:opacity-60"
               >
                 {fr.auth.signup.resend}
               </button>

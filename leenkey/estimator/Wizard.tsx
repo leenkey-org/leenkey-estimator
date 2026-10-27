@@ -535,7 +535,7 @@ export function LeenkeyWizard() {
             className="h-1.5 overflow-hidden rounded-full bg-lk-line"
           >
             <div
-              className="h-full rounded-full bg-lk-blue transition-all duration-500 ease-out-lk motion-reduce:transition-none"
+              className="h-full rounded-full bg-linear-90 from-lk-brand-blue to-lk-brand-violet transition-all duration-500 ease-out-lk motion-reduce:transition-none"
               style={{ width: `${progress}%` }}
             />
           </div>

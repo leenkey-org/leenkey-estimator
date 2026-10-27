@@ -55,7 +55,7 @@ export function ConversationHeader({
                 href={href}
                 className={cn(
                   "after:absolute after:inset-0 after:rounded-lk-sm hover:underline",
-                  "focus-visible:outline-none focus-visible:after:outline-solid focus-visible:after:outline-3 focus-visible:after:outline-offset-2 focus-visible:after:outline-lk-blue",
+                  "focus-visible:outline-none focus-visible:after:outline-solid focus-visible:after:outline-3 focus-visible:after:outline-offset-2 focus-visible:after:outline-lk-brand-blue",
                 )}
               >
                 {title}

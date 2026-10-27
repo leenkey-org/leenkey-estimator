@@ -21,7 +21,7 @@ import { PublicPage } from "@/leenkey/site/components/public-page";
 // (/#tarifs) with them.
 export default function HomePage() {
   return (
-    <PublicPage redesign>
+    <PublicPage header="night">
       <HomeHero />
       <ShortcutsSection />
       <SavingsSection />

@@ -57,7 +57,7 @@ export function SegmentedPicker({
         aria-labelledby={labelId}
         className={cn(
           "grid auto-cols-fr grid-flow-col",
-          dark ? "gap-1 rounded-lk-lg border border-white/12 bg-white/[0.06] p-1" : "gap-1.5",
+          dark ? "gap-1 rounded-full border border-white/12 bg-white/[0.06] p-1" : "gap-1.5",
           className,
         )}
         {...props}
@@ -74,7 +74,7 @@ export function SegmentedPicker({
               dark
                 ? [
                     // Its long labels may take two lines at 390 px.
-                    "min-h-11 rounded-lk-md py-1.5 leading-tight text-white/80 focus-visible:outline-white",
+                    "min-h-11 rounded-full py-1.5 leading-tight text-white/80 focus-visible:outline-white",
                     "data-[state=unchecked]:enabled:hover:bg-white/10",
                     "data-[state=checked]:bg-lk-surface data-[state=checked]:text-lk-blue",
                   ]
@@ -82,14 +82,15 @@ export function SegmentedPicker({
                   ? [
                       "h-11 rounded-full border-[1.5px] border-lk-line-strong bg-lk-surface text-lk-ink",
                       "data-[state=unchecked]:enabled:hover:border-lk-ink-3",
-                      "data-[state=checked]:border-lk-blue data-[state=checked]:bg-lk-blue data-[state=checked]:text-white",
-                      "data-[state=checked]:enabled:hover:bg-lk-blue-hover",
+                      // Chosen: the gradient of an action (charte D, SPECS.md 2).
+                      "data-[state=checked]:lk-gradient data-[state=checked]:border-transparent data-[state=checked]:text-white",
+                      "data-[state=checked]:enabled:hover:brightness-108",
                     ]
                   : [
                       "h-11 rounded-lk-sm bg-lk-stone-2 text-lk-ink-2",
                       "data-[state=unchecked]:enabled:hover:bg-lk-stone",
-                      "data-[state=checked]:bg-lk-blue data-[state=checked]:text-white",
-                      "data-[state=checked]:enabled:hover:bg-lk-blue-hover",
+                      "data-[state=checked]:lk-gradient data-[state=checked]:text-white",
+                      "data-[state=checked]:enabled:hover:brightness-108",
                     ],
               "disabled:cursor-not-allowed disabled:opacity-45",
             )}

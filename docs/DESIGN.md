@@ -38,6 +38,8 @@ Ce document est la **référence visuelle exécutable** de la V2 : valeurs exact
 
 ## 1. Principes
 
+> **Depuis L1-58 (décision de Younes du 2026-10-27, « on valide pour l'ensemble du site »), tout le site est dans la charte D** (`docs/design-handoff-d/SPECS.md`, paragraphe « Charte D » ci-dessous). Elle l'emporte sur les quatre signatures, les interdits, l'exception des pages vitrines et la direction C décrits ensuite pour : les couleurs, la police (Sora), les dégradés, les ombres, les rayons, les pilules et la nuit des bandeaux. Restent valables partout : la photo d'abord, les règles éditoriales, l'accessibilité (section 15), pas d'emoji, aucun chiffre inventé, aucune étape bloquée par la formule. Les paragraphes historiques sont gardés pour comprendre le code ; en cas de doute, c'est la charte D.
+
 **Intention.** Leenkey vend des logements, pas un logiciel. L'interface fait voir les biens d'abord et s'efface derrière eux.
 
 **Les quatre signatures** (à respecter sur chaque écran) :
@@ -63,7 +65,7 @@ Ce document est la **référence visuelle exécutable** de la V2 : valeurs exact
 
 **Direction C : la refonte en cours** (décision de Younes du 2026-10-26, maquettes de Claude Design dans `docs/design-handoff/`, `SPECS.md` et `maquettes/` ; `DECISIONS.md` 2026-10-26). Elle remplace peu à peu la direction ci-dessus, page par page : d'abord la **palette, sur tout le site** (mêmes jetons, nouvelles valeurs, 2.1), puis l'**accueil** `/` (13.1), puis les **contrôles de la recherche** `/acheter` (barre arrondie, menus, puces en pilules, panneau des filtres : L1-54, 10.1 et 10.3 ; « comme sur Airbnb », Younes) ; l'annonce et les autres pages suivront avec leurs propres maquettes. Ses signatures : neutres chauds (texte `#1C1B19`, page `#FAF8F5`, lignes `#ECE6DD`, sable `#F1EDE7`) et le bleu en accent seulement (boutons principaux, avatar du compte, pastilles, onglet actif), **jamais en grand aplat** ; boutons en pilule (`shape="pill"`), le principal avec une ombre bleue ; rayons de 16 à 28 px (cartes 16 à 24, photo du hero 28) ; ombres douces (carte de recherche, formule mise en avant, bloc posé) au lieu des bordures seules ; titres de section 800 un peu larges (`text-heavy`) ; formes décoratives bleues légères (halo, anneau, point) derrière le contenu de deux sections blanches, en flottement lent, immobiles avec `prefers-reduced-motion: reduce` ; icônes au trait 1,6 à 1,8 px. Sur les écrans passés en direction C, ces signatures l'emportent sur les quatre signatures et les interdits ci-dessus pour : les rayons ; les ombres ; les pilules ; l'icône de maison (permise pour l'onglet « Acheter », la catégorie « Maison » et l'option « Maison » du type de bien de la recherche) ; deux dégradés, le voile du hero (`--lk-navy`, plus sombre que la maquette là où est le texte : 4,5:1 même sur la pierre claire de la photo) et le halo des formes décoratives (`--lk-blue` à 10 %) ; les numéros « 01 » à « 03 » des cartes d'étape à partir de 768 px (décoratifs, la liste dit l'ordre) ; la flèche `ArrowRight` du bouton du bandeau final. Pas de capitales : les surtitres restent en casse normale. Restent interdits partout : couleurs hors charte, texte sous 4,5:1, chiffres non sourcés ou inventés (le nombre de biens est calculé, les badges viennent des données), emojis, « Débloquer » et toute étape bloquée par la formule.
 
-**Refonte D : la charte de Leenkey, d'abord sur l'accueil** (décision de Younes du 2026-10-27, L1-57, `docs/design-handoff-d/SPECS.md` qui fait foi pour elle, `DECISIONS.md` 2026-10-27). Palette nuit `#020D21`, encre `#0F172A`, bleu `#3B82F6` et violet `#8B5CF6` de la charte (dégradés, halos, orbes, avatar), et sous le texte blanc leurs tons AA `#2563EB` → `#7C3AED` (boutons, badges, pilule choisie). Indigo `#4338CA` pour les petits textes colorés, trait `#4F46E5` sous l'onglet actif. Police Sora. Dans le code : la classe `lk-d` sur la racine d'une page change les valeurs des jetons des composants (mêmes noms, `app/globals.css`). La classe `lk-on-night` blanchit une barre posée sur la nuit, `lk-on-light` rétablit un panneau blanc ouvert dessus. Utilitaires : `lk-gradient`, `lk-gradient-brand`, `lk-gradient-soft`, `lk-gradient-text` (`-night`), `lk-gradient-border`, `lk-icon-gradient` (le `<linearGradient>` de `GradientDefs`, une fois par page), `lk-dots-white` et `lk-dots-blue`, `lk-halo-blue` et `lk-halo-violet`, `lk-glow`. Toutes les animations sont coupées sous `prefers-reduced-motion`. Composants : `Button` `gradient` et `night`, `TopNav` et `SiteMenu` `tone="night"`, `SiteFooter` `tone="white"`, `ShowcaseCard` `redesign`, `PublicPage` `redesign`. **Les interdits de la section 1** (dégradés, ombres colorées, rayons de plus de 6 px, numérotation des étapes) **ne s'appliquent pas aux pages en refonte D** : sa charte les demande. Les petites étiquettes en capitales espacées de la charte (« UN FORFAIT FIXE. JAMAIS DE COMMISSION. », 11 puis 13 px, `tracking-lk-caps`) y sont permises aussi. Les règles éditoriales et l'accessibilité restent : 44 px, focus visible de 3 px `#3B82F6`, contrastes AA. Trois valeurs de la maquette changent pour le AA : bordure d'un champ `#828FA1` (3,2:1, pas `#CBD5E1`), vert de succès `#047857` sous un texte blanc (le `#059669` de la charte pour la coche seule), survol derrière un texte `#64748B` sur `#F8FAFC` (4,55:1). Les ombres de la charte s'écrivent `shadow-lk-d-*` dans les composants (Tailwind recopie la valeur d'une ombre dans son utilitaire : changer la variable ne la change pas). Les menus et panneaux ouverts hors de la page (Radix) reçoivent la portée `lk-d` par `PortalScope`. Sora n'est pas préchargée : seule une page de la charte la télécharge.
+**Charte D : la charte de Leenkey, sur tout le site** (décisions de Younes du 2026-10-27 : l'accueil en L1-57, puis tout le site en L1-58 ; `docs/design-handoff-d/SPECS.md` fait foi pour elle, `DECISIONS.md` 2026-10-27). Palette nuit `#020D21`, encre `#0F172A`, bleu `#3B82F6` et violet `#8B5CF6` de la charte (dégradés, halos, orbes, avatar, barres), et sous le texte blanc leurs tons AA `#2563EB` → `#7C3AED` (boutons, badges, pilule choisie, onglet de la barre du back office). Indigo `#4338CA` pour les petits textes colorés, trait `#4F46E5` sous l'onglet actif et le lien courant de la barre haute. Police Sora, seule police du site (préchargée). Dans le code : les **valeurs des jetons** de `app/globals.css` sont celles de la charte (mêmes noms qu'avant, 2.1) ; il n'y a plus de portée à poser sur une page. La classe `lk-on-night` blanchit une barre posée sur la nuit, `lk-on-light` rétablit un panneau blanc ouvert dessus. Utilitaires : `lk-gradient`, `lk-gradient-brand`, `lk-gradient-soft`, `lk-gradient-text` (`-night`), `lk-gradient-border`, `lk-icon-gradient` (le `<linearGradient>` de `GradientDefs`, une fois dans `app/layout.tsx`), `lk-dots-white` et `lk-dots-blue`, `lk-halo-blue` et `lk-halo-violet`, `lk-glow` ; `lk-hero-bg` et `lk-cta-bg` sont la nuit et ses halos (heros des pages vitrines, sections `tone="navy"`, dernier appel, 404, fins de parcours), `lk-text-grad` et `lk-text-grad-light` le dégradé des mots mis en valeur (sur clair, sur la nuit). Composants : tous les `Button` sont des pilules, `primary` en dégradé, `cta` en dégradé avec son ombre violette (l'appel principal d'un écran), `night` en verre sur la nuit ; `TopNav` et `SiteMenu` `tone="night"` sur les pages dont le premier bandeau est la nuit (`PublicPage header="night"` : accueil, `/concept`, `/tarifs`, `/faq`, `/investir`, `/qui-sommes-nous`), blancs ailleurs ; `SiteFooter` blanc avec le logo ; `ShowcaseCard` badge en dégradé et prix en gras ; onglet courant de la `BottomNav` en encre, son icône en dégradé ; pastilles de filtre et choix des sélecteurs en dégradé ; barres de progression bleu → violet ; avatar du compte en dégradé ; barre latérale du back office sur la nuit. Sur mobile, les pages bâties sur `PublicPage` (accueil, `/vendre`, `/contact` et les pages vitrines) ont la barre de navigation du bas (SPECS 3, item 12), comme `/acheter` ; l'annonce, les pages légales, l'estimateur et les formulaires gardent la leur ou n'en ont pas. **Les interdits de la section 1** (dégradés, ombres colorées, rayons de plus de 6 px, numérotation des étapes) **ne s'appliquent plus** : la charte les demande. Les petites étiquettes en capitales espacées de la charte (11 à 14 px, `tracking-lk-caps`) sont permises. Les règles éditoriales et l'accessibilité restent : 44 px, focus visible de 3 px `#3B82F6` (`outline-lk-brand-blue`, la seule couleur d'anneau des composants), contrastes AA. Quatre valeurs de la charte changent pour le AA : bordure d'un champ `#828FA1` (3,3:1, pas `#CBD5E1`), vert de succès `#047857` sous un texte blanc (le `#059669` de la charte pour la coche seule), texte tertiaire `#5B6880` (le `#64748B` de la charte tombe à 3,9:1 sur l'indigo clair d'une notification non lue et 4,3:1 sur les tuiles), survol `#F1F5F9` (`--lk-sand`, visible sur blanc, texte tertiaire 5,1:1 dessus). Les ombres s'écrivent avec leur utilitaire (`shadow-lk-d-*`, `shadow-lk-cta`…) : Tailwind recopie la valeur d'une ombre dans son utilitaire, changer la variable sur une portée ne la change pas. Hors du site, en attente de la confirmation de Cédric sur la couleur de marque (`DECISIONS.md` Q65) : les emails, le rapport PDF de l'estimateur et l'image de partage d'une annonce gardent le bleu `#1156FC`.
 
 ---
 
@@ -71,53 +73,60 @@ Ce document est la **référence visuelle exécutable** de la V2 : valeurs exact
 
 ### 2.1 Palette
 
+Valeurs de la charte D depuis L1-58 (`docs/design-handoff-d/SPECS.md` 1). Les noms des jetons sont ceux de Façade (le code ne change pas de nom), leurs valeurs sont les couleurs fonctionnelles (AA) de la charte.
+
 | Token | Hex | Usage | Contraste |
 |---|---|---|---|
-| `--lk-blue` | `#1156FC` | Aplats de marque, bouton principal, liens, sélection, focus | blanc dessus 5,58:1 ; sur blanc 5,58:1 |
-| `--lk-blue-hover` | `#0B3FC4` | Survol et pression du bleu (direction C) | blanc dessus 8,33:1 |
-| `--lk-blue-dark` | `#0B3FC4` | Direction C : texte d'un badge ou d'une étiquette sur blanc ou `--lk-blue-tint`, chiffres clés | 8,33:1 sur blanc ; 7,49:1 sur `--lk-blue-tint` |
-| `--lk-blue-tint` | `#EEF3FF` | Fond de sélection, encart d'aide, suggestion de l'assistant ; pastilles d'icône (direction C) | bleu dessus 5,03:1 ; `--lk-ink-3` dessus 5,26:1 (libellés des chiffres clés, L1-55) |
-| `--lk-blue-line` | `#DBEAFE` | Bordure des boutons secondaires et des encarts bleus, anneau de focus des champs, jauges ; survol d'une notification non lue | décoratif ; `--lk-ink-3` dessus 4,79:1 |
-| `--lk-blue-border` | `#C9D8FE` | Direction C : bordure d'une carte ou d'une pilule survolée | décoratif |
-| `--lk-on-blue-2` | `#F0F4FF` | Texte secondaire sur aplat bleu | 5,08:1 sur bleu |
-| `--lk-navy` | `#1A2B4A` | En-têtes sombres (dashboard vendeur), avatars ; sections vitrines de l'accueil (L1-47, L1-48) | blanc dessus 14,1:1 |
-| `--lk-blue-light` | `#93B4FF` | Sur navy : mots mis en valeur d'un titre, courbe, contours des repères (L1-47) ; surtitres, pictogrammes et liens sur navy des pages vitrines (L1-49, L1-50) | 6,86:1 sur navy |
-| `--lk-blue-mid` | `#2464FC` | Pages vitrines (L1-49, L1-50, section 1) : bout clair des dégradés sous un texte blanc (appels à l'action `cta`, dernier appel, carrés numérotés, encart chiffré de `/investir`) | blanc dessus 4,88:1 |
-| `--lk-blue-bright` | `#4C80FD` | Pages vitrines (L1-49, L1-50) : bout clair du dégradé des mots mis en valeur d'un titre et des chiffres de `/qui-sommes-nous` (24 px et plus), début de celui des heros sur navy | 3,61:1 sur blanc, 3,37:1 sur `--lk-mist` (grand texte) ; 4,6:1 sur `--lk-ink` |
-| `--lk-ink` | `#1C1B19` | Texte principal, back office (barre latérale), bouton « sur fond sombre » | 17,2:1 sur blanc |
-| `--lk-ink-2` | `#5E574D` | Texte de corps secondaire, valeurs sur pierre ; liens légaux du pied de page | 7,13:1 sur blanc ; 6,11:1 sur `--lk-sand` |
-| `--lk-ink-3` | `#6B6459` | Texte tertiaire (dates, libellés de chiffres, aides, textes indicatifs) | 5,85:1 sur blanc ; 5,51:1 sur `--lk-bg` ; 5,01:1 sur `--lk-stone-2` |
-| `--lk-disabled` | `#B5ADA2` | Direction C : flèche d'un bouton rond désactivé (en bout de carrousel) | exempté (élément désactivé) |
-| `--lk-bg` | `#FAF8F5` | Fond d'application (écrans connectés) ; fond de l'accueil (direction C) | bleu dessus 5,27:1 |
-| `--lk-surface` | `#FFFFFF` | Cartes, champs, barres d'en-tête et de navigation | — |
-| `--lk-stone-2` | `#F1EDE7` | Tuiles (chiffres clés, boutons icône), en-têtes de tableau, puces DPE non choisies | — |
-| `--lk-sand` | `#F1EDE7` | Direction C : pied de page, pistes des barres du simulateur, étiquettes neutres | `--lk-ink-2` dessus 6,11:1 |
-| `--lk-sand-line` | `#E4DDD2` | Direction C : filet du haut du pied de page | décoratif |
-| `--lk-agency` | `#CFC7BB` | Direction C : barre « Agence » du simulateur (le montant est écrit à côté) | décoratif |
-| `--lk-stone` | `#E4DDD2` | Aplats neutres larges (bandeaux, sections de page marketing) | — |
-| `--lk-mist` | `#F5F7FB` | Pages vitrines (L1-49, L1-50) : fond clair froid des sections de la V1, en alternance avec le blanc ; puces de la carte d'exemple | bleu dessus 5,2:1 ; `--lk-ink-3` 5,6:1 |
-| `--lk-mist-line` | `#E2E8F0` | Pages vitrines (L1-49, L1-50) : bordure des cartes de la V1 | décoratif |
-| `--lk-line` | `#ECE6DD` | Bordures de cartes et séparateurs (décoratifs) | 1,24:1, décoratif uniquement |
-| `--lk-line-strong` | `#DDD5CA` | Direction C : bordure des pilules, des boutons ronds et des champs en pilule (le champ se dit par son libellé et son icône) | décoratif |
-| `--lk-field` | `#8F877B` | Bordure des champs de saisie, cases à cocher, sélecteurs | 3,55:1 sur blanc (WCAG 1.4.11) |
-| `--lk-success` | `#047857` | Bouton « Valider », statut « Publiée », icônes de validation, texte de succès | blanc dessus 5,48:1 |
+| `--lk-blue` | `#2563EB` | Bleu des actions : liens, début du dégradé des boutons, sélection, cases cochées, bulle de l'utilisateur | blanc dessus 5,17:1 ; sur blanc 5,17:1 ; 4,94:1 sur `--lk-bg` |
+| `--lk-blue-hover` | `#1D4ED8` | Survol et pression du bleu | blanc dessus 6,7:1 |
+| `--lk-blue-mid` | `#7C3AED` | Violet des actions : fin du dégradé sous un texte blanc (`from-lk-blue to-lk-blue-mid`) | blanc dessus 5,7:1 |
+| `--lk-blue-bright` | `#8B5CF6` | Violet de la charte, fin claire d'un dégradé de titre (24 px et plus) | 4,23:1 sur blanc ; 3,95:1 sur `--lk-mist` (grand texte) |
+| `--lk-blue-dark` | `#4338CA` | Indigo : petits textes colorés, étiquettes, chiffres clés, surtitres | 7,9:1 sur blanc ; 7,07:1 sur `--lk-blue-tint` |
+| `--lk-blue-tint` | `#EEF2FF` | Fond d'étiquette, de sélection, d'encart d'aide | bleu dessus 4,62:1 ; `--lk-ink-3` 5,03:1 |
+| `--lk-blue-line` | `#E0E7FF` | Anneau de focus des champs, jauges ; survol d'une notification non lue | décoratif ; `--lk-ink-3` dessus 4,56:1 |
+| `--lk-blue-border` | `#C7D2FE` | Bordure d'une carte ou d'une pilule survolée | décoratif |
+| `--lk-on-blue-2` | `#F0F4FF` | Texte secondaire sur un aplat bleu ou sur la nuit | 4,7:1 sur bleu ; 17,6:1 sur la nuit |
+| `--lk-navy` = `--lk-night` | `#020D21` | La nuit : bandeaux, en-têtes sombres, back office, 404, fins de parcours | blanc dessus 19,4:1 |
+| `--lk-blue-light` | `#60A5FA` | Sur la nuit : accents, surtitres, liens, contours | 7,63:1 sur la nuit |
+| `--lk-brand-blue`, `--lk-brand-violet` | `#3B82F6`, `#8B5CF6` | Bleu et violet de la charte : halos, orbes, avatar, barres, anneau de focus (5,28:1 sur la nuit), titres en dégradé | jamais sous un texte blanc |
+| `--lk-action-blue`, `--lk-action-violet` | `#2563EB`, `#7C3AED` | Le dégradé des actions (`lk-gradient`) | blanc dessus 5,17 à 5,7:1 |
+| `--lk-night-blue`, `--lk-night-violet` | `#60A5FA`, `#A78BFA` | Le dégradé des mots mis en valeur sur la nuit | 7,1 à 7,6:1 sur la nuit |
+| `--lk-indigo-mark` | `#4F46E5` | Trait sous l'onglet actif et le lien courant | décoratif (3:1 au moins) |
+| `--lk-night-text`, `--lk-night-muted` | `#E2E8F0`, `#CBD5E1` | Textes sur la nuit : sous-titre, puis petits textes | 15,7:1 ; 13,1:1 |
+| `--lk-ink` | `#0F172A` | Texte principal, bouton « sur fond sombre », bouton flottant | 17,85:1 sur blanc |
+| `--lk-ink-2` | `#475569` | Texte de corps secondaire | 7,58:1 sur blanc ; 7,24:1 sur `--lk-bg` |
+| `--lk-ink-3` | `#5B6880` | Texte tertiaire (dates, libellés, aides, textes indicatifs). Plus foncé que le `#64748B` de la charte : AA sur les tuiles et l'indigo clair | 5,62:1 sur blanc ; 5,37:1 sur `--lk-bg` ; 5,13:1 sur `--lk-stone-2` |
+| `--lk-disabled` | `#94A3B8` | Flèche d'un bouton rond désactivé | exempté (élément désactivé) |
+| `--lk-bg` | `#F8FAFC` | Fond de page de tout le site | — |
+| `--lk-surface` | `#FFFFFF` | Cartes, champs, barres d'en-tête et de navigation, pied de page | — |
+| `--lk-stone-2` | `#F1F5F9` | Tuiles, en-têtes de tableau, pistes des barres, sections `tone="stone"` | — |
+| `--lk-stone` | `#E2E8F0` | Survol d'une tuile | — |
+| `--lk-sand`, `--lk-sand-line` | `#F1F5F9`, `#E2E8F0` | Survol d'une ligne ou d'une option sur blanc | `--lk-ink-3` dessus 5,13:1 |
+| `--lk-agency` | `#CBD5E1` | Barre « Agence » du simulateur (le montant est écrit à côté) | décoratif |
+| `--lk-mist`, `--lk-mist-line` | `#F5F7FB`, `#E2E8F0` | Fond clair de certaines sections, bordure de leurs cartes | bleu dessus 4,82:1 ; `--lk-ink-3` 5,24:1 |
+| `--lk-line` | `#E2E8F0` | Bordures de cartes et séparateurs | décoratif uniquement |
+| `--lk-line-strong` | `#CBD5E1` | Bordure des pilules, des boutons ronds et des champs en pilule | décoratif |
+| `--lk-field` | `#828FA1` | Bordure des champs de saisie, cases à cocher, sélecteurs | 3,28:1 sur blanc (WCAG 1.4.11) |
+| `--lk-success` | `#047857` | Bouton « Valider », statut « Publiée », icônes de validation | blanc dessus 5,48:1 |
 | `--lk-success-bg` | `#D1FAE5` | Fond de badge succès | texte `#065F46` 6,78:1 |
 | `--lk-warning` | `#B45309` | Icônes et texte d'alerte sur blanc | 5,02:1 |
 | `--lk-warning-bg` | `#FEF3C7` | Fond de badge et d'encart d'alerte | texte `#92400E` 6,37:1 |
 | `--lk-danger` | `#B91C1C` | Erreurs de champ, actions destructrices | 6,47:1 |
 | `--lk-danger-bg` | `#FEE2E2` | Fond de badge et d'encart d'erreur | texte `#991B1B` 6,8:1 |
 
-Badges DPE (fond / texte, direction C : les pastels de la maquette, texte `--lk-ink`, 10:1 au moins) : A `#B8E2CB` · B `#C9E8B0` · C `#E3F0C2` · D `#FBF0A8` · E `#FBDDA6` · F `#F8CBA6` · G `#F4B8B5`.
+Badges DPE (fond / texte : les pastels de la charte, texte `--lk-ink`, 10:1 au moins) : A `#B8E2CB` · B `#C9E8B0` · C `#E3F0C2` · D `#FBF0A8` · E `#FBDDA6` · F `#F8CBA6` · G `#F4B8B5`.
 
 Règles :
 - Le bleu n'est jamais utilisé pour du texte de plus de 2 lignes.
 - Sur aplat bleu : texte principal blanc, secondaire `--lk-on-blue-2`, jamais de gris.
-- Sur navy ou ink : texte principal blanc, secondaire `rgba(255,255,255,0.72)` (≥ 7:1) ; accent `--lk-blue-light`, jamais `--lk-blue` (2,5:1 sur navy).
-- Les pages publiques (recherche, annonce) ont un fond blanc ; l'accueil (direction C) et les espaces connectés (vendeur, acquéreur, compte) ont un fond `--lk-bg` avec cartes blanches.
+- Sur la nuit : texte principal blanc, secondaire `--lk-night-text` ou `--lk-night-muted` ; accent `--lk-blue-light` ou le dégradé `lk-text-grad-light`, jamais `--lk-blue` (3,75:1 sur la nuit, réservé à l'anneau de focus).
+- Les pages bâties sur `PublicPage`, les espaces connectés, les formulaires et le back office ont un fond `--lk-bg` avec cartes et sections blanches ; l'annonce, l'estimateur, les pages légales et l'authentification restent sur blanc ; la nuit pour les bandeaux de tête des pages vitrines, le dernier appel, la 404 et les fins de parcours.
 
 ### 2.2 `app/globals.css` (Tailwind 4)
 
 À créer tel quel en `L1-07` (Tailwind 4, configuration CSS-first). Les noms de classes Tailwind générés sont indiqués en commentaire.
+
+> **Charte D (L1-58).** Le bloc ci-dessous est la spécification de L1-07, gardée pour l'histoire des noms. Les valeurs en vigueur sont celles du tableau 2.1 et de `app/globals.css`, qui fait foi en cas d'écart (couleurs de la charte D, Sora, rayons de la section 5, ombres de la charte).
 
 > **Mise en œuvre (L1-07, PR #12).** Tant que les pages V1 sont servies par la V2, les jetons Façade portent le préfixe `lk` pour ne pas modifier les pages V1 : couleurs `bg-lk-*` / `text-lk-*`, rayons `rounded-lk-sm` (4 px) et `rounded-lk-md` (6 px) au lieu de `rounded-sm` / `rounded-md` (et `rounded-*-lk-xs`, 2 px, pour le coin d'une bulle de message, L1-21), échelle typographique en jetons de rôle `text-lk-*` (section 3.2). Les styles de base et les variables shadcn s'appliquent dans la portée `.facade`, posée par `<FacadeRoot>` (`components/shared/facade-root.tsx`). À l'arrêt des pages V1, un rechercher-remplacer ramène les noms de cette section.
 
@@ -249,28 +258,27 @@ Les composants shadcn/ui installés sont ensuite ajustés pour respecter les ray
 
 ### 3.1 Chargement
 
-> **Mise en œuvre (L1-07, PR #12 ; L1-44).** Archivo est déclarée dans `lib/fonts.ts`. Chargée d'abord par `<FacadeRoot>` seulement, pour que les pages V1 ne la téléchargent pas, elle est posée sur `<html>` par `app/layout.tsx` depuis L1-44 : c'est la seule police du site (les polices V1 sont retirées).
+> **Mise en œuvre (L1-07, L1-44, puis L1-58).** Depuis L1-58, Sora, la police de la charte D, est la seule police du site, déclarée dans `lib/fonts.ts`, auto-hébergée par next/font (aucune requête vers Google avant le consentement, L1-37), posée sur `<html>` par `app/layout.tsx` et sur la portée `.facade` (`facadeScope`) des portails. Archivo (L1-07 à L1-57) est retirée.
 
-`app/layout.tsx` :
+`lib/fonts.ts` :
 
 ```tsx
-import { Archivo } from "next/font/google";
+import { Sora } from "next/font/google";
 
-const archivo = Archivo({
+export const sora = Sora({
   subsets: ["latin", "latin-ext"],
-  axes: ["wdth"],           // axe de largeur, indispensable pour font-stretch
   display: "swap",
-  variable: "--font-archivo",
+  variable: "--font-sora",
 });
 
-// <html lang="fr" className={archivo.variable}>
+// <html lang="fr" className={sora.variable}>
 ```
 
-Graisses utilisées : 400, 500, 600, 700 ; 800 sur les pages vitrines seulement (titres des heros, surtitres, numéros et valeurs de la V1, L1-49, L1-50). Largeurs utilisées : 100 % (texte) et 116 % (titres). Ne pas charger d'autre police.
+Graisses utilisées : 400, 500, 600, 700 (titres 700, `letter-spacing` de −0,02 à −0,03 em : `text-wide`, `text-display`, `tracking-lk-d-tight`). Sora n'a pas d'axe de largeur : `font-stretch` n'est plus utilisé. Ne pas charger d'autre police.
 
 ### 3.2 Échelle
 
-Valeurs : taille px / interligne / graisse. « Large » = `font-stretch: 116%; letter-spacing: -0.02em` (classe `text-wide`).
+Valeurs : taille px / interligne / graisse. « Large » = `letter-spacing: -0.02em` (classe `text-wide` ; `font-stretch: 116%` aussi jusqu'à L1-57, avec Archivo).
 
 | Rôle | Mobile (< 768) | Desktop (≥ 1024) | Largeur | Exemples |
 |---|---|---|---|---|
@@ -359,6 +367,8 @@ Conception mobile d'abord, en 390 px.
 ---
 
 ## 5. Formes, bordures, élévation, couches
+
+> **Charte D (L1-58).** Les rayons des jetons valent depuis L1-58 : `rounded-lk-xs` 6 px (case à cocher, coin d'une bulle côté expéditeur), `rounded-lk-sm` 12 px (champ, select, onglet, tuile, vignette), `rounded-lk-md` 16 px (carte, panneau, encart, feuille), puis 12, 16, 20, 24 et 28 px (`lk-lg` à `lk-4xl`), 18 px pour la carte d'un bien (`rounded-lk-d-card`) et 22 px pour la carte de recherche (`rounded-lk-d-search`). Tous les boutons sont des pilules (`rounded-full`), ainsi que les boutons icône, les pastilles de filtre et les badges. Les ombres sont celles de la charte (indigo pour les appels à l'action, ardoise pour les blocs posés) ; une carte de liste garde sa bordure sans ombre. Le tableau ci-dessous décrit l'état d'avant L1-58 pour les rayons ; les bordures et les couches restent valables.
 
 | Élément | Rayon | Bordure | Ombre |
 |---|---|---|---|
@@ -526,7 +536,7 @@ Pour chaque composant : anatomie, dimensions, variantes, états. Les composants 
 - États : focus (anneau 3 px bleu, décalage 2 px, direction C pour tout le site), pressé (fond hover), désactivé (opacité 0,45, curseur interdit, pas de survol), chargement (libellé conservé, icône `Loader2` qui tourne à gauche, bouton désactivé).
 - Boutons côte à côte en bas d'écran mobile : `Précédent` (`secondary`, flex 1) + `Continuer` (`primary`, flex 1,4), écart 10 px.
 
-**IconButton** : 44 × 44 (40 × 40 dans le panneau de notifications), rayon 4. Variantes : `round` (direction C : blanc, rond, bordure `--lk-line-strong`, flèches du carrousel de l'accueil ; désactivé : flèche `--lk-disabled`), `stone` (fond `--lk-stone-2`, retour en en-tête), `white-float` (fond blanc + `shadow-float`, sur photo), `tint` (fond `--lk-blue-tint`, cloche active), `on-dark` (fond `rgba(255,255,255,0.12)`), `outline` (bordure 1,5 px `--lk-ink`, fermer un panneau, rond). Icône 20 px.
+**IconButton** : 44 × 44 (40 × 40 dans le panneau de notifications), rond (charte D, L1-58 ; rayon 4 avant). Variantes : `round` (direction C : blanc, rond, bordure `--lk-line-strong`, flèches du carrousel de l'accueil ; désactivé : flèche `--lk-disabled`), `stone` (fond `--lk-stone-2`, retour en en-tête), `white-float` (fond blanc + `shadow-float`, sur photo), `tint` (fond `--lk-blue-tint`, cloche active), `on-dark` (fond `rgba(255,255,255,0.12)`), `outline` (bordure 1,5 px `--lk-ink`, fermer un panneau, rond). Icône 20 px.
 
 **Input / Select / UnitInput / Textarea**
 
@@ -539,7 +549,7 @@ Pour chaque composant : anatomie, dimensions, variantes, états. Les composants 
 - Textarea : hauteur minimale 120 px, padding 12 × 14.
 - Barre de recherche (`SearchInput`) : icône `Search` 18 px à gauche, padding 0 14 px, écart 10 px.
 
-**Checkbox** : 20 × 20, rayon 4, bordure 1,5 px `--lk-field`, cochée = fond `--lk-blue` + coche blanche. Libellé 12–13 px `--lk-ink-2`, cliquable.
+**Checkbox** : 20 × 20, rayon 6 (`rounded-lk-xs`, charte D), bordure 1,5 px `--lk-field`, cochée = fond `--lk-blue` + coche blanche. Libellé 12–13 px `--lk-ink-2`, cliquable.
 
 **FilterMenu** (parties de la `FilterBar` desktop, tri des résultats ; L1-54, remplace le `FilterSelect` à select natif de L1-15, « menus déroulants trop Excel » de Younes, `DECISIONS.md` 2026-10-26) : déclencheur `segment` (nom 12 px 700 `--lk-ink` au-dessus de la valeur 14 px, `--lk-ink-3` sans filtre, `--lk-blue` 600 avec un filtre, chevron qui se retourne à l'ouverture ; pilule de 56 px, `--lk-sand` au survol, blanche à ombre `shadow-lk-field` ouverte) ou `ghost` (mot bleu et chevron, le tri). Menu : panneau blanc rayon 16, bordure `--lk-line`, `shadow-lk-block`, padding 8, 256 px au moins ; options de 44 px rayon 12, icône du type ou pastille DPE, `--lk-sand` sous le pointeur et le clavier, l'option choisie en `--lk-blue` 600 avec une coche. Radix : choix radio, flèches, Début, Fin, premières lettres, Échap qui rend le focus au déclencheur.
 
@@ -547,7 +557,7 @@ Pour chaque composant : anatomie, dimensions, variantes, états. Les composants 
 
 **ChipToggle** (atouts, filtres rapides) : hauteur 40 px (36 px dans la barre de filtres mobile), padding 0 16 px, 13 px 500, pilule (rayon 4 jusqu'à L1-54). Inactif : fond blanc, bordure 1,5 px `--lk-line`, texte `--lk-ink`. Actif : fond `--lk-blue-tint`, bordure 1,5 px `--lk-blue`, texte `--lk-blue`. `aria-pressed`.
 
-**SegmentedPicker** (DPE A à G, choix du projet) : boutons égaux de 44 px, écart 6 px, rayon 4. Inactif : fond `--lk-stone-2`, texte `--lk-ink-2` 600 14 px. Actif : fond `--lk-blue`, texte blanc. Rôle `radiogroup`. En pilules (`shape="pill"`, panneau des filtres de la recherche, L1-54) : blanches, bordure 1,5 px `--lk-line-strong` (survol `--lk-ink-3`), la choisie en `--lk-blue` à texte blanc ; le texte visible est le nom de chaque bouton (« Tous », « 3+ », « C »), le nom de la rangée dit ce qui est compté. **UnitInput** en pilule (`pill`, même panneau) : bordure 1,5 px `--lk-line-strong`, padding 0 18 px. Sombre (`tone="dark"`, `/tarifs` sur navy, L1-50, pages vitrines seulement) : cadre de verre (blanc à 6 %, filet blanc à 12 %, rayon 12, padding 4, écart 4), options blanc à 80 % de 44 px au moins (deux lignes possibles à 390 px), rayon 6 ; l'option choisie en blanc à texte `--lk-blue` (le bleu plein n'atteindrait que 2,5:1 contre le navy), anneau de focus blanc.
+**SegmentedPicker** (DPE A à G, choix du projet) : boutons égaux de 44 px, écart 6 px, rayon 12 (charte D). Inactif : fond `--lk-stone-2`, texte `--lk-ink-2` 600 14 px. Actif : le dégradé des actions (`lk-gradient`), texte blanc (charte D, L1-58 ; fond `--lk-blue` avant). Sombre (`/tarifs`) : cadre et options en pilule. Rôle `radiogroup`. En pilules (`shape="pill"`, panneau des filtres de la recherche, L1-54) : blanches, bordure 1,5 px `--lk-line-strong` (survol `--lk-ink-3`), la choisie dans le dégradé à texte blanc ; le texte visible est le nom de chaque bouton (« Tous », « 3+ », « C »), le nom de la rangée dit ce qui est compté. **UnitInput** en pilule (`pill`, même panneau) : bordure 1,5 px `--lk-line-strong`, padding 0 18 px. Sombre (`tone="dark"`, `/tarifs` sur navy, L1-50, pages vitrines seulement) : cadre de verre (blanc à 6 %, filet blanc à 12 %, rayon 12, padding 4, écart 4), options blanc à 80 % de 44 px au moins (deux lignes possibles à 390 px), rayon 6 ; l'option choisie en blanc à texte `--lk-blue` (le bleu plein n'atteindrait que 2,5:1 contre le navy), anneau de focus blanc.
 
 **RoleCard** (« Je vends » / « J'achète ») : 76 px de haut, 2 colonnes, écart 10 px, rayon 6, padding 0 14 px. Inactive : bordure 1,5 px `--lk-line`. Active : fond `--lk-blue-tint`, bordure 2 px `--lk-blue`, titre en bleu. Titre 14 px 600, sous-titre 12 px `--lk-ink-2`.
 
@@ -618,7 +628,7 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 - Toute la carte est un lien (`<a>` englobant), focus visible sur la carte entière. Le bouton favori, s'il est présent, est un bouton séparé (44 × 44) en haut à droite de la photo.
 - Survol et pression : bordure `--lk-blue` et ombre `shadow-lk-hover`, sans changement de taille (Younes, « encadré qui devient bleu », `DECISIONS.md` 2026-10-26 ; auparavant bordure `--lk-ink-3` sans ombre). Sur la recherche, la carte survolée ou au focus met aussi sa pastille de la carte en bleu (section 8).
 
-**ShowcaseCard** (direction C, section 1 ; `components/shared/showcase-card.tsx`, carrousel de l'accueil et, depuis L1-55, résultats de la recherche) : photo de rayon 16 au ratio 1 / 0,95 (272 px de large sur téléphone), badge blanc en haut à gauche (texte `--lk-blue-dark` 12 px 700, `shadow-lk-badge`, « Nouveau » quand l'annonce est en ligne depuis moins de 7 jours ; aucun badge inventé), cœur `FavoriteButton variant="photo"` en haut à droite (zone 44 px, hors du lien) ; dessous, « Maison · 5 p · 112 m² » 15 px 700 et son `DpeBadge`, la ville `--lk-ink-2`, le prix 17 px 800 souligné. Toute la carte ouvre l'annonce (le titre est le lien, étendu sur la carte). À partir de 768 px, ses photos (5 au plus) tournent avec deux flèches rondes au survol ou au focus (à la première ou la dernière photo, la flèche reste en place en `aria-disabled`, cachée au survol, grisée sous le focus), et des points les comptent ; sur téléphone, la photo principale seule (le doigt fait défiler le carrousel). Léger zoom de la photo au survol (aucun avec un mouvement réduit). Sans photo : le dessin de marque sur pierre. Dans la recherche (`swipe`, `framed`) : les photos tournent aussi d'un glissement du doigt sur téléphone, les points visibles ; la carte est encadrée (rayon 20, bordure `--lk-line`, padding 8) et son cadre devient `--lk-blue` avec `shadow-lk-hover` au survol et à la pression ; la commune suivie du quartier ; seules la photo affichée et la suivante sont chargées.
+**ShowcaseCard** (charte D depuis L1-58, SPECS 2 ; `components/shared/showcase-card.tsx`, carrousel de l'accueil et, depuis L1-55, résultats de la recherche) : photo de rayon 18 au ratio 1 / 0,95 (272 px de large sur téléphone), badge dans le dégradé en haut à gauche (texte blanc 12 px 600, `shadow-lk-d-badge`, « Nouveau » quand l'annonce est en ligne depuis moins de 7 jours ; aucun badge inventé), cœur `FavoriteButton variant="photo"` en haut à droite (zone 44 px, hors du lien) ; dessous, « Maison · 5 p · 112 m² » 15 px 600 et son `DpeBadge`, la ville `--lk-ink-3`, le prix 17 px 700. Toute la carte ouvre l'annonce (le titre est le lien, étendu sur la carte). À partir de 768 px, ses photos (5 au plus) tournent avec deux flèches rondes au survol ou au focus (à la première ou la dernière photo, la flèche reste en place en `aria-disabled`, cachée au survol, grisée sous le focus), et des points les comptent ; sur téléphone, la photo principale seule (le doigt fait défiler le carrousel). Léger zoom de la photo au survol (aucun avec un mouvement réduit). Sans photo : le dessin de marque sur pierre. Dans la recherche (`swipe`, `framed`) : les photos tournent aussi d'un glissement du doigt sur téléphone, les points visibles ; la carte est encadrée (rayon 20, bordure `--lk-line`, padding 8) et son cadre devient `--lk-blue` avec `shadow-lk-hover` au survol et à la pression ; la commune suivie du quartier ; seules la photo affichée et la suivante sont chargées.
 
 **PillLink** (direction C, `components/shared/pill-link.tsx`) : lien en pilule blanche, bordure `--lk-line-strong`, icône `--lk-blue` 18 px, 15 px 600, 44 px de haut puis 48 px à partir de 768 px ; survol : bordure `--lk-blue-border` sur `--lk-blue-tint` ; choisi (filtre) : `--lk-blue-tint`, bordure et texte bleus. Pilules de service du hero de l'accueil. **Charte D (L1-57)** : bordure `--lk-line`, ombre `shadow-lk-d-pill`, texte 13 puis 14 px 500, icône au trait dans le dégradé (`lk-icon-gradient`).
 
@@ -711,7 +721,7 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 ### 10.6 Navigation et structure
 
-**TopNav desktop** : hauteur 72, fond blanc, bordure basse `--lk-line`, padding 0 40, écart 32. Logo officiel (`Logo` : la maison et sa clé, « leenkey », `public/brand/logo.svg`, `DECISIONS.md` 2026-10-18), 32 px de haut. Liens 14 px 500 `--lk-ink` (actif `--lk-blue`), écart 24. À droite, écart 6 : « Vendre mon bien » (`primary md` avec `Plus`, marge droite 10) ; cloche (`IconButton tint`, point bleu 9 px bordé de blanc si non lu) ; favoris (`IconButton` transparent) ; avatar 42 px fond `--lk-ink` initiale blanche 14 px 600 (ou « Mon compte » `secondary` si non connecté).
+**TopNav desktop** : hauteur 72, fond blanc, bordure basse `--lk-line`, padding 0 40, écart 32. Logo officiel (`Logo` : la maison et sa clé, « leenkey », `public/brand/logo.svg`, `DECISIONS.md` 2026-10-18), 32 px de haut. Liens 14 px 500 `--lk-ink`, le courant souligné du trait `--lk-indigo-mark` (charte D, L1-58), écart 24 (12 sous 1 024 px, 16 sous 1 280 px : Sora est plus large ; le logo 28 px de haut sous 1 024 px). À droite, écart 6 : « Vendre mon bien » (pilule `outline-blue` avec `Plus`, `night` sur la nuit) ; cloche (`IconButton tint`, point bleu 9 px bordé de blanc si non lu) ; favoris (`IconButton` transparent) ; avatar dans le dégradé des actions, initiale blanche (ou la pilule menu et avatar vers « Mon compte » si non connecté).
 
 > **Direction C (2026-10-26, section 1).** Le contenu de la barre suit le cadre des pages (`lk-frame`, L1-56 : toute la largeur jusqu'à 1 920 px, gouttières de 20 px jusqu'à 1 024 px, 32 px ensuite, 64 px à partir de 1 536 px ; 1 280 px avant ; écart 24 puis 40), toujours 72 px de haut (la maquette en dessine 76 : les en-têtes collants de la conversation, de la messagerie et de l'estimateur se règlent sur 72). Liens 14 px 500, 600 à partir de 1 024 px, 15 px à partir de 1 280 px. « Vendre mon bien » en pilule `outline-blue` avec `Plus`. Le compte en pilule blanche (48 px, bordure `--lk-line-strong`, `Menu` 18 px puis l'avatar rond `--lk-blue` de 34 px, son initiale blanche) : sans session, un lien vers la connexion nommé « Mon compte » ; avec session, le déclencheur de l'`AccountMenu`, après la cloche et les favoris. Sous 1 024 px, l'avatar seul dans la pilule, pour que les liens tiennent à 768 px.
 
@@ -727,7 +737,7 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 > **Direction C (2026-10-26).** Le bouton « Menu » devient la pilule du compte de la maquette (44 px, bordure `--lk-line-strong`, `Menu` puis l'avatar rond `--lk-blue` de 32 px), toujours nommé « Menu » ; la hauteur de 60 px reste (la maquette en dessine 64).
 
-**BottomNav mobile** : fond blanc, bordure haute `--lk-line`, padding 10 × 20 × 22 (zone de sécurité iOS incluse via `env(safe-area-inset-bottom)`), grille de 5 (4 dans le back office). Élément : icône 22 + libellé 11 px, écart 4 ; actif `--lk-blue` 600, inactif `--lk-ink-3` 500. Onglets par espace : acquéreur « Chercher / Favoris / Vendre / Messages / Compte » ; vendeur « Ma vente / Dossier / Acheter / Messages / Compte » ; admin « Annonces / Dossiers / Utilisateurs / Assistant ». Un même compte achète et vend (`DECISIONS.md`, 2026-10-19) : l'onglet du milieu mène à l'autre côté, « Messages » et « Compte » gardent leur place.
+**BottomNav mobile** : fond blanc, bordure haute `--lk-line`, padding 10 × 20 × 22 (zone de sécurité iOS incluse via `env(safe-area-inset-bottom)`), grille de 5 (4 dans le back office). Élément : icône 22 + libellé 11 px, écart 4 ; actif `--lk-ink` 600, son icône dans le dégradé (charte D, L1-58 ; `--lk-blue` avant), inactif `--lk-ink-3` 500. Onglets par espace : acquéreur « Chercher / Favoris / Vendre / Messages / Compte » ; vendeur « Ma vente / Dossier / Acheter / Messages / Compte » ; admin « Annonces / Dossiers / Utilisateurs / Assistant ». Un même compte achète et vend (`DECISIONS.md`, 2026-10-19) : l'onglet du milieu mène à l'autre côté, « Messages » et « Compte » gardent leur place.
 
 > **Direction C (2026-10-26).** Icône 24, libellé 12 px 600, inactif `--lk-ink-2`, actif `--lk-blue` ; la marge réservée sous les pages (`BOTTOM_NAV_OFFSET`) suit sa hauteur.
 
@@ -789,7 +799,7 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 > **Mise en œuvre (L1-14).** `components/shared/confirm-dialog.tsx` (`ConfirmDialog`), sur le gabarit du dialogue de motif du back office (L1-19) : en mobile, écran plein avec l'en-tête de l'`AppHeader` (retour, titre 15 px 600 centré) ; à partir de 768 px, dialogue de 520 px au centre, titre 20 px 700 large et croix ; couche 60 ; texte 13 px `--lk-ink-2`, champs facultatifs dessous (prix de vente final), puis « Annuler » `outline-ink` et la confirmation `primary` ou `danger` avec son état de chargement. Fermé par Échap, la croix ou « Annuler », jamais pendant l'action ; une erreur reste dans le dialogue, dans une région lue dès qu'elle apparaît ; sans décision, le focus revient au bouton qui l'a ouvert.
 
-**EndOfFlow** (« C'est envoyé », « C'est activé ») : `BrandPanel blue` plein écran (mobile) ou 60 % de la hauteur (desktop), `facade.svg`, titre display, texte 15 px `--lk-on-blue-2`, bouton blanc à texte `--lk-blue` 600 (variante `inverse` du bouton, réservée aux aplats bleus).
+**EndOfFlow** (« C'est envoyé », « C'est activé ») : la nuit et ses halos (`lk-hero-bg`, charte D, L1-58) plein écran (mobile) ou 60 % de la hauteur (desktop), `facade.svg`, titre display, texte 15 px `--lk-night-muted`, un bouton `cta` dans le dégradé, anneau de focus blanc.
 
 **ConsentBanner** (bandeau cookies, L1-37) : non modal, la page reste utilisable. Mobile : feuille basse pleine largeur (rayon 6 en haut, bordure haute `--lk-line`, `shadow-sheet`, padding 20, zone de sécurité iOS) ; à partir de `md` : carte de 420 px en bas à gauche (marge 24, rayon 6, bordure). Couche 50 (feuilles) ; `shadow-sheet` en mobile, `shadow-float` en carte ; entrée 220 ms (fondu et montée), aucune en mouvement réduit. Titre 15 px 600, texte 13 px `--lk-ink-2` qui dit comment changer d'avis (« Gérer mes cookies », en bas de page), avec lien « Politique cookies ». « Refuser » et « Accepter » côte à côte, **même forme** (`outline-ink`, deux colonnes) : refuser est aussi simple qu'accepter (CNIL). « Personnaliser » en `ghost sm` dessous. Vue « Vos préférences » (Personnaliser, « Gérer mes cookies ») : « Nécessaires » toujours actifs, case « Mesure d'audience » décochée par défaut, « Refuser » (`outline-ink`) et « Enregistrer mes choix » (`primary`) ; à l'ouverture depuis le pied de page, le focus va au titre.
 
@@ -797,9 +807,9 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 **StagePill** (L1-43, `leenkey/site/components/stage-pill.tsx`) : étape d'un jalon de `/investir`, en toutes lettres, même pastille que `StatusBadge` (10.2, 11 px 600) : « Fait » `--lk-success-bg` / `--lk-success-fg`, « En cours » `--lk-blue-tint` / `--lk-blue`, « À venir » `--lk-stone-2` / `--lk-ink-2`. À droite du titre de la carte, aligné sur sa première ligne.
 
-**SiteFooter** (pied de page des pages V2, L1-36) : fond `--lk-bg`, bordure haute `--lk-line`, dans le cadre des pages (`lk-frame`, L1-56 ; toute la largeur sous la recherche, `fullWidth`), padding vertical 32 puis 40 en `md`. D'abord les pages du site (L1-41 : « Découvrir Leenkey », concept, tarifs, FAQ, investir, qui sommes-nous), 14 px 500 `--lk-ink`, écart 24 ; puis les liens légaux 13 px `--lk-ink-2` en ligne qui passe à la ligne (écart 20, chaque lien haut de 44 px), soulignés au survol, puis « Gérer mes cookies » (bouton à l'allure d'un lien). Dessous, 12 px `--lk-ink-3` : « SAS LEENKEY, RCS Évry … · adresse légale », puis « © 2026 Leenkey ». Sous toutes les pages (le pied V1 a disparu avec L1-43) : pages du site, estimateur (au-dessus de la barre fixe du formulaire, qui lui laisse 80 px), pages légales, authentification, recherche, annonce (sous 1024 px, 96 px de plus dessous pour la barre d'action fixe, affichée jusqu'à 1023 px), espaces vendeur et acquéreur, back office (sous le contenu, à côté de la barre latérale : prop `footer` d'`AdminShell`). Avec la `BottomNav`, il reste au-dessus de la barre en fin de page ; sur une page courte, il est en bas de l'écran (`main` en `flex-1`).
+**SiteFooter** (pied de page des pages V2, L1-36) : fond blanc depuis la charte D (L1-58 ; `--lk-bg`, puis sable en direction C), le logo en premier, bordure haute `--lk-line`, dans le cadre des pages (`lk-frame`, L1-56 ; toute la largeur sous la recherche, `fullWidth`), padding vertical 32 puis 40 en `md`. D'abord les pages du site (L1-41 : « Découvrir Leenkey », concept, tarifs, FAQ, investir, qui sommes-nous), 14 px 500 `--lk-ink`, écart 24 ; puis les liens légaux 13 px `--lk-ink-2` en ligne qui passe à la ligne (écart 20, chaque lien haut de 44 px), soulignés au survol, puis « Gérer mes cookies » (bouton à l'allure d'un lien). Dessous, 12 px `--lk-ink-3` : « SAS LEENKEY, RCS Évry … · adresse légale », puis « © 2026 Leenkey ». Sous toutes les pages (le pied V1 a disparu avec L1-43) : pages du site, estimateur (au-dessus de la barre fixe du formulaire, qui lui laisse 80 px), pages légales, authentification, recherche, annonce (sous 1024 px, 96 px de plus dessous pour la barre d'action fixe, affichée jusqu'à 1023 px), espaces vendeur et acquéreur, back office (sous le contenu, à côté de la barre latérale : prop `footer` d'`AdminShell`). Avec la `BottomNav`, il reste au-dessus de la barre en fin de page ; sur une page courte, il est en bas de l'écran (`main` en `flex-1`).
 
-> **Direction C (2026-10-26).** Fond `--lk-sand`, filet haut `--lk-sand-line`, dans le cadre des pages (L1-56 ; padding 32 × 16 × 40, puis 40 × 32 × 48 à partir de 768 px, 64 px de côté à partir de 1 536 px) ; pages du site 15 px 600, liens légaux 14 px `--lk-ink-2` (6,11:1 sur sable), mentions 12 px `--lk-ink-2` ; focus de 3 px.
+> **Direction C (2026-10-26, remplacée par la charte D : fond blanc).** Fond `--lk-sand`, filet haut `--lk-sand-line`, dans le cadre des pages (L1-56 ; padding 32 × 16 × 40, puis 40 × 32 × 48 à partir de 768 px, 64 px de côté à partir de 1 536 px) ; pages du site 15 px 600, liens légaux 14 px `--lk-ink-2` (6,11:1 sur sable), mentions 12 px `--lk-ink-2` ; focus de 3 px.
 
 ---
 
@@ -902,7 +912,7 @@ Référence de la page `/design` à construire en `L1-07` : palette, typographie
 | FAQ `/faq` | G1, dans la direction de la V1 (L1-50) | `MarketingSection` h1 `showcase` `navy` avec le surtitre « Questions fréquentes » ; `FaqList tone="dark"` centrée, 880 px au plus |
 | Investir `/investir` | G1, dans la direction de la V1 (L1-50) | `ShowcaseHero` (surtitre « Opportunité d'investissement · Proptech France 2026 », deux paragraphes, « Rejoindre l'aventure » `cta` vers `#formulaire`), sans la bande de chiffres de la V1 (Q53) ; constat centré sur blanc en 26, 32 puis 40 px 700 (« des milliards d'euros » en `lk-text-grad`, la raison en `--lk-ink-3`) ; marché et vision : tête de section à gauche (`align="start"`) au-dessus de deux colonnes à partir de 1 024 px, l'encart « 15 000 € prélevés sur une seule vente à 300 000 € » en dégradé bleu (36, 44 puis 56 px 800), les quatre parties de la plateforme en cartes à tuile d'icône (`Sparkles`, `MessageSquareMore`, `CircleCheck`, `Network`), l'objectif dans un cadre `--lk-blue-tint` ; état d'avancement en frise centrée de 720 px (rond de 44 px : `Check` sur `--lk-success-bg`, `RefreshCw` sur `--lk-blue-tint`, `Clock` bordé ; trait `--lk-mist-line` entre eux ; `StagePill` en capitales à côté du titre) ; « Source 1 » à « Source 3 » (point bleu, étiquette en pastille `--lk-blue-tint`, la troisième « À venir »), sans les projections (Q53) ; timing et raisons en cartes à tuile d'icône (`Users`, `Globe`, `Lightbulb` ; `Lightbulb`, `Layers`, `ChartLine`, `Users`), « C'est Leenkey. » en bleu au bout de la dernière carte du timing ; feuille de route en trois cartes larges de 920 px, libellé de phase en pastille (dégradé, navy, teinte) à côté du titre, points sur deux colonnes à partir de 768 px ; message sur le fond du hero (guillemet `--lk-blue-light`, phrase 32 puis 40 px, sa fin en `lk-text-grad-light`, « Parlons-en » `inverse`) ; `FaqList` claire ; `#formulaire` sur navy : WhatsApp et email en cartes de verre (tuile `--lk-success-bg`, tuile en dégradé), formulaire dans sa carte blanche `showcase` ; `CtaPanel` bleu. Alternance blanc / `--lk-mist` |
 | Qui sommes-nous `/qui-sommes-nous` | G1, dans la direction de la V1 (L1-50) | `ShowcaseHero` (surtitre « Qui sommes-nous », « Découvrir notre vision » `cta` vers la vision de `/investir`, `/investir#vision`, L1-51) avec, à droite à partir de 1 024 px (dessous avant), la photo de Cédric 3:4 de 440 px au plus (rayon 16, filet blanc à 10 %, `shadow-lk-photo`, chargée en priorité, fixe au premier affichage) et sa carte blanche posée sur le coin bas gauche (initiales « CD » dans un rond de 42 px en dégradé, nom 15 px 700, rôle 12 px `--lk-ink-3`, `shadow-lk-lift`) ; chiffres centrés sur blanc en `lk-text-grad`, 32 puis 44 px 800 (à confirmer, Q53) ; histoire centrée sur `--lk-mist`, 640 px (la largeur de lecture de 3.2 ; 880 px en V1), 16 puis 18 px, sa conviction dans un cadre `--lk-blue-tint` à filet gauche de 4 px `--lk-blue` ; valeurs sur navy en quatre cartes de verre, tuile de 48 px en dégradé (`Plus`, `CircleCheck`, `User`, `Activity`) ; `CtaPanel tone="light"` (« Nous contacter » `cta` vers `/contact`, « Valoriser mon bien gratuitement » `secondary`) |
-| Estimateur `/estimer` | existant, re-stylé : police Archivo, tokens, rayons ; aucune modification de logique (L1-44) | cartes de choix sur le modèle de `RoleCard`, `ChipToggle`, chiffres et DPE au format du `SegmentedPicker`, `InfoNote`, `InlineAlert`, dialogue 10.8 |
+| Estimateur `/estimer` | existant, re-stylé : police Sora (L1-58, Archivo en L1-44), tokens, rayons ; aucune modification de logique (L1-44) | cartes de choix sur le modèle de `RoleCard`, `ChipToggle`, chiffres et DPE au format du `SegmentedPicker`, `InfoNote`, `InlineAlert`, dialogue 10.8 |
 | Pages par ville | V3 | — |
 | Connexion, mot de passe oublié | G5 simplifié (comme 12.1) | — |
 | Pages légales | G10 | — |
@@ -971,7 +981,7 @@ Contenu et textes : `SPEC-V2` section 13 (modèle de Cédric). Mise en forme :
 
 - Contrastes : toutes les paires de la section 2.1 sont validées ; ne pas en créer d'autres sans vérification (outil : `npm run a11y` avec axe en E2E).
 - Cibles tactiles : 44 × 44 px minimum (boutons, icônes, cases cliquables via leur libellé).
-- Focus : anneau 3 px `--lk-blue` décalé de 2 px sur tout élément interactif, y compris cartes de bien et marqueurs de carte (2 px jusqu'à la direction C, section 1). Un contrôle hors d'usage au bout d'une liste (flèches d'un carrousel) reste en place, en `aria-disabled`, pour que le focus ne se perde pas.
+- Focus : anneau 3 px `--lk-brand-blue` `#3B82F6` (charte D, L1-58 : 3,3:1 au moins sur tous les fonds clairs, 3,5:1 sous les halos, 5,3:1 sur la nuit ; blanc sur une photo ou sous un halo quand le composant le pose) décalé de 2 px sur tout élément interactif, y compris cartes de bien et marqueurs de carte (2 px jusqu'à la direction C, section 1). Un contrôle hors d'usage au bout d'une liste (flèches d'un carrousel) reste en place, en `aria-disabled`, pour que le focus ne se perde pas.
 - Champs : `<label>` lié, erreurs annoncées (`aria-live="polite"` sur le résumé d'erreurs du formulaire).
 - `SegmentedPicker` : `role="radiogroup"` ; `ChipToggle` : `aria-pressed` ; onglets : `role="tablist"`.
 - Carte géographique : la liste reste la source accessible ; les marqueurs sont des boutons dont le nom commence par leur texte (« 350 k€, Appartement 3 pièces · 68 m², Savigny-sur-Orge », section 8).
@@ -985,15 +995,15 @@ Contenu et textes : `SPEC-V2` section 13 (modèle de Cédric). Mise en forme :
 
 À cocher dans chaque PR qui touche à l'interface (la commande `/revue` la vérifie).
 
-- [ ] Aucune couleur, taille, rayon ou ombre en dur : tokens ou classes Tailwind `lk-*` uniquement (direction C : échelle `text-lk-c-*`, rayons `lk-2xl` à `lk-4xl`, ombres `shadow-lk-search` et suivantes).
-- [ ] Police Archivo seule ; titres, prix et chiffres en `text-wide` 700 ; aucun `uppercase`, aucun `tracking-wide`, aucune police mono (sauf les surtitres et libellés de la V1 sur les pages vitrines, section 1).
-- [ ] Rayons : 4 px contrôles, 6 px conteneurs, `rounded-full` seulement pour statuts, compteurs, avatars, marqueurs de carte, puces (`ChipToggle`) et contrôles de la recherche (L1-54) (pages vitrines : 12 et 16 px et pastilles de la V1 ; écrans en direction C : 16 à 28 px et pilules, section 5).
-- [ ] Aucune ombre sauf `shadow-float` sur un élément flottant (et les ombres `shadow-lk-*` des pages vitrines et des écrans en direction C, section 1).
+- [ ] Aucune couleur, taille, rayon ou ombre en dur : tokens ou classes Tailwind `lk-*` uniquement (charte D : `lk-gradient*`, `text-lk-d-*`, `rounded-lk-d-*`, `shadow-lk-d-*`, section 1).
+- [ ] Police Sora seule ; titres 700 resserrés (`text-wide`, `tracking-lk-d-tight`) ; pas de capitales ni d'interlettrage positif, sauf les petites étiquettes de la charte (11 à 14 px, `tracking-lk-caps`) ; aucune police mono.
+- [ ] Rayons de la charte D (section 5) : 12 px contrôles, 16 à 28 px conteneurs, 18 px carte de bien, boutons et pastilles en pilule.
+- [ ] Ombres de la charte seulement (`shadow-float`, `shadow-lk-*`, `shadow-lk-d-*`) ; une carte de liste garde sa bordure sans ombre.
 - [ ] Une seule action `primary` par vue.
 - [ ] Chaque bien affiché a sa photo (ou `facade.svg`), jamais un bloc gris.
-- [ ] Champs de saisie bordés `--lk-field` (direction C : champ en pilule bordé `--lk-line-strong`, son libellé et son icône le disent) ; focus visible de 3 px.
+- [ ] Champs de saisie bordés `--lk-field` (champ en pilule bordé `--lk-line-strong` : son libellé et son icône le disent) ; focus visible de 3 px.
 - [ ] États vide, chargement, erreur présents.
-- [ ] Captures 390, 768 et 1280 px jointes, comparées à la maquette PNG correspondante (direction C : aux maquettes de `docs/design-handoff/maquettes/`, 390 et 1 440 px).
+- [ ] Captures 390, 768 et 1280 px jointes, comparées à la maquette correspondante (charte D : `docs/design-handoff-d/maquettes/`, 390 et 1 440 px).
 - [ ] Contrastes conformes à la section 2.1 ; cibles ≥ 44 px.
 - [ ] Textes en casse normale, montants et surfaces formatés (section 3.3), textes client repris mot pour mot.
 - [ ] Mouvement (section 9) : rien de caché sans JavaScript ni avec `prefers-reduced-motion` ; montée au défilement sur les pages publiques seulement.

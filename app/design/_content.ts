@@ -14,7 +14,7 @@ export const page = {
   metaTitle: "Design system · Leenkey",
   title: "Design system",
   subtitle:
-    "Bleu Leenkey en aplats, neutres pierre, Archivo élargie pour les titres, angles de 4 et 6 px, pas d'ombre.",
+    "Charte D : la nuit, le dégradé bleu → violet des actions, des neutres ardoise, Sora, des pilules et des angles de 12 à 28 px.",
   catalogueTitle: "Tous les composants",
   catalogueIntro:
     "Les composants de components/shared, avec leurs variantes, tailles et états (docs/DESIGN.md section 10).",
@@ -71,18 +71,23 @@ export const sections = {
 
 export type Swatch = { token: string; name: string; hex: string; usage: string };
 
-/** The 12 swatches of the board (Main.png), with the DESIGN.md values. */
+/** The 12 swatches of the board, with the values of the charte D (DESIGN.md 2.1, L1-58). */
 export const boardSwatches: Swatch[] = [
-  { token: "lk-blue", name: "Bleu Leenkey", hex: "#1156FC", usage: "Aplats, bouton principal" },
-  { token: "lk-blue-hover", name: "Bleu foncé", hex: "#0B3FC4", usage: "Survol, chiffres clés" },
-  { token: "lk-navy", name: "Navy", hex: "#1A2B4A", usage: "En-têtes sombres" },
-  { token: "lk-ink", name: "Encre", hex: "#1C1B19", usage: "Texte principal" },
-  { token: "lk-blue-tint", name: "Teinte", hex: "#EEF3FF", usage: "Sélection, pastilles" },
-  { token: "lk-blue-line", name: "Bleu clair", hex: "#DBEAFE", usage: "Anneau de focus, jauges" },
-  { token: "lk-stone-2", name: "Sable", hex: "#F1EDE7", usage: "Tuiles, pastilles neutres" },
-  { token: "lk-line", name: "Bordure", hex: "#ECE6DD", usage: "Cartes, séparateurs" },
-  { token: "lk-ink-2", name: "Texte secondaire", hex: "#5E574D", usage: "Corps secondaire" },
-  { token: "lk-ink-3", name: "Texte tertiaire", hex: "#6B6459", usage: "Dates, aides" },
+  { token: "lk-blue", name: "Bleu des actions", hex: "#2563EB", usage: "Liens, début du dégradé" },
+  { token: "lk-blue-hover", name: "Bleu foncé", hex: "#1D4ED8", usage: "Survol" },
+  { token: "lk-night", name: "Nuit", hex: "#020D21", usage: "Bandeaux, en-têtes sombres" },
+  { token: "lk-ink", name: "Encre", hex: "#0F172A", usage: "Texte principal" },
+  { token: "lk-blue-tint", name: "Teinte", hex: "#EEF2FF", usage: "Sélection, étiquettes" },
+  { token: "lk-blue-dark", name: "Indigo", hex: "#4338CA", usage: "Petits textes colorés" },
+  {
+    token: "lk-action-violet",
+    name: "Violet des actions",
+    hex: "#7C3AED",
+    usage: "Fin du dégradé",
+  },
+  { token: "lk-line", name: "Bordure", hex: "#E2E8F0", usage: "Cartes, séparateurs" },
+  { token: "lk-ink-2", name: "Texte secondaire", hex: "#475569", usage: "Corps secondaire" },
+  { token: "lk-ink-3", name: "Texte tertiaire", hex: "#5B6880", usage: "Dates, aides" },
   { token: "lk-success", name: "Succès", hex: "#047857", usage: "« En ligne », valider" },
   { token: "lk-warning", name: "Attention", hex: "#B45309", usage: "Alertes" },
 ];
@@ -90,12 +95,24 @@ export const boardSwatches: Swatch[] = [
 /** Every colour token of DESIGN.md 2.1. */
 export const paletteSwatches: Swatch[] = [
   ...boardSwatches,
-  { token: "lk-on-blue-2", name: "Secondaire sur bleu", hex: "#F0F4FF", usage: "Texte sur aplat" },
-  { token: "lk-bg", name: "Fond de page", hex: "#FAF8F5", usage: "Pages et espaces" },
+  {
+    token: "lk-brand-blue",
+    name: "Bleu charte",
+    hex: "#3B82F6",
+    usage: "Halos, titres en dégradé",
+  },
+  { token: "lk-brand-violet", name: "Violet charte", hex: "#8B5CF6", usage: "Halos, orbes" },
+  { token: "lk-blue-line", name: "Indigo clair", hex: "#E0E7FF", usage: "Anneau de focus, jauges" },
+  {
+    token: "lk-stone-2",
+    name: "Ardoise claire",
+    hex: "#F1F5F9",
+    usage: "Tuiles, pastilles neutres",
+  },
+  { token: "lk-bg", name: "Fond de page", hex: "#F8FAFC", usage: "Pages et espaces" },
   { token: "lk-surface", name: "Surface", hex: "#FFFFFF", usage: "Cartes, champs" },
-  { token: "lk-stone", name: "Pierre", hex: "#E4DDD2", usage: "Bandeaux neutres" },
-  { token: "lk-blue-border", name: "Bordure bleue", hex: "#C9D8FE", usage: "Carte survolée" },
-  { token: "lk-field", name: "Bordure de champ", hex: "#8F877B", usage: "Champs, cases" },
+  { token: "lk-blue-border", name: "Bordure indigo", hex: "#C7D2FE", usage: "Carte survolée" },
+  { token: "lk-field", name: "Bordure de champ", hex: "#828FA1", usage: "Champs, cases" },
   { token: "lk-success-bg", name: "Fond succès", hex: "#D1FAE5", usage: "Badge succès" },
   { token: "lk-warning-bg", name: "Fond attention", hex: "#FEF3C7", usage: "Badge, encart" },
   { token: "lk-danger", name: "Erreur", hex: "#B91C1C", usage: "Erreurs, suppression" },
@@ -243,13 +260,14 @@ export const buttons = {
     cta: "Voir ma valorisation",
   },
   ctaCaption:
-    "Variante cta avec trailingIcon ArrowRight · appels à l'action de l'accueil seulement, dans la direction de la V1 (L1-49) : dégradé du bleu de marque (4,9:1 sous le texte blanc), ombre bleue, s'élève de 2 px au survol, la flèche avance",
+    "Variante cta avec trailingIcon ArrowRight · l'appel principal d'un écran, charte D (L1-58) : dégradé #2563EB → #7C3AED (5,2:1 au moins sous le texte blanc), ombre violette, s'élève de 1 px au survol, la flèche avance",
   sizes: { lg: "Grand · 52 px", md: "Moyen · 44 px", sm: "Petit · 40 px" },
   withIcon: "Vendre mon bien",
   disabled: "Désactivé",
   loading: "Envoi en cours",
   link: "Lien avec le style bouton",
-  onBlueCaption: "Variantes inverse et outline-inverse (contour blanc), sur aplat bleu uniquement",
+  onBlueCaption:
+    "Variantes inverse et outline-inverse (contour blanc), sur un aplat coloré ou une photo",
 };
 
 export const iconButtons = {
@@ -563,8 +581,8 @@ export const formats = {
 };
 
 export const shapes = {
-  radiusSm: "rounded-lk-sm · 4 px · contrôles, vignettes",
-  radiusMd: "rounded-lk-md · 6 px · cartes, panneaux",
+  radiusSm: "rounded-lk-sm · 12 px · contrôles, vignettes",
+  radiusMd: "rounded-lk-md · 16 px · cartes, panneaux",
   radiusFull: "rounded-full · pastilles, avatars",
   shadowFloat: "shadow-float · éléments flottants",
   shadowSheet: "shadow-sheet · feuille mobile",
@@ -830,7 +848,7 @@ export const publicPages = {
   // L1-50: the pieces of the showcase pages (DESIGN.md 1 and 10.6).
   showcase: {
     heroCaption:
-      "ShowcaseHero · hero des pages vitrines (accueil, /concept, /investir, /qui-sommes-nous) : fond bleu nuit à trame de points, surtitre en capitales --lk-blue-light (ou pastille), titre mot à mot 36, 44 puis 56 px 800, mots mis en valeur en dégradé clair sur la ligne de cote, actions cta ; une photo à droite à partir de 1 024 px (aside)",
+      "ShowcaseHero · hero des pages vitrines (accueil, /concept, /investir, /qui-sommes-nous) : la nuit de la charte D et ses halos, trame de points, surtitre en capitales --lk-blue-light (ou pastille), titre mot à mot 36, 44 puis 56 px 700, mots mis en valeur dans le dégradé de la nuit sur la ligne de cote, actions cta ; une photo à droite à partir de 1 024 px (aside)",
     heroEyebrow: "Qui sommes-nous",
     heroTitle: "Rendre la vente immobilière enfin simple.",
     heroAccent: "enfin simple.",

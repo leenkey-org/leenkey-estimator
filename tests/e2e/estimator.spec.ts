@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 // L1-44: the valuation wizard and its result in Façade (docs/DESIGN.md 13.1),
 // with the logic and the words of the V1 (the engine has its own regression
-// tests): Archivo only, no emoji (DESIGN.md 1), no serious accessibility
+// tests): Sora only (charte D, L1-58), no emoji (DESIGN.md 1), no serious accessibility
 // violation, in mobile and desktop. The result is restored from this
 // browser, as after a reload.
 
@@ -35,9 +35,8 @@ async function expectNoEmoji(page: Page) {
     expect(label.trim()).not.toMatch(/→$/);
 }
 
-/** The families of the fonts of the page: Archivo (next/font) and its fallback only. */
-/** The fonts declared by the site: Archivo, and Sora of the redesign D (L1-57). */
-const SITE_FONTS = ["Archivo", "Archivo Fallback", "Sora", "Sora Fallback"];
+/** The families of the fonts of the page: Sora (next/font, charte D since L1-58) and its fallback only. */
+const SITE_FONTS = ["Sora", "Sora Fallback"];
 
 async function fontFamilies(page: Page) {
   await page.evaluate(() => document.fonts.ready);
@@ -71,16 +70,15 @@ async function restoreResult(page: Page) {
   await page.goto("/estimer");
 }
 
-test("le wizard est en Archivo, sans police de la V1, et sans violation sérieuse", async ({
+test("le wizard est en Sora, sans police de la V1, et sans violation sérieuse", async ({
   page,
 }) => {
   await page.goto("/estimer");
   const title = page.getByRole("heading", { level: 1 });
   await expect(title).toHaveText("Quel type de bien souhaitez-vous vendre ?");
   await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "8");
-  // Sora is declared for the pages of the redesign D (L1-57), not used here.
   expect(await fontFamilies(page)).toEqual(SITE_FONTS);
-  expect(await title.evaluate((node) => getComputedStyle(node).fontFamily)).toMatch(/^"?Archivo/);
+  expect(await title.evaluate((node) => getComputedStyle(node).fontFamily)).toMatch(/^"?Sora/);
   await expectNoEmoji(page);
   await expectNoSeriousViolation(page);
 
@@ -107,7 +105,6 @@ test("le wizard est en Archivo, sans police de la V1, et sans violation sérieus
 
   // The home page loads no V1 font either.
   await page.goto("/");
-  // Sora is declared for the pages of the redesign D (L1-57), not used here.
   expect(await fontFamilies(page)).toEqual(SITE_FONTS);
 });
 

@@ -31,7 +31,11 @@ export function ProgressBar({
         aria-valuenow={percent}
         className="h-1.5 overflow-hidden rounded-full bg-lk-line"
       >
-        <div className="h-full rounded-full bg-lk-blue" style={{ width: `${percent}%` }} />
+        {/* The bar of the charte: blue to violet (SPECS.md 1). */}
+        <div
+          className="h-full rounded-full bg-linear-90 from-lk-brand-blue to-lk-brand-violet"
+          style={{ width: `${percent}%` }}
+        />
       </div>
     </div>
   );

@@ -46,7 +46,7 @@ function useDesktop(): boolean {
 
 /** Floating pill of the map, « Carte » over the list and « Liste » over the map. */
 const FLOATING =
-  "flex h-12 items-center gap-2 rounded-full bg-lk-ink px-5 text-lk-button-md font-bold text-white shadow-lk-fab transition-colors duration-140 ease-out-lk hover:bg-lk-navy focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue [&_svg]:size-4.5";
+  "flex h-12 items-center gap-2 rounded-full bg-lk-ink px-5 text-lk-button-md font-bold text-white shadow-lk-fab transition-colors duration-140 ease-out-lk hover:bg-lk-navy focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue [&_svg]:size-4.5";
 
 function MapContent({
   apiKey,

@@ -13,7 +13,7 @@ export type PriceBlockProps = {
 };
 
 /**
- * Price (docs/DESIGN.md 10.2): wide Archivo, tabular figures; under it, on one
+ * Price (docs/DESIGN.md 10.2): Sora, tabular figures; under it, on one
  * line, « 5 147 € / m², sans commission ». Never « Prix ferme ».
  */
 export function PriceBlock({ priceCents, surfaceM2, size = "md", className }: PriceBlockProps) {

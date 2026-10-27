@@ -12,6 +12,15 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-27 · L1-58 · PR #56 · Charte D sur tout le site
+- Modifié : tout le site passe dans la charte de Leenkey validée sur l'accueil : nuit, dégradé bleu → violet, police Sora.
+  - Couleurs, police, arrondis et ombres de la charte sur toutes les pages, menus et fenêtres compris.
+  - Boutons en pilule, le principal en dégradé ; pastilles de filtre, choix et barres de progression en dégradé ; avatar du compte en dégradé.
+  - Heros des pages vitrines, sections sombres, dernier appel, page 404 et fins de parcours sur la nuit et ses halos, avec l'en-tête nuit sur les pages vitrines.
+  - Pied de page blanc partout ; sur mobile, barre de navigation du bas sur l'accueil, `/vendre`, `/contact` et les pages vitrines, comme sur `/acheter`.
+  - Cartes de biens de la recherche au modèle de l'accueil ; back office sur la nuit ; carte Google aux couleurs de la charte.
+- Non modifié : emails, rapport PDF et image de partage d'une annonce (en attente de Cédric, Q65).
+
 ### 2026-10-27 · L1-57 · PR #55 · Refonte D de l'accueil
 - Modifié : l'accueil passe dans la charte de Leenkey (refonte D) : nuit, dégradé bleu → violet, police Sora.
   - Grand bandeau nuit avec l'en-tête intégré, la photo à droite découpée par une vague et la carte « Exemple ».

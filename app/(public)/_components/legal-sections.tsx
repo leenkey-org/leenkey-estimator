@@ -68,7 +68,7 @@ export function LegalSections({
               <li key={section.id}>
                 <a
                   href={`#${section.id}`}
-                  className="inline-flex min-h-8 items-center rounded-lk-sm text-lk-secondary text-lk-ink-2 underline-offset-2 hover:text-lk-ink hover:underline focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue"
+                  className="inline-flex min-h-8 items-center rounded-lk-sm text-lk-secondary text-lk-ink-2 underline-offset-2 hover:text-lk-ink hover:underline focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue"
                 >
                   {section.title}
                 </a>

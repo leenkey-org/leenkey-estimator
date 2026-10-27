@@ -8,18 +8,19 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Since L1-44, the radii and the font of DESIGN.md (sections 2.2, 3 and 5)
-     for the classes of the V1 kit still in use: rounded-sm 4 px (controls),
-     rounded-md 6 px (containers), never more; Archivo (its variable is set
-     on <html> by app/layout.tsx). */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 6px;
-  --radius-xl: 6px;
-  --radius-2xl: 6px;
+  /* The radii and the font of the charte D (DESIGN.md 2.2, 3 and 5, L1-58)
+     for the classes of the V1 kit still in use (the valuation wizard, the
+     shadcn/ui components): rounded-sm 6 px, rounded-md 12 px (controls),
+     rounded-lg and rounded-xl 16 px (containers), rounded-2xl 22 px (large
+     blocks); Sora (its variable is set on <html> by app/layout.tsx). */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 16px;
+  --radius-2xl: 22px;
 
-  --font-sans: var(--font-archivo), system-ui, sans-serif;
-  --font-display: var(--font-archivo), system-ui, sans-serif;
+  --font-sans: var(--font-sora), system-ui, sans-serif;
+  --font-display: var(--font-sora), system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -348,7 +349,7 @@ html {
      --color-border, --ease-out…) that overrode a shared name. Colours keep their DESIGN.md names
      (bg-lk-blue…); radii are rounded-lk-sm / rounded-lk-md and font sizes
      text-lk-* instead of rounded-sm / rounded-md / text-[13px];
-   - base styles (Archivo, colours, shadcn/ui variables, focus ring, reduced
+   - base styles (Sora since L1-58, colours, shadcn/ui variables, focus ring, reduced
      motion) only apply inside the `.facade` scope set by <FacadeRoot>.
    Breakpoints are Tailwind's defaults, which are DESIGN.md 4.2's values:
    md 768 px, lg 1024 px, xl 1280 px.
@@ -358,52 +359,58 @@ html {
    when no utility uses it yet. */
 @theme static {
   /* Palette (DESIGN.md 2.1): bg-lk-blue, text-lk-ink-3, border-lk-line…
-     Since the redesign of direction C (docs/design-handoff/SPECS.md 1,
-     DECISIONS 2026-10-26): warm neutrals, the blue as an accent. */
-  --color-lk-blue: #1156fc;
-  /* Dark blue: hover, key figures, text of a badge (8.6:1 on white) */
-  --color-lk-blue-hover: #0b3fc4;
-  --color-lk-blue-dark: #0b3fc4;
-  --color-lk-blue-tint: #eef3ff;
-  /* Light blue: rings of a focused field, fills of a bar, hover of an
-     unread notification (ink-3 4.8:1 on it) */
-  --color-lk-blue-line: #dbeafe;
-  /* Soft blue border: a card or a pill hovered (direction C) */
-  --color-lk-blue-border: #c9d8fe;
+     The charte D of Leenkey since L1-58 (docs/design-handoff-d/SPECS.md 1,
+     DECISIONS 2026-10-27): the night, the blue and violet of the brand, cool
+     neutrals. The names stay those of Façade, their values are the
+     functional (AA) colours of the charte. */
+  /* The blue of actions and links: white text on it 5.2:1 */
+  --color-lk-blue: #2563eb;
+  --color-lk-blue-hover: #1d4ed8;
+  /* Indigo: small coloured texts, tags, key figures (7.9:1 on white) */
+  --color-lk-blue-dark: #4338ca;
+  --color-lk-blue-tint: #eef2ff;
+  /* Light indigo: rings of a focused field, fills of a bar, hover of an
+     unread notification (ink-3 4.6:1 on it) */
+  --color-lk-blue-line: #e0e7ff;
+  /* A card or a pill hovered */
+  --color-lk-blue-border: #c7d2fe;
   --color-lk-on-blue-2: #f0f4ff;
-  /* Accent, lines and rings on navy: 6.9:1 on --lk-navy (L1-47) */
-  --color-lk-blue-light: #93b4ff;
-  /* The brand blue made lighter, ends of its gradients on the home page
-     (L1-49): mid under white text (4.9:1), bright for the words of a title
-     only (3.6:1 on white) */
-  --color-lk-blue-mid: #2464fc;
-  --color-lk-blue-bright: #4c80fd;
-  --color-lk-navy: #1a2b4a;
-  /* Text (direction C): main 17:1, secondary 7:1, tertiary and placeholders
-     5.9:1 on white, 5.5:1 on the page */
-  --color-lk-ink: #1c1b19;
-  --color-lk-ink-2: #5e574d;
-  --color-lk-ink-3: #6b6459;
-  --color-lk-disabled: #b5ada2;
-  /* Warm neutral of the page, white surfaces (cards, header) */
-  --color-lk-bg: #faf8f5;
+  /* Accent, lines and rings on the night (7.5:1 on it) */
+  --color-lk-blue-light: #60a5fa;
+  /* The end of a gradient under white text (the violet of the charte, AA),
+     and the light end of a word in the gradient */
+  --color-lk-blue-mid: #7c3aed;
+  --color-lk-blue-bright: #8b5cf6;
+  --color-lk-navy: #020d21;
+  /* Text: main 17:1, secondary 7.6:1 on white; tertiary and placeholders
+     5.6:1 on white, 4.5:1 or more on the tints (the #64748B of the charte
+     falls to 3.9:1 on the light indigo of an unread notification) */
+  --color-lk-ink: #0f172a;
+  --color-lk-ink-2: #475569;
+  --color-lk-ink-3: #5b6880;
+  --color-lk-disabled: #94a3b8;
+  /* Cool neutral of the page, white surfaces (cards, header) */
+  --color-lk-bg: #f8fafc;
   --color-lk-surface: #ffffff;
-  --color-lk-stone: #e4ddd2;
-  /* Sand: the footer, the tracks of the bars, the tiles */
-  --color-lk-stone-2: #f1ede7;
-  --color-lk-sand: #f1ede7;
-  --color-lk-sand-line: #e4ddd2;
+  --color-lk-stone: #e2e8f0;
+  /* The tracks of the bars, the tiles, a hover */
+  --color-lk-stone-2: #f1f5f9;
+  /* A hover on white, behind a placeholder too (ink-3 5.1:1 on it) */
+  --color-lk-sand: #f1f5f9;
+  --color-lk-sand-line: #e2e8f0;
   /* The bar « Agence » of the comparison (decorative, with its amount) */
-  --color-lk-agency: #cfc7bb;
-  /* The light cool flat of the sections of the V1 home page and the line of
-     its cards (L1-49) */
+  --color-lk-agency: #cbd5e1;
+  /* The light flat of some sections and the line of their cards */
   --color-lk-mist: #f5f7fb;
   --color-lk-mist-line: #e2e8f0;
-  --color-lk-line: #ece6dd;
-  /* Strong border: pills, filters, the fields of the home search card */
-  --color-lk-line-strong: #ddd5ca;
-  /* Border of a form field: 3.5:1 on white, 3.3:1 on the page (WCAG 1.4.11) */
-  --color-lk-field: #8f877b;
+  --color-lk-line: #e2e8f0;
+  /* Strong border: pills, filters, chips */
+  --color-lk-line-strong: #cbd5e1;
+  /* A field told by its border: 3:1 on white (WCAG 1.4.11), not the
+     #CBD5E1 of the charte (1.5:1) */
+  --color-lk-field: #828fa1;
+  /* The green of success keeps white text on it (5.5:1): the #059669 of the
+     charte is for the check alone */
   --color-lk-success: #047857;
   --color-lk-success-bg: #d1fae5;
   --color-lk-success-fg: #065f46;
@@ -416,21 +423,21 @@ html {
 
   /* DPE badges (DESIGN.md 2.1): bg-lk-dpe-c-bg text-lk-dpe-c-fg… Direction C:
      the pastel scale of SPECS.md for B to E, A, F and G after the official
-     colours, the letter in the main text colour (11:1 or more). */
+     colours, the letter in the ink of the charte (11:1 or more). */
   --color-lk-dpe-a-bg: #b8e2cb;
-  --color-lk-dpe-a-fg: #1c1b19;
+  --color-lk-dpe-a-fg: #0f172a;
   --color-lk-dpe-b-bg: #c9e8b0;
-  --color-lk-dpe-b-fg: #1c1b19;
+  --color-lk-dpe-b-fg: #0f172a;
   --color-lk-dpe-c-bg: #e3f0c2;
-  --color-lk-dpe-c-fg: #1c1b19;
+  --color-lk-dpe-c-fg: #0f172a;
   --color-lk-dpe-d-bg: #fbf0a8;
-  --color-lk-dpe-d-fg: #1c1b19;
+  --color-lk-dpe-d-fg: #0f172a;
   --color-lk-dpe-e-bg: #fbdda6;
-  --color-lk-dpe-e-fg: #1c1b19;
+  --color-lk-dpe-e-fg: #0f172a;
   --color-lk-dpe-f-bg: #f8cba6;
-  --color-lk-dpe-f-fg: #1c1b19;
+  --color-lk-dpe-f-fg: #0f172a;
   --color-lk-dpe-g-bg: #f4b8b5;
-  --color-lk-dpe-g-fg: #1c1b19;
+  --color-lk-dpe-g-fg: #0f172a;
   /* Charte of the redesign D (docs/design-handoff-d/SPECS.md 1, L1-57): the
      night of the bands, the blue and violet of the brand for gradients,
      halos and orbs; their darker tones carry white text (AA); the indigo of
@@ -452,11 +459,12 @@ html {
   /* Text of a grey tag (the plans) */
   --color-lk-ink-tag: #334155;
 
-  /* Radii (DESIGN.md 5): 4 px controls, 6 px containers, rounded-full pills;
-     2 px for the corner of a message bubble on the side of its sender */
-  --radius-lk-xs: 2px;
-  --radius-lk-sm: 4px;
-  --radius-lk-md: 6px;
+  /* Radii (DESIGN.md 5, charte D since L1-58): 12 px controls, 16 px
+     containers, rounded-full pills and buttons; 6 px for a checkbox and the
+     corner of a message bubble on the side of its sender */
+  --radius-lk-xs: 6px;
+  --radius-lk-sm: 12px;
+  --radius-lk-md: 16px;
   /* Home page in the direction of the V1 (L1-49): its cards (12 px) and its
      panels (16 px) */
   --radius-lk-lg: 12px;
@@ -472,31 +480,32 @@ html {
   --radius-lk-d-photo: 130px; /* the top left corner of the photo of the hero, on a phone */
 
   /* Elevation (DESIGN.md 5): floating elements only, never cards */
-  --shadow-float: 0 2px 6px rgba(15, 30, 53, 0.18);
-  --shadow-sheet: 0 -8px 24px rgba(15, 30, 53, 0.16);
-  /* Home page in the direction of the V1 (L1-49): its cards and calls to
-     action in a blue shadow, the card and the photo of its hero lifted */
-  --shadow-lk-card: 0 4px 24px rgba(17, 86, 252, 0.08);
-  --shadow-lk-cta: 0 4px 16px rgba(17, 86, 252, 0.28);
-  --shadow-lk-cta-hover: 0 10px 24px rgba(17, 86, 252, 0.36);
-  --shadow-lk-raised: 0 8px 24px rgba(0, 0, 0, 0.16);
-  --shadow-lk-lift: 0 24px 50px rgba(15, 30, 53, 0.3);
-  --shadow-lk-photo: 0 24px 60px -20px rgba(0, 0, 0, 0.4);
-  /* Direction C (SPECS.md 1): the floating search card, a field in a pill,
-     the primary button, the featured plan, a white block set down, the
-     floating assistant; a badge on a photo, a card hovered, an icon tile */
-  --shadow-lk-search: 0 14px 44px rgba(11, 42, 122, 0.2), 0 1px 3px rgba(28, 27, 25, 0.08);
-  --shadow-lk-field: 0 4px 14px rgba(28, 27, 25, 0.08);
-  --shadow-lk-primary: 0 8px 20px rgba(17, 86, 252, 0.3);
-  --shadow-lk-featured: 0 12px 32px rgba(17, 86, 252, 0.12);
-  --shadow-lk-block: 0 12px 40px rgba(28, 27, 25, 0.08);
-  --shadow-lk-fab: 0 10px 30px rgba(28, 27, 25, 0.28);
-  --shadow-lk-badge: 0 2px 8px rgba(28, 27, 25, 0.14);
-  --shadow-lk-hover: 0 8px 24px rgba(17, 86, 252, 0.14);
-  --shadow-lk-tile: 0 6px 20px rgba(17, 86, 252, 0.16);
-  /* Redesign D (SPECS.md 1): the search card, a gradient button, the plan
-     put forward, a white block, the « Exemple » card on the photo, a card
-     hovered */
+  --shadow-float: 0 2px 6px rgba(15, 23, 42, 0.18);
+  --shadow-sheet: 0 -8px 24px rgba(15, 23, 42, 0.16);
+  /* Since L1-58 in the colours of the charte D (SPECS.md 1): the cards and
+     calls to action in an indigo shadow, the card and the photo of a hero
+     lifted */
+  --shadow-lk-card: 0 4px 24px rgba(79, 70, 229, 0.08);
+  --shadow-lk-cta: 0 10px 24px rgba(79, 70, 229, 0.32);
+  --shadow-lk-cta-hover: 0 14px 30px rgba(79, 70, 229, 0.38);
+  --shadow-lk-raised: 0 8px 24px rgba(2, 13, 33, 0.16);
+  --shadow-lk-lift: 0 24px 50px rgba(2, 13, 33, 0.3);
+  --shadow-lk-photo: 0 24px 60px -20px rgba(2, 13, 33, 0.4);
+  /* The floating search card, a field in a pill, the primary button, the
+     featured plan, a white block set down, the floating assistant; a badge
+     on a photo, a card hovered, an icon tile */
+  --shadow-lk-search: 0 20px 50px rgba(15, 23, 42, 0.18), 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-lk-field: 0 4px 14px rgba(15, 23, 42, 0.06);
+  --shadow-lk-primary: 0 10px 24px rgba(79, 70, 229, 0.32);
+  --shadow-lk-featured: 0 18px 44px rgba(79, 70, 229, 0.16);
+  --shadow-lk-block: 0 20px 50px rgba(15, 23, 42, 0.08);
+  --shadow-lk-fab: 0 12px 32px rgba(15, 23, 42, 0.3);
+  --shadow-lk-badge: 0 2px 8px rgba(15, 23, 42, 0.14);
+  --shadow-lk-hover: 0 10px 30px rgba(59, 130, 246, 0.14);
+  --shadow-lk-tile: 0 6px 20px rgba(79, 70, 229, 0.16);
+  /* The home page of the charte D (SPECS.md 1, L1-57): the search card, a
+     gradient button, the plan put forward, a white block, the « Exemple »
+     card on the photo, a card hovered */
   --shadow-lk-d-search: 0 20px 50px rgba(15, 23, 42, 0.18), 0 1px 3px rgba(15, 23, 42, 0.08);
   --shadow-lk-d-button: 0 10px 24px rgba(79, 70, 229, 0.32);
   --shadow-lk-d-featured: 0 18px 44px rgba(79, 70, 229, 0.16);
@@ -656,54 +665,39 @@ html {
   --text-lk-c-amount-lg--line-height: 1;
 }
 
-/* Brand utilities (DESIGN.md 2.2) */
+/* Brand utilities (DESIGN.md 2.2): the titles of the charte D, 700 and
+   tightened (Sora is wide by itself: no width axis since L1-58). */
 @utility text-display {
   font-weight: 700;
-  font-stretch: 116%;
   letter-spacing: -0.02em;
   line-height: 1.05;
 }
 @utility text-wide {
-  font-stretch: 116%;
   letter-spacing: -0.02em;
 }
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }
 
-/* ─── Home page in the direction of the V1 (DECISIONS 2026-10-23, L1-49) ───
-   The flats, gradients and shapes of the V1 home page (leenkey.css and
-   landing.html of the main branch), in the colours of the brand: no violet,
-   and the light blue of the gradients is the brand blue made lighter. */
+/* ─── Flats, gradients and shapes of the public pages ───
+   After the V1 home page (L1-49, L1-50), in the charte D since L1-58
+   (docs/design-handoff-d/SPECS.md 1, « Effets du moodboard »). */
 
-/* The hero: deep navy towards the brand blue in the bottom corner, two blue
-   glows. */
+/* A hero: the night, a blue halo in the bottom left corner and a violet one
+   at the top right (the glowing halos of the home page, still). */
 .lk-hero-bg {
   background:
-    radial-gradient(
-      ellipse at top right,
-      color-mix(in srgb, var(--color-lk-blue) 28%, transparent) 0%,
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse at bottom left,
-      color-mix(in srgb, var(--color-lk-blue) 22%, transparent) 0%,
-      transparent 55%
-    ),
-    linear-gradient(
-      135deg,
-      var(--color-lk-ink) 0%,
-      var(--color-lk-navy) 45%,
-      var(--color-lk-blue) 130%
-    );
+    radial-gradient(ellipse 60% 70% at 85% 0%, rgb(139 92 246 / 0.2), transparent 65%),
+    radial-gradient(ellipse 55% 80% at 0% 100%, rgb(59 130 246 / 0.3), transparent 65%),
+    var(--color-lk-night);
 }
-/* The last call to action (« cta-final »): the brand blue with a white glow
-   behind its title (10 %, where the V1 had 16 %: white text stays above 4.5:1
-   wherever there is text). */
+/* The last call to action (« cta-final »): the night of the final banner of
+   the home page, its halos the other way round. */
 .lk-cta-bg {
   background:
-    radial-gradient(50% 80% at 50% 0%, rgb(255 255 255 / 0.1), transparent 60%),
-    linear-gradient(90deg, var(--color-lk-blue), var(--color-lk-blue-mid));
+    radial-gradient(ellipse 50% 90% at 0% 100%, rgb(59 130 246 / 0.3), transparent 65%),
+    radial-gradient(ellipse 45% 90% at 90% 0%, rgb(139 92 246 / 0.22), transparent 65%),
+    var(--color-lk-night);
 }
 /* A grid of dots fading at its edges (« hero-dots », « cta-dots »). */
 .lk-dots {
@@ -716,10 +710,9 @@ html {
   background-size: 24px 24px;
   mask-image: radial-gradient(70% 70% at 50% 50%, #000, transparent);
 }
-/* Words in the blue gradient (« text-grad »): on a light flat (3.4:1 at its
-   lightest, titles of 24 px and more only), and lighter on a dark one
-   (4.6:1 at its darkest on --lk-ink). In print and in forced colours, the
-   words keep a plain colour. */
+/* Words in the gradient of the charte (« text-grad »): blue to violet on a
+   light flat (5.2:1 at its lightest), lighter on the night (7.6:1 at its
+   darkest). In print and in forced colours, the words keep a plain colour. */
 .lk-text-grad,
 .lk-text-grad-light {
   -webkit-background-clip: text;
@@ -727,13 +720,17 @@ html {
   color: transparent;
 }
 .lk-text-grad {
-  background-image: linear-gradient(135deg, var(--color-lk-blue), var(--color-lk-blue-bright));
+  background-image: linear-gradient(
+    90deg,
+    var(--color-lk-action-blue),
+    var(--color-lk-action-violet)
+  );
 }
 .lk-text-grad-light {
   background-image: linear-gradient(
-    135deg,
-    var(--color-lk-blue-bright),
-    var(--color-lk-blue-light)
+    90deg,
+    var(--color-lk-night-blue),
+    var(--color-lk-night-violet) 80%
   );
 }
 @media print, (forced-colors: active) {
@@ -973,11 +970,12 @@ html {
 }
 
 @layer base {
-  /* Façade scope: Archivo (variable set by next/font on the same element),
-     Leenkey colours and the shadcn/ui variables of DESIGN.md 2.2. */
+  /* Façade scope: Sora (variable set by next/font on the same element, the
+     font of the charte D since L1-58), Leenkey colours and the shadcn/ui
+     variables of DESIGN.md 2.2. */
   .facade {
     font-family:
-      var(--font-archivo),
+      var(--font-sora),
       system-ui,
       -apple-system,
       "Segoe UI",
@@ -1021,9 +1019,9 @@ html {
     text-wrap: pretty;
   }
 
-  /* 3 px since direction C (SPECS.md 1). */
+  /* 3 px, in the blue of the charte (docs/design-handoff-d/SPECS.md 1). */
   .facade :focus-visible {
-    outline: 3px solid var(--color-lk-blue);
+    outline: 3px solid var(--color-lk-brand-blue);
     outline-offset: 2px;
   }
 
@@ -1084,72 +1082,21 @@ html {
     animation: none;
   }
 }
-/* Titles of direction C: 800, a little wider (SPECS.md 1, 110 to 115 %). */
+/* Heavy titles: 700 in the charte D (SPECS.md 1), tightened. */
 @utility text-heavy {
-  font-weight: 800;
-  font-stretch: 112%;
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   Redesign D (docs/design-handoff-d/SPECS.md, L1-57): the charte of Leenkey
-   (night, blue to violet, Sora), on the home page first. `.lk-d` on the root
-   of a page: Sora and the colours of the charte for the tokens of the
-   components (their names stay, their values change), so that the whole site
-   moves to it by putting the class on every page once validated.
+   Charte D (docs/design-handoff-d/SPECS.md): the charte of Leenkey (night,
+   blue to violet, Sora), on the home page in L1-57, on the whole site since
+   L1-58 through the values of the tokens above. Below, the scopes of a
+   header on the night and the gradients, halos and dots of the charte.
    ═══════════════════════════════════════════════════════════════════════ */
 /* In the base layer, after the Façade scope: the utilities of a component
    still win over them (a white focus ring on a blue flat). */
 @layer base {
-  .lk-d {
-    font-family:
-      var(--font-sora),
-      system-ui,
-      -apple-system,
-      "Segoe UI",
-      Arial,
-      sans-serif;
-    /* Buttons and links with white text or on white: the darker blue (AA) */
-    --color-lk-blue: #2563eb;
-    --color-lk-blue-hover: #1d4ed8;
-    --color-lk-blue-mid: #7c3aed;
-    /* Small coloured texts, tags, key figures */
-    --color-lk-blue-dark: #4338ca;
-    --color-lk-blue-tint: #eef2ff;
-    --color-lk-blue-line: #e0e7ff;
-    --color-lk-blue-border: #c7d2fe;
-    --color-lk-blue-light: #60a5fa;
-    --color-lk-navy: #020d21;
-    --color-lk-ink: #0f172a;
-    --color-lk-ink-2: #475569;
-    --color-lk-ink-3: #64748b;
-    --color-lk-disabled: #94a3b8;
-    --color-lk-bg: #f8fafc;
-    --color-lk-stone: #e2e8f0;
-    --color-lk-stone-2: #f1f5f9;
-    /* A hover behind a placeholder: #64748B keeps 4.5:1 on it */
-    --color-lk-sand: #f8fafc;
-    --color-lk-sand-line: #e2e8f0;
-    --color-lk-agency: #cbd5e1;
-    --color-lk-line: #e2e8f0;
-    --color-lk-line-strong: #cbd5e1;
-    /* A field told by its border: 3:1 on white (WCAG 1.4.11), not the
-       #CBD5E1 of the mock-up (1.5:1). The green of success stays #047857
-       (white text on it): the #059669 of the charte is for the check alone. */
-    --color-lk-field: #828fa1;
-    --color-lk-dpe-a-fg: #0f172a;
-    --color-lk-dpe-b-fg: #0f172a;
-    --color-lk-dpe-c-fg: #0f172a;
-    --color-lk-dpe-d-fg: #0f172a;
-    --color-lk-dpe-e-fg: #0f172a;
-    --color-lk-dpe-f-fg: #0f172a;
-    --color-lk-dpe-g-fg: #0f172a;
-    color: var(--color-lk-ink);
-  }
-  .lk-d :focus-visible {
-    outline-color: var(--color-lk-brand-blue);
-  }
-
   /* On the night of a band (header of the home page D): white texts, the
      lines and fields of glass; the blue of the actions and of a light tint
      (an unread bell) stays. */
@@ -1166,7 +1113,7 @@ html {
   .lk-on-night .lk-on-light {
     --color-lk-ink: #0f172a;
     --color-lk-ink-2: #475569;
-    --color-lk-ink-3: #64748b;
+    --color-lk-ink-3: #5b6880;
     --color-lk-surface: #ffffff;
     --color-lk-line: #e2e8f0;
     --color-lk-line-strong: #cbd5e1;
@@ -1174,13 +1121,15 @@ html {
   }
 }
 
-/* The gradient of an action (button, badge, chosen pill): white text, AA. */
+/* The gradient of an action (button, badge, chosen pill): white text, AA.
+   Under a transparent border too (no stripe of the other end at its edges). */
 @utility lk-gradient {
   background-image: linear-gradient(
     90deg,
     var(--color-lk-action-blue),
     var(--color-lk-action-violet)
   );
+  background-origin: border-box;
 }
 /* The gradient of the charte: orbs, avatar, decorative tiles. */
 @utility lk-gradient-brand {

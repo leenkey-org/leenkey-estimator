@@ -45,7 +45,7 @@ export function AdminMobileHeader({
   return (
     <header
       className={cn(
-        "flex items-center justify-between gap-3 bg-lk-ink px-5 pt-5 pb-4 text-white md:hidden",
+        "flex items-center justify-between gap-3 bg-lk-night px-5 pt-5 pb-4 text-white md:hidden",
         className,
       )}
     >

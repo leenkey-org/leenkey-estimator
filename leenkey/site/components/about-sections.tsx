@@ -65,7 +65,7 @@ function FounderPhoto() {
       <figcaption className="absolute bottom-6 left-4 flex items-center gap-3 rounded-lk-xl bg-lk-surface py-3.5 pr-5 pl-3.5 text-lk-ink shadow-lk-lift md:bottom-8 lg:-left-5">
         <span
           aria-hidden="true"
-          className="flex size-10.5 shrink-0 items-center justify-center rounded-full bg-linear-135 from-lk-blue to-lk-blue-mid text-lk-title font-extrabold text-white"
+          className="flex size-10.5 shrink-0 items-center justify-center rounded-full bg-linear-135 from-lk-blue to-lk-blue-mid text-lk-title font-bold text-white"
         >
           {t.founder.initials}
         </span>
@@ -92,7 +92,7 @@ export function AboutFigures() {
             <dt className="text-lk-compact font-medium text-pretty text-lk-ink-3">
               {figure.label}
             </dt>
-            <dd className="text-lk-h1-lg font-extrabold text-wide tabular-nums lg:text-lk-display-md">
+            <dd className="text-lk-h1-lg font-bold text-wide tabular-nums lg:text-lk-display-md">
               <span className="lk-text-grad">{figure.value}</span>
             </dd>
           </div>

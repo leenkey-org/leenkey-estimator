@@ -50,7 +50,7 @@ export function AdminSidebar({
   return (
     <div
       className={cn(
-        "flex w-60 shrink-0 flex-col gap-6 overflow-y-auto bg-lk-ink px-4 py-6 text-white",
+        "flex w-60 shrink-0 flex-col gap-6 overflow-y-auto bg-lk-night px-4 py-6 text-white",
         className,
       )}
     >
@@ -78,7 +78,7 @@ export function AdminSidebar({
                     "transition-colors duration-140 ease-out-lk",
                     darkFocus,
                     active
-                      ? "bg-lk-blue font-semibold text-white"
+                      ? "lk-gradient font-semibold text-white"
                       : "font-medium text-white/80 hover:bg-white/6 hover:text-white",
                   )}
                 >

@@ -10,7 +10,7 @@ export type CheckboxProps = Omit<ComponentProps<"input">, "type" | "children"> &
 };
 
 /**
- * Native checkbox (docs/DESIGN.md 10.1): 20 px box, 4 px radius, blue when
+ * Native checkbox (docs/DESIGN.md 10.1): 20 px box, 6 px radius, blue when
  * ticked, clickable label of 12–13 px. Native so that FormData carries it.
  */
 export function Checkbox({
@@ -34,9 +34,9 @@ export function Checkbox({
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
             className={cn(
-              "peer size-5 cursor-pointer appearance-none rounded-lk-sm border-[1.5px] border-lk-field bg-lk-surface",
+              "peer size-5 cursor-pointer appearance-none rounded-lk-xs border-[1.5px] border-lk-field bg-lk-surface",
               "transition-colors duration-140 ease-out-lk checked:border-lk-blue checked:bg-lk-blue",
-              "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+              "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue",
               "aria-invalid:border-lk-danger disabled:cursor-not-allowed disabled:opacity-45",
               // 44 px touch target (DESIGN.md 15).
               "after:absolute after:-inset-3 after:content-['']",

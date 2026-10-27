@@ -299,7 +299,7 @@ export function FinalBanner() {
         </div>
         <Button
           asChild
-          variant="gradient"
+          variant="cta"
           shape="pill"
           size="xl"
           trailingIcon={ArrowRight}

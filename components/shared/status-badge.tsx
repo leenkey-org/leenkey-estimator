@@ -17,7 +17,7 @@ const listingTone: Record<ListingStatus, string> = {
   draft: "bg-lk-stone-2 text-lk-ink-2",
   pending: "bg-lk-warning-bg text-lk-warning-fg",
   published: "bg-lk-success text-white",
-  paused: "bg-lk-blue-tint text-lk-blue",
+  paused: "bg-lk-blue-tint text-lk-blue-dark",
   suspended: "bg-lk-danger-bg text-lk-danger-fg",
   sold: "bg-lk-ink text-white",
   rejected: "bg-lk-danger-bg text-lk-danger-fg",
@@ -25,7 +25,7 @@ const listingTone: Record<ListingStatus, string> = {
 
 const planTone: Record<PlanCode, string> = {
   serenite: "bg-lk-navy text-white",
-  accompagne: "bg-lk-blue-tint text-lk-blue",
+  accompagne: "bg-lk-blue-tint text-lk-blue-dark",
   autonomie: "bg-lk-stone-2 text-lk-ink-2",
 };
 

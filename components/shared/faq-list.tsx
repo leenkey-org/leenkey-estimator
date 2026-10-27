@@ -37,7 +37,7 @@ export function FaqList({
               <summary
                 className={cn(
                   "flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 py-3 text-lk-body font-semibold text-lk-ink md:min-h-17 md:gap-4 md:px-1 md:text-lk-body-lg [&::-webkit-details-marker]:hidden",
-                  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue focus-visible:outline-solid",
+                  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
                 )}
               >
                 <span>{item.question}</span>
@@ -76,7 +76,7 @@ export function FaqList({
                 "text-lk-h3 font-semibold lg:text-lk-h3-lg",
                 dark ? "text-white" : "text-lk-ink",
                 "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2",
-                dark ? "focus-visible:outline-white" : "focus-visible:outline-lk-blue",
+                dark ? "focus-visible:outline-white" : "focus-visible:outline-lk-brand-blue",
               )}
             >
               <span>{item.question}</span>

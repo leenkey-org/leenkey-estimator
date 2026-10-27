@@ -19,7 +19,7 @@ export function NumberBadge({
     <span
       aria-hidden="true"
       className={cn(
-        "flex shrink-0 items-center justify-center bg-linear-135 from-lk-blue to-lk-blue-mid font-extrabold text-white tabular-nums shadow-lk-cta",
+        "flex shrink-0 items-center justify-center bg-linear-135 from-lk-blue to-lk-blue-mid font-bold text-white tabular-nums shadow-lk-cta",
         size === "md"
           ? "size-10 rounded-lk-lg text-lk-title"
           : "size-8 rounded-lk-md text-lk-secondary",

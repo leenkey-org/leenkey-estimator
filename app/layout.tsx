@@ -2,10 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { ConsentManager } from "@/components/analytics/consent-manager";
 import { EnvBanner } from "@/components/shared/env-banner";
+import { GradientDefs } from "@/components/shared/gradient-defs";
 import { RouteHistory } from "@/leenkey/navigation/components/route-history";
 import { SpaceProvider } from "@/leenkey/navigation/components/space-context";
 import { isProduction } from "@/lib/env";
-import { archivo, sora } from "@/lib/fonts";
+import { sora } from "@/lib/fonts";
 import "./globals.css";
 
 const GA_ID = "G-27N3E3WP2D";
@@ -42,11 +43,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // and only after they accept audience measurement (L1-37).
   const analytics = isProduction();
   return (
-    // Archivo, self-hosted by next/font (no request to Google before
-    // consent, L1-37), for every page and the portals outside <FacadeRoot>;
-    // Sora for the pages of the redesign D (L1-57).
-    <html lang="fr" className={`${archivo.variable} ${sora.variable}`}>
+    // Sora, self-hosted by next/font (no request to Google before consent,
+    // L1-37), for every page and the portals outside <FacadeRoot>.
+    <html lang="fr" className={sora.variable}>
       <body>
+        {/* The gradient of the icons of the charte, once for every page (L1-58). */}
+        <GradientDefs />
         <EnvBanner />
         {/* Space of the navigation, kept across client navigations (L1-10). */}
         <SpaceProvider>{children}</SpaceProvider>

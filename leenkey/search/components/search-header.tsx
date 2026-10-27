@@ -54,10 +54,10 @@ export function SearchHeader() {
             onClick={() => openFilters()}
             className={cn(
               "relative flex shrink-0 items-center justify-center gap-2 rounded-full transition-colors duration-140 ease-out-lk",
-              "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-blue focus-visible:outline-solid",
-              // Mobile: the round blue button; from 1024 px, a white pill after the bar.
-              "size-12 bg-lk-blue text-white hover:bg-lk-blue-hover",
-              "lg:h-14 lg:w-auto lg:border lg:border-lk-line-strong lg:bg-lk-surface lg:px-5 lg:text-lk-button-md lg:font-bold lg:text-lk-ink lg:shadow-lk-field lg:hover:bg-lk-sand",
+              "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
+              // Mobile: the round button in the gradient; from 1024 px, a white pill after the bar.
+              "lk-gradient size-12 text-white hover:brightness-108",
+              "lg:h-14 lg:w-auto lg:border lg:border-lk-line-strong lg:bg-none lg:bg-lk-surface lg:hover:brightness-100 lg:px-5 lg:text-lk-button-md lg:font-bold lg:text-lk-ink lg:shadow-lk-field lg:hover:bg-lk-sand",
               "[&_svg]:size-5 lg:[&_svg]:size-4.5",
             )}
           >

@@ -224,35 +224,36 @@ test.describe("pages du site en V2", () => {
     });
   }
 
-  test("/tarifs et /faq : sur le navy de la V1, les questions en cartes de verre", async ({
+  test("/tarifs et /faq : sur la nuit de la charte D, les questions en cartes de verre", async ({
     page,
   }) => {
-    const navy = "rgb(26, 43, 74)";
+    const night = "rgb(2, 13, 33)";
     await page.goto("/tarifs");
     expect(
       await page.locator("#tarifs").evaluate((el) => getComputedStyle(el).backgroundColor),
-    ).toBe(navy);
+    ).toBe(night);
     await page.goto("/faq");
     expect(await page.locator("#faq").evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
-      navy,
+      night,
     );
     const question = page.locator("summary").first();
     await expect(question).toHaveCSS("color", "rgb(255, 255, 255)");
-    // The focus ring turns white on navy, where the blue would not reach 3:1
-    // (its colour alone would be white without any ring: currentColor).
+    // The focus ring turns white on the night and its halos (more than the
+    // 3.5:1 of the blue of the charte; its colour alone would be white without
+    // any ring: currentColor).
     await question.focus();
     await expect(question).toHaveCSS("outline-style", "solid");
     await expect(question).toHaveCSS("outline-color", "rgb(255, 255, 255)");
   });
 
-  test("/concept : les deux options de la V1 et l'outil sur navy", async ({ page }) => {
+  test("/concept : les deux options de la V1 et l'outil sur la nuit", async ({ page }) => {
     await page.goto("/concept");
     const options = page.locator("#idee");
     await expect(options.getByText(/^Option [12]$/)).toHaveText(["Option 1", "Option 2"]);
     await expect(options.getByText("ou", { exact: true })).toBeVisible();
     const tool = page.locator("#outil");
     expect(await tool.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
-      "rgb(26, 43, 74)",
+      "rgb(2, 13, 33)",
     );
     await expect(tool.locator("ol > li")).toHaveCount(4);
   });
@@ -306,7 +307,7 @@ test.describe("pages du site en V2", () => {
       "href",
       "/",
     );
-    // The whole screen on the blue flat of the brand (DESIGN.md 13.1): the
+    // The whole screen on the night of the charte D (DESIGN.md 13.1): the
     // background under the top left corner, whatever element is there.
     expect(
       await page.evaluate(() => {
@@ -316,7 +317,7 @@ test.describe("pages du site en V2", () => {
         }
         return null;
       }),
-    ).toBe("rgb(17, 86, 252)");
+    ).toBe("rgb(2, 13, 33)");
     expect(await seriousViolations(page)).toEqual([]);
   });
 
@@ -360,7 +361,7 @@ test.describe("/tarifs (base de seed)", () => {
   }) => {
     await page.goto("/tarifs");
     const plans = page.locator("article");
-    // On navy, the white focus ring of the switch (L1-50), before any click:
+    // On the night, the white focus ring of the switch (L1-50), before any click:
     // after one, Chromium keeps a focus set by script without its ring.
     const chosen = page.getByRole("radio", { name: "Gratuit pendant le lancement" });
     await chosen.focus();

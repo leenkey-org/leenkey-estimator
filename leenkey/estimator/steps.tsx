@@ -788,7 +788,7 @@ export function DpeRow({
           className={cn(
             "size-11 rounded-lk-sm text-lk-button-md font-semibold transition-colors duration-140 ease-out-lk",
             value === d.v
-              ? "bg-lk-blue text-white hover:bg-lk-blue-hover"
+              ? "lk-gradient text-white hover:brightness-108"
               : "bg-lk-stone-2 text-lk-ink-2 hover:bg-lk-stone",
           )}
         >
@@ -802,7 +802,7 @@ export function DpeRow({
         className={cn(
           "h-11 rounded-lk-sm border-[1.5px] px-4 text-lk-button-md font-semibold transition-colors duration-140 ease-out-lk",
           value === "inconnu"
-            ? "border-lk-blue bg-lk-blue text-white"
+            ? "lk-gradient border-transparent text-white"
             : "border-lk-line bg-lk-surface text-lk-ink hover:border-lk-ink-3",
         )}
       >
@@ -1272,7 +1272,7 @@ function FileDrop({
       <SectionTitle>{label}</SectionTitle>
       {/* The input stays in the page (sr-only): the keyboard reaches it, its
           label shows the focus. */}
-      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lk-md border-[1.5px] border-dashed border-lk-line bg-lk-blue-tint p-8 text-center transition hover:border-lk-ink-3 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-lk-blue">
+      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lk-md border-[1.5px] border-dashed border-lk-line bg-lk-blue-tint p-8 text-center transition hover:border-lk-ink-3 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-lk-brand-blue">
         <Paperclip aria-hidden="true" className="size-6 text-lk-blue" />
         <span className="text-lk-compact font-semibold text-lk-ink">
           Glissez vos fichiers ou cliquez pour parcourir

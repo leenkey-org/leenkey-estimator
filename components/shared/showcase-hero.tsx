@@ -25,9 +25,10 @@ export type ShowcaseHeroProps = {
 };
 
 /**
- * Hero of the public pages in the direction of the V1 (docs/DESIGN.md 1 and
- * 13.1, L1-49, L1-50): deep navy towards the brand blue with a grid of
- * dots, the pill or the label in capitals above the display title, the
+ * Hero of the public pages (docs/DESIGN.md 1 and 13.1, L1-49, L1-50), in the
+ * charte D since L1-58: the night of the home page and its halos, under the
+ * headers on the night, with a grid of dots; the pill (its icon in a disc
+ * of the gradient) or the label in capitals above the display title, the
  * title word by word with its words in the light blue gradient over the
  * dimension line (one line under each of its lines when it is long), the
  * text, the actions, then what follows, one after the other on the first
@@ -68,12 +69,14 @@ export function ShowcaseHero({
       >
         <div className={cn("flex flex-col items-start", !aside && "max-w-190")}>
           {badge && Icon ? (
-            <p className="lk-rise inline-flex items-center gap-1.5 rounded-full border border-white/16 bg-white/10 px-3.25 py-1.5 text-lk-caption font-semibold">
-              <Icon aria-hidden="true" className="size-3.5 shrink-0" />
+            <p className="lk-rise inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/6 py-1.25 pr-3.5 pl-1.25 text-lk-label font-medium lg:gap-2.5 lg:pr-4 lg:pl-1.5 lg:text-lk-compact">
+              <span className="lk-gradient-brand flex size-5.5 shrink-0 items-center justify-center rounded-full lg:size-6">
+                <Icon aria-hidden="true" strokeWidth={2.4} className="size-3 lg:size-3.25" />
+              </span>
               {badge.text}
             </p>
           ) : eyebrow ? (
-            <p className="lk-rise text-lk-secondary font-bold tracking-lk-eyebrow text-lk-blue-light uppercase">
+            <p className="lk-rise text-lk-secondary font-bold tracking-lk-caps text-lk-blue-light uppercase">
               {eyebrow}
             </p>
           ) : null}
@@ -83,7 +86,7 @@ export function ShowcaseHero({
             // hidden from assistive technologies.
             aria-label={title}
             className={cn(
-              "text-lk-display font-extrabold text-wide md:text-lk-display-md lg:text-lk-display-lg",
+              "text-lk-display font-bold tracking-lk-d-tight md:text-lk-display-md lg:text-lk-display-lg",
               (badge || eyebrow) && "mt-5 lg:mt-6",
             )}
           >
@@ -92,7 +95,7 @@ export function ShowcaseHero({
           {lead ? (
             <div
               style={delay(words.last + NEXT_MS)}
-              className="lk-rise mt-5 flex max-w-140 flex-col gap-4 text-lk-body-lg text-pretty text-white/80 lg:mt-6 lg:text-lk-lead-lg"
+              className="lk-rise mt-5 flex max-w-140 flex-col gap-4 text-lk-body-lg text-pretty text-lk-night-muted lg:mt-6 lg:text-lk-lead-lg lg:text-lk-night-text"
             >
               {typeof lead === "string" ? <p>{lead}</p> : lead}
             </div>
