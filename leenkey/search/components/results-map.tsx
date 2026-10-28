@@ -57,6 +57,7 @@ function MapContent({
   shown = true,
   padding,
   previewClassName,
+  previewSizes,
   className,
 }: Props & {
   activeId: string | null;
@@ -67,9 +68,11 @@ function MapContent({
   shown?: boolean;
   padding?: Padding;
   previewClassName?: string;
+  previewSizes?: string;
   className?: string;
 }) {
   const { allowed, allow } = useMapsConsent();
+  const { visited, markVisited } = useMapSync();
   if (!apiKey) return <MapNotice className={className}>{fr.maps.unavailable}</MapNotice>;
   if (!allowed) {
     return (
@@ -90,10 +93,13 @@ function MapContent({
       centre={centre}
       activeId={activeId}
       selectedId={selectedId}
+      visited={visited}
       onHover={onHover}
       onSelect={onSelect}
+      onVisit={markVisited}
       padding={padding}
       previewClassName={previewClassName}
+      previewSizes={previewSizes}
       className={className}
     />
   );
@@ -105,16 +111,22 @@ export function ResultsMapPanel(props: Props) {
   // Below 1024 px the panel is hidden: the map is the one of « Carte », and
   // a hidden one would still be loaded (and counted) by Google.
   const desktop = useDesktop();
+  // Hidden under 1024 px: no card chosen is kept for its return.
+  useEffect(() => {
+    if (!desktop) setSelectedId(null);
+  }, [desktop, setSelectedId]);
   return (
     <MapContent
       {...props}
       shown={desktop}
-      activeId={hoveredId ?? selectedId}
+      activeId={hoveredId}
       selectedId={selectedId}
       onHover={setHoveredId}
       onSelect={setSelectedId}
-      // At the bottom, in the middle, above the logo and the terms of Google.
-      previewClassName="inset-x-0 bottom-10 mx-auto w-80"
+      // At the bottom, in the middle, above the logo and the terms of Google;
+      // narrower in the narrower panel up to 1 279 px.
+      previewClassName="inset-x-0 bottom-10 mx-auto w-72 xl:w-80"
+      previewSizes="(min-width: 1280px) 320px, 288px"
       className="size-full"
     />
   );
@@ -158,14 +170,14 @@ export function ResultsMapDialog(props: Props) {
       <DialogPrimitive.Portal>
         <DialogPrimitive.Content
           aria-describedby={undefined}
-          // A card shown: Escape closes it, not the map (inside the card, the
-          // card closes itself and gives the focus back to its pill).
+          // A card shown: Escape closes it, not the map. On the map, the map
+          // closes it and gives the focus back to its pill (search-map.tsx).
           onEscapeKeyDown={(event) => {
             if (!chosenId) return;
             event.preventDefault();
-            const inCard =
-              event.target instanceof Element && event.target.closest("[data-map-preview]");
-            if (!inCard) setChosenId(null);
+            const onMap =
+              event.target instanceof Element && event.target.closest("[data-search-map]");
+            if (!onMap) setChosenId(null);
           }}
           className={cn(
             facadeScope,
@@ -177,14 +189,16 @@ export function ResultsMapDialog(props: Props) {
           <DialogPrimitive.Title className="sr-only">{t.region}</DialogPrimitive.Title>
           <MapContent
             {...props}
-            activeId={chosenId}
+            activeId={null}
             selectedId={chosenId}
             onHover={() => {}}
             onSelect={setChosenId}
             // Room for « Liste » at the bottom of the screen.
             padding={{ top: 48, right: 40, bottom: 120, left: 40 }}
-            // Above « Liste », across the screen up to 480 px.
-            previewClassName="inset-x-4 bottom-[calc(max(1.5rem,env(safe-area-inset-bottom))+3.75rem)] mx-auto max-w-120"
+            // Above « Liste », across the screen up to 480 px, narrower on a
+            // low screen (a phone on its side) for the whole card to show.
+            previewClassName="inset-x-4 bottom-[calc(max(1.5rem,env(safe-area-inset-bottom))+3.75rem)] mx-auto max-w-[min(30rem,calc((100dvh-14rem)*1.5))]"
+            previewSizes="min(480px, calc(100vw - 2rem))"
             className="absolute inset-0"
           />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">

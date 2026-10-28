@@ -125,13 +125,15 @@ test.describe("carte de la recherche (base de seed)", () => {
 
     // A pill of the end of the list, from the keyboard (it may be a dot under
     // another one, label-layer.ts): its card over the map (L1-62), the focus
-    // on its link, the pill moved above the card; the list stays where it is.
+    // on its link, the pill in the gradient (white text) and in the room left
+    // above the card; its card outlined in the list, which does not scroll.
     await page.mouse.move(0, 0);
     await expect(active).toHaveCount(0);
     const last = page.locator("[data-listing-id]").last();
     const lastId = await last.getAttribute("data-listing-id");
     expect(lastId).not.toBe(id);
     const pill = fakeMap(page).locator(`[data-label-id="${lastId}"]`);
+    const scrolled = await page.evaluate(() => window.scrollY);
     await pill.focus();
     await page.keyboard.press("Enter");
     const preview = page.getByRole("region", { name: "Bien choisi sur la carte" });
@@ -141,20 +143,61 @@ test.describe("carte de la recherche (base de seed)", () => {
       (await last.locator("a").first().getAttribute("href")) ?? "",
     );
     await expect(link).toBeFocused();
-    await expect(pill).toHaveAttribute("data-active", "");
-    const [pillBox, cardBox] = await Promise.all([pill.boundingBox(), preview.boundingBox()]);
-    expect(pillBox && cardBox).toBeTruthy();
-    if (pillBox && cardBox) expect(pillBox.y + pillBox.height).toBeLessThanOrEqual(cardBox.y);
+    await expect(pill).toHaveAttribute("data-selected", "");
+    await expect(pill).toHaveCSS("color", "rgb(255, 255, 255)");
+    await expect(last).toHaveAttribute("data-selected", "true");
+    expect(await page.evaluate(() => window.scrollY)).toBe(scrolled);
+    const [pillBox, cardBox, mapBox] = await Promise.all([
+      pill.boundingBox(),
+      preview.boundingBox(),
+      fakeMap(page).boundingBox(),
+    ]);
+    expect(pillBox && cardBox && mapBox).toBeTruthy();
+    if (pillBox && cardBox && mapBox) {
+      expect(pillBox.y).toBeGreaterThanOrEqual(mapBox.y);
+      expect(pillBox.y + pillBox.height).toBeLessThanOrEqual(cardBox.y);
+      expect(pillBox.x).toBeGreaterThanOrEqual(mapBox.x);
+      expect(pillBox.x + pillBox.width).toBeLessThanOrEqual(mapBox.x + mapBox.width);
+    }
+    // The card open: no serious violation.
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const scan = await new AxeBuilder({ page }).include("[data-search-map]").analyze();
+    expect(
+      scan.violations
+        .filter((violation) => violation.impact === "serious" || violation.impact === "critical")
+        .map((violation) => violation.id),
+    ).toEqual([]);
 
-    // Escape closes it, the focus back on its pill, now « seen » (Airbnb).
+    // Another pill: its own card, from its first photo.
+    const other = fakeMap(page).locator(`[data-label-id="${id}"]`);
+    await other.focus();
+    await page.keyboard.press("Enter");
+    await expect(link).toHaveAttribute(
+      "href",
+      (await first.locator("a").first().getAttribute("href")) ?? "",
+    );
+    await expect(pill).not.toHaveAttribute("data-selected", "");
+
+    // Escape closes it, the focus back on its pill, now « seen » (Airbnb):
+    // grey at rest, in the gradient again when hovered.
     await page.keyboard.press("Escape");
     await expect(preview).toHaveCount(0);
-    await expect(pill).toBeFocused();
+    await expect(other).toBeFocused();
+    await expect(other).toHaveAttribute("data-visited", "");
     await expect(pill).toHaveAttribute("data-visited", "");
-    // A press on the map itself closes it too.
+    await expect(pill).toHaveCSS("color", "rgb(71, 85, 105)");
+    // Focused, the pill is above the others: hovered, in the gradient.
+    await other.hover();
+    await expect(other).toHaveCSS("color", "rgb(255, 255, 255)");
+    await page.mouse.move(0, 0);
+    // « Fermer l'aperçu » too, and a press on the map itself.
+    await page.keyboard.press("Enter");
+    await preview.getByRole("button", { name: "Fermer l'aperçu" }).click();
+    await expect(preview).toHaveCount(0);
+    await expect(other).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(preview).toBeVisible();
-    await fakeMap(page).click({ position: { x: 8, y: 8 } });
+    await fakeMap(page).dispatchEvent("click");
     await expect(preview).toHaveCount(0);
 
     // Our zoom buttons, at the top right.
@@ -195,9 +238,22 @@ test.describe("carte de la recherche (base de seed)", () => {
     await expect(preview).toHaveCount(0);
     await expect(dialog).toBeVisible();
     await expect(pill).toBeFocused();
+    // The card above « Liste ».
+    await page.keyboard.press("Enter");
+    const [cardBox, listBox] = await Promise.all([
+      preview.boundingBox(),
+      dialog.getByRole("button", { name: "Liste" }).boundingBox(),
+    ]);
+    if (cardBox && listBox) expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(listBox.y);
+    // Escape with the focus on the pill: the card closes, not the map.
+    await pill.focus();
+    await page.keyboard.press("Escape");
+    await expect(preview).toHaveCount(0);
+    await expect(dialog).toBeVisible();
     await page.keyboard.press("Enter");
     await preview.getByRole("button", { name: "Fermer l'aperçu" }).click();
     await expect(preview).toHaveCount(0);
+    await expect(pill).toBeFocused();
 
     await dialog.getByRole("button", { name: "Liste" }).click();
     await expect(dialog).toHaveCount(0);

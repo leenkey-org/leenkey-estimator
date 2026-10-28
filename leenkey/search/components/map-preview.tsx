@@ -20,18 +20,19 @@ export function MapPreview({
   listing,
   onClose,
   ref,
+  sizes = "320px",
   className,
 }: {
   listing: MapListing;
   onClose: () => void;
   ref?: Ref<HTMLElement>;
+  sizes?: string;
   className?: string;
 }) {
   return (
     <section
       ref={ref}
       aria-label={t.preview}
-      data-map-preview=""
       onKeyDown={(event: KeyboardEvent) => {
         if (event.key === "Escape") {
           event.stopPropagation();
@@ -45,7 +46,7 @@ export function MapPreview({
         framed
         swipe
         photoShape="wide"
-        sizes="320px"
+        sizes={sizes}
         action={
           <IconButton
             aria-label={t.closePreview}

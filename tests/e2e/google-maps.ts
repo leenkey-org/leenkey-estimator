@@ -82,7 +82,8 @@ const FAKE_MAPS = String.raw`(() => {
       element.style.background = "#e9e5df";
       element.style.overflow = "hidden";
       this.pane = document.createElement("div");
-      this.pane.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;";
+      // As .gm-style of Google: its own stack, never above the card shown over it.
+      this.pane.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;z-index:0;";
       element.append(this.pane);
       this.streetView = new StreetViewPanorama(element);
     }

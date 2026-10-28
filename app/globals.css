@@ -6,6 +6,11 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+/* The price pills of the map (L1-62, DESIGN.md 8): « seen » and « dot » only
+   at rest, never over the gradient of a pill hovered, focused or chosen
+   (written after them, their rules would win otherwise). */
+@custom-variant pill-seen (&[data-visited]:not([data-active], [data-selected], :hover, :focus-visible));
+@custom-variant pill-dot (&[data-collapsed]:not([data-active], [data-selected], :hover, :focus-visible));
 
 @theme inline {
   /* The radii and the font of the charte D (DESIGN.md 2.2, 3 and 5, L1-58)

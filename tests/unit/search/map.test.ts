@@ -67,14 +67,27 @@ describe("the results on the map", () => {
 });
 
 describe("the pill chosen, above its card (L1-62)", () => {
-  it("pans the map south by the pixels asked, more at a lower zoom", () => {
+  // Web Mercator: the y of a point in world pixels at zoom 0.
+  const worldY = (lat: number) => {
+    const sin = Math.sin((lat * Math.PI) / 180);
+    return 256 * (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI));
+  };
+
+  it("pans the map south by the pixels asked, whatever the zoom", () => {
     const pill = { lat: 48.681, lng: 2.35 };
-    expect(centreBelow(pill, 13, 0)).toEqual(pill);
+    expect(centreBelow(pill, 13, 0).lat).toBeCloseTo(pill.lat, 10);
     const centre = centreBelow(pill, 13, 150);
     expect(centre.lng).toBe(pill.lng);
-    // 150 px at zoom 13, about 48.7° north: about 0.0174° of latitude.
-    expect(pill.lat - centre.lat).toBeCloseTo(0.0174, 3);
-    expect(pill.lat - centreBelow(pill, 12, 150).lat).toBeCloseTo(2 * (pill.lat - centre.lat), 6);
+    // 150 px at zoom 13, about 48.7° north: 0.0170° of latitude.
+    expect(pill.lat - centre.lat).toBeCloseTo(0.017, 4);
+    // The pill drawn exactly that many pixels above the new centre, from zoom 8 to 18.
+    for (const zoom of [8, 12, 13, 18]) {
+      for (const pixels of [40, 150, 300]) {
+        const shifted = centreBelow(pill, zoom, pixels);
+        const drawn = (worldY(shifted.lat) - worldY(pill.lat)) * 2 ** zoom;
+        expect(Math.abs(drawn - pixels)).toBeLessThan(1e-6);
+      }
+    }
   });
 });
 
