@@ -38,6 +38,8 @@ export type ShowcaseCardProps = Pick<
   framed?: boolean;
   /** The main photo is the largest image of the page: loaded first. */
   priority?: boolean;
+  /** wide: a photo of 3 by 2, lower, for the card shown over a map (L1-62). */
+  photoShape?: "tall" | "wide";
   sizes?: string;
   className?: string;
 };
@@ -70,6 +72,7 @@ export function ShowcaseCard({
   swipe = false,
   framed = false,
   priority = false,
+  photoShape = "tall",
   sizes = "(min-width: 1536px) 18vw, (min-width: 1024px) 23vw, (min-width: 768px) 45vw, 272px",
   className,
 }: ShowcaseCardProps) {
@@ -160,7 +163,10 @@ export function ShowcaseCard({
       </div>
       <div
         ref={frame}
-        className="relative order-1 aspect-[1/0.95] overflow-hidden rounded-lk-d-card bg-lk-line"
+        className={cn(
+          "relative order-1 overflow-hidden rounded-lk-d-card bg-lk-line",
+          photoShape === "wide" ? "aspect-[3/2]" : "aspect-[1/0.95]",
+        )}
       >
         {shown.length ? (
           <div

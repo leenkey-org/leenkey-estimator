@@ -1407,6 +1407,8 @@ export const fr = {
       pill: (label: string, summary: string, place: string) => `${label}, ${summary}, ${place}`,
       preview: "Bien choisi sur la carte",
       closePreview: "Fermer l'aperçu",
+      zoomIn: "Zoom avant",
+      zoomOut: "Zoom arrière",
     },
     empty: {
       title: "Aucun bien ne correspond.",

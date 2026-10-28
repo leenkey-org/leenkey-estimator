@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { LEENKEY_MAP_STYLE, MAP_TOKENS } from "@/components/shared/map-style";
-import { headingTo } from "@/core/maps/geometry";
+import { centreBelow, headingTo } from "@/core/maps/geometry";
 import { googleMapsScriptUrl } from "@/core/maps/loader";
 import { mapCentre, toMapListings } from "@/leenkey/search/map-listings";
 import type { SearchListing } from "@/leenkey/search/queries";
@@ -63,6 +63,18 @@ describe("the results on the map", () => {
     expect(mapCentre({ centre: { lat: 48.7, lng: 2.3 } })).toEqual({ lat: 48.7, lng: 2.3 });
     expect(mapCentre({})).toEqual(LAUNCH_ZONE_CENTRE);
     expect(mapCentre(null)).toEqual({ lat: 48.6736, lng: 2.3256 });
+  });
+});
+
+describe("the pill chosen, above its card (L1-62)", () => {
+  it("pans the map south by the pixels asked, more at a lower zoom", () => {
+    const pill = { lat: 48.681, lng: 2.35 };
+    expect(centreBelow(pill, 13, 0)).toEqual(pill);
+    const centre = centreBelow(pill, 13, 150);
+    expect(centre.lng).toBe(pill.lng);
+    // 150 px at zoom 13, about 48.7° north: about 0.0174° of latitude.
+    expect(pill.lat - centre.lat).toBeCloseTo(0.0174, 3);
+    expect(pill.lat - centreBelow(pill, 12, 150).lat).toBeCloseTo(2 * (pill.lat - centre.lat), 6);
   });
 });
 

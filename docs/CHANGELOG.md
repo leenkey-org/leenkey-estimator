@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-28 · L1-62 · PR #PRNUM · Carte de la recherche façon Airbnb
+- Modifié : la carte de `/acheter`, façon Airbnb.
+  - Une pastille choisie montre son bien sur la carte : photos, prix, lieu, lien. La carte se recentre pour garder la pastille visible ; Échap, « Fermer l'aperçu » ou un clic sur la carte referment.
+  - Pastilles au dégradé de la charte au survol et au choix, grisées une fois vues.
+  - Boutons de zoom « + » et « − » de Leenkey en haut à droite.
+- Tests : unitaires (recentrage) ; E2E de la carte adaptés (aperçu, focus, Échap, clic sur la carte, zoom, pastille vue).
+
 ### 2026-10-28 · L1-60 · PR #58 · Page annonce façon Airbnb
 - Modifié : la page d'une annonce, façon Airbnb.
   - Titre, « Partager » et « Enregistrer » au-dessus de la mosaïque, qui devient un seul bloc avec « Afficher toutes les photos ».

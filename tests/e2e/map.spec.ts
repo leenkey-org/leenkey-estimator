@@ -88,7 +88,7 @@ test.describe("carte de la recherche, sans base de données", () => {
 test.describe("carte de la recherche (base de seed)", () => {
   test.skip(!seeded, "base de seed requise (E2E_SEED=1)");
 
-  test("desktop : une pastille de prix par bien, la carte survolée la met en bleu, la pastille choisie montre sa carte", async ({
+  test("desktop : une pastille de prix par bien, la carte survolée l'allume, la pastille choisie montre son bien sur la carte", async ({
     page,
     context,
     isMobile,
@@ -123,19 +123,46 @@ test.describe("carte de la recherche (base de seed)", () => {
     const text = (await active.textContent()) ?? "";
     await expect(active).toHaveAccessibleName(new RegExp(`^${text.replace(/\s/g, "\\s")}, `));
 
-    // A pill of the end of the list: its card comes into view, outlined, its link focused.
+    // A pill of the end of the list, from the keyboard (it may be a dot under
+    // another one, label-layer.ts): its card over the map (L1-62), the focus
+    // on its link, the pill moved above the card; the list stays where it is.
     await page.mouse.move(0, 0);
     await expect(active).toHaveCount(0);
     const last = page.locator("[data-listing-id]").last();
     const lastId = await last.getAttribute("data-listing-id");
     expect(lastId).not.toBe(id);
-    // From the keyboard: a pill may be a dot under another one (label-layer.ts).
-    await fakeMap(page).locator(`[data-label-id="${lastId}"]`).focus();
+    const pill = fakeMap(page).locator(`[data-label-id="${lastId}"]`);
+    await pill.focus();
     await page.keyboard.press("Enter");
-    await expect(last).toHaveAttribute("data-flash", "true");
-    await expect(last).toBeInViewport();
-    await expect(last.locator("a:visible")).toBeFocused();
-    await expect(last).not.toHaveAttribute("data-flash", { timeout: 3000 });
+    const preview = page.getByRole("region", { name: "Bien choisi sur la carte" });
+    const link = preview.getByRole("link");
+    await expect(link).toHaveAttribute(
+      "href",
+      (await last.locator("a").first().getAttribute("href")) ?? "",
+    );
+    await expect(link).toBeFocused();
+    await expect(pill).toHaveAttribute("data-active", "");
+    const [pillBox, cardBox] = await Promise.all([pill.boundingBox(), preview.boundingBox()]);
+    expect(pillBox && cardBox).toBeTruthy();
+    if (pillBox && cardBox) expect(pillBox.y + pillBox.height).toBeLessThanOrEqual(cardBox.y);
+
+    // Escape closes it, the focus back on its pill, now « seen » (Airbnb).
+    await page.keyboard.press("Escape");
+    await expect(preview).toHaveCount(0);
+    await expect(pill).toBeFocused();
+    await expect(pill).toHaveAttribute("data-visited", "");
+    // A press on the map itself closes it too.
+    await page.keyboard.press("Enter");
+    await expect(preview).toBeVisible();
+    await fakeMap(page).click({ position: { x: 8, y: 8 } });
+    await expect(preview).toHaveCount(0);
+
+    // Our zoom buttons, at the top right.
+    const zoom = Number(await fakeMap(page).getAttribute("data-zoom"));
+    await page.getByRole("button", { name: "Zoom avant" }).click();
+    await expect(fakeMap(page)).toHaveAttribute("data-zoom", String(zoom + 1));
+    await page.getByRole("button", { name: "Zoom arrière" }).click();
+    await expect(fakeMap(page)).toHaveAttribute("data-zoom", String(zoom));
   });
 
   test("téléphone : « Carte » ouvre la carte en plein écran, une pastille montre son bien, « Liste » revient", async ({
@@ -157,10 +184,18 @@ test.describe("carte de la recherche (base de seed)", () => {
       dialog.locator("[data-fake-map]").getByRole("button", { name: /€/ }).first(),
     ).toBeVisible();
 
-    await dialog.locator("[data-fake-map]").getByRole("button", { name: /€/ }).first().focus();
+    const pill = dialog.locator("[data-fake-map]").getByRole("button", { name: /€/ }).first();
+    await pill.focus();
     await page.keyboard.press("Enter");
     const preview = dialog.getByRole("region", { name: "Bien choisi sur la carte" });
     await expect(preview.getByRole("link")).toHaveAttribute("href", /^\/annonce\/[a-z0-9-]+$/);
+    await expect(preview.getByRole("link")).toBeFocused();
+    // Escape closes the card, not the map; the focus back on its pill.
+    await page.keyboard.press("Escape");
+    await expect(preview).toHaveCount(0);
+    await expect(dialog).toBeVisible();
+    await expect(pill).toBeFocused();
+    await page.keyboard.press("Enter");
     await preview.getByRole("button", { name: "Fermer l'aperçu" }).click();
     await expect(preview).toHaveCount(0);
 
