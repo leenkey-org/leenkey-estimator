@@ -3,7 +3,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
 
 export type ChipToggleProps = Omit<ComponentProps<typeof Toggle>, "variant" | "size"> & {
-  /** 36 px instead of 40 px, for the mobile filter bar. */
+  /** 36 px instead of 40 px. */
   compact?: boolean;
 };
 
@@ -31,7 +31,7 @@ export function chipClassName(compact = false) {
 }
 
 /**
- * Strengths and quick filters (docs/DESIGN.md 10.1): a pill that the Radix
+ * Strengths and filters (docs/DESIGN.md 10.1): a pill that the Radix
  * toggle exposes with aria-pressed. Extends components/ui/toggle.tsx.
  */
 export function ChipToggle({ compact = false, className, ...props }: ChipToggleProps) {
@@ -39,31 +39,6 @@ export function ChipToggle({ compact = false, className, ...props }: ChipToggleP
     <Toggle
       variant={null}
       size={null}
-      className={cn(chipClassName(compact), className)}
-      {...props}
-    />
-  );
-}
-
-export type ChipButtonProps = ComponentProps<"button"> & {
-  compact?: boolean;
-};
-
-/**
- * Same look as an inactive chip, for a chip that opens something (the filters
- * panel on a given field) instead of switching a state: a plain button, so
- * that it is not announced as a toggle.
- */
-export function ChipButton({
-  compact = false,
-  className,
-  type = "button",
-  ...props
-}: ChipButtonProps) {
-  return (
-    <button
-      type={type}
-      data-state="off"
       className={cn(chipClassName(compact), className)}
       {...props}
     />

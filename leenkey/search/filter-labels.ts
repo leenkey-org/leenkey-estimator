@@ -2,7 +2,8 @@ import { formatPriceShort, formatSurface } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { OUTDOOR_SPACES, type SearchFilters } from "@/lib/validations/search";
 
-// Short labels of the active filters, for the chips of the mobile bar:
+// Short labels of the active filters: the « Budget » part of the search bar,
+// and the chips of the active filters under the categories on a phone:
 // « ≤ 400 k€ », « 200 – 400 k€ », « 3 pièces + », « DPE A à D ».
 
 const t = fr.search.chips;
@@ -27,15 +28,7 @@ export function surfaceLabel(filters: SearchFilters): string | undefined {
   return undefined;
 }
 
-export function roomsLabel(filters: SearchFilters): string | undefined {
-  return filters.roomsMin ? t.roomsMin(filters.roomsMin) : undefined;
-}
-
-export function bedroomsLabel(filters: SearchFilters): string | undefined {
-  return filters.bedroomsMin ? t.bedroomsMin(filters.bedroomsMin) : undefined;
-}
-
-/** « Extérieur » for any outdoor space, otherwise the spaces chosen: « Jardin ». */
+/** « Extérieur » for any outdoor space, otherwise the spaces chosen: « Balcon, terrasse ». */
 export function outdoorLabel(filters: SearchFilters): string {
   const spaces = filters.outdoor ?? [];
   if (spaces.length === 0 || spaces.length === OUTDOOR_SPACES.length) return t.outdoor;
@@ -43,6 +36,66 @@ export function outdoorLabel(filters: SearchFilters): string {
   return [labels[0], ...labels.slice(1).map((label) => label.toLowerCase())].join(", ");
 }
 
-export function dpeLabel(filters: SearchFilters): string | undefined {
-  return filters.dpeMax ? t.dpeMax(filters.dpeMax) : undefined;
+export type ActiveChip = {
+  key: string;
+  label: string;
+  /** The filters without this one. */
+  without: SearchFilters;
+};
+
+/**
+ * The active filters a category does not show (L1-61), each with the
+ * filters without it: the budget, the surface, the rooms, the bedrooms, the
+ * outdoor spaces (but the garden alone, « Avec jardin »), the lift, the
+ * energy class, and « Autre bien ». The commune is in its field; houses,
+ * flats, plots and the parking are categories.
+ */
+export function activeChips(filters: SearchFilters): ActiveChip[] {
+  const chips: Array<ActiveChip | null> = [
+    filters.type === "autre"
+      ? { key: "type", label: fr.search.types.autre, without: { ...filters, type: undefined } }
+      : null,
+    budgetLabel(filters)
+      ? {
+          key: "budget",
+          label: budgetLabel(filters) ?? "",
+          without: { ...filters, priceMinCents: undefined, priceMaxCents: undefined },
+        }
+      : null,
+    surfaceLabel(filters)
+      ? {
+          key: "surface",
+          label: surfaceLabel(filters) ?? "",
+          without: { ...filters, surfaceMin: undefined, surfaceMax: undefined },
+        }
+      : null,
+    filters.roomsMin
+      ? {
+          key: "rooms",
+          label: t.roomsMin(filters.roomsMin),
+          without: { ...filters, roomsMin: undefined },
+        }
+      : null,
+    filters.bedroomsMin
+      ? {
+          key: "bedrooms",
+          label: t.bedroomsMin(filters.bedroomsMin),
+          without: { ...filters, bedroomsMin: undefined },
+        }
+      : null,
+    filters.outdoor?.length && !(filters.outdoor.length === 1 && filters.outdoor[0] === "jardin")
+      ? {
+          key: "outdoor",
+          label: outdoorLabel(filters),
+          without: { ...filters, outdoor: undefined },
+        }
+      : null,
+    filters.elevator
+      ? { key: "elevator", label: t.elevator, without: { ...filters, elevator: undefined } }
+      : null,
+    filters.dpeMax
+      ? { key: "dpe", label: t.dpeMax(filters.dpeMax), without: { ...filters, dpeMax: undefined } }
+      : null,
+  ];
+  return chips.filter((chip): chip is ActiveChip => chip !== null);
 }

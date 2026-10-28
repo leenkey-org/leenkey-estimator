@@ -323,12 +323,7 @@ export const choices = {
     { label: "Cave", pressed: false },
     { label: "Jardin", pressed: false },
   ],
-  filtersLabel: "Filtres rapides, barre mobile (36 px)",
-  filters: [
-    { label: "Appartement", pressed: true },
-    { label: `≤ ${formatPriceShort(40_000_000)}`, pressed: true },
-    { label: "Extérieur", pressed: false },
-  ],
+
   dpeLabel: "DPE",
   dpeAria: (letter: string) => `Classe ${letter}`,
   financingLabel: "Financement",
@@ -619,42 +614,23 @@ export const motion = [
 const bar = fr.search.bar;
 
 export const filterBar = {
-  selectCaption:
-    "FilterMenu · parties de la barre arrondie de la recherche desktop : le nom au-dessus de la valeur, en bleu quand une valeur est choisie ; un menu arrondi aux choix cochés (flèches, Entrée, Échap)",
-  type: {
-    label: bar.type,
-    defaultValue: "appartement",
-    options: [
-      { value: "", label: bar.typeAll },
-      ...(["appartement", "maison", "terrain"] as const).map((type) => ({
-        value: type,
-        label: fr.search.types[type],
-      })),
-    ] satisfies FilterMenuOption[],
-  },
-  budget: {
-    label: bar.budgetTitle,
-    defaultValue: "",
-    options: [
-      { value: "", label: bar.any },
-      ...[300_000, 400_000, 500_000].map((euros) => ({
-        value: String(euros),
-        label: bar.priceUpTo(formatPrice(euros * 100)),
-      })),
-    ] satisfies FilterMenuOption[],
-  },
-  rooms: {
-    label: bar.rooms,
-    defaultValue: "3",
-    options: [
-      { value: "", label: bar.any },
-      ...[1, 2, 3, 4, 5].map((rooms) => ({ value: String(rooms), label: bar.roomsAtLeast(rooms) })),
-    ] satisfies FilterMenuOption[],
+  popoverCaption:
+    "FilterPopover · parties de la barre arrondie de /acheter (L1-61) : le nom au-dessus de la valeur, en bleu quand une valeur est choisie ; un panneau rayon 24. Type : TypeTiles, un choix appliqué aussitôt (les flèches déplacent sans choisir). Budget : BudgetRange, curseur à deux poignées et champs",
+  categoriesCaption:
+    "SearchCategories · sous la barre, à toutes les largeurs : chaque catégorie est un filtre appuyé ou non ; « Tous les biens » retire le type, le jardin seul et le parking",
+  activeCaption:
+    "Filtres actifs · sous les catégories sur téléphone : ce qu'une catégorie ne montre pas ; un appui retire le filtre (puce de 36 px, cible de 44 px)",
+  menuCaption:
+    "FilterMenu · un menu arrondi aux choix cochés (flèches, Entrée, Échap) : le tri des résultats",
+  sort: {
+    label: fr.search.results.sort,
+    defaultValue: "prix_asc",
+    options: (["recent", "prix_asc", "prix_desc"] as const).map((sort) => ({
+      value: sort,
+      label: fr.search.results.sorts[sort],
+    })) satisfies FilterMenuOption[],
   },
   more: fr.search.filtersButton,
-  chipCaption:
-    "ChipButton · même forme qu'un filtre rapide inactif, ouvre le panneau des filtres sur son champ (barre mobile)",
-  chips: [fr.search.chips.budget, fr.search.chips.rooms, fr.search.chips.dpe],
 };
 
 export const galleryPhotos: GalleryPhoto[] = [

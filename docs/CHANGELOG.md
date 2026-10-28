@@ -12,6 +12,16 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-28 · L1-61 · PR #59 · Catalogue façon Airbnb
+- Modifié : la recherche `/acheter`, façon Airbnb.
+  - Sous la barre, à toutes les largeurs, les catégories : tous les biens, maisons, appartements, avec jardin, avec parking, terrains.
+  - Dans la barre desktop, Type de bien, Budget et Pièces ouvrent des panneaux arrondis : tuiles, curseur de budget avec budgets courants, pilules.
+  - Le panneau « Filtres » est refait en sections titrées, avec tuiles, curseur, puces à pictogramme, « Tout effacer » et « Voir N biens ».
+  - Sur téléphone, les filtres actifs qu'aucune catégorie ne montre restent visibles en puces, retirables d'un appui.
+  - `/design` montre les panneaux, les catégories et les puces actives.
+- Retiré : les puces rapides du téléphone qui ouvraient le panneau sur un champ, et `ChipButton`.
+- Tests : unitaires (catégories, puces actives, curseur de budget) ; E2E de la recherche adaptés (catégories, puces actives, panneaux de la barre au clavier, scan d'accessibilité du panneau Budget).
+
 ### 2026-10-28 · L1-60 · PR #58 · Page annonce façon Airbnb
 - Modifié : la page d'une annonce, façon Airbnb.
   - Titre, « Partager » et « Enregistrer » au-dessus de la mosaïque, qui devient un seul bloc avec « Afficher toutes les photos ».
