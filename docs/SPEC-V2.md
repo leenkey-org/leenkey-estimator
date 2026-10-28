@@ -1192,7 +1192,7 @@ Maquettes : `Recherche.dc.html`, `RechercheDesktop.dc.html`.
 Maquettes : `Annonce.dc.html`, `AnnonceDesktop.dc.html`.
 
 Ordre du contenu (mise en page mobile et desktop : `docs/DESIGN.md` 12.7 et 12.8) :
-1. `Gallery`. Boutons retour et favori uniquement (pas de bouton de partage en V2).
+1. `Gallery`. Boutons retour, partage et favori (partage ajouté par Younes le 2026-10-28, L1-60 : partage de l'appareil, sinon lien copié ; `DECISIONS.md`).
 2. En mobile, prix (`PriceBlock`) et `DpeBadge` en premier, puis titre, lieu (quartier, ville), `StatusBadge` si non publiée (aperçu vendeur), pastille « Dossier complet » si applicable. En desktop, le prix est dans la colonne de droite.
 3. **`KeyFigures`** : surface, pièces, chambres, étage (6 tuiles en desktop), juste sous la galerie photo.
 4. Vendeur (`ContactCard`) : prénom, « Vente accompagnée par Leenkey » si formule payante, « Répond en général sous 24 h » uniquement si le temps de réponse médian réel est < 24 h (sinon rien).

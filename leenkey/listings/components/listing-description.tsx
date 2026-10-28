@@ -8,8 +8,8 @@ const t = fr.listing.description;
 
 /**
  * Description of the listing (SPEC-V2 8.5, docs/DESIGN.md 12.7): folded to
- * six lines on mobile with « Lire la suite » when it is longer, in full from
- * 1024 px. The line breaks of the seller are kept.
+ * six lines with « Lire la suite » when it is longer, at every width since
+ * L1-60 (as Airbnb does). The line breaks of the seller are kept.
  */
 export function ListingDescription({ text }: { text: string }) {
   const id = useId();
@@ -33,8 +33,8 @@ export function ListingDescription({ text }: { text: string }) {
         ref={ref}
         id={id}
         className={cn(
-          "whitespace-pre-line text-lk-compact leading-relaxed text-lk-ink lg:max-w-lk-prose",
-          !expanded && "line-clamp-6 lg:line-clamp-none",
+          "whitespace-pre-line text-lk-compact leading-relaxed text-lk-ink lg:max-w-lk-prose lg:text-lk-body-lg",
+          !expanded && "line-clamp-6",
         )}
       >
         {text}
@@ -45,7 +45,7 @@ export function ListingDescription({ text }: { text: string }) {
           aria-expanded={expanded}
           aria-controls={id}
           onClick={() => setExpanded((value) => !value)}
-          className="inline-flex min-h-11 items-center self-start rounded-lk-sm text-lk-label font-semibold text-lk-blue underline underline-offset-2 hover:no-underline lg:hidden"
+          className="inline-flex min-h-11 items-center self-start rounded-lk-sm text-lk-compact font-semibold text-lk-ink underline underline-offset-2 hover:no-underline"
         >
           {expanded ? t.less : t.more}
         </button>

@@ -1,3 +1,13 @@
+import {
+  ArrowUpDown,
+  Euro,
+  Leaf,
+  Sparkles,
+  SquareParking,
+  Sun,
+  Trees,
+  type LucideIcon,
+} from "lucide-react";
 import type { PublicListing } from "./queries";
 import type { GalleryPhoto } from "@/components/shared/gallery";
 import type { KeyFigure } from "@/components/shared/key-figures";
@@ -84,6 +94,93 @@ function floorValue(floor: number): string {
   if (floor === 0) return t.keyFigures.groundFloor;
   if (floor < 0) return t.keyFigures.basement;
   return t.ordinal(floor);
+}
+
+/**
+ * « Appartement à Juvisy-sur-Orge · centre »: the type and the place, its
+ * district when given (SPEC-V2 8.5), over the facts line (L1-60).
+ */
+export function listingOverview(
+  listing: Pick<PublicListing, "type" | "city" | "district">,
+): string {
+  const place = fr.search.place.at(listing.city);
+  return t.overview(
+    fr.propertyType[listing.type],
+    listing.district ? `${place}${SEPARATOR}${listing.district}` : place,
+  );
+}
+
+/**
+ * « 82 m² · 4 pièces · 3 chambres »: the surface, the rooms, then the
+ * bedrooms, or the floor (levels of a house) without them, in one line under
+ * the type and the place (L1-60, in the way of Airbnb). Three at most: two
+ * separators (docs/DESIGN.md 1); never the orientation nor the year.
+ */
+export function listingFactsLine(listing: PublicListing): string {
+  const k = t.keyFigures;
+  return listingKeyFigures(listing)
+    .filter(({ label }) => label !== k.orientation && label !== k.buildYear)
+    .slice(0, 3)
+    .map(({ value, label }) => {
+      if (label === k.surface || label === k.land) return value;
+      if (label === k.floor) {
+        if (value === k.groundFloor) return t.facts.groundFloor;
+        if (value === k.basement) return t.facts.basement;
+      }
+      return `${value}${NBSP}${label}`;
+    })
+    .join(SEPARATOR);
+}
+
+export type ListingHighlight = { key: string; icon: LucideIcon; title: string; text: string };
+
+/**
+ * The strong points of a listing (L1-60, the « points forts » of Airbnb),
+ * three at most and from its data only: no commission first (the promise of
+ * Leenkey to a buyer), then the outdoor space, the lift from the 2nd floor,
+ * the parking, a good energy class (A to C) and a new build.
+ */
+export function listingHighlights(listing: PublicListing): ListingHighlight[] {
+  const h = t.highlights;
+  const outdoor = listing.hasGarden
+    ? { title: h.garden, icon: Trees }
+    : listing.hasTerrace
+      ? { title: h.terrace, icon: Sun }
+      : listing.hasBalcony
+        ? { title: h.balcony, icon: Sun }
+        : null;
+  const candidates: Array<ListingHighlight | null> = [
+    { key: "commission", icon: Euro, ...h.commission },
+    outdoor ? { key: "outdoor", ...outdoor, text: h.outdoorText } : null,
+    listing.hasElevator && listing.floor !== null && listing.floor >= 2
+      ? {
+          key: "elevator",
+          icon: ArrowUpDown,
+          title: h.elevator.title,
+          text: h.elevator.text(t.ordinal(listing.floor)),
+        }
+      : null,
+    listing.hasParking
+      ? { key: "parking", icon: SquareParking, title: h.parking.title, text: h.parking.text }
+      : null,
+    listing.dpe && ["A", "B", "C"].includes(listing.dpe)
+      ? {
+          key: "energy",
+          icon: Leaf,
+          title: h.energy.title(listing.dpe),
+          text: h.energy.text,
+        }
+      : null,
+    listing.isNewBuild
+      ? {
+          key: "new",
+          icon: Sparkles,
+          title: h.newBuild.title,
+          text: h.newBuild.text(listing.buildYear),
+        }
+      : null,
+  ];
+  return candidates.filter((item): item is ListingHighlight => item !== null).slice(0, 3);
 }
 
 /**

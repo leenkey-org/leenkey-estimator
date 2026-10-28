@@ -108,6 +108,46 @@ function fact(label: string, value: string | null | undefined): KeyFact {
     : { label, value: t.notProvided, tone: notProvided, ...presentation };
 }
 
+/**
+ * What a buyer looks for before a visit first (SPEC-V2 8.5 point 6): the
+ * energy, the costs, then what the line under the title does not say (L1-60).
+ * The type, surface, rooms and bedrooms come last: that line gives them.
+ */
+const PREVIEW_ORDER: readonly string[] = [
+  t.dpe,
+  t.ges,
+  t.heating,
+  t.charges,
+  t.propertyTax,
+  t.carrez,
+  t.outdoor,
+  t.parking,
+  t.elevator,
+  t.floor,
+  t.levels,
+  t.construction,
+  t.orientation,
+  t.cellar,
+  t.coproLots,
+];
+
+/**
+ * The first `count` informed facts in that order, without their group: the
+ * page shows them before « Afficher les N caractéristiques » (L1-60).
+ * « Non renseigné » waits for the dialog.
+ */
+export function factsPreview(facts: readonly KeyFact[], count: number): KeyFact[] {
+  const rank = (fact: KeyFact) => {
+    const index = PREVIEW_ORDER.indexOf(fact.label);
+    return index === -1 ? PREVIEW_ORDER.length : index;
+  };
+  return facts
+    .filter((fact) => fact.tone !== "muted")
+    .sort((a, b) => rank(a) - rank(b))
+    .slice(0, count)
+    .map((fact) => ({ ...fact, section: undefined }));
+}
+
 /** The facts in the order of the groups of the grid: the property, its energy, its costs. */
 export function bySection(facts: readonly KeyFact[]): KeyFact[] {
   const rank = (fact: KeyFact) => {

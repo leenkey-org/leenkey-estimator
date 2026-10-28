@@ -69,6 +69,8 @@ export default async function PropertyPreviewPage({ params }: Props) {
           <ListingBody
             listing={listing}
             level={3}
+            // No action bar here: the price under the facts line on a phone.
+            inlinePrice
             aside={<PriceColumn listing={listing} links={null} />}
             className="border-y border-lk-line bg-lk-surface pb-6 md:overflow-hidden md:rounded-lk-md md:border lg:px-8 lg:pb-8"
           />

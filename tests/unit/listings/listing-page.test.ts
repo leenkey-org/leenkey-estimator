@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { bySection, listingKeyFacts } from "@/leenkey/listings/key-facts";
+import { bySection, factsPreview, listingKeyFacts } from "@/leenkey/listings/key-facts";
 import {
   buyerSignUpHref,
   communeSearchHref,
+  listingFactsLine,
+  listingHighlights,
   listingJsonLd,
   listingKeyFigures,
+  listingOverview,
   listingMetaDescription,
   listingMetaTitle,
   listingSummary,
@@ -116,6 +119,75 @@ describe("listing page texts", () => {
       "/inscription?role=buyer&next=%2Fannonce%2Fappartement-3-pieces-savigny-sur-orge-lk0005",
     );
     expect(communeSearchHref("Viry-Châtillon")).toBe("/acheter?ville=viry-chatillon");
+  });
+});
+
+// L1-60, in the way of Airbnb: the type and the place, the facts in one
+// line, the strong points from the data only.
+describe("overview and strong points", () => {
+  it("says the type and the place, its district, then three facts in one line", () => {
+    expect(plain(listingOverview(flat))).toBe("Appartement à Savigny-sur-Orge · centre");
+    expect(listingOverview({ ...flat, district: null })).toBe("Appartement à Savigny-sur-Orge");
+    // Two separators at most (DESIGN.md 1): the floor without the bedrooms.
+    expect(plain(listingFactsLine(flat))).toBe("68 m² · 3 pièces · 2 chambres");
+    expect(plain(listingFactsLine({ ...flat, bedrooms: null }))).toBe(
+      "68 m² · 3 pièces · 2e étage",
+    );
+    expect(plain(listingFactsLine({ ...flat, bedrooms: null, floor: 0 }))).toBe(
+      "68 m² · 3 pièces · Rez-de-chaussée",
+    );
+    // Never the orientation nor the year, whatever is missing.
+    const bare = { ...flat, type: "maison" as const, bedrooms: null, floorsTotal: null };
+    expect(plain(listingFactsLine(bare))).toBe("68 m² · 3 pièces");
+    expect(plain(listingFactsLine({ ...bare, floorsTotal: 2 }))).toBe(
+      "68 m² · 3 pièces · 2 niveaux",
+    );
+    expect(plain(listingFactsLine(land))).toBe("620 m²");
+    // No line break inside « 3 pièces ».
+    expect(listingFactsLine(flat)).toContain("3\u00A0pièces");
+  });
+
+  it("keeps three strong points, no commission first, from the data only", () => {
+    expect(listingHighlights(flat).map((item) => item.key)).toEqual([
+      "commission",
+      "outdoor",
+      "elevator",
+    ]);
+    expect(listingHighlights(flat)[1]?.title).toBe("Balcon");
+    expect(plain(listingHighlights(flat)[2]?.text)).toBe("2e étage, immeuble avec ascenseur.");
+    // A plot of land: no outdoor, lift, parking nor energy class to tell.
+    expect(listingHighlights(land).map((item) => item.key)).toEqual(["commission"]);
+    // A good energy class (A to C) only.
+    const energy = {
+      ...flat,
+      hasBalcony: false,
+      hasElevator: false,
+      hasParking: false,
+      dpe: "B" as const,
+    };
+    expect(listingHighlights(energy).map((item) => item.title)).toEqual([
+      "Sans commission d'agence",
+      "Classe énergie B",
+    ]);
+  });
+});
+
+describe("facts before « Afficher les N caractéristiques »", () => {
+  it("puts the energy and the costs first, the facts of the line under the title last", () => {
+    const labels = factsPreview(bySection(listingKeyFacts(flat)), 10).map((fact) => fact.label);
+    expect(labels.slice(0, 5)).toEqual([
+      "Classe énergie (DPE)",
+      "Émissions (GES)",
+      "Chauffage",
+      "Charges de copropriété",
+      "Taxe foncière",
+    ]);
+    expect(labels).toHaveLength(10);
+    expect(labels).not.toContain("Type de bien");
+    // Without their group, and never « Non renseigné ».
+    const preview = factsPreview(bySection(listingKeyFacts({ ...flat, ges: null })), 10);
+    expect(preview.every((fact) => fact.section === undefined && fact.tone !== "muted")).toBe(true);
+    expect(preview.map((fact) => fact.label)).not.toContain("Émissions (GES)");
   });
 });
 

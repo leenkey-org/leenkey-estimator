@@ -342,6 +342,8 @@ export const fr = {
   // L1-18: favourites.
   favorites: {
     add: "Ajouter aux favoris",
+    // Beside the title of a listing (L1-60, the « Enregistrer » of Airbnb).
+    save: "Enregistrer",
     addProperty: (property: string) => `Ajouter aux favoris : ${property}`,
     added: "Ajouté à vos favoris.",
     removed: "Retiré de vos favoris.",
@@ -1440,12 +1442,50 @@ export const fr = {
     breadcrumbRoot: "Acheter",
     // The back link of a listing, the button over the mobile gallery included.
     backToListings: "Retour aux annonces",
+    // L1-60, in the way of Airbnb: the actions beside the title, over the
+    // mobile photo; the type and the place, the facts in one line; the seller;
+    // the strong points, from the data of the listing only.
+    share: {
+      label: "Partager",
+      copied: "Lien de l'annonce copié.",
+      error: "Le lien n'a pas pu être copié. Copiez l'adresse de la page.",
+    },
+    overview: (kind: string, place: string) => `${kind} ${place}`,
+    host: {
+      title: (firstName: string) => `Proposé par ${firstName}`,
+      unknown: "Proposé par le propriétaire",
+      owner: "Propriétaire",
+    },
+    highlights: {
+      label: "Points forts",
+      commission: {
+        title: "Sans commission d'agence",
+        text: "Vous achetez directement au propriétaire.",
+      },
+      garden: "Jardin",
+      terrace: "Terrasse",
+      balcony: "Balcon",
+      outdoorText: "Un espace extérieur avec le bien.",
+      parking: { title: "Parking", text: "Stationnement avec le bien." },
+      elevator: {
+        title: "Ascenseur",
+        text: (floor: string) => `${floor} étage, immeuble avec ascenseur.`,
+      },
+      energy: {
+        title: (dpe: string) => `Classe énergie ${dpe}`,
+        text: "Diagnostic de performance énergétique (DPE).",
+      },
+      newBuild: {
+        title: "Logement neuf",
+        text: (year: number | null) => (year ? `Construit en ${year}.` : "Un bien neuf."),
+      },
+    },
     summary: {
       rooms: (rooms: number) => (rooms === 1 ? "1 pièce" : `${rooms} pièces`),
     },
     // L1-16: the area of the listing, never its address (docs/DESIGN.md 8).
     map: {
-      title: "Localisation",
+      title: "Où se situe le bien",
       region: "Carte du secteur du bien",
       gateTitle: "Voir le secteur sur la carte",
       sector: (place: string) => `Secteur approximatif, ${place}`,
@@ -1458,10 +1498,8 @@ export const fr = {
       none: "Pas encore de photo pour ce bien.",
       counter: (index: number, total: number) => `${index} / ${total}`,
       open: (index: number, total: number) => `Agrandir la photo ${index} sur ${total}`,
-      more: (count: number) => `+ ${count}\u00A0${count === 1 ? "photo" : "photos"}`,
-      /** The tile that shows « + 2 photos »: its name starts with what it shows. */
-      openMore: (count: number, index: number, total: number) =>
-        `+ ${count}\u00A0${count === 1 ? "photo" : "photos"}, agrandir la photo ${index} sur ${total}`,
+      // The button over the desktop mosaic (L1-60).
+      all: "Afficher toutes les photos",
       viewer: "Photos du bien",
       close: "Fermer",
       previous: "Photo précédente",
@@ -1495,6 +1533,9 @@ export const fr = {
     },
     facts: {
       title: "Ce que vous savez avant de visiter",
+      // The first ones, then all of them in a dialog (L1-60).
+      all: (count: number) => `Afficher les ${count} caractéristiques`,
+      close: "Fermer",
       // Groups of the grid of the listing page (L1-55).
       sections: {
         property: "Caractéristiques",
@@ -1539,6 +1580,8 @@ export const fr = {
     },
     actions: {
       contact: "Contacter le vendeur",
+      // The mobile bar, beside the price (L1-60).
+      contactShort: "Contacter",
       visit: "Demander une visite",
       accountRequired:
         "Un compte acquéreur est nécessaire pour contacter le vendeur ou demander une visite.",
