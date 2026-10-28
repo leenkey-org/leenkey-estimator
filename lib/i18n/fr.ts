@@ -1466,7 +1466,7 @@ export const fr = {
       terrace: "Terrasse",
       balcony: "Balcon",
       outdoorText: "Un espace extérieur avec le bien.",
-      parking: { title: "Stationnement", text: "Stationnement avec le bien." },
+      parking: { title: "Parking", text: "Stationnement avec le bien." },
       elevator: {
         title: "Ascenseur",
         text: (floor: string) => `${floor} étage, immeuble avec ascenseur.`,
