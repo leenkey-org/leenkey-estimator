@@ -1,9 +1,10 @@
 "use client";
 
 import { SlidersHorizontal } from "lucide-react";
+import { ActiveFilters } from "./active-filters";
 import { FilterBar } from "./filter-bar";
 import { LocationField } from "./location-field";
-import { QuickFilters } from "./quick-filters";
+import { SearchCategories } from "./search-categories";
 import { useSearch } from "./search-context";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -24,16 +25,16 @@ function Count({ value }: { value: number }) {
 }
 
 /**
- * Search controls in the rounded shapes of direction C (Younes, « des formes
- * arrondies pour les champs comme sur Airbnb », DECISIONS 2026-10-26).
- * Mobile (docs/DESIGN.md 10.3, 12.5): the place in a pill and a round
- * « Filtres » button (48 × 48, count of active filters), then the row of
- * chips. From 1024 px (12.6): one rounded bar, « Où ? » then type, budget,
- * rooms (surface and DPE from 1280 px), each opening its menu, and
- * « Filtres » for the rest.
+ * Search controls in the way of Airbnb (Younes, « des formes arrondies pour
+ * les champs comme sur Airbnb », DECISIONS 2026-10-26, then L1-61). Mobile
+ * (docs/DESIGN.md 10.3, 12.5): the place in a pill and a round « Filtres »
+ * button (48 × 48, count of active filters). From 1024 px (12.6): one
+ * rounded bar, « Où ? » then type, budget and rooms, each opening its panel,
+ * and « Filtres » for the rest. Under them at every width, the row of
+ * categories; on a phone, the active filters the categories do not show.
  */
 export function SearchHeader() {
-  const { query, openFilters } = useSearch();
+  const { query, openFilters, applyFilters } = useSearch();
   const active = countActiveFilters(query.filters);
   return (
     <div role="search" aria-label={t.bar.label} className="border-b border-lk-line bg-lk-surface">
@@ -65,10 +66,17 @@ export function SearchHeader() {
             <span aria-hidden="true" className="hidden lg:inline">
               {t.filtersButton}
             </span>
+            {/* A space between the label and the count: the visible « Filtres 2 »
+                is read in its name « Filtres, 2 filtres actifs » (WCAG 2.5.3). */}{" "}
             <Count value={active} />
           </button>
         </div>
-        <QuickFilters className="mt-2 lg:hidden" />
+        <SearchCategories
+          filters={query.filters}
+          onChange={applyFilters}
+          className="mt-2.5 lg:mt-3"
+        />
+        <ActiveFilters className="mt-2 lg:hidden" />
       </div>
     </div>
   );

@@ -1,162 +1,198 @@
 "use client";
 
-import { Building2, House, LandPlot, LayoutGrid, Warehouse } from "lucide-react";
+import { useState } from "react";
+import * as ToggleGroup from "@radix-ui/react-toggle-group";
 import { useSearch } from "./search-context";
-import { DpeBadge } from "@/components/shared/dpe-badge";
-import { FilterMenu, type FilterMenuOption } from "@/components/shared/filter-menu";
-import { formatPrice, formatSurface } from "@/lib/format";
+import { BudgetRange } from "./budget-range";
+import { TypeTiles } from "./type-tiles";
+import { budgetLabel } from "../filter-labels";
+import { budgetError, budgetPreset, wholeNumberInput, type BudgetDraft } from "../filters-form";
+import { Button } from "@/components/shared/button";
+import { FilterPopover } from "@/components/shared/filter-popover";
+import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
-import { DPE_CLASSES, PROPERTY_TYPES, type SearchFilters } from "@/lib/validations/search";
+import { PROPERTY_TYPES, type SearchFilters } from "@/lib/validations/search";
 
 const t = fr.search.bar;
+const d = fr.search.dialog;
 
-/** Steps of the budget and surface menus; a value set in the panel is added. */
-const BUDGET_STEPS_EUROS = [
-  150_000, 200_000, 250_000, 300_000, 350_000, 400_000, 450_000, 500_000, 600_000, 700_000, 800_000,
-  1_000_000,
-];
-const SURFACE_STEPS = [20, 30, 40, 50, 60, 70, 80, 100, 120, 150];
+/** Budgets of one tap in the panel of the budget: the usual steps of the launch zone. */
+const BUDGET_PRESETS_EUROS = [200_000, 300_000, 400_000, 500_000, 700_000];
 const ROOMS = [1, 2, 3, 4, 5];
-
-const TYPE_ICONS = {
-  appartement: Building2,
-  maison: House,
-  terrain: LandPlot,
-  autre: Warehouse,
-} as const;
-
-function withValue(steps: number[], value: number | undefined) {
-  return value === undefined || steps.includes(value)
-    ? steps
-    : [...steps, value].sort((a, b) => a - b);
-}
-
-const number = (value: string) => (value ? Number(value) : undefined);
+/** « Tous » in a toggle group, where "" means none pressed. */
+const ANY = "tous";
 
 /** Between two parts of the bar. */
 function Divider({ className }: { className?: string }) {
   return <span aria-hidden="true" className={cn("h-8 w-px shrink-0 bg-lk-line", className)} />;
 }
 
+const text = (euros: number | undefined) => (euros === undefined ? "" : String(euros));
+
+/** A pill of a panel: white, the chosen one in the gradient of an action (charte D). */
+const pill = cn(
+  "inline-flex h-11 min-w-0 items-center justify-center rounded-full border-[1.5px] px-3.5 text-lk-label font-semibold tabular",
+  "transition-colors duration-140 ease-out-lk",
+  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
+  "border-lk-line-strong bg-lk-surface text-lk-ink hover:border-lk-ink-3",
+);
+
 /**
  * The parts of the rounded search bar after « Où ? », from 1024 px
- * (docs/DESIGN.md 10.3, 12.6, direction C): type, budget, rooms, then
- * surface and DPE from 1280 px; below that width they stay in « Filtres ».
- * Each opens a rounded menu (FilterMenu); a choice applies the search at
- * once. « Créer une alerte » comes with L3-06.
+ * (docs/DESIGN.md 10.3, 12.6), each opening a panel in the way of Airbnb
+ * (L1-61): the type in tiles, the budget with its slider, its two fields and
+ * the usual budgets (applied with « Appliquer »), the rooms in pills. A tile
+ * or a pill applies the search at once and closes the panel; they are
+ * toggle groups of one choice, where an arrow moves without choosing. The
+ * surface, the outdoor space, the equipment and the energy class are in
+ * « Filtres ».
  */
 export function FilterBar({ className }: { className?: string }) {
   const { query, applyFilters } = useSearch();
   const filters = query.filters;
   const update = (patch: Partial<SearchFilters>) => applyFilters({ ...filters, ...patch });
-  const budgetMax =
-    filters.priceMaxCents === undefined ? undefined : Math.round(filters.priceMaxCents / 100);
+  const [open, setOpen] = useState<"type" | "budget" | "rooms" | null>(null);
+  const toggle = (name: "type" | "budget" | "rooms") => (next: boolean) =>
+    setOpen(next ? name : null);
 
-  const types: FilterMenuOption[] = [
-    { value: "", label: t.typeAll, icon: LayoutGrid },
-    ...PROPERTY_TYPES.map((type) => ({
-      value: type,
-      label: fr.search.types[type],
-      icon: TYPE_ICONS[type],
-    })),
-  ];
-  const budgets: FilterMenuOption[] = [
-    { value: "", label: t.any },
-    ...withValue(BUDGET_STEPS_EUROS, budgetMax).map((euros) => ({
-      value: String(euros),
-      label: t.priceUpTo(formatPrice(euros * 100)),
-    })),
-  ];
-  const rooms: FilterMenuOption[] = [
-    { value: "", label: t.any },
-    ...withValue(ROOMS, filters.roomsMin).map((count) => ({
-      value: String(count),
-      label: t.roomsAtLeast(count),
-    })),
-  ];
-  const surfaces: FilterMenuOption[] = [
-    { value: "", label: t.any },
-    ...withValue(SURFACE_STEPS, filters.surfaceMin).map((surface) => ({
-      value: String(surface),
-      label: t.surfaceAtLeast(formatSurface(surface)),
-    })),
-  ];
-  const dpe: FilterMenuOption[] = [
-    { value: "", label: t.dpeAll },
-    ...DPE_CLASSES.map((letter) => ({
-      value: letter,
-      label: t.dpeClass(letter),
-      // The label says the classes: the letter is drawn, not read twice.
-      adornment: (
-        <span aria-hidden="true" className="flex shrink-0">
-          <DpeBadge value={letter} compact />
-        </span>
-      ),
-    })),
-  ];
+  // The draft of the budget, from the applied filters each time its panel opens.
+  const [budget, setBudget] = useState<BudgetDraft>({ min: "", max: "" });
+  const minEuros = wholeNumberInput(budget.min);
+  const maxEuros = wholeNumberInput(budget.max);
+  const error = budgetError(budget);
 
   return (
     <div className={cn("min-w-0 items-center", className)}>
       <Divider />
-      <FilterMenu
+      <FilterPopover
         label={t.type}
-        value={filters.type ?? ""}
         display={filters.type ? fr.search.types[filters.type] : t.typeAll}
-        options={types}
-        onValueChange={(value) => update({ type: PROPERTY_TYPES.find((type) => type === value) })}
-      />
+        active={filters.type !== undefined}
+        open={open === "type"}
+        onOpenChange={toggle("type")}
+        panelClassName="w-120"
+      >
+        <TypeTiles
+          as="toggle"
+          label={t.type}
+          value={filters.type ?? ""}
+          onValueChange={(value) => {
+            setOpen(null);
+            if (value !== (filters.type ?? "")) {
+              update({ type: PROPERTY_TYPES.find((type) => type === value) });
+            }
+          }}
+        />
+      </FilterPopover>
       <Divider />
-      <FilterMenu
+      <FilterPopover
         label={t.budgetTitle}
-        value={budgetMax === undefined ? "" : String(budgetMax)}
-        display={budgetMax === undefined ? t.any : t.priceUpTo(formatPrice(budgetMax * 100))}
-        options={budgets}
-        onValueChange={(value) => {
-          const euros = number(value);
-          const max = euros === undefined ? undefined : euros * 100;
-          const min = filters.priceMinCents;
-          update({
-            priceMaxCents: max,
-            priceMinCents: min !== undefined && max !== undefined && min > max ? undefined : min,
-          });
+        display={budgetLabel(filters) ?? t.any}
+        active={filters.priceMinCents !== undefined || filters.priceMaxCents !== undefined}
+        open={open === "budget"}
+        onOpenChange={(next) => {
+          if (next) {
+            setBudget({
+              min: text(filters.priceMinCents && Math.round(filters.priceMinCents / 100)),
+              max: text(filters.priceMaxCents && Math.round(filters.priceMaxCents / 100)),
+            });
+          }
+          toggle("budget")(next);
         }}
-      />
+        panelClassName="w-112"
+      >
+        <form
+          className="flex flex-col gap-5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (error) return;
+            setOpen(null);
+            const priceMinCents = minEuros === undefined ? undefined : minEuros * 100;
+            const priceMaxCents = maxEuros === undefined ? undefined : maxEuros * 100;
+            // The same budget: the panel closes, the results stay as they are.
+            if (
+              priceMinCents !== filters.priceMinCents ||
+              priceMaxCents !== filters.priceMaxCents
+            ) {
+              update({ priceMinCents, priceMaxCents });
+            }
+          }}
+        >
+          <BudgetRange
+            idPrefix="barre-budget"
+            min={budget.min}
+            max={budget.max}
+            error={error ? d[error] : undefined}
+            onChange={(min, max) => setBudget({ min, max })}
+          />
+          <div role="group" aria-label={t.presets} className="flex flex-wrap gap-2">
+            {BUDGET_PRESETS_EUROS.map((euros) => (
+              <button
+                key={euros}
+                type="button"
+                aria-pressed={maxEuros === euros}
+                onClick={() => setBudget(budgetPreset(budget, euros))}
+                className={cn(
+                  pill,
+                  "aria-pressed:lk-gradient aria-pressed:border-transparent aria-pressed:text-white",
+                )}
+              >
+                {t.priceUpTo(formatPrice(euros * 100))}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center justify-between gap-3 border-t border-lk-line pt-4">
+            <button
+              type="button"
+              onClick={() => setBudget({ min: "", max: "" })}
+              className="inline-flex min-h-11 items-center rounded-lk-sm text-lk-compact font-semibold text-lk-ink underline underline-offset-2 hover:no-underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid"
+            >
+              {t.clear}
+            </button>
+            <Button type="submit" disabled={Boolean(error)}>
+              {t.apply}
+            </Button>
+          </div>
+        </form>
+      </FilterPopover>
       <Divider />
-      <FilterMenu
+      <FilterPopover
         label={t.rooms}
-        value={filters.roomsMin === undefined ? "" : String(filters.roomsMin)}
         display={filters.roomsMin ? t.roomsAtLeast(filters.roomsMin) : t.any}
-        options={rooms}
-        onValueChange={(value) => update({ roomsMin: number(value) })}
-      />
-      <Divider className="hidden xl:block" />
-      <FilterMenu
-        label={t.surface}
-        value={filters.surfaceMin === undefined ? "" : String(filters.surfaceMin)}
-        display={filters.surfaceMin ? t.surfaceAtLeast(formatSurface(filters.surfaceMin)) : t.any}
-        options={surfaces}
-        className="hidden xl:flex"
-        onValueChange={(value) => {
-          const min = number(value);
-          const max = filters.surfaceMax;
-          update({
-            surfaceMin: min,
-            surfaceMax: min !== undefined && max !== undefined && max < min ? undefined : max,
-          });
-        }}
-      />
-      <Divider className="hidden xl:block" />
-      <FilterMenu
-        label={t.dpe}
-        value={filters.dpeMax ?? ""}
-        display={filters.dpeMax ? t.dpeClass(filters.dpeMax) : t.dpeAll}
-        options={dpe}
-        className="hidden xl:flex"
-        onValueChange={(value) =>
-          update({ dpeMax: DPE_CLASSES.find((letter) => letter === value) })
-        }
-      />
+        active={filters.roomsMin !== undefined}
+        open={open === "rooms"}
+        onOpenChange={toggle("rooms")}
+        align="end"
+        panelClassName="w-96"
+      >
+        <ToggleGroup.Root
+          type="single"
+          aria-label={d.rooms}
+          value={filters.roomsMin === undefined ? ANY : String(filters.roomsMin)}
+          onValueChange={(value) => {
+            setOpen(null);
+            // "": the chosen one pressed again, nothing changes.
+            if (!value) return;
+            const rooms = value === ANY ? undefined : wholeNumberInput(value);
+            if (rooms !== filters.roomsMin) update({ roomsMin: rooms });
+          }}
+          className="grid grid-cols-6 gap-1.5"
+        >
+          {[undefined, ...ROOMS].map((count) => (
+            <ToggleGroup.Item
+              key={count ?? ANY}
+              value={count === undefined ? ANY : String(count)}
+              className={cn(
+                pill,
+                "px-1 aria-checked:lk-gradient aria-checked:border-transparent aria-checked:text-white aria-checked:hover:brightness-108",
+              )}
+            >
+              {count === undefined ? d.anyShort : d.roomsShort(count)}
+            </ToggleGroup.Item>
+          ))}
+        </ToggleGroup.Root>
+      </FilterPopover>
     </div>
   );
 }
