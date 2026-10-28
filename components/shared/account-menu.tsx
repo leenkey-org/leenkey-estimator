@@ -13,13 +13,13 @@ const t = fr.nav.menu;
 export type AccountMenuProps = {
   /** First letter of the first name, in the avatar (a person icon without it). */
   initial: string | null;
-  /** « Mon espace »: home of the account's role. */
+  /** « Cockpit »: home of the account's role. */
   homeHref: string;
-  /** Its name: « Mon espace », « Cockpit » for an admin. */
+  /** Its name: « Cockpit », « Back office » for an admin. */
   homeLabel?: string;
   /** « Mon compte ». */
   accountHref: string;
-  /** « Voir le site », from the Cockpit. */
+  /** « Voir le site », from the back office. */
   siteHref?: string;
   /** Server action that ends the session, then leaves the page. */
   signOut: () => Promise<void>;
@@ -58,7 +58,7 @@ function Avatar({ initial, className }: { initial: string | null; className: str
 
 /**
  * Account menu (docs/DESIGN.md 10.6): opened from the avatar of the TopNav or
- * of the back office. Radix dropdown menu, keyboard included: « Mon espace »,
+ * of the back office. Radix dropdown menu, keyboard included: « Cockpit »,
  * « Mon compte », then « Se déconnecter » after a separator. Floating panel:
  * radius 6, 1 px border, shadow-float, 220 ms (no movement with reduced
  * motion).

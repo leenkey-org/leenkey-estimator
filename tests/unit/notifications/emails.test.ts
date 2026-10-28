@@ -161,7 +161,7 @@ describe("« Annonce à valider »", () => {
       `LK-0042 · Savigny-sur-Orge (91600) · ${formatPrice(23_900_000)} · Alice`,
     );
     expect(email?.text).toContain("https://leenkey-v2.vercel.app/admin/annonces/l1");
-    expect(email?.text).toContain("Notification interne du Cockpit de Leenkey.");
+    expect(email?.text).toContain("Notification interne du back office de Leenkey.");
   });
 
   it("never a link written by the seller: its title and first name stay out", async () => {

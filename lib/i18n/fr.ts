@@ -153,16 +153,16 @@ export const fr = {
       text: "Créez votre annonce, ou commencez par une analyse de valeur gratuite : tout est enregistré au fur et à mesure, vous reprenez quand vous voulez.",
     },
     buyer: {
-      metaTitle: "Mon espace · Leenkey",
+      metaTitle: "Cockpit · Leenkey",
       title: "Votre espace acquéreur arrive",
       text: "Bientôt ici : vos favoris, vos messages et votre projet. En attendant, parcourez les biens à vendre.",
       action: "Voir les biens",
     },
     admin: {
-      metaTitle: "Cockpit · Leenkey",
-      // The dashboard of the Cockpit comes with L1-30; the listings are already there (L1-19).
+      metaTitle: "Back office · Leenkey",
+      // The dashboard of the back office comes with L1-30; the listings are already there (L1-19).
       title: "Le tableau de bord arrive",
-      text: "Nous préparons le tableau de bord du Cockpit. Les annonces à valider sont déjà dans « Annonces ».",
+      text: "Nous préparons le tableau de bord du back office. Les annonces à valider sont déjà dans « Annonces ».",
       action: "Voir les annonces à valider",
     },
   },
@@ -210,11 +210,12 @@ export const fr = {
   // L1-10: navigation shells (docs/DESIGN.md 10.6 to 10.8).
   nav: {
     label: "Navigation principale",
-    adminLabel: "Navigation du Cockpit",
+    adminLabel: "Navigation du back office",
     brand: "Leenkey",
-    // The back office, as Leenkey names it (Younes, 2026-10-26).
-    backOffice: "Cockpit",
-    // From the Cockpit, back to the site (DECISIONS 2026-10-26).
+    // The space of the admins (Younes, 2026-10-28: « Back office » for the
+    // admins, « Cockpit » for the clients).
+    backOffice: "Back office",
+    // From the back office, back to the site (DECISIONS 2026-10-26).
     site: "Voir le site",
     links: {
       buy: "Acheter",
@@ -252,7 +253,8 @@ export const fr = {
     },
     menu: {
       trigger: "Menu du compte",
-      home: "Mon espace",
+      // The space of a client, seller or buyer (Younes, 2026-10-28).
+      home: "Cockpit",
       account: "Mon compte",
       signOut: "Se déconnecter",
     },
@@ -833,34 +835,34 @@ export const fr = {
     },
     admin: {
       users: {
-        metaTitle: "Utilisateurs · Cockpit · Leenkey",
+        metaTitle: "Utilisateurs · Back office · Leenkey",
         title: "Utilisateurs",
         comingTitle: "La liste des comptes arrive",
         comingText:
           "Nous préparons l'écran des vendeurs et des acquéreurs, avec leurs biens et leur financement.",
       },
       cases: {
-        metaTitle: "Dossiers · Cockpit · Leenkey",
+        metaTitle: "Dossiers · Back office · Leenkey",
         title: "Dossiers",
         comingTitle: "Le suivi des dossiers arrive",
         comingText:
           "Nous préparons l'écran des dossiers d'accompagnement : formules payantes et demandes de conseiller.",
       },
       offers: {
-        metaTitle: "Offres · Cockpit · Leenkey",
+        metaTitle: "Offres · Back office · Leenkey",
         title: "Offres",
         comingTitle: "Le suivi des offres arrive",
         comingText: "Nous préparons l'écran qui réunira les offres d'achat et leur historique.",
       },
       reports: {
-        metaTitle: "Signalements · Cockpit · Leenkey",
+        metaTitle: "Signalements · Back office · Leenkey",
         title: "Signalements",
         comingTitle: "Le traitement des signalements arrive",
         comingText:
           "Nous préparons l'écran des signalements, avec leur motif et les suites données.",
       },
       assistant: {
-        metaTitle: "Assistant · Cockpit · Leenkey",
+        metaTitle: "Assistant · Back office · Leenkey",
         title: "Assistant",
         comingTitle: "Le suivi de l'assistant arrive",
         comingText:
@@ -1012,8 +1014,8 @@ export const fr = {
   },
   // L1-19: back office v0 of the listings (SPEC-V2 section 17, DESIGN.md 12.12, 12.13).
   adminListings: {
-    metaTitle: "Annonces · Cockpit · Leenkey",
-    detailMetaTitle: (reference: string) => `${reference} · Annonces · Cockpit · Leenkey`,
+    metaTitle: "Annonces · Back office · Leenkey",
+    detailMetaTitle: (reference: string) => `${reference} · Annonces · Back office · Leenkey`,
     title: "Annonces",
     summary: {
       pending: (count: number) => `${count}\u00A0en attente de validation`,
@@ -1147,7 +1149,7 @@ export const fr = {
       why: "Vous recevez cet email parce que vous vendez un bien sur Leenkey.",
       whyBuyer: "Vous recevez cet email parce que vous avez contacté un vendeur sur Leenkey.",
       preferences: "Gérer mes notifications",
-      internal: "Notification interne du Cockpit de Leenkey.",
+      internal: "Notification interne du back office de Leenkey.",
     },
     // The reference in the subjects: one thread per listing in the inbox.
     // L1-13: a listing sent for review (SPEC-V2 section 18).
@@ -1216,7 +1218,7 @@ export const fr = {
         before: "Si vous n'êtes pas d'accord ou si vous avez corrigé le problème, écrivez-nous à ",
         after: " : nous vous répondons sous 48\u00A0h, 7\u00A0j/7.",
       },
-      action: "Voir mon espace vendeur",
+      action: "Voir mon Cockpit",
     },
   },
   // Labels of SPEC-V2 section 7 (StatusBadge mapping), colours in DESIGN.md 10.2.

@@ -25,7 +25,7 @@ export type SiteMenuProps = {
   links: readonly NavItem[];
   /** Primary action at the end of the panel (« Vendre mon bien »). */
   cta: { href: string; label: string };
-  /** « Mon compte » signed out, « Mon espace » signed in. */
+  /** « Mon compte » signed out, « Cockpit » signed in (« Back office » for an admin). */
   account: { href: string; label: string };
   texts: SiteMenuTexts;
   /** night: on the night band of the home page D, white logo, pill of glass. */
