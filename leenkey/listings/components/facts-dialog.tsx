@@ -41,6 +41,8 @@ export function FactsDialog({
           )}
         />
         <DialogPrimitive.Content
+          // Its title says what it holds: no description.
+          aria-describedby={undefined}
           className={cn(
             facadeScope,
             "fixed inset-0 z-60 flex flex-col bg-lk-surface md:inset-auto md:top-1/2 md:left-1/2 md:max-h-[85dvh] md:w-[min(48.75rem,calc(100vw-4rem))] md:-translate-1/2 md:rounded-lk-3xl md:shadow-lk-d-block",
@@ -55,9 +57,6 @@ export function FactsDialog({
               {title}
             </DialogPrimitive.Title>
           </div>
-          <DialogPrimitive.Description className="sr-only">
-            {t.all(count)}
-          </DialogPrimitive.Description>
           <div className="flex-1 overflow-y-auto px-5 py-6 md:px-8 md:py-7">{children}</div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
+import { User } from "lucide-react";
 import { DpeBadge } from "@/components/shared/dpe-badge";
 import { Gallery } from "@/components/shared/gallery";
 import { KeyFactsGrid } from "@/components/shared/key-facts-table";
+import { PriceBlock } from "@/components/shared/price-block";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
-import { bySection, listingKeyFacts } from "../key-facts";
+import { bySection, factsPreview, listingKeyFacts } from "../key-facts";
 import {
   galleryPhotos,
   listingFactsLine,
@@ -41,7 +43,7 @@ function Block({
       className={cn("flex flex-col gap-4 border-t border-lk-line py-6 lg:py-8", className)}
     >
       {title ? (
-        <Heading id={id} className="text-lk-h2 font-semibold text-lk-ink lg:text-lk-h2-lg">
+        <Heading id={id} className="text-lk-h2 font-bold text-wide text-lk-ink lg:text-lk-h2-lg">
           {title}
         </Heading>
       ) : null}
@@ -59,7 +61,8 @@ function Block({
  * the first facts and all of them in a dialog, the map; the price column on
  * the right from 1024 px. The public page (L1-17) and the preview of the
  * seller before sending (L1-13) show the same one: what the seller checks is
- * what buyers will see.
+ * what buyers will see. Under 1024 px the public page gives the price in its
+ * bar at the bottom; the preview, without that bar, under the facts line.
  */
 export function ListingBody({
   listing,
@@ -68,19 +71,22 @@ export function ListingBody({
   galleryTopRight,
   aside,
   map,
+  inlinePrice = false,
   level = 1,
   className,
 }: {
   listing: PublicListing;
-  /** Beside the title from 1024 px (« Partager », « Enregistrer »). */
+  /** Beside the title from 1024 px (« Enregistrer »). */
   actions?: ReactNode;
-  /** Over the mobile photo (back link, share, favourite). */
+  /** Over the mobile photo (back link, favourite). */
   galleryTopLeft?: ReactNode;
   galleryTopRight?: ReactNode;
   /** The price column (PriceColumn), from 1024 px. */
   aside: ReactNode;
   /** The map of the area (L1-16), on the public page. */
   map?: ReactNode;
+  /** The price under the facts line under 1024 px: the preview, without the bar of the page. */
+  inlinePrice?: boolean;
   /**
    * Level of the title: 1 on the page of the listing; 3 in the preview, under
    * « Mon bien » and « Aperçu de votre annonce ». Its sections come one below.
@@ -92,11 +98,8 @@ export function ListingBody({
   const section = level === 1 ? "h2" : "h4";
   const highlights = listingHighlights(listing);
   const facts = bySection(listingKeyFacts(listing));
-  // The informed ones first, without their group (« Non renseigné » waits for the dialog).
-  const preview = facts
-    .filter((fact) => fact.tone !== "muted")
-    .slice(0, FACTS_PREVIEW)
-    .map((fact) => ({ ...fact, section: undefined }));
+  // A few facts: all of them, in their groups; more: the first ones, then the dialog.
+  const preview = facts.length > FACTS_PREVIEW ? factsPreview(facts, FACTS_PREVIEW) : null;
   const firstName = listing.sellerFirstName?.trim();
   const factsHeading = level === 1 ? "h3" : "h5";
 
@@ -105,7 +108,7 @@ export function ListingBody({
       {/* The title: over the photos from 1024 px, at the top of the sheet below. */}
       <div className="relative z-10 order-2 -mt-6 flex items-start justify-between gap-4 rounded-t-lk-3xl bg-lk-surface px-5 pt-6 lg:order-1 lg:mt-0 lg:items-end lg:rounded-none lg:bg-transparent lg:px-0 lg:pt-2 lg:pb-5">
         <div className="flex min-w-0 flex-col gap-1">
-          <Title className="text-lk-h2 font-semibold text-balance text-lk-ink lg:text-lk-h1-lg">
+          <Title className="text-lk-h2 font-bold text-wide text-balance text-lk-ink lg:text-lk-h1-lg">
             {listing.title}
           </Title>
         </div>
@@ -132,6 +135,13 @@ export function ListingBody({
               <p className="text-lk-compact text-lk-ink-2 lg:text-lk-body">
                 {listingFactsLine(listing)}
               </p>
+              {inlinePrice ? (
+                <PriceBlock
+                  priceCents={listing.priceCents}
+                  surfaceM2={listing.surfaceM2}
+                  className="mt-3 lg:hidden"
+                />
+              ) : null}
             </div>
             {listing.dpe ? <DpeBadge value={listing.dpe} className="shrink-0" /> : null}
           </div>
@@ -142,15 +152,27 @@ export function ListingBody({
               aria-hidden="true"
               className="lk-gradient flex size-12 shrink-0 items-center justify-center rounded-full text-lk-title font-semibold text-white"
             >
-              {(firstName?.charAt(0) ?? "?").toLocaleUpperCase("fr-FR")}
+              {firstName ? (
+                firstName.charAt(0).toLocaleUpperCase("fr-FR")
+              ) : (
+                <User strokeWidth={1.8} className="size-6" />
+              )}
             </span>
             <div className="flex min-w-0 flex-col gap-0.5">
               <p className="text-lk-body font-semibold text-lk-ink">
                 {firstName ? t.host.title(firstName) : t.host.unknown}
               </p>
-              <p className="text-lk-compact text-lk-ink-3">
-                {listing.accompanied ? `${t.host.owner} · ${t.contact.accompanied}` : t.host.owner}
-              </p>
+              {/* « Propriétaire » under a first name only: « le propriétaire » says it already. */}
+              {firstName || listing.accompanied ? (
+                <p className="text-lk-compact text-lk-ink-3">
+                  {[
+                    firstName ? t.host.owner : null,
+                    listing.accompanied ? t.contact.accompanied : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -180,7 +202,7 @@ export function ListingBody({
           </Block>
 
           <Block id="avant-visite" title={t.facts.title} level={section}>
-            {facts.length > preview.length ? (
+            {preview ? (
               <>
                 <KeyFactsGrid items={preview} headingLevel={factsHeading} />
                 <FactsDialog count={facts.length} title={t.facts.title}>

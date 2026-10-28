@@ -7,7 +7,7 @@ export type PriceBlockProps = {
   priceCents: number;
   /** Surface used for the price per m²; the line is left out without it. */
   surfaceM2?: number | null;
-  /** sm: 18 px (the mobile action bar, L1-60); md: 26 px; lg: 26 then 30 px (price column). */
+  /** sm: 17 px (the mobile action bar, L1-60); md: 26 px; lg: 26 then 30 px (price column). */
   size?: "sm" | "md" | "lg";
   className?: string;
 };

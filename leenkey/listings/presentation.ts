@@ -96,26 +96,38 @@ function floorValue(floor: number): string {
   return t.ordinal(floor);
 }
 
-/** « Appartement à Juvisy-sur-Orge »: the type and the place, over the facts line (L1-60). */
-export function listingOverview(listing: Pick<PublicListing, "type" | "city">): string {
-  return t.overview(fr.propertyType[listing.type], fr.search.place.at(listing.city));
+/**
+ * « Appartement à Juvisy-sur-Orge · centre »: the type and the place, its
+ * district when given (SPEC-V2 8.5), over the facts line (L1-60).
+ */
+export function listingOverview(
+  listing: Pick<PublicListing, "type" | "city" | "district">,
+): string {
+  const place = fr.search.place.at(listing.city);
+  return t.overview(
+    fr.propertyType[listing.type],
+    listing.district ? `${place}${SEPARATOR}${listing.district}` : place,
+  );
 }
 
 /**
- * « 82 m² · 4 pièces · 3 chambres · 5e étage »: the first four key figures
- * in one line, under the type and the place (L1-60, in the way of Airbnb).
+ * « 82 m² · 4 pièces · 3 chambres »: the surface, the rooms, then the
+ * bedrooms, or the floor (levels of a house) without them, in one line under
+ * the type and the place (L1-60, in the way of Airbnb). Three at most: two
+ * separators (docs/DESIGN.md 1); never the orientation nor the year.
  */
 export function listingFactsLine(listing: PublicListing): string {
   const k = t.keyFigures;
   return listingKeyFigures(listing)
-    .slice(0, 4)
+    .filter(({ label }) => label !== k.orientation && label !== k.buildYear)
+    .slice(0, 3)
     .map(({ value, label }) => {
       if (label === k.surface || label === k.land) return value;
       if (label === k.floor) {
         if (value === k.groundFloor) return t.facts.groundFloor;
         if (value === k.basement) return t.facts.basement;
       }
-      return `${value} ${label}`;
+      return `${value}${NBSP}${label}`;
     })
     .join(SEPARATOR);
 }

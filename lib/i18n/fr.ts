@@ -1445,11 +1445,6 @@ export const fr = {
     // L1-60, in the way of Airbnb: the actions beside the title, over the
     // mobile photo; the type and the place, the facts in one line; the seller;
     // the strong points, from the data of the listing only.
-    share: {
-      label: "Partager",
-      copied: "Le lien de l'annonce est copié.",
-      error: "Le lien n'a pas pu être copié. Copiez l'adresse de la page.",
-    },
     overview: (kind: string, place: string) => `${kind} ${place}`,
     host: {
       title: (firstName: string) => `Proposé par ${firstName}`,
@@ -1466,10 +1461,10 @@ export const fr = {
       terrace: "Terrasse",
       balcony: "Balcon",
       outdoorText: "Un espace extérieur avec le bien.",
-      parking: { title: "Stationnement", text: "Une place de stationnement avec le bien." },
+      parking: { title: "Stationnement", text: "Stationnement avec le bien." },
       elevator: {
         title: "Ascenseur",
-        text: (floor: string) => `${floor} étage, desservi par un ascenseur.`,
+        text: (floor: string) => `${floor} étage, immeuble avec ascenseur.`,
       },
       energy: {
         title: (dpe: string) => `Classe énergie ${dpe}`,

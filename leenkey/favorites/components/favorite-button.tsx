@@ -61,7 +61,7 @@ export function FavoriteButton({
       ? "relative inline-flex size-11 items-center justify-center rounded-full text-white focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-lk-brand-blue focus-visible:outline-solid"
       : asText
         ? cn(
-            "inline-flex h-10 items-center gap-2 rounded-full px-3 text-lk-compact font-semibold text-lk-ink underline underline-offset-2",
+            "inline-flex h-11 items-center gap-2 rounded-full px-3 text-lk-compact font-semibold text-lk-ink underline underline-offset-2",
             "transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2",
             "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
           )

@@ -3,6 +3,7 @@
 import { useRef, useState, type ReactNode, type TouchEvent } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ChevronLeft, ChevronRight, LayoutGrid, X } from "lucide-react";
+import { Button } from "./button";
 import { FacadeDrawing } from "./facade-drawing";
 import { Photo } from "./photo";
 import { facadeScope } from "./facade-root";
@@ -54,6 +55,9 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
     <div className={className}>
       {/* Mobile */}
       <div className="relative h-75 lg:hidden">
+        {/* Before the photos in the order of the focus: back and favourite first. */}
+        {topLeft ? <div className="absolute left-4 top-4 z-10">{topLeft}</div> : null}
+        {topRight ? <div className="absolute right-4 top-4 z-10">{topRight}</div> : null}
         {total ? (
           <div
             className="flex h-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -68,7 +72,8 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
                 type="button"
                 aria-label={t.open(index + 1, total)}
                 onClick={() => setViewer(index)}
-                className="relative h-full w-full shrink-0 snap-center"
+                // The ring inside the photo: the strip clips what is outside.
+                className="relative h-full w-full shrink-0 snap-center focus-visible:-outline-offset-3"
               >
                 <Photo src={photo.src} alt={photo.alt} sizes="100vw" priority={index === 0} />
               </button>
@@ -77,8 +82,6 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
         ) : (
           <NoPhoto className="h-full" />
         )}
-        {topLeft ? <div className="absolute left-4 top-4">{topLeft}</div> : null}
-        {topRight ? <div className="absolute right-4 top-4">{topRight}</div> : null}
         {total > 1 ? (
           <span
             aria-hidden="true"
@@ -108,7 +111,8 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
               type="button"
               aria-label={t.open(1, total)}
               onClick={() => setViewer(0)}
-              className="relative row-span-full overflow-hidden transition-[filter] duration-140 ease-out-lk hover:brightness-90"
+              // The ring inside the photo: the rounded block clips what is outside.
+              className="relative row-span-full overflow-hidden transition-[filter] duration-140 ease-out-lk hover:brightness-90 focus-visible:-outline-offset-3"
             >
               <Photo
                 src={photo.src}
@@ -132,21 +136,23 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
               type="button"
               aria-label={t.open(index + 2, total)}
               onClick={() => setViewer(index + 1)}
-              className="relative overflow-hidden transition-[filter] duration-140 ease-out-lk hover:brightness-90"
+              className="relative overflow-hidden transition-[filter] duration-140 ease-out-lk hover:brightness-90 focus-visible:-outline-offset-3"
             >
               <Photo src={photo.src} alt={photo.alt} sizes="(min-width: 1920px) 600px, 33vw" />
             </button>
           ))}
           {total > 1 ? (
             // All the photos, from the first one (the button of Airbnb).
-            <button
+            <Button
               type="button"
+              variant="outline-ink"
+              size="sm"
+              icon={LayoutGrid}
               onClick={() => setViewer(0)}
-              className="absolute right-4 bottom-4 inline-flex h-9 items-center gap-2 rounded-lk-lg border border-lk-ink bg-lk-surface px-3.5 text-lk-label font-semibold text-lk-ink shadow-float transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid"
+              className="absolute right-4 bottom-4 shadow-float"
             >
-              <LayoutGrid aria-hidden="true" className="size-4" />
               {t.all}
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : (
