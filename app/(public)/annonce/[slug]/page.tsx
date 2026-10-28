@@ -11,6 +11,7 @@ import { ListingBody } from "@/leenkey/listings/components/listing-body";
 import { ListingBreadcrumb } from "@/leenkey/listings/components/listing-breadcrumb";
 import { ListingMap } from "@/leenkey/listings/components/listing-map";
 import { ListingViewTracker } from "@/leenkey/listings/components/listing-view-tracker";
+import { ShareButton } from "@/leenkey/listings/components/share-button";
 import {
   buyerSignUpHref,
   communeSearchHref,
@@ -27,7 +28,9 @@ import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
 import { fr } from "@/lib/i18n/fr";
 import { absoluteUrl } from "@/lib/site";
 
-// L1-17: public listing page (SPEC-V2 8.5, docs/DESIGN.md 12.7, 12.8).
+// L1-17: public listing page (SPEC-V2 8.5, docs/DESIGN.md 12.7, 12.8), in
+// the way of Airbnb since L1-60 (ListingBody): « Partager » and
+// « Enregistrer » beside the title, over the photo on a phone.
 // Published listings only: any other status, or an unknown address, is a 404.
 // Photos (L1-12): the gallery, facade.svg without them. Map of the area
 // (L1-16): Google Maps after « Afficher la carte », a circle of 400 m around
@@ -85,7 +88,7 @@ export default async function ListingPage({ params }: Props) {
   const checkedAt = Date.now();
   const [favorite, profile] = await Promise.all([favoriteState(listing.id), getProfile()]);
   const links = contactLinks(listing, profile !== null);
-  const heart = (variant: "white-float" | "tint") => (
+  const heart = (variant: "white-float" | "text") => (
     <FavoriteButton
       listingId={listing.id}
       favorite={favorite}
@@ -95,13 +98,16 @@ export default async function ListingPage({ params }: Props) {
     />
   );
   const url = absoluteUrl(`/annonce/${listing.slug}`);
+  const share = (variant: "text" | "float") => (
+    <ShareButton url={url} title={listing.title} variant={variant} />
+  );
   const jsonLd = listingJsonLd(listing, url, absoluteUrl(`/api/og/${listing.slug}`));
 
   return (
     <FacadeRoot className="min-h-screen bg-lk-surface">
       <SiteTopNav />
       <main className="mx-auto w-full max-w-lk-frame pb-10 lg:lk-gutter lg:pb-16">
-        <div className="hidden items-center gap-6 pt-5 lg:flex">
+        <div className="hidden items-center gap-6 pt-5 pb-3 lg:flex">
           <BackLink variant="text" />
           <ListingBreadcrumb
             city={listing.city}
@@ -112,10 +118,21 @@ export default async function ListingPage({ params }: Props) {
         </div>
         <ListingBody
           listing={listing}
+          // Beside the title from 1024 px, over the photo below (L1-60, as Airbnb).
+          actions={
+            <>
+              {share("text")}
+              {heart("text")}
+            </>
+          }
           galleryTopLeft={<BackLink />}
-          galleryTopRight={heart("white-float")}
-          // The light blue of Leenkey rather than stone (« pas de gris », L1-55).
-          aside={<PriceColumn listing={listing} links={links} favorite={heart("tint")} />}
+          galleryTopRight={
+            <div className="flex gap-2.5">
+              {share("float")}
+              {heart("white-float")}
+            </div>
+          }
+          aside={<PriceColumn listing={listing} links={links} />}
           map={
             listing.location ? (
               <ListingMap
@@ -130,7 +147,7 @@ export default async function ListingPage({ params }: Props) {
       </main>
       <SiteFooter className="pb-24 lg:pb-0" />
 
-      <ActionBar links={links} />
+      <ActionBar links={links} priceCents={listing.priceCents} surfaceM2={listing.surfaceM2} />
       <ListingViewTracker listingId={listing.id} />
       <script
         type="application/ld+json"

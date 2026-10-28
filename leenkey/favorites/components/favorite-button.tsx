@@ -24,9 +24,10 @@ export type FavoriteButtonProps = {
   /**
    * white-float over a photo (gallery, card, DESIGN.md 7.1); stone in the
    * price column; photo: the heart alone over the photo of a card of
-   * direction C (SPECS.md 2), white outline on a shaded fill, blue once saved.
+   * direction C (SPECS.md 2), white outline on a shaded fill, blue once saved;
+   * text: « Enregistrer » and its heart beside the title of a listing (L1-60).
    */
-  variant?: "white-float" | "stone" | "tint" | "photo";
+  variant?: "white-float" | "stone" | "tint" | "photo" | "text";
   className?: string;
 };
 
@@ -52,14 +53,34 @@ export function FavoriteButton({
   const [message, setMessage] = useState("");
   const label = property ? t.addProperty(property) : t.add;
   const onPhoto = variant === "photo";
+  const asText = variant === "text";
+  // The visible « Enregistrer » names the text variant (WCAG 2.5.3).
+  const name = asText ? undefined : label;
   const classes = cn(
     onPhoto
       ? "relative inline-flex size-11 items-center justify-center rounded-full text-white focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-lk-brand-blue focus-visible:outline-solid"
-      : cn(iconButtonVariants({ variant }), "inline-flex items-center justify-center text-lk-blue"),
+      : asText
+        ? cn(
+            "inline-flex h-10 items-center gap-2 rounded-full px-3 text-lk-compact font-semibold text-lk-ink underline underline-offset-2",
+            "transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2",
+            "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
+          )
+        : cn(
+            iconButtonVariants({ variant }),
+            "inline-flex items-center justify-center text-lk-blue",
+          ),
     className,
   );
   const heart = (filled: boolean) =>
-    onPhoto ? (
+    asText ? (
+      <>
+        <Heart
+          aria-hidden="true"
+          className={cn("size-4", filled ? "fill-lk-blue text-lk-blue" : "text-lk-ink")}
+        />
+        {t.save}
+      </>
+    ) : onPhoto ? (
       <Heart
         aria-hidden="true"
         strokeWidth={2}
@@ -71,7 +92,7 @@ export function FavoriteButton({
 
   if (favorite === null) {
     return (
-      <Link href={signUpHref} prefetch={false} aria-label={label} className={classes}>
+      <Link href={signUpHref} prefetch={false} aria-label={name} className={classes}>
         {heart(false)}
       </Link>
     );
@@ -81,7 +102,7 @@ export function FavoriteButton({
     <>
       <button
         type="button"
-        aria-label={label}
+        aria-label={name}
         aria-pressed={shown}
         className={classes}
         onClick={() => {

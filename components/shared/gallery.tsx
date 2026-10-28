@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ReactNode, type TouchEvent } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, LayoutGrid, X } from "lucide-react";
 import { FacadeDrawing } from "./facade-drawing";
 import { Photo } from "./photo";
 import { facadeScope } from "./facade-root";
@@ -34,10 +34,13 @@ function NoPhoto({ className }: { className?: string }) {
 }
 
 /**
- * Listing photos (docs/DESIGN.md 10.3, 7.1). Mobile: one photo across the
- * width, 280 px, snap scrolling, counter « 1 / 12 », touch to enlarge.
- * Desktop: one large photo and four small ones, « + N photos » on the last;
- * taller from 1 536 px, where the page takes the width of the screen (L1-56).
+ * Listing photos (docs/DESIGN.md 10.3, 7.1), in the way of Airbnb (L1-60).
+ * Mobile: one photo across the width, 300 px, snap scrolling, counter « 1 /
+ * 12 » above the sheet of the listing that covers its bottom, touch to
+ * enlarge. Desktop: one large photo and four small ones in one block with
+ * rounded outer corners, « Afficher toutes les photos » over its bottom
+ * right; taller from 1 536 px, where the page takes the width of the screen
+ * (L1-56).
  * Enlarged: full-screen viewer on ink 95 %, arrows, counter, Escape, focus
  * kept inside, keyboard arrows and swipe. Without photos: facade.svg.
  */
@@ -50,7 +53,7 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
   return (
     <div className={className}>
       {/* Mobile */}
-      <div className="relative h-70 lg:hidden">
+      <div className="relative h-75 lg:hidden">
         {total ? (
           <div
             className="flex h-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -79,7 +82,7 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
         {total > 1 ? (
           <span
             aria-hidden="true"
-            className="absolute bottom-3 right-4 rounded-full bg-lk-ink/80 px-2.5 py-1 text-lk-caption font-medium tabular text-white"
+            className="absolute right-4 bottom-9 rounded-full bg-lk-ink/80 px-2.5 py-1 text-lk-caption font-medium tabular text-white"
           >
             {t.counter(current + 1, total)}
           </span>
@@ -90,7 +93,7 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
       {total ? (
         <div
           className={cn(
-            "hidden h-77.5 gap-2.5 lg:grid min-[1440px]:h-92.5 2xl:h-[min(30vw,35rem)]",
+            "relative hidden h-77.5 gap-2 overflow-hidden rounded-lk-2xl lg:grid min-[1440px]:h-92.5 2xl:h-[min(30vw,35rem)]",
             total === 1 && "grid-cols-1",
             total > 1 && total < 5 && "grid-cols-[2fr_1fr]",
             total === 2 && "grid-rows-1",
@@ -105,7 +108,7 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
               type="button"
               aria-label={t.open(1, total)}
               onClick={() => setViewer(0)}
-              className="relative row-span-full overflow-hidden rounded-lk-md"
+              className="relative row-span-full overflow-hidden transition-[filter] duration-140 ease-out-lk hover:brightness-90"
             >
               <Photo
                 src={photo.src}
@@ -123,28 +126,31 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
               />
             </button>
           ))}
-          {tiles.map((photo, index) => {
-            const more = index === 3 && total > 5 ? total - 5 : 0;
-            return (
-              <button
-                key={photo.src}
-                type="button"
-                aria-label={more ? t.openMore(more, index + 2, total) : t.open(index + 2, total)}
-                onClick={() => setViewer(index + 1)}
-                className="relative overflow-hidden rounded-lk-sm"
-              >
-                <Photo src={photo.src} alt={photo.alt} sizes="(min-width: 1920px) 600px, 33vw" />
-                {more ? (
-                  <span className="absolute inset-0 flex items-center justify-center bg-lk-ink/55 text-lk-label font-semibold text-white">
-                    {t.more(more)}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
+          {tiles.map((photo, index) => (
+            <button
+              key={photo.src}
+              type="button"
+              aria-label={t.open(index + 2, total)}
+              onClick={() => setViewer(index + 1)}
+              className="relative overflow-hidden transition-[filter] duration-140 ease-out-lk hover:brightness-90"
+            >
+              <Photo src={photo.src} alt={photo.alt} sizes="(min-width: 1920px) 600px, 33vw" />
+            </button>
+          ))}
+          {total > 1 ? (
+            // All the photos, from the first one (the button of Airbnb).
+            <button
+              type="button"
+              onClick={() => setViewer(0)}
+              className="absolute right-4 bottom-4 inline-flex h-9 items-center gap-2 rounded-lk-lg border border-lk-ink bg-lk-surface px-3.5 text-lk-label font-semibold text-lk-ink shadow-float transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid"
+            >
+              <LayoutGrid aria-hidden="true" className="size-4" />
+              {t.all}
+            </button>
+          ) : null}
         </div>
       ) : (
-        <NoPhoto className="hidden h-77.5 rounded-lk-md lg:flex min-[1440px]:h-92.5 2xl:h-[min(30vw,35rem)]" />
+        <NoPhoto className="hidden h-77.5 rounded-lk-2xl lg:flex min-[1440px]:h-92.5 2xl:h-[min(30vw,35rem)]" />
       )}
 
       {total ? <Viewer photos={photos} index={viewer} onIndexChange={setViewer} /> : null}

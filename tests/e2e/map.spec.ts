@@ -193,18 +193,18 @@ test.describe("carte de la recherche (base de seed)", () => {
     ).toHaveCount(0);
   });
 
-  test("annonce : choix déjà fait, la carte ne se charge qu'en approchant de « Localisation »", async ({
+  test("annonce : choix déjà fait, la carte ne se charge qu'en approchant de « Où se situe le bien »", async ({
     page,
     context,
     isMobile,
   }) => {
-    test.skip(!isMobile, "sur téléphone, « Localisation » est loin sous la photo");
+    test.skip(!isMobile, "sur téléphone, « Où se situe le bien » est loin sous la photo");
     const asked = await fakeGoogleMaps(context);
     await page.goto("/acheter");
     const href = await cards(page).first().getAttribute("href");
     await page.goto(href ?? "");
     await page
-      .getByRole("region", { name: "Localisation" })
+      .getByRole("region", { name: "Où se situe le bien" })
       .getByRole("button", { name: "Afficher la carte" })
       .click();
     await expect(page.locator("[data-fake-map]")).toBeVisible();
@@ -216,7 +216,7 @@ test.describe("carte de la recherche (base de seed)", () => {
     await settled(page);
     await expect(page.locator("[data-fake-map]")).toHaveCount(0);
     expect(asked).toHaveLength(before);
-    await page.getByRole("heading", { name: "Localisation" }).scrollIntoViewIfNeeded();
+    await page.getByRole("heading", { name: "Où se situe le bien" }).scrollIntoViewIfNeeded();
     await expect(page.locator("[data-fake-map]")).toBeVisible();
   });
 
@@ -228,8 +228,8 @@ test.describe("carte de la recherche (base de seed)", () => {
     await page.goto("/acheter");
     const href = await cards(page).first().getAttribute("href");
     await page.goto(href ?? "");
-    const area = page.getByRole("region", { name: "Localisation" });
-    await expect(area.getByRole("heading", { name: "Localisation" })).toBeVisible();
+    const area = page.getByRole("region", { name: "Où se situe le bien" });
+    await expect(area.getByRole("heading", { name: "Où se situe le bien" })).toBeVisible();
     await settled(page);
     expect(asked).toEqual([]);
     await area.getByRole("button", { name: "Afficher la carte" }).click();

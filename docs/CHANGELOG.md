@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-28 · L1-60 · PR #PRNUM · Page annonce façon Airbnb
+- Modifié : la page d'une annonce, façon Airbnb.
+  - Titre, « Partager » et « Enregistrer » au-dessus de la mosaïque, qui devient un seul bloc avec « Afficher toutes les photos ».
+  - Blocs séparés d'un filet : type et lieu avec les chiffres en une ligne, vendeur, trois points forts tirés des données, description repliable, dix caractéristiques puis toutes dans une fenêtre, carte « Où se situe le bien ».
+  - Carte de prix collante allégée ; sur téléphone, la fiche remonte sur la photo et la barre du bas montre le prix avec « Contacter ».
+- Tests : unitaires (ligne de chiffres, points forts, galerie) ; E2E adaptés (cœur « Enregistrer », carte).
+
 ### 2026-10-28 · L1-59 · PR #57 · Back office et Cockpit
 - Modifié : l'espace d'administration s'appelle « Back office » (barre latérale, en-tête mobile, menu du compte d'un admin, titres d'onglet, email interne) ; l'espace client s'appelle « Cockpit » (menu du compte et menu mobile à la place de « Mon espace », titre de l'espace acquéreur, bouton « Voir mon Cockpit » de l'email d'une annonce suspendue). Correction de la décision du 2026-10-26.
 

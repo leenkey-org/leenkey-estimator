@@ -3,8 +3,11 @@ import { bySection, listingKeyFacts } from "@/leenkey/listings/key-facts";
 import {
   buyerSignUpHref,
   communeSearchHref,
+  listingFactsLine,
+  listingHighlights,
   listingJsonLd,
   listingKeyFigures,
+  listingOverview,
   listingMetaDescription,
   listingMetaTitle,
   listingSummary,
@@ -116,6 +119,43 @@ describe("listing page texts", () => {
       "/inscription?role=buyer&next=%2Fannonce%2Fappartement-3-pieces-savigny-sur-orge-lk0005",
     );
     expect(communeSearchHref("Viry-Châtillon")).toBe("/acheter?ville=viry-chatillon");
+  });
+});
+
+// L1-60, in the way of Airbnb: the type and the place, the facts in one
+// line, the strong points from the data only.
+describe("overview and strong points", () => {
+  it("says the type and the place, then the first facts in one line", () => {
+    expect(listingOverview(flat)).toBe("Appartement à Savigny-sur-Orge");
+    expect(plain(listingFactsLine(flat))).toBe("68 m² · 3 pièces · 2 chambres · 2e étage");
+    expect(plain(listingFactsLine({ ...flat, floor: 0 }))).toBe(
+      "68 m² · 3 pièces · 2 chambres · Rez-de-chaussée",
+    );
+    expect(plain(listingFactsLine(land))).toBe("620 m²");
+  });
+
+  it("keeps three strong points, no commission first, from the data only", () => {
+    expect(listingHighlights(flat).map((item) => item.key)).toEqual([
+      "commission",
+      "outdoor",
+      "elevator",
+    ]);
+    expect(listingHighlights(flat)[1]?.title).toBe("Balcon");
+    expect(plain(listingHighlights(flat)[2]?.text)).toBe("2e étage, desservi par un ascenseur.");
+    // A plot of land: no outdoor, lift, parking nor energy class to tell.
+    expect(listingHighlights(land).map((item) => item.key)).toEqual(["commission"]);
+    // A good energy class (A to C) only.
+    const energy = {
+      ...flat,
+      hasBalcony: false,
+      hasElevator: false,
+      hasParking: false,
+      dpe: "B" as const,
+    };
+    expect(listingHighlights(energy).map((item) => item.title)).toEqual([
+      "Sans commission d'agence",
+      "Classe énergie B",
+    ]);
   });
 });
 

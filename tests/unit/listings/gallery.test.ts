@@ -18,11 +18,11 @@ const photos = Array.from({ length: 7 }, (_, index) => ({
 }));
 
 describe("gallery", () => {
-  it("names the tile « + 2 photos » with its text first", () => {
+  it("opens every photo from « Afficher toutes les photos » (L1-60)", () => {
     const html = renderToStaticMarkup(createElement(Gallery, { photos }));
     expect(html).toContain('aria-label="Agrandir la photo 4 sur 7"');
-    expect(html).toContain('aria-label="+ 2 photos, agrandir la photo 5 sur 7"');
-    expect(html).toContain(">+ 2 photos</span>");
+    expect(html).toContain('aria-label="Agrandir la photo 5 sur 7"');
+    expect(html).toContain("Afficher toutes les photos</button>");
   });
 
   it("shows the photos sent by the server without waiting for the JavaScript", () => {
@@ -31,9 +31,10 @@ describe("gallery", () => {
     expect(html).not.toContain("opacity-0");
   });
 
-  it("names the last tile as the others when every photo is shown", () => {
+  it("names the last tile as the others, and no button for a single photo", () => {
     const html = renderToStaticMarkup(createElement(Gallery, { photos: photos.slice(0, 5) }));
     expect(html).toContain('aria-label="Agrandir la photo 5 sur 5"');
-    expect(html).not.toContain("+ ");
+    const single = renderToStaticMarkup(createElement(Gallery, { photos: photos.slice(0, 1) }));
+    expect(single).not.toContain("Afficher toutes les photos");
   });
 });

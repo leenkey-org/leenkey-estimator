@@ -10,6 +10,8 @@ import { expect, test, type Page } from "@playwright/test";
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
+/** The heart of a listing: over the photo on a phone, « Enregistrer » beside the title from 1024 px (L1-60). */
+const HEART = /^(Ajouter aux favoris|Enregistrer)$/;
 
 test.skip(!seeded || !SEED_PASSWORD, "comptes de seed requis (E2E_SEED=1 et SEED_PASSWORD)");
 
@@ -44,7 +46,7 @@ async function signIn(page: Page, path: string, account = "seller_a") {
 test("sans session, le cœur mène à l'inscription acquéreur", async ({ page }) => {
   const href = LISTINGS.mobile;
   await page.goto(href);
-  const heart = page.getByRole("link", { name: "Ajouter aux favoris" });
+  const heart = page.getByRole("link", { name: HEART });
   await expect(heart).toBeVisible();
   await expect(heart).toHaveAttribute(
     "href",
@@ -61,7 +63,7 @@ test("ajouter une annonce aux favoris, la retrouver, puis la retirer", async ({
   // favourites page needs it (a listing is public, it does not ask).
   await signIn(page, "/acquereur/favoris");
   await page.goto(href);
-  const heart = page.getByRole("button", { name: "Ajouter aux favoris" });
+  const heart = page.getByRole("button", { name: HEART });
   await expect(heart).toBeVisible();
   // Left saved by an interrupted run: start from an unsaved listing.
   if ((await heart.getAttribute("aria-pressed")) === "true") {
@@ -111,7 +113,7 @@ test("un échec d'enregistrement laisse la page en place et remet le cœur", asy
   const title = page.getByRole("heading", { level: 1 });
   const titleText = (await title.textContent()) ?? "";
   expect(titleText).not.toBe("");
-  const heart = page.getByRole("button", { name: "Ajouter aux favoris" });
+  const heart = page.getByRole("button", { name: HEART });
   const before = (await heart.getAttribute("aria-pressed")) ?? "false";
   // The server action posts to the page: cut it, as a lost network would.
   await page.route(`**${LISTINGS.failure}`, (route) =>

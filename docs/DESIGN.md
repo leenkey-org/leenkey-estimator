@@ -655,9 +655,9 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 **ContactCard** (vendeur sur l'annonce) : avatar initiales 40 px navy, « Camille, propriétaire » 14 px 600, « Vente accompagnée par Leenkey · répond sous 24 h » 12 px `--lk-ink-3`, icône de vérification `--lk-success` à droite. Carte bordure `--lk-line` rayon 6 (mobile) ou tuile `--lk-stone-2` (desktop, dans la colonne prix).
 
-**ActionBar annonce mobile** (collée en bas) : fond blanc, bordure haute `--lk-line`, padding 14 × 20 × 24. « Contacter le vendeur » `primary lg` (flex 1) + bouton icône calendrier 52 × 52 `secondary`.
+**ActionBar annonce mobile** (depuis L1-60 : prix et prix au m² à gauche, calendrier et « Contacter » `cta` à droite, 12.7 ; avant :) (collée en bas) : fond blanc, bordure haute `--lk-line`, padding 14 × 20 × 24. « Contacter le vendeur » `primary lg` (flex 1) + bouton icône calendrier 52 × 52 `secondary`.
 
-**PriceColumn annonce desktop** (380 px, collante à 96 px du haut) : carte blanche bordure `--lk-line` rayon 6 padding 22, écart 16 : `PriceBlock`, `ContactCard`, « Contacter le vendeur » `primary lg`, grille 2 × « Demander une visite » / « Faire une offre » `secondary md`, mention 11 px centrée `--lk-ink-3`. Dessous : `AssistantNote`.
+**PriceColumn annonce desktop** (depuis L1-60 : 20 à 26 rem, rayon 24, `shadow-lk-d-block`, prix et deux actions seulement, 12.7 ; avant :) (380 px, collante à 96 px du haut) : carte blanche bordure `--lk-line` rayon 6 padding 22, écart 16 : `PriceBlock`, `ContactCard`, « Contacter le vendeur » `primary lg`, grille 2 × « Demander une visite » / « Faire une offre » `secondary md`, mention 11 px centrée `--lk-ink-3`. Dessous : `AssistantNote`.
 
 ### 10.4 Vendeur
 
@@ -861,6 +861,22 @@ En-tête blanc padding 18 × 20 × 12 : `SearchBar` + puces (Appartement, ≤ 40
 `TopNav` ; `FilterBar` ; grille `620px | 1fr` sur toute la largeur de l'écran, puis `3fr | 2fr` à partir de 1 536 px avec trois cartes par rangée (L1-56) ; gouttières de 32 px, posées une fois sur la page ; la `TopNav` et le pied de page aussi, `fullWidth`, pour que logo, champ de recherche, liste et pied de page s'alignent. Liste : `ResultsHeader`, `ShowcaseCard` en deux colonnes (L1-55, à la place des `PropertyCard wide` ; écart 20 × 24). Carte : hauteur de l'écran sous la `TopNav`, collée pendant le défilement de la liste, bordure gauche `--lk-blue-line`. Corriger l'écart connu (section 17) : « Créer une alerte » ne passe pas à la ligne.
 
 ### 12.7 Annonce mobile `/annonce/[slug]` (`Annonce.png`, G3)
+
+> **Façon Airbnb (L1-60, demande de Younes du 2026-10-28 : « refonte des annonces, plus type Airbnb »).** Elle l'emporte sur la maquette `Annonce.png` et sur `AnnonceDesktop.png` (12.8) :
+> - **Téléphone** : la photo pleine largeur, 300 px de haut, avec le retour à gauche, et « Partager » et le cœur à droite. Le compteur est posé au-dessus de la fiche, qui remonte sur le bas de la photo (coins hauts de 24 px).
+> - **Fiche** : le titre de l'annonce ; puis, un filet entre chaque bloc :
+>   - « Appartement à Juvisy-sur-Orge » et « 82 m² · 4 pièces · 3 chambres · 5e étage » avec le DPE à droite ;
+>   - « Proposé par Alice », « Propriétaire » (« · Vente accompagnée par Leenkey » pour une formule payante), avatar de 48 px en dégradé ;
+>   - les points forts, trois au plus, tirés des données seules : « Sans commission d'agence » d'abord, puis l'extérieur, l'ascenseur à partir du 2e étage, le stationnement, une classe énergie de A à C, le neuf. Pictogramme en dégradé ;
+>   - « Le bien », replié à six lignes avec « Lire la suite » à toutes les largeurs ;
+>   - « Ce que vous savez avant de visiter » : les dix premières caractéristiques renseignées en deux colonnes, puis « Afficher les N caractéristiques » (`outline-ink`), qui ouvre toute la grille groupée dans une fenêtre (plein écran sur téléphone, boîte de 780 px à partir de 768 px) ;
+>   - « Où se situe le bien », la carte.
+> - **Barre du bas** : le prix et son prix au m² à gauche, la visite (calendrier) et « Contacter » (`cta`, nommé « Contacter le vendeur ») à droite.
+> - **À partir de 1 024 px** :
+>   - « Retour aux annonces » et le fil d'Ariane ;
+>   - le titre de 32 px, avec à sa droite « Partager » (partage de l'appareil, sinon lien copié) et « Enregistrer » (le cœur, `FavoriteButton variant="text"`), soulignés ;
+>   - la mosaïque en un bloc aux coins de 20 px, avec « Afficher toutes les photos » en bas à droite ;
+>   - les blocs à gauche, et à droite la carte de prix collante (rayon 24, `shadow-lk-d-block`) : prix, « Contacter le vendeur » `cta`, « Demander une visite » `secondary`, mention du compte. Le vendeur et le cœur ne sont plus dans cette carte.
 Galerie 280 px (retour, favori, compteur). Bloc padding 20 × 20 × 0, écart 14 : prix 26 px + `DpeBadge` « DPE C » ; titre 15 px 600 ; lieu 13 px `--lk-ink-3`. `KeyFigures` (68 m², 3 pièces, 2 chambres, 3e étage). `ContactCard`. « Le bien » : description 14 px / 1,6 tronquée à 6 lignes + « Lire la suite ». « Ce que vous savez avant de visiter » : `KeyFactsGrid` (L1-55). « Localisation » : carte 240 px avec secteur et « Voir la rue » (DESIGN 8). `ActionBar` collée.
 
 ### 12.8 Annonce desktop (`AnnonceDesktop.png`, G3)
