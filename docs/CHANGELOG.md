@@ -12,6 +12,14 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-28 · L1-61 · PR #PRNUM · Catalogue façon Airbnb
+- Modifié : la recherche `/acheter`, façon Airbnb.
+  - Sous la barre, à toutes les largeurs, les catégories : tous les biens, maisons, appartements, avec jardin, avec parking, terrains.
+  - Dans la barre desktop, Type de bien, Budget et Pièces ouvrent des panneaux arrondis : tuiles, curseur de budget avec budgets courants, pilules.
+  - Le panneau « Filtres » est refait en sections titrées, avec tuiles, curseur, puces à pictogramme, « Tout effacer » et « Voir N biens ».
+- Retiré : les puces rapides du téléphone (remplacées par les catégories) et `ChipButton`.
+- Tests : unitaires (catégories, libellé du budget) ; E2E de la recherche adaptés (catégories, panneaux de la barre, champ du budget).
+
 ### 2026-10-28 · L1-59 · PR #57 · Back office et Cockpit
 - Modifié : l'espace d'administration s'appelle « Back office » (barre latérale, en-tête mobile, menu du compte d'un admin, titres d'onglet, email interne) ; l'espace client s'appelle « Cockpit » (menu du compte et menu mobile à la place de « Mon espace », titre de l'espace acquéreur, bouton « Voir mon Cockpit » de l'email d'une annonce suspendue). Correction de la décision du 2026-10-26.
 
