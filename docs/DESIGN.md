@@ -863,7 +863,7 @@ En-tête blanc padding 18 × 20 × 12 : `SearchBar` + puces (Appartement, ≤ 40
 ### 12.7 Annonce mobile `/annonce/[slug]` (`Annonce.png`, G3)
 
 > **Façon Airbnb (L1-60, demande de Younes du 2026-10-28 : « refonte des annonces, plus type Airbnb »).** Elle l'emporte sur la maquette `Annonce.png` et sur `AnnonceDesktop.png` (12.8) :
-> - **Téléphone** : la photo pleine largeur, 300 px de haut, avec le retour à gauche et le cœur à droite (pas de « Partager » : SPEC-V2 8.5, `BACKLOG-V3.md`). Le compteur est posé au-dessus de la fiche, qui remonte sur le bas de la photo (coins hauts de 24 px).
+> - **Téléphone** : la photo pleine largeur, 300 px de haut, avec le retour à gauche, et « Partager » et le cœur à droite. Le compteur est posé au-dessus de la fiche, qui remonte sur le bas de la photo (coins hauts de 24 px).
 > - **Fiche** : le titre de l'annonce ; puis, un filet entre chaque bloc :
 >   - « Appartement à Juvisy-sur-Orge · centre » (le quartier quand il est connu) et « 82 m² · 4 pièces · 3 chambres » avec le DPE à droite : trois chiffres au plus (deux séparateurs, section 1), l'étage ou les niveaux à la place des chambres quand elles manquent, jamais l'exposition ni l'année ;
 >   - « Proposé par Alice », « Propriétaire » (« · Vente accompagnée par Leenkey » pour une formule payante), avatar de 48 px en dégradé ; sans prénom, « Proposé par le propriétaire » seul et un pictogramme dans l'avatar ;
@@ -874,7 +874,7 @@ En-tête blanc padding 18 × 20 × 12 : `SearchBar` + puces (Appartement, ≤ 40
 > - **Barre du bas** : le prix et son prix au m² à gauche, la visite (calendrier) et « Contacter » (`cta`, nommé « Contacter le vendeur ») à droite. L'aperçu du vendeur (L1-13), sans cette barre, montre le prix sous la ligne des chiffres.
 > - **À partir de 1 024 px** :
 >   - « Retour aux annonces » et le fil d'Ariane ;
->   - le titre de 32 px en 700, avec à sa droite « Enregistrer » (le cœur, `FavoriteButton variant="text"`, 44 px de haut), souligné ;
+>   - le titre de 32 px en 700, avec à sa droite « Partager » (partage de l'appareil, sinon lien copié et « Lien de l'annonce copié. » 3 s en bas de l'écran) et « Enregistrer » (le cœur, `FavoriteButton variant="text"`), soulignés, 44 px de haut ;
 >   - la mosaïque en un bloc aux coins de 20 px (l'anneau de focus à l'intérieur des photos), avec « Afficher toutes les photos » (`outline-ink sm`) en bas à droite ;
 >   - les blocs à gauche, et à droite la carte de prix collante (rayon 24, `shadow-lk-d-block`) : prix, « Contacter le vendeur » `cta`, « Demander une visite » `secondary`, mention du compte. Le vendeur et le cœur ne sont plus dans cette carte.
 

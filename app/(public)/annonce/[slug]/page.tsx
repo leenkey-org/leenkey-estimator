@@ -8,6 +8,7 @@ import { favoriteState } from "@/leenkey/favorites/queries";
 import { BackLink } from "@/leenkey/listings/components/back-link";
 import { ActionBar, PriceColumn } from "@/leenkey/listings/components/listing-actions";
 import { ListingBody } from "@/leenkey/listings/components/listing-body";
+import { ShareButton } from "@/leenkey/listings/components/share-button";
 import { ListingBreadcrumb } from "@/leenkey/listings/components/listing-breadcrumb";
 import { ListingMap } from "@/leenkey/listings/components/listing-map";
 import { ListingViewTracker } from "@/leenkey/listings/components/listing-view-tracker";
@@ -97,6 +98,9 @@ export default async function ListingPage({ params }: Props) {
     />
   );
   const url = absoluteUrl(`/annonce/${listing.slug}`);
+  const share = (variant: "text" | "float") => (
+    <ShareButton url={url} title={listing.title} variant={variant} />
+  );
   const jsonLd = listingJsonLd(listing, url, absoluteUrl(`/api/og/${listing.slug}`));
 
   return (
@@ -114,11 +118,20 @@ export default async function ListingPage({ params }: Props) {
         </div>
         <ListingBody
           listing={listing}
-          // Beside the title from 1024 px, over the photo below (L1-60, as
-          // Airbnb). No « Partager » in V2 (SPEC-V2 8.5, BACKLOG-V3).
-          actions={heart("text")}
+          // Beside the title from 1024 px, over the photo below (L1-60, as Airbnb).
+          actions={
+            <>
+              {share("text")}
+              {heart("text")}
+            </>
+          }
           galleryTopLeft={<BackLink />}
-          galleryTopRight={heart("white-float")}
+          galleryTopRight={
+            <div className="flex gap-2.5">
+              {share("float")}
+              {heart("white-float")}
+            </div>
+          }
           aside={<PriceColumn listing={listing} links={links} />}
           map={
             listing.location ? (

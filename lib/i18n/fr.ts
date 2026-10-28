@@ -1445,6 +1445,11 @@ export const fr = {
     // L1-60, in the way of Airbnb: the actions beside the title, over the
     // mobile photo; the type and the place, the facts in one line; the seller;
     // the strong points, from the data of the listing only.
+    share: {
+      label: "Partager",
+      copied: "Lien de l'annonce copié.",
+      error: "Le lien n'a pas pu être copié. Copiez l'adresse de la page.",
+    },
     overview: (kind: string, place: string) => `${kind} ${place}`,
     host: {
       title: (firstName: string) => `Proposé par ${firstName}`,

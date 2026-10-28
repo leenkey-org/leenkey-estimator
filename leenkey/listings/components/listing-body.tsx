@@ -76,9 +76,9 @@ export function ListingBody({
   className,
 }: {
   listing: PublicListing;
-  /** Beside the title from 1024 px (« Enregistrer »). */
+  /** Beside the title from 1024 px (« Partager », « Enregistrer »). */
   actions?: ReactNode;
-  /** Over the mobile photo (back link, favourite). */
+  /** Over the mobile photo (back link, share, favourite). */
   galleryTopLeft?: ReactNode;
   galleryTopRight?: ReactNode;
   /** The price column (PriceColumn), from 1024 px. */

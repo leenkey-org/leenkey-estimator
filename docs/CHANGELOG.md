@@ -14,7 +14,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 
 ### 2026-10-28 · L1-60 · PR #58 · Page annonce façon Airbnb
 - Modifié : la page d'une annonce, façon Airbnb.
-  - Titre et « Enregistrer » au-dessus de la mosaïque, qui devient un seul bloc avec « Afficher toutes les photos ».
+  - Titre, « Partager » et « Enregistrer » au-dessus de la mosaïque, qui devient un seul bloc avec « Afficher toutes les photos ».
   - Blocs séparés d'un filet : type, lieu et quartier avec trois chiffres en une ligne, vendeur, trois points forts tirés des données, description repliable, caractéristiques (énergie et coûts d'abord) puis toutes dans une fenêtre, carte « Où se situe le bien ».
   - Carte de prix collante allégée ; sur téléphone, la fiche remonte sur la photo et la barre du bas montre le prix avec « Contacter ».
   - L'aperçu du vendeur garde le prix sur téléphone, sous les chiffres.
