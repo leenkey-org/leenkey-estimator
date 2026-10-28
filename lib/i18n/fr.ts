@@ -1218,7 +1218,7 @@ export const fr = {
         before: "Si vous n'êtes pas d'accord ou si vous avez corrigé le problème, écrivez-nous à ",
         after: " : nous vous répondons sous 48\u00A0h, 7\u00A0j/7.",
       },
-      action: "Ouvrir mon Cockpit",
+      action: "Voir mon Cockpit",
     },
   },
   // Labels of SPEC-V2 section 7 (StatusBadge mapping), colours in DESIGN.md 10.2.

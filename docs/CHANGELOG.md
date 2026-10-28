@@ -13,7 +13,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 -->
 
 ### 2026-10-28 · L1-59 · PR #57 · Back office et Cockpit
-- Modifié : l'espace d'administration s'appelle « Back office » (barre latérale, en-tête mobile, menu du compte d'un admin, titres d'onglet, email interne) ; l'espace client s'appelle « Cockpit » (menu du compte et menu mobile à la place de « Mon espace », titre de l'espace acquéreur, bouton « Ouvrir mon Cockpit » de l'email d'une annonce suspendue). Correction de la décision du 2026-10-26.
+- Modifié : l'espace d'administration s'appelle « Back office » (barre latérale, en-tête mobile, menu du compte d'un admin, titres d'onglet, email interne) ; l'espace client s'appelle « Cockpit » (menu du compte et menu mobile à la place de « Mon espace », titre de l'espace acquéreur, bouton « Voir mon Cockpit » de l'email d'une annonce suspendue). Correction de la décision du 2026-10-26.
 
 ### 2026-10-27 · L1-58 · PR #56 · Charte D sur tout le site
 - Modifié : tout le site passe dans la charte de Leenkey validée sur l'accueil : nuit, dégradé bleu → violet, police Sora.
