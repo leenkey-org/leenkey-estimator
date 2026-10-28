@@ -99,6 +99,32 @@ const MARGIN_PX = 16;
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+/**
+ * The room left for the pill: the part of the map seen on the screen (the
+ * bottom of the panel of the desktop is under the fold until the page is
+ * scrolled), less the card, above or under it. Viewport pixels.
+ */
+function freeRoom(
+  region: HTMLElement | null,
+  preview: HTMLElement | null,
+): { box: DOMRect; top: number; bottom: number } | null {
+  const box = region?.getBoundingClientRect();
+  const card = preview?.getBoundingClientRect();
+  if (!box || !card) return null;
+  const top = Math.max(box.top, 0);
+  const bottom = Math.min(box.bottom, window.innerHeight);
+  return card.top - box.top < box.bottom - card.bottom
+    ? { box, top: card.bottom, bottom }
+    : { box, top, bottom: card.top };
+}
+
+/** The pixels the centre goes south for the pill to sit in the middle of that room. */
+function shiftForCard(region: HTMLElement | null, preview: HTMLElement | null): number | null {
+  const room = freeRoom(region, preview);
+  if (!room) return null;
+  return room.box.top + room.box.height / 2 - (room.top + room.bottom) / 2;
+}
+
 export function SearchMap({
   apiKey,
   listings,
@@ -216,29 +242,6 @@ export function SearchMap({
 
   const selected = listings.find((listing) => listing.id === selectedId) ?? null;
 
-  /**
-   * The room left for the pill: the part of the map seen on the screen (the
-   * bottom of the panel of the desktop is under the fold until the page is
-   * scrolled), less the card, above or under it. Viewport pixels.
-   */
-  function freeRoom(): { box: DOMRect; top: number; bottom: number } | null {
-    const box = region.current?.getBoundingClientRect();
-    const card = preview.current?.getBoundingClientRect();
-    if (!box || !card) return null;
-    const top = Math.max(box.top, 0);
-    const bottom = Math.min(box.bottom, window.innerHeight);
-    return card.top - box.top < box.bottom - card.bottom
-      ? { box, top: card.bottom, bottom }
-      : { box, top, bottom: card.top };
-  }
-
-  /** The pixels the centre goes south for the pill to sit in the middle of that room. */
-  function shiftForCard(): number | null {
-    const room = freeRoom();
-    if (!room) return null;
-    return room.box.top + room.box.height / 2 - (room.top + room.bottom) / 2;
-  }
-
   // A pill chosen: lit, seen; the map moves only when the pill is not in
   // the room left by the card (Airbnb), and the focus goes to the card.
   useEffect(() => {
@@ -246,7 +249,7 @@ export function SearchMap({
     const chosen = latest.current.listings.find((listing) => listing.id === selectedId);
     if (!view || !chosen) return;
     handlers.current.onVisit(chosen.id);
-    const room = freeRoom();
+    const room = freeRoom(region.current, preview.current);
     const pill = region.current
       ?.querySelector(`[data-label-id="${CSS.escape(chosen.id)}"]`)
       ?.getBoundingClientRect();
@@ -257,7 +260,7 @@ export function SearchMap({
       pill.right <= room.box.right - MARGIN_PX &&
       pill.top >= room.top + MARGIN_PX &&
       pill.bottom <= room.bottom - MARGIN_PX;
-    const shift = shiftForCard();
+    const shift = shiftForCard(region.current, preview.current);
     const zoom = view.map.getZoom();
     if (!inRoom && shift !== null && zoom !== undefined) {
       const target = centreBelow(chosen.position, zoom, shift);
@@ -271,7 +274,7 @@ export function SearchMap({
   function zoomTo(zoom: number) {
     if (!view) return;
     view.map.setZoom(zoom);
-    const shift = selected ? shiftForCard() : null;
+    const shift = selected ? shiftForCard(region.current, preview.current) : null;
     if (selected && shift !== null) view.map.setCenter(centreBelow(selected.position, zoom, shift));
   }
 

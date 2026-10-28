@@ -37,7 +37,7 @@ const ANSWER_WITHIN_MS = 24 * 60 * 60 * 1000;
  * (L1-13b), the documents come with lot 3, the visits with lot 3, the offers
  * with lot 2, the contacts and the publication are not their doing.
  */
-function taskHref(code: string, property: SaleSituation["property"]): string | null {
+export function taskHref(code: string, property: SaleSituation["property"]): string | null {
   switch (code) {
     case "property_complete":
       return editHref(property, "characteristics");
@@ -55,7 +55,7 @@ function taskHref(code: string, property: SaleSituation["property"]): string | n
 }
 
 /** The seller does the tasks that are theirs (or shared): by hand, or where taskHref leads. */
-function sellerCanDo(task: StepTask, property: SaleSituation["property"]): boolean {
+export function sellerCanDo(task: StepTask, property: SaleSituation["property"]): boolean {
   if (task.owner !== "seller" && task.owner !== "both") return false;
   return task.autoTrigger === null || taskHref(task.code, property) !== null;
 }

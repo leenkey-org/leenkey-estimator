@@ -14,7 +14,7 @@ import type { SellerProperty } from "./queries";
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
 
-export type SheetTab = "infos" | "photos" | "annonce";
+export type SheetTab = "infos" | "photos" | "annonce" | "etapes";
 
 /** Address of a tab of the page of a property; Infos is the page itself. */
 export function sheetHref(propertyId: string, tab: SheetTab = "infos"): string {
@@ -28,6 +28,8 @@ export function sheetTabs(propertyId: string): { href: string; label: string }[]
     { href: sheetHref(propertyId), label: t.infos },
     { href: sheetHref(propertyId, "photos"), label: t.photos },
     { href: sheetHref(propertyId, "annonce"), label: t.listing },
+    // All the steps of the sale (L1-24, « Toutes les étapes » of « Ma vente »).
+    { href: sheetHref(propertyId, "etapes"), label: t.steps },
   ];
 }
 

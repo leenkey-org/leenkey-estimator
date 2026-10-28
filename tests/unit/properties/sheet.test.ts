@@ -54,13 +54,15 @@ const listing: NonNullable<SellerProperty["listing"]> = {
 const plain = (text: string) => text.replace(/[\u00A0\u202F]/g, " ");
 
 describe("tabs of the page of a property", () => {
-  it("Infos is the page itself, Photos and Annonce under it", () => {
+  it("Infos is the page itself, Photos, Annonce and Étapes under it", () => {
     expect(sheetHref(id)).toBe(`/vendeur/biens/${id}`);
     expect(sheetHref(id, "photos")).toBe(`/vendeur/biens/${id}/photos`);
     expect(sheetTabs(id)).toEqual([
       { href: `/vendeur/biens/${id}`, label: "Infos" },
       { href: `/vendeur/biens/${id}/photos`, label: "Photos" },
       { href: `/vendeur/biens/${id}/annonce`, label: "Annonce" },
+      // All the steps of the sale (L1-24).
+      { href: `/vendeur/biens/${id}/etapes`, label: "Étapes" },
     ]);
   });
 });

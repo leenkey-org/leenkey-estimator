@@ -12,6 +12,14 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-28 · L1-24 · PR #61
+- Ajouté : « Ma vente » complet (SPEC 8.7, DESIGN 12.3) : en-tête de nuit (`SellerHeader`, salutation, menu « Changer de bien », carte du bien, `StepProgress` avec la formule), prochaine action (`NextActionCard`, `getNextAction` de L1-23), vues sur 7 jours, contacts et acquéreurs qualifiés (`StatTile`), tâches de l'étape (`TaskList`, « Fait » / « Annuler » pour les tâches sans événement), trois dernières conversations, puis « Vos biens ». Brouillon : « Terminez votre annonce » ; vendu : le bilan de la vente.
+- Ajouté : onglet « Étapes » de la fiche du bien (« Toutes les étapes ») : les six étapes de la formule, l'étape en cours marquée.
+- Ajouté : action `setSaleTaskDone` (session du vendeur, RLS `sale_task_is_seller_manual`), schéma Zod `saleTaskSchema` ; une tâche se coche jusqu'à l'étape en cours, jamais sur un bien suspendu ou vendu (vérifié par l'action) ; mise à jour puis insertion, pas d'`upsert` (droits par colonne de `sale_task_status`).
+- Corrigé : avertissement ESLint `react-hooks/exhaustive-deps` de la carte de recherche (`freeRoom` et `shiftForCard` sorties du composant), sans changement de comportement.
+- Modifié : voix « nous » dans la prochaine action (« Nous vous indiquons ce qu'il faut modifier », « Envoyez-nous votre annonce ») ; « Se coche automatiquement » pour les tâches cochées par un événement ; `StepProgress` lu « Étape 3 sur 6 · … » (`aria-valuetext`).
+- Tests : unitaires (bien affiché, étape, prochaine action en mots, tâches, chiffres, action `setSaleTaskDone`) ; E2E du tableau de bord (en-tête, prochaine action, chiffres, tâches, conversations, « Toutes les étapes », menu « Changer de bien », annonce refusée et en relecture, aucun débordement sur téléphone, scans d'accessibilité).
+
 ### 2026-10-28 · L1-62 · PR #60 · Carte de la recherche façon Airbnb
 - Modifié : la carte de `/acheter`, façon Airbnb.
   - Une pastille choisie montre son bien sur la carte : photos, prix, lieu, lien. Sa carte de liste est entourée, sans défilement. La carte ne bouge que si la pastille serait cachée ; Échap, « Fermer l'aperçu » ou un clic sur la carte referment.
