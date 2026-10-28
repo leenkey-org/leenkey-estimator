@@ -20,9 +20,6 @@ import { searchHref, type SearchFilters, type SearchQuery } from "@/lib/validati
 // results. This context gives the controls the current query, a navigate()
 // that keeps them responsive (transition) and the filters panel state.
 
-/** Fields of the filters panel that a chip can open directly. */
-export type FilterField = "budget" | "rooms" | "dpe";
-
 type SearchContextValue = {
   query: SearchQuery;
   /** Total of the current results, null when the search failed. */
@@ -38,8 +35,7 @@ type SearchContextValue = {
   /** « Voir plus »: next page, without scrolling to the top. */
   showMore: () => void;
   filtersOpen: boolean;
-  filtersFocus: FilterField | null;
-  openFilters: (focus?: FilterField) => void;
+  openFilters: () => void;
   setFiltersOpen: (open: boolean) => void;
 };
 
@@ -67,7 +63,6 @@ export function SearchProvider({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filtersFocus, setFiltersFocus] = useState<FilterField | null>(null);
 
   useEffect(() => rememberSearch(searchHref(query)), [query]);
 
@@ -89,14 +84,10 @@ export function SearchProvider({
       applySort: (sort) => go({ filters: query.filters, sort, page: 1 }, true),
       showMore: () => go({ ...query, page: query.page + 1 }, false),
       filtersOpen,
-      filtersFocus,
-      openFilters: (focus) => {
-        setFiltersFocus(focus ?? null);
-        setFiltersOpen(true);
-      },
+      openFilters: () => setFiltersOpen(true),
       setFiltersOpen,
     }),
-    [query, total, placeLabel, radiusAvailable, isPending, go, filtersOpen, filtersFocus],
+    [query, total, placeLabel, radiusAvailable, isPending, go, filtersOpen],
   );
 
   return <SearchContext.Provider value={value}>{children}</SearchContext.Provider>;

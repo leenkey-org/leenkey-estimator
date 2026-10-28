@@ -620,7 +620,7 @@ const bar = fr.search.bar;
 
 export const filterBar = {
   selectCaption:
-    "FilterMenu · parties de la barre arrondie de la recherche desktop : le nom au-dessus de la valeur, en bleu quand une valeur est choisie ; un menu arrondi aux choix cochés (flèches, Entrée, Échap)",
+    "FilterMenu · le nom au-dessus de la valeur, en bleu quand une valeur est choisie ; un menu arrondi aux choix cochés (flèches, Entrée, Échap). Sert au tri des résultats ; depuis L1-61, les parties de la barre de /acheter ouvrent un FilterPopover (tuiles, curseur de budget, pastilles)",
   type: {
     label: bar.type,
     defaultValue: "appartement",
@@ -652,9 +652,6 @@ export const filterBar = {
     ] satisfies FilterMenuOption[],
   },
   more: fr.search.filtersButton,
-  chipCaption:
-    "ChipButton · même forme qu'un filtre rapide inactif, ouvre le panneau des filtres sur son champ (barre mobile)",
-  chips: [fr.search.chips.budget, fr.search.chips.rooms, fr.search.chips.dpe],
 };
 
 export const galleryPhotos: GalleryPhoto[] = [

@@ -8,14 +8,8 @@ import {
   toPropertyCard,
   toShowcaseCard,
 } from "@/leenkey/search/cards";
-import {
-  bedroomsLabel,
-  budgetLabel,
-  dpeLabel,
-  outdoorLabel,
-  roomsLabel,
-  surfaceLabel,
-} from "@/leenkey/search/filter-labels";
+import { categoryOn, toggleCategory } from "@/leenkey/search/categories";
+import { budgetLabel } from "@/leenkey/search/filter-labels";
 import { filtersFromForm, formFromFilters, wholeNumberInput } from "@/leenkey/search/filters-form";
 import { groupPhotos } from "@/leenkey/search/photos";
 import type { SearchListing } from "@/leenkey/search/queries";
@@ -97,28 +91,54 @@ describe("filters panel", () => {
   });
 });
 
-describe("chip labels", () => {
-  it("shortens the active filters", () => {
+describe("budget label", () => {
+  it("shortens the budget of the bar", () => {
     expect(plain(budgetLabel({ priceMaxCents: 40_000_000 }))).toBe("≤ 400 k€");
     expect(plain(budgetLabel({ priceMinCents: 20_000_000 }))).toBe("≥ 200 k€");
     expect(plain(budgetLabel({ priceMinCents: 20_000_000, priceMaxCents: 125_000_000 }))).toBe(
       "200 k€ – 1,25 M€",
     );
     expect(budgetLabel({})).toBeUndefined();
-    expect(plain(surfaceLabel({ surfaceMin: 60 }))).toBe("≥ 60 m²");
-    expect(plain(surfaceLabel({ surfaceMin: 60, surfaceMax: 120 }))).toBe("60 – 120 m²");
-    expect(plain(roomsLabel({ roomsMin: 3 }))).toBe("3 pièces +");
-    expect(roomsLabel({ roomsMin: 1 })).toBe("1 pièce +");
-    expect(plain(bedroomsLabel({ bedroomsMin: 2 }))).toBe("2 chambres +");
-    expect(dpeLabel({ dpeMax: "D" })).toBe("DPE A à D");
-    expect(dpeLabel({ dpeMax: "A" })).toBe("DPE A");
+  });
+});
+
+describe("categories under the bar", () => {
+  it("presses a type, the garden or the parking, keeping the other filters", () => {
+    const base = { priceMaxCents: 40_000_000, roomsMin: 3 };
+    expect(categoryOn("all", base)).toBe(true);
+    const houses = toggleCategory("maison", base);
+    expect(houses).toEqual({ ...base, type: "maison" });
+    expect(categoryOn("maison", houses)).toBe(true);
+    expect(categoryOn("all", houses)).toBe(false);
+    // Another type replaces it; pressed again, it goes.
+    expect(toggleCategory("appartement", houses).type).toBe("appartement");
+    expect(toggleCategory("maison", houses).type).toBeUndefined();
+
+    const garden = toggleCategory("jardin", { ...houses, outdoor: ["balcon"] });
+    expect(garden.outdoor).toEqual(["balcon", "jardin"]);
+    expect(categoryOn("jardin", garden)).toBe(true);
+    expect(toggleCategory("jardin", garden).outdoor).toEqual(["balcon"]);
+    expect(toggleCategory("jardin", toggleCategory("jardin", houses)).outdoor).toBeUndefined();
+
+    const parking = toggleCategory("parking", houses);
+    expect(parking.parking).toBe(true);
+    expect(toggleCategory("parking", parking).parking).toBeUndefined();
   });
 
-  it("names the outdoor spaces chosen", () => {
-    expect(outdoorLabel({})).toBe("Extérieur");
-    expect(outdoorLabel({ outdoor: ["balcon", "terrasse", "jardin"] })).toBe("Extérieur");
-    expect(outdoorLabel({ outdoor: ["jardin"] })).toBe("Jardin");
-    expect(outdoorLabel({ outdoor: ["balcon", "terrasse"] })).toBe("Balcon, terrasse");
+  it("« Tous les biens » clears the type, the garden and the parking only", () => {
+    const filters: SearchFilters = {
+      type: "maison",
+      outdoor: ["terrasse", "jardin"],
+      parking: true,
+      priceMaxCents: 40_000_000,
+    };
+    expect(toggleCategory("all", filters)).toEqual({
+      type: undefined,
+      outdoor: ["terrasse"],
+      parking: undefined,
+      priceMaxCents: 40_000_000,
+    });
+    expect(toggleCategory("all", { outdoor: ["jardin"] }).outdoor).toBeUndefined();
   });
 });
 

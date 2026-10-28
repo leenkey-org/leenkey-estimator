@@ -29,7 +29,7 @@ import { BottomNav } from "@/components/shared/bottom-nav";
 import { BrandPanel } from "@/components/shared/brand-panel";
 import { Button } from "@/components/shared/button";
 import { Checkbox } from "@/components/shared/checkbox";
-import { ChipButton, ChipToggle } from "@/components/shared/chip-toggle";
+import { ChipToggle } from "@/components/shared/chip-toggle";
 import { ChoiceCard } from "@/components/shared/choice-card";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { ContactCard } from "@/components/shared/contact-card";
@@ -562,14 +562,6 @@ export default function DesignPage() {
               <Button variant="outline-ink" shape="pill" className="h-14 shrink-0 px-5">
                 {content.filterBar.more}
               </Button>
-            </div>
-            <Caption>{content.filterBar.chipCaption}</Caption>
-            <div className="flex flex-wrap gap-2">
-              {content.filterBar.chips.map((label) => (
-                <ChipButton key={label} compact>
-                  {label}
-                </ChipButton>
-              ))}
             </div>
           </Section>
 

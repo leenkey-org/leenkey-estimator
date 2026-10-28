@@ -1291,21 +1291,21 @@ export const fr = {
     activeFilters: (count: number) =>
       count === 1 ? "1 filtre actif" : `${count}\u00A0filtres actifs`,
     quickFilters: "Filtres rapides",
+    // L1-61, in the way of Airbnb: the row of categories under the bar, each
+    // a filter pressed or not (the type, a garden, a parking).
+    categories: {
+      label: "Catégories de biens",
+      all: "Tous les biens",
+      maison: "Maisons",
+      appartement: "Appartements",
+      jardin: "Avec jardin",
+      parking: "Avec parking",
+      terrain: "Terrains",
+    },
     chips: {
-      budget: "Budget",
-      rooms: "Pièces",
-      outdoor: "Extérieur",
-      dpe: "DPE",
       priceMax: (price: string) => `≤ ${price}`,
       priceMin: (price: string) => `≥ ${price}`,
       priceRange: (min: string, max: string) => `${min} – ${max}`,
-      surfaceMax: (surface: string) => `≤ ${surface}`,
-      surfaceMin: (surface: string) => `≥ ${surface}`,
-      surfaceRange: (min: string, max: string) => `${min} – ${max}`,
-      roomsMin: (rooms: number) => (rooms === 1 ? "1 pièce +" : `${rooms}\u00A0pièces +`),
-      bedroomsMin: (bedrooms: number) =>
-        bedrooms === 1 ? "1 chambre +" : `${bedrooms}\u00A0chambres +`,
-      dpeMax: (letter: string) => (letter === "A" ? "DPE A" : `DPE A à ${letter}`),
     },
     bar: {
       label: "Filtres de la recherche",
@@ -1318,7 +1318,11 @@ export const fr = {
       surfaceAtLeast: (surface: string) => `${surface} et +`,
       // The rounded bar of direction C (DECISIONS 2026-10-26): a name above its value.
       where: "Où\u00A0?",
-      budgetTitle: "Budget max",
+      budgetTitle: "Budget",
+      // The panels of the bar (L1-61): the budget is applied with « Appliquer ».
+      apply: "Appliquer",
+      clear: "Effacer",
+      presets: "Budgets courants",
       typeAll: "Tous les biens",
       any: "Indifférent",
       dpeAll: "Toutes les classes",
@@ -1343,13 +1347,25 @@ export const fr = {
       anyShort: "Tous",
       roomsShort: (rooms: number) => `${rooms}+`,
       dpeMax: "Classe énergie (DPE), au plus",
+      // The sections of the panel (L1-61, in the way of Airbnb).
+      sections: {
+        type: "Type de bien",
+        budget: "Fourchette de budget",
+        budgetText: "Le prix de vente, sans frais d'agence.",
+        surface: "Surface habitable",
+        rooms: "Pièces et chambres",
+        outdoor: "Extérieur",
+        equipment: "Équipements",
+        dpe: "Performance énergétique",
+      },
+      budgetRange: "Fourchette de budget",
       outdoor: "Extérieur",
       outdoorHelp: "Les biens qui ont au moins l'un des extérieurs choisis.",
       equipment: "Équipements",
       parking: "Stationnement",
       elevator: "Ascenseur",
       minAboveMax: "Le maximum doit être supérieur ou égal au minimum.",
-      clear: "Effacer",
+      clear: "Tout effacer",
       show: (count: number) =>
         count === 0 ? "Aucun bien" : count === 1 ? "Voir 1 bien" : `Voir ${count}\u00A0biens`,
       showUnknown: "Voir les biens",
