@@ -43,7 +43,11 @@ export function NextActionCard({
           </div>
         </div>
         {actions ? (
-          <div className="grid gap-2.5 sm:flex sm:flex-wrap [&>*]:sm:flex-1">{actions}</div>
+          // Side by side on a phone, sharing the width (one under the other
+          // when their labels need it); from 768 px their own width, under the text.
+          <div className="flex flex-wrap gap-2.5 md:pl-13.5 [&>*]:flex-[1_1_9rem] [&>*]:md:flex-none">
+            {actions}
+          </div>
         ) : null}
       </div>
     </section>

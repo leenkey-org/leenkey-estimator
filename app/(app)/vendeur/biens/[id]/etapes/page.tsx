@@ -18,7 +18,7 @@ type Props = { params: Promise<{ id: string }> };
 // « Toutes les étapes » of a sale (L1-24, the extended view of « À faire »,
 // SPEC-V2 8.7 and section 9): the steps of its plan in order, the current one
 // marked, each with its tasks; the tasks without event where the seller acts
-// are ticked by hand here as on « Ma vente ».
+// are ticked by hand here as on « Ma vente », up to the current step.
 export default async function PropertyStepsPage({ params }: Props) {
   const { id } = await params;
   const property = await propertyForSheet(id);
@@ -32,13 +32,17 @@ export default async function PropertyStepsPage({ params }: Props) {
     );
   }
   const editable = property.listingStatus !== "suspended" && property.listingStatus !== "sold";
+  const steps = progress.data.steps;
+  const currentPosition =
+    steps.find((step) => step.code === progress.data?.currentStepCode)?.position ?? 1;
   return (
     <div className="flex flex-col gap-8">
       <h2 className="sr-only">{t.steps.title}</h2>
-      {progress.data.steps.map((step) => {
+      {steps.map((step) => {
         const current = step.code === progress.data?.currentStepCode;
         const count = stepCount(step);
-        const lines = taskLines(step, property, editable);
+        // Ticked by hand up to the current step: the later ones wait for it.
+        const lines = taskLines(step, property, editable && step.position <= currentPosition);
         return (
           <section
             key={step.code}
@@ -54,7 +58,7 @@ export default async function PropertyStepsPage({ params }: Props) {
                   current ? "text-lk-blue" : "text-lk-ink",
                 )}
               >
-                {t.step(step.position, progress.data?.steps.length ?? 0, step.title)}
+                {t.step(step.position, steps.length, step.title)}
               </h3>
               <span className="text-lk-caption tabular text-lk-ink-3">
                 {current ? `${t.steps.current} · ` : ""}

@@ -63,10 +63,19 @@ export type NextActionView = {
   secondary: ActionLink | null;
 };
 
+export type ActionLinks = {
+  sheet: string;
+  steps: string;
+  messages: string;
+  /** Its public page, once published. */
+  listing: string | null;
+};
+
 export function nextActionView(
   action: NextAction,
-  links: { sheet: string; steps: string; messages: string },
+  links: ActionLinks,
   now = new Date(),
+  listingStatus: SellerProperty["listingStatus"] = null,
 ): NextActionView {
   const n = t.next;
   switch (action.rule) {
@@ -97,11 +106,25 @@ export function nextActionView(
         secondary: { label: n.task.secondary, href: links.steps },
       };
     case "advice":
+      // Nothing for the seller to do: while Leenkey reviews the listing, when
+      // it comes back; online, the listing as buyers see it.
+      if (listingStatus === "pending") {
+        return {
+          icon: "advice",
+          title: n.review.title,
+          detail: n.review.text,
+          primary: { label: n.advice.sheet, href: links.sheet },
+          secondary: null,
+        };
+      }
       return {
         icon: "advice",
         title: action.step.title,
         detail: action.step.description || null,
-        primary: { label: n.advice.action, href: links.steps },
+        primary:
+          listingStatus === "published" && links.listing
+            ? { label: n.advice.listing, href: links.listing }
+            : { label: n.advice.sheet, href: links.sheet },
         secondary: null,
       };
   }

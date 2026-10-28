@@ -557,7 +557,9 @@ test.describe("comptes connectés (base de seed)", () => {
     isMobile,
   }) => {
     await signIn(page, "seller_a", "/vendeur");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bonjour Alice");
+    // « Ma vente » (L1-24): the greeting above the title.
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Ma vente");
+    await expect(page.getByText("Bonjour Alice", { exact: true })).toBeVisible();
     await expectFooter(page);
     const bell = page.getByRole("button", { name: "Notifications", exact: true });
     // One bell at each width: next to the title in mobile, in the TopNav after.

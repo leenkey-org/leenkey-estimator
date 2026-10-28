@@ -29,6 +29,7 @@ import { saleDashboard } from "@/leenkey/properties/dashboard-data";
 import { getNextAction } from "@/leenkey/properties/next-action";
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import { sellerProperties } from "@/leenkey/properties/queries";
+import { listingHref } from "@/leenkey/search/cards";
 import { creationHref, propertyName, sheetHref } from "@/leenkey/properties/sheet";
 import { formatDateShort, formatInteger, formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
@@ -145,6 +146,7 @@ export default async function SellerHomePage({ searchParams }: Props) {
     sheet: sheetHref(property.id),
     steps: sheetHref(property.id, "etapes"),
     messages: "/messages",
+    listing: listing && property.listingStatus === "published" ? listingHref(listing.slug) : null,
   };
 
   const header = (
@@ -162,6 +164,7 @@ export default async function SellerHomePage({ searchParams }: Props) {
         id: item.id,
         label: propertyName(item),
         href: dashboardHref(item.id),
+        status: item.listingStatus ?? "draft",
         current: item.id === property.id,
       }))}
       property={{
@@ -237,7 +240,7 @@ export default async function SellerHomePage({ searchParams }: Props) {
     );
   } else {
     const action = situation ? getNextAction(situation, now) : null;
-    const view = action ? nextActionView(action, links, now) : null;
+    const view = action ? nextActionView(action, links, now, property.listingStatus) : null;
     const figures = saleFigures(data.data.conversations, data.data.views);
     const lines = step && situation ? taskLines(step, situation.property, editable) : [];
     const recent = data.data.conversations.slice(0, 3);
@@ -288,7 +291,8 @@ export default async function SellerHomePage({ searchParams }: Props) {
           />
         </section>
 
-        <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        {/* minmax(0, 1fr): the previews cut at the end of their line never widen it. */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
           {step ? (
             <Section
               id="a-faire"

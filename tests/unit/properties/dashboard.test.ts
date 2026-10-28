@@ -200,6 +200,7 @@ describe("the step and the next action in words", () => {
     sheet: "/vendeur/biens/p1",
     steps: "/vendeur/biens/p1/etapes",
     messages: "/messages",
+    listing: "/annonce/appartement-savigny-lk-0001",
   };
 
   it("a buyer waiting: their first name, since when, the conversation", () => {
@@ -234,12 +235,26 @@ describe("the step and the next action in words", () => {
       links,
       NOW,
     );
-    expect(rejected.detail).toBe(
-      "Leenkey vous indique ce qu'il faut modifier avant de la publier.",
-    );
-    expect(nextActionView({ rule: "advice", step }, links, NOW)).toMatchObject({
+    expect(rejected.detail).toBe("Nous vous indiquons ce qu'il faut modifier avant de la publier.");
+  });
+
+  it("nothing to do: the review under way, or the listing as buyers see it", () => {
+    const step = progress("notary", []).steps[1];
+    expect(nextActionView({ rule: "advice", step }, links, NOW, "published")).toEqual({
+      icon: "advice",
       title: "Préparer ma vente avec le notaire",
       detail: null,
+      primary: { label: "Voir l'annonce en ligne", href: "/annonce/appartement-savigny-lk-0001" },
+      secondary: null,
+    });
+    expect(nextActionView({ rule: "advice", step }, links, NOW, "pending")).toMatchObject({
+      title: "Nous relisons votre annonce",
+      detail: "Nous la relisons sous 24\u00A0h et vous prévenons par email.",
+      primary: { label: "Voir le bien", href: "/vendeur/biens/p1" },
+    });
+    expect(nextActionView({ rule: "advice", step }, links, NOW, "paused").primary).toEqual({
+      label: "Voir le bien",
+      href: "/vendeur/biens/p1",
     });
   });
 });

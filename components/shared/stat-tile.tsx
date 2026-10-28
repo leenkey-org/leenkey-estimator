@@ -22,6 +22,7 @@ export function StatTile({
       )}
     >
       <span className="text-lk-stat font-bold tracking-lk-d-snug tabular text-lk-ink">{value}</span>
+      {/* Read « 248 vues · 7 j », not « 248vues » (no box in a flex column). */}{" "}
       <span className="text-lk-caption text-lk-ink-3">{label}</span>
     </div>
   );

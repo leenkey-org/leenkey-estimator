@@ -169,7 +169,7 @@ export const fr = {
   // « Ma vente », the dashboard of a sale (L1-24, SPEC-V2 8.7, DESIGN.md 12.3).
   saleDashboard: {
     title: "Ma vente",
-    choose: "Vos biens en vente",
+    switch: { trigger: "Changer de bien" },
     figures: (price: string, published: string | null) =>
       published ? `${price} · publié le ${published}` : price,
     step: (position: number, total: number, title: string) =>
@@ -178,7 +178,7 @@ export const fr = {
       label: "Prochaine action",
       rejected: {
         title: "Corrigez votre annonce",
-        text: "Leenkey vous indique ce qu'il faut modifier avant de la publier.",
+        text: "Nous vous indiquons ce qu'il faut modifier avant de la publier.",
         action: "Corriger l'annonce",
         secondary: "Voir le bien",
       },
@@ -208,7 +208,11 @@ export const fr = {
         done: "C'est fait",
         secondary: "Toutes les étapes",
       },
-      advice: { action: "Toutes les étapes" },
+      advice: { listing: "Voir l'annonce en ligne", sheet: "Voir le bien" },
+      review: {
+        title: "Nous relisons votre annonce",
+        text: "Nous la relisons sous 24\u00A0h et vous prévenons par email.",
+      },
     },
     stats: {
       label: "Votre annonce en chiffres",
