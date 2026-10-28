@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Minus, Plus } from "lucide-react";
 import type { MapListing } from "../map-listings";
 import { MapPreview } from "./map-preview";
-import { MapNotice } from "@/components/shared/map-gate";
+import { MapNotice } from "@/components/shared/map-notice";
 import { LEENKEY_MAP_STYLE } from "@/components/shared/map-style";
 import { centreBelow } from "@/core/maps/geometry";
 import type { GoogleMap, LatLngLiteral, Padding } from "@/core/maps/google-maps";

@@ -33,7 +33,7 @@ Guide pour Younes. Claude Code ne lit pas ce fichier en priorité : il lit `CLAU
 - [ ] Stripe (mode test) : produits Accompagné 990 €, Sérénité 1 500 €, surclassement 510 €, codes promo autorisés
 - [ ] Resend : compte créé, `EMAIL_TEST_INBOX` = ta boîte de test
 - [ ] Clé Anthropic avec plafond de dépenses mensuel
-- [ ] Clé Google Maps (Maps JavaScript API) restreinte à `leenkey-v2.vercel.app`, dans Vercel `leenkey-v2` (Production) : `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (`DECISIONS.md` 2026-10-26)
+- [x] Clé Google Maps (Maps JavaScript API) restreinte à `leenkey-v2.vercel.app`, dans Vercel `leenkey-v2` (Production) : `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (`DECISIONS.md` 2026-10-26 ; en place le 2026-10-28). Clé de production restreinte à `leenkey.fr`, sur le compte de Leenkey, avant la bascule (Q64)
 - [ ] Boîtes bonjour@ et admin@leenkey.fr créées (DNS chez IONOS, compte de Cédric)
 - [ ] `.env.local` rempli à partir de `.env.example`, variables staging saisies dans Vercel
 

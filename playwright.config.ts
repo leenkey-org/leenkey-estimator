@@ -43,7 +43,17 @@ export default defineConfig({
       process.env.PREPROD_USER && process.env.PREPROD_PASSWORD
         ? { username: process.env.PREPROD_USER, password: process.env.PREPROD_PASSWORD }
         : undefined,
-    launchOptions: executablePath ? { executablePath } : undefined,
+    launchOptions: {
+      ...(executablePath ? { executablePath } : {}),
+      // The maps load without a click (L1-63): Google is never reached by a
+      // test. A test that wants a map routes its script to the stand-in of
+      // tests/e2e/google-maps.ts (a route answers before any name lookup);
+      // any other request to Google fails at once, and the map says it is
+      // not available.
+      args: [
+        "--host-resolver-rules=MAP maps.googleapis.com ~NOTFOUND, MAP maps.gstatic.com ~NOTFOUND, MAP mapsresources-pa.googleapis.com ~NOTFOUND",
+      ],
+    },
   },
   projects: [
     {

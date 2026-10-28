@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Footprints, Map as MapIcon } from "lucide-react";
-import { MapGate, MapNotice } from "@/components/shared/map-gate";
+import { MapNotice } from "@/components/shared/map-notice";
 import { LEENKEY_MAP_STYLE, MAP_TOKENS } from "@/components/shared/map-style";
 import { headingTo } from "@/core/maps/geometry";
 import type {
@@ -12,7 +12,6 @@ import type {
   MapsRequestError,
 } from "@/core/maps/google-maps";
 import { useGoogleMaps } from "@/core/maps/use-google-maps";
-import { useMapsConsent } from "@/core/maps/use-maps-consent";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 
@@ -228,7 +227,10 @@ function useNearScreen<T extends Element>(): [RefObject<T | null>, boolean] {
   return [ref, near];
 }
 
-/** The map of the area, after « Afficher la carte »; without a key, not available. */
+/**
+ * The map of the area, loaded when « Où se situe le bien » nears the screen
+ * (L1-63: no click first); without a key, not available.
+ */
 export function ListingMap({
   apiKey,
   position,
@@ -241,24 +243,12 @@ export function ListingMap({
   place: string;
   className?: string;
 }) {
-  const { allowed, allow } = useMapsConsent();
   const [frame, near] = useNearScreen<HTMLDivElement>();
   // The position is a new object at each render of the page: kept by value.
   const [area] = useState(position);
   let content;
   if (!apiKey) content = <MapNotice className="absolute inset-0">{fr.maps.unavailable}</MapNotice>;
-  else if (!allowed) {
-    content = (
-      <MapGate
-        compact
-        title={t.gateTitle}
-        note={fr.maps.gateNote}
-        action={fr.maps.gateAction}
-        onAllow={allow}
-        className="absolute inset-0"
-      />
-    );
-  } else if (near) content = <AreaMap apiKey={apiKey} position={area} place={place} />;
+  else if (near) content = <AreaMap apiKey={apiKey} position={area} place={place} />;
   return (
     <div
       ref={frame}

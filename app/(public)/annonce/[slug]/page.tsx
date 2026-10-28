@@ -33,8 +33,8 @@ import { absoluteUrl } from "@/lib/site";
 // « Enregistrer » beside the title, over the photo on a phone.
 // Published listings only: any other status, or an unknown address, is a 404.
 // Photos (L1-12): the gallery, facade.svg without them. Map of the area
-// (L1-16): Google Maps after « Afficher la carte », a circle of 400 m around
-// the public location. Not yet here: assistant summary (L2-05), offer (L2),
+// (L1-16): Google Maps when it nears the screen (L1-63), a circle of 400 m
+// around the public location. Not yet here: assistant summary (L2-05), offer (L2),
 // documents (L3). Favourite
 // (L1-18): over the mobile gallery, next to the desktop price. Contact and
 // visit (L1-21): the first message to the seller, after the sign-up without

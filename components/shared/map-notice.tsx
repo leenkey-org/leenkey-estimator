@@ -1,11 +1,10 @@
 import type { ReactNode } from "react";
-import { MapPin } from "lucide-react";
-import { Button } from "./button";
 import { cn } from "@/lib/utils";
 
 /**
- * Drawn streets behind the gate and the notices of a map: the place of the
- * map before it loads, never a picture of Google's.
+ * Drawn streets behind the notices of a map: the place of the map before it
+ * loads, never a picture of Google's. The gate of L1-16 (« Afficher la
+ * carte ») went with L1-63: the maps load without a click.
  */
 function MapBackdrop({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -37,51 +36,6 @@ function MapBackdrop({ children, className }: { children: ReactNode; className?:
       </svg>
       {children}
     </div>
-  );
-}
-
-/**
- * Gate of a map from a third party (L1-16): nothing is asked of its provider
- * before the visitor clicks « Afficher la carte », and the note says what
- * that sends. Compact in a small frame (the map of a listing).
- */
-export function MapGate({
-  title,
-  note,
-  action,
-  onAllow,
-  compact = false,
-  className,
-}: {
-  title: string;
-  note: string;
-  action: string;
-  onAllow: () => void;
-  compact?: boolean;
-  className?: string;
-}) {
-  return (
-    <MapBackdrop className={className}>
-      <div
-        className={cn(
-          "relative flex max-w-90 flex-col items-center gap-2 rounded-lk-xl bg-lk-surface text-center shadow-lk-block",
-          compact ? "px-4 py-3.5" : "px-6 py-5.5",
-        )}
-      >
-        {compact ? null : (
-          <span className="flex size-10 items-center justify-center rounded-full bg-lk-blue-tint text-lk-blue">
-            <MapPin aria-hidden="true" className="size-5" />
-          </span>
-        )}
-        <p className="text-lk-title font-semibold text-lk-ink">{title}</p>
-        <p className="text-lk-caption text-lk-ink-3">{note}</p>
-        {/* Never a second primary button beside the action of the page (DESIGN 16). */}
-        <Button variant="outline-blue" shape="pill" size="sm" onClick={onAllow} className="mt-1">
-          <MapPin aria-hidden="true" />
-          {action}
-        </Button>
-      </div>
-    </MapBackdrop>
   );
 }
 

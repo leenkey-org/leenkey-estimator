@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-28 · L1-63 · PR #62 · Carte Google sans clic
+- Modifié : les cartes Google se chargent sans « Afficher la carte » (décision de Younes, option C) : avec la page à côté de la liste en desktop, à l'ouverture de « Carte » sur téléphone, à l'approche de « Où se situe le bien » sur une annonce.
+- Retiré : la porte `MapGate`, sa phrase et le choix gardé pour la visite (`core/maps/use-maps-consent.ts`) ; `components/shared/map-gate.tsx` devient `map-notice.tsx` (chargement, carte indisponible).
+- Tests : E2E de la carte réécrits (chargement direct, rien avant « Carte » sur téléphone, rien avant « Où se situe le bien », Google injoignable) ; les navigateurs des tests ne joignent plus jamais Google (`playwright.config.ts`).
+- Configuration : clé Google Maps de la préprod en place dans Vercel `leenkey-v2` (`docs/DEMARRAGE.md`).
+
 ### 2026-10-28 · L1-24 · PR #61
 - Ajouté : « Ma vente » complet (SPEC 8.7, DESIGN 12.3) : en-tête de nuit (`SellerHeader`, salutation, menu « Changer de bien », carte du bien, `StepProgress` avec la formule), prochaine action (`NextActionCard`, `getNextAction` de L1-23), vues sur 7 jours, contacts et acquéreurs qualifiés (`StatTile`), tâches de l'étape (`TaskList`, « Fait » / « Annuler » pour les tâches sans événement), trois dernières conversations, puis « Vos biens ». Brouillon : « Terminez votre annonce » ; vendu : le bilan de la vente.
 - Ajouté : onglet « Étapes » de la fiche du bien (« Toutes les étapes ») : les six étapes de la formule, l'étape en cours marquée.

@@ -7,17 +7,16 @@ import type { MapListing } from "../map-listings";
 import { useMapSync } from "./map-sync";
 import { SearchMap } from "./search-map";
 import { facadeScope } from "@/components/shared/facade-root";
-import { MapGate, MapNotice } from "@/components/shared/map-gate";
+import { MapNotice } from "@/components/shared/map-notice";
 import type { LatLngLiteral, Padding } from "@/core/maps/google-maps";
-import { useMapsConsent } from "@/core/maps/use-maps-consent";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 
 // The map of the results (L1-16, docs/DESIGN.md 8, 12.5, 12.6): beside the
-// list from 1024 px; on a phone and a tablet, full screen from a floating
-// « Carte » button. A pill chosen shows its card over the map (L1-62). Google is
-// reached only after « Afficher la carte » (core/maps/use-maps-consent.ts);
-// without a key (previews, CI) the map says it is not available.
+// list from 1024 px, loaded with the page (L1-63, DECISIONS 2026-10-28); on a
+// phone and a tablet, full screen from a floating « Carte » button, and
+// loaded only then. A pill chosen shows its card over the map (L1-62).
+// Without a key (previews) the map says it is not available.
 
 const t = fr.search.map;
 
@@ -71,20 +70,8 @@ function MapContent({
   previewSizes?: string;
   className?: string;
 }) {
-  const { allowed, allow } = useMapsConsent();
   const { visited, markVisited } = useMapSync();
   if (!apiKey) return <MapNotice className={className}>{fr.maps.unavailable}</MapNotice>;
-  if (!allowed) {
-    return (
-      <MapGate
-        title={t.gateTitle}
-        note={fr.maps.gateNote}
-        action={fr.maps.gateAction}
-        onAllow={allow}
-        className={className}
-      />
-    );
-  }
   if (!shown) return null;
   return (
     <SearchMap

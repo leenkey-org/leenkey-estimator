@@ -39,7 +39,7 @@ Trois lots contractuels. **Le périmètre à construire est celui de `docs/SPEC-
 | Paiement | Stripe Checkout + webhooks | Mode test en dev et preprod, live en prod uniquement |
 | IA | Anthropic API (SDK `@anthropic-ai/sdk`) | Tool use pour les actions, voir section 8 |
 | Emails | Resend + React Email | Templates dans `emails/` |
-| Cartes et géocodage | Google Maps, Maps JavaScript API (cartes, `core/maps/`, sans paquet npm ; `docs/DECISIONS.md` 2026-10-26) ; adresses et géocodage : Base Adresse Nationale (Géoplateforme de l'IGN, `core/geo/`) | Clé Google Maps publique côté client restreinte par domaine, chargée seulement après le clic « Afficher la carte ». Géocodage sans clé, appelé côté serveur, résultats stockables (provisoire, `docs/DECISIONS.md` Q46) |
+| Cartes et géocodage | Google Maps, Maps JavaScript API (cartes, `core/maps/`, sans paquet npm ; `docs/DECISIONS.md` 2026-10-26) ; adresses et géocodage : Base Adresse Nationale (Géoplateforme de l'IGN, `core/geo/`) | Clé Google Maps publique côté client restreinte par domaine ; la carte se charge sans clic, seulement quand elle est montrée (L1-63, `docs/DECISIONS.md` 2026-10-28). Géocodage sans clé, appelé côté serveur, résultats stockables (provisoire, `docs/DECISIONS.md` Q46) |
 | Images | `sharp` côté serveur | Redimensionnement à l'upload, jamais d'image brute servie |
 | Validation | Zod | Tout input utilisateur passe par un schéma Zod, côté serveur |
 | Hébergement | Vercel Pro (compte Nebula Creativ) | Preview par PR (build seulement), préprod sur la branche `v2` (projet `leenkey-v2`), prod sur `main` (projet `leenkey-estimator-main`) |
