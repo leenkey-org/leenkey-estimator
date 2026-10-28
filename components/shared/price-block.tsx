@@ -7,8 +7,8 @@ export type PriceBlockProps = {
   priceCents: number;
   /** Surface used for the price per m²; the line is left out without it. */
   surfaceM2?: number | null;
-  /** md: 26 px (mobile listing); lg: 26 then 30 px (price column). */
-  size?: "md" | "lg";
+  /** sm: 17 px (the mobile action bar, L1-60); md: 26 px; lg: 26 then 30 px (price column). */
+  size?: "sm" | "md" | "lg";
   className?: string;
 };
 
@@ -21,7 +21,8 @@ export function PriceBlock({ priceCents, surfaceM2, size = "md", className }: Pr
     <div className={cn("flex flex-col gap-0.5", className)}>
       <p
         className={cn(
-          "text-lk-price font-bold text-wide tabular text-lk-ink",
+          "font-bold text-wide tabular text-lk-ink",
+          size === "sm" ? "text-lk-card-price" : "text-lk-price",
           size === "lg" && "lg:text-lk-price-lg",
         )}
       >
@@ -29,7 +30,12 @@ export function PriceBlock({ priceCents, surfaceM2, size = "md", className }: Pr
       </p>
       {surfaceM2 ? (
         <p className="text-lk-caption tabular text-lk-ink-3">
-          {fr.listing.priceBlock.perSquareMetre(formatPricePerSquareMetre(priceCents, surfaceM2))}
+          {size === "sm"
+            ? // The mobile bar: one line (« sans commission » is a strong point above).
+              formatPricePerSquareMetre(priceCents, surfaceM2)
+            : fr.listing.priceBlock.perSquareMetre(
+                formatPricePerSquareMetre(priceCents, surfaceM2),
+              )}
         </p>
       ) : null}
     </div>

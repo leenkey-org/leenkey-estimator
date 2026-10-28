@@ -407,7 +407,8 @@ test.describe("page annonce (base de seed)", () => {
     await expect(
       page.getByRole("heading", { name: "Ce que vous savez avant de visiter" }),
     ).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Le bien" })).toBeVisible();
+    // Exact: « Où se situe le bien » holds it too.
+    await expect(page.getByRole("heading", { name: "Le bien", exact: true })).toBeVisible();
 
     // The sign-up, then the first message to the seller (L1-21).
     const signUp = (visit: boolean) =>

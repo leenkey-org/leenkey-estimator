@@ -39,7 +39,7 @@ export function ContactCard({
     >
       <span
         aria-hidden="true"
-        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-lk-navy text-lk-compact font-semibold text-white"
+        className="lk-gradient flex size-10 shrink-0 items-center justify-center rounded-full text-lk-compact font-semibold text-white"
       >
         {(name?.charAt(0) ?? "?").toLocaleUpperCase("fr-FR")}
       </span>
