@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-28 · L1-60 · PR #PRNUM · Page annonce façon Airbnb
+### 2026-10-28 · L1-60 · PR #58 · Page annonce façon Airbnb
 - Modifié : la page d'une annonce, façon Airbnb.
   - Titre et « Enregistrer » au-dessus de la mosaïque, qui devient un seul bloc avec « Afficher toutes les photos ».
   - Blocs séparés d'un filet : type, lieu et quartier avec trois chiffres en une ligne, vendeur, trois points forts tirés des données, description repliable, caractéristiques (énergie et coûts d'abord) puis toutes dans une fenêtre, carte « Où se situe le bien ».
