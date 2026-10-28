@@ -64,7 +64,8 @@ test("une vente en ligne : en-tête, prochaine action, chiffres, à faire, conve
   // The header: the property, its price and its publication, its step, its plan.
   const top = header(page);
   await expect(top.getByText("Appartement 3 pièces avec balcon, proche gare")).toBeVisible();
-  await expect(top.getByText(/^239\s000\s€ · publié le \d{1,2} \S+$/)).toBeVisible();
+  // « publié le 16 oct. », with its year when it was published the year before.
+  await expect(top.getByText(/^239\s000\s€ · publié le \d{1,2} \S+( \d{4})?$/)).toBeVisible();
   // Its status: under the title on a phone, on the right from 768 px.
   await expect(top.getByText("En ligne", { exact: true }).filter({ visible: true })).toHaveCount(1);
   const progress = top.getByRole("progressbar");
@@ -128,16 +129,19 @@ test("une vente en ligne : en-tête, prochaine action, chiffres, à faire, conve
       .getByRole("navigation", { name: "Rubriques de votre bien" })
       .getByRole("link", { name: "Étapes" }),
   ).toHaveAttribute("aria-current", "page");
-  const steps = page.getByRole("main").getByRole("heading", { level: 3 });
+  const steps = page.getByRole("main").getByRole("region", { name: /^Étape \d sur 6 · / });
   await expect(steps).toHaveCount(6);
-  await expect(steps.nth(2)).toHaveText("Étape 3 sur 6 · Gérer mes contacts et mes visites");
-  await expect(
-    page.getByRole("region", { name: "Étape 3 sur 6 · Gérer mes contacts et mes visites" }),
-  ).toHaveAttribute("aria-current", "step");
-  // The later steps wait for this one: nothing to tick there yet.
-  await expect(
-    page.getByRole("region", { name: /^Étape 5 sur 6/ }).getByRole("button"),
-  ).toHaveCount(0);
+  await expect(steps.nth(2)).toHaveAccessibleName(
+    "Étape 3 sur 6 · Gérer mes contacts et mes visites",
+  );
+  await expect(steps.nth(2)).toHaveAttribute("aria-current", "step");
+  // The later steps wait for this one: their tasks by hand, nothing to tick yet.
+  const notary = steps.nth(4);
+  await expect(notary).toHaveAccessibleName(/^Étape 5 sur 6 · /);
+  await expect(notary.getByRole("listitem").filter({ hasText: "Notaire choisi" })).toContainText(
+    "À cocher quand c'est fait",
+  );
+  await expect(notary.getByRole("button")).toHaveCount(0);
   expect(await seriousViolations(page)).toEqual([]);
 });
 

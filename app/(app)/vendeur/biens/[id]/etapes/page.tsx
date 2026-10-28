@@ -3,7 +3,7 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { TaskList } from "@/components/shared/task-list";
 import { stepCount } from "@/core/steps/progress";
 import { TaskDoneButton } from "@/leenkey/properties/components/task-done-button";
-import { taskLines } from "@/leenkey/properties/dashboard";
+import { saleEditable, stepTickable, taskLines } from "@/leenkey/properties/dashboard";
 import { propertyForSheet } from "@/leenkey/properties/load";
 import { saleProgress } from "@/leenkey/properties/sale";
 import { fr } from "@/lib/i18n/fr";
@@ -31,18 +31,16 @@ export default async function PropertyStepsPage({ params }: Props) {
       </InlineAlert>
     );
   }
-  const editable = property.listingStatus !== "suspended" && property.listingStatus !== "sold";
-  const steps = progress.data.steps;
-  const currentPosition =
-    steps.find((step) => step.code === progress.data?.currentStepCode)?.position ?? 1;
+  const sale = progress.data;
+  const editable = saleEditable(property.listingStatus);
   return (
     <div className="flex flex-col gap-8">
       <h2 className="sr-only">{t.steps.title}</h2>
-      {steps.map((step) => {
-        const current = step.code === progress.data?.currentStepCode;
+      {sale.steps.map((step, index) => {
+        const current = step.code === sale.currentStepCode;
         const count = stepCount(step);
         // Ticked by hand up to the current step: the later ones wait for it.
-        const lines = taskLines(step, property, editable && step.position <= currentPosition);
+        const lines = taskLines(step, property, editable && stepTickable(sale, step));
         return (
           <section
             key={step.code}
@@ -58,7 +56,7 @@ export default async function PropertyStepsPage({ params }: Props) {
                   current ? "text-lk-blue" : "text-lk-ink",
                 )}
               >
-                {t.step(step.position, steps.length, step.title)}
+                {t.step(index + 1, sale.steps.length, step.title)}
               </h3>
               <span className="text-lk-caption tabular text-lk-ink-3">
                 {current ? `${t.steps.current} · ` : ""}

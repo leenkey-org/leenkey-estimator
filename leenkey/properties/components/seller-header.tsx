@@ -63,7 +63,7 @@ export function SellerHeader({
       {choices && choices.length > 1 ? <PropertySwitcher choices={choices} /> : null}
 
       <div className="flex items-center gap-3 rounded-lk-xl bg-white/8 p-3">
-        <PropertyThumb src={property.thumbSrc} className="size-14 rounded-lk-md" />
+        <PropertyThumb src={property.thumbSrc} className="size-14 rounded-lk-sm" />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <p className="line-clamp-2 text-lk-compact font-semibold">{property.name}</p>
           {property.figures ? (

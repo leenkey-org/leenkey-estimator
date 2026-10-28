@@ -21,6 +21,7 @@ import {
   dashboardMode,
   daysOnSale,
   nextActionView,
+  saleEditable,
   saleFigures,
   stepHeading,
   taskLines,
@@ -72,7 +73,8 @@ function Section({
         {link ? (
           <Link
             href={link.href}
-            className="rounded-lk-sm text-lk-label font-semibold text-lk-blue underline underline-offset-2 hover:no-underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid"
+            // 44 px of target (DESIGN.md 15), the text on the line of the title.
+            className="-my-3 inline-flex min-h-11 items-center rounded-lk-sm text-lk-label font-semibold text-lk-blue underline underline-offset-2 hover:no-underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid"
           >
             {link.label}
           </Link>
@@ -94,6 +96,11 @@ function Section({
 export default async function SellerHomePage({ searchParams }: Props) {
   const [profile, query] = await Promise.all([requireProfile(), searchParams]);
   const result = await sellerProperties(profile.id);
+  const retry = (
+    <Button asChild variant="ghost" size="sm">
+      <Link href="/vendeur">{fr.properties.sheet.retry}</Link>
+    </Button>
+  );
 
   if (!result.ok || result.data.length === 0) {
     return (
@@ -104,7 +111,7 @@ export default async function SellerHomePage({ searchParams }: Props) {
         wide
       >
         {!result.ok ? (
-          <InlineAlert tone="danger" className="mt-6">
+          <InlineAlert tone="danger" className="mt-6" action={retry}>
             {list.error}
           </InlineAlert>
         ) : (
@@ -140,7 +147,7 @@ export default async function SellerHomePage({ searchParams }: Props) {
   const step = progress ? currentStep(progress) : null;
   const heading = progress ? stepHeading(progress) : null;
   const listing = property.listing;
-  const editable = property.listingStatus !== "suspended" && mode !== "sold";
+  const editable = saleEditable(property.listingStatus);
   const dashboardHref = (id: string) => `/vendeur?bien=${id}`;
   const links = {
     sheet: sheetHref(property.id),
@@ -186,7 +193,7 @@ export default async function SellerHomePage({ searchParams }: Props) {
   let content: ReactNode;
   if (!data.ok) {
     content = (
-      <InlineAlert tone="danger" live={false}>
+      <InlineAlert tone="danger" live={false} action={retry}>
         {list.error}
       </InlineAlert>
     );
@@ -210,7 +217,7 @@ export default async function SellerHomePage({ searchParams }: Props) {
     content = (
       <section aria-labelledby="bilan" className="flex flex-col gap-3">
         <div className="flex items-start gap-3.5 rounded-lk-2xl border border-lk-line bg-lk-surface p-4 md:p-5">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-lk-md bg-lk-blue-tint">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-lk-sm bg-lk-blue-tint">
             <CalendarCheck
               aria-hidden="true"
               strokeWidth={1.8}
@@ -224,11 +231,14 @@ export default async function SellerHomePage({ searchParams }: Props) {
             <p className="text-lk-compact text-lk-ink-3">{t.sold.text}</p>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-2.5">
+        {/* The price across the tile row: « 1 250 000 € » would not fit a third of 390 px. */}
+        <div className="grid grid-cols-2 gap-2.5">
           {listing ? (
             <StatTile
+              className="col-span-2"
               value={formatPrice(listing.soldPriceCents ?? listing.priceCents)}
-              label={t.sold.price}
+              // The final price when the seller gave it, otherwise the last one shown.
+              label={listing.soldPriceCents !== null ? t.sold.price : t.sold.askedPrice}
             />
           ) : null}
           {days !== null ? (
@@ -258,15 +268,16 @@ export default async function SellerHomePage({ searchParams }: Props) {
                   <Button asChild>
                     <Link href={view.primary.href}>{view.primary.label}</Link>
                   </Button>
-                ) : view.primary ? (
+                ) : view.primary && editable ? (
                   <TaskDoneButton
                     propertyId={property.id}
                     taskId={view.primary.taskId}
-                    title={view.title}
+                    title={view.primary.taskTitle}
                     done={false}
                     label={view.primary.label}
                     variant="primary"
                     size="md"
+                    stretch
                   />
                 ) : null}
                 {view.secondary ? (
@@ -280,7 +291,7 @@ export default async function SellerHomePage({ searchParams }: Props) {
         ) : null}
 
         <section aria-label={t.stats.label} className="grid grid-cols-3 gap-2.5">
-          <StatTile value={formatInteger(figures.views)} label={t.stats.views} />
+          <StatTile value={formatInteger(figures.views)} label={t.stats.views(figures.views)} />
           <StatTile
             value={formatInteger(figures.contacts)}
             label={t.stats.contacts(figures.contacts)}

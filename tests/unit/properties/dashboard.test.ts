@@ -7,9 +7,12 @@ import {
   daysOnSale,
   nextActionView,
   propertyConversations,
+  saleEditable,
   saleFigures,
   stepHeading,
+  stepTickable,
   taskLines,
+  taskTickable,
   weekStart,
 } from "@/leenkey/properties/dashboard";
 import type { NextAction, SaleSituation } from "@/leenkey/properties/next-action";
@@ -227,7 +230,7 @@ describe("the step and the next action in words", () => {
     expect(nextActionView(byHand, links, NOW)).toMatchObject({
       title: "Choisissez votre notaire",
       detail: "Étape « Préparer ma vente avec le notaire ».",
-      primary: { label: "C'est fait", taskId: "t-notary" },
+      primary: { label: "C'est fait", taskId: "t-notary", taskTitle: "Notaire choisi" },
       secondary: { href: "/vendeur/biens/p1/etapes" },
     });
     const rejected = nextActionView(
@@ -267,18 +270,41 @@ describe("the tasks of the current step", () => {
     expect(lines.map((line) => [line.title, line.state, line.detail, line.manual])).toEqual([
       ["Annonce rédigée", "done", null, false],
       // Ticked by the database when Leenkey publishes it.
-      ["Annonce en ligne", "todo", "Se coche tout seul quand c'est fait", false],
+      ["Annonce en ligne", "todo", "Se coche automatiquement", false],
       ["Annonce relue par le conseiller", "todo", "Par votre conseiller Leenkey", false],
     ]);
   });
 
   it("the tasks without event of the seller are ticked by hand, never once suspended", () => {
     const step = progress("notary", ["t-notary"]).steps[1];
-    expect(taskLines(step, owned, true).map((line) => [line.state, line.manual])).toEqual([
-      ["done", true],
-      ["current", true],
+    expect(
+      taskLines(step, owned, true).map((line) => [line.state, line.manual, line.detail]),
+    ).toEqual([
+      ["done", true, null],
+      ["current", true, "À cocher quand c'est fait"],
     ]);
-    expect(taskLines(step, owned, false).every((line) => !line.manual)).toBe(true);
+    // Not tickable (suspended, sold, a later step): still by hand, never « automatically ».
+    expect(taskLines(step, owned, false).map((line) => [line.manual, line.detail])).toEqual([
+      [false, null],
+      [false, "À cocher quand c'est fait"],
+    ]);
+  });
+
+  it("ticked by hand up to the current step, on a sale neither suspended nor sold", () => {
+    const atPublish = progress("publish", []);
+    const atNotary = progress("notary", []);
+    // A task of a later step waits for it.
+    expect(taskTickable(atPublish, "t-notary", "published")).toBe(false);
+    expect(stepTickable(atPublish, atPublish.steps[1])).toBe(false);
+    expect(taskTickable(atNotary, "t-notary", "published")).toBe(true);
+    expect(taskTickable(atNotary, "t-precontract", "paused")).toBe(true);
+    // Never a task with an event, nor one of Leenkey; never once suspended or sold.
+    expect(taskTickable(atNotary, "t-written", "published")).toBe(false);
+    expect(taskTickable(atNotary, "t-reviewed", "published")).toBe(false);
+    expect(taskTickable(atNotary, "t-notary", "suspended")).toBe(false);
+    expect(taskTickable(atNotary, "t-notary", "sold")).toBe(false);
+    expect(taskTickable(atNotary, "unknown", "published")).toBe(false);
+    expect(saleEditable("rejected")).toBe(true);
   });
 });
 

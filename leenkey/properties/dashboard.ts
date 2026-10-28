@@ -59,7 +59,7 @@ export type NextActionView = {
   title: string;
   detail: string | null;
   /** A link, or the task the seller ticks by hand. */
-  primary: ActionLink | { label: string; taskId: string } | null;
+  primary: ActionLink | { label: string; taskId: string; taskTitle: string } | null;
   secondary: ActionLink | null;
 };
 
@@ -102,7 +102,7 @@ export function nextActionView(
         detail: n.task.text(action.step.title),
         primary: action.href
           ? { label: n.task.action, href: action.href }
-          : { label: n.task.done, taskId: action.task.id },
+          : { label: n.task.done, taskId: action.task.id, taskTitle: action.task.title },
         secondary: { label: n.task.secondary, href: links.steps },
       };
     case "advice":
@@ -161,11 +161,15 @@ export function taskLines(
     const done = task.doneAt !== null;
     const manual = editable && byHand(task);
     const href = done || task.autoTrigger === null ? null : taskHref(task.code, property);
+    // Who does it: said of the tasks by hand even when they cannot be ticked
+    // yet (a later step), never « automatically ».
     const detail =
       task.owner === "leenkey"
         ? t.todo.leenkey
-        : manual
-          ? t.todo.manual
+        : byHand(task)
+          ? done
+            ? null
+            : t.todo.manual
           : done || href
             ? null
             : t.todo.automatic;
@@ -178,6 +182,34 @@ export function taskLines(
       manual,
     };
   });
+}
+
+/** Its tasks can still be ticked by hand: neither suspended by Leenkey nor sold. */
+export function saleEditable(listingStatus: SellerProperty["listingStatus"]): boolean {
+  return listingStatus !== "suspended" && listingStatus !== "sold";
+}
+
+/** The steps whose tasks are ticked by hand: up to the current one, the later ones wait for it. */
+export function stepTickable(progress: Progress, step: Step): boolean {
+  const current = progress.steps.findIndex((item) => item.code === progress.currentStepCode);
+  return progress.steps.indexOf(step) <= current;
+}
+
+/**
+ * A task the seller may tick (or untick) by hand now (setSaleTaskDone): theirs
+ * and without event, in a step up to the current one, on a sale they may
+ * still change (DECISIONS L1-24). The RLS checks the property and the task.
+ */
+export function taskTickable(
+  progress: Progress,
+  taskId: string,
+  listingStatus: SellerProperty["listingStatus"],
+): boolean {
+  if (!saleEditable(listingStatus)) return false;
+  return progress.steps.some(
+    (step) =>
+      stepTickable(progress, step) && step.tasks.some((task) => task.id === taskId && byHand(task)),
+  );
 }
 
 /** Financing at least declared (SPEC-V2 8.7): never the amounts, only the status. */

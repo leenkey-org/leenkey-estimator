@@ -37,6 +37,8 @@ export function StepProgress({
       <div
         role="progressbar"
         aria-label={label}
+        // Read « Étape 3 sur 6 », not the 40 % of 3 between 1 and 6.
+        aria-valuetext={label}
         aria-valuemin={1}
         aria-valuemax={total}
         aria-valuenow={current}
