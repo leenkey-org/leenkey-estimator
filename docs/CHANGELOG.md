@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-28 · L1-61 · PR #PRNUM · Catalogue façon Airbnb
+### 2026-10-28 · L1-61 · PR #59 · Catalogue façon Airbnb
 - Modifié : la recherche `/acheter`, façon Airbnb.
   - Sous la barre, à toutes les largeurs, les catégories : tous les biens, maisons, appartements, avec jardin, avec parking, terrains.
   - Dans la barre desktop, Type de bien, Budget et Pièces ouvrent des panneaux arrondis : tuiles, curseur de budget avec budgets courants, pilules.

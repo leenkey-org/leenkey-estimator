@@ -66,7 +66,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-58** Charte D sur tout le site (validation de Younes du 27 octobre : « on valide pour l'ensemble du site ») : jetons, Sora, boutons, en-têtes, bandeaux nuit, composants, back office · PR : #56 · Testé en préprod : ☐
 - [x] **L1-59** Back office et Cockpit (correction de Younes du 28 octobre) : « Back office » pour l'espace admin, « Cockpit » pour l'espace client · PR : #57 · Testé en préprod : ☐
 - [x] **L1-60** Page annonce façon Airbnb (demande de Younes du 28 octobre) : titre et actions au-dessus de la mosaïque, blocs, points forts, caractéristiques dans une fenêtre, carte de prix, barre du bas avec le prix · PR : #58 · Testé en préprod : ☐
-- [x] **L1-61** Catalogue `/acheter` façon Airbnb (demande de Younes du 28 octobre) : catégories sous la barre, panneaux de la barre (tuiles, curseur de budget, pilules), panneau « Filtres » en sections · PR : · Testé en préprod : ☐
+- [x] **L1-61** Catalogue `/acheter` façon Airbnb (demande de Younes du 28 octobre) : catégories sous la barre, panneaux de la barre (tuiles, curseur de budget, pilules), panneau « Filtres » en sections · PR : #59 · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
 
