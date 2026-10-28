@@ -14,7 +14,7 @@ const SEED_PASSWORD = process.env.SEED_PASSWORD;
 const SEED_REQUIRED = "comptes de seed requis (E2E_SEED=1 et SEED_PASSWORD)";
 
 const MAIN_NAV = "Navigation principale";
-const ADMIN_NAV = "Navigation du Cockpit";
+const ADMIN_NAV = "Navigation du back office";
 
 async function seriousViolations(page: Page) {
   await page.evaluate(() => document.fonts.ready);
@@ -669,7 +669,7 @@ test.describe("comptes connectés (base de seed)", () => {
       "/admin/annonces?statut=a-valider",
     );
     if (isMobile) {
-      await expect(page.getByRole("banner")).toContainText("Cockpit");
+      await expect(page.getByRole("banner")).toContainText("Back office");
       await expect(page.getByRole("banner")).toContainText("Tableau de bord");
       // Always a way back to the site, in the header too (DECISIONS 2026-10-26).
       await expect(
@@ -736,7 +736,7 @@ test.describe("comptes connectés (base de seed)", () => {
     );
   });
 
-  test("admin sur le site : son espace s'appelle « Cockpit », sans « Voir le site »", async ({
+  test("admin sur le site : son espace s'appelle « Back office », sans « Voir le site »", async ({
     page,
     isMobile,
   }) => {
@@ -744,12 +744,16 @@ test.describe("comptes connectés (base de seed)", () => {
     if (isMobile) {
       await page.getByRole("button", { name: "Menu" }).click();
       const menu = page.getByRole("dialog");
-      await expect(menu.getByRole("link", { name: "Cockpit" })).toHaveAttribute("href", "/admin");
-      await expect(menu.getByRole("link", { name: "Mon espace" })).toHaveCount(0);
+      await expect(menu.getByRole("link", { name: "Back office" })).toHaveAttribute(
+        "href",
+        "/admin",
+      );
+      // The Cockpit is the space of a client (Younes, 2026-10-28).
+      await expect(menu.getByRole("link", { name: "Cockpit" })).toHaveCount(0);
     } else {
       await page.getByRole("button", { name: "Menu du compte" }).click();
       await expect(page.getByRole("menu").getByRole("menuitem")).toHaveText([
-        "Cockpit",
+        "Back office",
         "Mon compte",
         "Se déconnecter",
       ]);
@@ -783,7 +787,7 @@ test.describe("comptes connectés (base de seed)", () => {
     await expect(filters).toHaveText(["Toutes", "Mes recherches", "Visites et offres"]);
     await page.keyboard.press("Escape");
     await page.getByRole("button", { name: "Menu du compte" }).click();
-    await page.getByRole("menuitem", { name: "Mon espace" }).click();
+    await page.getByRole("menuitem", { name: "Cockpit" }).click();
     await expect(page).toHaveURL("/vendeur");
     await bell.click();
     await expect(filters).toHaveText(["Toutes", "Messages", "Offres et visites"]);
@@ -832,12 +836,13 @@ test.describe("comptes connectés (base de seed)", () => {
     await page.keyboard.press("Enter");
     const menu = page.getByRole("menu");
     await expect(menu).toBeVisible();
-    // The space of an admin is the Cockpit, with the way back to the site.
-    const homeLabel = isMobile ? "Cockpit" : "Mon espace";
+    // The space of an admin is the back office, with the way back to the
+    // site; the space of a client, the Cockpit (Younes, 2026-10-28).
+    const homeLabel = isMobile ? "Back office" : "Cockpit";
     await expect(menu.getByRole("menuitem")).toHaveText(
       isMobile
-        ? ["Cockpit", "Voir le site", "Mon compte", "Se déconnecter"]
-        : ["Mon espace", "Mon compte", "Se déconnecter"],
+        ? ["Back office", "Voir le site", "Mon compte", "Se déconnecter"]
+        : ["Cockpit", "Mon compte", "Se déconnecter"],
     );
     await expect(menu.getByRole("menuitem", { name: homeLabel })).toHaveAttribute("href", home);
     if (isMobile) {
@@ -949,7 +954,7 @@ test.describe("comptes connectés (base de seed)", () => {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(200);
       await expect(page.getByRole("heading", { level: 1 }), path).toHaveText(title);
-      await expect(page, path).toHaveTitle(`${title} · Cockpit · Leenkey`);
+      await expect(page, path).toHaveTitle(`${title} · Back office · Leenkey`);
     }
     // The bell of the back office (L1-22), on the account page too: the
     // listings sent for review of the seed, unread.

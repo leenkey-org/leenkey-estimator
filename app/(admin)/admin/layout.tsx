@@ -26,7 +26,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         fallbackTitle={fr.nav.backOffice}
         account={{
           ...accountMenu(profile),
-          // From the Cockpit, back to the site (DECISIONS 2026-10-26).
+          // From the back office, back to the site (DECISIONS 2026-10-26).
           siteHref: ROUTES.home,
           signOut,
           name: profile.firstName,

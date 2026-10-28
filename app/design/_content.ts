@@ -511,7 +511,7 @@ export const navigation = {
     admin: "BottomNav du back office",
   },
   sidebarCaption:
-    "AdminShell à partir de 768 px : barre latérale de 240 px ; pastilles de compteurs avec les données du Cockpit ; « Voir le site » au-dessus de la carte du compte",
+    "AdminShell à partir de 768 px : barre latérale de 240 px ; pastilles de compteurs avec les données du back office ; « Voir le site » au-dessus de la carte du compte",
   headerCaption:
     "AdminMobileHeader sous 768 px : titre de la page, « Voir le site », la cloche et l'avatar du menu du compte",
   labels: {
@@ -545,7 +545,7 @@ export const notifications = {
   },
   times: ["Il y a 12\u00A0min", "Hier", "Mardi", "3 oct."],
   menuCaption:
-    "AccountMenu : avatar de la barre haute, puis avatar d'en-tête sombre ; Mon espace, Mon compte, Se déconnecter (qui déconnecte vraiment)",
+    "AccountMenu : avatar de la barre haute, puis avatar d'en-tête sombre ; Cockpit, Mon compte, Se déconnecter (qui déconnecte vraiment)",
 };
 
 export const stepForm = {

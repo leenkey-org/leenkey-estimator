@@ -25,8 +25,8 @@ export type AdminMobileHeaderProps = {
 };
 
 /**
- * Cockpit header below 768 px (docs/DESIGN.md 10.6): ink, padding
- * 20 × 20 × 16, « Cockpit » (11 px, white 60 %) over the title of the page
+ * Back office header below 768 px (docs/DESIGN.md 10.6): the night, padding
+ * 20 × 20 × 16, « Back office » (11 px, white 60 %) over the title of the page
  * (20 px 700 wide); on the right « Voir le site » (Globe, 44 px, DECISIONS
  * 2026-10-26), the bell and the avatar. The counter tiles come with the
  * back office data.

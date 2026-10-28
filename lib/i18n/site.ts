@@ -29,7 +29,7 @@ export const site = {
     open: "Menu",
     close: "Fermer le menu",
     signIn: "Mon compte",
-    mySpace: "Mon espace",
+    mySpace: "Cockpit",
   },
   // The home page of direction C (docs/design-handoff/SPECS.md 3, DECISIONS
   // 2026-10-26): the texts of the site kept where they exist; « Valoriser »

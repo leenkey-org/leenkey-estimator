@@ -63,7 +63,7 @@ export type FactsInput = Pick<
 >;
 
 // Groups and pictograms of the grid of the listing page (KeyFactsGrid, L1-55);
-// the table of the seller's page and of the Cockpit ignores them.
+// the table of the seller's page and of the back office ignores them.
 const PROPERTY = t.sections.property;
 const ENERGY = t.sections.energy;
 const COSTS = t.sections.costs;

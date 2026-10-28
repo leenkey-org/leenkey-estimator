@@ -180,8 +180,9 @@ export function accountInitial(firstName: string | null | undefined): string | n
 
 /**
  * Account menu of a profile, without its sign-out action (a Server Action).
- * An admin's space is the Cockpit, named so (Younes, 2026-10-26); the way
- * back to the site is given by the Cockpit itself (app/(admin)/admin/layout.tsx),
+ * A client's space is the Cockpit, an admin's the back office (Younes,
+ * 2026-10-28); the way back to the site is given by the back office itself
+ * (app/(admin)/admin/layout.tsx),
  * not on the pages of the site.
  */
 export function accountMenu(profile: { firstName: string | null; roles: readonly string[] }): {
