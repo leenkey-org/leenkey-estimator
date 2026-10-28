@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-10-28 · L1-62 · PR #PRNUM · Carte de la recherche façon Airbnb
+### 2026-10-28 · L1-62 · PR #60 · Carte de la recherche façon Airbnb
 - Modifié : la carte de `/acheter`, façon Airbnb.
   - Une pastille choisie montre son bien sur la carte : photos, prix, lieu, lien. Sa carte de liste est entourée, sans défilement. La carte ne bouge que si la pastille serait cachée ; Échap, « Fermer l'aperçu » ou un clic sur la carte referment.
   - Pastilles au dégradé de la charte au survol et au choix, grisées une fois vues pendant la visite.
