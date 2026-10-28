@@ -120,27 +120,31 @@ test("« Filtres » dit le nombre de filtres actifs ; les catégories sous la ba
   const button = page.getByRole("button", { name: "Filtres, 1 filtre actif", exact: true });
   await expect(button).toBeVisible();
   // The row of categories (L1-61), at every width: pressed or not, kept with
-  // the other filters; « Tous les biens » clears the type and the garden only.
+  // the other filters; « Tous les biens », the current one when none is on,
+  // clears the type, the garden alone and the parking.
   const categories = page.getByRole("group", { name: "Catégories de biens" });
   const all = categories.getByRole("button", { name: "Tous les biens" });
   const houses = categories.getByRole("button", { name: "Maisons" });
-  await expect(all).toHaveAttribute("aria-pressed", "true");
+  await expect(all).toHaveAttribute("aria-current", "true");
   // A click before the page is hydrated does nothing: clicked again until it does.
   await expect(async () => {
     if ((await houses.getAttribute("aria-pressed")) !== "true") await houses.click();
     await expect(houses).toHaveAttribute("aria-pressed", "true", { timeout: 1_000 });
   }).toPass({ timeout: 10_000 });
-  await expect(all).toHaveAttribute("aria-pressed", "false");
+  await expect(all).not.toHaveAttribute("aria-current", "true");
   await categories.getByRole("button", { name: "Avec jardin" }).click();
   await expect(page.getByRole("button", { name: "Filtres, 3 filtres actifs" })).toBeVisible();
   let params = new URL(page.url()).searchParams;
   expect(params.get("type")).toBe("maison");
+  expect(params.get("exterieur")).toBe("jardin");
   expect(params.get("budget_max")).toBe("400000");
   await all.click();
   await expect(button).toBeVisible();
   params = new URL(page.url()).searchParams;
   expect(params.get("type")).toBeNull();
+  expect(params.get("exterieur")).toBeNull();
   expect(params.get("budget_max")).toBe("400000");
+  await expect(all).toHaveAttribute("aria-current", "true");
 });
 
 test("une adresse d'annonce mal formée répond 404", async ({ page, request }) => {
@@ -239,7 +243,16 @@ test.describe("recherche /acheter (base de seed)", () => {
     await expect(
       page.getByRole("button", { name: "Filtres, 2 filtres actifs", exact: true }),
     ).toBeVisible();
-    if (!isMobile) {
+    if (isMobile) {
+      // On a phone, the active filters under the categories: one press removes one.
+      const chips = page.getByRole("list", { name: "Filtres actifs" });
+      await expect(
+        chips.getByRole("button", { name: /^Retirer le filtre 3\spièces \+$/ }),
+      ).toBeVisible();
+      await chips.getByRole("button", { name: /^Retirer le filtre ≤\s400\sk€$/ }).click();
+      await expect(page).toHaveURL(/\/acheter\?ville=savigny-sur-orge&rayon=5&pieces_min=3$/);
+      await expect(chips.getByRole("button", { name: /≤\s400\sk€/ })).toHaveCount(0);
+    } else {
       const bar = page.getByRole("search");
       await expect(bar.getByRole("button", { name: /^Budget/ })).toContainText(/≤\s400\sk€/);
       await expect(bar.getByRole("button", { name: /^Pièces/ })).toContainText(/3\spièces et \+/);
@@ -316,8 +329,8 @@ test.describe("recherche /acheter (base de seed)", () => {
     test.skip(isMobile, "barre de filtres à partir de 1024 px ; en mobile, le panneau");
     await page.goto("/acheter");
     await settle(page);
-    // A panel of the bar (L1-61), from the keyboard: tiles pressed or not,
-    // Escape gives the focus back.
+    // A panel of the bar (L1-61), from the keyboard: tiles of one choice,
+    // Escape gives the focus back, an arrow moves without applying.
     const bar = page.getByRole("search");
     const type = bar.getByRole("button", { name: /^Type de bien/ });
     const panel = page.getByRole("dialog", { name: "Type de bien" });
@@ -325,15 +338,19 @@ test.describe("recherche /acheter (base de seed)", () => {
       if (!(await panel.isVisible())) await type.click();
       await expect(panel).toBeVisible({ timeout: 1_000 });
     }).toPass({ timeout: 10_000 });
-    await expect(panel.getByRole("button", { name: "Tous les biens" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    const allTypes = panel.getByRole("radio", { name: "Tous les biens" });
+    await expect(allTypes).toHaveAttribute("aria-checked", "true");
     await page.keyboard.press("Escape");
     await expect(panel).toBeHidden();
     await expect(type).toBeFocused();
     await type.press("Enter");
-    await panel.getByRole("button", { name: "Appartement", exact: true }).click();
+    await allTypes.focus();
+    await page.keyboard.press("ArrowRight");
+    const flats = panel.getByRole("radio", { name: "Appartement", exact: true });
+    await expect(flats).toBeFocused();
+    await expect(panel).toBeVisible();
+    await expect(page).toHaveURL(/\/acheter$/);
+    await page.keyboard.press("Enter");
     await expect(panel).toBeHidden();
     await expect(page).toHaveURL(/\/acheter\?type=appartement$/);
     await expect(type).toContainText("Appartement");
@@ -342,11 +359,16 @@ test.describe("recherche /acheter (base de seed)", () => {
     expect(texts.length).toBeGreaterThan(0);
     for (const text of texts) expect(text).toContain("Appartement");
 
-    // The budget: a usual budget, then « Appliquer ».
+    // The budget: a usual budget, then « Appliquer »; its panel has no violation.
     await bar.getByRole("button", { name: /^Budget/ }).click();
     const budget = page.getByRole("dialog", { name: "Budget" });
     await budget.getByRole("button", { name: /^Jusqu'à\s300\s000\s€$/ }).click();
-    await expect(budget.getByRole("textbox", { name: "Budget maximum" })).toHaveValue("300000");
+    await expect(budget.getByLabel("Budget maximum")).toHaveValue(/^300\s000$/);
+    await expect(budget.getByRole("slider", { name: "Maximum" })).toHaveAttribute(
+      "aria-valuenow",
+      "300000",
+    );
+    expect(await seriousViolations(page)).toEqual([]);
     await budget.getByRole("button", { name: "Appliquer" }).click();
     await expect(budget).toBeHidden();
     await expect(page).toHaveURL(/\/acheter\?type=appartement&budget_max=300000$/);

@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import * as ToggleGroup from "@radix-ui/react-toggle-group";
 import { useSearch } from "./search-context";
 import { BudgetRange } from "./budget-range";
 import { TypeTiles } from "./type-tiles";
 import { budgetLabel } from "../filter-labels";
-import { wholeNumberInput } from "../filters-form";
+import { budgetError, budgetPreset, wholeNumberInput, type BudgetDraft } from "../filters-form";
 import { Button } from "@/components/shared/button";
 import { FilterPopover } from "@/components/shared/filter-popover";
 import { formatPrice } from "@/lib/format";
@@ -19,6 +20,8 @@ const d = fr.search.dialog;
 /** Budgets of one tap in the panel of the budget: the usual steps of the launch zone. */
 const BUDGET_PRESETS_EUROS = [200_000, 300_000, 400_000, 500_000, 700_000];
 const ROOMS = [1, 2, 3, 4, 5];
+/** « Tous » in a toggle group, where "" means none pressed. */
+const ANY = "tous";
 
 /** Between two parts of the bar. */
 function Divider({ className }: { className?: string }) {
@@ -27,13 +30,23 @@ function Divider({ className }: { className?: string }) {
 
 const text = (euros: number | undefined) => (euros === undefined ? "" : String(euros));
 
+/** A pill of a panel: white, the chosen one in the gradient of an action (charte D). */
+const pill = cn(
+  "inline-flex h-11 min-w-0 items-center justify-center rounded-full border-[1.5px] px-3.5 text-lk-label font-semibold tabular",
+  "transition-colors duration-140 ease-out-lk",
+  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
+  "border-lk-line-strong bg-lk-surface text-lk-ink hover:border-lk-ink-3",
+);
+
 /**
  * The parts of the rounded search bar after « Où ? », from 1024 px
  * (docs/DESIGN.md 10.3, 12.6), each opening a panel in the way of Airbnb
  * (L1-61): the type in tiles, the budget with its slider, its two fields and
  * the usual budgets (applied with « Appliquer »), the rooms in pills. A tile
- * or a pill applies the search at once. The surface, the outdoor space, the
- * equipment and the energy class are in « Filtres ».
+ * or a pill applies the search at once and closes the panel; they are
+ * toggle groups of one choice, where an arrow moves without choosing. The
+ * surface, the outdoor space, the equipment and the energy class are in
+ * « Filtres ».
  */
 export function FilterBar({ className }: { className?: string }) {
   const { query, applyFilters } = useSearch();
@@ -44,13 +57,10 @@ export function FilterBar({ className }: { className?: string }) {
     setOpen(next ? name : null);
 
   // The draft of the budget, from the applied filters each time its panel opens.
-  const [budget, setBudget] = useState({ min: "", max: "" });
+  const [budget, setBudget] = useState<BudgetDraft>({ min: "", max: "" });
   const minEuros = wholeNumberInput(budget.min);
   const maxEuros = wholeNumberInput(budget.max);
-  const budgetError =
-    minEuros !== undefined && maxEuros !== undefined && minEuros > maxEuros
-      ? d.minAboveMax
-      : undefined;
+  const error = budgetError(budget);
 
   return (
     <div className={cn("min-w-0 items-center", className)}>
@@ -61,10 +71,10 @@ export function FilterBar({ className }: { className?: string }) {
         active={filters.type !== undefined}
         open={open === "type"}
         onOpenChange={toggle("type")}
-        panelClassName="w-[30rem]"
+        panelClassName="w-120"
       >
         <TypeTiles
-          as="buttons"
+          as="toggle"
           label={t.type}
           value={filters.type ?? ""}
           onValueChange={(value) => {
@@ -90,25 +100,30 @@ export function FilterBar({ className }: { className?: string }) {
           }
           toggle("budget")(next);
         }}
-        panelClassName="w-[28rem]"
+        panelClassName="w-112"
       >
         <form
           className="flex flex-col gap-5"
           onSubmit={(event) => {
             event.preventDefault();
-            if (budgetError) return;
+            if (error) return;
             setOpen(null);
-            update({
-              priceMinCents: minEuros === undefined ? undefined : minEuros * 100,
-              priceMaxCents: maxEuros === undefined ? undefined : maxEuros * 100,
-            });
+            const priceMinCents = minEuros === undefined ? undefined : minEuros * 100;
+            const priceMaxCents = maxEuros === undefined ? undefined : maxEuros * 100;
+            // The same budget: the panel closes, the results stay as they are.
+            if (
+              priceMinCents !== filters.priceMinCents ||
+              priceMaxCents !== filters.priceMaxCents
+            ) {
+              update({ priceMinCents, priceMaxCents });
+            }
           }}
         >
           <BudgetRange
             idPrefix="barre-budget"
             min={budget.min}
             max={budget.max}
-            error={budgetError}
+            error={error ? d[error] : undefined}
             onChange={(min, max) => setBudget({ min, max })}
           />
           <div role="group" aria-label={t.presets} className="flex flex-wrap gap-2">
@@ -116,14 +131,11 @@ export function FilterBar({ className }: { className?: string }) {
               <button
                 key={euros}
                 type="button"
-                aria-pressed={maxEuros === euros && minEuros === undefined}
-                onClick={() => setBudget({ min: "", max: String(euros) })}
+                aria-pressed={maxEuros === euros}
+                onClick={() => setBudget(budgetPreset(budget, euros))}
                 className={cn(
-                  "inline-flex h-9 items-center rounded-full border px-3.5 text-lk-label font-semibold tabular",
-                  "transition-colors duration-140 ease-out-lk",
-                  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
+                  pill,
                   "aria-pressed:lk-gradient aria-pressed:border-transparent aria-pressed:text-white",
-                  "border-lk-line-strong bg-lk-surface text-lk-ink hover:border-lk-ink-3",
                 )}
               >
                 {t.priceUpTo(formatPrice(euros * 100))}
@@ -138,7 +150,7 @@ export function FilterBar({ className }: { className?: string }) {
             >
               {t.clear}
             </button>
-            <Button type="submit" disabled={Boolean(budgetError)}>
+            <Button type="submit" disabled={Boolean(error)}>
               {t.apply}
             </Button>
           </div>
@@ -152,33 +164,34 @@ export function FilterBar({ className }: { className?: string }) {
         open={open === "rooms"}
         onOpenChange={toggle("rooms")}
         align="end"
-        panelClassName="w-[24rem]"
+        panelClassName="w-96"
       >
-        {/* Buttons pressed or not, not a radio group: an arrow never applies
-            a count and closes the panel. */}
-        <div role="group" aria-label={d.rooms} className="grid grid-cols-6 gap-1.5">
+        <ToggleGroup.Root
+          type="single"
+          aria-label={d.rooms}
+          value={filters.roomsMin === undefined ? ANY : String(filters.roomsMin)}
+          onValueChange={(value) => {
+            setOpen(null);
+            // "": the chosen one pressed again, nothing changes.
+            if (!value) return;
+            const rooms = value === ANY ? undefined : wholeNumberInput(value);
+            if (rooms !== filters.roomsMin) update({ roomsMin: rooms });
+          }}
+          className="grid grid-cols-6 gap-1.5"
+        >
           {[undefined, ...ROOMS].map((count) => (
-            <button
-              key={count ?? "any"}
-              type="button"
-              aria-pressed={count === filters.roomsMin}
-              onClick={() => {
-                setOpen(null);
-                if (count !== filters.roomsMin) update({ roomsMin: count });
-              }}
+            <ToggleGroup.Item
+              key={count ?? ANY}
+              value={count === undefined ? ANY : String(count)}
               className={cn(
-                "h-11 min-w-0 rounded-full border-[1.5px] px-1 text-lk-button-md font-semibold",
-                "transition-colors duration-140 ease-out-lk",
-                "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
-                "border-lk-line-strong bg-lk-surface text-lk-ink hover:border-lk-ink-3",
-                // Chosen: the gradient of an action, as in the « Filtres » panel.
-                "aria-pressed:lk-gradient aria-pressed:border-transparent aria-pressed:text-white aria-pressed:hover:brightness-108",
+                pill,
+                "px-1 aria-checked:lk-gradient aria-checked:border-transparent aria-checked:text-white aria-checked:hover:brightness-108",
               )}
             >
               {count === undefined ? d.anyShort : d.roomsShort(count)}
-            </button>
+            </ToggleGroup.Item>
           ))}
-        </div>
+        </ToggleGroup.Root>
       </FilterPopover>
     </div>
   );

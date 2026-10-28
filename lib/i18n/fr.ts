@@ -1290,9 +1290,8 @@ export const fr = {
     filtersButton: "Filtres",
     activeFilters: (count: number) =>
       count === 1 ? "1 filtre actif" : `${count}\u00A0filtres actifs`,
-    quickFilters: "Filtres rapides",
     // L1-61, in the way of Airbnb: the row of categories under the bar, each
-    // a filter pressed or not (the type, a garden, a parking).
+    // a filter pressed or not (the type, the garden alone, the parking).
     categories: {
       label: "Catégories de biens",
       all: "Tous les biens",
@@ -1302,20 +1301,29 @@ export const fr = {
       parking: "Avec parking",
       terrain: "Terrains",
     },
+    // The active filters under the categories on a phone (L1-61): one press removes one.
     chips: {
+      label: "Filtres actifs",
+      remove: (label: string) => `Retirer le filtre ${label}`,
+      outdoor: "Extérieur",
+      elevator: "Ascenseur",
       priceMax: (price: string) => `≤ ${price}`,
       priceMin: (price: string) => `≥ ${price}`,
       priceRange: (min: string, max: string) => `${min} – ${max}`,
+      surfaceMax: (surface: string) => `≤ ${surface}`,
+      surfaceMin: (surface: string) => `≥ ${surface}`,
+      surfaceRange: (min: string, max: string) => `${min} – ${max}`,
+      roomsMin: (rooms: number) => (rooms === 1 ? "1 pièce +" : `${rooms}\u00A0pièces +`),
+      bedroomsMin: (bedrooms: number) =>
+        bedrooms === 1 ? "1 chambre +" : `${bedrooms}\u00A0chambres +`,
+      dpeMax: (letter: string) => (letter === "A" ? "DPE A" : `DPE A à ${letter}`),
     },
     bar: {
       label: "Filtres de la recherche",
       type: "Type de bien",
       rooms: "Pièces",
-      surface: "Surface",
-      dpe: "DPE",
       priceUpTo: (price: string) => `Jusqu'à ${price}`,
       roomsAtLeast: (rooms: number) => (rooms === 1 ? "1 pièce et +" : `${rooms} pièces et +`),
-      surfaceAtLeast: (surface: string) => `${surface} et +`,
       // The rounded bar of direction C (DECISIONS 2026-10-26): a name above its value.
       where: "Où\u00A0?",
       budgetTitle: "Budget",
@@ -1325,8 +1333,6 @@ export const fr = {
       presets: "Budgets courants",
       typeAll: "Tous les biens",
       any: "Indifférent",
-      dpeAll: "Toutes les classes",
-      dpeClass: (letter: string) => (letter === "A" ? "A" : `A à ${letter}`),
     },
     dialog: {
       title: "Filtres",
@@ -1334,11 +1340,11 @@ export const fr = {
       radius: (place: string) => `Rayon autour de ${place}`,
       radiusTown: "Ville seule",
       type: "Type de bien",
-      typeAll: "Tous les biens",
-      budget: "Budget",
       budgetMin: "Budget minimum",
       budgetMax: "Budget maximum",
-      surface: "Surface",
+      // The thumbs of the slider: the group « Fourchette de budget » names them.
+      thumbMin: "Minimum",
+      thumbMax: "Maximum",
       surfaceMin: "Surface minimum",
       surfaceMax: "Surface maximum",
       rooms: "Pièces",
@@ -1358,13 +1364,13 @@ export const fr = {
         equipment: "Équipements",
         dpe: "Performance énergétique",
       },
-      budgetRange: "Fourchette de budget",
       outdoor: "Extérieur",
       outdoorHelp: "Les biens qui ont au moins l'un des extérieurs choisis.",
       equipment: "Équipements",
-      parking: "Stationnement",
+      parking: "Parking",
       elevator: "Ascenseur",
       minAboveMax: "Le maximum doit être supérieur ou égal au minimum.",
+      tooHigh: "Montant trop élevé : 1 000 000 000 € au plus.",
       clear: "Tout effacer",
       show: (count: number) =>
         count === 0 ? "Aucun bien" : count === 1 ? "Voir 1 bien" : `Voir ${count}\u00A0biens`,

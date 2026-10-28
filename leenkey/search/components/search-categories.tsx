@@ -9,10 +9,10 @@ import {
   TreeDeciduous,
   type LucideIcon,
 } from "lucide-react";
-import { useSearch } from "./search-context";
 import { categoryOn, toggleCategory, type Category } from "../categories";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
+import type { SearchFilters } from "@/lib/validations/search";
 
 const t = fr.search.categories;
 
@@ -27,15 +27,23 @@ const CATEGORIES: ReadonlyArray<{ key: Category; icon: LucideIcon }> = [
 
 /**
  * The row of categories under the search bar (L1-61, the categories of
- * Airbnb), at every width: a pictogram over its name, the one pressed in ink
- * with its pictogram in the gradient and the indigo line under it. Each is a
- * filter pressed or not, kept with the others (« Maisons » and « Avec jardin »
- * together); « Tous les biens » clears the type, the garden and the parking.
- * Scrolled sideways on a phone.
+ * Airbnb), at every width: a pictogram over its name, the one on in ink with
+ * its pictogram in the gradient and the indigo line under it. Each is a
+ * filter pressed or not (aria-pressed), kept with the others (« Maisons » and
+ * « Avec jardin » together). « Tous les biens » is not a switch: it clears
+ * the type, the garden and the parking, and is the current one when none of
+ * them is on (aria-current). Scrolled sideways on a phone. Controlled: the
+ * search gives its filters, /design a state of its own.
  */
-export function SearchCategories({ className }: { className?: string }) {
-  const { query, applyFilters } = useSearch();
-  const filters = query.filters;
+export function SearchCategories({
+  filters,
+  onChange,
+  className,
+}: {
+  filters: SearchFilters;
+  onChange: (filters: SearchFilters) => void;
+  className?: string;
+}) {
   return (
     <div
       role="group"
@@ -48,12 +56,17 @@ export function SearchCategories({ className }: { className?: string }) {
     >
       {CATEGORIES.map(({ key, icon: Icon }) => {
         const on = categoryOn(key, filters);
+        const all = key === "all";
         return (
           <button
             key={key}
             type="button"
-            aria-pressed={on}
-            onClick={() => applyFilters(toggleCategory(key, filters))}
+            aria-pressed={all ? undefined : on}
+            aria-current={all && on ? "true" : undefined}
+            onClick={() => {
+              const next = toggleCategory(key, filters);
+              if (next !== filters) onChange(next);
+            }}
             className={cn(
               "flex min-w-14 shrink-0 flex-col items-center gap-1.5 border-b-2 px-0.5 pt-2 pb-2.5 text-lk-caption font-medium whitespace-nowrap md:text-lk-label",
               "transition-colors duration-140 ease-out-lk",

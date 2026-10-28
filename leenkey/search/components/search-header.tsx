@@ -1,6 +1,7 @@
 "use client";
 
 import { SlidersHorizontal } from "lucide-react";
+import { ActiveFilters } from "./active-filters";
 import { FilterBar } from "./filter-bar";
 import { LocationField } from "./location-field";
 import { SearchCategories } from "./search-categories";
@@ -30,10 +31,10 @@ function Count({ value }: { value: number }) {
  * button (48 × 48, count of active filters). From 1024 px (12.6): one
  * rounded bar, « Où ? » then type, budget and rooms, each opening its panel,
  * and « Filtres » for the rest. Under them at every width, the row of
- * categories.
+ * categories; on a phone, the active filters the categories do not show.
  */
 export function SearchHeader() {
-  const { query, openFilters } = useSearch();
+  const { query, openFilters, applyFilters } = useSearch();
   const active = countActiveFilters(query.filters);
   return (
     <div role="search" aria-label={t.bar.label} className="border-b border-lk-line bg-lk-surface">
@@ -68,7 +69,12 @@ export function SearchHeader() {
             <Count value={active} />
           </button>
         </div>
-        <SearchCategories className="mt-2.5 lg:mt-3" />
+        <SearchCategories
+          filters={query.filters}
+          onChange={applyFilters}
+          className="mt-2.5 lg:mt-3"
+        />
+        <ActiveFilters className="mt-2 lg:hidden" />
       </div>
     </div>
   );

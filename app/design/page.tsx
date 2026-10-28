@@ -21,6 +21,7 @@ import { ComposerDemo } from "./_composer-demo";
 import { ConfirmDemo } from "./_confirm-demo";
 import { ConsentDemo } from "./_consent-demo";
 import { FilterMenuDemo } from "./_filter-menu-demo";
+import { ActiveFiltersDemo, CategoriesDemo, FilterPopoverDemo } from "./_search-demos";
 import { AccountMenu } from "@/components/shared/account-menu";
 import { AppHeader } from "@/components/shared/app-header";
 import { AdminMobileHeader } from "@/components/shared/admin-mobile-header";
@@ -500,16 +501,7 @@ export default function DesignPage() {
                 ))}
               </div>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Caption>{content.choices.filtersLabel}</Caption>
-              <div className="flex flex-wrap gap-2">
-                {content.choices.filters.map((chip) => (
-                  <ChipToggle key={chip.label} defaultPressed={chip.pressed} compact>
-                    {chip.label}
-                  </ChipToggle>
-                ))}
-              </div>
-            </div>
+
             <div className="grid max-w-lk-form gap-3.5">
               <SegmentedPicker
                 label={content.choices.dpeLabel}
@@ -549,19 +541,21 @@ export default function DesignPage() {
           </Section>
 
           <Section id="filtres" title={content.sections.filters} level="h3">
-            <Caption>{content.filterBar.selectCaption}</Caption>
+            <Caption>{content.filterBar.popoverCaption}</Caption>
             <div className="flex flex-wrap items-center gap-3">
               {/* Wider than a phone: it scrolls sideways there, the page never does. */}
-              <div className="flex max-w-full items-center overflow-x-auto rounded-full border border-lk-line-strong bg-lk-surface p-1.5 shadow-lk-field">
-                <FilterMenuDemo {...content.filterBar.type} />
-                <span aria-hidden="true" className="h-8 w-px bg-lk-line" />
-                <FilterMenuDemo {...content.filterBar.budget} />
-                <span aria-hidden="true" className="h-8 w-px bg-lk-line" />
-                <FilterMenuDemo {...content.filterBar.rooms} />
-              </div>
+              <FilterPopoverDemo />
               <Button variant="outline-ink" shape="pill" className="h-14 shrink-0 px-5">
                 {content.filterBar.more}
               </Button>
+            </div>
+            <Caption>{content.filterBar.categoriesCaption}</Caption>
+            <CategoriesDemo />
+            <Caption>{content.filterBar.activeCaption}</Caption>
+            <ActiveFiltersDemo />
+            <Caption>{content.filterBar.menuCaption}</Caption>
+            <div className="flex">
+              <FilterMenuDemo {...content.filterBar.sort} />
             </div>
           </Section>
 

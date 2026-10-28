@@ -1,52 +1,54 @@
 import type { SearchFilters } from "@/lib/validations/search";
 
 // The categories under the search bar (L1-61): each one is a filter pressed
-// or not, kept with the others.
+// or not, kept with the others. The outdoor spaces are an OR in the search
+// (any of those chosen): « Avec jardin » is the garden alone, never added to
+// a balcony chosen in « Filtres », which would widen the results.
 
 export type Category = "all" | "maison" | "appartement" | "jardin" | "parking" | "terrain";
 
-/** The category is on in these filters. */
+const gardenOnly = (filters: SearchFilters) =>
+  filters.outdoor?.length === 1 && filters.outdoor[0] === "jardin";
+
+/** The category is on in these filters; « all »: none of the others is. */
 export function categoryOn(key: Category, filters: SearchFilters): boolean {
   switch (key) {
     case "all":
-      return (
-        filters.type === undefined &&
-        !filters.outdoor?.includes("jardin") &&
-        filters.parking === undefined
-      );
+      return filters.type === undefined && !gardenOnly(filters) && filters.parking === undefined;
     case "maison":
     case "appartement":
     case "terrain":
       return filters.type === key;
     case "jardin":
-      return filters.outdoor?.includes("jardin") ?? false;
+      return gardenOnly(filters);
     case "parking":
       return filters.parking === true;
   }
 }
 
-/** The filters once the category is pressed: the other filters are kept. */
+/**
+ * The filters once the category is pressed: the other filters are kept.
+ * « all » clears the type, the garden alone and the parking, nothing else;
+ * pressed while on, it changes nothing.
+ */
 export function toggleCategory(key: Category, filters: SearchFilters): SearchFilters {
   const on = categoryOn(key, filters);
   switch (key) {
-    case "all": {
-      const outdoor = filters.outdoor?.filter((space) => space !== "jardin");
-      return {
-        ...filters,
-        type: undefined,
-        outdoor: outdoor?.length ? outdoor : undefined,
-        parking: undefined,
-      };
-    }
+    case "all":
+      return on
+        ? filters
+        : {
+            ...filters,
+            type: undefined,
+            outdoor: gardenOnly(filters) ? undefined : filters.outdoor,
+            parking: undefined,
+          };
     case "maison":
     case "appartement":
     case "terrain":
       return { ...filters, type: on ? undefined : key };
-    case "jardin": {
-      const others = (filters.outdoor ?? []).filter((space) => space !== "jardin");
-      const outdoor = on ? others : [...others, "jardin" as const];
-      return { ...filters, outdoor: outdoor.length ? outdoor : undefined };
-    }
+    case "jardin":
+      return { ...filters, outdoor: on ? undefined : ["jardin"] };
     case "parking":
       return { ...filters, parking: on ? undefined : true };
   }

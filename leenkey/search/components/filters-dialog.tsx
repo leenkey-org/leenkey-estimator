@@ -162,7 +162,7 @@ function FiltersPanel() {
             className="absolute left-3 lg:left-4"
           />
         </DialogPrimitive.Close>
-        <DialogPrimitive.Title className="text-lk-title font-semibold text-lk-ink">
+        <DialogPrimitive.Title className="text-lk-h3 font-bold text-lk-ink">
           {t.title}
         </DialogPrimitive.Title>
       </div>
@@ -208,7 +208,7 @@ function FiltersPanel() {
             idPrefix="filtres-budget"
             min={form.priceMin}
             max={form.priceMax}
-            error={errors.price ? t.minAboveMax : undefined}
+            error={errors.price ? t[errors.price] : undefined}
             onChange={(priceMin, priceMax) => update({ priceMin, priceMax })}
           />
         </Section>

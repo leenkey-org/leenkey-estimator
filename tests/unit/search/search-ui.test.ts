@@ -9,8 +9,17 @@ import {
   toShowcaseCard,
 } from "@/leenkey/search/cards";
 import { categoryOn, toggleCategory } from "@/leenkey/search/categories";
-import { budgetLabel } from "@/leenkey/search/filter-labels";
-import { filtersFromForm, formFromFilters, wholeNumberInput } from "@/leenkey/search/filters-form";
+import { activeChips, budgetLabel } from "@/leenkey/search/filter-labels";
+import {
+  BUDGET_CAP_EUROS,
+  budgetError,
+  budgetFromThumbs,
+  budgetPreset,
+  budgetThumbs,
+  filtersFromForm,
+  formFromFilters,
+  wholeNumberInput,
+} from "@/leenkey/search/filters-form";
 import { groupPhotos } from "@/leenkey/search/photos";
 import type { SearchListing } from "@/leenkey/search/queries";
 import { fr } from "@/lib/i18n/fr";
@@ -77,7 +86,7 @@ describe("filters panel", () => {
 
   it("reports a minimum above its maximum", () => {
     const form = { ...formFromFilters({}), priceMin: "400000", priceMax: "300000" };
-    expect(filtersFromForm(form, {}).errors).toEqual({ price: true });
+    expect(filtersFromForm(form, {}).errors).toEqual({ price: "minAboveMax" });
     const surface = { ...formFromFilters({}), surfaceMin: "90", surfaceMax: "40" };
     expect(filtersFromForm(surface, {}).errors).toEqual({ surface: true });
   });
@@ -114,31 +123,119 @@ describe("categories under the bar", () => {
     expect(toggleCategory("appartement", houses).type).toBe("appartement");
     expect(toggleCategory("maison", houses).type).toBeUndefined();
 
-    const garden = toggleCategory("jardin", { ...houses, outdoor: ["balcon"] });
-    expect(garden.outdoor).toEqual(["balcon", "jardin"]);
-    expect(categoryOn("jardin", garden)).toBe(true);
-    expect(toggleCategory("jardin", garden).outdoor).toEqual(["balcon"]);
-    expect(toggleCategory("jardin", toggleCategory("jardin", houses)).outdoor).toBeUndefined();
-
     const parking = toggleCategory("parking", houses);
     expect(parking.parking).toBe(true);
     expect(toggleCategory("parking", parking).parking).toBeUndefined();
   });
 
-  it("« Tous les biens » clears the type, the garden and the parking only", () => {
+  it("« Avec jardin » is the garden alone: it never widens an OR of outdoor spaces", () => {
+    // A balcony chosen in « Filtres »: the garden replaces it, never adds to it.
+    const balcony: SearchFilters = { outdoor: ["balcon"] };
+    expect(categoryOn("jardin", balcony)).toBe(false);
+    expect(toggleCategory("jardin", balcony).outdoor).toEqual(["jardin"]);
+    // Any outdoor space (the three): not « Avec jardin ».
+    expect(categoryOn("jardin", { outdoor: ["balcon", "terrasse", "jardin"] })).toBe(false);
+    const garden = toggleCategory("jardin", {});
+    expect(categoryOn("jardin", garden)).toBe(true);
+    expect(toggleCategory("jardin", garden).outdoor).toBeUndefined();
+  });
+
+  it("« Tous les biens » clears the type, the garden alone and the parking, nothing else", () => {
     const filters: SearchFilters = {
       type: "maison",
-      outdoor: ["terrasse", "jardin"],
+      outdoor: ["jardin"],
       parking: true,
       priceMaxCents: 40_000_000,
     };
     expect(toggleCategory("all", filters)).toEqual({
       type: undefined,
-      outdoor: ["terrasse"],
+      outdoor: undefined,
       parking: undefined,
       priceMaxCents: 40_000_000,
     });
-    expect(toggleCategory("all", { outdoor: ["jardin"] }).outdoor).toBeUndefined();
+    // A terrace and a garden chosen in « Filtres » stay: removing one would narrow.
+    expect(
+      toggleCategory("all", { type: "maison", outdoor: ["terrasse", "jardin"] }).outdoor,
+    ).toEqual(["terrasse", "jardin"]);
+    // On already: the same filters, nothing to navigate to.
+    const plain = { roomsMin: 3 };
+    expect(toggleCategory("all", plain)).toBe(plain);
+    // « Autre bien » has no category: « Tous les biens » is not on, and clears it.
+    expect(categoryOn("all", { type: "autre" })).toBe(false);
+    expect(toggleCategory("all", { type: "autre" }).type).toBeUndefined();
+  });
+});
+
+describe("active filters of a phone", () => {
+  it("lists what no category shows, each with the filters without it", () => {
+    const filters: SearchFilters = {
+      type: "maison",
+      priceMaxCents: 40_000_000,
+      roomsMin: 3,
+      outdoor: ["jardin"],
+      parking: true,
+      dpeMax: "D",
+      elevator: true,
+    };
+    const chips = activeChips(filters);
+    expect(chips.map((chip) => plain(chip.label))).toEqual([
+      "≤ 400 k€",
+      "3 pièces +",
+      "Ascenseur",
+      "DPE A à D",
+    ]);
+    expect(chips[0]?.without.priceMaxCents).toBeUndefined();
+    expect(chips[0]?.without.roomsMin).toBe(3);
+    // An outdoor space other than the garden alone, « Autre bien », the surface.
+    expect(
+      activeChips({ type: "autre", outdoor: ["balcon", "terrasse"], surfaceMin: 60 }).map((chip) =>
+        plain(chip.label),
+      ),
+    ).toEqual(["Autre bien", "≥ 60 m²", "Balcon, terrasse"]);
+    expect(activeChips({})).toEqual([]);
+  });
+});
+
+describe("budget slider", () => {
+  it("places the thumbs, an amount beyond the top at the top", () => {
+    expect(budgetThumbs({ min: "", max: "" })).toEqual([0, BUDGET_CAP_EUROS]);
+    expect(budgetThumbs({ min: "200 000", max: "400000" })).toEqual([200_000, 400_000]);
+    expect(budgetThumbs({ min: "", max: "2000000" })).toEqual([0, BUDGET_CAP_EUROS]);
+    expect(budgetThumbs({ min: "2000000", max: "" })).toEqual([BUDGET_CAP_EUROS, BUDGET_CAP_EUROS]);
+  });
+
+  it("writes only the side that moved, an end meaning no limit", () => {
+    // The maximum typed beyond the top stays while the minimum moves.
+    const typed = { min: "", max: "2000000" };
+    expect(budgetFromThumbs(typed, [100_000, BUDGET_CAP_EUROS])).toEqual({
+      min: "100\u202F000",
+      max: "2000000",
+    });
+    expect(budgetFromThumbs({ min: "", max: "" }, [0, 495_000])).toEqual({
+      min: "",
+      max: "495\u202F000",
+    });
+    expect(budgetFromThumbs({ min: "100000", max: "300000" }, [0, 300_000])).toEqual({
+      min: "",
+      max: "300000",
+    });
+    expect(budgetFromThumbs({ min: "", max: "300000" }, [0, BUDGET_CAP_EUROS])).toEqual({
+      min: "",
+      max: "",
+    });
+  });
+
+  it("keeps the minimum under a usual budget, and tells an amount out of reach", () => {
+    expect(budgetPreset({ min: "150000", max: "" }, 300_000)).toEqual({
+      min: "150000",
+      max: "300\u202F000",
+    });
+    expect(budgetPreset({ min: "350000", max: "" }, 300_000).min).toBe("");
+    expect(budgetError({ min: "400000", max: "300000" })).toBe("minAboveMax");
+    expect(budgetError({ min: "", max: "2000000000" })).toBe("tooHigh");
+    expect(budgetError({ min: "", max: "1000000000" })).toBeUndefined();
+    const form = { ...formFromFilters({}), priceMax: "5 000 000 000" };
+    expect(filtersFromForm(form, {}).errors).toEqual({ price: "tooHigh" });
   });
 });
 

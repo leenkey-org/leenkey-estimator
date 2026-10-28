@@ -1,3 +1,4 @@
+import { formatInteger } from "@/lib/format";
 import {
   DPE_CLASSES,
   OUTDOOR_SPACES,
@@ -26,7 +27,10 @@ export type FiltersForm = {
   dpeMax: string;
 };
 
-export type FiltersFormErrors = { price?: true; surface?: true };
+/** minAboveMax: the minimum above the maximum; tooHigh: beyond what the search reads. */
+export type BudgetError = "minAboveMax" | "tooHigh";
+
+export type FiltersFormErrors = { price?: BudgetError; surface?: true };
 
 const text = (value: number | undefined) => (value === undefined ? "" : String(value));
 
@@ -55,6 +59,55 @@ export function wholeNumberInput(value: string): number | undefined {
   return number > 0 && Number.isSafeInteger(number) ? number : undefined;
 }
 
+// The budget of the bar and of the panel (L1-61): a slider over two fields.
+
+/** Top of the slider, in euros: a thumb there is « no maximum ». */
+export const BUDGET_CAP_EUROS = 1_500_000;
+export const BUDGET_STEP_EUROS = 5_000;
+/** Highest budget the search reads (lib/validations/search.ts, in cents). */
+export const BUDGET_LIMIT_EUROS = 1_000_000_000;
+
+/** The two fields of the budget, as typed. */
+export type BudgetDraft = { min: string; max: string };
+
+/**
+ * Where the thumbs stand for the amounts typed: an end without amount, an
+ * amount beyond the top of the slider at its top (the field keeps it).
+ */
+export function budgetThumbs({ min, max }: BudgetDraft): [number, number] {
+  const low = Math.min(wholeNumberInput(min) ?? 0, BUDGET_CAP_EUROS);
+  const high = Math.min(wholeNumberInput(max) ?? BUDGET_CAP_EUROS, BUDGET_CAP_EUROS);
+  return [low, Math.max(low, high)];
+}
+
+/**
+ * The fields once a thumb moved: only the side that moved is written again
+ * (« 1 495 000 »), so that an amount typed beyond the top of the slider stays
+ * while the other thumb moves; a thumb at an end means no limit on its side.
+ */
+export function budgetFromThumbs(draft: BudgetDraft, [from, to]: readonly number[]): BudgetDraft {
+  const [low, high] = budgetThumbs(draft);
+  const amount = (euros: number) => formatInteger(euros);
+  return {
+    min: from === undefined || from === low ? draft.min : from > 0 ? amount(from) : "",
+    max: to === undefined || to === high ? draft.max : to < BUDGET_CAP_EUROS ? amount(to) : "",
+  };
+}
+
+/** A usual budget chosen: it is the maximum; the minimum stays when it is not above it. */
+export function budgetPreset(draft: BudgetDraft, euros: number): BudgetDraft {
+  const low = wholeNumberInput(draft.min);
+  return { min: low !== undefined && low <= euros ? draft.min : "", max: formatInteger(euros) };
+}
+
+export function budgetError({ min, max }: BudgetDraft): BudgetError | undefined {
+  const low = wholeNumberInput(min);
+  const high = wholeNumberInput(max);
+  if ((low ?? 0) > BUDGET_LIMIT_EUROS || (high ?? 0) > BUDGET_LIMIT_EUROS) return "tooHigh";
+  if (low !== undefined && high !== undefined && low > high) return "minAboveMax";
+  return undefined;
+}
+
 function choice<T extends string | number>(values: readonly T[], value: string): T | undefined {
   return values.find((candidate) => String(candidate) === value);
 }
@@ -72,7 +125,8 @@ export function filtersFromForm(
   const priceMax = wholeNumberInput(form.priceMax);
   const surfaceMin = wholeNumberInput(form.surfaceMin);
   const surfaceMax = wholeNumberInput(form.surfaceMax);
-  if (priceMin !== undefined && priceMax !== undefined && priceMin > priceMax) errors.price = true;
+  const price = budgetError({ min: form.priceMin, max: form.priceMax });
+  if (price) errors.price = price;
   if (surfaceMin !== undefined && surfaceMax !== undefined && surfaceMin > surfaceMax) {
     errors.surface = true;
   }
