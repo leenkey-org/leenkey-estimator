@@ -66,6 +66,8 @@ export function SearchHeader() {
             <span aria-hidden="true" className="hidden lg:inline">
               {t.filtersButton}
             </span>
+            {/* A space between the label and the count: the visible « Filtres 2 »
+                is read in its name « Filtres, 2 filtres actifs » (WCAG 2.5.3). */}{" "}
             <Count value={active} />
           </button>
         </div>
