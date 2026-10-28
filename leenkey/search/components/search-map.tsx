@@ -216,34 +216,47 @@ export function SearchMap({
 
   const selected = listings.find((listing) => listing.id === selectedId) ?? null;
 
-  /** The pixels the centre goes south for the pill to sit in the middle of the room above the card. */
-  function shiftForCard(): number | null {
+  /**
+   * The room left for the pill: the part of the map seen on the screen (the
+   * bottom of the panel of the desktop is under the fold until the page is
+   * scrolled), less the card, above or under it. Viewport pixels.
+   */
+  function freeRoom(): { box: DOMRect; top: number; bottom: number } | null {
     const box = region.current?.getBoundingClientRect();
     const card = preview.current?.getBoundingClientRect();
     if (!box || !card) return null;
-    return Math.max(0, box.height / 2 - Math.max(0, card.top - box.top) / 2);
+    const top = Math.max(box.top, 0);
+    const bottom = Math.min(box.bottom, window.innerHeight);
+    return card.top - box.top < box.bottom - card.bottom
+      ? { box, top: card.bottom, bottom }
+      : { box, top, bottom: card.top };
+  }
+
+  /** The pixels the centre goes south for the pill to sit in the middle of that room. */
+  function shiftForCard(): number | null {
+    const room = freeRoom();
+    if (!room) return null;
+    return room.box.top + room.box.height / 2 - (room.top + room.bottom) / 2;
   }
 
   // A pill chosen: lit, seen; the map moves only when the pill is not in
-  // the room left above the card (Airbnb), and the focus goes to the card.
+  // the room left by the card (Airbnb), and the focus goes to the card.
   useEffect(() => {
     view?.layer.setSelected(selectedId);
     const chosen = latest.current.listings.find((listing) => listing.id === selectedId);
     if (!view || !chosen) return;
     handlers.current.onVisit(chosen.id);
-    const box = region.current?.getBoundingClientRect();
-    const card = preview.current?.getBoundingClientRect();
+    const room = freeRoom();
     const pill = region.current
       ?.querySelector(`[data-label-id="${CSS.escape(chosen.id)}"]`)
       ?.getBoundingClientRect();
     const inRoom =
-      box &&
-      card &&
+      room &&
       pill &&
-      pill.left >= box.left + MARGIN_PX &&
-      pill.right <= box.right - MARGIN_PX &&
-      pill.top >= box.top + MARGIN_PX &&
-      pill.bottom <= card.top - MARGIN_PX;
+      pill.left >= room.box.left + MARGIN_PX &&
+      pill.right <= room.box.right - MARGIN_PX &&
+      pill.top >= room.top + MARGIN_PX &&
+      pill.bottom <= room.bottom - MARGIN_PX;
     const shift = shiftForCard();
     const zoom = view.map.getZoom();
     if (!inRoom && shift !== null && zoom !== undefined) {

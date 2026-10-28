@@ -123,9 +123,10 @@ export function ResultsMapPanel(props: Props) {
       selectedId={selectedId}
       onHover={setHoveredId}
       onSelect={setSelectedId}
-      // At the bottom, in the middle, above the logo and the terms of Google;
-      // narrower in the narrower panel up to 1 279 px.
-      previewClassName="inset-x-0 bottom-10 mx-auto w-72 xl:w-80"
+      // At the top, in the middle: the bottom of the panel is under the fold
+      // until the page is scrolled; the logo and the terms of Google stay
+      // free. Narrower in the narrower panel up to 1 279 px.
+      previewClassName="inset-x-0 top-4 mx-auto w-72 xl:w-80"
       previewSizes="(min-width: 1280px) 320px, 288px"
       className="size-full"
     />

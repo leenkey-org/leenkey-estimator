@@ -30,9 +30,9 @@ function latitudeOf(y: number): number {
 }
 
 /**
- * The centre that shows a point `pixels` above the middle of the map, at a
- * zoom: where to pan for the point to stay in view over a card that covers
- * the bottom of the map (Web Mercator, exact).
+ * The centre that shows a point `pixels` above the middle of the map (below
+ * it when negative), at a zoom: where to pan for the point to sit in the room
+ * a card leaves on the map (Web Mercator, exact).
  */
 export function centreBelow(point: LatLngLiteral, zoom: number, pixels: number): LatLngLiteral {
   const y = mercatorY(point.lat) + pixels / (TILE_PX * 2 ** zoom);

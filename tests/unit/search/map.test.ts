@@ -80,9 +80,10 @@ describe("the pill chosen, above its card (L1-62)", () => {
     expect(centre.lng).toBe(pill.lng);
     // 150 px at zoom 13, about 48.7° north: 0.0170° of latitude.
     expect(pill.lat - centre.lat).toBeCloseTo(0.017, 4);
-    // The pill drawn exactly that many pixels above the new centre, from zoom 8 to 18.
+    // The pill drawn exactly that many pixels above the new centre (below it
+    // when negative), from zoom 8 to 18.
     for (const zoom of [8, 12, 13, 18]) {
-      for (const pixels of [40, 150, 300]) {
+      for (const pixels of [-200, 40, 150, 300]) {
         const shifted = centreBelow(pill, zoom, pixels);
         const drawn = (worldY(shifted.lat) - worldY(pill.lat)) * 2 ** zoom;
         expect(Math.abs(drawn - pixels)).toBeLessThan(1e-6);

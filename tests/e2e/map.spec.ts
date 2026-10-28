@@ -125,8 +125,9 @@ test.describe("carte de la recherche (base de seed)", () => {
 
     // A pill of the end of the list, from the keyboard (it may be a dot under
     // another one, label-layer.ts): its card over the map (L1-62), the focus
-    // on its link, the pill in the gradient (white text) and in the room left
-    // above the card; its card outlined in the list, which does not scroll.
+    // on its link, the pill in the gradient (white text) and in the room the
+    // card leaves on the part of the map seen (the card at the top on the
+    // desktop); its card outlined in the list, which does not scroll.
     await page.mouse.move(0, 0);
     await expect(active).toHaveCount(0);
     const last = page.locator("[data-listing-id]").last();
@@ -153,9 +154,13 @@ test.describe("carte de la recherche (base de seed)", () => {
       fakeMap(page).boundingBox(),
     ]);
     expect(pillBox && cardBox && mapBox).toBeTruthy();
+    const seen = await page.evaluate(() => window.innerHeight);
     if (pillBox && cardBox && mapBox) {
-      expect(pillBox.y).toBeGreaterThanOrEqual(mapBox.y);
-      expect(pillBox.y + pillBox.height).toBeLessThanOrEqual(cardBox.y);
+      expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(seen);
+      expect(pillBox.y).toBeGreaterThanOrEqual(cardBox.y + cardBox.height);
+      expect(pillBox.y + pillBox.height).toBeLessThanOrEqual(
+        Math.min(mapBox.y + mapBox.height, seen),
+      );
       expect(pillBox.x).toBeGreaterThanOrEqual(mapBox.x);
       expect(pillBox.x + pillBox.width).toBeLessThanOrEqual(mapBox.x + mapBox.width);
     }
