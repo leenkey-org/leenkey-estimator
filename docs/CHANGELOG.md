@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-28 · L1-62 · PR #60 · Carte de la recherche façon Airbnb
+- Modifié : la carte de `/acheter`, façon Airbnb.
+  - Une pastille choisie montre son bien sur la carte : photos, prix, lieu, lien. Sa carte de liste est entourée, sans défilement. La carte ne bouge que si la pastille serait cachée ; Échap, « Fermer l'aperçu » ou un clic sur la carte referment.
+  - Pastilles au dégradé de la charte au survol et au choix, grisées une fois vues pendant la visite.
+  - Boutons de zoom « + » et « − » de Leenkey en haut à droite.
+- Tests : unitaires (recentrage, Mercator exact) ; E2E de la carte (aperçu, focus, couleur des pastilles, d'un bien à l'autre, Échap, clic sur la carte, zoom, liste immobile, scan d'accessibilité aperçu ouvert).
+
 ### 2026-10-28 · L1-61 · PR #59 · Catalogue façon Airbnb
 - Modifié : la recherche `/acheter`, façon Airbnb.
   - Sous la barre, à toutes les largeurs, les catégories : tous les biens, maisons, appartements, avec jardin, avec parking, terrains.

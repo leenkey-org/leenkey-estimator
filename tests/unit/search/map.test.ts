@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { LEENKEY_MAP_STYLE, MAP_TOKENS } from "@/components/shared/map-style";
-import { headingTo } from "@/core/maps/geometry";
+import { centreBelow, headingTo } from "@/core/maps/geometry";
 import { googleMapsScriptUrl } from "@/core/maps/loader";
 import { mapCentre, toMapListings } from "@/leenkey/search/map-listings";
 import type { SearchListing } from "@/leenkey/search/queries";
@@ -63,6 +63,32 @@ describe("the results on the map", () => {
     expect(mapCentre({ centre: { lat: 48.7, lng: 2.3 } })).toEqual({ lat: 48.7, lng: 2.3 });
     expect(mapCentre({})).toEqual(LAUNCH_ZONE_CENTRE);
     expect(mapCentre(null)).toEqual({ lat: 48.6736, lng: 2.3256 });
+  });
+});
+
+describe("the pill chosen, above its card (L1-62)", () => {
+  // Web Mercator: the y of a point in world pixels at zoom 0.
+  const worldY = (lat: number) => {
+    const sin = Math.sin((lat * Math.PI) / 180);
+    return 256 * (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI));
+  };
+
+  it("pans the map south by the pixels asked, whatever the zoom", () => {
+    const pill = { lat: 48.681, lng: 2.35 };
+    expect(centreBelow(pill, 13, 0).lat).toBeCloseTo(pill.lat, 10);
+    const centre = centreBelow(pill, 13, 150);
+    expect(centre.lng).toBe(pill.lng);
+    // 150 px at zoom 13, about 48.7° north: 0.0170° of latitude.
+    expect(pill.lat - centre.lat).toBeCloseTo(0.017, 4);
+    // The pill drawn exactly that many pixels above the new centre (below it
+    // when negative), from zoom 8 to 18.
+    for (const zoom of [8, 12, 13, 18]) {
+      for (const pixels of [-200, 40, 150, 300]) {
+        const shifted = centreBelow(pill, zoom, pixels);
+        const drawn = (worldY(shifted.lat) - worldY(pill.lat)) * 2 ** zoom;
+        expect(Math.abs(drawn - pixels)).toBeLessThan(1e-6);
+      }
+    }
   });
 });
 

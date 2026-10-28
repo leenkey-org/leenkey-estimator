@@ -6,26 +6,30 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
 
 // The list and the map of the results together (docs/DESIGN.md 8): the card
-// hovered or focused lights its pill; a pill chosen on the map brings its
-// card into view with a blue outline for 1.2 s, and the focus on its link.
+// hovered or focused lights its pill; a pill chosen shows its card over the
+// map (L1-62, in the way of Airbnb) and outlines its card in the list,
+// which stays where it is. The pills whose card was seen stay grey for the
+// visit (sessionStorage, as the choice to show the maps).
 
-const FLASH_MS = 1200;
+const VISITED_KEY = "lk:maps:visited";
+/** Enough for a visit; the oldest go first. */
+const VISITED_MAX = 200;
 
 type MapSyncValue = {
   /** The card or pill under the pointer or the focus. */
   hoveredId: string | null;
   setHoveredId: (id: string | null) => void;
-  /** The last pill chosen: it stays blue. */
+  /** The pill chosen beside the list (from 1024 px): its card over the map. */
   selectedId: string | null;
-  flashId: string | null;
-  /** A pill chosen beside the list: its card is shown. */
-  revealInList: (id: string) => void;
+  setSelectedId: (id: string | null) => void;
+  /** The pills whose card was seen during the visit. */
+  visited: ReadonlySet<string>;
+  markVisited: (id: string) => void;
 };
 
 const MapSyncContext = createContext<MapSyncValue | null>(null);
@@ -36,43 +40,43 @@ export function useMapSync(): MapSyncValue {
   return value;
 }
 
-/** The link of a card: its title, first of the card (L1-55). */
-function visibleLink(item: HTMLElement): HTMLAnchorElement | null {
-  return (
-    Array.from(item.querySelectorAll<HTMLAnchorElement>("a[href]")).find(
-      (link) => link.getClientRects().length > 0,
-    ) ?? null
-  );
+function readVisited(): Set<string> {
+  try {
+    const stored: unknown = JSON.parse(window.sessionStorage.getItem(VISITED_KEY) ?? "[]");
+    return new Set(Array.isArray(stored) ? stored.filter((id) => typeof id === "string") : []);
+  } catch {
+    return new Set();
+  }
 }
 
 export function MapSyncProvider({ children }: { children: ReactNode }) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [flashId, setFlashId] = useState<string | null>(null);
-  const timer = useRef<number | undefined>(undefined);
+  const [visited, setVisited] = useState<ReadonlySet<string>>(() => new Set());
+  // Read after the first render: the server knows nothing of the visit.
+  useEffect(() => setVisited(readVisited()), []);
 
-  useEffect(() => () => window.clearTimeout(timer.current), []);
-
-  const revealInList = useCallback((id: string) => {
-    setSelectedId(id);
-    const item = document.querySelector<HTMLElement>(`[data-listing-id="${CSS.escape(id)}"]`);
-    if (!item) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    item.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" });
-    visibleLink(item)?.focus({ preventScroll: true });
-    window.clearTimeout(timer.current);
-    setFlashId(id);
-    timer.current = window.setTimeout(() => setFlashId(null), FLASH_MS);
+  const markVisited = useCallback((id: string) => {
+    setVisited((seen) => {
+      if (seen.has(id)) return seen;
+      const next = new Set([...seen, id].slice(-VISITED_MAX));
+      try {
+        window.sessionStorage.setItem(VISITED_KEY, JSON.stringify([...next]));
+      } catch {
+        // Kept for the page only.
+      }
+      return next;
+    });
   }, []);
 
   const value = useMemo<MapSyncValue>(
-    () => ({ hoveredId, setHoveredId, selectedId, flashId, revealInList }),
-    [hoveredId, selectedId, flashId, revealInList],
+    () => ({ hoveredId, setHoveredId, selectedId, setSelectedId, visited, markVisited }),
+    [hoveredId, selectedId, visited, markVisited],
   );
   return <MapSyncContext.Provider value={value}>{children}</MapSyncContext.Provider>;
 }
 
-/** One result of the list, tied to its pill on the map. */
+/** One result of the list, tied to its pill on the map; outlined while its pill is chosen. */
 export function ResultItem({
   id,
   index,
@@ -82,17 +86,17 @@ export function ResultItem({
   index: number;
   children: ReactNode;
 }) {
-  const { setHoveredId, flashId } = useMapSync();
+  const { setHoveredId, selectedId } = useMapSync();
   return (
     <li
       data-listing-id={id}
       data-result-index={index}
-      data-flash={flashId === id || undefined}
+      data-selected={selectedId === id || undefined}
       onPointerEnter={() => setHoveredId(id)}
       onPointerLeave={() => setHoveredId(null)}
       onFocus={() => setHoveredId(id)}
       onBlur={() => setHoveredId(null)}
-      className="rounded-lk-2xl data-flash:outline-2 data-flash:outline-offset-2 data-flash:outline-lk-brand-blue"
+      className="rounded-lk-2xl data-selected:outline-2 data-selected:outline-offset-2 data-selected:outline-lk-brand-blue data-selected:outline-solid"
     >
       {children}
     </li>

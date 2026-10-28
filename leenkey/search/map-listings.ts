@@ -1,6 +1,6 @@
-import { placeLabel, toPropertyCard } from "./cards";
+import { placeLabel, toPropertyCard, toShowcaseCard } from "./cards";
 import type { SearchListing } from "./queries";
-import { propertySummary, type PropertyCardData } from "@/components/shared/property-card";
+import { propertySummary } from "@/components/shared/property-card";
 import type { LatLngLiteral } from "@/core/maps/google-maps";
 import { LAUNCH_ZONE_CENTRE } from "@/lib/config/launch-zone";
 import { formatPriceShort } from "@/lib/format";
@@ -17,14 +17,14 @@ export type MapListing = {
   label: string;
   /** Name of the pill: its text, then kind and place as the card says them. */
   name: string;
-  /** The card shown over the map on a phone. */
-  card: PropertyCardData;
+  /** The card shown over the map when its pill is chosen (L1-62), its photos first. */
+  card: ReturnType<typeof toShowcaseCard>;
 };
 
 export function toMapListings(items: readonly SearchListing[], now: Date): MapListing[] {
   return items.flatMap((item) => {
     if (item.lat === null || item.lng === null) return [];
-    const card = toPropertyCard(item, now);
+    const summary = toPropertyCard(item, now);
     const label = formatPriceShort(item.priceCents);
     return [
       {
@@ -33,10 +33,10 @@ export function toMapListings(items: readonly SearchListing[], now: Date): MapLi
         label,
         name: fr.search.map.pill(
           label,
-          propertySummary(card, "long", true),
+          propertySummary(summary, "long", true),
           placeLabel(item.city, item.district),
         ),
-        card,
+        card: toShowcaseCard(item, now),
       },
     ];
   });

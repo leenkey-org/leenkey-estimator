@@ -11,8 +11,14 @@ export type MapLabel = {
 
 export type LabelLayer = {
   setLabels(labels: readonly MapLabel[]): void;
-  /** One label highlighted (hovered or selected), or none. */
+  /** One label highlighted (its card hovered in the list), or none. */
   setActive(id: string | null): void;
+  /** The label chosen (`data-selected`): its card shown over the map. */
+  setSelected(id: string | null): void;
+  /** The labels already chosen during the visit (`data-visited`). */
+  setVisited(ids: ReadonlySet<string>): void;
+  /** The focus back on a label (after the card it opened is closed). */
+  focus(id: string): void;
   remove(): void;
 };
 
@@ -136,6 +142,21 @@ export function createLabelLayer(
         if (key === id) button.setAttribute("data-active", "");
         else button.removeAttribute("data-active");
       }
+    },
+    setSelected(id) {
+      for (const [key, { button }] of nodes) {
+        if (key === id) button.setAttribute("data-selected", "");
+        else button.removeAttribute("data-selected");
+      }
+    },
+    setVisited(ids) {
+      for (const [key, { button }] of nodes) {
+        if (ids.has(key)) button.setAttribute("data-visited", "");
+        else button.removeAttribute("data-visited");
+      }
+    },
+    focus(id) {
+      nodes.get(id)?.button.focus({ preventScroll: true });
     },
     remove() {
       layer.setMap(null);

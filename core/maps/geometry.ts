@@ -14,3 +14,27 @@ export function headingTo(from: LatLngLiteral, to: LatLngLiteral): number {
   const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
   return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
 }
+
+/** Size of the world in pixels at zoom 0 (Web Mercator tiles). */
+const TILE_PX = 256;
+
+/** The y of a latitude in the world of Web Mercator, 0 at the top, 1 at the bottom. */
+function mercatorY(lat: number): number {
+  const sin = Math.sin(radians(lat));
+  return 0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI);
+}
+
+/** The latitude of a y of that world. */
+function latitudeOf(y: number): number {
+  return (Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180) / Math.PI;
+}
+
+/**
+ * The centre that shows a point `pixels` above the middle of the map (below
+ * it when negative), at a zoom: where to pan for the point to sit in the room
+ * a card leaves on the map (Web Mercator, exact).
+ */
+export function centreBelow(point: LatLngLiteral, zoom: number, pixels: number): LatLngLiteral {
+  const y = mercatorY(point.lat) + pixels / (TILE_PX * 2 ** zoom);
+  return { lat: latitudeOf(y), lng: point.lng };
+}

@@ -88,7 +88,7 @@ test.describe("carte de la recherche, sans base de données", () => {
 test.describe("carte de la recherche (base de seed)", () => {
   test.skip(!seeded, "base de seed requise (E2E_SEED=1)");
 
-  test("desktop : une pastille de prix par bien, la carte survolée la met en bleu, la pastille choisie montre sa carte", async ({
+  test("desktop : une pastille de prix par bien, la carte survolée l'allume, la pastille choisie montre son bien sur la carte", async ({
     page,
     context,
     isMobile,
@@ -123,19 +123,94 @@ test.describe("carte de la recherche (base de seed)", () => {
     const text = (await active.textContent()) ?? "";
     await expect(active).toHaveAccessibleName(new RegExp(`^${text.replace(/\s/g, "\\s")}, `));
 
-    // A pill of the end of the list: its card comes into view, outlined, its link focused.
+    // A pill of the end of the list, from the keyboard (it may be a dot under
+    // another one, label-layer.ts): its card over the map (L1-62), the focus
+    // on its link, the pill in the gradient (white text) and in the room the
+    // card leaves on the part of the map seen (the card at the top on the
+    // desktop); its card outlined in the list, which does not scroll.
     await page.mouse.move(0, 0);
     await expect(active).toHaveCount(0);
     const last = page.locator("[data-listing-id]").last();
     const lastId = await last.getAttribute("data-listing-id");
     expect(lastId).not.toBe(id);
-    // From the keyboard: a pill may be a dot under another one (label-layer.ts).
-    await fakeMap(page).locator(`[data-label-id="${lastId}"]`).focus();
+    const pill = fakeMap(page).locator(`[data-label-id="${lastId}"]`);
+    const scrolled = await page.evaluate(() => window.scrollY);
+    await pill.focus();
     await page.keyboard.press("Enter");
-    await expect(last).toHaveAttribute("data-flash", "true");
-    await expect(last).toBeInViewport();
-    await expect(last.locator("a:visible")).toBeFocused();
-    await expect(last).not.toHaveAttribute("data-flash", { timeout: 3000 });
+    const preview = page.getByRole("region", { name: "Bien choisi sur la carte" });
+    const link = preview.getByRole("link");
+    await expect(link).toHaveAttribute(
+      "href",
+      (await last.locator("a").first().getAttribute("href")) ?? "",
+    );
+    await expect(link).toBeFocused();
+    await expect(pill).toHaveAttribute("data-selected", "");
+    await expect(pill).toHaveCSS("color", "rgb(255, 255, 255)");
+    await expect(last).toHaveAttribute("data-selected", "true");
+    expect(await page.evaluate(() => window.scrollY)).toBe(scrolled);
+    const [pillBox, cardBox, mapBox] = await Promise.all([
+      pill.boundingBox(),
+      preview.boundingBox(),
+      fakeMap(page).boundingBox(),
+    ]);
+    expect(pillBox && cardBox && mapBox).toBeTruthy();
+    const seen = await page.evaluate(() => window.innerHeight);
+    if (pillBox && cardBox && mapBox) {
+      expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(seen);
+      expect(pillBox.y).toBeGreaterThanOrEqual(cardBox.y + cardBox.height);
+      expect(pillBox.y + pillBox.height).toBeLessThanOrEqual(
+        Math.min(mapBox.y + mapBox.height, seen),
+      );
+      expect(pillBox.x).toBeGreaterThanOrEqual(mapBox.x);
+      expect(pillBox.x + pillBox.width).toBeLessThanOrEqual(mapBox.x + mapBox.width);
+    }
+    // The card open: no serious violation.
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const scan = await new AxeBuilder({ page }).include("[data-search-map]").analyze();
+    expect(
+      scan.violations
+        .filter((violation) => violation.impact === "serious" || violation.impact === "critical")
+        .map((violation) => violation.id),
+    ).toEqual([]);
+
+    // Another pill: its own card, from its first photo.
+    const other = fakeMap(page).locator(`[data-label-id="${id}"]`);
+    await other.focus();
+    await page.keyboard.press("Enter");
+    await expect(link).toHaveAttribute(
+      "href",
+      (await first.locator("a").first().getAttribute("href")) ?? "",
+    );
+    await expect(pill).not.toHaveAttribute("data-selected", "");
+
+    // Escape closes it, the focus back on its pill, now « seen » (Airbnb):
+    // grey at rest, in the gradient again when hovered.
+    await page.keyboard.press("Escape");
+    await expect(preview).toHaveCount(0);
+    await expect(other).toBeFocused();
+    await expect(other).toHaveAttribute("data-visited", "");
+    await expect(pill).toHaveAttribute("data-visited", "");
+    await expect(pill).toHaveCSS("color", "rgb(71, 85, 105)");
+    // Focused, the pill is above the others: hovered, in the gradient.
+    await other.hover();
+    await expect(other).toHaveCSS("color", "rgb(255, 255, 255)");
+    await page.mouse.move(0, 0);
+    // « Fermer l'aperçu » too, and a press on the map itself.
+    await page.keyboard.press("Enter");
+    await preview.getByRole("button", { name: "Fermer l'aperçu" }).click();
+    await expect(preview).toHaveCount(0);
+    await expect(other).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(preview).toBeVisible();
+    await fakeMap(page).dispatchEvent("click");
+    await expect(preview).toHaveCount(0);
+
+    // Our zoom buttons, at the top right.
+    const zoom = Number(await fakeMap(page).getAttribute("data-zoom"));
+    await page.getByRole("button", { name: "Zoom avant" }).click();
+    await expect(fakeMap(page)).toHaveAttribute("data-zoom", String(zoom + 1));
+    await page.getByRole("button", { name: "Zoom arrière" }).click();
+    await expect(fakeMap(page)).toHaveAttribute("data-zoom", String(zoom));
   });
 
   test("téléphone : « Carte » ouvre la carte en plein écran, une pastille montre son bien, « Liste » revient", async ({
@@ -157,12 +232,33 @@ test.describe("carte de la recherche (base de seed)", () => {
       dialog.locator("[data-fake-map]").getByRole("button", { name: /€/ }).first(),
     ).toBeVisible();
 
-    await dialog.locator("[data-fake-map]").getByRole("button", { name: /€/ }).first().focus();
+    const pill = dialog.locator("[data-fake-map]").getByRole("button", { name: /€/ }).first();
+    await pill.focus();
     await page.keyboard.press("Enter");
     const preview = dialog.getByRole("region", { name: "Bien choisi sur la carte" });
     await expect(preview.getByRole("link")).toHaveAttribute("href", /^\/annonce\/[a-z0-9-]+$/);
+    await expect(preview.getByRole("link")).toBeFocused();
+    // Escape closes the card, not the map; the focus back on its pill.
+    await page.keyboard.press("Escape");
+    await expect(preview).toHaveCount(0);
+    await expect(dialog).toBeVisible();
+    await expect(pill).toBeFocused();
+    // The card above « Liste ».
+    await page.keyboard.press("Enter");
+    const [cardBox, listBox] = await Promise.all([
+      preview.boundingBox(),
+      dialog.getByRole("button", { name: "Liste" }).boundingBox(),
+    ]);
+    if (cardBox && listBox) expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(listBox.y);
+    // Escape with the focus on the pill: the card closes, not the map.
+    await pill.focus();
+    await page.keyboard.press("Escape");
+    await expect(preview).toHaveCount(0);
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press("Enter");
     await preview.getByRole("button", { name: "Fermer l'aperçu" }).click();
     await expect(preview).toHaveCount(0);
+    await expect(pill).toBeFocused();
 
     await dialog.getByRole("button", { name: "Liste" }).click();
     await expect(dialog).toHaveCount(0);

@@ -5,8 +5,9 @@ import type { BrowserContext } from "@playwright/test";
 // and the tests read what the page drew. The stand-in implements what
 // core/maps calls: Map (Web Mercator, fitBounds), OverlayView (the price
 // pills), Circle, LatLng, LatLngBounds, Street View. It marks its element
-// with data-fake-map, the circle with data-circle, the open Street View with
-// data-street-view="open". Flags set by a test before the page loads:
+// with data-fake-map and its zoom in data-zoom, the circle with data-circle,
+// the open Street View with data-street-view="open"; a press on the map
+// itself (not on a pill) is its « click ». Flags set by a test before the page loads:
 // __fakeMapsNoStreetView (no panorama near), __fakeMapsAuthFailure (key refused).
 
 export const MAPS_SCRIPT = /maps\.googleapis\.com\/maps\/api\/js/;
@@ -73,17 +74,27 @@ const FAKE_MAPS = String.raw`(() => {
       this.overlays = [];
       this.events = events();
       element.setAttribute("data-fake-map", "");
+      element.setAttribute("data-zoom", String(options.zoom));
+      // A press on the map itself, never on a pill: the « click » of the map.
+      element.addEventListener("click", (event) => {
+        if (event.target === element || event.target === this.pane) this.events.emit("click");
+      });
       element.style.background = "#e9e5df";
       element.style.overflow = "hidden";
       this.pane = document.createElement("div");
-      this.pane.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;";
+      // As .gm-style of Google: its own stack, never above the card shown over it.
+      this.pane.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;z-index:0;";
       element.append(this.pane);
       this.streetView = new StreetViewPanorama(element);
     }
     size() { return { width: this.element.clientWidth, height: this.element.clientHeight }; }
     redraw() { for (const overlay of this.overlays) overlay.draw?.(); }
     setCenter(center) { this.center = literal(center); this.offset = null; this.redraw(); }
-    setZoom(zoom) { this.zoom = zoom; this.redraw(); }
+    setZoom(zoom) { this.zoom = zoom; this.zoomed(); this.redraw(); }
+    zoomed() {
+      this.element.setAttribute("data-zoom", String(this.zoom));
+      this.events.emit("zoom_changed");
+    }
     getZoom() { return this.zoom; }
     panTo(center) { this.setCenter(center); }
     fitBounds(bounds, padding = 0) {
@@ -104,6 +115,7 @@ const FAKE_MAPS = String.raw`(() => {
         ),
       );
       this.zoom = Math.min(Math.floor(zoom), this.options.maxZoom ?? 21);
+      this.zoomed();
       const lats = bounds.points.map((p) => p.lat);
       const lngs = bounds.points.map((p) => p.lng);
       this.center = {
