@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-29 · L1-64 · PR #63 · Cockpit d'un admin qui vend ou achète
+- Ajouté : un compte admin qui vend ou achète aussi a « Cockpit » juste après « Back office » dans le menu du compte (site et back office) et dans le menu mobile du site ; il mène à « Ma vente » s'il vend, sinon à l'accueil acquéreur.
+- Tests : unitaires du menu du compte (admin seul, admin vendeur, admin acquéreur, client).
+
 ### 2026-10-28 · L1-63 · PR #62 · Carte Google sans clic
 - Modifié : les cartes Google se chargent sans « Afficher la carte » (décision de Younes, option C) : avec la page à côté de la liste en desktop, à l'ouverture de « Carte » sur téléphone, à l'approche de « Où se situe le bien » sur une annonce.
 - Retiré : la porte `MapGate`, sa phrase et le choix gardé pour la visite (`core/maps/use-maps-consent.ts`) ; `components/shared/map-gate.tsx` devient `map-notice.tsx` (chargement, carte indisponible).

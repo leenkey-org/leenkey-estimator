@@ -27,6 +27,8 @@ export type SiteMenuProps = {
   cta: { href: string; label: string };
   /** « Mon compte » signed out, « Cockpit » signed in (« Back office » for an admin). */
   account: { href: string; label: string };
+  /** The Cockpit of an admin who also sells or buys, after the back office (L1-64). */
+  cockpit?: { href: string; label: string };
   texts: SiteMenuTexts;
   /** night: on the night band of the home page D, white logo, pill of glass. */
   tone?: "light" | "night";
@@ -54,6 +56,7 @@ export function SiteMenu({
   links,
   cta,
   account,
+  cockpit,
   texts,
   tone = "light",
   className,
@@ -174,6 +177,13 @@ export function SiteMenu({
                   {account.label}
                 </Link>
               </Button>
+              {cockpit ? (
+                <Button asChild size="lg" variant="secondary">
+                  <Link href={cockpit.href} onClick={close}>
+                    {cockpit.label}
+                  </Link>
+                </Button>
+              ) : null}
             </div>
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>

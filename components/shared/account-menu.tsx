@@ -17,6 +17,8 @@ export type AccountMenuProps = {
   homeHref: string;
   /** Its name: « Cockpit », « Back office » for an admin. */
   homeLabel?: string;
+  /** The Cockpit of an admin who also sells or buys, after the back office (L1-64). */
+  cockpitHref?: string;
   /** « Mon compte ». */
   accountHref: string;
   /** « Voir le site », from the back office. */
@@ -67,6 +69,7 @@ export function AccountMenu({
   initial,
   homeHref,
   homeLabel,
+  cockpitHref,
   accountHref,
   siteHref,
   signOut,
@@ -152,6 +155,11 @@ export function AccountMenu({
           <MenuPrimitive.Item asChild className={itemClassName}>
             <Link href={homeHref}>{homeLabel ?? t.home}</Link>
           </MenuPrimitive.Item>
+          {cockpitHref ? (
+            <MenuPrimitive.Item asChild className={itemClassName}>
+              <Link href={cockpitHref}>{t.home}</Link>
+            </MenuPrimitive.Item>
+          ) : null}
           {siteHref ? (
             <MenuPrimitive.Item asChild className={itemClassName}>
               <Link href={siteHref}>{fr.nav.site}</Link>

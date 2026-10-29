@@ -9,8 +9,8 @@ const t = fr.site.menu;
  * Mobile header of the public pages (G1, docs/DESIGN.md 11), built from the
  * session: « Vendre mon bien » as in the TopNav, then the space of the
  * account once signed in (« Cockpit », the « Back office » of an admin, as in
- * the account menu), « Mon compte » (the login page, back to this page)
- * otherwise.
+ * the account menu, and the Cockpit of an admin who also sells or buys),
+ * « Mon compte » (the login page, back to this page) otherwise.
  */
 export async function SiteMobileHeader({ tone = "light" }: { tone?: "light" | "night" } = {}) {
   const [profile, path] = await Promise.all([getProfile(), currentPath()]);
@@ -25,6 +25,7 @@ export async function SiteMobileHeader({ tone = "light" }: { tone?: "light" | "n
       links={MENU_LINKS}
       cta={sellCta()}
       account={account}
+      cockpit={menu?.cockpitHref ? { href: menu.cockpitHref, label: fr.nav.menu.home } : undefined}
       texts={{ open: t.open, close: t.close }}
       tone={tone}
     />
