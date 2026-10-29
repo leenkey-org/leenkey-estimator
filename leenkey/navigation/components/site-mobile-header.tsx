@@ -25,7 +25,7 @@ export async function SiteMobileHeader({ tone = "light" }: { tone?: "light" | "n
       links={MENU_LINKS}
       cta={sellCta()}
       account={account}
-      cockpit={menu?.cockpitHref ? { href: menu.cockpitHref, label: fr.nav.menu.home } : undefined}
+      cockpit={menu?.cockpit}
       texts={{ open: t.open, close: t.close }}
       tone={tone}
     />

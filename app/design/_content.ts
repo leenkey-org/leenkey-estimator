@@ -519,6 +519,8 @@ export const navigation = {
   },
   buyer: { firstName: "Thomas", roles: ["buyer"] },
   admin: { firstName: "Cédric", roles: ["admin"] },
+  /** An admin who also sells (L1-64): « Back office », then « Cockpit ». */
+  adminSeller: { firstName: "Younes", roles: ["admin", "seller"] },
   /** Counts of the AdminDesktop mockup, for the pills. */
   counts: { "/admin/annonces": 3, "/admin/dossiers": 5 } as Record<string, number>,
 };
@@ -540,7 +542,7 @@ export const notifications = {
   },
   times: ["Il y a 12\u00A0min", "Hier", "Mardi", "3 oct."],
   menuCaption:
-    "AccountMenu : avatar de la barre haute, puis avatar d'en-tête sombre ; Cockpit, Mon compte, Se déconnecter (qui déconnecte vraiment)",
+    "AccountMenu : avatar de la barre haute, puis avatar d'en-tête sombre, puis un admin qui vend aussi (Back office, Cockpit) ; Cockpit, Mon compte, Se déconnecter (qui déconnecte vraiment)",
 };
 
 export const stepForm = {

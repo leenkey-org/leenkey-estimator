@@ -1045,6 +1045,7 @@ export default function DesignPage() {
                   variant="header"
                 />
               </div>
+              <AccountMenu {...accountMenu(content.navigation.adminSeller)} signOut={signOut} />
             </div>
             <Caption>{content.notifications.menuCaption}</Caption>
           </Section>
