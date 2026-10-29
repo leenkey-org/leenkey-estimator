@@ -69,6 +69,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-61** Catalogue `/acheter` façon Airbnb (demande de Younes du 28 octobre) : catégories sous la barre, panneaux de la barre (tuiles, curseur de budget, pilules), panneau « Filtres » en sections · PR : #59 · Testé en préprod : ☐
 - [x] **L1-62** Carte de la recherche façon Airbnb (demande de Younes du 28 octobre) : le bien d'une pastille sur la carte, pastilles au dégradé et « déjà vues », boutons de zoom · PR : #60 · Testé en préprod : ☐
 - [x] **L1-63** Carte Google sans clic (décision de Younes du 28 octobre, option C) : plus de « Afficher la carte », la carte se charge quand elle est montrée · PR : #62 · Testé en préprod : ☐
+- [x] **L1-64** Cockpit d'un admin qui vend ou achète (demande de Younes du 29 octobre) : « Cockpit » après « Back office » dans le menu du compte · PR : #63 · Testé en préprod : ☐
 
 ## S4 · semaine du 2 nov. · Messagerie, notifications, dashboard
 

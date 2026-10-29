@@ -183,18 +183,27 @@ export function accountInitial(firstName: string | null | undefined): string | n
  * A client's space is the Cockpit, an admin's the back office (Younes,
  * 2026-10-28); the way back to the site is given by the back office itself
  * (app/(admin)/admin/layout.tsx),
- * not on the pages of the site.
+ * not on the pages of the site. An admin who also sells or buys (a property
+ * created, a seller written to) has their Cockpit too, after the back office
+ * (L1-64).
  */
 export function accountMenu(profile: { firstName: string | null; roles: readonly string[] }): {
   initial: string | null;
   homeHref: string;
   homeLabel: string;
+  /** The Cockpit of an admin who also sells or buys. */
+  cockpit?: { href: string; label: string };
   accountHref: string;
 } {
+  const admin = profile.roles.includes("admin");
+  const clientRoles = profile.roles.filter((role) => role === "seller" || role === "buyer");
   return {
     initial: accountInitial(profile.firstName),
     homeHref: homePathForRoles(profile.roles),
-    homeLabel: profile.roles.includes("admin") ? fr.nav.backOffice : fr.nav.menu.home,
+    homeLabel: admin ? fr.nav.backOffice : fr.nav.menu.home,
+    ...(admin && clientRoles.length > 0
+      ? { cockpit: { href: homePathForRoles(clientRoles), label: fr.nav.menu.home } }
+      : {}),
     accountHref: ROUTES.account,
   };
 }

@@ -444,6 +444,27 @@ describe("bell and account menu", () => {
       homeLabel: "Cockpit",
       accountHref: "/compte",
     });
+    expect(accountMenu({ firstName: "Cédric", roles: ["admin"] })).not.toHaveProperty("cockpit");
+  });
+
+  it("an admin who also sells or buys has their Cockpit after the back office (L1-64)", () => {
+    expect(accountMenu({ firstName: "Younes", roles: ["admin", "seller"] })).toEqual({
+      initial: "Y",
+      homeHref: "/admin",
+      homeLabel: "Back office",
+      cockpit: { href: "/vendeur", label: "Cockpit" },
+      accountHref: "/compte",
+    });
+    expect(accountMenu({ firstName: "Younes", roles: ["buyer", "admin"] }).cockpit?.href).toBe(
+      "/acquereur",
+    );
+    expect(
+      accountMenu({ firstName: "Younes", roles: ["admin", "buyer", "seller"] }).cockpit?.href,
+    ).toBe("/vendeur");
+    // A client never has a second entry.
+    expect(accountMenu({ firstName: "Alice", roles: ["seller", "buyer"] })).not.toHaveProperty(
+      "cockpit",
+    );
   });
 });
 

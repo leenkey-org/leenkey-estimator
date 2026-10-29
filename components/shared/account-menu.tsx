@@ -17,6 +17,8 @@ export type AccountMenuProps = {
   homeHref: string;
   /** Its name: « Cockpit », « Back office » for an admin. */
   homeLabel?: string;
+  /** The Cockpit of an admin who also sells or buys, after the back office (L1-64). */
+  cockpit?: { href: string; label: string };
   /** « Mon compte ». */
   accountHref: string;
   /** « Voir le site », from the back office. */
@@ -58,8 +60,10 @@ function Avatar({ initial, className }: { initial: string | null; className: str
 
 /**
  * Account menu (docs/DESIGN.md 10.6): opened from the avatar of the TopNav or
- * of the back office. Radix dropdown menu, keyboard included: « Cockpit »,
- * « Mon compte », then « Se déconnecter » after a separator. Floating panel:
+ * of the back office. Radix dropdown menu, keyboard included: « Cockpit » (a
+ * client) or « Back office » (an admin), then the Cockpit of an admin who
+ * also sells or buys (L1-64), « Voir le site » in the back office, « Mon
+ * compte », and « Se déconnecter » after a separator. Floating panel:
  * radius 6, 1 px border, shadow-float, 220 ms (no movement with reduced
  * motion).
  */
@@ -67,6 +71,7 @@ export function AccountMenu({
   initial,
   homeHref,
   homeLabel,
+  cockpit,
   accountHref,
   siteHref,
   signOut,
@@ -152,6 +157,11 @@ export function AccountMenu({
           <MenuPrimitive.Item asChild className={itemClassName}>
             <Link href={homeHref}>{homeLabel ?? t.home}</Link>
           </MenuPrimitive.Item>
+          {cockpit ? (
+            <MenuPrimitive.Item asChild className={itemClassName}>
+              <Link href={cockpit.href}>{cockpit.label}</Link>
+            </MenuPrimitive.Item>
+          ) : null}
           {siteHref ? (
             <MenuPrimitive.Item asChild className={itemClassName}>
               <Link href={siteHref}>{fr.nav.site}</Link>

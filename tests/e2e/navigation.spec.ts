@@ -750,7 +750,10 @@ test.describe("comptes connectés (base de seed)", () => {
         "href",
         "/admin",
       );
-      // The Cockpit is the space of a client (Younes, 2026-10-28).
+      // The Cockpit is the space of a client (Younes, 2026-10-28): the admin
+      // of the seed has no client role. One who sells or buys has it too
+      // (L1-64): a property created with this account on the preprod adds
+      // the role, until the next db:seed.
       await expect(menu.getByRole("link", { name: "Cockpit" })).toHaveCount(0);
     } else {
       await page.getByRole("button", { name: "Menu du compte" }).click();
