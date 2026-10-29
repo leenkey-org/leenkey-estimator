@@ -3,7 +3,8 @@ import type { GoogleMapsApi, GoogleMapsNamespace } from "./google-maps";
 // Loading of the Maps JavaScript API (L1-16), in the browser only and once
 // per page: the script of Google, then its three libraries. No npm package
 // (the official loader is not a pre-approved dependency). The maps call it
-// only after the visitor asked for a map (components/shared/map-gate.tsx).
+// when they are shown: the search beside the list, the area of a listing when
+// it nears the screen, the full screen map of a phone when opened (L1-63).
 
 export const GOOGLE_MAPS_SCRIPT = "https://maps.googleapis.com/maps/api/js";
 const CALLBACK = "__lkGoogleMapsReady";

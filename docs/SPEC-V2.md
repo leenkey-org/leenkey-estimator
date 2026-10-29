@@ -1182,7 +1182,7 @@ Maquettes : `Recherche.dc.html`, `RechercheDesktop.dc.html`.
 - Tri : plus récents (défaut), prix croissant, prix décroissant, surface, prix au m².
 - Filtres sérialisés dans l'URL (`?ville=savigny-sur-orge&rayon=5&budget_max=400000&pieces_min=3`), schéma Zod `SearchFilters` partagé avec les alertes.
 - Liste : `ShowcaseCard` à photos qui tournent (L1-55, `docs/DESIGN.md` 10.3), pagination par 20 avec « Voir plus ».
-- Carte Google Maps (`DECISIONS.md` 2026-10-26, `docs/DESIGN.md` 8), chargée seulement après le clic « Afficher la carte » : marqueurs en pastille de prix (« 350 k€ »), marqueur de l'annonce survolée ou choisie dans le dégradé de la charte, grisé une fois vu ; un marqueur choisi montre son bien sur la carte (L1-62, façon Airbnb : photos, prix, lien ; boutons de zoom de Leenkey ; `docs/DESIGN.md` 8). Mobile et tablette : bouton flottant « Carte » qui l'ouvre en plein écran. Desktop : liste 620 px à gauche, carte à droite sur le reste de la largeur. Regroupement au dézoom et recherche « dans cette zone » au déplacement : L1-16b.
+- Carte Google Maps (`DECISIONS.md` 2026-10-26, `docs/DESIGN.md` 8), chargée sans clic (L1-63, `DECISIONS.md` 2026-10-28) : avec la page à côté de la liste en desktop, à l'ouverture de « Carte » sur téléphone ; marqueurs en pastille de prix (« 350 k€ »), marqueur de l'annonce survolée ou choisie dans le dégradé de la charte, grisé une fois vu ; un marqueur choisi montre son bien sur la carte (L1-62, façon Airbnb : photos, prix, lien ; boutons de zoom de Leenkey ; `docs/DESIGN.md` 8). Mobile et tablette : bouton flottant « Carte » qui l'ouvre en plein écran. Desktop : liste 620 px à gauche, carte à droite sur le reste de la largeur. Regroupement au dézoom et recherche « dans cette zone » au déplacement : L1-16b.
 - Bouton « Créer une alerte » (L3 ; en L1, bouton masqué).
 - Requête : fonction SQL `search_listings(filters jsonb, bbox, sort, page)` qui lit `public_listings`, avec index GIST sur `public_location` et index sur `price_cents`, `surface_m2`, `rooms`, `city`.
 - Vide : « Aucun bien ne correspond. Élargissez le rayon ou le budget, ou créez une alerte pour être prévenu. »
@@ -1198,7 +1198,7 @@ Ordre du contenu (mise en page mobile et desktop : `docs/DESIGN.md` 12.7 et 12.8
 4. Vendeur (`ContactCard`) : prénom, « Vente accompagnée par Leenkey » si formule payante, « Répond en général sous 24 h » uniquement si le temps de réponse médian réel est < 24 h (sinon rien).
 5. Description (repliée à 6 lignes sur mobile).
 6. **« Ce que vous savez avant de visiter »** : une seule `KeyFactsTable` qui regroupe les caractéristiques complètes et les informations utiles avant visite : charges, taxe foncière, lots, travaux votés et procédures (issus de l'analyse des documents en L3 ; « Non renseigné » sinon), documents disponibles avec « Demander l'accès ». En desktop, la carte vient sous la `KeyFactsTable`, sur la largeur de la colonne (`docs/DESIGN.md` 12.8, L1-16).
-7. Carte avec la zone approximative (cercle de 400 m de rayon autour de `public_location`), jamais l'adresse, et « Voir la rue » (Street View le plus proche du point public), après le clic « Afficher la carte » (L1-16).
+7. Carte avec la zone approximative (cercle de 400 m de rayon autour de `public_location`), jamais l'adresse, et « Voir la rue » (Street View le plus proche du point public), chargée quand le bloc approche de l'écran, sans clic (L1-16, L1-63).
 8. Résumé de l'assistant (L2) : 2 phrases factuelles générées à la publication, stockées, régénérées à chaque modification. `AssistantNote` (encart `--lk-blue-tint`) ; en desktop, sous la `PriceColumn`.
 9. Barre d'action : mobile, `ActionBar` fixée en bas (« Contacter le vendeur » + bouton visite) ; desktop, `PriceColumn` collante à droite avec `PriceBlock`, `ContactCard` et les boutons « Contacter le vendeur », « Demander une visite », « Faire une offre » (L2).
 
@@ -1951,7 +1951,7 @@ Usages : centre et zoom par défaut de la carte de recherche (Épinay-sur-Orge, 
 
 - Objectifs mobile (Lighthouse, 4G simulée) sur la page annonce et la recherche : LCP < 2,5 s, CLS < 0,1, INP < 200 ms.
 - Images : `next/image` sur la route `/img`, tailles adaptées, `priority` sur la photo principale uniquement.
-- Google Maps chargé seulement au clic « Afficher la carte » (script de Google injecté par `core/maps/loader.ts`, aucun paquet npm).
+- Google Maps chargé sans clic, seulement quand une carte est montrée (script de Google injecté par `core/maps/loader.ts`, aucun paquet npm ; L1-63).
 - Pas de bibliothèque de plus de 50 ko gzip côté client sans justification dans la PR.
 
 ### Accessibilité

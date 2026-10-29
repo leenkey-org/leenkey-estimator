@@ -1,18 +1,19 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { fakeGoogleMaps } from "./google-maps";
+import { fakeGoogleMaps, MAPS_SCRIPT } from "./google-maps";
 
 // L1-16: the maps of Google Maps, with a stand-in of the API (google-maps.ts).
 // The build under test has a key (the CI sets a fake one, the stand-in never
-// checks it). A key refused by Google is simulated (__fakeMapsAuthFailure);
-// a build without key shows the same notice instead of the gate.
+// checks it). A key refused by Google is simulated (__fakeMapsAuthFailure).
+// Since L1-63 the maps load without a click: beside the list from 1 024 px,
+// with « Carte » on a phone, near « Où se situe le bien » on a listing; the
+// browsers of the tests never reach Google (playwright.config.ts).
 //
 // Modes of search.spec.ts: the « sans base » tests run on the CI build
 // without Supabase; E2E_SEED=1 runs the others on a seeded database.
 
 const seeded = process.env.E2E_SEED === "1";
 
-const gateButton = (page: Page) => page.getByRole("button", { name: "Afficher la carte" });
 const fakeMap = (page: Page) => page.locator("[data-fake-map]");
 /** Price pills on the map (the overlay of core/maps/label-layer.ts). */
 const pills = (page: Page) => fakeMap(page).getByRole("button", { name: /€/ });
@@ -33,7 +34,7 @@ async function settled(page: Page) {
 test.describe("carte de la recherche, sans base de données", () => {
   test.skip(seeded, "états sans base de données, testés hors E2E_SEED");
 
-  test("desktop : rien n'est demandé à Google avant « Afficher la carte », puis la carte reste pour la visite", async ({
+  test("desktop : la carte se charge avec la page, sans clic, une fois, en français", async ({
     page,
     context,
     isMobile,
@@ -41,23 +42,31 @@ test.describe("carte de la recherche, sans base de données", () => {
     test.skip(isMobile, "la carte est à côté de la liste à partir de 1 024 px");
     const asked = await fakeGoogleMaps(context);
     await page.goto("/acheter");
-    await expect(page.getByText("Voir les biens sur la carte")).toBeVisible();
-    await expect(page.getByText(/fournie par Google Maps/)).toBeVisible();
-    await settled(page);
-    expect(asked).toEqual([]);
-
-    await gateButton(page).click();
     await expect(fakeMap(page)).toBeVisible();
-    expect(asked).toHaveLength(1);
-    const script = new URL(asked[0] ?? "");
+    await settled(page);
+    // The script of Google, once (its libraries come with it).
+    const scripts = asked.filter((url) => MAPS_SCRIPT.test(url));
+    expect(scripts).toHaveLength(1);
+    const script = new URL(scripts[0] ?? "");
     expect(script.searchParams.get("language")).toBe("fr");
     expect(script.searchParams.get("region")).toBe("FR");
     expect(script.searchParams.get("key")).toBeTruthy();
+  });
 
-    // The same visit: the map without asking again.
-    await page.reload();
-    await expect(fakeMap(page)).toBeVisible();
-    await expect(gateButton(page)).toHaveCount(0);
+  test("desktop : Google injoignable, et la carte dit qu'elle n'est pas disponible", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "la carte est à côté de la liste à partir de 1 024 px");
+    // No stand-in: the browsers of the tests never reach Google Maps. The
+    // script is asked for, fails, and the map says so.
+    const failed = page.waitForEvent("requestfailed", (request) => MAPS_SCRIPT.test(request.url()));
+    await page.goto("/acheter");
+    await failed;
+    await expect(
+      page.getByRole("status").filter({ hasText: "La carte n'est pas disponible pour le moment." }),
+    ).toBeVisible();
+    await expect(fakeMap(page)).toHaveCount(0);
   });
 
   test("desktop : une clé refusée par Google, et la carte dit qu'elle n'est pas disponible", async ({
@@ -71,7 +80,6 @@ test.describe("carte de la recherche, sans base de données", () => {
       (window as Window & { __fakeMapsAuthFailure?: boolean }).__fakeMapsAuthFailure = true;
     });
     await page.goto("/acheter");
-    await gateButton(page).click();
     await expect(
       page.getByRole("status").filter({ hasText: "La carte n'est pas disponible pour le moment." }),
     ).toBeVisible();
@@ -96,7 +104,6 @@ test.describe("carte de la recherche (base de seed)", () => {
     test.skip(isMobile, "la carte est à côté de la liste à partir de 1 024 px");
     await fakeGoogleMaps(context);
     await page.goto("/acheter");
-    await gateButton(page).click();
     await expect(fakeMap(page)).toBeVisible();
     const count = await cards(page).count();
     expect(count).toBeGreaterThan(1);
@@ -213,18 +220,20 @@ test.describe("carte de la recherche (base de seed)", () => {
     await expect(fakeMap(page)).toHaveAttribute("data-zoom", String(zoom));
   });
 
-  test("téléphone : « Carte » ouvre la carte en plein écran, une pastille montre son bien, « Liste » revient", async ({
+  test("téléphone : rien n'est demandé à Google avant « Carte », qui ouvre la carte en plein écran ; une pastille montre son bien, « Liste » revient", async ({
     page,
     context,
     isMobile,
   }) => {
     test.skip(!isMobile, "bouton des téléphones");
-    await fakeGoogleMaps(context);
+    const asked = await fakeGoogleMaps(context);
     await page.goto("/acheter");
+    await settled(page);
+    // The panel of the desktop is hidden below 1024 px: no map, no request.
+    expect(asked).toEqual([]);
     await page.getByRole("button", { name: "Carte", exact: true }).click();
     const dialog = page.getByRole("dialog", { name: "Carte des biens" });
     await expect(dialog).toBeVisible();
-    await dialog.getByRole("button", { name: "Afficher la carte" }).click();
     await expect(dialog.locator("[data-fake-map]")).toBeVisible();
     // One map only: the panel of the desktop, hidden, loads none.
     await expect(page.locator("[data-fake-map]")).toHaveCount(1);
@@ -263,33 +272,13 @@ test.describe("carte de la recherche (base de seed)", () => {
     await dialog.getByRole("button", { name: "Liste" }).click();
     await expect(dialog).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Carte", exact: true })).toBeFocused();
+    // Opened again: the same script, never asked a second time.
+    await page.getByRole("button", { name: "Carte", exact: true }).click();
+    await expect(dialog.locator("[data-fake-map]")).toBeVisible();
+    expect(asked.filter((url) => MAPS_SCRIPT.test(url))).toHaveLength(1);
   });
 
-  test("téléphone : choix déjà fait, la page rechargée ne demande rien à Google avant « Carte »", async ({
-    page,
-    context,
-    isMobile,
-  }) => {
-    test.skip(!isMobile, "bouton des téléphones");
-    const asked = await fakeGoogleMaps(context);
-    await page.goto("/acheter");
-    await page.getByRole("button", { name: "Carte", exact: true }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "Afficher la carte" }).click();
-    await expect(page.locator("[data-fake-map]")).toHaveCount(1);
-    await page.getByRole("button", { name: "Liste" }).click();
-    const before = asked.length;
-    await page.reload();
-    await settled(page);
-    // The panel of the desktop is hidden below 1024 px: no map, no request.
-    expect(asked).toHaveLength(before);
-    await page.getByRole("button", { name: "Carte", exact: true }).click();
-    await expect(page.getByRole("dialog").locator("[data-fake-map]")).toBeVisible();
-    await expect(
-      page.getByRole("dialog").getByRole("button", { name: "Afficher la carte" }),
-    ).toHaveCount(0);
-  });
-
-  test("annonce : choix déjà fait, la carte ne se charge qu'en approchant de « Où se situe le bien »", async ({
+  test("annonce : la carte ne se charge qu'en approchant de « Où se situe le bien », sans clic", async ({
     page,
     context,
     isMobile,
@@ -299,36 +288,24 @@ test.describe("carte de la recherche (base de seed)", () => {
     await page.goto("/acheter");
     const href = await cards(page).first().getAttribute("href");
     await page.goto(href ?? "");
-    await page
-      .getByRole("region", { name: "Où se situe le bien" })
-      .getByRole("button", { name: "Afficher la carte" })
-      .click();
-    await expect(page.locator("[data-fake-map]")).toBeVisible();
-    // Another listing of the same visit, opened at its top.
-    await page.goto("/acheter");
-    const other = await cards(page).nth(1).getAttribute("href");
-    const before = asked.length;
-    await page.goto(other ?? "");
     await settled(page);
     await expect(page.locator("[data-fake-map]")).toHaveCount(0);
-    expect(asked).toHaveLength(before);
+    expect(asked).toEqual([]);
     await page.getByRole("heading", { name: "Où se situe le bien" }).scrollIntoViewIfNeeded();
     await expect(page.locator("[data-fake-map]")).toBeVisible();
+    expect(asked.filter((url) => MAPS_SCRIPT.test(url))).toHaveLength(1);
   });
 
   test("annonce : secteur de 400 m, jamais l'adresse, et « Voir la rue »", async ({
     page,
     context,
   }) => {
-    const asked = await fakeGoogleMaps(context);
+    await fakeGoogleMaps(context);
     await page.goto("/acheter");
     const href = await cards(page).first().getAttribute("href");
     await page.goto(href ?? "");
     const area = page.getByRole("region", { name: "Où se situe le bien" });
-    await expect(area.getByRole("heading", { name: "Où se situe le bien" })).toBeVisible();
-    await settled(page);
-    expect(asked).toEqual([]);
-    await area.getByRole("button", { name: "Afficher la carte" }).click();
+    await area.getByRole("heading", { name: "Où se situe le bien" }).scrollIntoViewIfNeeded();
     const map = area.locator("[data-fake-map]");
     await expect(map).toHaveAttribute("data-circle", "400");
     await expect(area.getByText(/^Secteur approximatif, /)).toBeVisible();
@@ -354,7 +331,7 @@ test.describe("carte de la recherche (base de seed)", () => {
     await page.goto("/acheter");
     const href = await cards(page).first().getAttribute("href");
     await page.goto(href ?? "");
-    await page.getByRole("button", { name: "Afficher la carte" }).click();
+    await page.getByRole("heading", { name: "Où se situe le bien" }).scrollIntoViewIfNeeded();
     await page.getByRole("button", { name: "Voir la rue" }).click();
     await expect(
       page.getByRole("status").filter({ hasText: "Pas de vue de la rue" }),
@@ -369,7 +346,6 @@ test.describe("carte de la recherche (base de seed)", () => {
     test.skip(isMobile, "la carte est à côté de la liste à partir de 1 024 px");
     await fakeGoogleMaps(context);
     await page.goto("/acheter");
-    await gateButton(page).click();
     await expect(pills(page).first()).toBeVisible();
     await page.emulateMedia({ reducedMotion: "reduce" });
     const results = await new AxeBuilder({ page }).analyze();

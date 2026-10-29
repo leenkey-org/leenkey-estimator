@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Minus, Plus } from "lucide-react";
 import type { MapListing } from "../map-listings";
 import { MapPreview } from "./map-preview";
-import { MapNotice } from "@/components/shared/map-gate";
+import { MapNotice } from "@/components/shared/map-notice";
 import { LEENKEY_MAP_STYLE } from "@/components/shared/map-style";
 import { centreBelow } from "@/core/maps/geometry";
 import type { GoogleMap, LatLngLiteral, Padding } from "@/core/maps/google-maps";
@@ -16,8 +16,8 @@ import { cn } from "@/lib/utils";
 // Map of the results (L1-16, docs/DESIGN.md 8): Google Maps in the style of
 // Leenkey, a price pill per listing, framed on the results; in the way of
 // Airbnb since L1-62, a pill chosen shows its card over the map and our own
-// zoom buttons replace those of Google. Mounted only after the visitor chose
-// to show the map.
+// zoom buttons replace those of Google. Mounted only when the map is shown
+// (L1-63).
 
 const t = fr.search.map;
 const ZOOM = 12;

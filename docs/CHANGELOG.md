@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-28 · L1-63 · PR #62 · Carte Google sans clic
+- Modifié : les cartes Google se chargent sans « Afficher la carte » (décision de Younes, option C) : avec la page à côté de la liste en desktop, à l'ouverture de « Carte » sur téléphone, à l'approche de « Où se situe le bien » sur une annonce.
+- Retiré : la porte `MapGate`, sa phrase et le choix gardé pour la visite (`core/maps/use-maps-consent.ts`) ; `components/shared/map-gate.tsx` devient `map-notice.tsx` (chargement, carte indisponible).
+- Modifié : avant d'être chargée, la carte montre les rues dessinées, puis « Chargement de la carte… » pendant son chargement ; la carte de la recherche suit le point de rupture `lg` en rem (pas de carte chargée pour rien avec une police agrandie).
+- Tests : E2E de la carte réécrits (chargement direct, script demandé une fois, rien avant « Carte » sur téléphone ni en la rouvrant, rien avant « Où se situe le bien », Google Maps injoignable) ; les navigateurs des tests ne joignent plus jamais Google Maps (`playwright.config.ts`) ; le test du bandeau de cookies vérifie la mesure d'audience, pas les cartes.
+- Configuration : clé Google Maps de la préprod en place dans Vercel `leenkey-v2` (`docs/DEMARRAGE.md`).
+
 ### 2026-10-28 · L1-24 · PR #61
 - Ajouté : « Ma vente » complet (SPEC 8.7, DESIGN 12.3) : en-tête de nuit (`SellerHeader`, salutation, menu « Changer de bien », carte du bien, `StepProgress` avec la formule), prochaine action (`NextActionCard`, `getNextAction` de L1-23), vues sur 7 jours, contacts et acquéreurs qualifiés (`StatTile`), tâches de l'étape (`TaskList`, « Fait » / « Annuler » pour les tâches sans événement), trois dernières conversations, puis « Vos biens ». Brouillon : « Terminez votre annonce » ; vendu : le bilan de la vente.
 - Ajouté : onglet « Étapes » de la fiche du bien (« Toutes les étapes ») : les six étapes de la formule, l'étape en cours marquée.

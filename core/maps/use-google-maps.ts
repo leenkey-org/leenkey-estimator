@@ -11,8 +11,8 @@ export type GoogleMapsState =
 
 /**
  * The Maps JavaScript API for a map being shown: loading, ready, or an error
- * (script not loaded, key refused by Google). Mounted only once the visitor
- * asked for the map.
+ * (script not loaded, key refused by Google). Mounted only when the map is
+ * shown (L1-63).
  */
 export function useGoogleMaps(apiKey: string): GoogleMapsState {
   const [state, setState] = useState<GoogleMapsState>({ status: "loading" });

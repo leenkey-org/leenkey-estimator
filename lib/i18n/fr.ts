@@ -1360,12 +1360,9 @@ export const fr = {
     photoCount: (total: number) => `1 / ${total}`,
   },
   // L1-15: search /acheter (SPEC-V2 8.4, docs/DESIGN.md 10.3, 12.5, 12.6).
-  // L1-16: maps of Google Maps, shown after the choice of the visitor
-  // (core/maps/use-maps-consent.ts, DECISIONS 2026-10-26).
+  // L1-16: maps of Google Maps, loaded without a click since L1-63
+  // (DECISIONS 2026-10-28).
   maps: {
-    gateNote:
-      "La carte est fournie par Google Maps : l'afficher transmet votre adresse IP à Google.",
-    gateAction: "Afficher la carte",
     loading: "Chargement de la carte…",
     unavailable: "La carte n'est pas disponible pour le moment.",
   },
@@ -1516,7 +1513,6 @@ export const fr = {
     // L1-16: the map of the results (docs/DESIGN.md 8, 12.5, 12.6).
     map: {
       region: "Carte des biens",
-      gateTitle: "Voir les biens sur la carte",
       open: "Carte",
       close: "Liste",
       /** Name of a price pill: its text first (WCAG 2.5.3), then what the card says. */
@@ -1605,7 +1601,6 @@ export const fr = {
     map: {
       title: "Où se situe le bien",
       region: "Carte du secteur du bien",
-      gateTitle: "Voir le secteur sur la carte",
       sector: (place: string) => `Secteur approximatif, ${place}`,
       streetView: "Voir la rue",
       backToMap: "Revenir à la carte",

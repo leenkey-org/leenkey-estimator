@@ -14,7 +14,7 @@ import {
 // hovered or focused lights its pill; a pill chosen shows its card over the
 // map (L1-62, in the way of Airbnb) and outlines its card in the list,
 // which stays where it is. The pills whose card was seen stay grey for the
-// visit (sessionStorage, as the choice to show the maps).
+// visit (sessionStorage).
 
 const VISITED_KEY = "lk:maps:visited";
 /** Enough for a visit; the oldest go first. */
