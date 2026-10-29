@@ -26,7 +26,9 @@ type Props = {
   centre: LatLngLiteral;
 };
 
-const DESKTOP = "(min-width: 1024px)";
+// The breakpoint `lg` of Tailwind (64rem), not 1024px: with a larger font of
+// the browser, the panel hidden by the CSS would otherwise load a map.
+const DESKTOP = "(min-width: 64rem)";
 
 /** From 1024 px: the panel beside the list is shown (false on the server). */
 function useDesktop(): boolean {
@@ -72,7 +74,15 @@ function MapContent({
 }) {
   const { visited, markVisited } = useMapSync();
   if (!apiKey) return <MapNotice className={className}>{fr.maps.unavailable}</MapNotice>;
-  if (!shown) return null;
+  // Before the hydration (the server cannot know the width), the streets and
+  // « Chargement de la carte… »; hidden below 1024 px with their panel.
+  if (!shown) {
+    return (
+      <MapNotice busy className={className}>
+        {fr.maps.loading}
+      </MapNotice>
+    );
+  }
   return (
     <SearchMap
       apiKey={apiKey}

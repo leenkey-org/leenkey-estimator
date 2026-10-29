@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { MAPS_HOST_NAMES } from "./tests/e2e/google-maps";
 
 // BASE_URL targets a deployed environment (preprod); without it, the suite
 // starts the production build locally.
@@ -45,13 +46,14 @@ export default defineConfig({
         : undefined,
     launchOptions: {
       ...(executablePath ? { executablePath } : {}),
-      // The maps load without a click (L1-63): Google is never reached by a
-      // test. A test that wants a map routes its script to the stand-in of
-      // tests/e2e/google-maps.ts (a route answers before any name lookup);
-      // any other request to Google fails at once, and the map says it is
-      // not available.
+      // The maps load without a click (L1-63): Google Maps is never reached
+      // by a test. A test that wants a map routes its script to the stand-in
+      // of tests/e2e/google-maps.ts (a route answers before any name lookup);
+      // any other request to Google Maps fails at once, and the map says it
+      // is not available. Without a proxy for the browser: a proxy would
+      // look the names up itself.
       args: [
-        "--host-resolver-rules=MAP maps.googleapis.com ~NOTFOUND, MAP maps.gstatic.com ~NOTFOUND, MAP mapsresources-pa.googleapis.com ~NOTFOUND",
+        `--host-resolver-rules=${MAPS_HOST_NAMES.map((host) => `MAP ${host} ~NOTFOUND`).join(", ")}`,
       ],
     },
   },

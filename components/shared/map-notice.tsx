@@ -2,11 +2,10 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Drawn streets behind the notices of a map: the place of the map before it
- * loads, never a picture of Google's. The gate of L1-16 (« Afficher la
- * carte ») went with L1-63: the maps load without a click.
+ * Drawn streets in the place of a map before it loads, and behind its
+ * notices: never a picture of Google's.
  */
-function MapBackdrop({ children, className }: { children: ReactNode; className?: string }) {
+export function MapBackdrop({ children, className }: { children?: ReactNode; className?: string }) {
   return (
     <div
       className={cn(
@@ -39,7 +38,7 @@ function MapBackdrop({ children, className }: { children: ReactNode; className?:
   );
 }
 
-/** In the place of a map: loading, or not available (no key, key refused). */
+/** In the place of a map: loading, or not available (no key, key refused, Google not reached). */
 export function MapNotice({
   children,
   busy = false,

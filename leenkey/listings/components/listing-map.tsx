@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Footprints, Map as MapIcon } from "lucide-react";
-import { MapNotice } from "@/components/shared/map-notice";
+import { MapBackdrop, MapNotice } from "@/components/shared/map-notice";
 import { LEENKEY_MAP_STYLE, MAP_TOKENS } from "@/components/shared/map-style";
 import { headingTo } from "@/core/maps/geometry";
 import type {
@@ -249,6 +249,8 @@ export function ListingMap({
   let content;
   if (!apiKey) content = <MapNotice className="absolute inset-0">{fr.maps.unavailable}</MapNotice>;
   else if (near) content = <AreaMap apiKey={apiKey} position={area} place={place} />;
+  // Far from the screen: the drawn streets, nothing asked of Google yet.
+  else content = <MapBackdrop className="absolute inset-0" />;
   return (
     <div
       ref={frame}

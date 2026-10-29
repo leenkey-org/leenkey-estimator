@@ -11,8 +11,15 @@ import type { BrowserContext } from "@playwright/test";
 // __fakeMapsNoStreetView (no panorama near), __fakeMapsAuthFailure (key refused).
 
 export const MAPS_SCRIPT = /maps\.googleapis\.com\/maps\/api\/js/;
-/** Any host of Google Maps (blocked for the browsers of the tests, playwright.config.ts). */
-export const MAPS_HOSTS = /maps\.googleapis\.com|maps\.gstatic\.com|mapsresources-pa/;
+/** The hosts of Google Maps: they resolve nowhere in the browsers of the tests (playwright.config.ts). */
+export const MAPS_HOST_NAMES = [
+  "maps.googleapis.com",
+  "maps.gstatic.com",
+  "mapsresources-pa.googleapis.com",
+] as const;
+export const MAPS_HOSTS = new RegExp(
+  MAPS_HOST_NAMES.map((host) => host.replaceAll(".", "\\.")).join("|"),
+);
 
 const FAKE_MAPS = String.raw`(() => {
   const script = document.currentScript;

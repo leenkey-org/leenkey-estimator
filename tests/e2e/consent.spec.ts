@@ -1,9 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { fakeGoogle, GOOGLE } from "./google";
+import { MAPS_HOSTS } from "./google-maps";
 
-// L1-37: cookie consent (Q23). Nothing from Google before an explicit
-// « Accepter »; refusing is as easy as accepting and is kept six months;
+// L1-37: cookie consent (Q23). No audience (Google Analytics, Tag Manager)
+// before an explicit « Accepter »; refusing is as easy as accepting and is
+// kept six months;
 // « Gérer mes cookies » reopens the choice. These tests start without the
 // consent cookie the other suites get from playwright.config.ts.
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -11,10 +13,16 @@ test.beforeEach(async ({ context }) => fakeGoogle(context));
 
 const production = process.env.NEXT_PUBLIC_ENV === "production";
 
+/**
+ * The requests to Google the banner governs: the audience (Tag Manager,
+ * Analytics). Not the maps, which load without asking since L1-63
+ * (DECISIONS 2026-10-28, Q63).
+ */
 function watchGoogle(page: Page): string[] {
   const requests: string[] = [];
   page.on("request", (request) => {
-    if (GOOGLE.test(request.url())) requests.push(request.url());
+    const url = request.url();
+    if (GOOGLE.test(url) && !MAPS_HOSTS.test(url)) requests.push(url);
   });
   return requests;
 }

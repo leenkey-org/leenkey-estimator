@@ -43,11 +43,11 @@ test.describe("carte de la recherche, sans base de données", () => {
     const asked = await fakeGoogleMaps(context);
     await page.goto("/acheter");
     await expect(fakeMap(page)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Afficher la carte" })).toHaveCount(0);
     await settled(page);
     // The script of Google, once (its libraries come with it).
-    expect(asked.filter((url) => MAPS_SCRIPT.test(url))).toHaveLength(1);
-    const script = new URL(asked[0] ?? "");
+    const scripts = asked.filter((url) => MAPS_SCRIPT.test(url));
+    expect(scripts).toHaveLength(1);
+    const script = new URL(scripts[0] ?? "");
     expect(script.searchParams.get("language")).toBe("fr");
     expect(script.searchParams.get("region")).toBe("FR");
     expect(script.searchParams.get("key")).toBeTruthy();
@@ -58,8 +58,11 @@ test.describe("carte de la recherche, sans base de données", () => {
     isMobile,
   }) => {
     test.skip(isMobile, "la carte est à côté de la liste à partir de 1 024 px");
-    // No stand-in: the browsers of the tests never reach Google.
+    // No stand-in: the browsers of the tests never reach Google Maps. The
+    // script is asked for, fails, and the map says so.
+    const failed = page.waitForEvent("requestfailed", (request) => MAPS_SCRIPT.test(request.url()));
     await page.goto("/acheter");
+    await failed;
     await expect(
       page.getByRole("status").filter({ hasText: "La carte n'est pas disponible pour le moment." }),
     ).toBeVisible();
@@ -269,6 +272,10 @@ test.describe("carte de la recherche (base de seed)", () => {
     await dialog.getByRole("button", { name: "Liste" }).click();
     await expect(dialog).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Carte", exact: true })).toBeFocused();
+    // Opened again: the same script, never asked a second time.
+    await page.getByRole("button", { name: "Carte", exact: true }).click();
+    await expect(dialog.locator("[data-fake-map]")).toBeVisible();
+    expect(asked.filter((url) => MAPS_SCRIPT.test(url))).toHaveLength(1);
   });
 
   test("annonce : la carte ne se charge qu'en approchant de « Où se situe le bien », sans clic", async ({
@@ -286,7 +293,7 @@ test.describe("carte de la recherche (base de seed)", () => {
     expect(asked).toEqual([]);
     await page.getByRole("heading", { name: "Où se situe le bien" }).scrollIntoViewIfNeeded();
     await expect(page.locator("[data-fake-map]")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Afficher la carte" })).toHaveCount(0);
+    expect(asked.filter((url) => MAPS_SCRIPT.test(url))).toHaveLength(1);
   });
 
   test("annonce : secteur de 400 m, jamais l'adresse, et « Voir la rue »", async ({
