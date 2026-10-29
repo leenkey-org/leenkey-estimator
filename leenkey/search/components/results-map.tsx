@@ -7,7 +7,7 @@ import type { MapListing } from "../map-listings";
 import { useMapSync } from "./map-sync";
 import { SearchMap } from "./search-map";
 import { facadeScope } from "@/components/shared/facade-root";
-import { MapNotice } from "@/components/shared/map-notice";
+import { MapBackdrop, MapNotice } from "@/components/shared/map-notice";
 import type { LatLngLiteral, Padding } from "@/core/maps/google-maps";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -74,15 +74,10 @@ function MapContent({
 }) {
   const { visited, markVisited } = useMapSync();
   if (!apiKey) return <MapNotice className={className}>{fr.maps.unavailable}</MapNotice>;
-  // Before the hydration (the server cannot know the width), the streets and
-  // « Chargement de la carte… »; hidden below 1024 px with their panel.
-  if (!shown) {
-    return (
-      <MapNotice busy className={className}>
-        {fr.maps.loading}
-      </MapNotice>
-    );
-  }
+  // Before the hydration (the server cannot know the width), the drawn
+  // streets; below 1024 px, hidden with their panel (never busy: nothing
+  // loads there).
+  if (!shown) return <MapBackdrop className={className} />;
   return (
     <SearchMap
       apiKey={apiKey}

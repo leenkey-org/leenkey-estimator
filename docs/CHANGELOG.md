@@ -15,7 +15,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 ### 2026-10-28 · L1-63 · PR #62 · Carte Google sans clic
 - Modifié : les cartes Google se chargent sans « Afficher la carte » (décision de Younes, option C) : avec la page à côté de la liste en desktop, à l'ouverture de « Carte » sur téléphone, à l'approche de « Où se situe le bien » sur une annonce.
 - Retiré : la porte `MapGate`, sa phrase et le choix gardé pour la visite (`core/maps/use-maps-consent.ts`) ; `components/shared/map-gate.tsx` devient `map-notice.tsx` (chargement, carte indisponible).
-- Modifié : avant son chargement, la carte montre les rues dessinées (« Chargement de la carte… » sur la recherche, sans texte sur l'annonce) ; la carte de la recherche suit le point de rupture `lg` en rem (pas de carte chargée pour rien avec une police agrandie).
+- Modifié : avant d'être chargée, la carte montre les rues dessinées, puis « Chargement de la carte… » pendant son chargement ; la carte de la recherche suit le point de rupture `lg` en rem (pas de carte chargée pour rien avec une police agrandie).
 - Tests : E2E de la carte réécrits (chargement direct, script demandé une fois, rien avant « Carte » sur téléphone ni en la rouvrant, rien avant « Où se situe le bien », Google Maps injoignable) ; les navigateurs des tests ne joignent plus jamais Google Maps (`playwright.config.ts`) ; le test du bandeau de cookies vérifie la mesure d'audience, pas les cartes.
 - Configuration : clé Google Maps de la préprod en place dans Vercel `leenkey-v2` (`docs/DEMARRAGE.md`).
 
