@@ -19,6 +19,9 @@
     "db:rls-test": "scripts/db-rls-test.sh",
     "db:seed": "scripts/db-seed.sh local",
     "db:seed:staging": "scripts/db-seed.sh staging",
+    "kb:import": "scripts/kb-import.sh local",
+    "kb:import:staging": "scripts/kb-import.sh staging",
+    "kb:eval": "node scripts/kb-eval.mjs",
     "db:types": "scripts/db-types.sh"
   },
   "dependencies": {

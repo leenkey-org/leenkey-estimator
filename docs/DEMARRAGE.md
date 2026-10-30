@@ -47,6 +47,15 @@ Guide pour Younes. Claude Code ne lit pas ce fichier en priorité : il lit `CLAU
 - [ ] **Vercel `leenkey-v2`, onglet Production** : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (projet staging) et `NEXT_PUBLIC_SITE_URL=https://leenkey-v2.vercel.app`. Emails du back office (L1-19) : `RESEND_API_KEY` (clé Resend de test) et `EMAIL_TEST_INBOX` (la boîte qui reçoit tout hors production) ; `EMAIL_FROM` facultatif, si `bonjour@leenkey.fr` n'est pas encore vérifié dans Resend. Sans elles, les décisions passent, le back office dit que l'email n'est pas parti.
 - Comptes de test : `seller_a@test.leenkey.fr`, `seller_b@…`, `buyer_c@…`, `buyer_d@…`, `admin@…` ; mot de passe dans **Integrations → Vault**, secret `seed_password`. À la première connexion, chacun accepte les conditions (écran « Acceptez nos conditions »).
 
+### Base de connaissances de l'assistant (L1-27, puis à chaque modification de la FAQ)
+
+La recherche de l'assistant lit les fiches de `supabase/seed/knowledge/faq-cedric-v2.md` avec leurs embeddings, calculés par l'Edge Function `embed` du projet.
+
+- [ ] **La fonction** : déployée sur `leenkey-staging` (Edge Functions → `embed`, « Verify JWT » activé). Sinon, depuis le repo : `npx supabase functions deploy embed --project-ref <ref du projet>`.
+- [ ] **L'import**, depuis le Mac, dans le repo : `STAGING_DATABASE_URL=<chaîne de connexion> STAGING_SUPABASE_URL=https://<ref>.supabase.co STAGING_SUPABASE_ANON_KEY=<clé anon> SEED_PASSWORD=<secret Vault seed_password> npm run kb:import:staging` → « Knowledge base on staging: 73 cards, 73 with an embedding. ». Le script se connecte comme `admin@test.leenkey.fr` : aucune clé de service. À relancer après chaque modification de la FAQ : seules les fiches changées sont recalculées.
+- [ ] **Vérifier** : `KB_SUPABASE_URL=… KB_SUPABASE_ANON_KEY=… SEED_PASSWORD=… npm run kb:eval` → « among the 5 returned: 18/20 » (ou plus).
+- En production (P-05b) : la fonction sur le projet de production, puis `scripts/kb-import.sh prod` avec `PROD_DATABASE_URL`, `PROD_SUPABASE_URL`, `PROD_SUPABASE_ANON_KEY`, `KB_ADMIN_EMAIL` et `KB_ADMIN_PASSWORD` (le compte admin de Cédric), après confirmation.
+
 ### Emails groupés des notifications (L1-22, une seule fois)
 
 Toutes les 5 minutes, Supabase (`pg_cron`) appelle `/api/cron/send-notification-emails` avec un secret partagé ; la route envoie les emails en attente, regroupés (« Nouveau message », « Annonce à valider »).

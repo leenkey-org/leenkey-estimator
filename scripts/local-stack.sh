@@ -3,8 +3,9 @@
 # hosted project is reachable (docker images only, nothing to install):
 #   Postgres (supabase/postgres), Supabase Auth (supabase/gotrue) with the
 #   templates of supabase/templates/, PostgREST, Supabase Storage (files on
-#   the container's disk), Supabase Realtime, Mailpit (catches the emails)
-#   and a gateway serving /auth/v1, /rest/v1, /storage/v1 and /realtime/v1
+#   the container's disk), Supabase Realtime, the Edge Functions runtime
+#   (supabase/functions/, L1-27), Mailpit (catches the emails)
+#   and a gateway serving /auth/v1, /rest/v1, /storage/v1, /functions/v1 and /realtime/v1
 #   (WebSocket) on one origin.
 # Usage: scripts/local-stack.sh up | env | down
 #   up    starts the stack, applies the migrations and the seed (keys and seed
@@ -18,11 +19,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 DIR=.local-stack
-DB_PORT=54326 GATEWAY=54331 REST=54332 AUTH=54333 STORAGE=54334 REALTIME=54335 SMTP=54327 MAIL_UI=54328
+DB_PORT=54326 GATEWAY=54331 REST=54332 AUTH=54333 STORAGE=54334 REALTIME=54335 FUNCTIONS=54336 SMTP=54327 MAIL_UI=54328
 APP_URL=http://localhost:3200
 HOST_IP=172.17.0.1 # docker host seen from the containers
 DB_URL="postgresql://postgres:postgres@127.0.0.1:$DB_PORT/postgres"
-CONTAINERS="lk-stack-db lk-stack-auth lk-stack-rest lk-stack-storage lk-stack-realtime lk-stack-mail"
+CONTAINERS="lk-stack-db lk-stack-auth lk-stack-rest lk-stack-storage lk-stack-realtime lk-stack-functions lk-stack-mail"
 
 jwt() { # role -> HS256 token signed with the stack secret
   node -e '
@@ -56,7 +57,7 @@ case "${1:-}" in
       -c "alter role supabase_auth_admin with password 'postgres'; alter role authenticator with password 'postgres'; alter role supabase_storage_admin with password 'postgres';"
 
     docker run -d --name lk-stack-mail -p $HOST_IP:$SMTP:1025 -p 127.0.0.1:$MAIL_UI:8025 axllent/mailpit:v1.27 >/dev/null
-    node scripts/local-stack-gateway.mjs $GATEWAY $AUTH $REST "$PWD/supabase/templates" $HOST_IP $STORAGE $REALTIME > $DIR/gateway.log 2>&1 &
+    node scripts/local-stack-gateway.mjs $GATEWAY $AUTH $REST "$PWD/supabase/templates" $HOST_IP $STORAGE $REALTIME $FUNCTIONS > $DIR/gateway.log 2>&1 &
     echo $! > $DIR/gateway.pid
     sleep 1
     kill -0 "$(cat $DIR/gateway.pid)" 2>/dev/null || { echo "Gateway not started (port $GATEWAY taken?): $DIR/gateway.log"; exit 1; }
@@ -124,6 +125,29 @@ case "${1:-}" in
       (echo > /dev/tcp/127.0.0.1/$REALTIME) 2>/dev/null && break
       sleep 1
     done
+    # Edge Functions (L1-27): `embed`, the only one, is the main service of the
+    # runtime. On the host network, with the proxy of the machine if any: its
+    # model (gte-small) comes from Hugging Face on the first call.
+    proxy_args=()
+    [ -n "${HTTPS_PROXY:-}" ] && proxy_args+=(-e "HTTPS_PROXY=$HTTPS_PROXY" -e "HTTP_PROXY=${HTTP_PROXY:-$HTTPS_PROXY}" -e "NO_PROXY=localhost,127.0.0.1")
+    [ -n "${SSL_CERT_FILE:-}" ] && [ -f "$SSL_CERT_FILE" ] && proxy_args+=(-v "$SSL_CERT_FILE:/ca.crt:ro" -e SSL_CERT_FILE=/ca.crt)
+    docker run -d --name lk-stack-functions --network host "${proxy_args[@]}" \
+      -e SUPABASE_URL="http://127.0.0.1:$GATEWAY" -e SUPABASE_ANON_KEY="$(cat $DIR/anon_key)" \
+      -v "$PWD/supabase/functions:/home/deno/functions:ro" \
+      supabase/edge-runtime:v1.69.6 start --main-service /home/deno/functions/embed --port $FUNCTIONS >/dev/null
+    for _ in $(seq 1 60); do
+      (echo > /dev/tcp/127.0.0.1/$FUNCTIONS) 2>/dev/null && break
+      sleep 1
+    done
+    # The embeddings of the knowledge base, computed by an admin (L1-27), once
+    # PostgREST has loaded the schema.
+    for _ in $(seq 1 60); do
+      curl -sf --noproxy '*' -H "apikey: $(cat $DIR/anon_key)" "http://127.0.0.1:$GATEWAY/rest/v1/plans?select=code&limit=1" >/dev/null && break
+      sleep 1
+    done
+    SEED_PASSWORD="$(cat $DIR/seed_password)" KB_SUPABASE_URL="http://127.0.0.1:$GATEWAY" \
+      KB_SUPABASE_ANON_KEY="$(cat $DIR/anon_key)" node scripts/kb-embed.mjs \
+      || echo "Knowledge base not embedded (Hugging Face unreachable?): npm run kb:import later."
     echo "Stack up. Emails: http://localhost:$MAIL_UI. Seed password: $DIR/seed_password. Then: eval \"\$(scripts/local-stack.sh env)\""
     ;;
   env)
