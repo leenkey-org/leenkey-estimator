@@ -101,7 +101,7 @@ test("accueil acquéreur : bandeau, recherche, favoris, conversations, dossier c
     name: "Votre dossier fait la différence auprès des vendeurs",
   });
   await expect(
-    file.getByRole("heading", { name: "Votre dossier acquéreur, 2 étapes sur 2 faites" }),
+    file.getByRole("heading", { name: "Votre dossier acquéreur : 2 étapes sur 2 faites" }),
   ).toBeVisible();
   await expect(file.getByText("Informations déclarées")).toBeVisible();
   await expect(file.getByRole("link", { name: "Modifier mon projet" })).toHaveAttribute(

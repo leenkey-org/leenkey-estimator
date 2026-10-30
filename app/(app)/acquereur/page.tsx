@@ -93,7 +93,7 @@ function FileBlock({ file, status }: { file: BuyerFile; status: FinancingStatus 
           <div className="flex min-w-0 flex-col items-start gap-1.5">
             <h3 className="text-lk-body font-semibold text-lk-ink">
               {t.file.heading}
-              <span className="sr-only">, {t.file.countLabel(file.done, file.total)}</span>
+              <span className="sr-only"> : {t.file.countLabel(file.done, file.total)}</span>
             </h3>
             <FinancingBadge status={status} />
           </div>

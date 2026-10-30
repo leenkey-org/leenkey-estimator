@@ -56,7 +56,7 @@ test("un acquéreur déclare son projet ; son vendeur voit le statut, pas les mo
       name: "Votre dossier fait la différence auprès des vendeurs",
     });
     await expect(
-      file.getByRole("heading", { name: "Votre dossier acquéreur, 0 étape sur 2 faite" }),
+      file.getByRole("heading", { name: "Votre dossier acquéreur : 0 étape sur 2 faite" }),
     ).toBeVisible();
     await expect(file.getByText("Financement non renseigné")).toBeVisible();
     const order = await buyer
@@ -101,7 +101,7 @@ test("un acquéreur déclare son projet ; son vendeur voit le statut, pas les mo
       name: "Votre dossier fait la différence auprès des vendeurs",
     });
     await expect(
-      file.getByRole("heading", { name: "Votre dossier acquéreur, 2 étapes sur 2 faites" }),
+      file.getByRole("heading", { name: "Votre dossier acquéreur : 2 étapes sur 2 faites" }),
     ).toBeVisible();
     await expect(file.getByRole("link", { name: "Modifier mon projet" })).toBeVisible();
   });
