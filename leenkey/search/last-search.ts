@@ -11,10 +11,20 @@ const STORED_KEY = "lk:search:last";
 /** A search with criteria, and when it was last seen. */
 export type StoredSearch = { href: string; at: string };
 
+/** Parameters that are not criteria: a sort or a page alone is no search to resume. */
+const NOT_CRITERIA = new Set(["tri", "page"]);
+
+export function hasCriteria(href: string): boolean {
+  const query = href.indexOf("?");
+  if (query === -1) return false;
+  return [...new URLSearchParams(href.slice(query + 1)).keys()].some(
+    (key) => !NOT_CRITERIA.has(key),
+  );
+}
+
 export function rememberSearch(href: string) {
   lastSearchHref = href;
-  // Only a search with criteria: « /acheter » alone is no search to resume.
-  if (!href.includes("?")) return;
+  if (!hasCriteria(href)) return;
   try {
     const stored: StoredSearch = { href, at: new Date().toISOString() };
     window.localStorage.setItem(STORED_KEY, JSON.stringify(stored));

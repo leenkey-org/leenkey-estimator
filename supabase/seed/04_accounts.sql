@@ -95,3 +95,13 @@ update public.buyer_profiles
  where profile_id = '5eed0000-0000-4000-8000-00000000000c'
    and (project, budget_max_cents, down_payment_cents, loan_needed, loan_amount_cents)
        is distinct from ('residence_principale'::public.buyer_project, 38000000::bigint, 6000000::bigint, true, 32000000::bigint);
+
+-- buyer_d back to nothing declared (tests/e2e/buyer-profile-live.spec.ts and
+-- the recette save one): the specs that read the seed expect him
+-- « Financement non renseigné ».
+update public.buyer_profiles
+   set project = null, target_cities = null, budget_max_cents = null, down_payment_cents = null,
+       loan_needed = null, loan_amount_cents = null, situation_note = null
+ where profile_id = '5eed0000-0000-4000-8000-00000000000d'
+   and (project, target_cities, budget_max_cents, down_payment_cents, loan_needed, loan_amount_cents, situation_note)
+       is distinct from (null::public.buyer_project, null::text[], null::bigint, null::bigint, null::boolean, null::bigint, null::text);

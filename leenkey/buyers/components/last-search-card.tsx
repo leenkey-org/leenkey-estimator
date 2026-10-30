@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { Button } from "@/components/shared/button";
+import { Skeleton } from "@/components/shared/skeleton";
 import { lastSearchDigest } from "@/leenkey/search/actions";
 import { storedSearch } from "@/leenkey/search/last-search";
 import { fr } from "@/lib/i18n/fr";
@@ -68,20 +69,31 @@ export function LastSearchCard({ className }: { className?: string }) {
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h2 id="derniere-recherche" className="text-lk-title font-semibold text-lk-ink">
-            {search ? t.lastSearch.title : t.start.title}
+            {state.kind === "reading" ? (
+              <>
+                <span className="sr-only">{t.lastSearch.reading}</span>
+                <Skeleton className="my-1 h-5 w-3/4" />
+              </>
+            ) : search ? (
+              t.lastSearch.title
+            ) : (
+              t.start.title
+            )}
           </h2>
-          <p className="text-lk-compact text-lk-ink-3">
-            {/* A no-break space keeps the height of the line while there is nothing to say. */}
-            {search
-              ? search.criteria === null
-                ? "\u00A0"
-                : search.criteria.length > 0
-                  ? search.criteria.join(" · ")
-                  : t.lastSearch.any
-              : state.kind === "none"
-                ? t.start.text
-                : "\u00A0"}
-          </p>
+          {state.kind === "reading" ? (
+            <Skeleton className="my-0.5 h-4 w-1/2" />
+          ) : (
+            <p className="text-lk-compact text-lk-ink-3">
+              {/* A no-break space keeps the height of the line when the criteria could not be read. */}
+              {search
+                ? search.criteria === null
+                  ? "\u00A0"
+                  : search.criteria.length > 0
+                    ? search.criteria.join(" · ")
+                    : t.lastSearch.any
+                : t.start.text}
+            </p>
+          )}
         </div>
         {search && search.fresh > 0 ? (
           <span className="shrink-0 rounded-full bg-lk-blue-tint px-2.5 py-1 text-lk-caption font-semibold text-lk-blue">
@@ -89,7 +101,9 @@ export function LastSearchCard({ className }: { className?: string }) {
           </span>
         ) : null}
       </div>
-      {state.kind === "reading" ? null : (
+      {state.kind === "reading" ? (
+        <Skeleton className="h-11 w-full sm:w-1/2" />
+      ) : (
         <div className="grid gap-2.5 sm:grid-cols-2">
           {search ? (
             <>

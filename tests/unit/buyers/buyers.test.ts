@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buyerFile } from "@/leenkey/buyers/file";
 import type { BuyerProfile } from "@/leenkey/buyers/queries";
 import { searchSummary } from "@/leenkey/search/filter-labels";
-import { parseStoredSearch } from "@/leenkey/search/last-search";
+import { hasCriteria, parseStoredSearch } from "@/leenkey/search/last-search";
 import { fr } from "@/lib/i18n/fr";
 import { buyerProfileSchema, parseCities } from "@/lib/validations/buyer";
 import { parseSearchParams } from "@/lib/validations/search";
@@ -139,6 +139,16 @@ describe("parseStoredSearch", () => {
       parseStoredSearch(JSON.stringify({ href: "/acheter?type=maison", at: "hier" })),
     ).toBeNull();
     expect(parseStoredSearch(JSON.stringify(["/acheter?type=maison", at]))).toBeNull();
+  });
+});
+
+describe("hasCriteria", () => {
+  it("keeps a search with a criterion, not a sort or a page alone", () => {
+    expect(hasCriteria("/acheter?ville=savigny-sur-orge")).toBe(true);
+    expect(hasCriteria("/acheter?tri=prix_asc&type=maison")).toBe(true);
+    expect(hasCriteria("/acheter")).toBe(false);
+    expect(hasCriteria("/acheter?tri=prix_asc")).toBe(false);
+    expect(hasCriteria("/acheter?page=2&tri=recent")).toBe(false);
   });
 });
 

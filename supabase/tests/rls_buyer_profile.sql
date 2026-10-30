@@ -5,7 +5,9 @@ begin;
 select plan(9);
 \ir _plan.psql
 
--- What a seller can read about the buyers: no amount in any of its results.
+-- What a seller can read about the buyers: no amount in any of its results
+-- (the rows themselves, status for the seller of the property and nothing
+-- for another one: rls_plans_sales_messaging.sql).
 select ok(pg_get_function_result('public.buyer_summary_for_seller(uuid)'::regprocedure) !~ 'cents|budget|down_payment|loan',
           'buyer_summary_for_seller: no amount among its columns');
 select ok(pg_get_function_result('public.conversation_summaries(uuid)'::regprocedure) !~ 'cents|budget|down_payment|loan',

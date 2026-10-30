@@ -17,7 +17,7 @@ test.skip(!seeded || !SEED_PASSWORD, "comptes de seed requis (E2E_SEED=1 et SEED
 const CHLOE_WITH_ALICE = "/messages/5eed2000-0000-4000-8000-000000000011";
 const LK0001 = "/vendeur?bien=5eed1000-0000-4000-8000-000000000001";
 /** The amounts of Chloé, whatever the spaces between the digits. */
-const AMOUNTS = /\b(380|60|320)\s?000\b/;
+const AMOUNTS = /\b(380|60|320)\s?(000\b|k)/;
 const STORED_KEY = "lk:search:last";
 
 /** Signs a seed account in and lands on `path` (terms gate as in navigation.spec.ts). */
@@ -134,7 +134,7 @@ test("accueil acquéreur : reprendre la dernière recherche, avec ses nouveaux b
   await expect(
     card.getByRole("heading", { name: "Reprendre votre dernière recherche ?" }),
   ).toBeVisible();
-  await expect(card.getByText("Maison", { exact: true })).toBeVisible();
+  await expect(card.getByText("Maisons", { exact: true })).toBeVisible();
   await expect(card.getByText(/^\d+ nouveaux? biens?( et plus)?$/)).toBeVisible();
   await expect(card.getByRole("link", { name: "Nouvelle recherche" })).toHaveAttribute(
     "href",
@@ -142,8 +142,10 @@ test("accueil acquéreur : reprendre la dernière recherche, avec ses nouveaux b
   );
   await card.getByRole("link", { name: "Reprendre" }).click();
   await expect(page).toHaveURL("/acheter?type=maison");
-
-  // Seen now: no new listing since.
+  // Seen now (kept by the search once its page is shown): no new listing since.
+  await expect
+    .poll(() => page.evaluate(([key]) => window.localStorage.getItem(key) ?? "", [STORED_KEY]))
+    .not.toContain("2020-01-01");
   await page.goto("/acquereur");
   await expect(
     card.getByRole("heading", { name: "Reprendre votre dernière recherche ?" }),
@@ -168,7 +170,10 @@ test("accueil acquéreur : reprendre la dernière recherche, avec ses nouveaux b
 test("mon projet d'achat : statut, encart, valeurs déclarées @a11y", async ({ page }) => {
   await signIn(page, "buyer_c", "/acquereur/profil");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Mon projet d'achat");
-  await expect(page.getByRole("link", { name: "Cockpit" })).toHaveAttribute("href", "/acquereur");
+  await expect(page.getByRole("link", { name: "Espace acquéreur", exact: true })).toHaveAttribute(
+    "href",
+    "/acquereur",
+  );
   await expect(page.getByRole("status").getByText("Informations déclarées")).toBeVisible();
   await expect(
     page.getByText(/Il ne voit ni votre justificatif ni les montants de votre profil/),

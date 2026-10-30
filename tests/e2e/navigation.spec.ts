@@ -649,7 +649,8 @@ test.describe("comptes connectés (base de seed)", () => {
         "/vendeur/biens/nouveau",
       );
     } else {
-      await page.getByRole("link", { name: "Favoris" }).click();
+      // Exact: the buyer home also has « Voir les 3 favoris » (L1-25).
+      await page.getByRole("link", { name: "Favoris", exact: true }).click();
       await expect(page).toHaveURL("/acquereur/favoris");
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Favoris");
       // The seed saves three published listings for buyer_c (L1-18).

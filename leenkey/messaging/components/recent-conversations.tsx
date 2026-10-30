@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FinancingBadge } from "@/components/shared/financing-badge";
-import { counterpartName, messagePreview } from "../presentation";
+import { conversationTitle, counterpartName, messagePreview } from "../presentation";
 import type { ConversationSummary } from "../types";
 import { capitalize, formatMessageTime } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
@@ -23,8 +23,10 @@ function initials(name: string): string {
  * The last conversations of a space (« Ma vente », docs/DESIGN.md 12.3; the
  * buyer home, 12.10): the initials in a round, the first name and the time,
  * the last message on one line, a blue dot when it is unread; each one
- * opens its conversation. For a seller, the financing status of the buyer
- * (FinancingBadge, L1-25), never an amount: the page says its mention once.
+ * opens its conversation. For a buyer, the property it is about (they may
+ * write to several sellers); for a seller, the financing status of the
+ * buyer (FinancingBadge, L1-25), never an amount: the page says its mention
+ * once.
  */
 export function RecentConversations({
   conversations,
@@ -61,6 +63,11 @@ export function RecentConversations({
                     {formatMessageTime(conversation.lastMessageAt, now)}
                   </span>
                 </span>
+                {conversation.role === "buyer" ? (
+                  <span className="truncate text-lk-caption text-lk-ink-3">
+                    {conversationTitle(conversation)}
+                  </span>
+                ) : null}
                 <span className="truncate text-lk-label text-lk-ink-2">
                   {messagePreview(conversation)}
                 </span>

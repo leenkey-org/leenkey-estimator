@@ -1054,7 +1054,7 @@ export const fr = {
           purpose:
             "Vous proposer de reprendre votre dernière recherche, avec les biens publiés depuis",
           kind: "necessary",
-          duration: "Jusqu'à une nouvelle recherche",
+          duration: "Jusqu'à son effacement dans votre navigateur, remplacé à chaque recherche",
         },
         {
           name: "_ga, _ga_…",
@@ -1338,6 +1338,7 @@ export const fr = {
       error: "Une partie de votre espace n'a pas pu être chargée.",
       lastSearch: {
         title: "Reprendre votre dernière recherche ?",
+        reading: "Votre dernière recherche, en cours de lecture",
         any: "Tous les biens",
         resume: "Reprendre",
         fresh: "Nouvelle recherche",
@@ -1350,7 +1351,7 @@ export const fr = {
       },
       start: {
         title: "Trouvez le bien qui vous ressemble",
-        text: "Des biens vendus par leurs propriétaires, sans frais d'agence.",
+        text: "Parcourez les biens à vendre et gardez vos préférés d'un cœur.",
         action: "Voir les biens",
       },
       file: {
@@ -1365,7 +1366,7 @@ export const fr = {
           financing: "Votre financement déclaré",
         },
         states: { done: "Fait", current: "À faire maintenant", todo: "À faire" },
-        text: "Un vendeur répond plus volontiers à un acquéreur dont le projet est clair. Il voit le statut de votre dossier, jamais vos montants.",
+        text: "Un vendeur répond plus volontiers à un acquéreur dont le projet est clair. Il voit le statut de votre dossier ; vos montants n'apparaissent que dans les offres que vous envoyez.",
         complete: "Compléter mon dossier",
         edit: "Modifier mon projet",
       },
@@ -1387,7 +1388,8 @@ export const fr = {
     profile: {
       metaTitle: "Mon projet d'achat · Leenkey",
       title: "Mon projet d'achat",
-      back: "Cockpit",
+      back: "Espace acquéreur",
+      formTitle: "Votre recherche et votre financement",
       status: "Votre dossier de financement",
       declaredRule:
         "Projet, budget, apport et besoin de prêt renseignés : votre dossier passe à « Informations déclarées ».",

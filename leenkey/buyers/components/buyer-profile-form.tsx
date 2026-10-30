@@ -4,7 +4,6 @@ import { useRef, useState, useTransition, type FormEvent } from "react";
 import { flushSync } from "react-dom";
 import { Button } from "@/components/shared/button";
 import { FinancingBadge, type FinancingStatus } from "@/components/shared/financing-badge";
-import { FormActionBar } from "@/components/shared/form-action-bar";
 import { InfoNote } from "@/components/shared/info-note";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
@@ -42,7 +41,8 @@ function amountOf(text: string): number | null {
  * it (permanent note), then the project, the cities, the budget, the down
  * payment, the loan and its amount, the situation. Saved in place: the
  * status follows (declared once project, budget, down payment and loan
- * need are given).
+ * need are given). The first save of an account that never bought gives
+ * it the buyer role (DECISIONS 2026-10-30, L1-25).
  */
 export function BuyerProfileForm({ initial }: { initial: BuyerProfile }) {
   const form = useRef<HTMLFormElement>(null);
@@ -123,6 +123,12 @@ export function BuyerProfileForm({ initial }: { initial: BuyerProfile }) {
         return;
       }
       setStatus(result.data.financingStatus);
+      // As kept: each city once, the amounts with their spaces.
+      setCities(input.targetCities.join(", "));
+      setBudget(amountText(input.budgetMaxEuros));
+      setDownPayment(amountText(input.downPaymentEuros));
+      setLoanAmount(amountText(input.loanAmountEuros));
+      setSituation(situation.trim());
       setError(null);
       setSaved(true);
     });
@@ -147,6 +153,8 @@ export function BuyerProfileForm({ initial }: { initial: BuyerProfile }) {
       </section>
 
       {error ? <InlineAlert tone="danger">{error}</InlineAlert> : null}
+
+      <h2 className="mt-2 text-lk-h3 font-bold text-wide text-lk-ink">{t.formTitle}</h2>
 
       <SegmentedPicker
         label={t.project}
@@ -239,11 +247,10 @@ export function BuyerProfileForm({ initial }: { initial: BuyerProfile }) {
         }}
       />
 
-      <FormActionBar className="md:mt-3">
-        <Button type="submit" loading={saving}>
-          {t.save}
-        </Button>
-      </FormActionBar>
+      {/* In the flow of the page: a bar stuck at the bottom would sit under the tabs of the space. */}
+      <Button type="submit" loading={saving} className="mt-1 self-start">
+        {t.save}
+      </Button>
       {/* Said once saved, for every reader. */}
       <p role="status" className="text-lk-compact font-semibold text-lk-success-fg empty:sr-only">
         {saved ? t.saved : ""}

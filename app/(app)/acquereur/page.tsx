@@ -190,7 +190,7 @@ export default async function BuyerHomePage() {
           >
             {saved.length > 0 ? (
               <ul
-                aria-label={t.favorites.title}
+                aria-label={fr.favorites.page.list}
                 className="grid gap-3 md:grid-cols-2 xl:grid-cols-3"
               >
                 {saved.slice(0, 3).map((item) => (
