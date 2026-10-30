@@ -154,7 +154,9 @@
    to an anchor or to an element that takes the focus (WCAG 2.4.11): the
    SiteMenu below 768 px or the TopNav from 768 px (data-sticky-header), and a
    second sticky header under it on a page that has one (data-sticky-subheader:
-   the wizard of /estimer, 57 px; a conversation, 73 px). Nothing on a page
+   the wizard of /estimer, 57 px; a conversation, 73 px, and with the mention
+   of the financing of the buyer for its seller, 144 px on a phone and
+   126 px from 768 px). Nothing on a page
    without any (legal pages, forms, back office). An anchor lands right under
    them. The V1 padding (145 px, and 165 px below 640 px) left every anchor of
    the V2 that much too low. The bottom of the screen is not handled here. */
@@ -184,6 +186,13 @@ html:has([data-sticky-subheader="wizard"]) {
 
 html:has([data-sticky-subheader="conversation"]) {
   --lk-sticky-subheader: --spacing(18.25);
+}
+
+html:has([data-sticky-subheader="conversation-financing"]) {
+  --lk-sticky-subheader: --spacing(36);
+  @variant md {
+    --lk-sticky-subheader: --spacing(31.5);
+  }
 }
 
 /* The gutters of a page frame (L1-56, DESIGN.md 4.3): 20 px on a phone,

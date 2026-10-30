@@ -208,7 +208,10 @@ export function ConversationView({
   return (
     <>
       {/* A second sticky header: room for it when the focus moves (app/globals.css). */}
-      <div data-sticky-subheader="conversation" className="sticky top-0 z-20 md:top-18">
+      <div
+        data-sticky-subheader={financing ? "conversation-financing" : "conversation"}
+        className="sticky top-0 z-20 md:top-18"
+      >
         <ConversationHeader
           back={
             <Link href="/messages" aria-label={t.thread.back} className={backClass}>
@@ -245,16 +248,16 @@ export function ConversationView({
             />
           }
         />
+        {/* Under the status of the header, in sight however far the thread is scrolled. */}
+        {financing ? (
+          <FinancingMention className="border-b border-lk-line bg-lk-surface px-4 py-2" />
+        ) : null}
         {reported ? (
           <div className="border-b border-lk-line bg-lk-surface px-4 py-2.5">
             <InlineAlert tone="success">{t.thread.reported}</InlineAlert>
           </div>
         ) : null}
       </div>
-
-      {financing ? (
-        <FinancingMention className="border-b border-lk-line bg-lk-surface px-4 py-2.5" />
-      ) : null}
 
       <div role="log" aria-label={t.thread.label} className="flex flex-1 flex-col gap-3 p-4">
         {threadItems(messages, now).map((item) => {

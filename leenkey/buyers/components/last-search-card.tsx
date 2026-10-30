@@ -23,8 +23,8 @@ type State =
  * Under the greeting of the buyer home (DESIGN.md 12.10): the search kept by
  * this browser, its criteria and its listings published since it was last
  * seen, to resume it or start a new one; without one, the way to the
- * listings. Read after the first paint (localStorage): the same height in
- * both cases, nothing jumps.
+ * listings. Read after the first paint (localStorage): skeletons of about
+ * the same height meanwhile.
  */
 export function LastSearchCard({ className }: { className?: string }) {
   const [state, setState] = useState<State>({ kind: "reading" });
@@ -59,7 +59,7 @@ export function LastSearchCard({ className }: { className?: string }) {
       aria-labelledby="derniere-recherche"
       aria-busy={state.kind === "reading" || undefined}
       className={cn(
-        "flex min-h-44 flex-col gap-4 rounded-lk-2xl border border-lk-line bg-lk-surface p-5 shadow-lk-block md:p-6",
+        "flex flex-col gap-4 rounded-lk-2xl border border-lk-line bg-lk-surface p-5 shadow-lk-block md:p-6",
         className,
       )}
     >

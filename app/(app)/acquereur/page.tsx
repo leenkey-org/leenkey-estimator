@@ -75,7 +75,8 @@ function Empty({ children }: { children: ReactNode }) {
 function FileBlock({ file, status }: { file: BuyerFile; status: FinancingStatus }) {
   const current = file.steps.find((step) => !step.done)?.key;
   return (
-    <section aria-labelledby="dossier" className="flex flex-col gap-3">
+    // 820 px at most: its lines and its text stay readable on a wide screen.
+    <section aria-labelledby="dossier" className="flex max-w-205 flex-col gap-3">
       <div className="flex flex-col gap-1">
         <p className="text-lk-caption font-semibold text-lk-ink-3">{t.file.label}</p>
         <h2 id="dossier" className="text-lk-h3 font-bold text-wide text-lk-ink">
