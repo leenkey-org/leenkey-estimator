@@ -341,7 +341,9 @@ npm run db:migrate:local # applique les migrations en local
 npm run db:migrate:staging
 npm run db:migrate:prod  # demande une confirmation explicite
 npm run db:seed          # charge supabase/seed/ en local (npm run db:seed:staging pour la préprod ; refuse la prod)
-scripts/local-stack.sh up # pile locale type Supabase (Auth, API, emails capturés) pour tester les parcours connectés
+npm run kb:import        # fiches de supabase/seed/knowledge/ puis leurs embeddings (Edge Function embed, en admin) ; kb:import:staging
+npm run kb:eval          # pertinence de la recherche dans la FAQ (questions de test, fiche attendue parmi les 5)
+scripts/local-stack.sh up # pile locale type Supabase (Auth, API, Edge Functions, emails capturés) pour tester les parcours connectés
 npm run db:rls-test      # tests de permissions
 npm run a11y             # contrôle d'accessibilité axe sur les parcours E2E (docs/DESIGN.md section 15)
 npm run stripe:listen    # Stripe CLI vers /api/webhooks/stripe en local

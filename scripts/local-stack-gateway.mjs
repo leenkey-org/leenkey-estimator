@@ -1,5 +1,6 @@
 // Gateway of scripts/local-stack.sh: serves /auth/v1 (Supabase Auth),
-// /rest/v1 (PostgREST), /storage/v1 (Supabase Storage) and the WebSocket of
+// /rest/v1 (PostgREST), /storage/v1 (Supabase Storage), /functions/v1 (the
+// Edge Functions runtime, L1-27) and the WebSocket of
 // /realtime/v1 (Supabase Realtime) under one origin, like a Supabase
 // project, and the email templates of supabase/templates/ to Supabase Auth.
 import { createReadStream, existsSync } from "node:fs";
@@ -7,12 +8,13 @@ import http from "node:http";
 import net from "node:net";
 import { basename, join } from "node:path";
 
-const [port, authPort, restPort, templatesDir, hostIp, storagePort, realtimePort] =
+const [port, authPort, restPort, templatesDir, hostIp, storagePort, realtimePort, functionsPort] =
   process.argv.slice(2);
 const routes = [
   ["/auth/v1", Number(authPort)],
   ["/rest/v1", Number(restPort)],
   ["/storage/v1", Number(storagePort)],
+  ["/functions/v1", Number(functionsPort)],
 ];
 
 function handle(req, res) {
