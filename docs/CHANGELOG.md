@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-30 · Curseur · PR #65 · La main sur ce qui se clique
+- Modifié : la main au survol de tout ce qui se clique (boutons, onglets, choix, cases, interrupteurs, éléments de menu), règle globale de `app/globals.css` ; les champs de texte gardent leur curseur, un élément désactivé montre le curseur interdit.
+- Tests : E2E `cursor.spec.ts` sur l'accueil, la recherche, l'estimateur, la connexion et l'inscription (mobile et desktop).
+
 ### 2026-10-30 · L1-25 · PR #64 · Espace acquéreur v1
 - Ajouté : accueil acquéreur `/acquereur` (DESIGN 12.10) : « Bonjour Chloé » sur le bandeau, « Reprendre votre dernière recherche ? » avec ses critères et ses nouveaux biens (ou « Voir les biens »), le dossier acquéreur (« Compléter mon dossier » en tête tant qu'il est incomplet), les favoris, les conversations, « Nos services ».
 - Ajouté : « Mon projet d'achat » `/acquereur/profil` : projet, villes, budget, apport, prêt, situation ; statut du dossier (`FinancingBadge`) qui passe à « Informations déclarées » une fois projet, budget, apport et besoin de prêt renseignés ; encart sur ce que voit le vendeur.
