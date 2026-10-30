@@ -120,10 +120,11 @@
   }
 
   /* The hand on everything that can be clicked (Younes, 2026-10-30): Tailwind 4
-     leaves buttons with the arrow. Links have it already. :where() keeps the
-     rules weakest: a class (cursor-grab of a map, cursor-text) wins. The
-     address field (combobox) keeps the text cursor. Disabled: the forbidden
-     cursor (DESIGN.md 10.1). */
+     leaves buttons with the arrow. Links have it already. In this base layer,
+     any utility class wins (cursor-grab of the photo thumbnails, cursor-text
+     of the address fields, the states of Button). The address field
+     (combobox) keeps the text cursor. Disabled: the forbidden cursor; busy:
+     the progress one (DESIGN.md 10.1). */
   :where(
     button,
     summary,
@@ -131,16 +132,25 @@
     label:has(
       input[type="checkbox"],
       input[type="radio"],
+      input[type="file"],
       [role="checkbox"],
       [role="radio"],
       [role="switch"]
     ),
-    input:is([type="checkbox"], [type="radio"], [type="file"], [type="submit"], [type="button"]),
+    input:is(
+      [type="checkbox"],
+      [type="radio"],
+      [type="file"],
+      [type="range"],
+      [type="submit"],
+      [type="button"]
+    ),
     [role="button"],
     [role="tab"],
     [role="radio"],
     [role="checkbox"],
     [role="switch"],
+    [role="slider"],
     [role="option"],
     [role="menuitem"],
     [role="menuitemradio"],
@@ -151,14 +161,25 @@
 
   :where(
     button,
+    summary,
     select,
     input,
     [role="button"],
     [role="tab"],
     [role="radio"],
-    [role="checkbox"]
+    [role="checkbox"],
+    [role="switch"],
+    [role="slider"],
+    [role="option"],
+    [role="menuitem"],
+    [role="menuitemradio"],
+    [role="menuitemcheckbox"]
   ):where(:disabled, [aria-disabled="true"], [data-disabled]) {
     cursor: not-allowed;
+  }
+
+  :where(button, [role="button"]):where([aria-busy="true"]) {
+    cursor: progress;
   }
 }
 
