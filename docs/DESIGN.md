@@ -539,6 +539,7 @@ Pour chaque composant : anatomie, dimensions, variantes, états. Les composants 
 
 - Rayon 4 px. Icône à gauche, 16 px, écart 8 px. Direction C (section 1) : `shape="pill"`, bouts arrondis et libellé 700 ; le `primary` en pilule a l'ombre `shadow-lk-primary` ; un seul par écran.
 - États : focus (anneau 3 px bleu, décalage 2 px, direction C pour tout le site), pressé (fond hover), désactivé (opacité 0,45, curseur interdit, pas de survol), chargement (libellé conservé, icône `Loader2` qui tourne à gauche, bouton désactivé).
+- Curseur (décision de Younes du 2026-10-30) : la main au survol de tout ce qui se clique (boutons, onglets, choix, cases, interrupteurs, éléments de menu, libellés de case), règle globale de `app/globals.css` ; les champs de texte gardent leur curseur ; désactivé, le curseur interdit ; en cours, le curseur d'attente.
 - Boutons côte à côte en bas d'écran mobile : `Précédent` (`secondary`, flex 1) + `Continuer` (`primary`, flex 1,4), écart 10 px.
 
 **IconButton** : 44 × 44 (40 × 40 dans le panneau de notifications), rond (charte D, L1-58 ; rayon 4 avant). Variantes : `round` (direction C : blanc, rond, bordure `--lk-line-strong`, flèches du carrousel de l'accueil ; désactivé : flèche `--lk-disabled`), `stone` (fond `--lk-stone-2`, retour en en-tête), `white-float` (fond blanc + `shadow-float`, sur photo), `tint` (fond `--lk-blue-tint`, cloche active), `on-dark` (fond `rgba(255,255,255,0.12)`), `outline` (bordure 1,5 px `--lk-ink`, fermer un panneau, rond). Icône 20 px.
