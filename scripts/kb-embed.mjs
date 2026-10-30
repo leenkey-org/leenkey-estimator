@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Computes the embeddings of the knowledge base (L1-27): an admin asks the
-// Edge Function `embed` to fill the cards without one (reindex). Signed in
+// Edge Function `embed` to fill the cards without one (reindex, 20 per call,
+// again until none remains). Signed in
 // with the account of an admin, never with the service key: RLS lets an admin
 // alone write knowledge_base. Cards whose answer changed lost their embedding
 // at the import (scripts/seed-knowledge.mjs), so only they are computed again.
@@ -28,17 +29,25 @@ const signIn = await fetch(`${url}/auth/v1/token?grant_type=password`, {
 if (!signIn.ok) fail(`sign in of ${email}: ${signIn.status}`);
 const token = (await signIn.json()).access_token;
 
-// The model loads on the first call: up to a minute on a cold runtime.
-const response = await fetch(`${url}/functions/v1/embed`, {
-  method: "POST",
-  headers: {
-    apikey: anonKey,
-    authorization: `Bearer ${token}`,
-    "content-type": "application/json",
-  },
-  body: JSON.stringify({ reindex: true }),
-  signal: AbortSignal.timeout(300_000),
-});
-if (!response.ok) fail(`embed: ${response.status} ${await response.text()}`);
-const { updated } = await response.json();
-console.log(`Knowledge base embedded: ${updated} card(s) computed.`);
+// The function computes 20 cards per call; the model loads on the first one:
+// up to a minute on a cold runtime.
+let total = 0;
+for (;;) {
+  const response = await fetch(`${url}/functions/v1/embed`, {
+    method: "POST",
+    headers: {
+      apikey: anonKey,
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ reindex: true }),
+    signal: AbortSignal.timeout(300_000),
+  });
+  if (response.status === 403) fail(`${email} is not an admin.`);
+  if (!response.ok) fail(`embed: ${response.status} ${await response.text()}`);
+  const { updated, remaining } = await response.json();
+  total += updated;
+  if (!remaining) break;
+  if (updated === 0) fail("no card computed while some remain.");
+}
+console.log(`Knowledge base embedded: ${total} card(s) computed.`);

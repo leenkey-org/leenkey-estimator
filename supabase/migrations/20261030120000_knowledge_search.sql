@@ -11,9 +11,10 @@
 -- computes it).
 --
 -- The cards stay readable by the admin alone (RLS of knowledge_base, L1-05);
--- a signed-in account reads them through this function, for its audience: a
--- seller the cards for sellers and for both, a buyer those for buyers and
--- for both, an admin all of them. 5 cards at most.
+-- a signed-in active account reads them through this function, for an
+-- audience among its roles: as a seller the cards for sellers and for both,
+-- as a buyer those for buyers and for both, as an admin all of them. 5 cards
+-- at most. The question is read on its first 500 characters.
 
 alter table public.knowledge_base
   add column search_document tsvector generated always as (
@@ -42,7 +43,7 @@ language plpgsql stable security definer set search_path = '' as $$
 declare
   -- Any of the words of the question: plainto_tsquery joins them with AND.
   v_words tsquery := nullif(
-    replace(plainto_tsquery('french'::regconfig, coalesce(p_query, ''))::text, ' & ', ' | '), ''
+    replace(plainto_tsquery('french'::regconfig, left(coalesce(p_query, ''), 500))::text, ' & ', ' | '), ''
   )::tsquery;
 begin
   if auth.uid() is null or not public.is_active_user() then
@@ -51,9 +52,18 @@ begin
   if p_embedding is null then
     raise exception 'search_knowledge: embedding required' using errcode = '22004';
   end if;
-  if p_audience is null or p_audience not in ('seller', 'buyer', 'admin')
-     or (p_audience = 'admin' and not public.is_admin()) then
+  -- The declared dimension of a parameter is not enforced by PostgreSQL.
+  if extensions.vector_dims(p_embedding) <> 384 then
+    raise exception 'search_knowledge: 384 dimensions expected' using errcode = '22023';
+  end if;
+  if p_audience is null or p_audience not in ('seller', 'buyer', 'admin') then
     raise exception 'search_knowledge: unknown audience' using errcode = '22023';
+  end if;
+  if not public.is_admin() and not exists (
+    select 1 from public.profiles pr
+    where pr.id = auth.uid() and p_audience::public.user_role = any(pr.roles)
+  ) then
+    raise exception 'search_knowledge: audience not among the roles of the account' using errcode = '42501';
   end if;
 
   return query
@@ -91,7 +101,7 @@ begin
            f.fused_score::double precision
     from fused f
     join public.knowledge_base kb on kb.id = f.card_id
-    order by 7 desc, kb.id
+    order by 7 desc, 6 desc, kb.id
     limit least(greatest(coalesce(p_limit, 5), 1), 5);
 end;
 $$;

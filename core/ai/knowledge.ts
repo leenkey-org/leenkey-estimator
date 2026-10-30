@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { embedTexts, vectorLiteral } from "./embeddings";
+import type { AiContext } from "./tools/types";
 
 // Search of the knowledge base (L1-27, SPEC-V2 section 12): the question
 // embedded (embeddings.ts), then the SQL function search_knowledge, with the
@@ -11,7 +12,8 @@ import { embedTexts, vectorLiteral } from "./embeddings";
 // included (scripts/kb-eval.mjs); the model reads the cards and uses only
 // those that answer (prompt of the assistant, L1-28).
 
-export type KnowledgeAudience = "seller" | "buyer" | "admin";
+/** The context of the assistant: the cards of its audience (one of the roles of the account). */
+export type KnowledgeAudience = AiContext;
 
 export type KnowledgeCard = {
   id: string;

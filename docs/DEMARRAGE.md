@@ -52,9 +52,16 @@ Guide pour Younes. Claude Code ne lit pas ce fichier en priorité : il lit `CLAU
 La recherche de l'assistant lit les fiches de `supabase/seed/knowledge/faq-cedric-v2.md` avec leurs embeddings, calculés par l'Edge Function `embed` du projet.
 
 - [ ] **La fonction** : déployée sur `leenkey-staging` (Edge Functions → `embed`, « Verify JWT » activé). Sinon, depuis le repo : `npx supabase functions deploy embed --project-ref <ref du projet>`.
-- [ ] **L'import**, depuis le Mac, dans le repo : `STAGING_DATABASE_URL=<chaîne de connexion> STAGING_SUPABASE_URL=https://<ref>.supabase.co STAGING_SUPABASE_ANON_KEY=<clé anon> SEED_PASSWORD=<secret Vault seed_password> npm run kb:import:staging` → « Knowledge base on staging: 73 cards, 73 with an embedding. ». Le script se connecte comme `admin@test.leenkey.fr` : aucune clé de service. À relancer après chaque modification de la FAQ : seules les fiches changées sont recalculées.
-- [ ] **Vérifier** : `KB_SUPABASE_URL=… KB_SUPABASE_ANON_KEY=… SEED_PASSWORD=… npm run kb:eval` → « among the 5 returned: 18/20 » (ou plus).
-- En production (P-05b) : la fonction sur le projet de production, puis `scripts/kb-import.sh prod` avec `PROD_DATABASE_URL`, `PROD_SUPABASE_URL`, `PROD_SUPABASE_ANON_KEY`, `KB_ADMIN_EMAIL` et `KB_ADMIN_PASSWORD` (le compte admin de Cédric), après confirmation.
+- [ ] **Les accès**, une fois, dans un fichier `.env.staging.local` à la racine du repo (jamais commité : `.gitignore` exclut `.env*`), pour qu'aucun secret ne reste dans l'historique du Terminal :
+  ```
+  STAGING_DATABASE_URL=<chaîne de connexion du projet leenkey-staging>
+  STAGING_SUPABASE_URL=https://<ref>.supabase.co
+  STAGING_SUPABASE_ANON_KEY=<clé anon>
+  SEED_PASSWORD=<secret Vault seed_password>
+  ```
+- [ ] **L'import**, depuis le Mac, dans le repo : `set -a; . ./.env.staging.local; set +a; npm run kb:import:staging` → « Knowledge base on staging: 73 cards, 73 with an embedding. ». Le script se connecte comme `admin@test.leenkey.fr` : aucune clé de service. À relancer après chaque modification de la FAQ : seules les fiches changées sont recalculées (`npm run db:seed:staging` les recalcule aussi).
+- [ ] **Vérifier**, dans le même Terminal : `KB_SUPABASE_URL=$STAGING_SUPABASE_URL KB_SUPABASE_ANON_KEY=$STAGING_SUPABASE_ANON_KEY npm run kb:eval` → « among the 5 returned: 18/20 » (ou plus).
+- En production (P-05b) : la fonction sur le projet de production, puis `scripts/kb-import.sh prod` avec `PROD_DATABASE_URL`, `PROD_SUPABASE_URL`, `PROD_SUPABASE_ANON_KEY`, `KB_ADMIN_EMAIL` et `KB_ADMIN_PASSWORD` dans un fichier `.env.prod.local`, après confirmation. Le compte : un admin de Younes ou un compte admin dédié à l'import, jamais celui de Cédric.
 
 ### Emails groupés des notifications (L1-22, une seule fois)
 

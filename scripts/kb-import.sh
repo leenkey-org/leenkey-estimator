@@ -40,5 +40,7 @@ if [ -z "$supabase_url" ] || [ -z "$anon_key" ]; then
   exit 1
 fi
 KB_SUPABASE_URL="$supabase_url" KB_SUPABASE_ANON_KEY="$anon_key" node scripts/kb-embed.mjs
-psql "$db" -At -c "select format('Knowledge base on %s: %s cards, %s with an embedding.', '$target',
-  count(*), count(embedding)) from public.knowledge_base;"
+read -r cards embedded < <(psql "$db" -At -F ' ' -c "select count(*), count(embedding) from public.knowledge_base;")
+echo "Knowledge base on $target: $cards cards, $embedded with an embedding."
+# A card without an embedding is never found: the import is not done.
+[ "$cards" = "$embedded" ] || { echo "Some cards have no embedding."; exit 1; }

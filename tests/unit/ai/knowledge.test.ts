@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // supabase/tests/rls_knowledge_search.sql; the relevance on the FAQ of Cédric
 // by scripts/kb-eval.mjs against a project.
 
-type Invoke = { name: string; body: unknown };
+type Invoke = { name: string; body: unknown; timeout?: number };
 type Rpc = { name: string; args: Record<string, unknown> };
 
 const mocks = vi.hoisted(() => ({
@@ -22,8 +22,8 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
     functions: {
-      invoke: async (name: string, options: { body: unknown }) => {
-        mocks.invoke.push({ name, body: options.body });
+      invoke: async (name: string, options: { body: unknown; timeout?: number }) => {
+        mocks.invoke.push({ name, body: options.body, timeout: options.timeout });
         return mocks.invokeError
           ? { data: null, error: mocks.invokeError }
           : { data: { embeddings: mocks.embeddings }, error: null };
@@ -38,7 +38,7 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
-const { EMBEDDING_DIMENSIONS, embedTexts, mockEmbedding, vectorLiteral } =
+const { EMBEDDING_DIMENSIONS, EMBED_TIMEOUT_MS, embedTexts, vectorLiteral } =
   await import("@/core/ai/embeddings");
 const { searchKnowledge } = await import("@/core/ai/knowledge");
 const { searchKnowledgeTool } = await import("@/core/ai/tools/search-knowledge");
@@ -80,7 +80,6 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.restoreAllMocks();
-  vi.unstubAllEnvs();
 });
 
 describe("embedTexts", () => {
@@ -89,7 +88,11 @@ describe("embedTexts", () => {
     const result = await embedTexts(["  Faut-il un notaire ?  ", "Combien ?"]);
     expect(result).toEqual({ ok: true, data: [unit(0), unit(1)] });
     expect(calls.invoke).toEqual([
-      { name: "embed", body: { input: ["Faut-il un notaire ?", "Combien ?"] } },
+      {
+        name: "embed",
+        body: { input: ["Faut-il un notaire ?", "Combien ?"] },
+        timeout: EMBED_TIMEOUT_MS,
+      },
     ]);
   });
 
@@ -117,25 +120,9 @@ describe("embedTexts", () => {
       });
     }
   });
-
-  it("AI_MOCK=1: a deterministic stand-in, without any call", async () => {
-    vi.stubEnv("AI_MOCK", "1");
-    const calls = answers();
-    const result = await embedTexts(["Faut-il un notaire ?"]);
-    expect(result).toEqual({ ok: true, data: [mockEmbedding("Faut-il un notaire ?")] });
-    expect(calls.invoke).toHaveLength(0);
-  });
 });
 
-describe("mockEmbedding and vectorLiteral", () => {
-  it("gives a normalized vector of 384 numbers, the same for the same words", () => {
-    const vector = mockEmbedding("Le notaire du vendeur");
-    expect(vector).toHaveLength(EMBEDDING_DIMENSIONS);
-    expect(Math.hypot(...vector)).toBeCloseTo(1, 10);
-    expect(mockEmbedding("le NOTAIRE du vendeur !")).toEqual(vector);
-    expect(Math.hypot(...mockEmbedding("?"))).toBeCloseTo(1, 10);
-  });
-
+describe("vectorLiteral", () => {
   it("writes a vector as pgvector reads it", () => {
     expect(vectorLiteral([0.5, -0.25, 1])).toBe("[0.5,-0.25,1]");
   });

@@ -1,13 +1,14 @@
 -- L1-27: search_knowledge, the hybrid search of the knowledge base. A
--- signed-in account reads the cards of its audience (and those for both),
--- never the table itself; an admin reads them all; 5 cards at most, fused by
+-- signed-in account reads the cards of an audience among its roles (and those
+-- for both), never the table itself, and never writes an embedding (reindex
+-- of the Edge Function embed relies on it); an admin reads them all; 5 cards at most, fused by
 -- the ranks of their closeness and of their words; a card of the current step
 -- a little first; cards without an embedding left out. Synthetic embeddings:
 -- unit vectors, so that the closeness is known (1 for the same vector, 0.8 for
 -- the mix below, 0 for an orthogonal one).
 begin;
 \ir _helpers.psql
-select plan(15);
+select plan(21);
 \ir _plan.psql
 
 create function tests.kb_vector(p_weights double precision[]) returns extensions.vector
@@ -36,13 +37,17 @@ select ok(not has_function_privilege('anon', 'public.search_knowledge(extensions
 \set who seller_a
 \ir _as.psql
 select is((select count(*) from knowledge_base)::int, 0, 'seller_a: still no direct read of the table');
+with written as (update knowledge_base set embedding = null returning 1)
+select is(count(*)::int, 0, 'seller_a: writes no embedding') from written;
 select is((select array_agg(question order by question)
            from search_knowledge(tests.kb_vector('{1}'), null, 'seller')),
           '{"Q both","Q both far 1","Q both far 2","Q seller S2","Q seller S3"}'::text[],
           'seller_a: the closest cards for sellers and for both, never for buyers, never without an embedding');
 select is((select round(similarity::numeric, 3) from search_knowledge(tests.kb_vector('{1}'), null, 'seller') limit 1),
           1.000, 'seller_a: the same vector, similarity 1');
-select is((select array_agg(question) from search_knowledge(tests.kb_vector('{1}'), null, 'seller', 'S2', 2)),
+select is((select array_agg(question order by position)
+           from search_knowledge(tests.kb_vector('{1}'), null, 'seller', 'S2', 2)
+                with ordinality as found(id, category, step_code, question, answer, similarity, score, position)),
           '{"Q seller S3","Q seller S2"}'::text[],
           'seller_a: a card of the current step before an equally close card, never before a closer one');
 select is((select question from search_knowledge(tests.kb_vector('{1}'), 'Faut-il un notaire ?', 'seller') limit 1),
@@ -52,12 +57,22 @@ select ok(not exists (select 1 from search_knowledge(tests.kb_vector('{1}'), 'no
           'seller_a: a card without an embedding is left out, even when its words match');
 select is((select count(*) from search_knowledge(tests.kb_vector('{1}'), '', 'seller', null, 2))::int, 2,
           'seller_a: the number of cards asked');
-select throws_ok($$select * from search_knowledge(tests.kb_vector('{1}'), null, 'admin')$$, '22023', null,
+select throws_ok($$select * from search_knowledge(tests.kb_vector('{1}'), null, 'admin')$$, '42501', null,
                  'seller_a: the audience of the admin is refused');
+select throws_ok($$select * from search_knowledge(tests.kb_vector('{1}'), null, 'buyer')$$, '42501', null,
+                 'seller_a: the audience of a role it does not have is refused');
 select throws_ok($$select * from search_knowledge(tests.kb_vector('{1}'), null, 'tous')$$, '22023', null,
                  'seller_a: an unknown audience is refused');
 select throws_ok($$select * from search_knowledge(null, 'notaire', 'seller')$$, '22004', null,
                  'seller_a: an embedding is required');
+select throws_ok($$select * from search_knowledge('[1,0,0]', 'notaire', 'seller')$$, '22023', null,
+                 'seller_a: an embedding of 384 dimensions');
+
+-- Seller B --------------------------------------------------------------------
+\set who seller_b
+\ir _as.psql
+with written as (update knowledge_base set embedding = null returning 1)
+select is(count(*)::int, 0, 'seller_b: writes no embedding') from written;
 
 -- Buyer C ---------------------------------------------------------------------
 \set who buyer_c
@@ -66,6 +81,10 @@ select is((select array_agg(question order by question)
            from search_knowledge(tests.kb_vector('{1}'), 'notaire', 'buyer')),
           '{"Q both","Q both far 1","Q both far 2","Q buyer"}'::text[],
           'buyer_c: cards for buyers and for both, never for sellers, even when their words match');
+select throws_ok($$select * from search_knowledge(tests.kb_vector('{1}'), null, 'seller')$$, '42501', null,
+                 'buyer_c: the cards for sellers are refused to a buyer');
+with written as (update knowledge_base set embedding = null returning 1)
+select is(count(*)::int, 0, 'buyer_c: writes no embedding') from written;
 
 -- Admin -----------------------------------------------------------------------
 \set who admin

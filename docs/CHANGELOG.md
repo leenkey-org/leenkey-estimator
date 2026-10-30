@@ -13,11 +13,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 -->
 
 ### 2026-10-30 · L1-27 · PR #66 · Base de connaissances : embeddings et recherche
-- Ajouté : Edge Function `embed` (`gte-small`, comptes connectés seulement ; `reindex` par un admin, sans clé de service) ; `npm run kb:import` (fiches puis embeddings manquants, local, préprod, prod avec confirmation) et `npm run kb:eval` (pertinence sur la FAQ de Cédric).
-- Ajouté : `search_knowledge` en SQL (proximité des embeddings et mots de la question en français, fusionnés ; fiches de l'étape un peu devant ; 5 au plus ; par public), `core/ai/embeddings.ts`, `core/ai/knowledge.ts` et l'outil `search_knowledge` de l'assistant (`core/ai/tools/`).
+- Ajouté : Edge Function `embed` (`gte-small`, comptes connectés et actifs seulement ; `reindex` par un admin, par lots de 20, sans clé de service) ; `npm run kb:import` (fiches puis embeddings manquants, local, préprod, prod avec confirmation) et `npm run kb:eval` (pertinence sur la FAQ de Cédric).
+- Ajouté : `search_knowledge` en SQL (proximité des embeddings et mots de la question en français, fusionnés ; fiches de l'étape un peu devant ; 5 au plus ; public parmi les rôles du compte), `core/ai/embeddings.ts`, `core/ai/knowledge.ts` et l'outil `search_knowledge` de l'assistant (`core/ai/tools/`).
 - Modifié : la pile locale lance les Edge Functions (`supabase/edge-runtime`) et calcule les embeddings de la FAQ au démarrage.
 - Migration : `20261030120000_knowledge_search.sql` (colonne `search_document` générée et son index, fonction `search_knowledge`).
-- Tests : RLS (`rls_knowledge_search.sql`, 15), unitaires (13), pertinence : la bonne fiche parmi les 5 pour 18 questions sur 20.
+- Tests : RLS (`rls_knowledge_search.sql`, 21), unitaires (11), pertinence : la bonne fiche parmi les 5 pour 18 questions sur 20.
 
 ### 2026-10-30 · Curseur · PR #65 · La main sur ce qui se clique
 - Modifié : la main au survol de tout ce qui se clique (boutons, onglets, choix, cases, interrupteurs, éléments de menu), règle globale de `app/globals.css` ; les champs de texte gardent leur curseur, un élément désactivé montre le curseur interdit.

@@ -131,10 +131,10 @@ case "${1:-}" in
     proxy_args=()
     [ -n "${HTTPS_PROXY:-}" ] && proxy_args+=(-e "HTTPS_PROXY=$HTTPS_PROXY" -e "HTTP_PROXY=${HTTP_PROXY:-$HTTPS_PROXY}" -e "NO_PROXY=localhost,127.0.0.1")
     [ -n "${SSL_CERT_FILE:-}" ] && [ -f "$SSL_CERT_FILE" ] && proxy_args+=(-v "$SSL_CERT_FILE:/ca.crt:ro" -e SSL_CERT_FILE=/ca.crt)
-    docker run -d --name lk-stack-functions --network host "${proxy_args[@]}" \
+    docker run -d --name lk-stack-functions --network host ${proxy_args[@]+"${proxy_args[@]}"} \
       -e SUPABASE_URL="http://127.0.0.1:$GATEWAY" -e SUPABASE_ANON_KEY="$(cat $DIR/anon_key)" \
       -v "$PWD/supabase/functions:/home/deno/functions:ro" \
-      supabase/edge-runtime:v1.69.6 start --main-service /home/deno/functions/embed --port $FUNCTIONS >/dev/null
+      supabase/edge-runtime:v1.69.6 start --main-service /home/deno/functions/embed --ip 127.0.0.1 --port $FUNCTIONS >/dev/null
     for _ in $(seq 1 60); do
       (echo > /dev/tcp/127.0.0.1/$FUNCTIONS) 2>/dev/null && break
       sleep 1
@@ -147,7 +147,7 @@ case "${1:-}" in
     done
     SEED_PASSWORD="$(cat $DIR/seed_password)" KB_SUPABASE_URL="http://127.0.0.1:$GATEWAY" \
       KB_SUPABASE_ANON_KEY="$(cat $DIR/anon_key)" node scripts/kb-embed.mjs \
-      || echo "Knowledge base not embedded (Hugging Face unreachable?): npm run kb:import later."
+      || echo "Knowledge base not embedded (Hugging Face unreachable?). Later: eval \"\$(scripts/local-stack.sh env)\" && KB_SUPABASE_URL=\$NEXT_PUBLIC_SUPABASE_URL KB_SUPABASE_ANON_KEY=\$NEXT_PUBLIC_SUPABASE_ANON_KEY node scripts/kb-embed.mjs"
     echo "Stack up. Emails: http://localhost:$MAIL_UI. Seed password: $DIR/seed_password. Then: eval \"\$(scripts/local-stack.sh env)\""
     ;;
   env)

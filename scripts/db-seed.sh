@@ -66,6 +66,13 @@ else
   echo "Photos of the demo properties not loaded: the project of $target, its public key or SEED_PASSWORD is not set."
 fi
 
+# The cards whose answer changed lost their embedding: computed again on
+# staging (L1-27). The local stack computes them once its functions are up.
+if [ "$target" = staging ] && [ -n "$supabase_url" ] && [ -n "$anon_key" ] && [ -n "${SEED_PASSWORD:-}" ]; then
+  KB_SUPABASE_URL="$supabase_url" KB_SUPABASE_ANON_KEY="$anon_key" node scripts/kb-embed.mjs \
+    || echo "Knowledge base not embedded: npm run kb:import:staging."
+fi
+
 psql "$url" -At -c "
   select format('Seed loaded on %s: %s plans, %s sale steps, %s tasks, %s knowledge cards, %s seed accounts, %s demo properties (%s published), %s demo photos.',
     '$target',

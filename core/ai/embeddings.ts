@@ -4,12 +4,16 @@ import { createClient } from "@/lib/supabase/server";
 // Embeddings of texts (L1-27, SPEC-V2 section 3): the gte-small model built
 // into Supabase, by the Edge Function `embed` (supabase/functions/embed),
 // called with the session of the signed-in account; 384 dimensions, mean
-// pooled and normalized. AI_MOCK=1 (E2E): a deterministic stand-in, no call.
+// pooled and normalized. No stand-in here: the cards are embedded by the same
+// function, a question must be in the same space (the E2E tests use the
+// function of the local stack).
 
 export const EMBEDDING_DIMENSIONS = 384;
 /** What the function accepts in one call. */
 export const EMBED_MAX_TEXTS = 16;
 export const EMBED_MAX_CHARS = 2_000;
+/** A cold function loads its model first: past this, the search is unavailable. */
+export const EMBED_TIMEOUT_MS = 20_000;
 
 export type EmbedResult = { ok: true; data: number[][] } | { ok: false; error: "unavailable" };
 
@@ -23,11 +27,11 @@ export async function embedTexts(texts: readonly string[]): Promise<EmbedResult>
     return { ok: false, error: "unavailable" };
   const input = texts.map((text) => text.trim().slice(0, EMBED_MAX_CHARS));
   if (input.some((text) => text.length === 0)) return { ok: false, error: "unavailable" };
-  if (process.env.AI_MOCK === "1") return { ok: true, data: input.map(mockEmbedding) };
 
   const supabase = await createClient();
   const { data, error } = await supabase.functions.invoke<{ embeddings?: unknown }>("embed", {
     body: { input },
+    timeout: EMBED_TIMEOUT_MS,
   });
   const embeddings = data?.embeddings;
   if (
@@ -45,26 +49,4 @@ export async function embedTexts(texts: readonly string[]): Promise<EmbedResult>
 /** The text form of a vector, as pgvector reads it: « [0.1,0.2,…] ». */
 export function vectorLiteral(vector: readonly number[]): string {
   return `[${vector.join(",")}]`;
-}
-
-/**
- * AI_MOCK: the words of the text in 384 buckets, normalized. Same words, same
- * vector; texts sharing words are close: enough for the E2E paths.
- */
-export function mockEmbedding(text: string): number[] {
-  const vector = new Array<number>(EMBEDDING_DIMENSIONS).fill(0);
-  const words = text
-    .toLocaleLowerCase("fr-FR")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .split(/[^a-z0-9]+/)
-    .filter((word) => word.length > 2);
-  for (const word of words) {
-    let hash = 2166136261;
-    for (const char of word) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-    vector[Math.abs(hash) % EMBEDDING_DIMENSIONS] += 1;
-  }
-  const norm = Math.hypot(...vector);
-  if (norm === 0) vector[0] = 1;
-  return norm === 0 ? vector : vector.map((x) => x / norm);
 }
