@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CalendarCheck, Lightbulb, ListChecks, MessageCircle, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { EmptyState } from "@/components/shared/empty-state";
+import { FinancingMention } from "@/components/shared/financing-badge";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { NextActionCard } from "@/components/shared/next-action-card";
 import { StatTile } from "@/components/shared/stat-tile";
@@ -12,7 +13,7 @@ import { requireProfile } from "@/core/auth/session";
 import { currentStep } from "@/core/steps/progress";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { DashboardConversations } from "@/leenkey/properties/components/dashboard-conversations";
+import { RecentConversations } from "@/leenkey/messaging/components/recent-conversations";
 import { PropertyList } from "@/leenkey/properties/components/property-list";
 import { SellerHeader } from "@/leenkey/properties/components/seller-header";
 import { TaskDoneButton } from "@/leenkey/properties/components/task-done-button";
@@ -333,7 +334,10 @@ export default async function SellerHomePage({ searchParams }: Props) {
             link={recent.length ? { href: links.messages, label: t.conversations.all } : undefined}
           >
             {recent.length ? (
-              <DashboardConversations conversations={recent} now={now} />
+              <>
+                <RecentConversations conversations={recent} now={now} />
+                <FinancingMention />
+              </>
             ) : (
               <p className="rounded-lk-xl border border-lk-line bg-lk-surface px-4 py-3.5 text-lk-compact text-lk-ink-3">
                 {t.conversations.empty}

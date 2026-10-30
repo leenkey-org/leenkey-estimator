@@ -31,6 +31,8 @@ export type BrandPanelProps = {
   illustration?: boolean;
   /** Actions or content under the description. */
   children?: ReactNode;
+  /** In the top right corner, below 768 px: the bell of a signed-in home. */
+  corner?: ReactNode;
   className?: string;
 };
 
@@ -49,6 +51,7 @@ export function BrandPanel({
   description,
   illustration = false,
   children,
+  corner,
   className,
 }: BrandPanelProps) {
   const hero = titleSize === "hero";
@@ -75,6 +78,8 @@ export function BrandPanel({
             // Room for the dimension line under the title.
             hero ? "gap-4 lg:gap-5" : titleAccent ? "gap-3" : "gap-2",
             illustration && "lg:max-w-lk-form",
+            // The title never runs under the corner.
+            corner && "max-md:pr-12",
           )}
         >
           <Title
@@ -112,6 +117,9 @@ export function BrandPanel({
             </div>
           ) : null}
         </div>
+        {corner ? (
+          <div className="absolute right-(--lk-gutter) top-3 md:hidden">{corner}</div>
+        ) : null}
         {illustration ? (
           <FacadeDrawing
             data-reveal-draw={hero ? undefined : ""}

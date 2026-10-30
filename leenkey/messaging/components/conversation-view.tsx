@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { Composer } from "@/components/shared/composer";
 import { ConversationHeader } from "@/components/shared/conversation-header";
+import { FinancingMention, type FinancingStatus } from "@/components/shared/financing-badge";
 import { iconButtonVariants } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { MessageBubble, MessageDate, SystemMessage } from "@/components/shared/message-bubble";
@@ -38,6 +39,12 @@ export type ConversationViewProps = {
     hrefLabel: string;
   };
   initialMessages: ThreadMessage[];
+  /**
+   * The seller's view: the financing status of the buyer, said by the header
+   * (« Avec Chloé · Informations déclarées »), never an amount; its mention
+   * under the header (L1-25).
+   */
+  financing?: FinancingStatus | null;
   /** Unread when the page was read: marked read on opening. */
   unread: boolean;
   closed: boolean;
@@ -59,6 +66,7 @@ export function ConversationView({
   counterpart,
   header,
   initialMessages,
+  financing = null,
   unread,
   closed,
   initialDraft = "",
@@ -243,6 +251,10 @@ export function ConversationView({
           </div>
         ) : null}
       </div>
+
+      {financing ? (
+        <FinancingMention className="border-b border-lk-line bg-lk-surface px-4 py-2.5" />
+      ) : null}
 
       <div role="log" aria-label={t.thread.label} className="flex flex-1 flex-col gap-3 p-4">
         {threadItems(messages, now).map((item) => {

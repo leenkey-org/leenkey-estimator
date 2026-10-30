@@ -25,6 +25,8 @@ export const ROUTES = {
   newProperty: "/vendeur/biens/nouveau",
   sellerFile: "/vendeur/dossier",
   buyer: "/acquereur",
+  /** The buying project and its financing (L1-25). */
+  buyerProfile: "/acquereur/profil",
   favourites: "/acquereur/favoris",
   messages: "/messages",
   account: "/compte",

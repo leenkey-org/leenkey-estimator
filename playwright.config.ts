@@ -11,7 +11,7 @@ const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH;
 // the seed while they change it. They also need E2E_MUTATE=1 and a local
 // stack (see each file). `--no-deps` runs one of them alone.
 const MUTATING =
-  /(admin-listings|messaging-live|notifications-live|property-creation|property-edit|property-from-estimation|property-photos|property-status)\.spec\.ts$/;
+  /(admin-listings|buyer-profile-live|messaging-live|notifications-live|property-creation|property-edit|property-from-estimation|property-photos|property-status)\.spec\.ts$/;
 const desktop = { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } };
 
 // Cookie consent already answered (refused) so that the banner of L1-37

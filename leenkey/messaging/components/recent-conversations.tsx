@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { counterpartName, messagePreview } from "@/leenkey/messaging/presentation";
-import type { ConversationSummary } from "@/leenkey/messaging/types";
+import { FinancingBadge } from "@/components/shared/financing-badge";
+import { counterpartName, messagePreview } from "../presentation";
+import type { ConversationSummary } from "../types";
 import { capitalize, formatMessageTime } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -19,12 +20,13 @@ function initials(name: string): string {
 }
 
 /**
- * The last conversations about the property on « Ma vente » (docs/DESIGN.md
- * 12.3): its initials in a round, the first name and the time, the last
- * message on one line, a blue dot when it is unread; each one opens its
- * conversation.
+ * The last conversations of a space (« Ma vente », docs/DESIGN.md 12.3; the
+ * buyer home, 12.10): the initials in a round, the first name and the time,
+ * the last message on one line, a blue dot when it is unread; each one
+ * opens its conversation. For a seller, the financing status of the buyer
+ * (FinancingBadge, L1-25), never an amount: the page says its mention once.
  */
-export function DashboardConversations({
+export function RecentConversations({
   conversations,
   now,
 }: {
@@ -62,6 +64,13 @@ export function DashboardConversations({
                 <span className="truncate text-lk-label text-lk-ink-2">
                   {messagePreview(conversation)}
                 </span>
+                {/* On its own line: « Financement non renseigné » would squeeze the name. */}
+                {conversation.role === "seller" && conversation.buyerFinancingStatus ? (
+                  <FinancingBadge
+                    status={conversation.buyerFinancingStatus}
+                    className="mt-1 self-start"
+                  />
+                ) : null}
               </span>
               {conversation.unread ? (
                 <span className="size-2.5 shrink-0 rounded-full bg-lk-blue">

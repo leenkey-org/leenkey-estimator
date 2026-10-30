@@ -80,6 +80,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
             hrefLabel: propertyHrefLabel(conversation),
           }}
           initialMessages={thread.data}
+          financing={conversation.role === "seller" ? conversation.buyerFinancingStatus : null}
           unread={conversation.unread}
           closed={conversation.closed}
           initialDraft={visit && !conversation.closed ? t.start.visit : ""}
