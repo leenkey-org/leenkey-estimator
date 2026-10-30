@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-10-30 · L1-25 · PR #64 · Espace acquéreur v1
+- Ajouté : accueil acquéreur `/acquereur` (DESIGN 12.10) : « Bonjour Chloé » sur le bandeau, « Reprendre votre dernière recherche ? » avec ses critères et ses nouveaux biens (ou « Voir les biens »), le dossier acquéreur (« Compléter mon dossier » en tête tant qu'il est incomplet), les favoris, les conversations, « Nos services ».
+- Ajouté : « Mon projet d'achat » `/acquereur/profil` : projet, villes, budget, apport, prêt, situation ; statut du dossier (`FinancingBadge`) qui passe à « Informations déclarées » une fois projet, budget, apport et besoin de prêt renseignés ; encart sur ce que voit le vendeur.
+- Ajouté : `FinancingBadge` et la mention obligatoire côté vendeur, sur les conversations de « Ma vente » et sous l'en-tête d'une conversation ; jamais un montant.
+- Modifié : la dernière recherche avec critères est gardée dans le navigateur (`lk:search:last`, au tableau des cookies) ; `BrandPanel` prend la cloche en haut à droite sur téléphone.
+- Tests : RLS (`rls_buyer_profile.sql` : l'acquéreur écrit son projet, jamais son statut ; un autre acquéreur et un vendeur ne le lisent pas ; aucune colonne de montant dans ce que lit le vendeur), unitaires (villes, schéma, dossier, résumé de recherche, recherche gardée), E2E (accueil, reprise de recherche, projet, statut sans montants côté vendeur ; enregistrement d'un projet dans « seed-mutations »).
+
 ### 2026-10-29 · L1-64 · PR #63 · Cockpit d'un admin qui vend ou achète
 - Ajouté : un compte admin qui vend ou achète aussi a « Cockpit » juste après « Back office » dans le menu du compte (site et back office) et dans le menu mobile du site ; il mène à « Ma vente » s'il vend, sinon à l'accueil acquéreur.
 - Tests : unitaires du menu du compte (admin seul, admin vendeur, admin acquéreur, client).

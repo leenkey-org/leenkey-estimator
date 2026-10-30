@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { Composer } from "@/components/shared/composer";
 import { ConversationHeader } from "@/components/shared/conversation-header";
+import { FinancingMention, type FinancingStatus } from "@/components/shared/financing-badge";
 import { iconButtonVariants } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { MessageBubble, MessageDate, SystemMessage } from "@/components/shared/message-bubble";
@@ -38,6 +39,12 @@ export type ConversationViewProps = {
     hrefLabel: string;
   };
   initialMessages: ThreadMessage[];
+  /**
+   * The seller's view: the financing status of the buyer, said by the header
+   * (« Avec Chloé · Informations déclarées »), never an amount; its mention
+   * under the header (L1-25).
+   */
+  financing?: FinancingStatus | null;
   /** Unread when the page was read: marked read on opening. */
   unread: boolean;
   closed: boolean;
@@ -59,6 +66,7 @@ export function ConversationView({
   counterpart,
   header,
   initialMessages,
+  financing = null,
   unread,
   closed,
   initialDraft = "",
@@ -200,7 +208,10 @@ export function ConversationView({
   return (
     <>
       {/* A second sticky header: room for it when the focus moves (app/globals.css). */}
-      <div data-sticky-subheader="conversation" className="sticky top-0 z-20 md:top-18">
+      <div
+        data-sticky-subheader={financing ? "conversation-financing" : "conversation"}
+        className="sticky top-0 z-20 md:top-18"
+      >
         <ConversationHeader
           back={
             <Link href="/messages" aria-label={t.thread.back} className={backClass}>
@@ -237,6 +248,10 @@ export function ConversationView({
             />
           }
         />
+        {/* Under the status of the header, in sight however far the thread is scrolled. */}
+        {financing ? (
+          <FinancingMention className="border-b border-lk-line bg-lk-surface px-4 py-2" />
+        ) : null}
         {reported ? (
           <div className="border-b border-lk-line bg-lk-surface px-4 py-2.5">
             <InlineAlert tone="success">{t.thread.reported}</InlineAlert>

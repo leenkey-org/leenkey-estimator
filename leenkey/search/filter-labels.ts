@@ -1,6 +1,7 @@
 import { formatPriceShort, formatSurface } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { OUTDOOR_SPACES, type SearchFilters } from "@/lib/validations/search";
+import { categoryOn } from "./categories";
 
 // Short labels of the active filters: the « Budget » part of the search bar,
 // and the chips of the active filters under the categories on a phone:
@@ -98,4 +99,22 @@ export function activeChips(filters: SearchFilters): ActiveChip[] {
       : null,
   ];
   return chips.filter((chip): chip is ActiveChip => chip !== null);
+}
+
+/**
+ * The criteria of a search on one line (L1-25, « Reprendre votre dernière
+ * recherche ? »): the commune, the categories, then the active filters:
+ * « Savigny-sur-Orge · Maisons · Avec jardin · ≤ 400 k€ ». Empty: no criterion.
+ */
+export function searchSummary(filters: SearchFilters, place: string | null): string[] {
+  const categories = fr.search.categories;
+  const type =
+    filters.type === "maison" || filters.type === "appartement" || filters.type === "terrain"
+      ? categories[filters.type]
+      : null;
+  const garden = categoryOn("jardin", filters) ? categories.jardin : null;
+  const parking = filters.parking ? categories.parking : null;
+  return [place, type, garden, parking, ...activeChips(filters).map((chip) => chip.label)].filter(
+    (part): part is string => Boolean(part),
+  );
 }
