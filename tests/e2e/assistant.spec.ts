@@ -155,7 +155,8 @@ test("la route : une session, une demande valide, sa propre conversation", async
   });
   expect(anonymous.status()).toBe(401);
 
-  await signIn(page, "seller_b", "/vendeur");
+  // seller_a: seller_b and buyer_d are left to the gate of the terms (auth-journey.spec.ts).
+  await signIn(page, "seller_a", "/vendeur");
   const invalid = await page.request.post("/api/ai/chat", {
     data: { context: "seller", message: "" },
   });
@@ -168,9 +169,9 @@ test("la route : une session, une demande valide, sa propre conversation", async
     },
   });
   expect(notTheirs.status()).toBe(404);
-  // Someone else's property for a new conversation.
+  // Someone else's property (15, of seller_b) for a new conversation.
   const othersProperty = await page.request.post("/api/ai/chat", {
-    data: { context: "seller", propertyId: property(1), message: "Bonjour" },
+    data: { context: "seller", propertyId: property(15), message: "Bonjour" },
   });
   expect(othersProperty.status()).toBe(400);
 });
