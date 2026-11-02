@@ -6,9 +6,19 @@ import { buildHistory, type StoredToolResult } from "@/core/ai/conversation";
 import { findConversation, logResult, readLog } from "@/core/ai/log";
 import { getProfile, missingAcceptances } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { toolCallSchema } from "@/lib/validations/assistant";
+import {
+  descriptionDraftSchema,
+  replySuggestionSchema,
+  toolCallSchema,
+} from "@/lib/validations/assistant";
 import { DECLINED } from "./assistant";
 import { assistantConversation, isFailure } from "./queries";
+import {
+  draftListingDescription,
+  suggestReply,
+  type SuggestionError,
+  type SuggestionResult,
+} from "./suggestions";
 import { toolsFor } from "./tools";
 import type { AssistantConversation } from "./types";
 
@@ -87,6 +97,7 @@ async function answer(input: unknown, confirm: boolean): Promise<ToolCallResult>
     try {
       output = await tool.execute(toolInput.data, {
         profileId: profile.id,
+        roles: profile.roles,
         context,
         stepCode: null,
         call: { conversationId, toolUseId: call.id, name: call.name },
@@ -140,4 +151,45 @@ export async function loadAssistantConversation(): Promise<
   if (!profile || !profile.roles.includes("seller")) return { ok: false, error: "auth" };
   const conversation = await assistantConversation(profile.id, "seller");
   return conversation.ok ? conversation : { ok: false, error: "unavailable" };
+}
+
+/**
+ * The seller, signed in, conditions accepted (L1-29): a suggestion is theirs
+ * only. Nothing is written but the log of the assistant, hence no
+ * revalidatePath (CLAUDE.md section 9): the screen keeps the text.
+ */
+async function sellerOnly(): Promise<
+  | { ok: true; profile: NonNullable<Awaited<ReturnType<typeof getProfile>>> }
+  | {
+      ok: false;
+      error: SuggestionError;
+    }
+> {
+  const profile = await getProfile();
+  if (!profile) return { ok: false, error: "auth" };
+  if ((await missingAcceptances(profile.id)).length > 0) return { ok: false, error: "conditions" };
+  if (!profile.roles.includes("seller")) return { ok: false, error: "not_found" };
+  return { ok: true, profile };
+}
+
+/** « Suggérer une réponse » (SPEC-V2 8.6): a reply to the last message of the buyer. */
+export async function suggestReplyAction(input: unknown): Promise<SuggestionResult> {
+  const parsed = replySuggestionSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const seller = await sellerOnly();
+  if (!seller.ok) return seller;
+  return suggestReply(seller.profile, parsed.data.conversationId);
+}
+
+/** « Rédiger avec l'assistant » (SPEC-V2 8.3): a description, never saved here. */
+export async function draftDescriptionAction(input: unknown): Promise<SuggestionResult> {
+  const parsed = descriptionDraftSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const seller = await sellerOnly();
+  if (!seller.ok) return seller;
+  return draftListingDescription({
+    profile: seller.profile,
+    propertyId: parsed.data.propertyId,
+    notes: parsed.data.notes,
+  });
 }

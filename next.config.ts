@@ -25,10 +25,13 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: "4mb" },
   },
   // The share image draws the white logo, read from public/ on the server;
-  // the assistant reads its prompts (core/ai/prompts/*.md, L1-28).
+  // the assistant reads its prompts (core/ai/prompts/*.md, L1-28), from its
+  // route and from the actions of its suggestions (L1-29), which run in the
+  // function of the page that calls them (the messaging, the price step):
+  // every function has them (a few kilobytes).
   outputFileTracingIncludes: {
     "/api/og/**": ["./public/brand/logo-white.svg"],
-    "/api/ai/**": ["./core/ai/prompts/**/*.md"],
+    "/**": ["./core/ai/prompts/**/*.md"],
   },
   // The addresses of the V1 pages are kept, as permanent redirects
   // (CLAUDE.md section 16).

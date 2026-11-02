@@ -100,7 +100,7 @@ Toujours la semaine la plus risquée du projet. Ordre imposé : L1-26 et L1-33 (
 Recette du lot 1 par Cédric du 16 au 20 novembre ; mise en ligne de la V2 la semaine du 23 novembre (P-05b, ci-dessous). Reportés du lot 1 (recalage du 15 octobre) :
 
 - [ ] **L1-16b** Carte avancée : regroupement, recherche dans la zone (synchronisation liste/carte livrée avec L1-16) · PR : · Testé en préprod : ☐
-- [ ] **L1-29** Suggestion de réponse en messagerie + rédaction de description · PR : · Testé en préprod : ☐
+- [x] **L1-29** Suggestion de réponse en messagerie + rédaction de description · PR : #69 · Testé en préprod : ☐
 - [ ] **L1-35** `listing_revisions` simplifié : historique des champs prix, titre, description d’une annonce publiée, vendeur et admin · PR : · Testé en préprod : ☐
 - [ ] **L1-30b** Résumé du jour par l'assistant dans le back office · PR : #56 · Testé en préprod : ☐
 

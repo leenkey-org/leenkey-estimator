@@ -12,6 +12,15 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-02 · L1-29 · PR #69 · Suggestions de l'assistant
+- Ajouté : « Suggérer une réponse » dans une conversation, côté vendeur, quand l'acquéreur a écrit en dernier : réponse proposée dans un `AssistantSuggestion` (« Utiliser », « Modifier », « Ignorer »), jamais envoyée seule ; le message envoyé à partir d'une suggestion porte `ai_suggested`.
+- Ajouté : « Rédiger avec l'assistant » sous la description de l'étape « Prix et description » : description proposée à partir des caractéristiques du bien et du texte déjà saisi, mise dans le champ seulement, enregistrée avec l'étape.
+- Ajouté : outil `draft_listing_description` de l'assistant (même rédaction, puis proposition avec `update_listing_description`) ; prompts `reply-suggestion.md` et `listing-description.md` ; appel non streamé du modèle (`core/ai/generate.ts`) ; chaque suggestion comptée dans le quota du jour et journalisée avec ses tokens.
+- Ajouté : `AssistantSuggestion` au catalogue `/design`.
+- Migration : `20261102150000_ai_suggestions.sql` (colonne `ai_conversations.kind` ; déclencheur `messages_ai_suggested_by_seller` : la marque d'une suggestion n'est gardée que pour le vendeur de la conversation).
+- Modifié : les prompts de l'assistant sont joints à toutes les fonctions du déploiement (les actions des suggestions tournent dans les pages).
+- Tests : RLS (`rls_ai_suggestions.sql`, 20), unitaires (32), E2E (`assistant-suggestions.spec.ts`, en 390 et 1 280 px).
+
 ### 2026-11-02 · Sécurité · PR #68 · Aucune clé de l'API dans les journaux
 - Corrigé : une erreur du SDK Anthropic qui citait l'en-tête d'authentification (clé collée avec un retour à la ligne) était journalisée telle quelle ; les erreurs de l'assistant le sont désormais par leur type, leur statut et l'id de la requête, le reste masqué. Même correctif pour l'analyse de valeur reprise de la V1 (`/api/estimate`).
 - Modifié : la clé est lue sans les espaces ni les retours à la ligne qu'une copie peut ajouter.

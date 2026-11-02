@@ -17,6 +17,8 @@ const messageBody = z
 export const messageSchema = z.object({
   conversationId: z.string().uuid(),
   body: messageBody,
+  /** Written from a reply the assistant suggested (L1-29, messages.ai_suggested). */
+  aiSuggested: z.boolean().optional(),
 });
 
 /** The first message of a buyer, which opens the conversation on a listing. */

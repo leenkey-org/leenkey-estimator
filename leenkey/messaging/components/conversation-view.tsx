@@ -18,6 +18,7 @@ import { NBSP, formatClock } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { MESSAGE_MAX } from "@/lib/validations/messaging";
 import { cn } from "@/lib/utils";
+import { ReplySuggestion } from "@/leenkey/ai/components/reply-suggestion";
 import { ConversationMenu } from "./conversation-menu";
 
 const t = fr.messaging;
@@ -50,6 +51,8 @@ export type ConversationViewProps = {
   closed: boolean;
   /** The text already in the field (`visite=1`). */
   initialDraft?: string;
+  /** The seller's view: « Suggérer une réponse » (L1-29) while the buyer wrote last. */
+  suggestions?: boolean;
   /** Time of the server render, for the days of the thread. */
   now: string;
 };
@@ -70,10 +73,13 @@ export function ConversationView({
   unread,
   closed,
   initialDraft = "",
+  suggestions = false,
   now,
 }: ConversationViewProps) {
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState(initialDraft);
+  // The text in the field came from a suggestion of the assistant (until it is emptied or sent).
+  const [fromSuggestion, setFromSuggestion] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<SendError | null>(null);
   const [isClosed, setIsClosed] = useState(closed);
@@ -181,7 +187,7 @@ export function ConversationView({
     setError(null);
     let result: Awaited<ReturnType<typeof sendMessage>> | null = null;
     try {
-      result = await sendMessage({ conversationId, body: draft });
+      result = await sendMessage({ conversationId, body: draft, aiSuggested: fromSuggestion });
     } catch (caught) {
       // Network lost, or a page older than the last deployment: the text stays.
       console.error("[messaging] message not sent", caught);
@@ -194,11 +200,16 @@ export function ConversationView({
     }
     atEnd.current = true;
     setDraft("");
+    setFromSuggestion(false);
     addMessages([result.data]);
     // Realtime may have brought it first: the thread does not change then.
     scrollToEnd();
     fieldRef.current?.focus();
   };
+
+  // The last message written (a system message is not one): the buyer's, a reply is due.
+  const lastText = [...messages].reverse().find((message) => message.kind === "text");
+  const lastFromCounterpart = lastText !== undefined && lastText.senderId !== viewerId;
 
   const backClass = cn(
     iconButtonVariants({ variant: "stone" }),
@@ -286,6 +297,27 @@ export function ConversationView({
           </div>
         ) : (
           <>
+            {suggestions && lastText && lastFromCounterpart ? (
+              <ReplySuggestion
+                key={lastText.id}
+                conversationId={conversationId}
+                onUse={(text) => {
+                  setDraft(text);
+                  setFromSuggestion(true);
+                  setError(null);
+                }}
+                onEdit={(text) => {
+                  setDraft(text);
+                  setFromSuggestion(true);
+                  setError(null);
+                  requestAnimationFrame(() => {
+                    const field = fieldRef.current;
+                    field?.focus();
+                    field?.setSelectionRange(field.value.length, field.value.length);
+                  });
+                }}
+              />
+            ) : null}
             {error ? (
               <div id={errorId} className="border-t border-lk-line bg-lk-surface px-3 pt-2.5">
                 <InlineAlert tone="danger">{t.errors[error]}</InlineAlert>
@@ -295,6 +327,7 @@ export function ConversationView({
               value={draft}
               onValueChange={(value) => {
                 setDraft(value);
+                if (value.trim() === "") setFromSuggestion(false);
                 if (error === "empty" || error === "tooLong") setError(null);
               }}
               onSend={() => void send()}

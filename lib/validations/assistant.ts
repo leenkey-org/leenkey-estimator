@@ -30,3 +30,15 @@ export const toolCallSchema = z.object({
   conversationId: z.string().uuid(),
   toolCallId: z.string().min(1).max(200),
 });
+
+/** A reply suggested to the seller of a conversation of the messaging (L1-29). */
+export const replySuggestionSchema = z.object({ conversationId: z.string().uuid() }).strict();
+
+/**
+ * A description drafted for the listing of a property (L1-29): what the
+ * seller already wrote in the field is given as notes (the field holds 1 200
+ * characters, a pasted text is cut there).
+ */
+export const descriptionDraftSchema = z
+  .object({ propertyId: z.string().uuid(), notes: z.string().max(6_000) })
+  .strict();

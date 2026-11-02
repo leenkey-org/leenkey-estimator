@@ -18,3 +18,20 @@ export type ChatItem =
     };
 
 export type AssistantConversation = { conversationId: string | null; items: ChatItem[] };
+
+// The suggestions of the assistant (L1-29): a reply in the messaging, a
+// description at the price step (leenkey/ai/suggestions.ts).
+
+export type SuggestionError =
+  | "auth"
+  | "conditions"
+  | "invalid"
+  | "not_found"
+  | "nothing"
+  | "quota"
+  | "refused"
+  | "unavailable";
+
+export type SuggestionResult =
+  | { ok: true; data: { text: string } }
+  | { ok: false; error: SuggestionError };

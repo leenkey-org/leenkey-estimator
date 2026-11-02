@@ -328,7 +328,7 @@ function turn(replies: (Anthropic.Message | Error)[], tools: AnyTool[], logged =
     system: "Prompt.",
     tools,
     messages: [{ role: "user", content: "Bonjour" }],
-    ctx: { profileId: "p", context: "seller", stepCode: null },
+    ctx: { profileId: "p", roles: ["seller"], context: "seller", stepCode: null },
     emit: (event) => events.push(event),
     log: {
       answer: async (value) => {
@@ -488,7 +488,7 @@ describe("runTurn", () => {
         system: "Prompt.",
         tools: [],
         messages,
-        ctx: { profileId: "p", context: "seller", stepCode: null },
+        ctx: { profileId: "p", roles: ["seller"], context: "seller", stepCode: null },
         emit: (event) => events.push(event),
         log: { answer: async () => true, result: async () => true },
       });
@@ -602,6 +602,7 @@ describe("the tools of the seller", () => {
     const names = ALL_TOOLS.map((item) => item.name);
     expect(new Set(names).size).toBe(names.length);
     expect(names.sort()).toEqual([
+      "draft_listing_description",
       "get_listing_stats",
       "get_my_properties",
       "get_property_details",

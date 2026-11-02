@@ -2,13 +2,15 @@ import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import type { ModelCall } from "@/core/ai/client";
+import type { TextCall } from "@/core/ai/generate";
 
 // The model of the end-to-end tests (AI_MOCK=1, core/ai/client.ts): the same
 // answer to the same conversation, no call to the API. It plays the
 // scenarios of the tests: « description » (reads the properties and the
 // listing of the conversation, or the first that may change, proposes one of
 // two texts, not the current one, then says what happened), « prix » (5 000 €
-// less), anything else (one sentence).
+// less), anything else (one sentence). The suggestions (L1-29) give one
+// fixed text each.
 
 export const MOCK_DESCRIPTIONS = [
   "Bien au calme, proche des commerces et des transports. Description proposée par l'assistant " +
@@ -192,3 +194,22 @@ export const mockModel: ModelCall = async (request, { onText }) => {
   }
   return say(`Réponse de test de l'assistant à : ${asked.slice(0, 80)}`);
 };
+
+/** The reply suggested by the model of the tests (messaging, L1-29). */
+export const MOCK_REPLY =
+  "Bonjour, merci pour votre message. Je vérifie ce point et je reviens vers vous rapidement avec une réponse précise.";
+
+/** The description drafted by the model of the tests (price step, L1-29). */
+export const MOCK_LISTING_DESCRIPTION =
+  "Proposition de description de l'assistant de test. Le bien se compose d'un séjour, d'une cuisine " +
+  "et de chambres réparties de part et d'autre d'un dégagement.\n\nLes caractéristiques indiquées par le " +
+  "vendeur sont reprises sans rien ajouter : surface, nombre de pièces, étage, chauffage et classes du DPE.";
+
+/** The suggestions of the tests: the same text for the same kind, no call to the API. */
+export function mockText(kind: "reply_suggestion" | "listing_description"): TextCall {
+  return async () =>
+    message(
+      [text(kind === "reply_suggestion" ? MOCK_REPLY : MOCK_LISTING_DESCRIPTION)],
+      "end_turn",
+    );
+}

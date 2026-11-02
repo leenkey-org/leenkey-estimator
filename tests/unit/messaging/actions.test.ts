@@ -155,7 +155,24 @@ describe("a message in a conversation", () => {
     expect(mocks.calls[0]).toEqual({
       target: "messages",
       op: "insert",
-      values: { conversation_id: CONVERSATION, sender_id: buyer.id, body: "Bonjour" },
+      values: {
+        conversation_id: CONVERSATION,
+        sender_id: buyer.id,
+        body: "Bonjour",
+        ai_suggested: false,
+      },
+    });
+  });
+
+  it("says when it was written from a reply the assistant suggested (L1-29)", async () => {
+    mocks.answers.push(ok(row));
+    await sendMessage({ conversationId: CONVERSATION, body: "Bonjour", aiSuggested: true });
+    expect(mocks.calls[0]).toMatchObject({ values: { ai_suggested: true } });
+    expect(
+      await sendMessage({ conversationId: CONVERSATION, body: "Bonjour", aiSuggested: "oui" }),
+    ).toEqual({
+      ok: false,
+      error: "empty",
     });
   });
 

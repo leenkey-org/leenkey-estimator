@@ -11,6 +11,7 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
 import { Textarea } from "@/components/shared/textarea";
 import { UnitInput } from "@/components/shared/unit-input";
+import { DescriptionSuggestion } from "@/leenkey/ai/components/description-suggestion";
 import { formatInteger } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import {
@@ -37,6 +38,8 @@ const edits = fr.properties.edit;
 // which needs its price: without anything typed yet, « Précédent » and
 // « Enregistrer » only leave the step. Once the listing is sent (L1-14b,
 // `edit`), « Annuler » and « Enregistrer », the description required.
+// « Rédiger avec l'assistant » (L1-29) proposes a description under the
+// field; taken, it is in the field only, saved with the step.
 
 export type Valuation = {
   /** « Votre analyse de valeur du 12 octobre 2026 ». */
@@ -67,6 +70,7 @@ export function PriceStep({
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
   const next = useRef<HTMLButtonElement>(null);
+  const descriptionField = useRef<HTMLTextAreaElement>(null);
   const valuationId = useId();
   const [price, setPrice] = useState(
     initial.priceEuros === null ? "" : formatInteger(initial.priceEuros),
@@ -266,9 +270,27 @@ export function PriceStep({
           fieldErrors.description ??
           (count > LISTING_DESCRIPTION_MAX ? errors.descriptionLength : undefined)
         }
+        ref={descriptionField}
         onChange={(event) => {
           setDescription(event.target.value);
           clear("description");
+        }}
+      />
+      <DescriptionSuggestion
+        propertyId={propertyId}
+        notes={description}
+        onUse={(text) => {
+          setDescription(text);
+          clear("description");
+        }}
+        onEdit={(text) => {
+          setDescription(text);
+          clear("description");
+          requestAnimationFrame(() => {
+            const field = descriptionField.current;
+            field?.focus();
+            field?.setSelectionRange(field.value.length, field.value.length);
+          });
         }}
       />
 
