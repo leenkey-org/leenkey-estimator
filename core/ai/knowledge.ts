@@ -79,3 +79,32 @@ export async function searchKnowledge({
     })),
   };
 }
+
+/** A card of the FAQ, as the system prompt of the assistant reads it. */
+export type FaqCard = Pick<KnowledgeCard, "id" | "category" | "stepCode" | "question" | "answer">;
+
+/**
+ * Every card of an audience (Q69, option a: the whole FAQ in the system
+ * prompt), with the session of the account: the SQL function knowledge_cards
+ * checks that the audience is one of its roles. Always in the same order.
+ */
+export async function knowledgeCards(
+  audience: KnowledgeAudience,
+): Promise<{ ok: true; data: FaqCard[] } | { ok: false; error: "unavailable" }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("knowledge_cards", { p_audience: audience });
+  if (error) {
+    console.error("[ai] knowledge cards read failed", { code: error.code });
+    return { ok: false, error: "unavailable" };
+  }
+  return {
+    ok: true,
+    data: data.map((row) => ({
+      id: row.id,
+      category: row.category,
+      stepCode: row.step_code as string | null,
+      question: row.question,
+      answer: row.answer,
+    })),
+  };
+}

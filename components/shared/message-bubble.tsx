@@ -7,17 +7,21 @@ import { cn } from "@/lib/utils";
  * most, padding 12 × 14, 14 px / 1.5, its line breaks kept and a long word
  * cut. Received: white, --lk-line border, radius 6 6 6 2; sent: blue, white
  * text, radius 6 6 2 6. Meta under it, 11 px --lk-ink-3: « Thomas · 9:12 »,
- * « Vous · 9:40 ».
+ * « Vous · 9:40 ». The answers of the assistant: --lk-blue-tint (DESIGN.md
+ * 12, « Assistant »).
  */
 export function MessageBubble({
   mine,
   meta,
+  tone = "default",
   children,
   className,
 }: {
   /** Sent by the viewer: on the right, in blue. */
   mine: boolean;
   meta: ReactNode;
+  /** A received message written by the assistant. */
+  tone?: "default" | "assistant";
   children: ReactNode;
   className?: string;
 }) {
@@ -36,7 +40,9 @@ export function MessageBubble({
           "rounded-lk-md px-3.5 py-3 text-lk-compact whitespace-pre-wrap wrap-anywhere",
           mine
             ? "rounded-br-lk-xs bg-lk-blue text-white"
-            : "rounded-bl-lk-xs border border-lk-line bg-lk-surface text-lk-ink",
+            : tone === "assistant"
+              ? "rounded-bl-lk-xs border border-lk-blue-line bg-lk-blue-tint text-lk-navy"
+              : "rounded-bl-lk-xs border border-lk-line bg-lk-surface text-lk-ink",
         )}
       >
         {children}

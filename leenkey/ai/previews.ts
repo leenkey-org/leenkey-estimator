@@ -1,0 +1,35 @@
+import { z } from "zod";
+
+// What a change proposed by the assistant will do, shown before the seller
+// confirms it (ConfirmActionCard, DESIGN.md 12 « Assistant »): before and
+// after. Sent to the browser as data, read back there with these schemas.
+
+export const descriptionPreview = z.object({
+  kind: z.literal("listing_description"),
+  propertyName: z.string(),
+  before: z.string(),
+  after: z.string(),
+});
+
+export const pricePreview = z.object({
+  kind: z.literal("listing_price"),
+  propertyName: z.string(),
+  beforeEuros: z.number(),
+  afterEuros: z.number(),
+  /** The analysis of value of the property, when it has one. */
+  valuationEuros: z.number().nullable(),
+  /** Gap of the new price to the analysis of value, in %, one decimal. */
+  gapPercent: z.number().nullable(),
+});
+
+export const actionPreview = z.discriminatedUnion("kind", [descriptionPreview, pricePreview]);
+
+export type DescriptionPreview = z.infer<typeof descriptionPreview>;
+export type PricePreview = z.infer<typeof pricePreview>;
+export type ActionPreview = z.infer<typeof actionPreview>;
+
+/** The gap of a price to the analysis of value, in %, one decimal; null without one. */
+export function gapPercent(priceEuros: number, valuationEuros: number | null): number | null {
+  if (valuationEuros === null || valuationEuros <= 0) return null;
+  return Math.round(((priceEuros - valuationEuros) / valuationEuros) * 1000) / 10;
+}

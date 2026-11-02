@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { Button } from "@/components/shared/button";
 import { FilterPillButtons } from "@/components/shared/filter-pills";
 import { InlineAlert } from "@/components/shared/inline-alert";
@@ -8,7 +9,7 @@ import { NotificationItem } from "@/components/shared/notification-item";
 import { Skeleton } from "@/components/shared/skeleton";
 import type { Notifications } from "@/core/notifications/store";
 import { internalLink, type NotificationView } from "@/core/notifications/types";
-import type { Space } from "@/leenkey/navigation/spaces";
+import { ROUTES, type Space } from "@/leenkey/navigation/spaces";
 import { formatNotificationTime, parisDaysAgo } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { describeNotification, FILTERS, inFilter, type NotificationFilter } from "../catalog";
@@ -139,7 +140,7 @@ export function NotificationPanel({
           ))
         )}
       </div>
-      <div className="flex shrink-0 items-center border-t border-lk-line px-4 py-3.5">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-t border-lk-line px-4 py-3.5">
         {/* aria-disabled, not disabled: the focus stays on it once all is read. */}
         <Button
           variant="ghost"
@@ -152,6 +153,14 @@ export function NotificationPanel({
         >
           {t.markAllRead}
         </Button>
+        {/* The assistant of the seller (DESIGN.md 10.7, L1-28). */}
+        {space === "seller" ? (
+          <Button asChild variant="outline-ink" size="sm">
+            <Link href={ROUTES.assistant} onClick={close}>
+              {fr.assistant.name}
+            </Link>
+          </Button>
+        ) : null}
       </div>
     </>
   );

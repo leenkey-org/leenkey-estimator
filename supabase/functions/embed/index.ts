@@ -6,7 +6,7 @@
 // Auth and the database, whatever the gateway does):
 //   { "input": ["question", ...] }  -> { "embeddings": [[...384], ...] }
 //   { "reindex": true }             -> { "updated": n, "remaining": bool }
-// reindex, by an admin only, fills up to 20 cards without an embedding with
+// reindex, by an admin only, fills up to 8 cards without an embedding with
 // the token of the caller (RLS: an admin alone writes knowledge_base); the
 // caller calls again while some remain. No service role key here.
 // Rate limit of the calls: with the assistant (L1-38, DECISIONS 2026-10-30).
@@ -19,7 +19,9 @@ declare const Supabase: { ai: { Session: new (model: string) => Session } };
 const MAX_INPUTS = 16;
 const MAX_CHARS = 2_000;
 const MAX_BODY_BYTES = 64 * 1024;
-const REINDEX_BATCH = 20;
+// 8 cards per call: beyond about 11, the hosted runtime stops the worker
+// (WORKER_RESOURCE_LIMIT, staging, L1-27).
+const REINDEX_BATCH = 8;
 const DIMENSIONS = 384;
 
 const session = new Supabase.ai.Session("gte-small");

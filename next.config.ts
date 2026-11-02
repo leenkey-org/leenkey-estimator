@@ -24,8 +24,12 @@ const nextConfig: NextConfig = {
     // takes 4.5 MB per request.
     serverActions: { bodySizeLimit: "4mb" },
   },
-  // The share image draws the white logo, read from public/ on the server.
-  outputFileTracingIncludes: { "/api/og/**": ["./public/brand/logo-white.svg"] },
+  // The share image draws the white logo, read from public/ on the server;
+  // the assistant reads its prompts (core/ai/prompts/*.md, L1-28).
+  outputFileTracingIncludes: {
+    "/api/og/**": ["./public/brand/logo-white.svg"],
+    "/api/ai/**": ["./core/ai/prompts/**/*.md"],
+  },
   // The addresses of the V1 pages are kept, as permanent redirects
   // (CLAUDE.md section 16).
   async redirects() {

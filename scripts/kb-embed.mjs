@@ -29,7 +29,7 @@ const signIn = await fetch(`${url}/auth/v1/token?grant_type=password`, {
 if (!signIn.ok) fail(`sign in of ${email}: ${signIn.status}`);
 const token = (await signIn.json()).access_token;
 
-// The function computes 20 cards per call; the model loads on the first one:
+// The function computes 8 cards per call; the model loads on the first one:
 // up to a minute on a cold runtime.
 let total = 0;
 for (;;) {
