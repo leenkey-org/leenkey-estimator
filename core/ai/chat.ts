@@ -1,6 +1,6 @@
 import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
-import { isBadRequest, type ModelCall, type ModelRequest } from "./client";
+import { describeError, isBadRequest, type ModelCall, type ModelRequest } from "./client";
 import {
   hasThinking,
   notRun,
@@ -161,7 +161,7 @@ async function prepareCall(
     console.error("[ai] tool failed", {
       user_id: ctx.profileId,
       tool: call.name,
-      error: error instanceof Error ? error.message : String(error),
+      error: describeError(error),
     });
     return { result: errorResult(call, "The data could not be read. Try again later.") };
   }
@@ -191,7 +191,7 @@ export async function runTurn(input: TurnInput): Promise<void> {
       }
       console.error("[ai] model call failed", {
         user_id: ctx.profileId,
-        error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+        error: describeError(error),
       });
       emit({ type: "error", error: "unavailable" });
       return;

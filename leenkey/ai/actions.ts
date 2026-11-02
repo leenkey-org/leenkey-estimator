@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { describeError } from "@/core/ai/client";
 import { buildHistory, type StoredToolResult } from "@/core/ai/conversation";
 import { findConversation, logResult, readLog } from "@/core/ai/log";
 import { getProfile, missingAcceptances } from "@/core/auth/session";
@@ -95,7 +96,7 @@ async function answer(input: unknown, confirm: boolean): Promise<ToolCallResult>
         user_id: profile.id,
         entity_id: conversationId,
         tool: call.name,
-        error: error instanceof Error ? error.message : String(error),
+        error: describeError(error),
       });
       output = { updated: false, error: "The change could not be made: nothing was changed." };
     }

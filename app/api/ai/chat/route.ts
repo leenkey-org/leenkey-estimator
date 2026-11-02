@@ -1,6 +1,6 @@
 import { after } from "next/server";
 import { runTurn, type ChatEvent } from "@/core/ai/chat";
-import { isAiConfigured } from "@/core/ai/client";
+import { describeError, isAiConfigured } from "@/core/ai/client";
 import { logAnswer, logResult } from "@/core/ai/log";
 import { getProfile, missingAcceptances } from "@/core/auth/session";
 import { prepareTurn } from "@/leenkey/ai/assistant";
@@ -104,7 +104,7 @@ export async function POST(request: Request): Promise<Response> {
       console.error("[ai] turn failed", {
         user_id: profile.id,
         entity_id: turn.conversationId,
-        error: error instanceof Error ? error.message : String(error),
+        error: describeError(error),
       });
       send({ type: "error", error: "unavailable" });
     })

@@ -28,6 +28,7 @@
 - [ ] En-têtes : CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy (la CSP autorise l'origine du stockage Supabase dans `img-src` : les photos signées en viennent ; et le WebSocket de Supabase Realtime dans `connect-src`, `wss://<projet>.supabase.co` : la messagerie en dépend, L1-21)
 - [ ] Clés Google Maps restreintes au domaine (référents HTTP) et à la Maps JavaScript API, quota journalier et budget fixés ; la future CSP autorise Google Maps : `script-src` `https://maps.googleapis.com`, `img-src` `https://*.googleapis.com https://*.gstatic.com https://*.ggpht.com data:`, `font-src` `https://fonts.gstatic.com`, `style-src` `https://fonts.googleapis.com`, `connect-src` `https://*.googleapis.com`, `worker-src` `blob:`
 - [ ] Préprod : mot de passe du middleware actif, `X-Robots-Tag: noindex`, aucune variable de prod dans le projet Vercel `leenkey-v2`
+- [x] Aucune clé dans les journaux : une erreur du SDK Anthropic (ou de `fetch`) peut citer l'en-tête d'authentification ; les erreurs de l'assistant sont journalisées par leur type, leur statut et l'id de la requête seulement (`describeError`, `core/ai/client.ts`), le reste masqué (`redactSecrets`), testé. Incident du 2026-11-02 : une clé de préprod collée avec un retour à la ligne a été citée par l'erreur dans les journaux Vercel de `leenkey-v2` (rétention d'une heure) ; clé à révoquer et à remplacer (CLAUDE.md 11), correctif PR #68
 
 ## RGPD
 - [ ] Pages légales publiées (mentions, CGU, CGV, confidentialité, cookies)
