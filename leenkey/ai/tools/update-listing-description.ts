@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { AiTool } from "@/core/ai/tools/types";
 import { LISTING_DESCRIPTION_MAX, textLength } from "@/lib/validations/listing";
 import type { DescriptionPreview } from "../previews";
-import { editableListing, updateListing } from "./listing-edit";
+import { editableListing, updateListing, type UpdateOutput } from "./listing-edit";
 import { withProperty } from "./shared";
 
 // update_listing_description (SPEC-V2 section 12): replaces the description
@@ -22,8 +22,6 @@ const input = z.object({
 });
 
 type Input = z.infer<typeof input>;
-
-export type UpdateOutput = { updated: true } | { updated: false; error: string };
 
 export const updateListingDescriptionTool: AiTool<Input, UpdateOutput, DescriptionPreview> = {
   name: "update_listing_description",
@@ -65,7 +63,6 @@ export const updateListingDescriptionTool: AiTool<Input, UpdateOutput, Descripti
   async execute({ propertyId, description }, ctx) {
     const target = await editableListing(ctx.profileId, propertyId);
     if (!target.ok) return { updated: false, error: target.error };
-    const written = await updateListing(ctx.profileId, target.data.listing.id, { description });
-    return written.ok ? { updated: true } : { updated: false, error: written.error };
+    return updateListing(ctx, target.data.listing.id, { description });
   },
 };

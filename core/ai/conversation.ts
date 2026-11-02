@@ -3,14 +3,32 @@ import { z } from "zod";
 
 // The log of a conversation with the assistant (ai_messages, SPEC-V2
 // section 12) and the history sent back to the model from it. A row per
-// message of the person (with the file of the person at that moment, sent
-// as a system message after it), per answer of the model (its blocks as
-// returned, thinking included, with the model and the tokens) and per result
-// of a tool. The log only grows: the history is rebuilt the same way at each
-// call, so that the model reads the same bytes again (prompt caching) and
-// its thinking blocks stay valid (they are tied to an unchanged history).
+// message of the person (with their file at that moment, sent before it in
+// the same message: data, never instructions of Leenkey), per answer of the
+// model (its blocks as returned, thinking included, with the model and the
+// tokens) and per result of a tool. The log only grows: the history is
+// rebuilt the same way at each call, so that the model reads the same bytes
+// again (prompt caching) and its thinking blocks stay valid (they are tied to
+// an unchanged history). The person may write their own log (RLS, L1-05):
+// every row is read as data, checked and bounded in size.
 
 export type ToolStatus = "done" | "confirmed" | "declined" | "superseded" | "error";
+
+/** Sizes read back from the log; a row beyond is left out. */
+export const LOG_LIMITS = {
+  /** A message of the person (2 000 characters when sent, lib/validations/assistant.ts). */
+  message: 2_000,
+  /** The file of the person given with a message. */
+  context: 8_000,
+  /** An answer of the model, all its blocks. */
+  answer: 80_000,
+  /** A result of a tool, as the model reads it. */
+  result: 30_000,
+  /** The whole history: the oldest turns are left out beyond. */
+  history: 150_000,
+} as const;
+
+const jsonLength = (value: unknown) => JSON.stringify(value ?? null).length;
 
 const textBlock = z.object({ type: z.literal("text"), text: z.string() }).passthrough();
 const thinkingBlock = z
@@ -36,23 +54,27 @@ const assistantBlock = z.discriminatedUnion("type", [
 
 export const storedUser = z.object({
   type: z.literal("user"),
-  text: z.string(),
-  /** The file of the person when the message was sent: given to the model after it. */
-  context: z.string().nullable(),
+  text: z.string().max(LOG_LIMITS.message),
+  /** The file of the person when the message was sent: given to the model with it. */
+  context: z.string().max(LOG_LIMITS.context).nullable(),
 });
-export const storedAssistant = z.object({
-  type: z.literal("assistant"),
-  blocks: z.array(assistantBlock),
-  stopReason: z.string().nullable(),
-});
-export const storedToolResult = z.object({
-  type: z.literal("tool_result"),
-  tool_use_id: z.string().min(1).max(200),
-  name: z.string(),
-  status: z.enum(["done", "confirmed", "declined", "superseded", "error"]),
-  /** What the model reads: the output of the tool, or why it did not run. */
-  result: z.unknown(),
-});
+export const storedAssistant = z
+  .object({
+    type: z.literal("assistant"),
+    blocks: z.array(assistantBlock),
+    stopReason: z.string().nullable(),
+  })
+  .refine((answer) => jsonLength(answer.blocks) <= LOG_LIMITS.answer);
+export const storedToolResult = z
+  .object({
+    type: z.literal("tool_result"),
+    tool_use_id: z.string().min(1).max(200),
+    name: z.string().max(100),
+    status: z.enum(["done", "confirmed", "declined", "superseded", "error"]),
+    /** What the model reads: the output of the tool, or why it did not run. */
+    result: z.unknown(),
+  })
+  .refine((result) => jsonLength(result.result) <= LOG_LIMITS.result);
 
 export type StoredUser = z.infer<typeof storedUser>;
 export type StoredAssistant = z.infer<typeof storedAssistant>;
@@ -105,14 +127,30 @@ export function toolResultBlock(result: StoredToolResult): Anthropic.ToolResultB
   };
 }
 
-/** Answer to a call left without a result (a turn cut short): the model reads it did not run. */
-function notRun(toolUse: ToolUse): StoredToolResult {
+/** Answer to a call that did not run (a turn cut short, an answer refused). */
+export function notRun(toolUse: Pick<ToolUse, "id" | "name">): StoredToolResult {
   return {
     type: "tool_result",
     tool_use_id: toolUse.id,
     name: toolUse.name,
     status: "error",
     result: "Not run: the conversation went on without this action.",
+  };
+}
+
+/** An answer the model declined (stop reason refusal): never shown again nor sent back. */
+const refused = (answer: StoredAssistant) => answer.stopReason === "refusal";
+
+/** A message of the person as the model reads it: their file first, then what they wrote. */
+export function personMessage(user: StoredUser): Anthropic.MessageParam {
+  return {
+    role: "user",
+    content: user.context
+      ? [
+          { type: "text", text: user.context },
+          { type: "text", text: user.text },
+        ]
+      : user.text,
   };
 }
 
@@ -158,7 +196,15 @@ export function buildHistory(
   { maxTurns = 10, withoutThinking = false }: { maxTurns?: number; withoutThinking?: boolean } = {},
 ): History {
   const all = turnsOf(rows);
-  const kept = all.slice(-maxTurns);
+  let kept = all.slice(-maxTurns);
+  // The oldest turns left out beyond the size of a history (the current one stays).
+  const size = (turn: Turn) =>
+    turn.entries.reduce((sum, entry) => sum + jsonLength(entry.content), 0);
+  let total = kept.reduce((sum, turn) => sum + size(turn), 0);
+  while (kept.length > 1 && total > LOG_LIMITS.history) {
+    total -= size(kept[0]);
+    kept = kept.slice(1);
+  }
   const truncated = kept.length < all.length;
   const messages: Anthropic.MessageParam[] = [];
   let pending: ToolUse[] = [];
@@ -183,13 +229,10 @@ export function buildHistory(
 
     for (const entry of turn.entries) {
       if (entry.role === "user") {
-        turnMessages.push({ role: "user", content: entry.content.text });
-        if (entry.content.context) {
-          turnMessages.push({ role: "system", content: entry.content.context });
-        }
+        turnMessages.push(personMessage(entry.content));
       } else if (entry.role === "tool") {
         results.push(entry.content);
-      } else {
+      } else if (!refused(entry.content)) {
         const answers = flush(true);
         if (answers.length > 0) turnMessages.push({ role: "user", content: answers });
         const blocks = dropThinking
@@ -216,9 +259,8 @@ export function buildHistory(
       }
     }
 
-    // A former turn without an answer left (an error, or thinking alone):
-    // the person saw the error; its system message would come before the
-    // next message of the person, which the API refuses.
+    // A former turn without an answer left (an error, a refusal, or thinking
+    // alone): the person saw the error.
     if (current || turnMessages.some((message) => message.role === "assistant")) {
       messages.push(...turnMessages);
     }
@@ -270,6 +312,7 @@ export function displayItems(
   }
   const lastIndex = (role: Entry["role"]) =>
     entries.reduce((last, entry, index) => (entry.role === role ? index : last), -1);
+  // A refused answer: its text is dropped (the person saw the error), its calls never ran.
   const lastAnswer = lastIndex("assistant");
   const lastUser = lastIndex("user");
   const items: DisplayItem[] = [];
@@ -278,7 +321,7 @@ export function displayItems(
       items.push({ kind: "user", text: entry.content.text });
       return;
     }
-    if (entry.role !== "assistant") return;
+    if (entry.role !== "assistant" || refused(entry.content)) return;
     const text = entry.content.blocks
       .filter((block) => block.type === "text")
       .map((block) => block.text)

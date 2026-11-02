@@ -3,6 +3,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { isBadRequest, type ModelCall, type ModelRequest } from "./client";
 import {
   hasThinking,
+  notRun,
   toStoredBlocks,
   toolResultBlock,
   type AssistantBlock,
@@ -97,17 +98,15 @@ export function chatRequest(
   };
 }
 
+/** The history without its thinking blocks; an answer of thinking alone is left out. */
 const withoutThinking = (messages: Anthropic.MessageParam[]): Anthropic.MessageParam[] =>
-  messages.map((message) =>
-    message.role === "assistant" && Array.isArray(message.content)
-      ? {
-          ...message,
-          content: message.content.filter(
-            (block) => block.type !== "thinking" && block.type !== "redacted_thinking",
-          ),
-        }
-      : message,
-  );
+  messages.flatMap((message) => {
+    if (message.role !== "assistant" || !Array.isArray(message.content)) return [message];
+    const content = message.content.filter(
+      (block) => block.type !== "thinking" && block.type !== "redacted_thinking",
+    );
+    return content.length > 0 ? [{ ...message, content }] : [];
+  });
 
 function isAbort(error: unknown, signal: AbortSignal | undefined): boolean {
   return signal?.aborted === true || (error instanceof Error && error.name === "AbortError");
@@ -210,14 +209,16 @@ export async function runTurn(input: TurnInput): Promise<void> {
       return;
     }
 
-    if (message.stop_reason === "refusal") {
-      emit({ type: "error", error: "refused" });
-      return;
-    }
     const calls = blocks.filter((block): block is ToolUse => block.type === "tool_use");
-    // A call cut off by the length of the answer is never run.
-    if (message.stop_reason === "max_tokens") {
-      emit({ type: "done", reason: "length" });
+    // A refused answer, or one cut off by its length: its calls never run,
+    // and are answered at once (never offered to confirm later).
+    if (message.stop_reason === "refusal" || message.stop_reason === "max_tokens") {
+      for (const call of calls) await log.result(notRun(call));
+      emit(
+        message.stop_reason === "refusal"
+          ? { type: "error", error: "refused" }
+          : { type: "done", reason: "length" },
+      );
       return;
     }
     if (calls.length === 0) {

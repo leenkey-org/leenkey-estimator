@@ -25,6 +25,9 @@ test.skip(
 
 const id = "5eed1000-0000-4000-8000-000000000001";
 
+// One listing, changed in turn.
+test.describe.configure({ mode: "serial" });
+
 async function signIn(page: Page, path: string) {
   await page.goto(`/connexion?next=${encodeURIComponent(path)}`);
   await page.getByLabel("Email").fill("seller_a@test.leenkey.fr");
@@ -85,6 +88,40 @@ test("la description de l'annonce modifiée par l'assistant, après confirmation
 
   // The page behind shows it (router.refresh), and so does the page read again.
   await expect(page.getByText(proposed).first()).toBeVisible();
+  await page.goto(`/vendeur/biens/${id}/annonce`);
+  await expect(page.getByText(proposed).first()).toBeVisible();
+});
+
+test("sur la page de l'assistant en téléphone : la description confirmée, la réponse reste affichée", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page, `/assistant?bien=${id}`);
+  const thread = page.getByRole("log", { name: "Conversation avec l'assistant" });
+  const intro = page.getByText("Posez vos questions sur votre vente");
+  // A new conversation: a click before the page is hydrated does nothing, clicked again until it does.
+  await expect(async () => {
+    await page.getByRole("button", { name: "Nouvelle conversation" }).click();
+    await expect(intro).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+
+  await page.getByLabel("Votre question").fill("Réécris la description de mon annonce");
+  await page.getByRole("button", { name: "Envoyer" }).click();
+  const card = thread.getByRole("region", { name: "Modifier la description de l'annonce" });
+  const after = card
+    .getByText("Proposé", { exact: true })
+    .locator("xpath=following-sibling::div[1]");
+  await expect(after).toBeVisible();
+  const proposed = (await after.innerText()).trim();
+
+  await card.getByRole("button", { name: "Confirmer" }).click();
+  await expect(card.getByText("Modification enregistrée.")).toBeVisible();
+  const done = thread.getByText("C'est fait : votre annonce est à jour.");
+  await expect(done).toBeVisible();
+  // The page is not read again: the answer stays, and the field is free.
+  await expect(page.getByLabel("Votre question")).toBeEnabled();
+  await expect(page.getByLabel("Votre question")).toBeFocused();
+
   await page.goto(`/vendeur/biens/${id}/annonce`);
   await expect(page.getByText(proposed).first()).toBeVisible();
 });

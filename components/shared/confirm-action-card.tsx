@@ -42,14 +42,18 @@ export function ConfirmActionCard({
     <section
       aria-label={title}
       className={cn(
-        "flex w-full flex-col gap-3 rounded-lk-lg border border-lk-blue-line bg-lk-surface p-4",
+        "flex w-full flex-col gap-3 rounded-lk-xl border border-lk-blue-line bg-lk-surface p-4",
         className,
       )}
     >
-      <h3 className="flex items-center gap-2 text-lk-compact font-semibold text-lk-ink">
-        <Sparkles aria-hidden="true" className="size-4 shrink-0 text-lk-blue" />
+      {/* Named by its title (aria-label): a line of the conversation, not a section of the page. */}
+      <p
+        aria-hidden="true"
+        className="flex items-center gap-2 text-lk-compact font-semibold text-lk-ink"
+      >
+        <Sparkles className="size-4 shrink-0 text-lk-blue" />
         {title}
-      </h3>
+      </p>
       {children ? <div className="flex flex-col gap-2.5">{children}</div> : null}
       {state === "pending" ? (
         <div className="flex flex-wrap items-center gap-2">

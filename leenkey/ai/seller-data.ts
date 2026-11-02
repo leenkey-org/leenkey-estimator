@@ -6,6 +6,7 @@ import { sellerProperties, type SellerProperty } from "@/leenkey/properties/quer
 import { saleProgress } from "@/leenkey/properties/sale";
 import { propertyName } from "@/leenkey/properties/sheet";
 import { fr } from "@/lib/i18n/fr";
+import { createClient } from "@/lib/supabase/server";
 
 // What the assistant reads of the file of a seller (L1-28), with their
 // session (RLS: their own properties only): the properties, their listing,
@@ -71,6 +72,8 @@ export type SellerFile = {
   properties: SellerProperty[];
   overview: PropertyOverview[];
   plans: ActivePlan[] | null;
+  /** At least one property under a paid plan, among all of them (the daily limit). */
+  hasPaidPlan: boolean;
 };
 
 /** The properties of the seller (the most recent first) with their sale; null: unreadable. */
@@ -78,9 +81,22 @@ export async function sellerFile(profileId: string): Promise<SellerFile | null> 
   const [properties, plans] = await Promise.all([sellerProperties(profileId), activePlans()]);
   if (!properties.ok) return null;
   const shown = properties.data.slice(0, OVERVIEW_MAX);
-  const progresses = await Promise.all(shown.map((property) => saleProgress(property.id)));
-  if (progresses.some((progress) => !progress.ok)) return null;
+  const supabase = await createClient();
+  const [progresses, sales] = await Promise.all([
+    Promise.all(shown.map((property) => saleProgress(property.id))),
+    properties.data.length > 0
+      ? supabase
+          .from("sale_progress")
+          .select("plan")
+          .in(
+            "property_id",
+            properties.data.map((property) => property.id),
+          )
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (progresses.some((progress) => !progress.ok) || sales.error) return null;
   return {
+    hasPaidPlan: sales.data.some((sale) => planSummary(sale.plan, plans)?.paid === true),
     properties: properties.data,
     overview: shown.map((property, index) => {
       const progress = progresses[index];

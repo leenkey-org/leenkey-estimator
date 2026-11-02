@@ -1857,6 +1857,9 @@ export const fr = {
         "Vous avez atteint la limite de messages de l'assistant pour aujourd'hui. Elle se renouvelle à minuit. Besoin d'aide maintenant ? Écrivez à un conseiller.",
       quotaAction: "Écrire à un conseiller",
       auth: "Votre session a expiré. Reconnectez-vous pour continuer.",
+      conditions:
+        "Acceptez les conditions d'utilisation mises à jour pour continuer : rechargez la page.",
+      cut: "La réponse de l'assistant a été interrompue. Reformulez votre question si besoin.",
       retry: "Réessayer",
     },
     comingTitle: "L'assistant de l'espace acquéreur arrive",

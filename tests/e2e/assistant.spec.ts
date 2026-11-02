@@ -110,8 +110,12 @@ test("la page de l'assistant sur téléphone : depuis Ma vente, une suggestion, 
   await expect(page).toHaveTitle("Assistant · Leenkey");
   await expect(page.getByRole("heading", { level: 1, name: "Assistant Leenkey" })).toBeVisible();
 
-  await page.goto(`/assistant?nouvelle=1&bien=${property(2)}`);
-  await expect(page.getByRole("button", { name: "Que dois-je faire maintenant ?" })).toBeVisible();
+  // A new conversation: a click before the page is hydrated does nothing, clicked again until it does.
+  const suggestion = page.getByRole("button", { name: "Que dois-je faire maintenant ?" });
+  await expect(async () => {
+    await page.getByRole("button", { name: "Nouvelle conversation" }).click();
+    await expect(suggestion).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
   expect(await seriousViolations(page)).toEqual([]);
   const thread = page.getByRole("log", { name: "Conversation avec l'assistant" });
   // A click before the page is hydrated sends nothing: clicked again until it does.

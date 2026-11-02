@@ -1,10 +1,12 @@
 import type { PropertyOverview } from "./seller-data";
 
 // The file of the seller as the model reads it with each of their messages
-// (SPEC-V2 section 12: « le dossier est le contexte »), a system message
-// after the message: the day, their first name, their properties (status,
-// price, plan, step, tasks left) and the property the conversation is about.
-// Kept with the message in the log: the model reads the same text again.
+// (SPEC-V2 section 12: « le dossier est le contexte »), before the message,
+// between <dossier> tags: the day, their first name, their properties
+// (status, price, plan, step, tasks left) and the property the conversation
+// is about. Data, never instructions: what the seller typed (a title, their
+// first name) is kept on one line and cut short. Kept with the message in the
+// log: the model reads the same text again.
 
 const day = (now: Date) =>
   new Intl.DateTimeFormat("fr-FR", {
@@ -15,12 +17,17 @@ const day = (now: Date) =>
     year: "numeric",
   }).format(now);
 
+/** A value typed by the seller: one line, 120 characters at most, no tag. */
+export function typed(value: string): string {
+  return value.replace(/[<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 120);
+}
+
 const euros = (value: number) =>
   `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(value)} €`;
 
 function propertyLine(property: PropertyOverview): string {
   const parts = [
-    `- Bien ${property.propertyId} : « ${property.name} », ${property.city} (${property.postalCode}).`,
+    `- Bien ${property.propertyId} : « ${typed(property.name)} », ${typed(property.city)} (${typed(property.postalCode)}).`,
   ];
   parts.push(
     property.listingStatus
@@ -59,9 +66,10 @@ export function sellerContextText({
   propertyId: string | null;
 }): string {
   const lines = [
-    "Dossier du vendeur, fourni par Leenkey (pas par le vendeur) au moment de son message :",
+    "<dossier>",
+    "Dossier du vendeur au moment de son message, résumé par Leenkey (les noms et titres sont ceux qu'il a saisis) :",
     `- Date : ${day(now)}.`,
-    `- Prénom : ${firstName ?? "non renseigné"}.`,
+    `- Prénom : ${firstName ? typed(firstName) : "non renseigné"}.`,
   ];
   if (overview.length === 0) {
     lines.push("- Aucun bien pour l'instant : il peut en créer un depuis « Ma vente ».");
@@ -72,7 +80,11 @@ export function sellerContextText({
     lines.push(...overview.map(propertyLine));
   }
   const about = propertyId ? overview.find((property) => property.propertyId === propertyId) : null;
-  if (about)
-    lines.push(`- La conversation porte sur le bien ${about.propertyId} (« ${about.name} »).`);
+  if (about) {
+    lines.push(
+      `- La conversation porte sur le bien ${about.propertyId} (« ${typed(about.name)} »).`,
+    );
+  }
+  lines.push("</dossier>");
   return lines.join("\n");
 }

@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { runTurn, type ChatEvent } from "@/core/ai/chat";
 import { isAiConfigured } from "@/core/ai/client";
 import { logAnswer, logResult } from "@/core/ai/log";
@@ -55,56 +56,61 @@ export async function POST(request: Request): Promise<Response> {
   }
   const turn = prepared.data;
 
-  const abort = new AbortController();
-  request.signal.addEventListener("abort", () => abort.abort());
   const encoder = new TextEncoder();
+  let output: ReadableStreamDefaultController<Uint8Array> | null = null;
+  // The person may leave (a tab closed): the turn goes on to its end and is
+  // logged, its tokens with it; only the stream stops.
+  const send = (event: StreamEvent) => {
+    try {
+      output?.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+    } catch {
+      output = null;
+    }
+  };
+  const close = () => {
+    try {
+      output?.close();
+    } catch {
+      // Closed by the person leaving.
+    }
+  };
 
   const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      const send = (event: StreamEvent) => {
-        try {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
-        } catch {
-          // The person left: the turn goes on to its end, logged.
-        }
-      };
+    start(controller) {
+      output = controller;
       send({ type: "conversation", id: turn.conversationId });
-      try {
-        await runTurn({
-          model: turn.model,
-          callModel: turn.callModel,
-          system: turn.system,
-          tools: turn.tools,
-          messages: turn.messages,
-          ctx: turn.ctx,
-          signal: abort.signal,
-          emit: send,
-          log: {
-            answer: async (answer) =>
-              (await logAnswer(turn.supabase, turn.conversationId, answer)) === "ok",
-            result: async (result) =>
-              (await logResult(turn.supabase, turn.conversationId, result)) === "ok",
-          },
-        });
-      } catch (error) {
-        console.error("[ai] turn failed", {
-          user_id: profile.id,
-          entity_id: turn.conversationId,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        send({ type: "error", error: "unavailable" });
-      } finally {
-        try {
-          controller.close();
-        } catch {
-          // Already closed by the person leaving.
-        }
-      }
     },
     cancel() {
-      abort.abort();
+      output = null;
     },
   });
+
+  const run = runTurn({
+    model: turn.model,
+    callModel: turn.callModel,
+    system: turn.system,
+    tools: turn.tools,
+    messages: turn.messages,
+    ctx: turn.ctx,
+    emit: send,
+    log: {
+      answer: async (answer) =>
+        (await logAnswer(turn.supabase, turn.conversationId, answer)) === "ok",
+      result: async (result) =>
+        (await logResult(turn.supabase, turn.conversationId, result)) === "ok",
+    },
+  })
+    .catch((error: unknown) => {
+      console.error("[ai] turn failed", {
+        user_id: profile.id,
+        entity_id: turn.conversationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      send({ type: "error", error: "unavailable" });
+    })
+    .finally(close);
+  // Kept alive by the platform after the response, should the person leave.
+  after(() => run);
 
   return new Response(stream, {
     headers: {

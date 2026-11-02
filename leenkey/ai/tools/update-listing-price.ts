@@ -3,8 +3,7 @@ import { z } from "zod";
 import type { AiTool } from "@/core/ai/tools/types";
 import { LISTING_PRICE_MAX_EUROS } from "@/lib/validations/listing";
 import { gapPercent, type PricePreview } from "../previews";
-import { editableListing, updateListing } from "./listing-edit";
-import type { UpdateOutput } from "./update-listing-description";
+import { editableListing, updateListing, type UpdateOutput } from "./listing-edit";
 import { withProperty } from "./shared";
 
 // update_listing_price (SPEC-V2 section 12): changes the price of the
@@ -61,9 +60,6 @@ export const updateListingPriceTool: AiTool<Input, UpdateOutput, PricePreview> =
   async execute({ propertyId, priceEuros }, ctx) {
     const target = await editableListing(ctx.profileId, propertyId);
     if (!target.ok) return { updated: false, error: target.error };
-    const written = await updateListing(ctx.profileId, target.data.listing.id, {
-      price_cents: priceEuros * 100,
-    });
-    return written.ok ? { updated: true } : { updated: false, error: written.error };
+    return updateListing(ctx, target.data.listing.id, { priceCents: priceEuros * 100 });
   },
 };

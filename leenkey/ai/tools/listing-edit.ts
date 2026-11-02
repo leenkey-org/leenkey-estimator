@@ -1,6 +1,7 @@
 import "server-only";
 import type { SellerListing, SellerProperty } from "@/leenkey/properties/queries";
 import { propertyName } from "@/leenkey/properties/sheet";
+import type { ToolContext } from "@/core/ai/tools/types";
 import { createClient } from "@/lib/supabase/server";
 import { PROPERTY_NOT_FOUND, sellerPropertyById } from "../seller-data";
 
@@ -39,30 +40,47 @@ export async function editableListing(
   return { ok: true, data: { property, listing, name: propertyName(property) } };
 }
 
-export type ListingUpdate = { description: string } | { price_cents: number };
+export type ListingUpdate = { description: string } | { priceCents: number };
 
-/** The update, with the session of the seller; false when nothing was written. */
+/** What a tool that changes the listing answers. */
+export type UpdateOutput =
+  | { updated: true }
+  | { updated: false; error: string }
+  /** The call was already answered (cancelled, replaced, confirmed elsewhere): nothing written. */
+  | { updated: false; answered: true };
+
+/**
+ * The change confirmed by the seller, with their session, and its result in
+ * the log, in one transaction (SQL ai_listing_update): the listing changes
+ * only with its result logged, once. Without the call confirmed
+ * (ToolContext.call), nothing is written.
+ */
 export async function updateListing(
-  profileId: string,
+  ctx: ToolContext,
   listingId: string,
   values: ListingUpdate,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<UpdateOutput> {
+  if (!ctx.call)
+    return { updated: false, error: "Not confirmed by the seller: nothing was written." };
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("listings")
-    .update(values)
-    .eq("id", listingId)
-    .select("id")
-    .maybeSingle();
-  if (error) {
+  const { error } = await supabase.rpc("ai_listing_update", {
+    p_conversation_id: ctx.call.conversationId,
+    p_tool_use_id: ctx.call.toolUseId,
+    p_tool_name: ctx.call.name,
+    p_listing_id: listingId,
+    ...("description" in values
+      ? { p_description: values.description }
+      : { p_price_cents: values.priceCents }),
+  });
+  if (!error) return { updated: true };
+  if (error.code === "23505") return { updated: false, answered: true };
+  if (error.code !== "P0002" && error.code !== "42501") {
     console.error("[ai] listing update failed", {
-      user_id: profileId,
+      user_id: ctx.profileId,
       entity_id: listingId,
       code: error.code,
     });
-    return { ok: false, error: "The listing could not be changed. Nothing was written." };
+    return { updated: false, error: "The listing could not be changed. Nothing was written." };
   }
-  if (!data)
-    return { ok: false, error: "The listing can no longer be changed. Nothing was written." };
-  return { ok: true };
+  return { updated: false, error: "The listing can no longer be changed. Nothing was written." };
 }

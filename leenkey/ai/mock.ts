@@ -22,11 +22,23 @@ const detailsDescription = z.object({ listing: z.object({ description: z.string(
 /** The text of the last message of the person, and what followed it. */
 function currentTurn(messages: readonly Anthropic.MessageParam[]) {
   let start = -1;
+  let texts: string[] = [];
   messages.forEach((message, index) => {
-    if (message.role === "user" && typeof message.content === "string") start = index;
+    if (message.role !== "user") return;
+    if (typeof message.content === "string") {
+      start = index;
+      texts = [message.content];
+    } else if (message.content.every((block) => block.type === "text")) {
+      start = index;
+      texts = message.content.flatMap((block) => (block.type === "text" ? [block.text] : []));
+    }
   });
-  const text = start === -1 ? "" : String(messages[start].content);
-  return { text, after: messages.slice(start + 1) };
+  // The file of the seller first, then what they wrote.
+  return {
+    text: texts.at(-1) ?? "",
+    file: texts.length > 1 ? texts[0] : "",
+    after: messages.slice(start + 1),
+  };
 }
 
 /** The last result of a tool in the turn, with the name of its call. */
@@ -121,16 +133,12 @@ function call(name: string, input: Record<string, unknown>): Anthropic.ContentBl
 }
 
 /** The property the conversation is about, as the file of the seller names it. */
-function conversationProperty(messages: readonly Anthropic.MessageParam[]): string | null {
-  for (const message of [...messages].reverse()) {
-    if (message.role !== "system" || typeof message.content !== "string") continue;
-    return /La conversation porte sur le bien ([0-9a-f-]{36})/.exec(message.content)?.[1] ?? null;
-  }
-  return null;
+function conversationProperty(file: string): string | null {
+  return /La conversation porte sur le bien ([0-9a-f-]{36})/.exec(file)?.[1] ?? null;
 }
 
 export const mockModel: ModelCall = async (request, { onText }) => {
-  const { text: asked, after } = currentTurn(request.messages);
+  const { text: asked, file, after } = currentTurn(request.messages);
   const result = lastResult(after);
   const say = (value: string) => {
     onText(value);
@@ -143,7 +151,7 @@ export const mockModel: ModelCall = async (request, { onText }) => {
     const tool = wantsDescription ? "update_listing_description" : "update_listing_price";
     if (!result) return message([call("get_my_properties", {})], "tool_use");
     if (result.name === "get_my_properties") {
-      const property = firstListing(result.content, conversationProperty(request.messages));
+      const property = firstListing(result.content, conversationProperty(file));
       if (!property || property.priceEuros === null) {
         return say("Vous n'avez pas encore d'annonce à modifier.");
       }

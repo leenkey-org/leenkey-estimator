@@ -29,7 +29,7 @@ export const HISTORY_TURNS = 10;
 /** What the model reads of an action the person did not confirm. */
 export const DECLINED = "The seller cancelled this action: nothing was changed.";
 export const SUPERSEDED =
-  "The seller wrote a new message instead of confirming: nothing was changed.";
+  "Not run: the seller wrote a new message before answering this action; nothing was changed.";
 
 export type PreparedTurn = {
   conversationId: string;
@@ -46,10 +46,43 @@ export type PrepareError =
   | { error: "not_found" | "pending" | "nothing" | "unavailable" | "invalid" }
   | { error: "quota"; limit: number };
 
+type Prepared = { ok: true; data: PreparedTurn } | ({ ok: false } & PrepareError);
+
+/**
+ * Every turn counts against the limit of the day, a message as the turn
+ * going on after confirmations (`resume`): each one calls the model. Counted
+ * once the turn is known to be valid, before anything is written.
+ */
+async function consumeQuota(
+  supabase: Supabase,
+  profile: SessionProfile,
+  hasPaidProperty: boolean,
+): Promise<{ ok: true } | ({ ok: false } & PrepareError)> {
+  const limit = dailyLimit(profile.roles, { hasPaidProperty });
+  // No limit (an admin): the largest the function takes, the turn still counted.
+  const quota = await supabase.rpc("ai_quota_consume", { p_limit: limit ?? 2_147_483_647 });
+  if (quota.error) {
+    console.error("[ai] quota failed", { user_id: profile.id, code: quota.error.code });
+    return { ok: false, error: "unavailable" };
+  }
+  if (!quota.data[0]?.allowed) return { ok: false, error: "quota", limit: limit ?? 0 };
+  return { ok: true };
+}
+
+/** The last message of a history holds results of tools not answered yet. */
+const endsWithResults = (messages: readonly Anthropic.MessageParam[]) => {
+  const last = messages.at(-1);
+  return (
+    last?.role === "user" &&
+    Array.isArray(last.content) &&
+    last.content.some((block) => block.type === "tool_result")
+  );
+};
+
 export async function prepareTurn(
   profile: SessionProfile,
   request: ChatRequest,
-): Promise<{ ok: true; data: PreparedTurn } | ({ ok: false } & PrepareError)> {
+): Promise<Prepared> {
   const supabase = await createClient();
   const context = request.context;
 
@@ -63,85 +96,13 @@ export async function prepareTurn(
     about = found.data.entityId;
   }
 
-  const cards = await knowledgeCards(context);
-  if (!cards.ok) return { ok: false, error: "unavailable" };
+  const [cards, file] = await Promise.all([knowledgeCards(context), sellerFile(profile.id)]);
+  if (!cards.ok || !file) return { ok: false, error: "unavailable" };
 
-  if ("message" in request) {
-    const file = await sellerFile(profile.id);
-    if (!file) return { ok: false, error: "unavailable" };
-    const propertyId = about;
-    if (propertyId && !file.properties.some((property) => property.id === propertyId)) {
-      // Deleted since the conversation opened: about none of them now.
-      if (request.conversationId) about = null;
-      else return { ok: false, error: "invalid" };
-    }
-
-    // The limit of the day, before anything is written.
-    const limit = dailyLimit(profile.roles, {
-      hasPaidProperty: file.overview.some((property) => property.plan?.paid === true),
-    });
-    // No limit (an admin): the largest the function takes, the message still counted.
-    const quota = await supabase.rpc("ai_quota_consume", { p_limit: limit ?? 2_147_483_647 });
-    if (quota.error) {
-      console.error("[ai] quota failed", { user_id: profile.id, code: quota.error.code });
-      return { ok: false, error: "unavailable" };
-    }
-    if (!quota.data[0]?.allowed) return { ok: false, error: "quota", limit: limit ?? 0 };
-
-    if (!conversationId) {
-      conversationId = await openConversation(supabase, profile.id, context, about);
-      if (!conversationId) return { ok: false, error: "unavailable" };
-    } else {
-      // Actions left waiting: the person wrote instead of answering them.
-      const log = await readLog(supabase, conversationId);
-      if (!log.ok) return { ok: false, error: "unavailable" };
-      for (const call of buildHistory(log.data, { maxTurns: 1 }).pending) {
-        const result: StoredToolResult = {
-          type: "tool_result",
-          tool_use_id: call.id,
-          name: call.name,
-          status: "superseded",
-          result: SUPERSEDED,
-        };
-        if ((await logResult(supabase, conversationId, result)) === "failed") {
-          return { ok: false, error: "unavailable" };
-        }
-      }
-    }
-
-    const contextText = sellerContextText({
-      firstName: profile.firstName,
-      now: new Date(),
-      overview: file.overview,
-      total: file.properties.length,
-      propertyId: about,
-    });
-    const logged = await logUser(supabase, conversationId, {
-      type: "user",
-      text: request.message,
-      context: contextText,
-    });
-    if (logged !== "ok") return { ok: false, error: "unavailable" };
-  }
-
-  if (!conversationId) return { ok: false, error: "not_found" };
-  const log = await readLog(supabase, conversationId);
-  if (!log.ok) return { ok: false, error: "unavailable" };
-  const history = buildHistory(log.data, { maxTurns: HISTORY_TURNS });
-  if (history.pending.length > 0) return { ok: false, error: "pending" };
-  // A message: the history ends with it (and the file after it). Going on
-  // after confirmations: it ends with their results, not yet answered.
-  const last = history.messages.at(-1);
-  const ready =
-    "resume" in request
-      ? last?.role === "user" && Array.isArray(last.content)
-      : last?.role === "system" || last?.role === "user";
-  if (!ready) return { ok: false, error: "nothing" };
-
-  return {
+  const ready = (history: ReturnType<typeof buildHistory>): Prepared => ({
     ok: true,
     data: {
-      conversationId,
+      conversationId: conversationId ?? "",
       supabase,
       model: MODELS.fast,
       callModel: isAiMock() ? mockModel : streamModel,
@@ -150,5 +111,66 @@ export async function prepareTurn(
       messages: history.messages,
       ctx: { profileId: profile.id, context, stepCode: null },
     },
-  };
+  });
+
+  if ("resume" in request) {
+    // Going on after confirmations: the history ends with their results, not yet answered.
+    if (!conversationId) return { ok: false, error: "not_found" };
+    const log = await readLog(supabase, conversationId);
+    if (!log.ok) return { ok: false, error: "unavailable" };
+    const history = buildHistory(log.data, { maxTurns: HISTORY_TURNS });
+    if (history.pending.length > 0) return { ok: false, error: "pending" };
+    if (!endsWithResults(history.messages)) return { ok: false, error: "nothing" };
+    const quota = await consumeQuota(supabase, profile, file.hasPaidPlan);
+    return quota.ok ? ready(history) : quota;
+  }
+
+  if (about && !file.properties.some((property) => property.id === about)) {
+    // Deleted since the conversation opened: about none of them now.
+    if (request.conversationId) about = null;
+    else return { ok: false, error: "invalid" };
+  }
+  const quota = await consumeQuota(supabase, profile, file.hasPaidPlan);
+  if (!quota.ok) return quota;
+
+  if (!conversationId) {
+    conversationId = await openConversation(supabase, profile.id, context, about);
+    if (!conversationId) return { ok: false, error: "unavailable" };
+  } else {
+    // Actions left waiting: the person wrote instead of answering them.
+    const log = await readLog(supabase, conversationId);
+    if (!log.ok) return { ok: false, error: "unavailable" };
+    for (const call of buildHistory(log.data, { maxTurns: 1 }).pending) {
+      const result: StoredToolResult = {
+        type: "tool_result",
+        tool_use_id: call.id,
+        name: call.name,
+        status: "superseded",
+        result: SUPERSEDED,
+      };
+      if ((await logResult(supabase, conversationId, result)) === "failed") {
+        return { ok: false, error: "unavailable" };
+      }
+    }
+  }
+
+  const contextText = sellerContextText({
+    firstName: profile.firstName,
+    now: new Date(),
+    overview: file.overview,
+    total: file.properties.length,
+    propertyId: about,
+  });
+  const logged = await logUser(supabase, conversationId, {
+    type: "user",
+    text: request.message,
+    context: contextText,
+  });
+  if (logged !== "ok") return { ok: false, error: "unavailable" };
+
+  const log = await readLog(supabase, conversationId);
+  if (!log.ok) return { ok: false, error: "unavailable" };
+  const history = buildHistory(log.data, { maxTurns: HISTORY_TURNS });
+  if (history.pending.length > 0) return { ok: false, error: "pending" };
+  return ready(history);
 }

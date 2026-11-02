@@ -13,6 +13,12 @@ export type ToolContext = {
   context: AiContext;
   /** The step of the sale being talked about, when there is one. */
   stepCode: string | null;
+  /**
+   * The call the person confirmed (a tool that writes, run by the action of
+   * confirmation): the tool writes its result in the log with its change, in
+   * one transaction, so that a call is answered once. Absent: nothing written.
+   */
+  call?: { conversationId: string; toolUseId: string; name: string };
 };
 
 /**

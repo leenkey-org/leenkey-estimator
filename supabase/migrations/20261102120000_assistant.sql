@@ -17,6 +17,14 @@
 --    same bytes at each call (prompt caching).
 -- 3. One result per call of a tool in the log (ai_messages): a confirmation
 --    clicked twice, or in two tabs, is written once.
+-- 4. ai_listing_update: a change of a listing the seller confirmed
+--    (update_listing_description, update_listing_price) and its result in the
+--    log, in one transaction, with the rights of the seller (security
+--    invoker: RLS and triggers of listings and ai_messages). The listing
+--    changes only if its result is logged, once; a call already answered
+--    (cancelled, replaced by a new message, confirmed in another tab) or a
+--    listing that may no longer change (sold, suspended, someone else's)
+--    leaves both as they were.
 
 create function public.ai_quota_consume(p_limit integer)
 returns table (allowed boolean, used integer)
@@ -85,3 +93,36 @@ grant execute on function public.knowledge_cards(text) to authenticated;
 create unique index ai_messages_tool_result_idx
   on public.ai_messages (conversation_id, (content ->> 'tool_use_id'))
   where role = 'tool';
+
+create function public.ai_listing_update(
+  p_conversation_id uuid,
+  p_tool_use_id text,
+  p_tool_name text,
+  p_listing_id uuid,
+  p_description text default null,
+  p_price_cents bigint default null
+) returns void
+language plpgsql volatile security invoker set search_path = '' as $$
+declare
+  v_id uuid;
+begin
+  if (p_description is null) = (p_price_cents is null) then
+    raise exception 'ai_listing_update: a description or a price' using errcode = '22023';
+  end if;
+  insert into public.ai_messages (conversation_id, role, content)
+  values (p_conversation_id, 'tool', jsonb_build_object(
+    'type', 'tool_result', 'tool_use_id', p_tool_use_id, 'name', p_tool_name,
+    'status', 'confirmed', 'result', jsonb_build_object('updated', true)));
+  update public.listings
+     set description = coalesce(p_description, description),
+         price_cents = coalesce(p_price_cents, price_cents)
+   where id = p_listing_id and deleted_at is null and status not in ('sold', 'suspended')
+  returning id into v_id;
+  if v_id is null then
+    raise exception 'ai_listing_update: listing not changed' using errcode = 'P0002';
+  end if;
+end;
+$$;
+
+revoke execute on function public.ai_listing_update(uuid, text, text, uuid, text, bigint) from public, anon;
+grant execute on function public.ai_listing_update(uuid, text, text, uuid, text, bigint) to authenticated;

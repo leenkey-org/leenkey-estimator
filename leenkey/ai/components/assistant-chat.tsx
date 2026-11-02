@@ -20,7 +20,7 @@ import type { ActionState, AssistantConversation, ChatItem } from "../types";
 
 const t = fr.assistant;
 
-type ChatError = "unavailable" | "refused" | "quota" | "auth";
+type ChatError = "unavailable" | "refused" | "quota" | "auth" | "conditions" | "cut";
 
 const gapFormat = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 1,
@@ -69,7 +69,11 @@ function ActionContent({ preview }: { preview: ActionPreview | null }) {
   );
 }
 
-const ERROR_OF: Record<string, ChatError> = { quota: "quota", auth: "auth", conditions: "auth" };
+const ERROR_OF: Record<string, ChatError> = {
+  quota: "quota",
+  auth: "auth",
+  conditions: "conditions",
+};
 
 /**
  * The conversation with the assistant (SPEC-V2 section 12, DESIGN.md 12
@@ -89,7 +93,11 @@ export function AssistantChat({
   /** The property the conversation is about, for a new conversation. */
   propertyId: string | null;
   initial: AssistantConversation;
-  /** panel: the thread scrolls inside the panel; page: with the page, the field kept at the bottom. */
+  /**
+   * panel: the thread scrolls inside the panel, and the page behind is read
+   * again after a change; page: the thread scrolls with the page, the field
+   * kept at the bottom.
+   */
   layout: "panel" | "page";
   className?: string;
 }) {
@@ -106,12 +114,18 @@ export function AssistantChat({
   const end = useRef<HTMLDivElement>(null);
   const field = useRef<HTMLTextAreaElement>(null);
   const errorId = `${useId()}-error`;
+  /** The request of the stream, stopped when the conversation is closed (the turn goes on, logged). */
+  const request = useRef<AbortController | null>(null);
+  /** What the stream of this turn wrote, removed when the model declines. */
+  const written = useRef<string[]>([]);
 
   const newId = () => `local-${(next.current += 1)}`;
 
   useEffect(() => {
     end.current?.scrollIntoView({ block: "end" });
   }, [items, reading, error]);
+
+  useEffect(() => () => request.current?.abort(), []);
 
   const setState = (toolCallId: string, state: ActionState) =>
     setItems((current) =>
@@ -137,6 +151,7 @@ export function AssistantChat({
       } else {
         const created = newId();
         writing.current = created;
+        written.current.push(created);
         setItems((current) => [...current, { id: created, kind: "assistant", text: event.delta }]);
       }
     } else if (event.type === "tool") {
@@ -157,27 +172,40 @@ export function AssistantChat({
           preview: preview.success ? preview.data : null,
         },
       ]);
+    } else if (event.type === "done") {
+      if (event.reason === "length" || event.reason === "limit") setError("cut");
     } else if (event.type === "error") {
+      if (event.error === "refused") {
+        // The text written before the model declined is not an answer.
+        const dropped = new Set(written.current);
+        setItems((current) => current.filter((item) => !dropped.has(item.id)));
+      }
       setError(event.error === "refused" ? "refused" : "unavailable");
     }
   }
 
-  async function stream(body: Record<string, unknown>) {
+  /** One turn streamed; "rejected": refused before the stream (nothing written by the server). */
+  async function stream(body: Record<string, unknown>): Promise<"streamed" | "rejected"> {
     setStreaming(true);
     setError(null);
     writing.current = null;
+    written.current = [];
+    const controller = new AbortController();
+    request.current = controller;
+    let ended = false;
     try {
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
+        signal: controller.signal,
       });
       if (!response.ok || !response.body) {
         const data: unknown = await response.json().catch(() => null);
         const code =
           typeof data === "object" && data !== null && "error" in data ? String(data.error) : "";
         setError(response.status === 401 ? "auth" : (ERROR_OF[code] ?? "unavailable"));
-        return;
+        return "rejected";
       }
       const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
       let buffer = "";
@@ -186,10 +214,17 @@ export function AssistantChat({
         if (done) break;
         const { events, rest } = readEvents(buffer + value);
         buffer = rest;
-        events.forEach(onEvent);
+        for (const event of events) {
+          if (event.type === "done" || event.type === "error") ended = true;
+          onEvent(event);
+        }
       }
+      // Cut without its end (the connection lost): said, never silent.
+      if (!ended) setError("unavailable");
+      return "streamed";
     } catch {
-      setError("unavailable");
+      if (!controller.signal.aborted) setError("unavailable");
+      return "streamed";
     } finally {
       writing.current = null;
       setReading(false);
@@ -197,9 +232,10 @@ export function AssistantChat({
     }
   }
 
-  function send(text: string) {
+  async function send(text: string) {
     const message = text.trim();
-    if (!message || streaming) return;
+    if (!message || streaming || answering) return;
+    const before = items;
     setDraft("");
     // A change left waiting: the person wrote instead (nothing changes).
     setItems((current) => [
@@ -210,16 +246,22 @@ export function AssistantChat({
       ),
       { id: newId(), kind: "user", text: message },
     ]);
-    void stream({
+    field.current?.focus();
+    const outcome = await stream({
       context,
       conversationId,
       ...(conversationId ? {} : { propertyId }),
       message,
     });
+    // Refused before anything was written (the limit of the day): as before, the text kept.
+    if (outcome === "rejected") {
+      setItems(before);
+      setDraft(message);
+    }
   }
 
   async function answer(toolCallId: string, confirm: boolean) {
-    if (!conversationId || answering) return;
+    if (!conversationId || answering || streaming) return;
     setAnswering(toolCallId);
     setError(null);
     const result = await (confirm ? confirmToolCall : declineToolCall)({
@@ -227,18 +269,20 @@ export function AssistantChat({
       toolCallId,
     }).catch(() => null);
     setAnswering(null);
+    // The card gives way to its state: the focus goes back to the field.
+    field.current?.focus();
     if (!result) {
       setError("unavailable");
       return;
     }
     if (!result.ok) {
       if (result.error === "not_found") setState(toolCallId, "superseded");
-      else setError(result.error === "auth" ? "auth" : "unavailable");
+      else setError(ERROR_OF[result.error] ?? "unavailable");
       return;
     }
     setState(toolCallId, result.data.outcome);
-    // The page behind shows the change (the panel stays open).
-    if (result.data.outcome === "confirmed") router.refresh();
+    // The page behind the panel shows the change.
+    if (result.data.outcome === "confirmed" && layout === "panel") router.refresh();
     if (result.data.remaining === 0) await stream({ context, conversationId, resume: true });
   }
 
@@ -267,7 +311,7 @@ export function AssistantChat({
                       variant="secondary"
                       size="sm"
                       disabled={streaming}
-                      onClick={() => send(suggestion)}
+                      onClick={() => void send(suggestion)}
                     >
                       {suggestion}
                     </Button>
@@ -326,7 +370,7 @@ export function AssistantChat({
         <div className="flex flex-col gap-2 border-t border-lk-line bg-lk-surface px-3 pt-2.5">
           {errorText ? (
             <InlineAlert
-              tone={error === "quota" ? "warning" : "danger"}
+              tone={error === "quota" || error === "cut" ? "warning" : "danger"}
               action={
                 error === "quota" ? (
                   <Link
