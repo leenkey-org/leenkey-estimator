@@ -16,6 +16,7 @@ import { ROUTES } from "@/leenkey/navigation/spaces";
 import { RecentConversations } from "@/leenkey/messaging/components/recent-conversations";
 import { PropertyList } from "@/leenkey/properties/components/property-list";
 import { SellerHeader } from "@/leenkey/properties/components/seller-header";
+import { AssistantHeaderLink } from "@/leenkey/ai/components/assistant-header-link";
 import { TaskDoneButton } from "@/leenkey/properties/components/task-done-button";
 import {
   chooseProperty,
@@ -161,12 +162,11 @@ export default async function SellerHomePage({ searchParams }: Props) {
     <SellerHeader
       greeting={fr.spaces.greeting(profile.firstName)}
       bell={
-        <SpaceNotificationBell
-          roles={profile.roles}
-          profileId={profile.id}
-          tone="dark"
-          className="md:hidden"
-        />
+        // The assistant beside the bell on a phone (Q26); from 768 px, AssistantFab.
+        <div className="flex shrink-0 items-center gap-2 md:hidden">
+          <AssistantHeaderLink propertyId={property.id} />
+          <SpaceNotificationBell roles={profile.roles} profileId={profile.id} tone="dark" />
+        </div>
       }
       choices={properties.map((item) => ({
         id: item.id,

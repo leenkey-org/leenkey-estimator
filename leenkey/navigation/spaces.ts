@@ -28,6 +28,9 @@ export const ROUTES = {
   /** The buying project and its financing (L1-25). */
   buyerProfile: "/acquereur/profil",
   favourites: "/acquereur/favoris",
+  assistant: "/assistant",
+  /** How the assistant uses artificial intelligence (L1-43). */
+  aiPolicy: "/intelligence-artificielle",
   messages: "/messages",
   account: "/compte",
   notificationSettings: "/compte/notifications",

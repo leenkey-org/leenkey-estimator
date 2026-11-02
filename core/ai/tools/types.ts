@@ -15,11 +15,36 @@ export type ToolContext = {
   stepCode: string | null;
 };
 
-export type AiTool<Input, Output> = {
+/**
+ * The input as the model sees it (JSON Schema, strict: every property
+ * required, nothing else). Written next to the Zod schema, which stays the
+ * check before any execution (tests/unit/ai: both name the same fields).
+ */
+export type ToolInputSchema = {
+  type: "object";
+  properties: Record<string, unknown>;
+  required: string[];
+  additionalProperties: false;
+};
+
+/** What a tool to confirm will do, shown before the person confirms (ConfirmActionCard). */
+export type ToolPreview<Preview> = { ok: true; data: Preview } | { ok: false; error: string };
+
+export type AiTool<Input, Output, Preview = never> = {
   name: string;
   description: string;
   input: z.ZodType<Input>;
+  /** Absent: the tool is not offered to the model (search_knowledge, Q69). */
+  inputSchema?: ToolInputSchema;
   requiresConfirmation: boolean;
   contexts: readonly AiContext[];
+  /** Tools to confirm: the change, before and after, read with the session of the person. */
+  preview?(input: Input, ctx: ToolContext): Promise<ToolPreview<Preview>>;
   execute(input: Input, ctx: ToolContext): Promise<Output>;
 };
+
+/**
+ * Any tool of a registry (methods take their parameters bivariantly): the
+ * loop gives execute only what the Zod schema of the tool accepted.
+ */
+export type AnyAiTool = AiTool<unknown, unknown, unknown>;

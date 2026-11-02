@@ -1,0 +1,33 @@
+import Link from "next/link";
+import { Sparkles } from "lucide-react";
+import { iconButtonVariants } from "@/components/shared/icon-button";
+import { ROUTES } from "@/leenkey/navigation/spaces";
+import { fr } from "@/lib/i18n/fr";
+import { cn } from "@/lib/utils";
+
+/**
+ * The assistant in the header of « Ma vente » on a phone (DESIGN.md 10.4,
+ * Q26: beside the bell): an IconButton on-dark, Sparkles, to the page
+ * /assistant about the property shown. From 768 px, AssistantFab.
+ */
+export function AssistantHeaderLink({
+  propertyId,
+  className,
+}: {
+  propertyId: string | null;
+  className?: string;
+}) {
+  return (
+    <Link
+      href={propertyId ? `${ROUTES.assistant}?bien=${propertyId}` : ROUTES.assistant}
+      aria-label={fr.assistant.open}
+      className={cn(
+        iconButtonVariants({ variant: "on-dark" }),
+        "inline-flex items-center justify-center focus-visible:outline-white",
+        className,
+      )}
+    >
+      <Sparkles aria-hidden="true" />
+    </Link>
+  );
+}

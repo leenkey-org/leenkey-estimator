@@ -1807,6 +1807,64 @@ export const fr = {
       text: "L'annonce a peut-être été vendue ou retirée par son propriétaire.",
     },
   },
+  // The assistant (L1-28, SPEC-V2 section 12, DESIGN.md 10.5 and 12).
+  assistant: {
+    name: "Assistant Leenkey",
+    metaTitle: "Assistant · Leenkey",
+    open: "Ouvrir l'assistant Leenkey",
+    close: "Fermer l'assistant",
+    newConversation: "Nouvelle conversation",
+    thread: "Conversation avec l'assistant",
+    you: "Vous",
+    intro:
+      "Posez vos questions sur votre vente : les étapes, votre annonce, vos contacts. L'assistant peut aussi modifier la description ou le prix de votre annonce, toujours après votre confirmation.",
+    suggestionsLabel: "Exemples de questions",
+    suggestions: [
+      "Que dois-je faire maintenant ?",
+      "Améliore la description de mon annonce",
+      "Combien de personnes ont vu mon annonce ?",
+    ],
+    disclaimer: "L'assistant peut se tromper : vérifiez les informations importantes.",
+    howItWorks: "Comment fonctionne l'assistant",
+    field: "Votre question",
+    send: "Envoyer",
+    writing: "L'assistant écrit…",
+    reading: "L'assistant consulte votre dossier…",
+    // The actions to confirm (ConfirmActionCard).
+    action: {
+      descriptionTitle: "Modifier la description de l'annonce",
+      priceTitle: "Modifier le prix de l'annonce",
+      property: (name: string) => `Bien : ${name}`,
+      before: "Actuellement",
+      after: "Proposé",
+      valuation: (value: string) => `Analyse de valeur : ${value}`,
+      gap: (gap: string) => `Écart avec l'analyse de valeur : ${gap}`,
+      unknown: "L'assistant propose une modification de votre annonce.",
+      confirm: "Confirmer",
+      cancel: "Annuler",
+      states: {
+        confirmed: "Modification enregistrée.",
+        declined: "Modification annulée : rien n'a changé.",
+        superseded: "Proposition non confirmée : rien n'a changé.",
+        error: "La modification n'a pas pu être faite : rien n'a changé.",
+      },
+    },
+    errors: {
+      unavailable: "L'assistant ne répond pas pour le moment. Réessayez dans quelques instants.",
+      refused:
+        "L'assistant ne peut pas répondre à cette demande. Un conseiller Leenkey peut vous aider.",
+      quota:
+        "Vous avez atteint la limite de messages de l'assistant pour aujourd'hui. Elle se renouvelle à minuit. Besoin d'aide maintenant ? Écrivez à un conseiller.",
+      quotaAction: "Écrire à un conseiller",
+      auth: "Votre session a expiré. Reconnectez-vous pour continuer.",
+      retry: "Réessayer",
+    },
+    comingTitle: "L'assistant de l'espace acquéreur arrive",
+    comingSoon: "Il vous aidera dans vos recherches et vos démarches d'achat.",
+    back: "Retour à Ma vente",
+    unavailable:
+      "Votre conversation avec l'assistant n'a pas pu être lue. Réessayez dans quelques instants.",
+  },
   // Public site in V2 (lib/i18n/site.ts).
   site,
 } as const;

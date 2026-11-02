@@ -1,8 +1,9 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { BOTTOM_NAV_OFFSET } from "@/components/shared/nav-items";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { requireProfile } from "@/core/auth/session";
+import { AssistantPanel } from "@/leenkey/ai/components/assistant-panel";
 import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
 import { SpaceBottomNav } from "@/leenkey/navigation/components/space";
 import { fr } from "@/lib/i18n/fr";
@@ -23,6 +24,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <main className="flex-1">{children}</main>
       <SiteFooter />
       <SpaceBottomNav roles={profile.roles} label={fr.nav.label} />
+      {/* The assistant of the seller from 768 px (L1-28): its button at the bottom right. */}
+      <Suspense fallback={null}>
+        <AssistantPanel roles={profile.roles} />
+      </Suspense>
     </FacadeRoot>
   );
 }

@@ -12,6 +12,14 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-02 · L1-28 · PR #67 · Assistant vendeur
+- Ajouté : l'assistant du vendeur : bouton « Assistant Leenkey » et panneau latéral à partir de 768 px, page `/assistant` sur téléphone (depuis l'en-tête de « Ma vente » et le panneau des notifications) ; réponses en continu ; changements proposés en `ConfirmActionCard` (avant / après, « Confirmer », « Annuler »).
+- Ajouté : route `/api/ai/chat` (flux SSE), server actions `confirmToolCall` et `declineToolCall`, outils vendeur (`leenkey/ai/tools/`) dont la modification de la description et du prix de l'annonce après confirmation, prompts `core/ai/prompts/base.md` et `seller.md` avec la FAQ entière en cache (Q69, option a), client Anthropic unique (`core/ai/client.ts`, SDK `@anthropic-ai/sdk`), modèles, quotas par rôle, journal des conversations et des tokens.
+- Ajouté : modèle déterministe pour les tests (`AI_MOCK=1`, jamais en production).
+- Modifié : Edge Function `embed`, `reindex` par lots de 8.
+- Migration : `20261102120000_assistant.sql` (fonctions `ai_quota_consume` et `knowledge_cards`, un résultat par appel d'outil dans le journal).
+- Tests : RLS (`rls_assistant.sql`, 24), unitaires (41), E2E (`assistant.spec.ts`, `assistant-live.spec.ts` : description modifiée après confirmation).
+
 ### 2026-10-30 · L1-27 · PR #66 · Base de connaissances : embeddings et recherche
 - Ajouté : Edge Function `embed` (`gte-small`, comptes connectés et actifs seulement ; `reindex` par un admin, par lots de 20, sans clé de service) ; `npm run kb:import` (fiches puis embeddings manquants, local, préprod, prod avec confirmation) et `npm run kb:eval` (pertinence sur la FAQ de Cédric).
 - Ajouté : `search_knowledge` en SQL (proximité des embeddings et mots de la question en français, fusionnés ; fiches de l'étape un peu devant ; 5 au plus ; public parmi les rôles du compte), `core/ai/embeddings.ts`, `core/ai/knowledge.ts` et l'outil `search_knowledge` de l'assistant (`core/ai/tools/`).
