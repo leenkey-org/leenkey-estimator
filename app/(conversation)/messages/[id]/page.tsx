@@ -84,6 +84,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
           unread={conversation.unread}
           closed={conversation.closed}
           initialDraft={visit && !conversation.closed ? t.start.visit : ""}
+          suggestions={conversation.role === "seller"}
           now={now.toISOString()}
         />
       </MessagesLayout>

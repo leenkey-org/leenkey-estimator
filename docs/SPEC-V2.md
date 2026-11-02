@@ -831,6 +831,8 @@ create table ai_conversations (
   profile_id uuid not null references profiles(id) on delete cascade,
   context text not null check (context in ('seller','buyer','admin')),
   property_id uuid references properties(id),
+  -- L1-29 (DECISIONS 2026-11-02) : la conversation avec l'assistant, ou une suggestion journalisée
+  kind text not null default 'chat' check (kind in ('chat','reply_suggestion','listing_description')),
   created_at timestamptz not null default now()
 );
 
@@ -1066,7 +1068,7 @@ Tous dans `components/shared/`, construits sur shadcn/ui quand un primitif exist
 | `StatTile` | Indicateur | Chiffre Archivo élargie 22 px, libellé 11 px secondaire. |
 | `MessageBubble` | Message | Largeur max 82 %, rayon 6 px. Reçu : fond blanc, bordure `--lk-line`, coin inférieur gauche 2 px. Envoyé : fond `--lk-blue`, texte blanc, coin inférieur droit 2 px. Auteur et heure en dessous (« Thomas · 9:12 », « Vous · 9:40 »). Séparateur de date centré. Message système (offre, visite) : pleine largeur, fond `--lk-stone-2`, icône à gauche, lien d'action (`docs/DESIGN.md` 10.5). |
 | `ConversationHeader` | En-tête de conversation | Retour, vignette du bien 44 × 44, titre du bien tronqué, sous-titre, menu (`docs/DESIGN.md` 10.5). Variante conseiller : avatar « LK » fond `--lk-blue` à la place de la vignette, titre « Mon conseiller Leenkey », formule du bien, mention « Réponse sous 24 h ». Messages Leenkey signés « L'équipe Leenkey » avec le prénom de l'admin qui répond. |
-| `AssistantSuggestion` | Suggestion IA | Encart `--lk-blue-tint`, bordure `--lk-blue-line`, icône `Sparkles`, titre « Réponse suggérée par l'assistant » pour une suggestion de réponse en messagerie, « Proposition de l'assistant » pour une proposition de description d'annonce (second libellé : décision en attente d'ajout dans `docs/DESIGN.md`), texte, boutons Utiliser / Modifier / Ignorer. **C'est la seule forme d'une proposition de l'IA dans l'interface.** |
+| `AssistantSuggestion` | Suggestion IA | Encart `--lk-blue-tint`, bordure `--lk-blue-line`, icône `Sparkles`, titre « Réponse suggérée par l'assistant » pour une suggestion de réponse en messagerie, « Proposition de l'assistant » pour une proposition de description d'annonce (second libellé ajouté à `docs/DESIGN.md` 10.5 avec L1-29), texte, boutons Utiliser / Modifier / Ignorer. **C'est la seule forme d'une proposition de l'IA dans l'interface.** |
 | `AssistantPanel` | Chat assistant | Mobile : page plein écran `/assistant`, ouverte depuis l'onglet ou le bouton d'en-tête. Desktop : panneau latéral droit 400 px, ouvert depuis le bouton flottant `AssistantFab` en bas à droite (`docs/DESIGN.md` 10.5). Suggestions de départ sous forme de pastilles. Actions proposées par l'IA affichées en carte de confirmation (section 12). |
 | `ConfirmActionCard` | Action IA à confirmer | Résumé de l'action (« Remplacer la description de l'annonce »), aperçu avant / après si texte, boutons Confirmer / Annuler. |
 | `EmptyState` | État vide | Dessin `facade.svg`, titre, phrase utile, action. |

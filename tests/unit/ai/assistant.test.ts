@@ -602,6 +602,7 @@ describe("the tools of the seller", () => {
     const names = ALL_TOOLS.map((item) => item.name);
     expect(new Set(names).size).toBe(names.length);
     expect(names.sort()).toEqual([
+      "draft_listing_description",
       "get_listing_stats",
       "get_my_properties",
       "get_property_details",

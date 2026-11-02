@@ -35,11 +35,16 @@ export async function sendMessage(
   if (!parsed.success) return { ok: false, error: invalidBody(parsed.error.issues) };
   const profile = await getProfile();
   if (!profile) return { ok: false, error: "auth" };
-  const { conversationId, body } = parsed.data;
+  const { conversationId, body, aiSuggested = false } = parsed.data;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("messages")
-    .insert({ conversation_id: conversationId, sender_id: profile.id, body })
+    .insert({
+      conversation_id: conversationId,
+      sender_id: profile.id,
+      body,
+      ai_suggested: aiSuggested,
+    })
     .select(MESSAGE_COLUMNS)
     .single();
   if (error) {

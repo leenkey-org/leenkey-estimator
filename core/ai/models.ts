@@ -1,8 +1,7 @@
 // Models of the assistant (SPEC-V2 section 3), never written anywhere else.
 // The identifiers can be changed without a deployment of code
-// (AI_MODEL_FAST, AI_MODEL_SMART). A model given here must accept the
-// mid-conversation system messages (the file of the person, core/ai/chat.ts)
-// and adaptive thinking: Claude Sonnet 5.5 and Claude Opus 5.5 do.
+// (AI_MODEL_FAST, AI_MODEL_SMART). A model given here must accept adaptive
+// thinking and the effort setting: Claude Sonnet 5.5 and Claude Opus 5.5 do.
 
 export const MODELS = {
   /** Conversation, suggestions, pre-analysis: where speed counts. */
@@ -22,4 +21,14 @@ export const CHAT_SETTINGS = {
   maxTokens: 16_000,
   /** Calls of the model in one turn (tools read, then the answer). */
   maxSteps: 6,
+} as const;
+
+/**
+ * A suggestion (L1-29): a reply in the messaging, a description of a
+ * listing; one call, not streamed, adaptive thinking at low effort. 4 000
+ * tokens at most, thinking included: a description is about 300.
+ */
+export const SUGGESTION_SETTINGS = {
+  effort: "low",
+  maxTokens: 4_000,
 } as const;

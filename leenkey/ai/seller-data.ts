@@ -106,6 +106,28 @@ export async function sellerFile(profileId: string): Promise<SellerFile | null> 
   };
 }
 
+/**
+ * At least one property of the seller under a paid plan (the daily limit of
+ * the assistant, core/ai/quotas.ts): a plan whose price is above zero, never
+ * a name compared. Null: unreadable.
+ */
+export async function sellerHasPaidPlan(profileId: string): Promise<boolean | null> {
+  const supabase = await createClient();
+  const [sales, plans] = await Promise.all([
+    supabase
+      .from("sale_progress")
+      .select("plan, properties!inner(owner_id)")
+      .eq("properties.owner_id", profileId)
+      .is("properties.deleted_at", null),
+    activePlans(),
+  ]);
+  if (sales.error) {
+    console.error("[ai] plans read failed", { user_id: profileId, code: sales.error.code });
+    return null;
+  }
+  return sales.data.some((sale) => planSummary(sale.plan, plans)?.paid === true);
+}
+
 /** One property of the seller, or null (unknown, someone else's, deleted). */
 export async function sellerPropertyById(
   profileId: string,

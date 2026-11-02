@@ -1,5 +1,6 @@
 import "server-only";
 import type { AiContext, AnyAiTool } from "@/core/ai/tools/types";
+import { draftListingDescriptionTool } from "./draft-listing-description";
 import { getListingStatsTool } from "./get-listing-stats";
 import { getMyPropertiesTool } from "./get-my-properties";
 import { getPropertyDetailsTool } from "./get-property-details";
@@ -13,7 +14,7 @@ import { updateListingPriceTool } from "./update-listing-price";
 // properties, listings and buyers live here (CLAUDE.md section 3: core/ knows
 // none of them); search_knowledge (core/ai/tools) is not offered to the
 // model of the conversation: the whole FAQ is in its prompt (Q69, option a).
-// To come with their tasks: draft_listing_description (L1-29), create_case
+// To come with their tasks: create_case
 // (L1-31), contact_advisor (L1-34), summarize_offer (L2), the tools of the
 // buyer (L2) and of the admin (L1-30), propose_visit_slot (L3).
 
@@ -24,6 +25,7 @@ const TOOLS: readonly AnyAiTool[] = [
   getListingStatsTool,
   summarizeContactsTool,
   getUpgradeContextTool,
+  draftListingDescriptionTool,
   updateListingDescriptionTool,
   updateListingPriceTool,
 ];
