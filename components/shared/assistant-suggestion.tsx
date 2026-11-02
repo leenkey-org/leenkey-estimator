@@ -15,10 +15,11 @@ export type AssistantSuggestionState = "loading" | "ready" | "error";
  * its title in 12 px 600 blue (« Réponse suggérée par l'assistant »,
  * « Proposition de l'assistant »); the text 13 px navy; « Utiliser »
  * (primary sm, flex 1), « Modifier » (secondary sm, flex 1), « Ignorer »
- * (ghost, grey). While the assistant writes, lines of skeleton; when it
- * cannot, why, and « Ignorer » alone. The focus comes to it once its text
- * is there (the button that asked for it is gone). Its buttons never submit
- * the form around it (the price step).
+ * (ghost, grey). While the assistant writes, lines of skeleton and
+ * « Ignorer »; when it cannot, why, and « Ignorer » alone. It takes the focus
+ * when it appears (the button that asked for it is gone), once: a person who
+ * moved on keeps their place; its text, when it comes, is read out (live
+ * region). Its buttons never submit the form around it (the price step).
  */
 export function AssistantSuggestion({
   title,
@@ -33,6 +34,8 @@ export function AssistantSuggestion({
   onEdit,
   onDismiss,
   className,
+  textClassName,
+  autoFocus = true,
 }: {
   title: string;
   state: AssistantSuggestionState;
@@ -49,11 +52,16 @@ export function AssistantSuggestion({
   onEdit: (text: string) => void;
   onDismiss: () => void;
   className?: string;
+  /** The text in a box of fixed height (above a field that stays in view). */
+  textClassName?: string;
+  /** Takes the focus when it appears (false: the catalogue, where nothing asked for it). */
+  autoFocus?: boolean;
 }) {
   const box = useRef<HTMLElement>(null);
+  const focusOnMount = useRef(autoFocus);
   useEffect(() => {
-    if (state !== "loading") box.current?.focus();
-  }, [state]);
+    if (focusOnMount.current) box.current?.focus();
+  }, []);
 
   return (
     <section
@@ -62,7 +70,9 @@ export function AssistantSuggestion({
       aria-label={title}
       aria-busy={state === "loading" || undefined}
       className={cn(
-        "flex flex-col gap-2.5 rounded-lk-md border border-lk-blue-line bg-lk-blue-tint px-3.5 py-3 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lk-blue",
+        "flex flex-col gap-2.5 rounded-lk-md border border-lk-blue-line bg-lk-blue-tint px-3.5 py-3",
+        // The focus ring of the buttons (DESIGN 15): 3 px, brand blue.
+        "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
         className,
       )}
     >
@@ -85,7 +95,14 @@ export function AssistantSuggestion({
         ) : state === "error" ? (
           <div className="text-lk-secondary text-lk-navy">{error}</div>
         ) : (
-          <p className="text-lk-secondary whitespace-pre-wrap text-lk-navy wrap-anywhere">{text}</p>
+          <p
+            className={cn(
+              "text-lk-secondary whitespace-pre-wrap text-lk-navy wrap-anywhere",
+              textClassName,
+            )}
+          >
+            {text}
+          </p>
         )}
       </div>
       {state === "ready" && text ? (
@@ -106,13 +123,14 @@ export function AssistantSuggestion({
             {dismissLabel}
           </Button>
         </div>
-      ) : state === "error" ? (
+      ) : (
+        // While it writes, or when it cannot: the way out.
         <div className="flex justify-end">
           <Button type="button" size="sm" variant="ghost" muted onClick={onDismiss}>
             {dismissLabel}
           </Button>
         </div>
-      ) : null}
+      )}
     </section>
   );
 }

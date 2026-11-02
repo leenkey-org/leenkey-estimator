@@ -109,7 +109,7 @@ export async function prepareTurn(
       system: systemPrompt(context, cards.data),
       tools: toolsFor(context),
       messages: history.messages,
-      ctx: { profileId: profile.id, context, stepCode: null },
+      ctx: { profileId: profile.id, roles: profile.roles, context, stepCode: null },
     },
   });
 

@@ -31,4 +31,7 @@ export const CHAT_SETTINGS = {
 export const SUGGESTION_SETTINGS = {
   effort: "low",
   maxTokens: 4_000,
+  /** The seller waits for it on the screen: 30 s and one retry at most. */
+  timeoutMs: 30_000,
+  maxRetries: 1,
 } as const;

@@ -931,6 +931,10 @@ export const messaging = {
     "À partir de 768 px, l'en-tête porte le chemin vers ce dont parle la conversation (« Voir l'annonce », « Voir mon bien » pour le vendeur) ; en dessous, c'est la première ligne du menu",
   caption:
     "ConversationHeader (retour, vignette 44 × 44, titre 14 px 600, sous-titre 12 px, menu), séparateur de date, MessageBubble reçue (blanche, coin 2 px en bas à gauche) et envoyée (bleue, coin 2 px en bas à droite), SystemMessage (pierre, pleine largeur), puis le Composer : champ de 44 px qui grandit jusqu'à cinq lignes, Entrée envoie au clavier",
+  // L1-29: AssistantSuggestion (DESIGN.md 10.5).
+  suggestion: "Avec plaisir. Je reviens vers vous dans la journée avec des créneaux de visite.",
+  suggestionCaption:
+    "AssistantSuggestion : la réponse proposée (« Utiliser », « Modifier », « Ignorer »), l'assistant qui rédige (squelette, « Ignorer »), puis pourquoi il n'y a pas de proposition. Fond bleu pâle, filet bleu, rayon 16 ; le focus vient à l'encart quand il apparaît",
 };
 
 // L1-14: the tabs of the page of a property and the confirmation dialog.

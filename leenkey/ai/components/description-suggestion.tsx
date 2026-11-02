@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import { AssistantSuggestion } from "@/components/shared/assistant-suggestion";
 import { Button } from "@/components/shared/button";
 import { fr } from "@/lib/i18n/fr";
+import { LISTING_DESCRIPTION_MAX } from "@/lib/validations/listing";
 import { draftDescriptionAction } from "../actions";
 import { SuggestionErrorText, useSuggestion } from "./use-suggestion";
 
@@ -41,7 +42,15 @@ export function DescriptionSuggestion({
           type="button"
           size="sm"
           variant="secondary"
-          onClick={() => void ask(() => draftDescriptionAction({ propertyId, notes }))}
+          onClick={() =>
+            // The field holds 1 200 characters: a longer text pasted is cut there.
+            void ask(() =>
+              draftDescriptionAction({
+                propertyId,
+                notes: Array.from(notes).slice(0, LISTING_DESCRIPTION_MAX).join(""),
+              }),
+            )
+          }
         >
           <Sparkles aria-hidden="true" />
           {t.draftDescription}

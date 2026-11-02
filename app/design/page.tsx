@@ -19,6 +19,7 @@ import {
 import * as content from "./_content";
 import { ComposerDemo } from "./_composer-demo";
 import { ConfirmDemo } from "./_confirm-demo";
+import { SuggestionDemo } from "./_suggestion-demo";
 import { ConsentDemo } from "./_consent-demo";
 import { FilterMenuDemo } from "./_filter-menu-demo";
 import { ActiveFiltersDemo, CategoriesDemo, FilterPopoverDemo } from "./_search-demos";
@@ -1383,6 +1384,8 @@ export default function DesignPage() {
               <ComposerDemo />
             </div>
             <Caption>{content.messaging.caption}</Caption>
+            <SuggestionDemo text={content.messaging.suggestion} />
+            <Caption>{content.messaging.suggestionCaption}</Caption>
             <div className="hidden max-w-155 overflow-hidden rounded-lk-md border border-lk-line md:block">
               <ConversationHeader
                 back={

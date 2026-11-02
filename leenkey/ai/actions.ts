@@ -97,6 +97,7 @@ async function answer(input: unknown, confirm: boolean): Promise<ToolCallResult>
     try {
       output = await tool.execute(toolInput.data, {
         profileId: profile.id,
+        roles: profile.roles,
         context,
         stepCode: null,
         call: { conversationId, toolUseId: call.id, name: call.name },
@@ -187,8 +188,7 @@ export async function draftDescriptionAction(input: unknown): Promise<Suggestion
   const seller = await sellerOnly();
   if (!seller.ok) return seller;
   return draftListingDescription({
-    profileId: seller.profile.id,
-    counted: seller.profile,
+    profile: seller.profile,
     propertyId: parsed.data.propertyId,
     notes: parsed.data.notes,
   });

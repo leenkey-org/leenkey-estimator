@@ -42,7 +42,13 @@ export async function assistantConversation(
         const tool = tools.find((candidate) => candidate.name === item.name);
         const input = tool?.input.safeParse(item.input);
         if (tool?.preview && input?.success) {
-          const read = await tool.preview(input.data, { profileId, context, stepCode: null });
+          // A preview reads what would change, it never calls the model (no roles needed).
+          const read = await tool.preview(input.data, {
+            profileId,
+            roles: [],
+            context,
+            stepCode: null,
+          });
           const parsed = read.ok ? actionPreview.safeParse(read.data) : null;
           preview = parsed?.success ? parsed.data : null;
         }

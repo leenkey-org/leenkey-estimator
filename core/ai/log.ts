@@ -19,13 +19,6 @@ export const LOG_ROWS_MAX = 300;
 
 export type Conversation = { id: string; context: AiContext; entityId: string | null };
 
-/**
- * What a log holds: the conversation with the assistant, or one suggestion
- * (a reply in the messaging, a description of a listing; L1-29), never
- * reopened as a conversation.
- */
-export type LogKind = "chat" | "reply_suggestion" | "listing_description";
-
 const CONTEXTS: readonly AiContext[] = ["seller", "buyer", "admin"];
 
 /** A conversation of the person with the assistant (never someone else's, even for an admin). */
@@ -78,7 +71,12 @@ export async function openConversation(
   profileId: string,
   context: AiContext,
   entityId: string | null,
-  kind: LogKind = "chat",
+  /**
+   * What the log holds (ai_conversations.kind): the conversation with the
+   * assistant, or one suggestion of a product (L1-29), never reopened as a
+   * conversation; the kinds are checked by the table.
+   */
+  kind: string = "chat",
 ): Promise<string | null> {
   const { data, error } = await supabase
     .from("ai_conversations")

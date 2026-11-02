@@ -328,7 +328,7 @@ function turn(replies: (Anthropic.Message | Error)[], tools: AnyTool[], logged =
     system: "Prompt.",
     tools,
     messages: [{ role: "user", content: "Bonjour" }],
-    ctx: { profileId: "p", context: "seller", stepCode: null },
+    ctx: { profileId: "p", roles: ["seller"], context: "seller", stepCode: null },
     emit: (event) => events.push(event),
     log: {
       answer: async (value) => {
@@ -488,7 +488,7 @@ describe("runTurn", () => {
         system: "Prompt.",
         tools: [],
         messages,
-        ctx: { profileId: "p", context: "seller", stepCode: null },
+        ctx: { profileId: "p", roles: ["seller"], context: "seller", stepCode: null },
         emit: (event) => events.push(event),
         log: { answer: async () => true, result: async () => true },
       });

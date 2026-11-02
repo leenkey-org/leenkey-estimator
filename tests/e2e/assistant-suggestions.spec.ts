@@ -13,8 +13,8 @@ import { devices, expect, test, type Browser, type Page } from "@playwright/test
 // with E2E_SEED=1, SEED_PASSWORD, E2E_MUTATE=1 and AI_MOCK=1, never on the
 // preprod (project « seed-mutations », after auth-journey.spec.ts, which needs
 // seller_b and buyer_d never signed in). Seed used here: the conversation of
-// buyer_d with seller_b on LK-0008 (the buyer wrote last), and LK-0001 of
-// seller_a (never saved).
+// buyer_d with seller_b on LK-0008 (the buyer wrote last), and LK-0004 of
+// seller_a (never saved). Each on a phone (390 px) and a desktop (1 280 px).
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
@@ -34,7 +34,8 @@ test.describe.configure({ mode: "serial" });
 /** buyer_d and seller_b about LK-0008, the buyer last (supabase/seed/05_demo_data.sql). */
 const CONVERSATION = "/messages/5eed2000-0000-4000-8000-000000000018";
 const LAST_FROM_BUYER = "Serait-il possible de la visiter la semaine prochaine ?";
-const LK0001 = "5eed1000-0000-4000-8000-000000000001";
+/** LK-0004 of seller_a: no other spec of « seed-mutations » touches it (never saved here). */
+const LK0004 = "5eed1000-0000-4000-8000-000000000004";
 /** The texts of the model of the tests (leenkey/ai/mock.ts). */
 const MOCK_REPLY =
   "Bonjour, merci pour votre message. Je vérifie ce point et je reviens vers vous rapidement avec une réponse précise.";
@@ -105,23 +106,27 @@ test("le vendeur répond à l'acquéreur avec une réponse suggérée par l'assi
 }) => {
   test.setTimeout(120_000);
   const base = baseURL ?? "http://localhost:3100";
-  const seller = await openBrowser(browser, base, true);
-  const suggest = seller.getByRole("button", { name: "Suggérer une réponse" });
   const region = "Réponse suggérée par l'assistant";
 
-  await test.step("« Ignorer » ferme la suggestion, le focus revient au bouton", async () => {
-    await signIn(seller, "seller_b", CONVERSATION);
+  await test.step("en desktop, « Ignorer » ferme la suggestion, le focus revient au bouton", async () => {
+    const desktop = await openBrowser(browser, base, false);
+    await signIn(desktop, "seller_b", CONVERSATION);
     // The buyer wrote last: there is something to answer.
-    await expect(thread(seller).getByText(LAST_FROM_BUYER)).toBeVisible();
-    const box = await ask(seller, "Suggérer une réponse", region);
-    await expect(box.getByText(MOCK_REPLY)).toBeVisible();
+    await expect(thread(desktop).getByText(LAST_FROM_BUYER)).toBeVisible();
+    const box = await ask(desktop, "Suggérer une réponse", region);
     await expect(box).toBeFocused();
-    await expectNoSeriousViolation(seller);
+    await expect(box.getByText(MOCK_REPLY)).toBeVisible();
+    await expectNoSeriousViolation(desktop);
     await box.getByRole("button", { name: "Ignorer" }).click();
     await expect(box).toHaveCount(0);
-    await expect(suggest).toBeFocused();
-    await expect(field(seller)).toHaveValue("");
+    await expect(desktop.getByRole("button", { name: "Suggérer une réponse" })).toBeFocused();
+    await expect(field(desktop)).toHaveValue("");
+    await desktop.context().close();
   });
+
+  const seller = await openBrowser(browser, base, true);
+  const suggest = seller.getByRole("button", { name: "Suggérer une réponse" });
+  await signIn(seller, "seller_b", CONVERSATION);
 
   await test.step("« Modifier » met la réponse dans le champ, le focus dedans", async () => {
     const box = await ask(seller, "Suggérer une réponse", region);
@@ -164,32 +169,38 @@ test("le vendeur répond à l'acquéreur avec une réponse suggérée par l'assi
   await seller.context().close();
 });
 
-test("une description proposée par l'assistant, dans le champ jusqu'à l'enregistrement", async ({
-  page,
-}) => {
-  const path = `/vendeur/biens/${LK0001}/modifier/annonce`;
-  await signIn(page, "seller_a", path);
-  await expect(page).toHaveURL(path);
-  const description = page.getByRole("textbox", { name: "Description" });
-  const saved = await description.inputValue();
-  const region = "Proposition de l'assistant";
+for (const phone of [true, false]) {
+  test(`une description proposée par l'assistant, dans le champ jusqu'à l'enregistrement (${phone ? "390" : "1 280"} px)`, async ({
+    browser,
+    baseURL,
+  }) => {
+    const page = await openBrowser(browser, baseURL ?? "http://localhost:3100", phone);
+    const path = `/vendeur/biens/${LK0004}/modifier/annonce`;
+    await signIn(page, "seller_a", path);
+    await expect(page).toHaveURL(path);
+    const description = page.getByRole("textbox", { name: "Description" });
+    const saved = await description.inputValue();
+    const region = "Proposition de l'assistant";
 
-  const box = await ask(page, "Rédiger avec l'assistant", region);
-  await expect(box.getByText(MOCK_DESCRIPTION_START, { exact: false })).toBeVisible();
-  await expectNoSeriousViolation(page);
-  await box.getByRole("button", { name: "Ignorer" }).click();
-  await expect(box).toHaveCount(0);
-  await expect(description).toHaveValue(saved);
+    const box = await ask(page, "Rédiger avec l'assistant", region);
+    await expect(box).toBeFocused();
+    await expect(box.getByText(MOCK_DESCRIPTION_START, { exact: false })).toBeVisible();
+    await expectNoSeriousViolation(page);
+    await box.getByRole("button", { name: "Ignorer" }).click();
+    await expect(box).toHaveCount(0);
+    await expect(description).toHaveValue(saved);
 
-  const again = await ask(page, "Rédiger avec l'assistant", region);
-  await again.getByRole("button", { name: "Utiliser" }).click();
-  await expect(again).toHaveCount(0);
-  await expect(description).toHaveValue(new RegExp(`^${MOCK_DESCRIPTION_START}`));
-  // The form was not sent: same page, the button back with the focus.
-  await expect(page).toHaveURL(path);
-  await expect(page.getByRole("button", { name: "Rédiger avec l'assistant" })).toBeFocused();
+    const again = await ask(page, "Rédiger avec l'assistant", region);
+    await again.getByRole("button", { name: "Utiliser" }).click();
+    await expect(again).toHaveCount(0);
+    await expect(description).toHaveValue(new RegExp(`^${MOCK_DESCRIPTION_START}`));
+    // The form was not sent: same page, the button back with the focus.
+    await expect(page).toHaveURL(path);
+    await expect(page.getByRole("button", { name: "Rédiger avec l'assistant" })).toBeFocused();
 
-  // Nothing saved before « Enregistrer ».
-  await page.reload();
-  await expect(description).toHaveValue(saved);
-});
+    // Nothing saved before « Enregistrer ».
+    await page.reload();
+    await expect(description).toHaveValue(saved);
+    await page.context().close();
+  });
+}

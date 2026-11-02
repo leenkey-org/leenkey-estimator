@@ -10,6 +10,8 @@ export type AiContext = "seller" | "buyer" | "admin";
 
 export type ToolContext = {
   profileId: string;
+  /** The roles of the person (a tool that calls the model counts it against their daily limit). */
+  roles: readonly string[];
   context: AiContext;
   /** The step of the sale being talked about, when there is one. */
   stepCode: string | null;

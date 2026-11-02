@@ -1533,7 +1533,7 @@ Chaque outil : `core/ai/tools/<nom>.ts` exportant `{ name, description, input: Z
 | `get_property_details` | seller | non | Détail d'un bien du vendeur (caractéristiques, annonce, estimation) |
 | `get_sale_progress` | seller | non | Étape en cours, tâches faites et à faire, prochaine action |
 | `get_listing_stats` | seller | non | Vues, contacts, conversations, offres |
-| `draft_listing_description` | seller | non | Produit une proposition de description (renvoyée à l'UI en `AssistantSuggestion`, pas écrite) |
+| `draft_listing_description` | seller | non | Produit une proposition de description, pas écrite : rendue à l'assistant, qui la propose avec `update_listing_description` et sa confirmation (décision du 2026-11-02) ; à l'étape « Prix et description », la même rédaction s'affiche en `AssistantSuggestion` |
 | `update_listing_description` | seller | **oui** | Remplace la description (confirmation avec avant / après) |
 | `update_listing_price` | seller | **oui** | Modifie le prix (confirmation, rappel de l'écart à l'estimation) |
 | `summarize_offer` | seller | non | Répond aux questions du vendeur sur une offre reçue à partir de sa `synthesis`, dans la conversation avec l'assistant (L2). Pas de bouton « Expliquer cette offre » en V2 (V3). |

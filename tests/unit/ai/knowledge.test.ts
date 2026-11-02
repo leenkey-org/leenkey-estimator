@@ -195,6 +195,7 @@ describe("searchKnowledge", () => {
 describe("search_knowledge, the tool", () => {
   const ctx = {
     profileId: "5eed0000-0000-4000-8000-00000000000a",
+    roles: ["seller"],
     context: "seller" as const,
     stepCode: "offers",
   };

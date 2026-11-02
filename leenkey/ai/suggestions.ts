@@ -2,9 +2,9 @@ import "server-only";
 import { createModelMessage, isAiConfigured, isAiMock } from "@/core/ai/client";
 import { toStoredBlocks } from "@/core/ai/conversation";
 import { generateText, textRequest } from "@/core/ai/generate";
-import { searchKnowledge } from "@/core/ai/knowledge";
-import { logAnswer, logRequest, openConversation, type LogKind } from "@/core/ai/log";
-import { MODELS } from "@/core/ai/models";
+import { KNOWLEDGE_QUERY_MAX, searchKnowledge } from "@/core/ai/knowledge";
+import { logAnswer, logRequest, openConversation } from "@/core/ai/log";
+import { MODELS, SUGGESTION_SETTINGS } from "@/core/ai/models";
 import { promptFile } from "@/core/ai/prompts";
 import type { SessionProfile } from "@/core/auth/session";
 import { getConversation } from "@/leenkey/messaging/queries";
@@ -24,10 +24,12 @@ import type { SuggestionError, SuggestionResult } from "./types";
 // what the seller may read with their session (RLS). Nothing is written but
 // the log: the seller reads the text in an AssistantSuggestion and decides.
 // Each suggestion counts as a message of the assistant for the day (it calls
-// the model) and is logged with its tokens, under its own kind.
+// the model), once the access is checked and before anything costly, and is
+// logged with its tokens, under its own kind.
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
-type SuggestionKind = Exclude<LogKind, "chat">;
+/** The kinds of log of the suggestions (ai_conversations.kind). */
+export type SuggestionKind = "reply_suggestion" | "listing_description";
 
 export type { SuggestionError, SuggestionResult };
 
@@ -45,6 +47,11 @@ const NOTES_CHARS = LISTING_DESCRIPTION_MAX;
 /** A text written by someone, given as data: no tag, bounded. */
 export function asData(value: string, max: number): string {
   return Array.from(value.replace(/[<>]/g, "").trim()).slice(0, max).join("");
+}
+
+/** A value given in an attribute of a tag: no tag, no quote, one line. */
+export function asAttribute(value: string, max: number): string {
+  return asData(value.replace(/["\s]+/g, " "), max);
 }
 
 const number = (value: number) => new Intl.NumberFormat("fr-FR").format(value);
@@ -128,7 +135,12 @@ export type ReplyMessage = {
   createdAt: string;
 };
 
-/** What the model writes a reply from: the property, the FAQ, the conversation. */
+/**
+ * What the model writes a reply from: the property, the FAQ, the
+ * conversation. Each message in its tag, its author and date in attributes
+ * the text cannot hold: a message that claims to be the seller's stays the
+ * buyer's (core/ai/prompts/reply-suggestion.md).
+ */
 export function replyPrompt({
   facts,
   cards,
@@ -140,8 +152,8 @@ export function replyPrompt({
   messages: readonly ReplyMessage[];
   buyerFirstName: string | null;
 }): string {
-  const buyer = buyerFirstName ? `Acquéreur (${asData(buyerFirstName, 60)})` : "Acquéreur";
-  const author = { seller: "Vendeur", buyer, leenkey: "Leenkey" } as const;
+  const buyer = buyerFirstName ? `acquéreur (${asAttribute(buyerFirstName, 60)})` : "acquéreur";
+  const author = { seller: "vendeur", buyer, leenkey: "Leenkey" } as const;
   const parts = ["<bien>", facts, "</bien>"];
   if (cards.length > 0) {
     parts.push("", "<faq>");
@@ -158,9 +170,9 @@ export function replyPrompt({
   parts.push("", "<conversation>");
   for (const message of messages) {
     parts.push(
-      `[${author[message.author]}, ${when.format(new Date(message.createdAt))}]`,
+      `<message auteur="${author[message.author]}" date="${when.format(new Date(message.createdAt))}">`,
       asData(message.body, MESSAGE_CHARS),
-      "",
+      "</message>",
     );
   }
   parts.push(
@@ -207,46 +219,90 @@ export function cleanSuggestion(text: string, max: number): string {
   return (end > max / 2 ? kept.slice(0, end + 1) : kept).trim();
 }
 
+const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/;
+const PHONE = /(?:\+33\s*|\b0)[1-9](?:[\s.-]*\d{2}){4}\b/;
+
 /**
- * One suggestion: counted against the limit of the day (`counted`: the
- * person; null within a turn of the assistant, already counted), written by
- * the model from its prompt, logged.
+ * A text the prompt forbids, checked again in code: a phone number or an
+ * email (the exchange stays in the messaging), « Prix ferme » (CLAUDE.md 16).
+ * Such a text is never shown.
  */
-async function suggest({
+export function breaksRules(text: string): boolean {
+  return EMAIL.test(text) || PHONE.test(text) || /prix\s+ferme/i.test(text);
+}
+
+/** The first characters of a text within `max` units of JavaScript (a search takes 500). */
+export function firstUnits(text: string, max: number): string {
+  let kept = "";
+  for (const char of text) {
+    if (kept.length + char.length > max) break;
+    kept += char;
+  }
+  return kept;
+}
+
+/** The rules of a kind of suggestion; null when the file cannot be read (logged). */
+function systemOf(kind: SuggestionKind, userId: string): string | null {
+  try {
+    return promptFile(kind === "reply_suggestion" ? "reply-suggestion" : "listing-description");
+  } catch (error) {
+    console.error("[ai] prompt unreadable", {
+      user_id: userId,
+      kind,
+      error: error instanceof Error ? error.name : "unknown",
+    });
+    return null;
+  }
+}
+
+/**
+ * One suggestion counted against the limit of the day of the person (each
+ * calls the model), once its access is checked and before any costly read.
+ */
+async function count(
+  supabase: Supabase,
+  profile: SessionProfile,
+): Promise<{ ok: true } | { ok: false; error: SuggestionError }> {
+  if (!isAiConfigured()) return { ok: false, error: "unavailable" };
+  const paid = await sellerHasPaidPlan(profile.id);
+  if (paid === null) return { ok: false, error: "unavailable" };
+  const quota = await consumeQuota(supabase, profile, paid);
+  if (!quota.ok) return { ok: false, error: quota.error === "quota" ? "quota" : "unavailable" };
+  return { ok: true };
+}
+
+/** One call of the model, for a suggestion (not the 60 s and 2 retries of the chat). */
+const callModel = (request: Parameters<typeof createModelMessage>[0]) =>
+  createModelMessage(request, {
+    timeout: SUGGESTION_SETTINGS.timeoutMs,
+    maxRetries: SUGGESTION_SETTINGS.maxRetries,
+  });
+
+/** A suggestion already counted: written by the model from its prompt, logged. */
+async function write({
   supabase,
   profileId,
-  counted,
   kind,
   propertyId,
+  system,
   prompt,
   max,
 }: {
   supabase: Supabase;
   profileId: string;
-  counted: SessionProfile | null;
   kind: SuggestionKind;
   propertyId: string;
+  system: string;
   prompt: string;
   max: number;
 }): Promise<SuggestionResult> {
-  if (!isAiConfigured()) return { ok: false, error: "unavailable" };
-  if (counted) {
-    const paid = await sellerHasPaidPlan(counted.id);
-    if (paid === null) return { ok: false, error: "unavailable" };
-    const quota = await consumeQuota(supabase, counted, paid);
-    if (!quota.ok) return { ok: false, error: quota.error === "quota" ? "quota" : "unavailable" };
-  }
-
   const conversationId = await openConversation(supabase, profileId, "seller", propertyId, kind);
   if (!conversationId) return { ok: false, error: "unavailable" };
   if ((await logRequest(supabase, conversationId, prompt)) !== "ok") {
     return { ok: false, error: "unavailable" };
   }
-  const system = promptFile(
-    kind === "reply_suggestion" ? "reply-suggestion" : "listing-description",
-  );
   const generation = await generateText(
-    isAiMock() ? mockText(kind) : createModelMessage,
+    isAiMock() ? mockText(kind) : callModel,
     textRequest(MODELS.fast, system, prompt),
     { userId: profileId, kind },
   );
@@ -263,6 +319,10 @@ async function suggest({
   }
   if (!generation.ok) return { ok: false, error: generation.error };
   const text = cleanSuggestion(generation.text, max);
+  if (breaksRules(text)) {
+    console.error("[ai] suggestion left out", { user_id: profileId, kind });
+    return { ok: false, error: "unavailable" };
+  }
   return text ? { ok: true, data: { text } } : { ok: false, error: "unavailable" };
 }
 
@@ -282,8 +342,13 @@ export async function suggestReply(
     return { ok: false, error: "not_found" };
   }
   if (conversation.closed) return { ok: false, error: "nothing" };
+  const system = systemOf("reply_suggestion", profile.id);
+  if (!system) return { ok: false, error: "unavailable" };
 
   const supabase = await createClient();
+  const counted = await count(supabase, profile);
+  if (!counted.ok) return counted;
+
   const [rows, property] = await Promise.all([
     supabase
       .from("messages")
@@ -315,26 +380,25 @@ export async function suggestReply(
 
   // The FAQ helps on a step of the sale; without it, the reply still comes.
   const cards = await searchKnowledge({
-    query: Array.from(lastFromBuyer.body.trim()).slice(0, 500).join(""),
+    query: firstUnits(lastFromBuyer.body.trim(), KNOWLEDGE_QUERY_MAX),
     audience: "seller",
     limit: REPLY_CARDS,
   });
   if (!cards.ok) {
     console.error("[ai] reply cards unavailable", { user_id: profile.id, error: cards.error });
   }
-  const prompt = replyPrompt({
-    facts: propertyFacts(property.data, { withPrice: true }),
-    cards: cards.ok ? cards.data : [],
-    messages,
-    buyerFirstName: conversation.counterpartFirstName,
-  });
-  return suggest({
+  return write({
     supabase,
     profileId: profile.id,
-    counted: profile,
     kind: "reply_suggestion",
     propertyId: property.data.id,
-    prompt,
+    system,
+    prompt: replyPrompt({
+      facts: propertyFacts(property.data, { withPrice: true }),
+      cards: cards.ok ? cards.data : [],
+      messages,
+      buyerFirstName: conversation.counterpartFirstName,
+    }),
     max: REPLY_MAX,
   });
 }
@@ -344,30 +408,33 @@ export async function suggestReply(
  * its characteristics, its features and notes (what the seller already wrote
  * in the field, or asked the assistant to stress). Nothing written: the price
  * step keeps the text until « Enregistrer »; the assistant proposes it with
- * update_listing_description. `counted`: the person whose limit of the day it
- * counts against; null within a turn of the assistant (already counted).
+ * update_listing_description. Counted against the limit of the day each
+ * time, from the price step as from a turn of the assistant (each calls the
+ * model once more).
  */
 export async function draftListingDescription({
-  profileId,
-  counted,
+  profile,
   propertyId,
   notes,
 }: {
-  profileId: string;
-  counted: SessionProfile | null;
+  profile: SessionProfile;
   propertyId: string;
   notes: string;
 }): Promise<SuggestionResult> {
-  const property = await sellerPropertyById(profileId, propertyId);
+  const system = systemOf("listing_description", profile.id);
+  if (!system) return { ok: false, error: "unavailable" };
+  const property = await sellerPropertyById(profile.id, propertyId);
   if (!property.ok) return { ok: false, error: "unavailable" };
   if (!property.data) return { ok: false, error: "not_found" };
   const supabase = await createClient();
-  return suggest({
+  const counted = await count(supabase, profile);
+  if (!counted.ok) return counted;
+  return write({
     supabase,
-    profileId,
-    counted,
+    profileId: profile.id,
     kind: "listing_description",
     propertyId: property.data.id,
+    system,
     prompt: descriptionPrompt({
       facts: propertyFacts(property.data, { withPrice: false }),
       notes,

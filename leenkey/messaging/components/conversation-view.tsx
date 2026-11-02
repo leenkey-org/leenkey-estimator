@@ -297,10 +297,10 @@ export function ConversationView({
           </div>
         ) : (
           <>
-            {suggestions ? (
+            {suggestions && lastText && lastFromCounterpart ? (
               <ReplySuggestion
+                key={lastText.id}
                 conversationId={conversationId}
-                available={lastFromCounterpart}
                 onUse={(text) => {
                   setDraft(text);
                   setFromSuggestion(true);

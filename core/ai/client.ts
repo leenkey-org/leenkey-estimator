@@ -78,8 +78,10 @@ export const streamModel: ModelCall = async (request, { onText, signal }) => {
 };
 
 /** One call of the model, not streamed: the whole message at once (suggestions, L1-29). */
-export const createModelMessage = (request: ModelRequest): Promise<Anthropic.Message> =>
-  anthropic().messages.create(request);
+export const createModelMessage = (
+  request: ModelRequest,
+  options?: { timeout?: number; maxRetries?: number },
+): Promise<Anthropic.Message> => anthropic().messages.create(request, options);
 
 /** A request refused as written (400): the history replayed is not accepted. */
 export function isBadRequest(error: unknown): boolean {
