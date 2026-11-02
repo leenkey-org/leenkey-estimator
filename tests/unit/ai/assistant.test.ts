@@ -14,6 +14,7 @@ vi.mock("server-only", () => ({}));
 const { LOG_LIMITS, buildHistory, displayItems, hasThinking } =
   await import("@/core/ai/conversation");
 const { chatRequest, runTurn, toolDefinitions } = await import("@/core/ai/chat");
+const { apiKey, describeError, redactSecrets } = await import("@/core/ai/client");
 const { AI_DAILY_LIMITS, dailyLimit } = await import("@/core/ai/quotas");
 const { faqSection, promptFile, systemPrompt } = await import("@/core/ai/prompts");
 const { readEvents } = await import("@/leenkey/ai/stream-events");
@@ -759,5 +760,34 @@ describe("the texts of the assistant (CLAUDE.md section 16)", () => {
     expect(fr.assistant.errors.quota).toBe(
       "Vous avez atteint la limite de messages de l'assistant pour aujourd'hui. Elle se renouvelle à minuit. Besoin d'aide maintenant ? Écrivez à un conseiller.",
     );
+  });
+});
+
+describe("the key of the API never in a log (CLAUDE.md section 11)", () => {
+  const fakeKey = "sk-ant-test-0000aaaa1111bbbb\n2222cccc3333dddd";
+
+  it("reads the key without the spaces and line breaks a copy may add", () => {
+    expect(apiKey(` ${fakeKey} \n`)).toBe("sk-ant-test-0000aaaa1111bbbb2222cccc3333dddd");
+    expect(apiKey("  ")).toBeUndefined();
+    expect(apiKey(undefined)).toBeUndefined();
+  });
+
+  it("an error quoting the key is logged without it", () => {
+    const quoted = new TypeError(`Headers.append: "Bearer ${fakeKey}" is an invalid header value.`);
+    const logged = describeError(quoted);
+    expect(logged).not.toContain("0000aaaa");
+    expect(logged).not.toContain("2222cccc");
+    expect(logged).toContain("TypeError");
+    expect(redactSecrets(`x-api-key: ${fakeKey}`)).toBe("x-api-key: [secret]");
+  });
+
+  it("an error of the API by its class and status only", () => {
+    const refused = new Anthropic.AuthenticationError(
+      401,
+      undefined,
+      `invalid ${fakeKey}`,
+      new Headers(),
+    );
+    expect(describeError(refused)).toBe("API error 401");
   });
 });

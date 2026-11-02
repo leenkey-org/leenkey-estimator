@@ -146,8 +146,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // L'analyse rédigée est un confort ; le lead est la valeur. Une panne de
   // l'API IA ne doit donc jamais empêcher l'envoi des emails — auparavant elle
   // renvoyait 502 et le prospect était perdu.
-  const analyse = await genererAnalyse(payload).catch((e) => {
-    console.error("Analyse IA indisponible (non bloquant):", e);
+  // Its kind only: an error of fetch may quote the key (an invalid header).
+  const analyse = await genererAnalyse(payload).catch((e: unknown) => {
+    console.error(
+      "Analyse IA indisponible (non bloquant):",
+      e instanceof Error ? e.name : "unknown",
+    );
     return undefined;
   });
 
@@ -163,7 +167,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 /** Demande à Claude la seule analyse rédigée. Renvoie undefined en cas d'échec. */
 async function genererAnalyse(payload: Record<string, unknown>): Promise<string | undefined> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  // Without the spaces and line breaks a copy may add (a header refuses them).
+  const apiKey = process.env.ANTHROPIC_API_KEY?.replace(/\s+/g, "");
   if (!apiKey) {
     console.error("ANTHROPIC_API_KEY manquante");
     return undefined;

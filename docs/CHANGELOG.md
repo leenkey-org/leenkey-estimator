@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-02 · Sécurité · PR #68 · Aucune clé de l'API dans les journaux
+- Corrigé : une erreur du SDK Anthropic qui citait l'en-tête d'authentification (clé collée avec un retour à la ligne) était journalisée telle quelle ; les erreurs de l'assistant le sont désormais par leur type, leur statut et l'id de la requête, le reste masqué. Même correctif pour l'analyse de valeur reprise de la V1 (`/api/estimate`).
+- Modifié : la clé est lue sans les espaces ni les retours à la ligne qu'une copie peut ajouter.
+- Tests : unitaires (3).
+
 ### 2026-11-02 · L1-28 · PR #67 · Assistant vendeur
 - Ajouté : l'assistant du vendeur : bouton « Assistant Leenkey » et panneau latéral à partir de 768 px, page `/assistant` sur téléphone (depuis l'en-tête de « Ma vente » et le panneau des notifications) ; réponses en continu ; changements proposés en `ConfirmActionCard` (avant / après, « Confirmer », « Annuler »).
 - Ajouté : route `/api/ai/chat` (flux SSE), server actions `confirmToolCall` et `declineToolCall`, outils vendeur (`leenkey/ai/tools/`) dont la modification de la description et du prix de l'annonce après confirmation, prompts `core/ai/prompts/base.md` et `seller.md` avec la FAQ entière en cache (Q69, option a), client Anthropic unique (`core/ai/client.ts`, SDK `@anthropic-ai/sdk`), modèles, quotas par rôle, journal des conversations et des tokens.
