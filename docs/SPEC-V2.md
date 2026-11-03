@@ -1419,6 +1419,8 @@ Créés par Younes dans Stripe (test puis live), identifiants reportés dans `pl
 
 Remboursements : faits par Cédric depuis le dashboard Stripe (hors application en V2).
 
+Mise en œuvre (L1-26, `DECISIONS.md` 2026-11-03) : identifiants des prix lus dans `STRIPE_PRICE_*` (pas dans `plans.stripe_price_id`), montant vérifié contre la table `plans` à chaque commande ; écritures du webhook dans deux fonctions SQL idempotentes (`stripe_checkout_complete`, `stripe_charge_refunded`) ; la conversation conseiller au paiement arrive avec L1-34, l'email récapitulatif, la rétractation et l'échéance avec L1-40 ; au remboursement, la vente suit la formule en vigueur (déclencheurs de L1-23).
+
 Tests : Stripe CLI (`npm run stripe:listen`) en local, cartes de test documentées dans `docs/RECETTE.md`.
 
 ---

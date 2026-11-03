@@ -18,8 +18,8 @@ export function AppHeader({
 }: {
   /** The H1 of the page. */
   title: string;
-  /** Another level where the page has its own H1 (/design). */
-  titleAs?: "h1" | "h2" | "h3" | "h4";
+  /** Another level where the page has its own H1 (/design); a paragraph under a page H1 (/vendeur/formule). */
+  titleAs?: "h1" | "h2" | "h3" | "h4" | "p";
   back: ReactNode;
   action?: ReactNode;
   progress?: ReactNode;

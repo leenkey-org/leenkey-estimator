@@ -382,6 +382,27 @@ export const fr = {
     loadError: "Les notifications n'ont pas pu être chargées.",
     retry: "Réessayer",
     types: {
+      // L1-26: a plan paid (seller), its case and its refunds (team).
+      planActivated: {
+        title: (plan: string | null) => (plan ? `Formule ${plan} activée` : "Formule activée"),
+        detail: (reference: string | null) =>
+          reference
+            ? `Pour votre bien ${reference}.`
+            : "Votre conseiller Leenkey va vous contacter.",
+      },
+      caseCreated: {
+        title: (plan: string | null, upgrade: boolean) =>
+          upgrade
+            ? `Passage à ${plan ?? "une formule supérieure"}`
+            : `Nouvelle formule ${plan ?? "payante"}`,
+        detail: (reference: string | null) =>
+          reference ? `Dossier à suivre pour ${reference}.` : "Un dossier à suivre.",
+      },
+      planRefunded: {
+        title: (full: boolean) => (full ? "Formule remboursée" : "Remboursement partiel"),
+        detail: (amount: string | null, reference: string | null) =>
+          [amount, reference].filter(Boolean).join(" · ") || null,
+      },
       messageNew: {
         title: (name: string | null) => (name ? `Nouveau message ${of(name)}` : "Nouveau message"),
         detail: (excerpt: string, truncated: boolean) =>
@@ -1506,6 +1527,34 @@ export const fr = {
     },
     // L1-30a: an account suspended by the back office (SPEC-V2 17, « suspension
     // du compte (motif, email) »). Provisional text, as the listing one (Q71).
+    // L1-26: a plan paid; the full summary of the order comes with L1-40.
+    planActivated: {
+      subject: (plan: string) => `Votre formule ${plan} est activée`,
+      title: (plan: string) => `Votre formule ${plan} est activée`,
+      text: (plan: string, property: string) =>
+        `Merci : votre formule ${plan} est active pour votre bien ${property}.`,
+      paid: (amount: string) => `Montant payé : ${amount} TTC, une seule fois, pour ce bien.`,
+      contactNow: "Votre conseiller Leenkey vous contacte sous 24\u00A0h.",
+      contactLater: (date: string) =>
+        `Votre conseiller Leenkey vous contacte à partir du ${date}, à la fin du délai de rétractation de 14\u00A0jours.`,
+      receipt: "Stripe vous envoie le reçu de votre paiement par email.",
+      action: "Voir ma formule",
+    },
+    planPurchased: {
+      subject: (plan: string, property: string, upgrade: boolean) =>
+        upgrade ? `Passage à ${plan} · ${property}` : `Formule ${plan} souscrite · ${property}`,
+      title: (upgrade: boolean) =>
+        upgrade ? "Passage à une formule supérieure" : "Nouvelle formule souscrite",
+      text: (plan: string, property: string, upgrade: boolean) =>
+        upgrade
+          ? `Le vendeur de ${property} passe à ${plan}.`
+          : `Le vendeur de ${property} a souscrit la formule ${plan}.`,
+      details: (seller: string, amount: string) => `${seller} · ${amount} TTC payés.`,
+      earlyStart: "Démarrage immédiat demandé : premier contact sous 24\u00A0h.",
+      lateStart:
+        "Pas de démarrage immédiat : premier contact à partir du 15e\u00A0jour, à la fin du délai de rétractation.",
+      action: "Voir les dossiers",
+    },
     accountSuspended: {
       subject: "Votre compte Leenkey est suspendu",
       title: "Votre compte est suspendu",
@@ -1515,6 +1564,101 @@ export const fr = {
         before: "Si vous n'êtes pas d'accord, écrivez-nous à ",
         after: " : nous vous répondons sous 48\u00A0h, 7\u00A0j/7.",
       },
+    },
+  },
+  // L1-26: the plan of a property and its payment (SPEC-V2 8.8 and 11,
+  // DESIGN.md 12.4). The texts of the plans come from the plans table.
+  billing: {
+    metaTitle: "Choisir ma formule · Leenkey",
+    header: "Choisir ma formule",
+    back: "Retour à ma vente",
+    // Under the steps of « Ma vente ».
+    entry: "Voir les formules",
+    title: "Un forfait fixe par bien. Jamais de commission.",
+    lead: "Le prix ne dépend pas de la valeur de votre bien. Vous pouvez passer à une formule supérieure à tout moment.",
+    property: (name: string) => `Pour ${name}`,
+    /** `total`: all the properties of the seller, this one included. */
+    otherProperties: (total: number) =>
+      total > 2 ? `Choisir un autre de vos ${total}\u00A0biens` : "Choisir votre autre bien",
+    otherPropertiesLabel: "Vos autres biens",
+    free: "Gratuit",
+    taxes: "TTC",
+    badge: "Le plus complet",
+    current: "Formule actuelle",
+    activeSince: (since: string, until: string) => `Active depuis le ${since}, jusqu'au ${until}.`,
+    included: "Comprise dans votre formule",
+    choose: (plan: string) => `Choisir ${plan}`,
+    upgrade: (plan: string, price: string) => `Passer à ${plan} pour ${price}`,
+    reassurance:
+      "Paiement sécurisé par carte via Stripe. Reçu envoyé par email. Forfait payé une fois, pour ce bien. Sans abonnement.",
+    sold: "Ce bien est vendu : il n'y a plus de formule à choisir.",
+    noProperty: {
+      title: "Aucun bien pour l'instant",
+      text: "Une formule se choisit pour un bien : créez d'abord votre annonce.",
+      action: "Créer mon annonce",
+    },
+    closed: {
+      title: "Les formules payantes ouvrent bientôt",
+      text: "Pour être accompagné dès maintenant, écrivez-nous : nous vous répondons sous 48\u00A0h, 7\u00A0j/7.",
+      action: "Nous écrire",
+    },
+    error: "Les formules n'ont pas pu être chargées.",
+    retry: "Réessayer",
+    recap: {
+      title: "Récapitulatif de votre commande",
+      plan: "Formule",
+      property: "Bien",
+      price: "Prix",
+      priceValue: (price: string) => `${price} TTC, payé une fois`,
+      upgradeValue: (price: string, from: string) =>
+        `${price} TTC : la différence avec ${from}, déjà payée`,
+      duration: "Durée",
+      durationValue:
+        "12 mois à partir du paiement, sans renouvellement automatique. À l'échéance, votre bien repasse en Autonomie.",
+      withdrawal: "Rétractation",
+      withdrawalValue: "Vous pouvez renoncer au contrat pendant 14 jours après la commande.",
+      mediator: "Médiateur de la consommation",
+      mediatorPending: "En cours de désignation.",
+      includes: "Ce qui est compris",
+      terms: {
+        before: "J'ai lu et j'accepte les ",
+        cgu: "conditions générales d'utilisation",
+        and: " et les ",
+        cgv: "conditions générales de vente",
+        after: (cgu: string, cgv: string) => ` (versions du ${cgu} et du ${cgv}).`,
+      },
+      earlyStart:
+        "Je demande que les prestations commencent avant la fin du délai de rétractation de 14 jours.",
+      earlyStartHelp:
+        "Sans cette demande, votre conseiller vous contacte à partir du 15e jour. Vous pouvez renoncer au contrat pendant 14 jours dans tous les cas.",
+      pay: (price: string) => `Commander et payer ${price} TTC`,
+      change: "Changer de formule",
+      termsRequired: "Cochez la case pour accepter les conditions générales.",
+    },
+    errors: {
+      invalid: "Cochez la case pour accepter les conditions générales.",
+      notFound: "Ce bien n'existe plus.",
+      sold: "Ce bien est vendu : il n'y a plus de formule à choisir.",
+      current: "Cette formule est déjà la vôtre pour ce bien.",
+      lower: "Votre formule actuelle comprend déjà celle-ci.",
+      closed: "Les formules payantes ne sont pas encore ouvertes à la commande.",
+      unavailable:
+        "Le paiement n'est pas disponible pour le moment. Réessayez dans quelques minutes.",
+      network: "Pas de réponse du serveur : rien n'a été débité. Réessayez.",
+    },
+    cancelled: "Le paiement a été annulé : rien n'a été débité.",
+    confirmation: {
+      pendingTitle: "Paiement en cours de confirmation",
+      pendingText: "Stripe nous confirme votre paiement : cela prend quelques secondes.",
+      slowText:
+        "La confirmation prend plus de temps que prévu. Vous recevrez un email dès qu'elle arrive ; vous pouvez aussi recharger la page.",
+      reload: "Recharger la page",
+      doneTitle: "C'est activé.",
+      doneNow: (plan: string) =>
+        `Votre formule ${plan} est active. Votre conseiller Leenkey vous contacte sous 24\u00A0h.`,
+      doneLater: (plan: string, date: string) =>
+        `Votre formule ${plan} est active. Votre conseiller Leenkey vous contacte à partir du ${date}, à la fin du délai de rétractation.`,
+      back: "Retour à ma vente",
     },
   },
   // Labels of SPEC-V2 section 7 (StatusBadge mapping), colours in DESIGN.md 10.2.

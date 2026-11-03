@@ -3,6 +3,7 @@ import {
   CircleCheck,
   ClipboardList,
   Flag,
+  Folder,
   MessageCircle,
   Bell,
   type LucideIcon,
@@ -10,13 +11,14 @@ import {
 import type { NotificationTone } from "@/components/shared/notification-item";
 import type { NotificationView } from "@/core/notifications/types";
 import type { Space } from "@/leenkey/navigation/spaces";
+import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 
 // The types of notifications of Leenkey (SPEC-V2 section 10) and their
 // wording, from the facts written by the database (supabase/migrations,
 // L1-22): the title and the detail of the panel, the visual, the filters it
 // falls under. The other types of SPEC 10 come with their events (offers L2,
-// visits and alerts L3, plan with Stripe).
+// visits and alerts L3).
 
 const t = fr.notifications.types;
 
@@ -90,6 +92,32 @@ const CATALOG: Record<string, Entry> = {
       const title = text(data.title);
       return title ? t.listingRejected.detail(title) : null;
     },
+  },
+  // L1-26: a plan paid (the seller), its case and its refunds (the team).
+  "plan.activated": {
+    icon: CircleCheck,
+    tone: "success",
+    filters: [],
+    title: (data) => t.planActivated.title(text(data.plan_name)),
+    detail: (data) => t.planActivated.detail(text(data.reference)),
+  },
+  "case.created": {
+    icon: Folder,
+    tone: "blue",
+    filters: [],
+    title: (data) => t.caseCreated.title(text(data.plan_name), data.upgrade === true),
+    detail: (data) => t.caseCreated.detail(text(data.reference)),
+  },
+  "plan.refunded": {
+    icon: CircleAlert,
+    tone: "warning",
+    filters: [],
+    title: (data) => t.planRefunded.title(data.full === true),
+    detail: (data) =>
+      t.planRefunded.detail(
+        typeof data.amount_cents === "number" ? formatPrice(data.amount_cents) : null,
+        text(data.reference),
+      ),
   },
   // In the app only (SPEC-V2 section 10): « Étape 3 sur 6 · Maison 5 pièces ».
   "step.advanced": {
