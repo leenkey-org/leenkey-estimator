@@ -56,7 +56,7 @@ export const sections = {
   notifications: "Notifications et menu du compte",
   alerts: "Alertes",
   infoNote: "Note d'information",
-  backOffice: "Back office : filtres, tableau, motif",
+  backOffice: "Back office : chiffres, filtres, tableau, motif",
   skeleton: "Chargement",
   consent: "Consentement aux cookies",
   footer: "Pied de page",
@@ -508,7 +508,15 @@ export const navigation = {
   sidebarCaption:
     "AdminShell à partir de 768 px : barre latérale de 240 px ; pastilles de compteurs avec les données du back office ; « Voir le site » au-dessus de la carte du compte",
   headerCaption:
-    "AdminMobileHeader sous 768 px : titre de la page, « Voir le site », la cloche et l'avatar du menu du compte",
+    "AdminMobileHeader sous 768 px : titre de la page, « Voir le site », la cloche et l'avatar du menu du compte ; trois tuiles de ce qui attend l'équipe, liens vers leurs listes",
+  headerTiles: {
+    label: "À traiter",
+    tiles: [
+      { label: "À valider", value: 3 },
+      { label: "Dossiers", value: 1 },
+      { label: "Signalements", value: 0 },
+    ],
+  },
   labels: {
     topSignedIn: "Exemple de barre haute, connecté",
     topSignedOut: "Exemple de barre haute, sans session",
@@ -871,6 +879,29 @@ export const publicPages = {
 
 // L1-19: FilterPills, DataTable and Textarea (back office).
 export const backOffice = {
+  tilesLabel: "Chiffres du back office (exemple)",
+  tiles: [
+    {
+      value: "3",
+      label: "Annonces à valider",
+      detail: "Plus ancienne : 27\u00A0h · au-delà de 24\u00A0h",
+      late: true,
+    },
+    {
+      value: "2",
+      label: "Formules vendues · 30\u00A0j",
+      detail: "2\u00A0490\u00A0€ TTC",
+      late: false,
+    },
+    {
+      value: "7",
+      label: "Inscriptions · 30\u00A0j",
+      detail: "5\u00A0vendeurs, 2\u00A0acquéreurs",
+      late: false,
+    },
+  ],
+  tilesCaption:
+    "StatTile : chiffre et libellé, ligne de détail en option (orange quand l'objectif est dépassé) ; tableau de bord du back office et « Ma vente ».",
   pillsLabel: "Statut des annonces (exemple)",
   pills: [
     { label: "Toutes", count: 16, active: false },
@@ -967,6 +998,7 @@ export const emails = {
     published: "Annonce en ligne (vendeur)",
     rejected: "Annonce à corriger (vendeur)",
     suspended: "Annonce suspendue (vendeur)",
+    accountSuspended: "Compte suspendu (vendeur ou acquéreur)",
     messageSeller: "Nouveau message (vendeur)",
     messagesBuyer: "Nouveaux messages (acquéreur)",
     messageLink: "Nouveau message avec un lien (vendeur)",

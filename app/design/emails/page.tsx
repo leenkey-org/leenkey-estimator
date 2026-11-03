@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { render } from "@react-email/components";
 import { FacadeRoot } from "@/components/shared/facade-root";
+import { AccountSuspendedEmail, accountSuspendedSubject } from "@/emails/account-suspended";
 import { ListingDecisionEmail, listingDecisionSubject } from "@/emails/listing-decision";
 import {
   ListingReceivedEmail,
@@ -105,6 +106,16 @@ function previews(): Preview[] {
       name: t.names.suspended,
       subject: listingDecisionSubject("suspended", s.reference),
       element: ListingDecisionEmail({ ...decision, decision: "suspended", reason: s.reason }),
+    },
+    {
+      name: t.names.accountSuspended,
+      subject: accountSuspendedSubject(),
+      element: AccountSuspendedEmail({
+        firstName: s.buyer,
+        reason: s.reason,
+        contactEmail: fr.legal.contactEmail,
+        siteUrl: site,
+      }),
     },
     {
       name: t.names.messageSeller,

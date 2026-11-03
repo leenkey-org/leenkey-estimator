@@ -3,6 +3,7 @@ import { AdminShell } from "@/components/shared/admin-shell";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { requireAdmin } from "@/core/auth/session";
+import { adminCounts } from "@/leenkey/admin/dashboard/queries";
 import { signOut } from "@/leenkey/auth/actions";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { accountMenu, ADMIN_NAV_ITEMS, bottomTabs, ROUTES } from "@/leenkey/navigation/config";
@@ -13,15 +14,30 @@ import { fr } from "@/lib/i18n/fr";
 // middleware. Each page checks again with requireAdmin() (see its comment).
 // AdminShell: sidebar from 768 px, header and bottom tabs below (DESIGN.md 10.6),
 // SiteFooter under the content (L1-36). The metadata of each page are read
-// under requireAdmin() too (leenkey/admin/metadata.ts).
+// under requireAdmin() too (leenkey/admin/metadata.ts). What waits for the
+// team (L1-30a): the count pills of the sidebar and, below 768 px, the three
+// tiles of the header; without the counts, neither (the pages still show).
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const profile = await requireAdmin();
+  const counts = await adminCounts();
+  const waiting = counts.ok ? counts.data : null;
+  const countOf: Record<string, number | undefined> = waiting
+    ? {
+        [ROUTES.adminListings]: waiting.listingsPending,
+        [ROUTES.adminCases]: waiting.casesOpen,
+        [ROUTES.adminReports]: waiting.reportsOpen,
+      }
+    : {};
+  const items = ADMIN_NAV_ITEMS.map((item) =>
+    countOf[item.href] ? { ...item, count: countOf[item.href] } : item,
+  );
+  const header = fr.adminDashboard.header;
   return (
     <FacadeRoot className="min-h-dvh bg-lk-bg">
       <AdminShell
         label={fr.nav.adminLabel}
         homeHref={ROUTES.admin}
-        items={ADMIN_NAV_ITEMS}
+        items={items}
         tabs={bottomTabs("admin")}
         fallbackTitle={fr.nav.backOffice}
         account={{
@@ -41,6 +57,22 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           ),
         }}
         footer={<SiteFooter />}
+        headerTiles={
+          waiting
+            ? {
+                label: header.label,
+                tiles: [
+                  {
+                    label: header.listings,
+                    value: waiting.listingsPending,
+                    href: ROUTES.adminListingsToReview,
+                  },
+                  { label: header.cases, value: waiting.casesOpen, href: ROUTES.adminCases },
+                  { label: header.reports, value: waiting.reportsOpen, href: ROUTES.adminReports },
+                ],
+              }
+            : undefined
+        }
       >
         {children}
       </AdminShell>

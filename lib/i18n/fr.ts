@@ -24,6 +24,9 @@ export const fr = {
     hoursAgo: (hours: number) => `il y a ${hours}\u00A0h`,
     yesterday: "hier",
     daysAgo: (days: number) => `il y a ${days}\u00A0j`,
+    waitMinutes: (minutes: number) => `${minutes}\u00A0min`,
+    waitHours: (hours: number) => `${hours}\u00A0h`,
+    waitDays: (days: number) => `${days}\u00A0${days > 1 ? "jours" : "jour"}`,
   },
   field: {
     optional: "(facultatif)",
@@ -157,10 +160,7 @@ export const fr = {
     },
     admin: {
       metaTitle: "Back office · Leenkey",
-      // The dashboard of the back office comes with L1-30; the listings are already there (L1-19).
-      title: "Le tableau de bord arrive",
-      text: "Nous préparons le tableau de bord du back office. Les annonces à valider sont déjà dans « Annonces ».",
-      action: "Voir les annonces à valider",
+      loading: "Chargement de la page…",
     },
   },
   // « Ma vente », the dashboard of a sale (L1-24, SPEC-V2 8.7, DESIGN.md 12.3).
@@ -928,13 +928,6 @@ export const fr = {
       title: "Dossier de vente",
     },
     admin: {
-      users: {
-        metaTitle: "Utilisateurs · Back office · Leenkey",
-        title: "Utilisateurs",
-        comingTitle: "La liste des comptes arrive",
-        comingText:
-          "Nous préparons l'écran des vendeurs et des acquéreurs, avec leurs biens et leur financement.",
-      },
       cases: {
         metaTitle: "Dossiers · Back office · Leenkey",
         title: "Dossiers",
@@ -1242,6 +1235,193 @@ export const fr = {
       reload: "Recharger la page",
     },
   },
+  // L1-30a: the dashboard of the back office (SPEC-V2 section 17).
+  adminDashboard: {
+    greeting: (firstName: string | null) =>
+      firstName ? `Bonjour ${firstName}, voici ce qui vous attend.` : "Voici ce qui vous attend.",
+    tiles: {
+      label: "Chiffres du back office",
+      listings: "Annonces à valider",
+      oldest: (wait: string, late: boolean) =>
+        `Plus ancienne : ${wait}${late ? " · au-delà de 24\u00A0h" : " · objectif 24\u00A0h"}`,
+      none: "Rien en attente",
+      cases: "Dossiers ouverts",
+      reports: "Signalements ouverts",
+      plans: (days: number) => `Formules vendues · ${days}\u00A0j`,
+      plansAmount: (amount: string) => `${amount} TTC`,
+      signups: (days: number) => `Inscriptions · ${days}\u00A0j`,
+      signupsSplit: (sellers: number, buyers: number) =>
+        `${sellers}\u00A0${sellers > 1 ? "vendeurs" : "vendeur"}, ${buyers}\u00A0${buyers > 1 ? "acquéreurs" : "acquéreur"}`,
+    },
+    // The header of a phone (AdminMobileHeader): three tiles.
+    header: {
+      label: "À traiter",
+      listings: "À valider",
+      cases: "Dossiers",
+      reports: "Signalements",
+    },
+    todo: {
+      title: "À traiter",
+      lead: "Ce qui attend l'équipe, du plus ancien au plus récent.",
+      kinds: {
+        listing: "Annonce à valider",
+        case: "Dossier",
+        report: "Signalement",
+      },
+      since: (wait: string) => `En attente depuis ${wait}`,
+      emptyTitle: "Rien à traiter",
+      emptyText: "Aucune annonce, aucun dossier ni aucun signalement n'attend l'équipe.",
+    },
+    later:
+      "Messages clients, offres et déclencheurs de montée en gamme s'ajouteront ici avec leurs écrans.",
+    error: "Une partie du tableau de bord n'a pas pu être chargée.",
+    retry: "Réessayer",
+  },
+  // L1-30a: the users of the back office (SPEC-V2 section 17).
+  adminUsers: {
+    metaTitle: "Utilisateurs · Back office · Leenkey",
+    detailMetaTitle: (name: string) => `${name} · Utilisateurs · Back office · Leenkey`,
+    title: "Utilisateurs",
+    summary: {
+      total: (count: number) => `${count}\u00A0${count > 1 ? "comptes" : "compte"}`,
+      sellers: (count: number) => `${count}\u00A0${count > 1 ? "vendeurs" : "vendeur"}`,
+      buyers: (count: number) => `${count}\u00A0${count > 1 ? "acquéreurs" : "acquéreur"}`,
+      suspended: (count: number) => `${count}\u00A0${count > 1 ? "suspendus" : "suspendu"}`,
+    },
+    filters: {
+      label: "Type de compte",
+      all: "Tous",
+      seller: "Vendeurs",
+      buyer: "Acquéreurs",
+      admin: "Équipe",
+      suspended: "Suspendus",
+    },
+    search: {
+      label: "Rechercher un compte",
+      placeholder: "Nom, prénom ou email",
+      submit: "Rechercher",
+    },
+    limited: (count: number) =>
+      `Les ${count}\u00A0premiers comptes sont affichés : précisez la recherche ou le filtre.`,
+    table: {
+      label: "Comptes",
+      user: "Compte",
+      roles: "Rôles",
+      signedUp: "Inscription",
+      properties: "Biens",
+      plan: "Formule",
+      financing: "Financement",
+      status: "Statut",
+    },
+    roles: {
+      seller: "Vendeur",
+      buyer: "Acquéreur",
+      admin: "Équipe",
+    },
+    noName: "Sans nom",
+    noPlan: "—",
+    noFinancing: "—",
+    active: "Actif",
+    suspendedBadge: "Suspendu",
+    signedUp: (date: string) => `Inscrit le ${date}`,
+    propertiesCount: (count: number) => `${count}\u00A0${count > 1 ? "biens" : "bien"}`,
+    open: "Voir la fiche",
+    openLabel: (name: string) => `Voir la fiche de ${name}`,
+    empty: {
+      title: "Aucun compte",
+      text: "Aucun compte ne correspond à ce filtre.",
+      search: (query: string) => `Aucun compte ne correspond à « ${query} ».`,
+      action: "Voir tous les comptes",
+    },
+    error: "Les comptes n'ont pas pu être chargés.",
+    retry: "Réessayer",
+    back: "Tous les utilisateurs",
+    detail: {
+      info: "Informations",
+      email: "Email",
+      emailConfirmed: "Email confirmé",
+      emailNotConfirmed: "Email non confirmé",
+      phone: "Téléphone",
+      noPhone: "Non renseigné",
+      signedUp: "Inscription",
+      lastSignIn: "Dernière connexion",
+      never: "Jamais",
+      roles: "Rôles",
+      suspension: "Suspendu",
+      suspensionReason: "Motif de la suspension",
+      properties: "Biens",
+      propertiesEmpty: "Aucun bien.",
+      noListing: "Annonce pas encore rédigée",
+      buyer: "Projet d'achat",
+      project: "Projet",
+      cities: "Villes recherchées",
+      financing: "Financement",
+      noProject: "Non renseigné",
+      conversations: "Conversations",
+      conversationsNote:
+        "Les métadonnées seulement : le contenu des messages n'est lu qu'en cas de signalement.",
+      conversationsEmpty: "Aucune conversation.",
+      asSeller: (name: string) => `Vend à ${name}`,
+      asBuyer: (name: string) => `Achète à ${name}`,
+      someone: "un compte supprimé",
+      closed: "Close",
+      lastMessage: (when: string) => `Dernier message ${when}`,
+      cases: "Dossiers",
+      casesEmpty: "Aucun dossier.",
+      caseStatus: {
+        new: "Nouveau",
+        in_progress: "En cours",
+        closed: "Clos",
+      },
+      history: "Historique",
+      historyEmpty: "Aucune décision pour l'instant.",
+      self: "C'est votre compte : vous ne pouvez pas le suspendre.",
+      later:
+        "Les offres et le justificatif de financement s'ajouteront à cette fiche avec le lot 2.",
+    },
+    history: {
+      actions: {
+        "user.suspend": "Compte suspendu",
+        "user.unsuspend": "Compte réactivé",
+        "user.set_roles": "Rôles modifiés",
+      } as Record<string, string>,
+      other: "Modifié",
+      by: (name: string) => `par ${name}`,
+      reason: (reason: string) => `Motif : ${reason}`,
+    },
+    actions: {
+      label: (name: string) => `Décisions sur le compte de ${name}`,
+      suspend: "Suspendre le compte",
+      unsuspend: "Réactiver le compte",
+    },
+    dialog: {
+      title: "Suspendre le compte",
+      text: "Le compte ne pourra plus publier, écrire ni utiliser l'assistant ; ses annonces restent en ligne. Son titulaire reçoit ce motif par email.",
+      reason: "Motif envoyé au titulaire du compte",
+      confirm: "Suspendre le compte",
+    },
+    // Provisional wording, to be validated by Cédric (Q71).
+    suspendTemplates: [
+      "Comportement abusif envers d'autres utilisateurs.",
+      "Tentative de fraude ou d'escroquerie signalée.",
+      "Informations du compte inexactes.",
+      "Non-respect de nos conditions d'utilisation.",
+    ],
+    result: {
+      suspended: "Compte suspendu.",
+      unsuspended: "Compte réactivé.",
+      emailFailed: "L'email au titulaire n'a pas pu partir : prévenez-le autrement.",
+    },
+    errors: {
+      invalid: "Le motif doit faire au moins 3 caractères.",
+      conflict: "Ce compte ne peut pas être suspendu (c'est peut-être le vôtre).",
+      notFound: "Ce compte n'existe plus.",
+      forbidden: "Cette action est réservée à l'équipe Leenkey.",
+      unavailable: "La décision n'a pas pu être enregistrée. Réessayez.",
+      network:
+        "Pas de réponse du serveur : la décision a peut-être été enregistrée. Rechargez la page pour vérifier le statut du compte avant de recommencer.",
+    },
+  },
   // Transactional emails (SPEC-V2 section 18, DESIGN.md 14), texts of emails/.
   emails: {
     brand: "Leenkey",
@@ -1321,6 +1501,18 @@ export const fr = {
         after: " : nous vous répondons sous 48\u00A0h, 7\u00A0j/7.",
       },
       action: "Voir mon Cockpit",
+    },
+    // L1-30a: an account suspended by the back office (SPEC-V2 17, « suspension
+    // du compte (motif, email) »). Provisional text, as the listing one (Q71).
+    accountSuspended: {
+      subject: "Votre compte Leenkey est suspendu",
+      title: "Votre compte est suspendu",
+      text: "Vous pouvez toujours vous connecter, mais votre compte ne permet plus de publier une annonce, d'envoyer un message ni d'utiliser l'assistant pour le moment.",
+      reason: "Motif",
+      contest: {
+        before: "Si vous n'êtes pas d'accord, écrivez-nous à ",
+        after: " : nous vous répondons sous 48\u00A0h, 7\u00A0j/7.",
+      },
     },
   },
   // Labels of SPEC-V2 section 7 (StatusBadge mapping), colours in DESIGN.md 10.2.

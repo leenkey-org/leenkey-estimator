@@ -89,6 +89,9 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [ ] **L1-33** `plan_entitlements`, `hasEntitlement`, contenu des formules dans `plans`, page formules avec tableau comparatif (déclencheurs : voir L2-09) · PR : · Testé en préprod : ☐
 - [x] **L1-28** Assistant : route de streaming, outils vendeur, confirmation, quotas, journalisation, panneau desktop +… · PR : #67 · Testé en préprod : ☐
 - [ ] **L1-30** Back office complet lot 1 : tableau de bord, utilisateurs, dossiers, signalements (résumé du jour par l'assistant : S6),… · PR : · Testé en préprod : ☐
+  - [x] **L1-30a** Tableau de bord (tuiles, « À traiter », compteurs de la barre latérale et de l'en-tête mobile), utilisateurs (liste, fiche, suspension du compte avec email) · PR : #70 · Testé en préprod : ☐
+  - [ ] **L1-30c** Dossiers et signalements · PR : · Testé en préprod : ☐
+  - [ ] **L1-30d** Pré-analyse des annonces, `/admin/assistant`, « Rédiger avec l'assistant » du motif de refus, export CSV des annonces · PR : · Testé en préprod : ☐
 - [ ] **L1-31** Passage à l’humain (`create_case`, fonction SQL `security definer`) côté vendeur · PR : · Testé en préprod : ☐
 - [ ] **L1-34** Conversation conseiller : `kind = 'advisor'` sur la messagerie existante, créée au paiement, vue admin `/admin/messages`, outil `contact_advisor` · PR : · Testé en préprod : ☐
 - [ ] **L1-32** Recette interne lot 1 : E2E 1, 2, 3, 7 verts, Lighthouse, axe, revue RLS · PR : · Testé en préprod : ☐
@@ -102,7 +105,7 @@ Recette du lot 1 par Cédric du 16 au 20 novembre ; mise en ligne de la V2 la se
 - [ ] **L1-16b** Carte avancée : regroupement, recherche dans la zone (synchronisation liste/carte livrée avec L1-16) · PR : · Testé en préprod : ☐
 - [x] **L1-29** Suggestion de réponse en messagerie + rédaction de description · PR : #69 · Testé en préprod : ☐
 - [ ] **L1-35** `listing_revisions` simplifié : historique des champs prix, titre, description d’une annonce publiée, vendeur et admin · PR : · Testé en préprod : ☐
-- [ ] **L1-30b** Résumé du jour par l'assistant dans le back office · PR : #56 · Testé en préprod : ☐
+- [ ] **L1-30b** Résumé du jour par l'assistant dans le back office · PR : · Testé en préprod : ☐
 
 Mise en ligne :
 

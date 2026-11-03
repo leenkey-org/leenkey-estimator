@@ -170,6 +170,18 @@ export function formatDateTime(value: DateInput, now: DateInput = new Date()): s
 }
 
 /**
+ * How long something has waited (L1-30a, « En attente depuis 30 h »): minutes
+ * under an hour, hours under two days (the 24 h target of a review reads in
+ * hours), then days. Never less than a minute.
+ */
+export function formatWaiting(since: DateInput, now: DateInput = new Date()): string {
+  const elapsed = Math.max(0, toDate(now).getTime() - toDate(since).getTime());
+  if (elapsed < HOUR) return fr.format.waitMinutes(Math.max(1, Math.floor(elapsed / MINUTE)));
+  if (elapsed < 2 * DAY) return fr.format.waitHours(Math.floor(elapsed / HOUR));
+  return fr.format.waitDays(Math.floor(elapsed / DAY));
+}
+
+/**
  * « à l'instant », « il y a 12 min », « il y a 2 h », « hier », « il y a 3 j »,
  * then the short date. A future date is shown as a date and time.
  */
