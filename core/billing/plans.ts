@@ -14,6 +14,9 @@ export type PlanCode = Database["public"]["Enums"]["plan_code"];
 
 export type ActivePlan = PlanView;
 
+/** A plan, on sale or withdrawn from sale (`active` false). */
+export type AnyPlan = PlanView & { active: boolean };
+
 /**
  * Active plans in their order, or null when they cannot be read (database
  * unreachable, or not configured: CI build, PR previews). Read once per
@@ -41,6 +44,40 @@ export const activePlans = cache(async function activePlans(): Promise<ActivePla
     }));
   } catch (error) {
     // The signals of Next.js (a page rendered at request time) go through.
+    unstable_rethrow(error);
+    console.error("[billing] plans read failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+});
+
+/**
+ * Every plan, on sale or not, or null when they cannot be read. A plan
+ * withdrawn from sale still counts for the sellers who hold it: the passage
+ * to a dearer one costs the difference with its price (L1-26).
+ */
+export const allPlans = cache(async function allPlans(): Promise<AnyPlan[] | null> {
+  if (!isSupabaseConfigured()) return null;
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("plans")
+      .select("code, name, price_cents, description, features, active")
+      .order("position");
+    if (error) {
+      console.error("[billing] plans read failed", { code: error.code });
+      return null;
+    }
+    return data.map((row) => ({
+      code: row.code,
+      name: row.name,
+      priceCents: row.price_cents,
+      ...splitDescription(row.description),
+      features: row.features,
+      active: row.active,
+    }));
+  } catch (error) {
     unstable_rethrow(error);
     console.error("[billing] plans read failed", {
       error: error instanceof Error ? error.message : String(error),

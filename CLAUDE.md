@@ -169,6 +169,7 @@ PREPROD_PASSWORD=               # préprod uniquement ; absentes en prod = pas d
 AI_MODEL_FAST=                  # facultatif, surcharge de core/ai/models.ts
 AI_MODEL_SMART=                 # facultatif
 AI_MOCK=                        # 1 en tests E2E : réponses IA déterministes
+STRIPE_MOCK=                    # 1 en tests E2E : Stripe simulé (core/billing/stripe.ts, jamais en prod), webhooks signés par les tests
 GEOCODER=                       # facultatif : fixtures = adresses de démonstration (tests E2E, environnement sans accès à la Base Adresse Nationale)
 GEOCODER_URL=                   # facultatif, surcharge du service de géocodage (core/geo/address-search.ts)
 E2E_SEED=                       # 1 : tests E2E sur une base chargée par npm run db:seed (local, préprod)

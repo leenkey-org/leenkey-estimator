@@ -188,6 +188,7 @@ export default async function SellerHomePage({ searchParams }: Props) {
         status: property.listingStatus ?? "draft",
       }}
       progress={heading && progress ? { ...heading, plan: PLANS[progress.template] ?? "" } : null}
+      planHref={mode === "sold" ? undefined : `/vendeur/formule?bien=${property.id}`}
     />
   );
 

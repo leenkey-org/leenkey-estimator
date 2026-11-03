@@ -14,6 +14,8 @@ import {
 } from "@/emails/listing-submitted";
 import { ListingsToReviewEmail, listingsToReviewSubject } from "@/emails/listings-to-review";
 import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
+import { PlanActivatedEmail, planActivatedSubject } from "@/emails/plan-activated";
+import { PlanPurchasedEmail, planPurchasedSubject } from "@/emails/plan-purchased";
 import { formatPrice } from "@/lib/format";
 import { isProduction } from "@/lib/env";
 import { fr } from "@/lib/i18n/fr";
@@ -114,6 +116,33 @@ function previews(): Preview[] {
         firstName: s.buyer,
         reason: s.reason,
         contactEmail: fr.legal.contactEmail,
+        siteUrl: site,
+      }),
+    },
+    {
+      name: t.names.planActivated,
+      subject: planActivatedSubject("Accompagné"),
+      element: PlanActivatedEmail({
+        firstName: "Bruno",
+        planName: "Accompagné",
+        property: s.reference,
+        amount: formatPrice(99000),
+        contactFrom: "mardi 17 novembre",
+        planUrl: `${site}/vendeur/formule`,
+        siteUrl: site,
+      }),
+    },
+    {
+      name: t.names.planPurchased,
+      subject: planPurchasedSubject("Sérénité", s.reference, true),
+      element: PlanPurchasedEmail({
+        planName: "Sérénité",
+        upgrade: true,
+        property: s.reference,
+        seller: "Bruno Lefèvre",
+        amount: formatPrice(51000),
+        earlyStart: true,
+        casesUrl: `${site}/admin/dossiers`,
         siteUrl: site,
       }),
     },

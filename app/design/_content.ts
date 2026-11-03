@@ -1001,6 +1001,8 @@ export const emails = {
     rejected: "Annonce à corriger (vendeur)",
     suspended: "Annonce suspendue (vendeur)",
     accountSuspended: "Compte suspendu (vendeur ou acquéreur)",
+    planActivated: "Formule activée (vendeur)",
+    planPurchased: "Formule souscrite ou passage à une formule supérieure (équipe)",
     messageSeller: "Nouveau message (vendeur)",
     messagesBuyer: "Nouveaux messages (acquéreur)",
     messageLink: "Nouveau message avec un lien (vendeur)",

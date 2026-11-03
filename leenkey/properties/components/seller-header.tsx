@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { PropertyThumb } from "@/components/shared/property-thumb";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { StepProgress } from "@/components/shared/step-progress";
@@ -34,6 +35,7 @@ export function SellerHeader({
   choices,
   property,
   progress,
+  planHref,
   className,
 }: {
   greeting: string;
@@ -43,6 +45,8 @@ export function SellerHeader({
   choices?: readonly PropertyChoice[];
   property: HeaderProperty;
   progress?: { current: number; total: number; label: string; plan: string } | null;
+  /** The plans of the property (/vendeur/formule, L1-26), under the steps. */
+  planHref?: string;
   className?: string;
 }) {
   return (
@@ -83,6 +87,14 @@ export function SellerHeader({
           label={progress.label}
           trailing={progress.plan}
         />
+      ) : null}
+      {planHref ? (
+        <Link
+          href={planHref}
+          className="-my-2 inline-flex min-h-11 items-center self-start text-lk-caption font-semibold text-white underline underline-offset-2 hover:no-underline focus-visible:outline-white"
+        >
+          {fr.billing.entry}
+        </Link>
       ) : null}
     </header>
   );

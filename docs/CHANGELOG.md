@@ -12,6 +12,16 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-03 · L1-26 · PR #71 · Paiement des formules par Stripe
+- Ajouté : page `/vendeur/formule` : les formules de la table `plans`, la formule en vigueur, « Passer à Sérénité pour 510 € », le récapitulatif de la commande avec ses deux cases jamais cochées d'avance et « Commander et payer … € TTC », le paiement sur Stripe Checkout, le retour (« Paiement en cours de confirmation », puis « C'est activé. ») et l'annulation ; lien « Voir les formules » dans « Ma vente ».
+- Ajouté : webhook `/api/webhooks/stripe` (signature vérifiée, idempotent) : formule activée, CGU et CGV acceptées avec leurs versions, dossier pour l'équipe, notifications et emails ; remboursements total et partiel.
+- Ajouté : client Stripe unique (`core/billing/stripe.ts`), prix vérifiés contre la table `plans`, mode simulé `STRIPE_MOCK=1` pour les tests, `npm run stripe:listen`.
+- Ajouté : emails « Votre formule … est activée » (vendeur) et « Formule … souscrite » (équipe), à l'aperçu `/design/emails`.
+- Ajouté : une commande qui ne correspond plus à la formule en vigueur quand l'argent arrive (passage payé sans Accompagné en vigueur, second paiement du même passage, montant inférieur) est gardée sans activer la formule : « Paiement reçu » pour le vendeur, « Paiement de la formule … à vérifier » avec ce qui est à vérifier pour l'équipe (email et notification).
+- Ajouté : premier contact du conseiller après la fin du délai de rétractation, comptée en jours de Paris et reportée après un samedi, un dimanche ou un jour férié.
+- Migration : `20261103190000_stripe_checkout.sql` (colonnes de vente conforme de `subscriptions`, paiements gardés de `stripe_events`, notes de dossier sans auteur, fonctions `stripe_checkout_complete` et `stripe_charge_refunded` réservées au rôle de service, avec verrou du bien et contrôle de la commande, `euros`).
+- Tests : RLS (`rls_stripe_checkout.sql`, 61, cinq comptes et visiteur), unitaires (`tests/unit/billing`, 40), E2E (`billing-page.spec.ts` en 390 et 1 280 px, `billing.spec.ts` sur la pile locale).
+
 ### 2026-11-03 · L1-30a · PR #70 · Back office : tableau de bord et utilisateurs
 - Ajouté : tableau de bord `/admin` : annonces à valider (attente de la plus ancienne, objectif 24 h, orange au-delà), dossiers et signalements ouverts, formules vendues et inscriptions sur 30 jours, puis « À traiter » (annonces, dossiers, signalements, du plus ancien au plus récent).
 - Ajouté : compteurs de la barre latérale et trois tuiles de l'en-tête mobile du back office (« À valider », « Dossiers », « Signalements »).
