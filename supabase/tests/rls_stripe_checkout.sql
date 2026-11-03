@@ -7,7 +7,7 @@
 -- an upgrade had replaced; a partial one leaves a note only.
 begin;
 \ir _helpers.psql
-select plan(34);
+select plan(61);
 \ir _plan.psql
 
 -- The plans of the seed (reference data, absent from a bare database).
@@ -22,6 +22,12 @@ on conflict (code) do nothing;
 insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms)
 values (tests.uid('seller_a'), 'appartement', '12 rue de la Gare', '91600', 'Savigny-sur-Orge', 68, 3)
 returning id as prop \gset
+insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms)
+values (tests.uid('seller_a'), 'maison', '3 allée des Tilleuls', '91200', 'Athis-Mons', 110, 5)
+returning id as prop2 \gset
+insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms)
+values (tests.uid('seller_a'), 'appartement', '8 place de la Mairie', '91360', 'Épinay-sur-Orge', 45, 2)
+returning id as prop3 \gset
 
 -- Nobody but the webhook --------------------------------------------------------
 \set who anon
@@ -127,6 +133,69 @@ select is((select stripe_charge_refunded('evt_r3', 'pi_unknown', 1000, true) ->>
 select ok((select count(*) >= 2 from notifications where profile_id = tests.uid('admin') and type = 'plan.refunded'),
           'webhook: the team is told of each refund');
 
+-- What money alone does not settle, recorded and flagged for the team.
+-- A stale upgrade session paid once Accompagné is refunded: Sérénité for 510 €.
+select is((select stripe_charge_refunded('evt_r4', 'pi_1', 99000, true) ->> 'status'), 'processed',
+          'webhook: Accompagné refunded in full');
+select is((select (stripe_checkout_complete('evt_5', 'cs_5', 'pi_5', :'prop', tests.uid('seller_a'), 'serenite',
+            true, 51000, 0, false, now(), '2026-06-28', '2026-10-17') - 'subscription_id' - 'case_id')
+             = '{"check": ["passage payé sans la formule inférieure en vigueur", "510,00 € reçus au lieu de 1 500,00 €", "paiement gardé, formule non activée"], "status": "held", "reference": "Savigny-sur-Orge", "plan_name": "Sérénité", "replaced_plan": null}'::jsonb),
+          true,
+          'webhook: an upgrade paid without Accompagné in force is held, with the amount');
+select is((select row(
+             (select plan::text from sale_progress where property_id = :'prop'),
+             (select ends_at <= activated_at from subscriptions where stripe_checkout_session_id = 'cs_5'))::text),
+          '(autonomie,t)', 'webhook: the held payment gives no plan');
+select ok((select bool_or(body like '%À vérifier : passage payé sans la formule inférieure en vigueur%')
+             from case_notes where author_id is null
+              and case_id = (select id from cases where property_id = :'prop' and source = 'plan_purchase')),
+          'webhook: the case says it');
+
+-- A refund recorded before its payment (the payment came back later).
+select is((select stripe_charge_refunded('evt_r9', 'pi_9', 99000, true) ->> 'status'), 'unknown',
+          'webhook: a refund of a payment not recorded yet is kept');
+select is((select stripe_checkout_complete('evt_9', 'cs_9', 'pi_9', :'prop2', tests.uid('seller_a'), 'accompagne',
+            false, 99000, 0, false, now(), '2026-06-28', '2026-10-17') ->> 'status'),
+          'refunded', 'webhook: the payment that comes later is recorded as refunded');
+select is((select row(
+             (select refunded_at is not null from subscriptions where stripe_checkout_session_id = 'cs_9'),
+             (select plan::text from sale_progress where property_id = :'prop2'))::text),
+          '(t,autonomie)', 'webhook: and no plan is in force for it');
+
+-- Two tabs: the same plan paid twice, then a dearer one, then a cheaper one.
+select is((select stripe_checkout_complete('evt_12', 'cs_12', 'pi_12', :'prop2', tests.uid('seller_a'), 'accompagne',
+            false, 99000, 0, false, now(), '2026-06-28', '2026-10-17') ->> 'status'), 'processed',
+          'webhook: Accompagné paid');
+select is((select stripe_checkout_complete('evt_13', 'cs_13', 'pi_13', :'prop2', tests.uid('seller_a'), 'accompagne',
+            false, 99000, 0, false, now(), '2026-06-28', '2026-10-17') ->> 'status'), 'held',
+          'webhook: the same plan paid a second time is held');
+select is((select row(
+             (select plan::text from sale_progress where property_id = :'prop2'),
+             (select replaced_by is null from subscriptions where stripe_checkout_session_id = 'cs_12'))::text),
+          '(accompagne,t)', 'webhook: the first one stays in force');
+select is((select stripe_checkout_complete('evt_14', 'cs_14', 'pi_14', :'prop2', tests.uid('seller_a'), 'serenite',
+            false, 150000, 0, false, now(), '2026-06-28', '2026-10-17') ->> 'check'),
+          '["une formule payante était déjà active : la différence est à rembourser"]',
+          'webhook: Sérénité at full price over Accompagné activates, the difference to refund');
+select is((select plan::text from sale_progress where property_id = :'prop2'), 'serenite',
+          'webhook: Sérénité in force');
+select is((select stripe_checkout_complete('evt_15', 'cs_15', 'pi_15', :'prop2', tests.uid('seller_a'), 'accompagne',
+            false, 99000, 0, false, now(), '2026-06-28', '2026-10-17') ->> 'status'), 'held',
+          'webhook: a cheaper plan paid after a dearer one is held');
+select is((select plan::text from sale_progress where property_id = :'prop2'), 'serenite',
+          'webhook: and never replaces it');
+
+-- Accompagné refunded while the upgrade that replaced it is in force.
+select is((select stripe_checkout_complete('evt_10', 'cs_10', 'pi_10', :'prop3', tests.uid('seller_a'), 'accompagne',
+            false, 99000, 0, false, now(), '2026-06-28', '2026-10-17') ->> 'status'), 'processed',
+          'webhook: Accompagné on a third property');
+select is((select stripe_checkout_complete('evt_11', 'cs_11', 'pi_11', :'prop3', tests.uid('seller_a'), 'serenite',
+            true, 51000, 0, false, now(), '2026-06-28', '2026-10-17') -> 'check')::text, '[]',
+          'webhook: its upgrade, nothing to check');
+select is((select row(stripe_charge_refunded('evt_r10', 'pi_10', 99000, true) ->> 'check',
+                      (select plan::text from sale_progress where property_id = :'prop3'))::text),
+          '(true,serenite)', 'webhook: Accompagné refunded under Sérénité is flagged, Sérénité stays');
+
 -- A note without an author is Leenkey's only.
 \set who admin
 \ir _as.psql
@@ -137,12 +206,39 @@ select throws_ok(format($$insert into case_notes (case_id, author_id, body) valu
 -- What the seller reads: their plan, never another's.
 \set who seller_a
 \ir _as.psql
-select is((select count(*)::int from subscriptions where property_id = :'prop'), 2,
+select is((select count(*)::int from subscriptions where property_id = :'prop'), 3,
           'seller_a: reads the plans of their property');
 \set who seller_b
 \ir _as.psql
 select is((select count(*)::int from subscriptions where property_id = :'prop'), 0,
           'seller_b: never the plans of another seller');
+select is((select count(*)::int from legal_acceptances where profile_id = tests.uid('seller_a')), 0,
+          'seller_b: never the acceptances of another seller');
+select throws_ok(format($$select stripe_checkout_complete('evt_b', 'cs_b', 'pi_b', %L, %L, 'accompagne',
+                  false, 99000, 0, false, now(), '2026-06-28', '2026-10-17')$$, :'prop', tests.uid('seller_b')),
+                 '42501', null, 'seller_b: never records a payment');
+select throws_ok($$select stripe_charge_refunded('evt_rb', 'pi_1', 99000, true)$$, '42501', null,
+                 'seller_b: never records a refund');
+select throws_ok('select count(*) from stripe_events', '42501', null, 'seller_b: never the events of Stripe');
+
+\set who buyer_c
+\ir _as.psql
+select is((select count(*)::int from subscriptions), 0, 'buyer_c: no plan to read');
+select is((select count(*)::int from legal_acceptances where context = 'checkout'), 0,
+          'buyer_c: never the acceptances of an order');
+
+\set who buyer_d
+\ir _as.psql
+select throws_ok(format($$select stripe_checkout_complete('evt_d', 'cs_d', 'pi_d', %L, %L, 'accompagne',
+                  false, 99000, 0, false, now(), '2026-06-28', '2026-10-17')$$, :'prop', tests.uid('seller_a')),
+                 '42501', null, 'buyer_d: never records a payment');
+select is((select count(*)::int from subscriptions where property_id = :'prop'), 0,
+          'buyer_d: never the plans of a seller');
+
+\set who anon
+\ir _as.psql
+select throws_ok('select count(*) from subscriptions', '42501', null, 'anon: no plan to read');
+select throws_ok('select count(*) from legal_acceptances', '42501', null, 'anon: no acceptance to read');
 
 select * from finish();
 rollback;

@@ -57,7 +57,11 @@ async function checkoutCompleted(
   eventId: string,
   session: StripeCheckoutSession,
 ): Promise<WebhookOutcome> {
-  if (session.mode !== "payment" || session.payment_status !== "paid") {
+  // « no_payment_required »: a promotion code of 100 %, an order all the same.
+  if (
+    session.mode !== "payment" ||
+    (session.payment_status !== "paid" && session.payment_status !== "no_payment_required")
+  ) {
     log("session not paid ignored", { event_id: eventId, session: session.id });
     return ok("ignored");
   }
@@ -71,6 +75,11 @@ async function checkoutCompleted(
     return ok("ignored");
   }
   const order = metadata.data;
+  // Local and preprod share the test mode of one Stripe account: each its own orders.
+  if (order.env !== appEnv()) {
+    log("order of another environment ignored", { event_id: eventId, env: order.env });
+    return ok("ignored");
+  }
   const amount = session.amount_total ?? 0;
   const { data, error } = await supabase.rpc("stripe_checkout_complete", {
     p_event_id: eventId,
@@ -98,7 +107,18 @@ async function checkoutCompleted(
     return { status: 500, outcome: "failed" };
   }
   const result = readResult(data);
-  if (result.status !== "processed") return ok("duplicate");
+  if (result.status === "duplicate") return ok("duplicate");
+  if (result.status === "refunded") {
+    // Refunded before it was recorded (the team refunded it): in the case, nothing to send.
+    log("payment refunded before it was recorded", {
+      event_id: eventId,
+      entity_id: order.property_id,
+    });
+    return ok("processed");
+  }
+  // « held »: paid, the plan not activated (the order no longer matched the
+  // plan in force); the team checks it and writes to the seller.
+  const held = result.status === "held";
 
   const seller = await supabase
     .from("profiles")
@@ -118,16 +138,19 @@ async function checkoutCompleted(
     amountCents: amount,
     earlyStart: order.early_start === "1",
     activatedAt: new Date(),
+    held,
+    check: result.check,
   };
   const [toSeller, toTeam] = await Promise.all([
-    emailPlanActivated(paid),
+    held ? Promise.resolve("none" as const) : emailPlanActivated(paid),
     emailPlanPurchased(paid),
   ]);
-  log("payment recorded", {
+  log(held ? "payment recorded, plan held" : "payment recorded", {
     event_id: eventId,
     entity_id: order.property_id,
     plan: order.plan,
     kind: order.kind,
+    checks: result.check.length,
     email_seller: toSeller,
     email_team: toTeam,
   });
@@ -162,6 +185,8 @@ function readResult(data: unknown): {
   status: string;
   planName: string | null;
   reference: string | null;
+  /** What the team has to check (stripe_checkout_complete), in French. */
+  check: string[];
 } {
   const record = typeof data === "object" && data !== null ? (data as Record<string, unknown>) : {};
   const text = (value: unknown) => (typeof value === "string" ? value : null);
@@ -169,5 +194,8 @@ function readResult(data: unknown): {
     status: text(record.status) ?? "unknown",
     planName: text(record.plan_name),
     reference: text(record.reference),
+    check: Array.isArray(record.check)
+      ? record.check.filter((item): item is string => typeof item === "string")
+      : [],
   };
 }

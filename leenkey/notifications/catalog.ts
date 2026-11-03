@@ -11,7 +11,7 @@ import {
 import type { NotificationTone } from "@/components/shared/notification-item";
 import type { NotificationView } from "@/core/notifications/types";
 import type { Space } from "@/leenkey/navigation/spaces";
-import { formatPrice } from "@/lib/format";
+import { formatAmount } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 
 // The types of notifications of Leenkey (SPEC-V2 section 10) and their
@@ -105,17 +105,21 @@ const CATALOG: Record<string, Entry> = {
     icon: Folder,
     tone: "blue",
     filters: [],
-    title: (data) => t.caseCreated.title(text(data.plan_name), data.upgrade === true),
+    title: (data) =>
+      data.check === true
+        ? t.caseCreated.checkTitle(data.held === true)
+        : t.caseCreated.title(text(data.plan_name), data.upgrade === true),
     detail: (data) => t.caseCreated.detail(text(data.reference)),
   },
   "plan.refunded": {
     icon: CircleAlert,
     tone: "warning",
     filters: [],
-    title: (data) => t.planRefunded.title(data.full === true),
+    title: (data) =>
+      data.check === true ? t.planRefunded.checkTitle : t.planRefunded.title(data.full === true),
     detail: (data) =>
       t.planRefunded.detail(
-        typeof data.amount_cents === "number" ? formatPrice(data.amount_cents) : null,
+        typeof data.amount_cents === "number" ? formatAmount(data.amount_cents) : null,
         text(data.reference),
       ),
   },

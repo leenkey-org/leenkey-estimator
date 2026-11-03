@@ -11,7 +11,8 @@ import { firstContactFrom } from "../orders";
 // The return from Stripe (SPEC-V2 section 11, step 4): the page activates
 // nothing, it reads the state the webhook wrote. « Paiement en cours de
 // confirmation » while the subscription is not there, read again every 2 s
-// for 30 s; then « C'est activé. » with when the advisor gets in touch.
+// for 30 s; then « C'est activé. » with when the advisor gets in touch, or
+// « Paiement reçu » when the team checks the order before activating it.
 
 const t = fr.billing.confirmation;
 const POLL_MS = 2_000;
@@ -20,6 +21,7 @@ const MAX_MS = 30_000;
 type State =
   | { kind: "pending" }
   | { kind: "slow" }
+  | { kind: "held" }
   | { kind: "done"; planName: string; contactFrom: string | null };
 
 export function PaymentConfirmation({
@@ -49,7 +51,11 @@ export function PaymentConfirmation({
         result = null;
       }
       if (stopped) return;
-      if (result?.ok && result.data.active) {
+      if (result?.ok && result.data.state === "held") {
+        setState({ kind: "held" });
+        return;
+      }
+      if (result?.ok && result.data.state === "active") {
         const contact = firstContactFrom(new Date(result.data.activatedAt), result.data.earlyStart);
         setState({
           kind: "done",
@@ -87,16 +93,18 @@ export function PaymentConfirmation({
         tabIndex={-1}
         className="text-lk-h2 font-bold text-wide outline-none md:text-lk-h2-lg"
       >
-        {done ? t.doneTitle : t.pendingTitle}
+        {done ? t.doneTitle : state.kind === "held" ? t.heldTitle : t.pendingTitle}
       </h2>
       <p className="text-lk-body text-white/85">
         {state.kind === "done"
           ? state.contactFrom
             ? t.doneLater(state.planName, state.contactFrom)
             : t.doneNow(state.planName)
-          : state.kind === "slow"
-            ? t.slowText
-            : t.pendingText}
+          : state.kind === "held"
+            ? t.heldText
+            : state.kind === "slow"
+              ? t.slowText
+              : t.pendingText}
       </p>
       <div className="flex flex-wrap gap-3 pt-2">
         {state.kind === "slow" ? (

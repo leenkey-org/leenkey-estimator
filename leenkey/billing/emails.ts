@@ -5,15 +5,17 @@ import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
 import { PlanActivatedEmail, planActivatedSubject } from "@/emails/plan-activated";
 import { PlanPurchasedEmail, planPurchasedSubject } from "@/emails/plan-purchased";
 import { teamAddress } from "@/leenkey/notifications/send-emails";
-import { formatDate, formatPrice } from "@/lib/format";
+import { formatAmount, formatDate } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { absoluteUrl, siteUrl } from "@/lib/site";
 import { firstContactFrom } from "./orders";
 
 // The emails of a plan paid (SPEC-V2 sections 10 and 18, L1-26), sent by the
 // webhook once the payment is recorded: plan.activated to the seller,
-// case.created to the team. An email that fails is logged; the payment stays
-// recorded (Stripe does not send the event again for it).
+// case.created to the team, with what it has to check (a payment held, the
+// plan not activated, goes to the team only). An email that fails is logged;
+// the payment stays recorded (Stripe does not send the event again for it:
+// durable emails come with the queue of L1-40).
 
 export type PaidOrder = {
   sellerEmail: string | null;
@@ -27,6 +29,10 @@ export type PaidOrder = {
   amountCents: number;
   earlyStart: boolean;
   activatedAt: Date;
+  /** Paid, the plan not activated: the team checks the order first. */
+  held: boolean;
+  /** What the team has to check, from stripe_checkout_complete. */
+  check: string[];
 };
 
 async function rendered(element: React.ReactElement) {
@@ -42,7 +48,7 @@ export async function emailPlanActivated(order: PaidOrder): Promise<EmailDeliver
         firstName: order.sellerFirstName,
         planName: order.planName,
         property: order.property,
-        amount: formatPrice(order.amountCents),
+        amount: formatAmount(order.amountCents),
         contactFrom: contact ? formatDate(contact, order.activatedAt) : null,
         planUrl: absoluteUrl(`/vendeur/formule?bien=${order.propertyId}`),
         siteUrl: siteUrl(),
@@ -74,15 +80,17 @@ export async function emailPlanPurchased(order: PaidOrder): Promise<EmailDeliver
         upgrade: order.upgrade,
         property: order.property,
         seller: order.sellerName,
-        amount: formatPrice(order.amountCents),
+        amount: formatAmount(order.amountCents),
         earlyStart: order.earlyStart,
+        held: order.held,
+        check: order.check,
         casesUrl: absoluteUrl("/admin/dossiers"),
         siteUrl: siteUrl(),
       }),
     );
     return await sendEmail({
       to,
-      subject: planPurchasedSubject(order.planName, order.property, order.upgrade),
+      subject: planPurchasedSubject(order.planName, order.property, order.upgrade, order.held),
       html,
       text,
     });

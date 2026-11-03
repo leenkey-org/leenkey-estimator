@@ -7,11 +7,16 @@ import { z } from "zod";
 const planCode = z.enum(["autonomie", "accompagne", "serenite"]);
 const version = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
-/** « J'ai lu et j'accepte les CGU et les CGV » must be ticked; the immediate start is free to choose. */
+/**
+ * « J'ai lu et j'accepte les CGU et les CGV » must be ticked, with the
+ * versions the page showed; the immediate start is free to choose.
+ */
 export const checkoutSchema = z.object({
   propertyId: z.string().uuid(),
   plan: planCode,
   acceptedTerms: z.literal(true),
+  cguVersion: version,
+  cgvVersion: version,
   earlyStart: z.boolean(),
 });
 
@@ -30,6 +35,8 @@ export const checkoutMetadataSchema = z.object({
   accepted_at: z.string().datetime({ offset: true }),
   cgu_version: version,
   cgv_version: version,
+  /** Where the order was made: local and preprod share the test mode of one Stripe account. */
+  env: z.enum(["local", "staging", "production"]),
 });
 
 export type CheckoutMetadata = z.infer<typeof checkoutMetadataSchema>;

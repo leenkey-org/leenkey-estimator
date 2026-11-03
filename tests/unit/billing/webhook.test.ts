@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
     error: null as { code: string } | null,
   },
   emails: [] as string[],
+  orders: [] as Record<string, unknown>[],
 }));
 
 vi.mock("server-only", () => ({}));
@@ -21,8 +22,9 @@ vi.mock("@/leenkey/billing/emails", () => ({
     mocks.emails.push("seller");
     return "logged";
   },
-  emailPlanPurchased: async () => {
+  emailPlanPurchased: async (order: Record<string, unknown>) => {
     mocks.emails.push("team");
+    mocks.orders.push(order);
     return "logged";
   },
 }));
@@ -53,6 +55,7 @@ const metadata = {
   accepted_at: "2026-11-03T10:00:00.000Z",
   cgu_version: "2026-06-28",
   cgv_version: "2026-10-17",
+  env: "staging",
 };
 
 function completed(overrides: Record<string, unknown> = {}, livemode = false) {
@@ -82,6 +85,7 @@ function completed(overrides: Record<string, unknown> = {}, livemode = false) {
 beforeEach(() => {
   mocks.rpc = [];
   mocks.emails = [];
+  mocks.orders = [];
   mocks.rpcResult = {
     data: { status: "processed", plan_name: "Accompagné", reference: "LK-0009" },
     error: null,
@@ -134,13 +138,66 @@ describe("handleStripeEvent", () => {
     expect(mocks.emails).toEqual([]);
   });
 
-  it("ignores a session not paid, another product, an event of the other mode", async () => {
+  it("ignores a session not paid, another product, an event of the other mode or environment", async () => {
     expect((await handle(completed({ payment_status: "unpaid" }))).outcome).toBe("ignored");
     expect((await handle(completed({ metadata: { order: "other" } }))).outcome).toBe("ignored");
     expect((await handle(completed({}, true))).outcome).toBe("ignored");
+    // Local and preprod share the test mode of one Stripe account.
+    expect((await handle(completed({ metadata: { ...metadata, env: "local" } }))).outcome).toBe(
+      "ignored",
+    );
     vi.stubEnv("NEXT_PUBLIC_ENV", "production");
     expect((await handle(completed())).outcome).toBe("ignored");
     expect(mocks.rpc).toEqual([]);
+  });
+
+  it("records an order paid with a promotion code of 100 %", async () => {
+    const free = completed({
+      payment_status: "no_payment_required",
+      amount_total: 0,
+      total_details: { amount_discount: 99000 },
+    });
+    expect((await handle(free)).outcome).toBe("processed");
+    expect(mocks.rpc[0].args).toMatchObject({ p_amount_paid_cents: 0, p_discount_cents: 99000 });
+  });
+
+  it("tells only the team of a payment held, with what to check", async () => {
+    mocks.rpcResult = {
+      data: {
+        status: "held",
+        plan_name: "Sérénité",
+        reference: "LK-0009",
+        check: ["passage payé sans la formule inférieure en vigueur", 3],
+      },
+      error: null,
+    };
+    expect(await handle(completed())).toEqual({ status: 200, outcome: "processed" });
+    expect(mocks.emails).toEqual(["team"]);
+    expect(mocks.orders[0]).toMatchObject({
+      held: true,
+      check: ["passage payé sans la formule inférieure en vigueur"],
+    });
+  });
+
+  it("passes what to check to the team for a plan activated all the same", async () => {
+    mocks.rpcResult = {
+      data: {
+        status: "processed",
+        plan_name: "Sérénité",
+        reference: "LK-0009",
+        check: ["une formule payante était déjà active : la différence est à rembourser"],
+      },
+      error: null,
+    };
+    await handle(completed());
+    expect(mocks.emails.sort()).toEqual(["seller", "team"]);
+    expect(mocks.orders[0]).toMatchObject({ held: false, check: [expect.any(String)] });
+  });
+
+  it("tells nobody of a payment refunded before it was recorded", async () => {
+    mocks.rpcResult = { data: { status: "refunded" }, error: null };
+    expect(await handle(completed())).toEqual({ status: 200, outcome: "processed" });
+    expect(mocks.emails).toEqual([]);
   });
 
   it("records a refund, total or partial", async () => {
@@ -233,19 +290,29 @@ describe("the Stripe client", () => {
       amountTotal: 51000,
       metadata: { plan: "serenite" },
     });
+    // Never the email of the seller in an address.
+    expect(session.url).not.toContain("bruno");
 
+    // The local stack only: neither the preprod nor the production.
+    vi.stubEnv("NEXT_PUBLIC_ENV", "staging");
+    expect(stripe.stripeMocked()).toBe(false);
     vi.stubEnv("NEXT_PUBLIC_ENV", "production");
     expect(stripe.stripeMocked()).toBe(false);
   });
 
-  it("refuses a live key outside production", async () => {
+  it("refuses a live key outside production, a test key in production", async () => {
     vi.stubEnv("STRIPE_MOCK", "");
-    vi.stubEnv("NEXT_PUBLIC_ENV", "staging");
-    vi.stubEnv("STRIPE_SECRET_KEY", "sk_live_x");
-    vi.resetModules();
-    const stripe = await import("@/core/billing/stripe");
-    await expect(stripe.retrievePrice("price_1")).rejects.toThrow(
-      "A live Stripe key is only for production",
-    );
+    for (const [env, key, message] of [
+      ["staging", "sk_live_x", "A live Stripe key is only for production"],
+      ["local", "rk_live_x", "A live Stripe key is only for production"],
+      ["production", "sk_test_x", "Production takes a live Stripe key"],
+      ["production", "rk_test_x", "Production takes a live Stripe key"],
+    ] as const) {
+      vi.stubEnv("NEXT_PUBLIC_ENV", env);
+      vi.stubEnv("STRIPE_SECRET_KEY", key);
+      vi.resetModules();
+      const stripe = await import("@/core/billing/stripe");
+      await expect(stripe.retrievePrice("price_1"), `${env} ${key}`).rejects.toThrow(message);
+    }
   });
 });

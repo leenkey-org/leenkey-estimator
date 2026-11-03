@@ -395,11 +395,14 @@ export const fr = {
           upgrade
             ? `Passage à ${plan ?? "une formule supérieure"}`
             : `Nouvelle formule ${plan ?? "payante"}`,
+        // A payment recorded with something to check (stripe_checkout_complete).
+        checkTitle: (held: boolean) => (held ? "Paiement à vérifier" : "Formule à vérifier"),
         detail: (reference: string | null) =>
           reference ? `Dossier à suivre pour ${reference}.` : "Un dossier à suivre.",
       },
       planRefunded: {
         title: (full: boolean) => (full ? "Formule remboursée" : "Remboursement partiel"),
+        checkTitle: "Remboursement à vérifier",
         detail: (amount: string | null, reference: string | null) =>
           [amount, reference].filter(Boolean).join(" · ") || null,
       },
@@ -1536,7 +1539,7 @@ export const fr = {
       paid: (amount: string) => `Montant payé : ${amount} TTC, une seule fois, pour ce bien.`,
       contactNow: "Votre conseiller Leenkey vous contacte sous 24\u00A0h.",
       contactLater: (date: string) =>
-        `Votre conseiller Leenkey vous contacte à partir du ${date}, à la fin du délai de rétractation de 14\u00A0jours.`,
+        `Votre conseiller Leenkey vous contacte à partir du ${date}, après le délai de rétractation de 14\u00A0jours.`,
       receipt: "Stripe vous envoie le reçu de votre paiement par email.",
       action: "Voir ma formule",
     },
@@ -1552,7 +1555,13 @@ export const fr = {
       details: (seller: string, amount: string) => `${seller} · ${amount} TTC payés.`,
       earlyStart: "Démarrage immédiat demandé : premier contact sous 24\u00A0h.",
       lateStart:
-        "Pas de démarrage immédiat : premier contact à partir du 15e\u00A0jour, à la fin du délai de rétractation.",
+        "Pas de démarrage immédiat : premier contact à partir du 15e\u00A0jour, après le délai de rétractation.",
+      heldSubject: (plan: string, property: string) =>
+        `Paiement de la formule ${plan} à vérifier · ${property}`,
+      heldTitle: "Paiement à vérifier",
+      heldText: (plan: string, property: string) =>
+        `Le vendeur de ${property} a payé la formule ${plan} : elle n'est pas activée, la commande est à vérifier. Écrivez-lui sous 24\u00A0h pour l'activer ou la rembourser.`,
+      check: "À vérifier :",
       action: "Voir les dossiers",
     },
     accountSuspended: {
@@ -1636,7 +1645,12 @@ export const fr = {
       termsRequired: "Cochez la case pour accepter les conditions générales.",
     },
     errors: {
+      session: "Votre session a expiré. Reconnectez-vous pour commander.",
+      suspended:
+        "Votre compte est suspendu : il ne permet pas de commander une formule pour le moment.",
       invalid: "Cochez la case pour accepter les conditions générales.",
+      termsChanged:
+        "Les conditions générales viennent d'être mises à jour : rechargez la page pour lire la nouvelle version avant de payer.",
       notFound: "Ce bien n'existe plus.",
       sold: "Ce bien est vendu : il n'y a plus de formule à choisir.",
       current: "Cette formule est déjà la vôtre pour ce bien.",
@@ -1651,13 +1665,16 @@ export const fr = {
       pendingTitle: "Paiement en cours de confirmation",
       pendingText: "Stripe nous confirme votre paiement : cela prend quelques secondes.",
       slowText:
-        "La confirmation prend plus de temps que prévu. Vous recevrez un email dès qu'elle arrive ; vous pouvez aussi recharger la page.",
+        "La confirmation prend plus de temps que prévu. Ne relancez pas le paiement : vous recevrez un email dès qu'elle arrive. Vous pouvez aussi recharger la page.",
+      heldTitle: "Paiement reçu",
+      heldText:
+        "Nous vérifions votre commande avant d'activer la formule : l'équipe Leenkey vous écrit sous 24\u00A0h.",
       reload: "Recharger la page",
       doneTitle: "C'est activé.",
       doneNow: (plan: string) =>
         `Votre formule ${plan} est active. Votre conseiller Leenkey vous contacte sous 24\u00A0h.`,
       doneLater: (plan: string, date: string) =>
-        `Votre formule ${plan} est active. Votre conseiller Leenkey vous contacte à partir du ${date}, à la fin du délai de rétractation.`,
+        `Votre formule ${plan} est active. Votre conseiller Leenkey vous contacte à partir du ${date}, après le délai de rétractation.`,
       back: "Retour à ma vente",
     },
   },

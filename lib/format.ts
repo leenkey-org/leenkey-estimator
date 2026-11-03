@@ -42,6 +42,19 @@ export function formatPrice(cents: number): string {
   return `${formatNumber(Math.round(cents / 100))}${NNBSP}€`;
 }
 
+/**
+ * An amount paid: « 990 € », its cents kept when it has some (« 891,50 € »,
+ * a promotion code), never rounded.
+ */
+export function formatAmount(cents: number): string {
+  if (cents % 100 === 0) return formatPrice(cents);
+  const format = new Intl.NumberFormat(LOCALE, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `${normaliseSpaces(format.format(cents / 100))}${NNBSP}€`;
+}
+
 /** Map markers and filter chips: « 350 k€ », « 1,25 M€ ». */
 export function formatPriceShort(cents: number): string {
   const euros = Math.round(cents / 100);

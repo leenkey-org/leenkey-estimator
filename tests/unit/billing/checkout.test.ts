@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   stripeAmount: 99000 as number | null,
   sessions: [] as Record<string, unknown>[],
   configured: true,
+  accompagneOnSale: true,
 }));
 
 vi.mock("server-only", () => ({}));
@@ -22,8 +23,16 @@ vi.mock("@/core/auth/session", () => ({
   getProfile: async () => mocks.profile,
 }));
 vi.mock("@/core/billing/plans", () => ({
-  activePlans: async () => [
-    { code: "autonomie", name: "Autonomie", priceCents: 0, intro: null, outro: null, features: [] },
+  allPlans: async () => [
+    {
+      code: "autonomie",
+      name: "Autonomie",
+      priceCents: 0,
+      intro: null,
+      outro: null,
+      features: [],
+      active: true,
+    },
     {
       code: "accompagne",
       name: "Accompagné",
@@ -31,6 +40,7 @@ vi.mock("@/core/billing/plans", () => ({
       intro: null,
       outro: null,
       features: [],
+      active: mocks.accompagneOnSale,
     },
     {
       code: "serenite",
@@ -39,6 +49,7 @@ vi.mock("@/core/billing/plans", () => ({
       intro: null,
       outro: null,
       features: [],
+      active: true,
     },
   ],
 }));
@@ -65,7 +76,10 @@ function chain(result: unknown) {
 }
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
-    rpc: async () => ({ data: mocks.active, error: null }),
+    rpc: async (fn: string) =>
+      fn === "is_active_user"
+        ? { data: mocks.active, error: null }
+        : { data: mocks.plan, error: null },
     from: (table: string) =>
       table === "properties" ? chain(mocks.property) : chain({ plan: mocks.plan }),
   }),
@@ -75,6 +89,8 @@ const input = {
   propertyId: "5eed1000-0000-4000-8000-000000000009",
   plan: "accompagne",
   acceptedTerms: true,
+  cguVersion: "2026-06-28",
+  cgvVersion: "2026-10-17",
   earlyStart: false,
 };
 
@@ -87,6 +103,7 @@ beforeEach(() => {
   mocks.stripeAmount = 99000;
   mocks.sessions = [];
   mocks.configured = true;
+  mocks.accompagneOnSale = true;
   vi.stubEnv("NEXT_PUBLIC_ENV", "staging");
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://leenkey-v2.vercel.app");
   vi.stubEnv("STRIPE_PRICE_ACCOMPAGNE", "price_a");
@@ -120,7 +137,9 @@ describe("startCheckout", () => {
         plan: "accompagne",
         kind: "new",
         early_start: "0",
+        cgu_version: "2026-06-28",
         cgv_version: "2026-10-17",
+        env: "staging",
       },
     });
   });
@@ -133,6 +152,26 @@ describe("startCheckout", () => {
       priceId: "price_u",
       metadata: { kind: "upgrade", plan: "serenite", early_start: "1" },
     });
+  });
+
+  it("charges the difference to a holder of a plan withdrawn from sale", async () => {
+    mocks.accompagneOnSale = false;
+    mocks.plan = "accompagne";
+    mocks.stripeAmount = 51000;
+    expect((await start({ ...input, plan: "serenite" })).ok).toBe(true);
+    expect(mocks.sessions[0]).toMatchObject({ priceId: "price_u", metadata: { kind: "upgrade" } });
+  });
+
+  it("refuses an order made on texts published since the page opened", async () => {
+    expect(await start({ ...input, cgvVersion: "2026-09-01" })).toEqual({
+      ok: false,
+      error: "terms_changed",
+    });
+    expect(await start({ ...input, cguVersion: "2026-01-01" })).toEqual({
+      ok: false,
+      error: "terms_changed",
+    });
+    expect(mocks.sessions).toEqual([]);
   });
 
   it("never starts a payment without the CGU and CGV accepted", async () => {
@@ -148,7 +187,7 @@ describe("startCheckout", () => {
     expect(await start()).toEqual({ ok: false, error: "session" });
     mocks.user = { id: "u1", email: "bruno@exemple.test" };
     mocks.active = false;
-    expect(await start()).toEqual({ ok: false, error: "session" });
+    expect(await start()).toEqual({ ok: false, error: "suspended" });
     mocks.active = true;
     mocks.property = null;
     expect(await start()).toEqual({ ok: false, error: "not_found" });

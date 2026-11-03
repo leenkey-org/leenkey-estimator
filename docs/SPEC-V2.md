@@ -487,7 +487,7 @@ create table subscriptions (             -- formule active d'un bien
   stripe_payment_intent_id text,
   stripe_promotion_code text,                     -- réservé : codes promo Stripe
   activated_at timestamptz not null default now(),
-  ends_at timestamptz,                            -- activated_at + 12 mois (trigger) ; à l'échéance, retour en Autonomie
+  ends_at timestamptz,                            -- activated_at + 12 mois (trigger) ; à l'échéance, retour en Autonomie ; = activated_at : paiement gardé sans activer la formule, à vérifier par l'équipe (L1-26)
   replaced_by uuid references subscriptions(id),  -- upgrade : nouvel abonnement, les 12 mois repartent
   refunded_at timestamptz,
   -- Vente conforme (L1-40, décision du 2026-10-15)
@@ -510,7 +510,10 @@ create table legal_acceptances (          -- acceptations datées et versionnée
 create table stripe_events (             -- idempotence
   id text primary key,
   type text not null,
-  processed_at timestamptz not null default now()
+  processed_at timestamptz not null default now(),
+  payment_intent_id text,                 -- L1-26 : un remboursement arrivé avant son paiement est retrouvé
+  refunded_cents int,
+  fully_refunded boolean
 );
 
 create table upgrade_prompts (           -- déclencheurs de montée en gamme affichés
@@ -807,7 +810,7 @@ create table cases (
 create table case_notes (
   id uuid primary key default gen_random_uuid(),
   case_id uuid not null references cases(id) on delete cascade,
-  author_id uuid not null references profiles(id),
+  author_id uuid references profiles(id),         -- null : note écrite par Leenkey elle-même (paiement Stripe, L1-26)
   body text not null,
   created_at timestamptz not null default now()
 );

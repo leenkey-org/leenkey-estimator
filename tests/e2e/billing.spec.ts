@@ -12,7 +12,8 @@ import { consentValue } from "./google";
 // Accompagné, then Sérénité, then is refunded back to Accompagné): this file
 // runs only on a local stack just made by `scripts/local-stack.sh up`, with
 // E2E_SEED=1, SEED_PASSWORD and E2E_MUTATE=1, never on the preprod (project
-// « seed-mutations »). Read only: LK-0001 (Accompagné) and LK-0003 of seller_a.
+// « seed-mutations »). Read only: LK-0003 of seller_a. The page and its
+// summary, without paying, are in billing-page.spec.ts (mobile and desktop).
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
@@ -29,7 +30,6 @@ test.skip(
 test.describe.configure({ mode: "serial" });
 
 const LK0009 = "5eed1000-0000-4000-8000-000000000009";
-const LK0001 = "5eed1000-0000-4000-8000-000000000001";
 const LK0003 = "5eed1000-0000-4000-8000-000000000003";
 const planPage = (id: string) => `/vendeur/formule?bien=${id}`;
 
@@ -37,7 +37,7 @@ const signer = new Stripe("sk_test_signature_only");
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
 
-async function signIn(page: Page, account: "seller_a" | "seller_b", path: string) {
+async function signIn(page: Page, account: "seller_a" | "seller_b" | "admin", path: string) {
   await page.context().addCookies([{ name: "lk_consent", value: consentValue(false), url: BASE }]);
   await page.goto(`/connexion?next=${encodeURIComponent(path)}`);
   await page.getByLabel("Email").fill(`${account}@test.leenkey.fr`);
@@ -59,8 +59,10 @@ type MockSession = {
   id: string;
   amountTotal: number;
   metadata: Record<string, string>;
-  customerEmail: string;
 };
+
+/** The buyer of the plans of this file. */
+const SELLER_EMAIL = "seller_b@test.leenkey.fr";
 
 /** The session the simulated Stripe put in the success address. */
 function sessionOf(page: Page): MockSession {
@@ -97,8 +99,8 @@ function checkoutCompleted(session: MockSession, eventId: string) {
         total_details: { amount_discount: 0 },
         metadata: session.metadata,
         payment_intent: `pi_${session.id}`,
-        customer_email: session.customerEmail,
-        customer_details: { email: session.customerEmail },
+        customer_email: SELLER_EMAIL,
+        customer_details: { email: SELLER_EMAIL },
       },
     },
   };
@@ -112,70 +114,6 @@ async function expectNoSeriousViolation(page: Page) {
     results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),
   ).toEqual([]);
 }
-
-test("la page formule : trois formules, la formule actuelle, le récapitulatif et ses cases", async ({
-  page,
-}) => {
-  await signIn(page, "seller_a", planPage(LK0003));
-  await expect(
-    page.getByRole("heading", {
-      level: 1,
-      name: "Un forfait fixe par bien. Jamais de commission.",
-    }),
-  ).toBeVisible();
-  const plans = page.getByRole("list", { name: "Choisir ma formule" });
-  await expect(plans.getByRole("heading", { level: 2 })).toHaveText([
-    "Autonomie",
-    "Accompagné",
-    "Sérénité",
-  ]);
-  await expect(plans.getByRole("listitem").first()).toContainText("Formule actuelle");
-  await expect(plans.getByText("Le plus complet")).toBeVisible();
-  await expect(page.getByText(/Paiement sécurisé par carte via Stripe/)).toBeVisible();
-  await expectNoSeriousViolation(page);
-
-  await plans.getByRole("button", { name: "Choisir Accompagné" }).click();
-  const recap = page.getByRole("region", { name: "Récapitulatif de votre commande" });
-  await expect(
-    recap.getByRole("heading", { name: "Récapitulatif de votre commande" }),
-  ).toBeFocused();
-  await expect(recap).toContainText("Accompagné");
-  await expect(recap).toContainText(
-    "12 mois à partir du paiement, sans renouvellement automatique",
-  );
-  await expect(recap).toContainText("renoncer au contrat pendant 14 jours");
-  // Never ticked beforehand (L1-40, decision of 2026-10-15).
-  const terms = recap.getByRole("checkbox", { name: /J'ai lu et j'accepte/ });
-  const early = recap.getByRole("checkbox", { name: /commencent avant la fin du délai/ });
-  await expect(terms).not.toBeChecked();
-  await expect(early).not.toBeChecked();
-  await recap.getByRole("button", { name: "Commander et payer 990 € TTC" }).click();
-  await expect(
-    recap.getByText("Cochez la case pour accepter les conditions générales."),
-  ).toBeVisible();
-  await expect(terms).toBeFocused();
-  await expect(page).toHaveURL(planPage(LK0003));
-  await expectNoSeriousViolation(page);
-
-  await recap.getByRole("button", { name: "Changer de formule" }).click();
-  await expect(plans).toBeVisible();
-});
-
-test("une formule payante : « Passer à Sérénité pour 510 € », la formule inférieure comprise", async ({
-  page,
-}) => {
-  await signIn(page, "seller_a", planPage(LK0001));
-  const plans = page.getByRole("list", { name: "Choisir ma formule" });
-  const accompagne = plans.getByRole("listitem").filter({ hasText: "Accompagné" }).first();
-  await expect(accompagne).toContainText("Formule actuelle");
-  await expect(accompagne).toContainText(/Active depuis le .*, jusqu'au /);
-  await expect(plans.getByRole("button", { name: "Passer à Sérénité pour 510 €" })).toBeVisible();
-  await expect(plans.getByRole("button", { name: /Choisir/ })).toHaveCount(0);
-  await plans.getByRole("button", { name: "Passer à Sérénité pour 510 €" }).click();
-  const recap = page.getByRole("region", { name: "Récapitulatif de votre commande" });
-  await expect(recap).toContainText("510 € TTC : la différence avec Accompagné, déjà payée");
-  await expect(recap.getByRole("button", { name: "Commander et payer 510 € TTC" })).toBeVisible();
-});
 
 test("payer Accompagné : retour de Stripe, confirmation par le webhook, une seule activation", async ({
   page,
@@ -198,8 +136,12 @@ test("payer Accompagné : retour de Stripe, confirmation par le webhook, une seu
     plan: "accompagne",
     kind: "new",
     early_start: "0",
+    cgu_version: "2026-06-28",
     cgv_version: "2026-10-17",
+    env: "local",
   });
+  // Never the email of the seller in the address.
+  expect(page.url()).not.toContain("seller_b");
   expect(session.amountTotal).toBe(99000);
 
   // A forged event is refused.
@@ -304,6 +246,65 @@ test("passer à Sérénité avec démarrage immédiat, puis un remboursement ram
       .filter({ hasText: "Accompagné" })
       .first(),
   ).toContainText("Formule actuelle");
+});
+
+test("deux onglets, deux paiements du même passage : le second est gardé, l'équipe vérifie", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  // LK-0009 is Accompagné again (the refund above). Two tabs open the same
+  // passage to Sérénité; both are paid.
+  const orderUpgrade = async () => {
+    await page.goto(planPage(LK0009));
+    await page
+      .getByRole("list", { name: "Choisir ma formule" })
+      .getByRole("button", { name: "Passer à Sérénité pour 510 €" })
+      .click();
+    const recap = page.getByRole("region", { name: "Récapitulatif de votre commande" });
+    await recap.getByRole("checkbox", { name: /J'ai lu et j'accepte/ }).check();
+    await recap.getByRole("button", { name: "Commander et payer 510 € TTC" }).click();
+    await page.waitForURL(/paiement=ok/);
+    return sessionOf(page);
+  };
+  await signIn(page, "seller_b", planPage(LK0009));
+  const first = await orderUpgrade();
+  const second = await orderUpgrade();
+  expect(second.id).not.toBe(first.id);
+
+  expect(
+    await (await postEvent(page, checkoutCompleted(first, `evt_e2e_${first.id}`))).json(),
+  ).toMatchObject({ outcome: "processed" });
+  expect(
+    await (await postEvent(page, checkoutCompleted(second, `evt_e2e_${second.id}`))).json(),
+  ).toMatchObject({ outcome: "processed" });
+  // The page of the second payment: received, not activated a second time.
+  await expect(page.getByRole("heading", { name: "Paiement reçu" })).toBeVisible({
+    timeout: 10_000,
+  });
+  await expect(page.getByText(/l'équipe Leenkey vous écrit sous 24/)).toBeVisible();
+  await expectNoSeriousViolation(page);
+
+  await page.goto(planPage(LK0009));
+  await expect(
+    page
+      .getByRole("list", { name: "Choisir ma formule" })
+      .getByRole("listitem")
+      .filter({ hasText: "Sérénité" })
+      .first(),
+  ).toContainText("Formule actuelle");
+
+  // The team sees it in its bell.
+  const context = await browser.newContext({ baseURL });
+  const admin = await context.newPage();
+  await signIn(admin, "admin", "/admin");
+  await admin
+    .getByRole("button", { name: /^Notifications/ })
+    .locator("visible=true")
+    .first()
+    .click();
+  await expect(admin.getByText("Paiement à vérifier").first()).toBeVisible();
+  await context.close();
 });
 
 test("retour après annulation, et un événement d'un autre produit est ignoré", async ({ page }) => {

@@ -82,7 +82,11 @@ export default async function PlanPage({ searchParams }: Props) {
             tone="danger"
             action={
               <Link
-                href={requested ? `/vendeur/formule?bien=${requested}` : "/vendeur/formule"}
+                href={
+                  requested
+                    ? `/vendeur/formule?bien=${encodeURIComponent(requested)}`
+                    : "/vendeur/formule"
+                }
                 className="font-semibold underline underline-offset-2 hover:no-underline"
               >
                 {t.retry}
@@ -127,7 +131,7 @@ export default async function PlanPage({ searchParams }: Props) {
           <h1 className="sr-only">{t.title}</h1>
           <PaymentConfirmation
             sessionId={session.data}
-            planNames={Object.fromEntries(data.plans.map((plan) => [plan.code, plan.name]))}
+            planNames={Object.fromEntries(data.prices.map((plan) => [plan.code, plan.name]))}
             backHref={backHref}
             reloadHref={`${planHref}&paiement=ok&session_id=${session.data}`}
           />
@@ -203,12 +207,13 @@ export default async function PlanPage({ searchParams }: Props) {
               : data.property.name
           }
           plans={data.plans}
+          prices={data.prices}
           current={data.current}
           activeNote={activeNote}
           orderable={orderable}
           versions={{
-            cgu: versionDate(LEGAL_VERSIONS.cgu),
-            cgv: versionDate(SALES_TERMS.cgvVersion),
+            cgu: { id: LEGAL_VERSIONS.cgu, date: versionDate(LEGAL_VERSIONS.cgu) },
+            cgv: { id: SALES_TERMS.cgvVersion, date: versionDate(SALES_TERMS.cgvVersion) },
           }}
           mediator={
             SALES_TERMS.mediator

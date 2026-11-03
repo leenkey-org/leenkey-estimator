@@ -30,19 +30,26 @@ export type PlanChooserProps = {
   propertyId: string;
   propertyName: string;
   plans: readonly PlanView[];
+  /** The price of every plan, on sale or not: what a passage costs. */
+  prices: readonly { code: PlanCode; name: string; priceCents: number }[];
   current: PlanCode;
   /** « Active depuis le 3 nov., jusqu'au 3 nov. 2027. » for the plan in force. */
   activeNote: string | null;
   /** Paid plans can be ordered (production: final CGV and mediator). */
   orderable: boolean;
-  /** Versions of the CGU and CGV accepted, as dates shown (« 28 juin 2026 »). */
-  versions: { cgu: string; cgv: string };
+  /**
+   * Versions of the CGU and CGV accepted: sent with the order (refused when
+   * newer ones were published meanwhile), and shown (« 28 juin 2026 »).
+   */
+  versions: { cgu: { id: string; date: string }; cgv: { id: string; date: string } };
   mediator: string | null;
 };
 
 const ERRORS: Record<StartCheckoutError, string> = {
-  session: t.errors.unavailable,
+  session: t.errors.session,
+  suspended: t.errors.suspended,
   invalid: t.errors.invalid,
+  terms_changed: t.errors.termsChanged,
   not_found: t.errors.notFound,
   sold: t.errors.sold,
   current: t.errors.current,
@@ -67,6 +74,7 @@ export function PlanChooser({
   propertyId,
   propertyName,
   plans,
+  prices,
   current,
   activeNote,
   orderable,
@@ -79,6 +87,9 @@ export function PlanChooser({
   const [termsError, setTermsError] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // On its way to Stripe: the button stays busy until the page is left.
+  const [redirecting, setRedirecting] = useState(false);
+  const busy = pending || redirecting;
   const recapTitle = useRef<HTMLHeadingElement>(null);
   const termsBox = useRef<HTMLInputElement>(null);
   // The dearest plan is put forward (SPEC 8.8: « Le plus complet »).
@@ -86,14 +97,35 @@ export function PlanChooser({
     (best, plan) => (best && best.priceCents >= plan.priceCents ? best : plan),
     null,
   );
-  const currentPlan = plans.find((plan) => plan.code === current);
+  const currentPlan = prices.find((plan) => plan.code === current);
 
   useEffect(() => {
     if (selected) recapTitle.current?.focus();
   }, [selected]);
 
+  // Back from Stripe with the back button, the page comes out of the cache
+  // as it was left: the button is free again.
+  useEffect(() => {
+    const restored = (event: PageTransitionEvent) => {
+      if (event.persisted) setRedirecting(false);
+    };
+    window.addEventListener("pageshow", restored);
+    return () => window.removeEventListener("pageshow", restored);
+  }, []);
+
+  // Each order starts with its two boxes unticked (no box ticked
+  // beforehand, decision of 2026-10-15): a box ticked for one plan never
+  // carries over to another.
+  const select = (code: PlanCode | null) => {
+    setSelected(code);
+    setTerms(false);
+    setEarlyStart(false);
+    setTermsError(false);
+    setError(null);
+  };
+
   const target = selected ? plans.find((plan) => plan.code === selected) : undefined;
-  const choice = target ? planChoice(plans, current, target.code) : null;
+  const choice = target ? planChoice(prices, current, target.code) : null;
 
   if (target && choice?.status === "order") {
     const price = formatPrice(choice.amountCents);
@@ -111,6 +143,8 @@ export function PlanChooser({
             propertyId,
             plan: target.code,
             acceptedTerms: true,
+            cguVersion: versions.cgu.id,
+            cgvVersion: versions.cgv.id,
             earlyStart,
           });
         } catch {
@@ -121,6 +155,7 @@ export function PlanChooser({
           setError(ERRORS[result.error]);
           return;
         }
+        setRedirecting(true);
         window.location.assign(result.data.url);
       });
     };
@@ -205,7 +240,7 @@ export function PlanChooser({
                 >
                   {r.terms.cgv}
                 </Link>
-                {r.terms.after(versions.cgu, versions.cgv)}
+                {r.terms.after(versions.cgu.date, versions.cgv.date)}
               </>
             }
           />
@@ -224,18 +259,14 @@ export function PlanChooser({
         </div>
         {error ? <InlineAlert tone="danger">{error}</InlineAlert> : null}
         <div className="flex flex-col gap-3">
-          <Button size="lg" loading={pending} onClick={submit} className="w-full">
+          <Button size="lg" loading={busy} onClick={submit} className="w-full">
             {r.pay(price)}
           </Button>
           <Button
             variant="ghost"
             className="self-center"
-            disabled={pending}
-            onClick={() => {
-              setSelected(null);
-              setError(null);
-              setTermsError(false);
-            }}
+            disabled={busy}
+            onClick={() => select(null)}
           >
             {r.change}
           </Button>
@@ -250,7 +281,7 @@ export function PlanChooser({
       <ul aria-label={t.header} className="flex flex-col gap-5 lg:grid lg:grid-cols-3 lg:gap-4">
         {plans.map((plan) => {
           const free = plan.priceCents === 0;
-          const status = planChoice(plans, current, plan.code);
+          const status = planChoice(prices, current, plan.code);
           const featured = !free && dearest?.code === plan.code;
           let action;
           if (status.status === "current") {
@@ -260,7 +291,7 @@ export function PlanChooser({
               <Button
                 variant={featured ? "primary" : "secondary"}
                 className="w-full"
-                onClick={() => setSelected(plan.code)}
+                onClick={() => select(plan.code)}
               >
                 {status.kind === "upgrade"
                   ? t.upgrade(plan.name, formatPrice(status.amountCents))

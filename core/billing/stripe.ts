@@ -7,10 +7,11 @@ import { appEnv } from "@/lib/env";
 // the price, the metadata and the addresses (leenkey/billing/). Test keys in
 // local and preprod, live keys in production only (CLAUDE.md section 4).
 //
-// STRIPE_MOCK=1 (end-to-end tests, never with NEXT_PUBLIC_ENV=production):
-// no call leaves. A price id `price_mock_<cents>` is a one-off price of that
-// amount in euros; a session is fake and its address is the success address,
-// with the session in `mock_session` (base64url JSON: id, metadata, amount),
+// STRIPE_MOCK=1 (end-to-end tests on the local stack only, NEXT_PUBLIC_ENV=
+// local): no call leaves. A price id `price_mock_<cents>` is a one-off price
+// of that amount in euros; a session is fake and its address is the success
+// address, with the session in `mock_session` (base64url JSON: id, metadata,
+// amount; no email),
 // so that the test signs and posts the event Stripe would send, with
 // STRIPE_WEBHOOK_SECRET of the local stack. Stripe advises against driving
 // its hosted page in automated tests.
@@ -37,7 +38,7 @@ export type CheckoutInput = {
   /** `{CHECKOUT_SESSION_ID}` is replaced by Stripe with the id of the session. */
   successUrl: string;
   cancelUrl: string;
-  /** The same key twice gives the same session (a double click). */
+  /** A retry of the same request with this key gets the same session back (Stripe). */
   idempotencyKey: string;
 };
 
@@ -48,14 +49,16 @@ export type MockSession = {
   id: string;
   amountTotal: number;
   metadata: Record<string, string>;
-  customerEmail: string;
 };
 
 const MOCK_PRICE = /^price_mock_(\d{1,7})$/;
 
 export function stripeMocked(): boolean {
-  return process.env.STRIPE_MOCK === "1" && appEnv() !== "production";
+  return process.env.STRIPE_MOCK === "1" && appEnv() === "local";
 }
+
+/** A session can be paid for an hour (Stripe: 30 minutes at least); then a new one is asked. */
+export const SESSION_LIFETIME_SECONDS = 60 * 60;
 
 /** A payment can be started: a secret key, or the mock. */
 export function stripeConfigured(): boolean {
@@ -69,10 +72,12 @@ let verifier: Stripe | null = null;
 function stripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
-  if (appEnv() !== "production" && key.startsWith("sk_live_")) {
-    // A live key outside production would take real money (CLAUDE.md section 4).
+  // A live key outside production would take real money, a test key in
+  // production would take none (CLAUDE.md section 4); secret or restricted.
+  const live = /^(sk|rk)_live_/.test(key);
+  if (appEnv() !== "production" && live)
     throw new Error("A live Stripe key is only for production");
-  }
+  if (appEnv() === "production" && !live) throw new Error("Production takes a live Stripe key");
   client ??= new Stripe(key, { maxNetworkRetries: 1, timeout: 20_000 });
   return client;
 }
@@ -107,7 +112,6 @@ export async function createCheckoutSession(input: CheckoutInput): Promise<Check
       id,
       amountTotal: match ? Number(match[1]) : 0,
       metadata: input.metadata,
-      customerEmail: input.customerEmail,
     };
     const url = new URL(input.successUrl.replace("{CHECKOUT_SESSION_ID}", id));
     url.searchParams.set(
@@ -129,6 +133,7 @@ export async function createCheckoutSession(input: CheckoutInput): Promise<Check
       success_url: input.successUrl,
       cancel_url: input.cancelUrl,
       locale: "fr",
+      expires_at: Math.floor(Date.now() / 1000) + SESSION_LIFETIME_SECONDS,
       invoice_creation: { enabled: true },
       allow_promotion_codes: true,
     },

@@ -1,5 +1,5 @@
 import "server-only";
-import { activePlans, type ActivePlan } from "@/core/billing/plans";
+import { allPlans, type ActivePlan } from "@/core/billing/plans";
 import { chooseProperty } from "@/leenkey/properties/dashboard";
 import { sellerProperties } from "@/leenkey/properties/queries";
 import { propertyName } from "@/leenkey/properties/sheet";
@@ -7,9 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 
 // Reads of /vendeur/formule (L1-26, SPEC-V2 8.8), with the seller's session:
-// the RLS gives them their properties, the sale of each (sale_progress.plan,
-// the plan in force, kept to the subscriptions by the triggers of L1-23) and
-// their subscriptions.
+// the RLS gives them their properties and their subscriptions; the plan in
+// force is property_current_plan, as the rights read it (an ended plan is
+// already back to Autonomie, before the cron of L1-40 moves the sale).
 
 type PlanCode = Database["public"]["Enums"]["plan_code"];
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
@@ -20,7 +20,10 @@ export type PlanPage = {
   property: { id: string; name: string; reference: string | null; status: ListingStatus | null };
   /** The other properties of the seller, to choose the plan of another one. */
   others: { id: string; name: string }[];
+  /** The plans on sale, and the one in force even when withdrawn from sale. */
   plans: ActivePlan[];
+  /** The price of every plan, on sale or not: what a passage costs. */
+  prices: { code: PlanCode; name: string; priceCents: number }[];
   current: PlanCode;
   /** The paid plan in force: since when, until when, immediate start asked. */
   active: {
@@ -36,14 +39,14 @@ export async function planPage(
   profileId: string,
   requested: string | null,
 ): Promise<QueryResult<PlanPage | null>> {
-  const [properties, plans] = await Promise.all([sellerProperties(profileId), activePlans()]);
+  const [properties, plans] = await Promise.all([sellerProperties(profileId), allPlans()]);
   if (!properties.ok || !plans) return { ok: false, error: "unavailable" };
   const property = chooseProperty(properties.data, requested);
   if (!property) return { ok: true, data: null };
   try {
     const supabase = await createClient();
     const [progress, subscription] = await Promise.all([
-      supabase.from("sale_progress").select("plan").eq("property_id", property.id).maybeSingle(),
+      supabase.rpc("property_current_plan", { p: property.id }),
       supabase
         .from("subscriptions")
         .select("plan, activated_at, ends_at, early_start_requested_at")
@@ -55,9 +58,9 @@ export async function planPage(
         .limit(1)
         .maybeSingle(),
     ]);
-    if (progress.error) throw new Error(`sale_progress: ${progress.error.code}`);
+    if (progress.error) throw new Error(`property_current_plan: ${progress.error.code}`);
     if (subscription.error) throw new Error(`subscriptions: ${subscription.error.code}`);
-    const current = progress.data?.plan ?? "autonomie";
+    const current = progress.data ?? "autonomie";
     const active = subscription.data;
     return {
       ok: true,
@@ -71,7 +74,14 @@ export async function planPage(
         others: properties.data
           .filter((other) => other.id !== property.id && other.listingStatus !== "sold")
           .map((other) => ({ id: other.id, name: propertyName(other) })),
-        plans,
+        plans: plans
+          .filter((plan) => plan.active || plan.code === current)
+          .map(({ active: _active, ...plan }) => plan),
+        prices: plans.map((plan) => ({
+          code: plan.code,
+          name: plan.name,
+          priceCents: plan.priceCents,
+        })),
         current,
         active:
           active && active.plan === current
