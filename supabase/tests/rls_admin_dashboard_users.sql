@@ -2,10 +2,13 @@
 -- the admin's only (a visitor, a seller and a buyer are refused); the admin
 -- reads what waits for them (a listing to review and the oldest one, an open
 -- case, an open report), the plans sold and the sign-ups of the last days,
--- the accounts with their search and filters, and the email of one account.
+-- the accounts with their search and filters, and the email of one account;
+-- never an account of the team in the sign-ups, never a deleted account; an
+-- account of the team is never suspended, a decision on an account already
+-- in that state is refused.
 begin;
 \ir _helpers.psql
-select plan(29);
+select plan(42);
 \ir _plan.psql
 
 -- Out of the way: what the seed or a previous test left (the rest is counted
@@ -69,6 +72,8 @@ select throws_ok('select * from admin_counts()', '42501', null, 'anon: no counte
 select throws_ok('select * from admin_users()', '42501', null, 'anon: no list of the accounts');
 select throws_ok(format('select * from admin_user_contact(%L)', tests.uid('seller_a')), '42501', null,
                  'anon: no email of an account');
+select throws_ok('select * from admin_activity()', '42501', null, 'anon: no activity of the site');
+select throws_ok('select * from admin_user_counts()', '42501', null, 'anon: no count of the accounts');
 
 \set who seller_a
 \ir _as.psql
@@ -107,6 +112,7 @@ select is((select row(plans_sold, plans_amount_cents)::text from admin_activity(
 select is((select plans_sold from admin_activity(1)), 0, 'admin: none sold in the last day');
 select ok((select signups_sellers >= 2 and signups_buyers >= 2 from admin_activity(30)),
           'admin: the sign-ups of the period, sellers and buyers');
+select signups_sellers as sellers0 from admin_activity(30) \gset
 select throws_ok('select * from admin_activity(0)', '22023', null, 'admin: a period of at least one day');
 
 select ok((select count(*) >= 5 from admin_users()), 'admin: every account');
@@ -118,6 +124,10 @@ select ok((select count(*) >= 1 and bool_and(first_name = 'Alice') from admin_us
 select is((select row(properties, paid_plan)::text from admin_users(p_query => 'seller_a@rls')),
           '(2,accompagne)', 'admin: the properties and the paid plan in force');
 select ok((select bool_and('buyer' = any(roles)) from admin_users('buyer')), 'admin: the buyers only');
+select is((select count(*)::int from admin_users(p_query => '%')), 0,
+          'admin: a % in the search is a character, not a wildcard');
+select is((select count(*)::int from admin_users(p_query => 'seller_a@rls_leenkey')), 0,
+          'admin: a _ in the search is a character, not a wildcard');
 select throws_ok('select * from admin_users(''proprietaire'')', '22023', null, 'admin: an unknown filter is refused');
 
 select lives_ok(format('select admin_suspend_user(%L, %L)', tests.uid('buyer_d'), 'Comportement abusif'),
@@ -126,6 +136,37 @@ select ok((select bool_or(email = 'buyer_d@rls.leenkey.test') and bool_and(suspe
              from admin_users('suspended')), 'admin: the suspended accounts only');
 select is((select email from admin_user_contact(tests.uid('buyer_c'))), 'buyer_c@rls.leenkey.test',
           'admin: the email of an account');
+select throws_ok(format('select admin_suspend_user(%L, %L)', tests.uid('buyer_d'), 'Encore'), '22023', null,
+                 'admin: an account already suspended is refused (no new date, motive nor email)');
+select lives_ok(format('select admin_unsuspend_user(%L)', tests.uid('buyer_d')), 'admin: lifts the suspension');
+select throws_ok(format('select admin_unsuspend_user(%L)', tests.uid('buyer_c')), '22023', null,
+                 'admin: an account not suspended is refused (no false « réactivé » in the history)');
+select is((select array_agg(action order by created_at, id) from audit_log
+            where entity = 'profile' and entity_id = tests.uid('buyer_d')),
+          '{user.suspend,user.unsuspend}'::text[], 'admin: one decision each in the history');
+select throws_ok(format('select admin_suspend_user(%L, %L)', tests.uid('admin'), 'Essai'), '22023', null,
+                 'admin: never suspends themselves');
+
+-- The team: never in the sign-ups, never suspended.
+reset role;
+update profiles set roles = '{admin,seller}' where id = tests.uid('admin');
+update profiles set roles = '{seller,admin}' where id = tests.uid('seller_b');
+\set who admin
+\ir _as.psql
+select is((select signups_sellers from admin_activity(30)), :sellers0 - 1,
+          'admin: an account of the team that also sells is not a seller sign-up');
+select throws_ok(format('select admin_suspend_user(%L, %L)', tests.uid('seller_b'), 'Comportement abusif'),
+                 '22023', null, 'admin: another account of the team is never suspended');
+
+-- A deleted account: out of the list, no email.
+reset role;
+update profiles set deleted_at = now() where id = tests.uid('buyer_c');
+\set who admin
+\ir _as.psql
+select is((select count(*)::int from admin_users(p_query => 'buyer_c@rls')), 0,
+          'admin: a deleted account is out of the list');
+select is((select count(*)::int from admin_user_contact(tests.uid('buyer_c'))), 0,
+          'admin: no email of a deleted account');
 
 select * from finish();
 rollback;

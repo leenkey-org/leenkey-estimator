@@ -510,7 +510,7 @@ export const navigation = {
   headerCaption:
     "AdminMobileHeader sous 768 px : titre de la page, « Voir le site », la cloche et l'avatar du menu du compte ; trois tuiles de ce qui attend l'équipe, liens vers leurs listes",
   headerTiles: {
-    label: "À traiter",
+    label: "Compteurs du back office (exemple)",
     tiles: [
       { label: "À valider", value: 3 },
       { label: "Dossiers", value: 1 },
@@ -900,6 +900,8 @@ export const backOffice = {
       late: false,
     },
   ],
+  accountBadgesCaption:
+    "RoleBadges et AccountStatusBadge (utilisateurs du back office) : rôles sur --lk-stone-2, « Équipe » en encre ; « Actif » sur --lk-success-bg, « Suspendu » sur --lk-danger-bg.",
   tilesCaption:
     "StatTile : chiffre et libellé, ligne de détail en option (orange quand l'objectif est dépassé) ; tableau de bord du back office et « Ma vente ».",
   pillsLabel: "Statut des annonces (exemple)",

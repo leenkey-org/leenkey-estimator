@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
  * A figure and what it counts (docs/DESIGN.md 10.2 StatTile): white card,
  * 1 px line, the figure 22 px 700 tabular (--text-lk-stat), its label 12 px ink-3 under it.
  * By three in a grid on the dashboard of a sale (« 248 vues · 7 j »). A
- * detail under the label (the back office, L1-30a: « La plus ancienne : il
- * y a 3 h · objectif 24 h »), in the warning colour when it says a delay.
+ * detail under the label (the back office, L1-30a: « Plus ancienne : 30 h ·
+ * au-delà de 24 h »), 11 px, in the warning colour when it says a delay.
  */
 export function StatTile({
   value,

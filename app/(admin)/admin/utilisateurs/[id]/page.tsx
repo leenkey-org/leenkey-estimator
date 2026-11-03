@@ -22,22 +22,35 @@ const d = t.detail;
 
 type Props = { params: Promise<{ id: string }> };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** The name of the account, else its email (a sign-up without a name). */
+const nameOf = (user: AdminUserDetail) =>
+  fullName(user.firstName, user.lastName) ?? user.email ?? t.noName;
 
-async function load(id: string) {
-  if (!UUID.test(id)) return null;
-  return adminUser(id);
+/** The other side of a conversation: a deleted account is said as such. */
+function counterpartOf(conversation: AdminUserDetail["conversations"][number]): string {
+  const other = conversation.counterpart;
+  if (!other || other.deleted) return d.deletedAccount;
+  return other.name ?? t.noName;
 }
 
-const nameOf = (user: AdminUserDetail) => fullName(user.firstName, user.lastName) ?? t.noName;
-
+// adminUser is read once per request (React cache): metadata and page share it.
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   await requireAdmin();
-  const result = await load((await params).id);
+  const result = await adminUser((await params).id);
   return {
-    title: result?.ok && result.data ? t.detailMetaTitle(nameOf(result.data)) : t.metaTitle,
+    title: result.ok && result.data ? t.detailMetaTitle(nameOf(result.data)) : t.metaTitle,
   };
 }
+
+const backLink = (
+  <Link
+    href={adminUsersHref({})}
+    className="inline-flex min-h-11 items-center gap-1 text-lk-secondary font-semibold text-lk-blue"
+  >
+    <ChevronLeft aria-hidden="true" className="size-4" />
+    {t.back}
+  </Link>
+);
 
 /** « Appartement 3 pièces » before step 3, when the listing has no title yet. */
 function propertyLabel(property: AdminUserDetail["properties"][number]): string {
@@ -94,12 +107,24 @@ const empty = "text-lk-secondary text-lk-ink-3";
 // of financing (L2-02). The page checks the admin role itself.
 export default async function AdminUserPage({ params }: Props) {
   const admin = await requireAdmin();
-  const result = await load((await params).id);
-  if (!result) notFound();
+  const { id } = await params;
+  const result = await adminUser(id);
   if (!result.ok) {
     return (
-      <AdminPage title={t.title}>
-        <InlineAlert tone="danger">{t.error}</InlineAlert>
+      <AdminPage title={t.title} titleOnMobile back={backLink}>
+        <InlineAlert
+          tone="danger"
+          action={
+            <Link
+              href={`/admin/utilisateurs/${id}`}
+              className="font-semibold underline underline-offset-2 hover:no-underline"
+            >
+              {t.retry}
+            </Link>
+          }
+        >
+          {d.error}
+        </InlineAlert>
       </AdminPage>
     );
   }
@@ -123,19 +148,7 @@ export default async function AdminUserPage({ params }: Props) {
   ];
 
   return (
-    <AdminPage
-      title={name}
-      titleOnMobile
-      back={
-        <Link
-          href={adminUsersHref({})}
-          className="inline-flex min-h-11 items-center gap-1 text-lk-secondary font-semibold text-lk-blue"
-        >
-          <ChevronLeft aria-hidden="true" className="size-4" />
-          {t.back}
-        </Link>
-      }
-    >
+    <AdminPage title={name} titleOnMobile back={backLink}>
       <ModerationFeedback>
         <section aria-label={d.info} className={`flex flex-col gap-4 p-5 ${box}`}>
           <div className="flex flex-wrap items-center gap-2.5">
@@ -168,6 +181,8 @@ export default async function AdminUserPage({ params }: Props) {
           ) : null}
           {user.id === admin.id ? (
             <p className={empty}>{d.self}</p>
+          ) : user.roles.includes("admin") ? (
+            <p className={empty}>{d.team}</p>
           ) : (
             <AccountModeration profileId={user.id} name={name} suspended={suspended} />
           )}
@@ -179,16 +194,20 @@ export default async function AdminUserPage({ params }: Props) {
           ) : (
             <ul className={`flex flex-col divide-y divide-lk-line ${box}`}>
               {user.properties.map((property) => (
-                <li key={property.id} className="flex items-center gap-3 px-4 py-3">
+                <li
+                  key={property.id}
+                  className="relative flex items-center gap-3 px-4 py-3 has-[a:hover]:bg-lk-stone-2"
+                >
                   <PropertyThumb
                     src={property.coverPath ? photoUrl(property.coverPath) : null}
                     className="h-11 w-14 self-start sm:self-center"
                   />
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
                     {property.listing ? (
+                      // The whole row opens the listing (a target of 44 px at least).
                       <Link
                         href={`/admin/annonces/${property.listing.id}`}
-                        className="truncate text-lk-label font-semibold text-lk-ink underline-offset-2 hover:underline"
+                        className="truncate text-lk-label font-semibold text-lk-ink underline-offset-2 before:absolute before:inset-0 hover:underline"
                       >
                         {propertyLabel(property)}
                       </Link>
@@ -245,7 +264,7 @@ export default async function AdminUserPage({ params }: Props) {
           ) : (
             <ul className={`flex flex-col divide-y divide-lk-line ${box}`}>
               {user.conversations.map((conversation) => {
-                const other = conversation.counterpartName ?? d.someone;
+                const other = counterpartOf(conversation);
                 return (
                   <li key={conversation.id} className="flex flex-col gap-0.5 px-4 py-3">
                     <p className="text-lk-label font-semibold text-lk-ink">

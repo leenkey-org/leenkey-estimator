@@ -115,7 +115,7 @@ test("téléphone : trois tuiles sous le titre", async ({ browser, baseURL }) =>
   ]);
   const page = await context.newPage();
   await signIn(page, "/admin");
-  const header = page.getByRole("navigation", { name: "À traiter" });
+  const header = page.getByRole("navigation", { name: "Compteurs du back office" });
   await expect(header.getByRole("link")).toHaveCount(3);
   await expect(header.getByRole("link", { name: /À valider/ })).toHaveAttribute(
     "href",
@@ -139,6 +139,13 @@ test("téléphone : trois tuiles sous le titre", async ({ browser, baseURL }) =>
   await expect(page.getByRole("table", { name: "Comptes" })).toBeHidden();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await expectNoSeriousViolation(page);
+
+  // 768 px: the sidebar, still the cards (the table from 1 024 px).
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await expect(page.getByRole("navigation", { name: "Navigation du back office" })).toBeVisible();
+  await expect(cards.getByRole("link")).toHaveCount(1);
+  await expect(page.getByRole("table", { name: "Comptes" })).toBeHidden();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
   await context.close();
 });
 
@@ -183,11 +190,15 @@ test("utilisateurs : recherche, filtres, fiche d'un compte", async ({ page }) =>
     "href",
     /^\/admin\/annonces\/[0-9a-f-]{36}$/,
   );
+  const conversations = page.getByRole("region", { name: "Conversations" });
   await expect(
-    page.getByText(
+    conversations.getByText(
       "Les métadonnées seulement : le contenu des messages n'est lu qu'en cas de signalement.",
     ),
   ).toBeVisible();
+  // Who the seller talks with, never what they wrote (seed conversations of LK-0001).
+  await expect(conversations.getByText("Échange avec David Moreau, acquéreur")).toBeVisible();
+  await expect(conversations.getByText(/Dernier message : /).first()).toBeVisible();
   await expect(page.getByRole("group", { name: /Décisions sur le compte de/ })).toBeVisible();
   await expectNoSeriousViolation(page);
 

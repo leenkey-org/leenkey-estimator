@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { requireAdmin } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { AdminUsersQuery } from "@/lib/validations/admin";
@@ -59,7 +60,8 @@ export type AdminUserConversation = {
   id: string;
   /** The account in this conversation. */
   role: "seller" | "buyer";
-  counterpartName: string | null;
+  /** The other side: its name, null without one, « deleted » for a deleted account. */
+  counterpart: { name: string | null; deleted: boolean } | null;
   listingTitle: string | null;
   lastMessageAt: string | null;
   closed: boolean;
@@ -177,9 +179,16 @@ export async function adminUserCounts(): Promise<QueryResult<AdminUserCounts>> {
 const one = <T>(value: T | T[] | null | undefined): T | null =>
   Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
 
-/** The sheet of an account; null when it does not exist or was deleted. */
-export async function adminUser(id: string): Promise<QueryResult<AdminUserDetail | null>> {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * The sheet of an account; null when it does not exist, was deleted or the
+ * id is not one (it goes into a filter). Read once per request: the metadata
+ * and the page share it.
+ */
+export const adminUser = cache(async (id: string): Promise<QueryResult<AdminUserDetail | null>> => {
   await requireAdmin();
+  if (!UUID.test(id)) return { ok: true, data: null };
   try {
     const supabase = await createClient();
     const profile = await supabase
@@ -243,16 +252,20 @@ export async function adminUser(id: string): Promise<QueryResult<AdminUserDetail
       (row) => (row.seller_id === id ? row.buyer_id : row.seller_id) ?? [],
     );
     const actorIds = audit.data.flatMap((entry) => entry.actor_id ?? []);
-    const names = new Map<string, string | null>();
+    // The RLS lets the admin read a deleted profile: said as such, not by its name.
+    const people = new Map<string, { name: string | null; deleted: boolean }>();
     const wanted = [...new Set([...counterpartIds, ...actorIds])];
     if (wanted.length > 0) {
-      const people = await supabase
+      const rows = await supabase
         .from("profiles")
-        .select("id, first_name, last_name")
+        .select("id, first_name, last_name, deleted_at")
         .in("id", wanted);
-      if (people.error) throw new Error(`profiles: ${people.error.code}`);
-      for (const person of people.data) {
-        names.set(person.id, fullName(person.first_name, person.last_name));
+      if (rows.error) throw new Error(`profiles: ${rows.error.code}`);
+      for (const person of rows.data) {
+        people.set(person.id, {
+          name: fullName(person.first_name, person.last_name),
+          deleted: person.deleted_at !== null,
+        });
       }
     }
 
@@ -307,7 +320,7 @@ export async function adminUser(id: string): Promise<QueryResult<AdminUserDetail
           return {
             id: row.id,
             role,
-            counterpartName: other ? (names.get(other) ?? null) : null,
+            counterpart: other ? (people.get(other) ?? null) : null,
             listingTitle: one(row.listing)?.title ?? null,
             lastMessageAt: row.last_message_at ?? row.created_at,
             closed: row.closed_at !== null,
@@ -323,7 +336,7 @@ export async function adminUser(id: string): Promise<QueryResult<AdminUserDetail
           id: entry.id,
           action: entry.action,
           at: entry.created_at,
-          actorName: entry.actor_id ? (names.get(entry.actor_id) ?? null) : null,
+          actorName: entry.actor_id ? (people.get(entry.actor_id)?.name ?? null) : null,
           reason: metaReason(entry.meta),
         })),
       },
@@ -332,4 +345,4 @@ export async function adminUser(id: string): Promise<QueryResult<AdminUserDetail
     logFailure("user", error, { entity_id: id });
     return { ok: false, error: "unavailable" };
   }
-}
+});

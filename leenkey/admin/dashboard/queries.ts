@@ -37,6 +37,8 @@ export type AdminTodoItem = {
   label: string;
   /** Since when it waits. */
   since: string;
+  /** The cover photo of a listing (storage path), null without one or for a case or a report. */
+  coverPath: string | null;
 };
 
 /** Days of the activity of the dashboard (SPEC 17: « sur 30 jours »). */
@@ -114,11 +116,24 @@ export function shortLabel(text: string, max: number = LABEL_CHARS): string {
         .trimEnd()}…`;
 }
 
-/** The items of « À traiter », merged and the oldest first. */
+type PhotoRow = { storage_path: string; is_cover: boolean };
+
+/** The cover photo of the property of a listing (embedded one to one, or as a list). */
+function coverOf(
+  property: { photos: PhotoRow[] } | { photos: PhotoRow[] }[] | null,
+): string | null {
+  const one = Array.isArray(property) ? property[0] : property;
+  return one?.photos.find((photo) => photo.is_cover)?.storage_path ?? null;
+}
+
+/** The items of « À traiter », merged and the oldest first (by date, then by id). */
 export function mergeTodo(groups: readonly AdminTodoItem[][], limit: number = TODO_LIMIT) {
   return groups
     .flat()
-    .sort((a, b) => a.since.localeCompare(b.since) || a.id.localeCompare(b.id))
+    .sort(
+      (a, b) =>
+        Date.parse(a.since) - Date.parse(b.since) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+    )
     .slice(0, limit);
 }
 
@@ -133,7 +148,9 @@ export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult
     const [listings, cases, reports] = await Promise.all([
       supabase
         .from("listings")
-        .select("id, title, reference, submitted_at, created_at")
+        .select(
+          "id, title, reference, submitted_at, created_at, property:properties(photos(storage_path, is_cover))",
+        )
         .eq("status", "pending")
         .is("deleted_at", null)
         .order("submitted_at", { ascending: true, nullsFirst: true })
@@ -163,18 +180,21 @@ export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult
             id: row.id,
             label: `${shortLabel(row.title)} · ${row.reference}`,
             since: row.submitted_at ?? row.created_at,
+            coverPath: coverOf(row.property),
           })),
           cases.data.map((row) => ({
             kind: "case" as const,
             id: row.id,
             label: shortLabel(row.subject),
             since: row.created_at,
+            coverPath: null,
           })),
           reports.data.map((row) => ({
             kind: "report" as const,
             id: row.id,
             label: shortLabel(row.reason),
             since: row.created_at,
+            coverPath: null,
           })),
         ],
         limit,

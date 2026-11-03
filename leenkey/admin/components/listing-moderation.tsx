@@ -13,12 +13,12 @@ import {
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
-import type { EmailDelivery } from "@/core/notifications/email";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import type { ModerationAction, ModerationInput } from "@/lib/validations/admin";
 import type { Database } from "@/types/database";
 import { moderateListing, type ModerationResult } from "../actions";
+import { withEmailNote, type Feedback } from "../feedback";
 import { ReasonDialog } from "./reason-dialog";
 
 // Decisions of the back office on a listing (SPEC-V2 section 17): validate
@@ -28,27 +28,12 @@ import { ReasonDialog } from "./reason-dialog";
 // the button clicked has left with its row, or changed with the status.
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
-/** reload: no answer from the server, the page may be out of date. */
-export type Feedback = { tone: "success" | "warning" | "danger"; text: string; reload?: boolean };
-
 const t = fr.adminListings;
 
 const FeedbackContext = createContext<(feedback: Feedback) => void>(() => {});
 
 /** Reports the outcome of a decision in the ModerationFeedback around (listings, accounts). */
 export const useModerationFeedback = () => useContext(FeedbackContext);
-
-/** What a decision done says of the email it sent (null: none sent). */
-export function withEmailNote(done: string, email: EmailDelivery | null, failed: string): Feedback {
-  if (email === null) return { tone: "success", text: done };
-  if (email === "failed") return { tone: "warning", text: `${done} ${failed}` };
-  const note = {
-    sent: t.result.emailSent,
-    test: t.result.emailTest,
-    logged: t.result.emailLogged,
-  }[email];
-  return { tone: "success", text: `${done} ${note}` };
-}
 
 /**
  * Outcome of the last decision, above the list or the listing. Its live
@@ -120,7 +105,10 @@ const ERROR = {
 function feedbackFor(action: ModerationAction, result: ModerationResult | null): Feedback {
   if (!result) return { tone: "danger", text: t.errors.network, reload: true };
   if (!result.ok) return { tone: "danger", text: t.errors[ERROR[result.error]] };
-  return withEmailNote(DONE[action], result.data.email, t.result.emailFailed);
+  return withEmailNote(DONE[action], result.data.email, {
+    sent: t.result.emailSent,
+    failed: t.result.emailFailed,
+  });
 }
 
 export function ListingModeration({

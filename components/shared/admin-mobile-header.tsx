@@ -86,7 +86,7 @@ export function AdminMobileHeader({
         <nav aria-label={tilesLabel} className="grid grid-cols-3 gap-2">
           {tiles.map((tile, index) => (
             <Link
-              key={tile.href}
+              key={tile.label}
               href={tile.href}
               className={cn(
                 "flex min-h-11 min-w-0 flex-col gap-0.5 rounded-lk-sm px-2.5 py-3 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white focus-visible:outline-solid",

@@ -6,33 +6,17 @@ import { Button } from "@/components/shared/button";
 import { fr } from "@/lib/i18n/fr";
 import type { AccountDecisionInput } from "@/lib/validations/admin";
 import { decideAccount, type AccountDecisionResult } from "../users/actions";
-import { useModerationFeedback, withEmailNote, type Feedback } from "./listing-moderation";
+import { accountFeedback } from "../feedback";
+import { useModerationFeedback } from "./listing-moderation";
 import { ReasonDialog } from "./reason-dialog";
 
 // Suspension of an account from its sheet (SPEC-V2 section 17, L1-30a):
 // « Suspendre le compte » asks for a motive, sent to its owner by email;
 // « Réactiver le compte » lifts it at once. The outcome shows at the top of
-// the sheet (ModerationFeedback) and takes the focus. Never one's own account.
+// the sheet (ModerationFeedback) and takes the focus. Never one's own account
+// nor an account of the team (the page shows neither button; the SQL refuses).
 
 const t = fr.adminUsers;
-
-const ERROR = {
-  invalid: t.errors.invalid,
-  forbidden: t.errors.forbidden,
-  not_found: t.errors.notFound,
-  conflict: t.errors.conflict,
-  unavailable: t.errors.unavailable,
-} as const;
-
-function feedbackFor(
-  action: AccountDecisionInput["action"],
-  result: AccountDecisionResult | null,
-): Feedback {
-  if (!result) return { tone: "danger", text: t.errors.network, reload: true };
-  if (!result.ok) return { tone: "danger", text: ERROR[result.error] };
-  const done = action === "suspend" ? t.result.suspended : t.result.unsuspended;
-  return withEmailNote(done, result.data.email, t.result.emailFailed);
-}
 
 export function AccountModeration({
   profileId,
@@ -62,7 +46,7 @@ export function AccountModeration({
         // The decision may have been saved all the same: the message says so.
         console.error("[admin] account decision request failed", error);
       }
-      const feedback = feedbackFor(input.action, result);
+      const feedback = accountFeedback(input.action, result);
       if (result?.ok === false && result.error === "not_found") router.refresh();
       if (open && !result?.ok) {
         setDialogError(feedback.text);

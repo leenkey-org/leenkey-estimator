@@ -45,7 +45,8 @@ const COLUMNS = [
 ];
 
 const sheetHref = (row: AdminUserRow) => `/admin/utilisateurs/${row.id}`;
-const nameOf = (row: AdminUserRow) => row.name ?? t.noName;
+/** The name of the account, else its email (a sign-up without a name). */
+const nameOf = (row: AdminUserRow) => row.name ?? row.email;
 
 /** The plan of a seller (« Autonomie » without a paid one), nothing for an account that sells nothing. */
 function PlanCell({ row }: { row: AdminUserRow }) {
@@ -142,7 +143,9 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                     </span>
                     {row.suspendedAt ? <AccountStatusBadge suspended /> : null}
                   </span>
-                  <span className="truncate text-lk-caption text-lk-ink-3">{row.email}</span>
+                  {row.name ? (
+                    <span className="truncate text-lk-caption text-lk-ink-3">{row.email}</span>
+                  ) : null}
                   <RoleBadges roles={row.roles} />
                   <span className="text-lk-caption text-lk-ink-3">
                     {[
@@ -164,17 +167,20 @@ export default async function AdminUsersPage({ searchParams }: Props) {
           <DataTableHeader columns={COLUMNS} />
           <tbody>
             {rows.map((row) => (
-              <DataTableRow key={row.id}>
+              // The whole row opens the sheet (a target of 44 px at least).
+              <DataTableRow key={row.id} className="relative has-[a:hover]:bg-lk-stone-2">
                 <DataTableRowHeader>
                   <div className="flex min-w-0 flex-col">
                     <Link
                       href={sheetHref(row)}
                       aria-label={t.openLabel(nameOf(row))}
-                      className="font-semibold text-lk-ink underline-offset-2 hover:underline"
+                      className="font-semibold text-lk-ink underline-offset-2 before:absolute before:inset-0 hover:underline"
                     >
                       {nameOf(row)}
                     </Link>
-                    <span className="truncate text-lk-caption text-lk-ink-3">{row.email}</span>
+                    {row.name ? (
+                      <span className="truncate text-lk-caption text-lk-ink-3">{row.email}</span>
+                    ) : null}
                   </div>
                 </DataTableRowHeader>
                 <DataTableCell>

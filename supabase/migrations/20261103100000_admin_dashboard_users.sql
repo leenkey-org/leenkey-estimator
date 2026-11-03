@@ -12,6 +12,12 @@
 -- 3. admin_users, admin_user_counts: the list of /admin/utilisateurs, with
 --    its search on the name and the email and its filters.
 -- 4. admin_user_contact: the email of an account and its sign-in dates.
+-- 5. admin_suspend_user / admin_unsuspend_user (L1-05) replaced: an account
+--    of the team is never suspended (is_admin() ignores a suspension: a
+--    suspended admin would keep the back office and lift it), and a decision
+--    on an account already in that state is refused (a stale tab would reset
+--    the date and the motive, email the holder again, or write a false
+--    « réactivé » in the history).
 --
 -- 1, 2 and the counts run with the caller's rights (security invoker): the
 -- RLS of the tables they read is a second barrier. The list and the contact
@@ -34,7 +40,7 @@ begin
     select
       (select count(*)::int from public.listings l
         where l.status = 'pending' and l.deleted_at is null),
-      (select min(l.submitted_at) from public.listings l
+      (select min(coalesce(l.submitted_at, l.created_at)) from public.listings l
         where l.status = 'pending' and l.deleted_at is null),
       (select count(*)::int from public.cases c where c.status <> 'closed'),
       (select count(*)::int from public.reports r where r.resolved_at is null);
@@ -43,8 +49,9 @@ $$;
 
 -- A plan sold: paid (above 0 €), not refunded; an upgrade counts as a sale
 -- (its own subscription, SPEC 11). A sign-up: an account created in the
--- period, not deleted, not the team's; an account both seller and buyer
--- counts once in the total.
+-- period, not deleted, not the team's (an admin who also sells is left out
+-- everywhere); an account both seller and buyer counts once in the total,
+-- in both of the split.
 create function public.admin_activity(p_days int default 30)
 returns table (
   plans_sold int,
@@ -73,18 +80,20 @@ begin
       (select count(*)::int from public.profiles p
         where p.created_at >= v_since and p.deleted_at is null and not ('admin' = any(p.roles))),
       (select count(*)::int from public.profiles p
-        where p.created_at >= v_since and p.deleted_at is null and 'seller' = any(p.roles)),
+        where p.created_at >= v_since and p.deleted_at is null and not ('admin' = any(p.roles))
+          and 'seller' = any(p.roles)),
       (select count(*)::int from public.profiles p
-        where p.created_at >= v_since and p.deleted_at is null and 'buyer' = any(p.roles));
+        where p.created_at >= v_since and p.deleted_at is null and not ('admin' = any(p.roles))
+          and 'buyer' = any(p.roles));
 end;
 $$;
 
 -- The list of /admin/utilisateurs: the most recent first; filter on a role
 -- or the suspended accounts; search on the first name, the last name and
 -- the email. Deleted accounts are left out (L2-10). `paid_plan`: the dearest
--- paid plan in force on one of the properties of the account (not replaced,
--- refunded nor over), null when none; `properties`: its properties not
--- deleted.
+-- paid plan of its properties not deleted, as their sale reads it
+-- (sale_progress.plan, kept to property_current_plan by the triggers of
+-- L1-23), null when none; `properties`: its properties not deleted.
 create function public.admin_users(
   p_filter text default null,
   p_query text default null,
@@ -113,11 +122,11 @@ begin
     select p.id, p.first_name, p.last_name, u.email::text, p.roles, p.created_at, p.suspended_at,
            (select count(*)::int from public.properties pp
              where pp.owner_id = p.id and pp.deleted_at is null),
-           (select s.plan from public.subscriptions s
-              join public.plans pl on pl.code = s.plan
-             where s.owner_id = p.id and s.replaced_by is null and s.refunded_at is null
-               and (s.ends_at is null or s.ends_at > now()) and pl.price_cents > 0
-             order by pl.price_cents desc, s.activated_at desc
+           (select sp.plan from public.properties pp
+              join public.sale_progress sp on sp.property_id = pp.id
+              join public.plans pl on pl.code = sp.plan
+             where pp.owner_id = p.id and pp.deleted_at is null and pl.price_cents > 0
+             order by pl.price_cents desc
              limit 1),
            bp.financing_status
       from public.profiles p
@@ -164,6 +173,63 @@ begin
       from auth.users u
       join public.profiles p on p.id = u.id
      where u.id = p_profile_id and p.deleted_at is null;
+end;
+$$;
+
+create or replace function public.admin_suspend_user(p_profile_id uuid, p_reason text) returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_roles public.user_role[];
+  v_suspended_at timestamptz;
+begin
+  if not public.is_admin() then
+    raise exception 'admin only' using errcode = '42501';
+  end if;
+  if char_length(btrim(coalesce(p_reason, ''))) < 3 then
+    raise exception 'a reason is required' using errcode = '22023';
+  end if;
+  if p_profile_id = auth.uid() then
+    raise exception 'an admin cannot suspend themselves' using errcode = '22023';
+  end if;
+  select p.roles, p.suspended_at into v_roles, v_suspended_at
+    from public.profiles p
+   where p.id = p_profile_id and p.deleted_at is null
+     for update;
+  if not found then
+    raise exception 'profile not found' using errcode = 'P0002';
+  end if;
+  if 'admin' = any(v_roles) then
+    raise exception 'an account of the team is not suspended' using errcode = '22023';
+  end if;
+  if v_suspended_at is not null then
+    raise exception 'already suspended' using errcode = '22023';
+  end if;
+  update public.profiles set suspended_at = now(), suspension_reason = btrim(p_reason)
+   where id = p_profile_id;
+  perform public.audit('user.suspend', 'profile', p_profile_id, jsonb_build_object('reason', btrim(p_reason)));
+end;
+$$;
+
+create or replace function public.admin_unsuspend_user(p_profile_id uuid) returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_suspended_at timestamptz;
+begin
+  if not public.is_admin() then
+    raise exception 'admin only' using errcode = '42501';
+  end if;
+  select p.suspended_at into v_suspended_at
+    from public.profiles p
+   where p.id = p_profile_id
+     for update;
+  if not found then
+    raise exception 'profile not found' using errcode = 'P0002';
+  end if;
+  if v_suspended_at is null then
+    raise exception 'not suspended' using errcode = '22023';
+  end if;
+  update public.profiles set suspended_at = null, suspension_reason = null where id = p_profile_id;
+  perform public.audit('user.unsuspend', 'profile', p_profile_id);
 end;
 $$;
 

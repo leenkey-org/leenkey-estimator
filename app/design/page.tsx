@@ -80,6 +80,7 @@ import { SiteFooter } from "@/components/shared/site-footer";
 import { Select } from "@/components/shared/select";
 import { Skeleton } from "@/components/shared/skeleton";
 import { StatTile } from "@/components/shared/stat-tile";
+import { AccountStatusBadge, RoleBadges } from "@/leenkey/admin/components/account-badges";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Textarea } from "@/components/shared/textarea";
 import { TopNav } from "@/components/shared/top-nav";
@@ -1105,6 +1106,13 @@ export default function DesignPage() {
               ))}
             </ul>
             <Caption>{content.backOffice.tilesCaption}</Caption>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <RoleBadges roles={["seller", "buyer"]} />
+              <RoleBadges roles={["admin"]} />
+              <AccountStatusBadge suspended={false} />
+              <AccountStatusBadge suspended />
+            </div>
+            <Caption>{content.backOffice.accountBadgesCaption}</Caption>
             <FilterPills
               label={content.backOffice.pillsLabel}
               items={content.backOffice.pills.map((pill) => ({

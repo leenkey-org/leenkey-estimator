@@ -1253,9 +1253,10 @@ export const fr = {
       signupsSplit: (sellers: number, buyers: number) =>
         `${sellers}\u00A0${sellers > 1 ? "vendeurs" : "vendeur"}, ${buyers}\u00A0${buyers > 1 ? "acquéreurs" : "acquéreur"}`,
     },
-    // The header of a phone (AdminMobileHeader): three tiles.
+    // The header of a phone (AdminMobileHeader): three tiles, a navigation
+    // named apart from the « À traiter » list of the dashboard.
     header: {
-      label: "À traiter",
+      label: "Compteurs du back office",
       listings: "À valider",
       cases: "Dossiers",
       reports: "Signalements",
@@ -1325,7 +1326,6 @@ export const fr = {
     suspendedBadge: "Suspendu",
     signedUp: (date: string) => `Inscrit le ${date}`,
     propertiesCount: (count: number) => `${count}\u00A0${count > 1 ? "biens" : "bien"}`,
-    open: "Voir la fiche",
     openLabel: (name: string) => `Voir la fiche de ${name}`,
     empty: {
       title: "Aucun compte",
@@ -1346,8 +1346,6 @@ export const fr = {
       signedUp: "Inscription",
       lastSignIn: "Dernière connexion",
       never: "Jamais",
-      roles: "Rôles",
-      suspension: "Suspendu",
       suspensionReason: "Motif de la suspension",
       properties: "Biens",
       propertiesEmpty: "Aucun bien.",
@@ -1361,11 +1359,12 @@ export const fr = {
       conversationsNote:
         "Les métadonnées seulement : le contenu des messages n'est lu qu'en cas de signalement.",
       conversationsEmpty: "Aucune conversation.",
-      asSeller: (name: string) => `Vend à ${name}`,
-      asBuyer: (name: string) => `Achète à ${name}`,
-      someone: "un compte supprimé",
+      // The account sells: the other side is a buyer, and the reverse.
+      asSeller: (name: string) => `Échange avec ${name}, acquéreur`,
+      asBuyer: (name: string) => `Échange avec ${name}, vendeur`,
+      deletedAccount: "un compte supprimé",
       closed: "Close",
-      lastMessage: (when: string) => `Dernier message ${when}`,
+      lastMessage: (when: string) => `Dernier message : ${when}`,
       cases: "Dossiers",
       casesEmpty: "Aucun dossier.",
       caseStatus: {
@@ -1376,6 +1375,8 @@ export const fr = {
       history: "Historique",
       historyEmpty: "Aucune décision pour l'instant.",
       self: "C'est votre compte : vous ne pouvez pas le suspendre.",
+      team: "Un compte de l'équipe ne se suspend pas.",
+      error: "La fiche de ce compte n'a pas pu être chargée.",
       later:
         "Les offres et le justificatif de financement s'ajouteront à cette fiche avec le lot 2.",
     },
@@ -1410,11 +1411,13 @@ export const fr = {
     result: {
       suspended: "Compte suspendu.",
       unsuspended: "Compte réactivé.",
+      emailSent: "Le titulaire du compte est prévenu par email.",
       emailFailed: "L'email au titulaire n'a pas pu partir : prévenez-le autrement.",
     },
     errors: {
       invalid: "Le motif doit faire au moins 3 caractères.",
-      conflict: "Ce compte ne peut pas être suspendu (c'est peut-être le vôtre).",
+      conflict:
+        "Le statut de ce compte a déjà changé, ou c'est un compte de l'équipe : rechargez la page.",
       notFound: "Ce compte n'existe plus.",
       forbidden: "Cette action est réservée à l'équipe Leenkey.",
       unavailable: "La décision n'a pas pu être enregistrée. Réessayez.",

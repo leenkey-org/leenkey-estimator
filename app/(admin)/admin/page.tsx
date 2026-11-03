@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ClipboardList, Flag, Folder, type LucideIcon } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InlineAlert } from "@/components/shared/inline-alert";
+import { PropertyThumb } from "@/components/shared/property-thumb";
 import { SectionTitle } from "@/components/shared/section-title";
 import { StatTile } from "@/components/shared/stat-tile";
 import { requireAdmin } from "@/core/auth/session";
@@ -13,6 +14,7 @@ import {
   adminTodo,
   type AdminTodoItem,
 } from "@/leenkey/admin/dashboard/queries";
+import { photoUrl } from "@/leenkey/properties/photo-files";
 import { formatInteger, formatPrice, formatWaiting } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -185,12 +187,20 @@ export default async function AdminHomePage() {
                       href={todoHref(item)}
                       className="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-lk-stone-2 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-brand-blue focus-visible:outline-solid"
                     >
-                      <span
-                        aria-hidden="true"
-                        className="flex size-9 shrink-0 items-center justify-center rounded-lk-sm bg-lk-blue-tint text-lk-blue"
-                      >
-                        <Icon className="size-4.5" />
-                      </span>
+                      {item.kind === "listing" ? (
+                        // A property shows its photo (DESIGN.md 13.2, rule 3).
+                        <PropertyThumb
+                          src={item.coverPath ? photoUrl(item.coverPath) : null}
+                          className="size-11"
+                        />
+                      ) : (
+                        <span
+                          aria-hidden="true"
+                          className="flex size-11 shrink-0 items-center justify-center rounded-lk-sm bg-lk-blue-tint text-lk-blue"
+                        >
+                          <Icon className="size-4.5" />
+                        </span>
+                      )}
                       <span className="flex min-w-0 flex-1 flex-col">
                         <span className="truncate text-lk-label font-semibold text-lk-ink">
                           {item.label}

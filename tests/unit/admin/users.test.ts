@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AccountSuspendedEmail, accountSuspendedSubject } from "@/emails/account-suspended";
 import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
 import { mergeTodo, shortLabel, type AdminTodoItem } from "@/leenkey/admin/dashboard/queries";
+import { accountFeedback, withEmailNote } from "@/leenkey/admin/feedback";
 import { formatWaiting } from "@/lib/format";
 import {
   accountDecisionSchema,
@@ -109,6 +110,7 @@ describe("« À traiter »", () => {
     id,
     label: id,
     since,
+    coverPath: null,
   });
 
   it("merges the three lists, the oldest first, and cuts them", () => {
@@ -124,6 +126,15 @@ describe("« À traiter »", () => {
       3,
     );
     expect(merged.map((entry) => entry.id)).toEqual(["c1", "l1", "r1"]);
+  });
+
+  it("compares the dates, not their text", () => {
+    expect(
+      mergeTodo([
+        [item("listing", "a", "2026-11-02T09:00:00.5+01:00")],
+        [item("case", "b", "2026-11-02T08:30:00Z")],
+      ]).map((entry) => entry.id),
+    ).toEqual(["a", "b"]);
   });
 
   it("keeps a stable order for the same date", () => {
@@ -237,5 +248,41 @@ describe("formatWaiting", () => {
     expect(formatWaiting(ago(47 * 60 * minute), now)).toBe("47 h");
     expect(formatWaiting(ago(2 * 24 * 60 * minute), now)).toBe("2 jours");
     expect(formatWaiting(ago(-minute), now)).toBe("1 min");
+  });
+});
+
+describe("what a decision says of its email", () => {
+  it("names the holder of the account, not the seller, once the email is sent", () => {
+    expect(
+      accountFeedback("suspend", { ok: true, data: { suspended: true, email: "sent" } }),
+    ).toEqual({
+      tone: "success",
+      text: "Compte suspendu. Le titulaire du compte est prévenu par email.",
+    });
+    expect(
+      accountFeedback("suspend", { ok: true, data: { suspended: true, email: "failed" } }),
+    ).toEqual({
+      tone: "warning",
+      text: "Compte suspendu. L'email au titulaire n'a pas pu partir : prévenez-le autrement.",
+    });
+    expect(
+      accountFeedback("unsuspend", { ok: true, data: { suspended: false, email: null } }),
+    ).toEqual({ tone: "success", text: "Compte réactivé." });
+  });
+
+  it("says outside production where the email went", () => {
+    expect(withEmailNote("Fait.", "test", { sent: "Envoyé.", failed: "Échec." }).text).toBe(
+      "Fait. Email envoyé à la boîte de test (hors production).",
+    );
+    expect(withEmailNote("Fait.", "logged", { sent: "Envoyé.", failed: "Échec." }).text).toBe(
+      "Fait. Email non envoyé : environnement local.",
+    );
+  });
+
+  it("asks to reload after no answer, says a refusal", () => {
+    expect(accountFeedback("suspend", null)).toMatchObject({ tone: "danger", reload: true });
+    expect(accountFeedback("suspend", { ok: false, error: "conflict" }).text).toBe(
+      "Le statut de ce compte a déjà changé, ou c'est un compte de l'équipe : rechargez la page.",
+    );
   });
 });
