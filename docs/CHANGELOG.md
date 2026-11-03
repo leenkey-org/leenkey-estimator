@@ -12,6 +12,14 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-03 · L1-30a · PR #70 · Back office : tableau de bord et utilisateurs
+- Ajouté : tableau de bord `/admin` : annonces à valider (attente de la plus ancienne, objectif 24 h, orange au-delà), dossiers et signalements ouverts, formules vendues et inscriptions sur 30 jours, puis « À traiter » (annonces, dossiers, signalements, du plus ancien au plus récent).
+- Ajouté : compteurs de la barre latérale et trois tuiles de l'en-tête mobile du back office (« À valider », « Dossiers », « Signalements »).
+- Ajouté : `/admin/utilisateurs` (recherche, filtres Vendeurs, Acquéreurs, Équipe, Suspendus ; cartes en mobile, tableau à partir de 1 024 px) et fiche `/admin/utilisateurs/[id]` (informations, biens, projet d'achat, conversations sans leur contenu, dossiers, historique).
+- Ajouté : « Suspendre le compte » avec un motif (motifs fréquents ou texte libre), email « Votre compte Leenkey est suspendu » au titulaire, et « Réactiver le compte ».
+- Modifié : le dialogue des motifs des annonces devient `ReasonDialog`, commun aux annonces et aux comptes ; `StatTile` accepte une ligne de détail.
+- Migration : `20261103100000_admin_dashboard_users.sql` (fonctions `admin_counts`, `admin_activity`, `admin_users`, `admin_user_counts`, `admin_user_contact`, réservées à l'admin).
+
 ### 2026-11-02 · L1-29 · PR #69 · Suggestions de l'assistant
 - Ajouté : « Suggérer une réponse » dans une conversation, côté vendeur, quand l'acquéreur a écrit en dernier : réponse proposée dans un `AssistantSuggestion` (« Utiliser », « Modifier », « Ignorer »), jamais envoyée seule ; le message envoyé à partir d'une suggestion porte `ai_suggested`.
 - Ajouté : « Rédiger avec l'assistant » sous la description de l'étape « Prix et description » : description proposée à partir des caractéristiques du bien et du texte déjà saisi, mise dans le champ seulement, enregistrée avec l'étape.

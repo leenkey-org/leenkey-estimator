@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { AccountMenuProps } from "./account-menu";
-import { AdminMobileHeader } from "./admin-mobile-header";
+import { AdminMobileHeader, type AdminHeaderTile } from "./admin-mobile-header";
 import { AdminSidebar } from "./admin-sidebar";
 import { BottomNav } from "./bottom-nav";
 import { BOTTOM_NAV_OFFSET, type NavItem } from "./nav-items";
@@ -22,6 +22,8 @@ export type AdminShellProps = {
   notifications?: { sidebar: ReactNode; header: ReactNode };
   /** Under the content, beside the sidebar (SiteFooter). */
   footer?: ReactNode;
+  /** The three counters of the mobile header and their name (L1-30a). */
+  headerTiles?: { label: string; tiles: readonly AdminHeaderTile[] };
   children: ReactNode;
   className?: string;
 };
@@ -41,6 +43,7 @@ export function AdminShell({
   account,
   notifications,
   footer,
+  headerTiles,
   children,
   className,
 }: AdminShellProps) {
@@ -66,6 +69,8 @@ export function AdminShell({
           fallbackTitle={fallbackTitle}
           account={account}
           notifications={notifications?.header}
+          tiles={headerTiles?.tiles}
+          tilesLabel={headerTiles?.label}
         />
         <main className="flex-1 px-5 pt-5 pb-8 md:px-8 md:py-7">{children}</main>
         {footer}

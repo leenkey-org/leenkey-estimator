@@ -74,3 +74,53 @@ export const moderationSchema = z.discriminatedUnion("action", [
 
 export type ModerationInput = z.infer<typeof moderationSchema>;
 export type ModerationAction = ModerationInput["action"];
+
+// L1-30a: the users of the back office (SPEC-V2 section 17).
+
+/** Filters of /admin/utilisateurs, in the order of the pills, with their URL value. */
+export const ADMIN_USER_FILTERS = [
+  { filter: "seller", param: "vendeurs" },
+  { filter: "buyer", param: "acquereurs" },
+  { filter: "admin", param: "equipe" },
+  { filter: "suspended", param: "suspendus" },
+] as const;
+
+export type AdminUserFilter = (typeof ADMIN_USER_FILTERS)[number]["filter"];
+export type AdminUsersQuery = { filter?: AdminUserFilter; query?: string };
+
+const USER_PARAMS = ADMIN_USER_FILTERS.map((filter) => filter.param) as [string, ...string[]];
+
+/** /admin/utilisateurs?filtre=vendeurs&q=martin; anything unknown is ignored. */
+export function parseAdminUsersQuery(
+  params: Record<string, string | string[] | undefined>,
+): AdminUsersQuery {
+  const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+  const param = z.enum(USER_PARAMS).safeParse(first(params.filtre));
+  const query = z.string().trim().min(1).max(100).safeParse(first(params.q));
+  return {
+    filter: param.success
+      ? ADMIN_USER_FILTERS.find((filter) => filter.param === param.data)?.filter
+      : undefined,
+    query: query.success ? query.data : undefined,
+  };
+}
+
+/** Address of the list of the users for a filter and a search. */
+export function adminUsersHref({ filter, query }: AdminUsersQuery): string {
+  const params = new URLSearchParams();
+  const param = ADMIN_USER_FILTERS.find((candidate) => candidate.filter === filter)?.param;
+  if (param) params.set("filtre", param);
+  if (query) params.set("q", query);
+  const search = params.toString();
+  return search ? `/admin/utilisateurs?${search}` : "/admin/utilisateurs";
+}
+
+const profileId = z.string().uuid();
+
+/** Suspend an account (a motive sent to its owner by email) or lift the suspension. */
+export const accountDecisionSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("suspend"), profileId, reason }),
+  z.object({ action: z.literal("unsuspend"), profileId }),
+]);
+
+export type AccountDecisionInput = z.infer<typeof accountDecisionSchema>;

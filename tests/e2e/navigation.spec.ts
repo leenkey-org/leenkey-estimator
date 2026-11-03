@@ -665,12 +665,14 @@ test.describe("comptes connectés (base de seed)", () => {
     await signIn(page, "admin", "/admin");
     const nav = page.getByRole("navigation", { name: ADMIN_NAV });
     await expectFooter(page);
-    // The dashboard comes with L1-30; the listings to review are already there.
-    await expect(page.getByRole("heading", { name: "Le tableau de bord arrive" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Voir les annonces à valider" })).toHaveAttribute(
-      "href",
-      "/admin/annonces?statut=a-valider",
-    );
+    // The dashboard (L1-30a, tests/e2e/admin-users.spec.ts): its tiles lead to the listings to review.
+    await expect(page.getByRole("list", { name: "Chiffres du back office" })).toBeVisible();
+    await expect(
+      page
+        .getByRole("list", { name: "Chiffres du back office" })
+        .getByRole("link")
+        .filter({ hasText: "Annonces à valider" }),
+    ).toHaveAttribute("href", "/admin/annonces?statut=a-valider");
     if (isMobile) {
       await expect(page.getByRole("banner")).toContainText("Back office");
       await expect(page.getByRole("banner")).toContainText("Tableau de bord");
@@ -694,13 +696,14 @@ test.describe("comptes connectés (base de seed)", () => {
       await expect(page.getByRole("banner")).toContainText("Annonces");
       await expect(page.getByRole("heading", { level: 1, name: "Annonces" })).toBeAttached();
     } else {
+      // Count pills of what waits (L1-30a): the seed has listings to review.
       await expect(nav.getByRole("link")).toHaveText([
         "Tableau de bord",
-        "Annonces",
+        /^Annonces\s*\d+$/,
         "Utilisateurs",
-        "Dossiers",
+        /^Dossiers(\s*\d+)?$/,
         "Offres",
-        "Signalements",
+        /^Signalements(\s*\d+)?$/,
         "Assistant",
       ]);
       await expect(nav.getByRole("link", { name: "Tableau de bord" })).toHaveAttribute(

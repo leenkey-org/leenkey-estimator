@@ -8,28 +8,18 @@ import {
   useRef,
   useState,
   useTransition,
-  type FormEvent,
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { flushSync } from "react-dom";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { ChevronLeft, X } from "lucide-react";
 import { Button } from "@/components/shared/button";
-import { facadeScope } from "@/components/shared/facade-root";
-import { IconButton } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
-import { Textarea } from "@/components/shared/textarea";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
-import {
-  REASON_MIN,
-  reasonLength,
-  type ModerationAction,
-  type ModerationInput,
-} from "@/lib/validations/admin";
+import type { ModerationAction, ModerationInput } from "@/lib/validations/admin";
 import type { Database } from "@/types/database";
 import { moderateListing, type ModerationResult } from "../actions";
+import { withEmailNote, type Feedback } from "../feedback";
+import { ReasonDialog } from "./reason-dialog";
 
 // Decisions of the back office on a listing (SPEC-V2 section 17): validate
 // and publish, refuse with a motive, suspend with a motive, put back online.
@@ -38,12 +28,12 @@ import { moderateListing, type ModerationResult } from "../actions";
 // the button clicked has left with its row, or changed with the status.
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
-/** reload: no answer from the server, the page may be out of date. */
-type Feedback = { tone: "success" | "warning" | "danger"; text: string; reload?: boolean };
-
 const t = fr.adminListings;
 
 const FeedbackContext = createContext<(feedback: Feedback) => void>(() => {});
+
+/** Reports the outcome of a decision in the ModerationFeedback around (listings, accounts). */
+export const useModerationFeedback = () => useContext(FeedbackContext);
 
 /**
  * Outcome of the last decision, above the list or the listing. Its live
@@ -115,16 +105,10 @@ const ERROR = {
 function feedbackFor(action: ModerationAction, result: ModerationResult | null): Feedback {
   if (!result) return { tone: "danger", text: t.errors.network, reload: true };
   if (!result.ok) return { tone: "danger", text: t.errors[ERROR[result.error]] };
-  const { email } = result.data;
-  if (email === null) return { tone: "success", text: DONE[action] };
-  if (email === "failed")
-    return { tone: "warning", text: `${DONE[action]} ${t.result.emailFailed}` };
-  const note = {
+  return withEmailNote(DONE[action], result.data.email, {
     sent: t.result.emailSent,
-    test: t.result.emailTest,
-    logged: t.result.emailLogged,
-  }[email];
-  return { tone: "success", text: `${DONE[action]} ${note}` };
+    failed: t.result.emailFailed,
+  });
 }
 
 export function ListingModeration({
@@ -257,7 +241,26 @@ export function ListingModeration({
       {buttons}
       <ReasonDialog
         key={dialogKey}
-        kind={dialog}
+        open={dialog !== null}
+        copy={
+          dialog === "suspend"
+            ? {
+                title: t.reasonDialog.suspendTitle,
+                text: t.reasonDialog.suspendText,
+                reason: t.reasonDialog.reason,
+                confirm: t.reasonDialog.confirmSuspend,
+                tone: "danger",
+                templates: t.suspendTemplates,
+              }
+            : {
+                title: t.reasonDialog.rejectTitle,
+                text: t.reasonDialog.rejectText,
+                reason: t.reasonDialog.reason,
+                confirm: t.reasonDialog.confirmReject,
+                tone: "primary",
+                templates: t.rejectTemplates,
+              }
+        }
         working={working}
         error={dialogError}
         onClose={() => setDialog(null)}
@@ -271,163 +274,5 @@ export function ListingModeration({
         }}
       />
     </div>
-  );
-}
-
-/**
- * Motive of a refusal or a suspension (docs/DESIGN.md 10.8): a full screen
- * with a back header on a phone, a dialog of 520 px from 768 px.
- */
-function ReasonDialog({
-  kind,
-  working,
-  error,
-  onClose,
-  onConfirm,
-  onCloseAutoFocus,
-}: {
-  kind: "reject" | "suspend" | null;
-  working: boolean;
-  error: string | null;
-  onClose: () => void;
-  onConfirm: (reason: string) => void;
-  onCloseAutoFocus: (event: Event) => void;
-}) {
-  const [reason, setReason] = useState("");
-  const [invalid, setInvalid] = useState(false);
-  const field = useRef<HTMLTextAreaElement>(null);
-  const copy = t.reasonDialog;
-  const templates = kind === "suspend" ? t.suspendTemplates : t.rejectTemplates;
-
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    if (reasonLength(reason) < REASON_MIN) {
-      // The error in the page first: the field gives it with its name.
-      flushSync(() => setInvalid(true));
-      field.current?.focus();
-      return;
-    }
-    onConfirm(reason.trim());
-  };
-
-  return (
-    <DialogPrimitive.Root
-      open={kind !== null}
-      onOpenChange={(open) => {
-        if (!open && !working) onClose();
-      }}
-    >
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay
-          className={cn(
-            "fixed inset-0 z-60 bg-lk-ink/40 duration-220",
-            "data-[state=open]:animate-in data-[state=open]:fade-in-0",
-            "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
-          )}
-        />
-        <DialogPrimitive.Content
-          onCloseAutoFocus={onCloseAutoFocus}
-          className={cn(
-            facadeScope,
-            "fixed inset-0 z-60 flex flex-col overflow-y-auto bg-lk-surface outline-none",
-            "md:top-1/2 md:right-auto md:bottom-auto md:left-1/2 md:max-h-[85vh] md:w-130 md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-lk-md md:shadow-float",
-            "duration-220 ease-out-lk data-[state=open]:animate-in data-[state=open]:fade-in-0 motion-reduce:animate-none",
-          )}
-        >
-          {/* Phone: the AppHeader (back, title 15 px 600 centred); dialog: title 20 px 700 and a cross. */}
-          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-lk-line px-5 pt-5 pb-3.5 md:flex md:border-0 md:px-6 md:pt-6 md:pb-0">
-            <DialogPrimitive.Close asChild>
-              <IconButton
-                icon={ChevronLeft}
-                variant="stone"
-                aria-label={copy.back}
-                disabled={working}
-                className="md:hidden"
-              />
-            </DialogPrimitive.Close>
-            <DialogPrimitive.Title className="min-w-0 flex-1 truncate text-center text-lk-title font-semibold text-lk-ink md:whitespace-normal md:text-left md:text-lk-h2 md:font-bold md:text-wide">
-              {kind === "suspend" ? copy.suspendTitle : copy.rejectTitle}
-            </DialogPrimitive.Title>
-            <DialogPrimitive.Close asChild>
-              <IconButton
-                icon={X}
-                aria-label={copy.close}
-                variant="transparent"
-                size="sm"
-                disabled={working}
-                className="hidden md:inline-flex"
-              />
-            </DialogPrimitive.Close>
-            <span aria-hidden="true" className="size-11 md:hidden" />
-          </div>
-          <div className="flex flex-col gap-4 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:px-6 md:pb-6">
-            <DialogPrimitive.Description className="text-lk-secondary text-lk-ink-2">
-              {kind === "suspend" ? copy.suspendText : copy.rejectText}
-            </DialogPrimitive.Description>
-            <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
-              <fieldset className="flex flex-col gap-2">
-                <legend className="mb-2 text-lk-label font-semibold text-lk-ink">
-                  {copy.templates}
-                </legend>
-                {templates.map((template) => (
-                  <button
-                    key={template}
-                    type="button"
-                    aria-pressed={reason === template}
-                    onClick={() => {
-                      setReason(template);
-                      setInvalid(false);
-                    }}
-                    className={cn(
-                      "min-h-11 rounded-lk-sm border-[1.5px] px-3.5 py-2.5 text-left text-lk-secondary transition-colors duration-140 ease-out-lk",
-                      reason === template
-                        ? "border-lk-blue bg-lk-blue-tint text-lk-navy"
-                        : "border-lk-line bg-lk-surface text-lk-ink hover:bg-lk-stone-2",
-                    )}
-                  >
-                    {template}
-                  </button>
-                ))}
-              </fieldset>
-              <Textarea
-                ref={field}
-                label={copy.reason}
-                help={copy.reasonHint}
-                value={reason}
-                maxLength={1000}
-                required
-                error={invalid ? t.errors.invalid : undefined}
-                onChange={(event) => {
-                  setReason(event.target.value);
-                  if (invalid) setInvalid(false);
-                }}
-              />
-              {/* In the page from the opening, so that the error is read; out of the layout while empty. */}
-              <div aria-live="polite" className={cn(!error && "sr-only")}>
-                {error ? (
-                  <InlineAlert tone="danger" live={false}>
-                    {error}
-                  </InlineAlert>
-                ) : null}
-              </div>
-              <div className="flex flex-col-reverse gap-2.5 md:flex-row md:justify-end">
-                <DialogPrimitive.Close asChild>
-                  <Button variant="outline-ink" disabled={working}>
-                    {copy.cancel}
-                  </Button>
-                </DialogPrimitive.Close>
-                <Button
-                  type="submit"
-                  variant={kind === "suspend" ? "danger" : "primary"}
-                  loading={working}
-                >
-                  {kind === "suspend" ? copy.confirmSuspend : copy.confirmReject}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
   );
 }

@@ -106,8 +106,10 @@ test.describe("catalogue /design", () => {
     await page.getByRole("link", { name: "Aperçu des emails" }).click();
     await expect(page).toHaveURL("/design/emails");
     await expect(page.getByRole("heading", { level: 1, name: "Emails" })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(9);
+    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(10);
     await expect(page.getByText("Sujet : 3 annonces à valider")).toBeVisible();
+    // L1-30a: the suspension of an account.
+    await expect(page.getByText("Sujet : Votre compte Leenkey est suspendu")).toBeVisible();
     const frame = page.frameLocator(
       'iframe[title="Aperçu de l\'email « Nouveau message avec un lien (vendeur) »"]',
     );

@@ -79,6 +79,8 @@ import { SegmentedPicker } from "@/components/shared/segmented-picker";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { Select } from "@/components/shared/select";
 import { Skeleton } from "@/components/shared/skeleton";
+import { StatTile } from "@/components/shared/stat-tile";
+import { AccountStatusBadge, RoleBadges } from "@/leenkey/admin/components/account-badges";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Textarea } from "@/components/shared/textarea";
 import { TopNav } from "@/components/shared/top-nav";
@@ -1009,6 +1011,11 @@ export default function DesignPage() {
                     siteHref: "/design#navigation",
                     signOut,
                   }}
+                  tilesLabel={content.navigation.headerTiles.label}
+                  tiles={content.navigation.headerTiles.tiles.map((tile) => ({
+                    ...tile,
+                    href: "/design#navigation",
+                  }))}
                 />
                 <Caption>{content.navigation.headerCaption}</Caption>
               </div>
@@ -1082,6 +1089,30 @@ export default function DesignPage() {
           </Section>
 
           <Section id="back-office" title={content.sections.backOffice} level="h3">
+            <ul
+              aria-label={content.backOffice.tilesLabel}
+              className="grid max-w-3xl grid-cols-2 gap-2.5 md:grid-cols-3"
+            >
+              {content.backOffice.tiles.map((tile) => (
+                <li key={tile.label}>
+                  <StatTile
+                    value={tile.value}
+                    label={tile.label}
+                    detail={tile.detail}
+                    detailTone={tile.late ? "warning" : "muted"}
+                    className="h-full"
+                  />
+                </li>
+              ))}
+            </ul>
+            <Caption>{content.backOffice.tilesCaption}</Caption>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <RoleBadges roles={["seller", "buyer"]} />
+              <RoleBadges roles={["admin"]} />
+              <AccountStatusBadge suspended={false} />
+              <AccountStatusBadge suspended />
+            </div>
+            <Caption>{content.backOffice.accountBadgesCaption}</Caption>
             <FilterPills
               label={content.backOffice.pillsLabel}
               items={content.backOffice.pills.map((pill) => ({

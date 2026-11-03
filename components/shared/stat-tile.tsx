@@ -3,15 +3,21 @@ import { cn } from "@/lib/utils";
 /**
  * A figure and what it counts (docs/DESIGN.md 10.2 StatTile): white card,
  * 1 px line, the figure 22 px 700 tabular (--text-lk-stat), its label 12 px ink-3 under it.
- * By three in a grid on the dashboard of a sale (« 248 vues · 7 j »).
+ * By three in a grid on the dashboard of a sale (« 248 vues · 7 j »). A
+ * detail under the label (the back office, L1-30a: « Plus ancienne : 30 h ·
+ * au-delà de 24 h »), 11 px, in the warning colour when it says a delay.
  */
 export function StatTile({
   value,
   label,
+  detail,
+  detailTone = "muted",
   className,
 }: {
   value: string;
   label: string;
+  detail?: string;
+  detailTone?: "muted" | "warning";
   className?: string;
 }) {
   return (
@@ -24,6 +30,19 @@ export function StatTile({
       <span className="text-lk-stat font-bold tracking-lk-d-snug tabular text-lk-ink">{value}</span>
       {/* Read « 248 vues · 7 j », not « 248vues » (no box in a flex column). */}{" "}
       <span className="text-lk-caption text-lk-ink-3">{label}</span>
+      {detail ? (
+        <>
+          {" "}
+          <span
+            className={cn(
+              "text-lk-micro",
+              detailTone === "warning" ? "font-semibold text-lk-warning" : "text-lk-ink-3",
+            )}
+          >
+            {detail}
+          </span>
+        </>
+      ) : null}
     </div>
   );
 }

@@ -1841,6 +1841,7 @@ Maquettes : `AdminAnnonces.dc.html`, `AdminDesktop.dc.html`. Conçu desktop d'ab
 - Tuiles : annonces à valider (avec l'ancienneté de la plus vieille, objectif 24 h), messages clients en attente, dossiers ouverts, offres des 7 derniers jours, signalements ouverts, formules vendues sur 30 jours (nombre et montant), inscriptions sur 30 jours (vendeurs / acquéreurs), déclencheurs de montée en gamme (affichés, cliqués, convertis).
 - « Résumé du jour » par l'assistant (outil `admin_daily_brief`), généré à l'ouverture, mis en cache 1 h.
 - Liste « À traiter » : les éléments qui attendent Cédric, par ancienneté.
+- Mise en œuvre (L1-30a, `DECISIONS.md` 2026-11-03) : tuiles des annonces à valider, dossiers et signalements ouverts, formules vendues et inscriptions sur 30 jours ; messages clients (L1-34), offres (lot 2), déclencheurs (L2-09) et résumé du jour (L1-30b) avec leurs tâches. « À traiter » : annonces en attente, dossiers et signalements ouverts, 20 au plus.
 
 ### Annonces `/admin/annonces`
 
@@ -1855,6 +1856,8 @@ Maquettes : `AdminAnnonces.dc.html`, `AdminDesktop.dc.html`. Conçu desktop d'ab
 ### Utilisateurs `/admin/utilisateurs`
 
 Liste avec rôles, date d'inscription, biens, formule, statut de financement. Fiche : informations, biens, conversations (métadonnées, pas le contenu sauf signalement), offres, dossiers, justificatif de financement (type, date avec alerte au-delà de 3 mois, aperçu du fichier) avec **Marquer le justificatif comme vérifié** et une note interne, suspension du compte (motif, email).
+
+Mise en œuvre (L1-30a, `DECISIONS.md` 2026-11-03) : recherche (prénom, nom, email) et filtres (vendeurs, acquéreurs, équipe, suspendus) ; fiche sans les offres ni le justificatif de financement, qui arrivent avec le lot 2 (L2-02) ; un compte suspendu se connecte encore mais n'écrit plus, ses annonces restent en ligne (Q71).
 
 ### Dossiers `/admin/dossiers`
 
