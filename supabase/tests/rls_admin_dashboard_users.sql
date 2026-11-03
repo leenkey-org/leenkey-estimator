@@ -11,6 +11,13 @@ begin;
 select plan(42);
 \ir _plan.psql
 
+-- The plans of the seed (reference data, absent from a bare database).
+insert into plans (code, name, tagline, price_cents, description, features, position) values
+  ('autonomie', 'Autonomie', 'Tous les outils pour vendre vous-même.', 0, 'Gratuit', '{}', 1),
+  ('accompagne', 'Accompagné', 'Vous vendez. Nous vous accompagnons.', 99000, 'Accompagné', '{}', 2),
+  ('serenite', 'Sérénité', 'Nous pilotons avec vous.', 150000, 'Sérénité', '{}', 3)
+on conflict (code) do nothing;
+
 -- Out of the way: what the seed or a previous test left (the rest is counted
 -- before, the seed may hold listings to review and plans sold).
 delete from reports;

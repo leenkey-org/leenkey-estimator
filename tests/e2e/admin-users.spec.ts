@@ -181,9 +181,10 @@ test("utilisateurs : recherche, filtres, fiche d'un compte", async ({ page }) =>
   await expect(sellerRow.getByText("Vendeur", { exact: true })).toBeVisible();
   await sellerRow.getByRole("link").first().click();
   await expect(page).toHaveURL(/\/admin\/utilisateurs\/[0-9a-f-]{36}$/);
-  await expect(page.getByRole("region", { name: "Informations" })).toContainText(
-    "seller_a@test.leenkey.fr",
-  );
+  const info = page.getByRole("region", { name: "Informations" });
+  await expect(info).toContainText("seller_a@test.leenkey.fr");
+  // Read in auth.users (admin_user_contact): the seed accounts are confirmed.
+  await expect(info.getByText("Email confirmé", { exact: true })).toBeVisible();
   const properties = page.getByRole("region", { name: "Biens" });
   await expect(properties.getByRole("listitem").first()).toBeVisible();
   await expect(properties.getByRole("link").first()).toHaveAttribute(
@@ -197,7 +198,9 @@ test("utilisateurs : recherche, filtres, fiche d'un compte", async ({ page }) =>
     ),
   ).toBeVisible();
   // Who the seller talks with, never what they wrote (seed conversations of LK-0001).
-  await expect(conversations.getByText("Échange avec David Moreau, acquéreur")).toBeVisible();
+  await expect(
+    conversations.getByText("Échange avec David Moreau, acquéreur").first(),
+  ).toBeVisible();
   await expect(conversations.getByText(/Dernier message : /).first()).toBeVisible();
   await expect(page.getByRole("group", { name: /Décisions sur le compte de/ })).toBeVisible();
   await expectNoSeriousViolation(page);

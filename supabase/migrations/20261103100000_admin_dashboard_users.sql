@@ -11,7 +11,9 @@
 -- 2. admin_activity: plans sold and sign-ups over the last days.
 -- 3. admin_users, admin_user_counts: the list of /admin/utilisateurs, with
 --    its search on the name and the email and its filters.
--- 4. admin_user_contact: the email of an account and its sign-in dates.
+-- 4. admin_user_contact: the email of an account, when it was confirmed
+--    (auth.users.confirmed_at: the email, no phone sign-in here) and its
+--    last sign-in.
 -- 5. admin_suspend_user / admin_unsuspend_user (L1-05) replaced: an account
 --    of the team is never suspended (is_admin() ignores a suspension: a
 --    suspended admin would keep the back office and lift it), and a decision
@@ -162,14 +164,14 @@ end;
 $$;
 
 create function public.admin_user_contact(p_profile_id uuid)
-returns table (email text, email_confirmed_at timestamptz, last_sign_in_at timestamptz)
+returns table (email text, confirmed_at timestamptz, last_sign_in_at timestamptz)
 language plpgsql stable security definer set search_path = '' as $$
 begin
   if not public.is_admin() then
     raise exception 'admin only' using errcode = '42501';
   end if;
   return query
-    select u.email::text, u.email_confirmed_at, u.last_sign_in_at
+    select u.email::text, u.confirmed_at, u.last_sign_in_at
       from auth.users u
       join public.profiles p on p.id = u.id
      where u.id = p_profile_id and p.deleted_at is null;

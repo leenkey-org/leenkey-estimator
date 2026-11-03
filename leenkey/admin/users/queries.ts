@@ -285,7 +285,7 @@ export const adminUser = cache(async (id: string): Promise<QueryResult<AdminUser
         lastName: profile.data.last_name,
         email: reachable?.email ?? null,
         phone: profile.data.phone,
-        emailConfirmedAt: (reachable?.email_confirmed_at as string | null | undefined) ?? null,
+        emailConfirmedAt: (reachable?.confirmed_at as string | null | undefined) ?? null,
         lastSignInAt: (reachable?.last_sign_in_at as string | null | undefined) ?? null,
         roles: profile.data.roles,
         createdAt: profile.data.created_at,
