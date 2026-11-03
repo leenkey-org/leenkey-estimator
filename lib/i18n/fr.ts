@@ -160,7 +160,6 @@ export const fr = {
     },
     admin: {
       metaTitle: "Back office · Leenkey",
-      loading: "Chargement de la page…",
     },
   },
   // « Ma vente », the dashboard of a sale (L1-24, SPEC-V2 8.7, DESIGN.md 12.3).
