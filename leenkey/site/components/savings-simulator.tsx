@@ -49,7 +49,7 @@ export function SavingsSimulator({
                     "flex h-11 cursor-pointer items-center rounded-full border px-4 text-lk-compact font-semibold tabular md:h-11.5 md:px-5",
                     "transition-[color,background-color,border-color,scale] duration-140 ease-out-lk",
                     // Pressed on a phone (Younes, 2026-11-04).
-                    "[-webkit-tap-highlight-color:transparent] active:scale-[0.96] motion-reduce:active:scale-100",
+                    "[-webkit-tap-highlight-color:transparent] active:scale-[0.98]",
                     // Chosen: the gradient of an action, white text (redesign D).
                     "peer-checked:lk-gradient peer-checked:border-transparent peer-checked:text-white",
                     "border-lk-line-strong bg-lk-surface text-lk-ink hover:border-lk-blue-border",

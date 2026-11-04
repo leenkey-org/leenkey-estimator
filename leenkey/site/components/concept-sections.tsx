@@ -97,8 +97,8 @@ function OptionPair({ options, or }: { options: readonly ReactNode[]; or: string
 }
 
 /**
- * « Ce que vous obtenez en quelques minutes. », on navy as in the V1: what
- * the tool produces, its references, what it takes into account, the report,
+ * « Ce que vous obtenez en quelques minutes. », on navy as in the V1: the
+ * range of value, the sales of the area, what moves the price, the report,
  * in four glass cards numbered 01 to 04, then the line of the V1 in a frame
  * of the light blue with its icon.
  */
@@ -116,10 +116,8 @@ export function ToolSection() {
       <ol data-reveal-stagger="" className="grid gap-5 md:grid-cols-2">
         {t.tool.items.map((item, index) => (
           <li key={item.title} className={cn(cardDark, "flex flex-col gap-3")}>
-            <p className="flex items-center gap-3 text-lk-caption font-bold tracking-lk-caps text-lk-blue-light uppercase">
-              <NumberBadge value={index + 1} size="sm" />
-              {item.label}
-            </p>
+            {/* The number of the V1 above the title (01 to 04). */}
+            <NumberBadge value={index + 1} size="sm" />
             <h3 className="text-lk-h3-lg font-bold text-white lg:text-lk-h2">{item.title}</h3>
             <p className={cardTextDark}>{item.text}</p>
           </li>

@@ -71,8 +71,9 @@ export function SegmentedPicker({
               "min-w-0 cursor-pointer px-1",
               "text-lk-button-md font-semibold",
               "transition-[color,background-color,border-color,scale] duration-140 ease-out-lk",
-              // Pressed on a phone: the option sinks a little (2026-11-04).
-              "[-webkit-tap-highlight-color:transparent] enabled:active:scale-[0.96] motion-reduce:enabled:active:scale-100",
+              // Pressed on a phone: the option sinks a little, as a Button
+              // (DESIGN.md 10.1, 2026-11-04).
+              "[-webkit-tap-highlight-color:transparent] enabled:active:scale-[0.98]",
               dark
                 ? [
                     // Its long labels may take two lines at 390 px.

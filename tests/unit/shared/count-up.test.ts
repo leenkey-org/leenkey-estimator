@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countable } from "@/components/shared/count-up";
+import { countable } from "@/lib/figures";
 import { formatInteger } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 

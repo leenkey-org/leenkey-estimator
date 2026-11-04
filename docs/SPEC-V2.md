@@ -1139,7 +1139,7 @@ Pour chaque écran : route, contenu dans l'ordre, états (chargement, vide, erre
 ### 8.1 Accueil `/` (refait en V2, puis en direction C)
 
 Depuis la refonte du 2026-10-26 (`docs/DECISIONS.md`, maquettes de `docs/design-handoff/`, mise en page en `docs/DESIGN.md` 13.1), l'accueil suit la direction C. Il remplace l'accueil dans la direction de la V1 (L1-41, L1-49), dont les sections « Où en êtes-vous », les deux sections sombres, le comparatif et la carte d'exemple sont retirés. Dans l'ordre :
-- Photo d'une maison (droits confirmés par Younes, Q57), la pastille « Ni agence, ni seul · 0 € de commission », le titre « Leenkey vous donne les clés de votre vente. » et son sous-titre.
+- Photo d'une maison (droits confirmés par Younes, Q57), la pastille du slogan « Parce que le lien, c'est la clé » (2026-11-04), le titre « Leenkey vous donne les clés de votre vente. » et son sous-titre.
 - Carte de recherche à trois onglets, « Valoriser mon bien » ouvert d'abord :
   - Valoriser : l'adresse choisie dans les suggestions de la Base Adresse Nationale ouvre `/estimer` avec elle (`?adresse=&cp=&ville=`, lus une fois, le département déduit du code postal), comme si elle avait été choisie à l'étape « Localisation » ; une adresse tapée sans suggestion choisie en demande une.
   - Vendre : l'adresse tapée ouvre la création du bien (`/vendeur/biens/nouveau?adresse=`, cherchée à l'étape 1), après l'inscription vendeur sans session.

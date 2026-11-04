@@ -1034,6 +1034,20 @@ html {
   [data-reveal-draw] text {
     opacity: 1 !important;
   }
+  /* A figure that rolls up (CountUp) is printed as it is, never at 0: its
+     rolling copy hidden, the copy of screen readers shown. */
+  [data-count-up] > [aria-hidden="true"] {
+    display: none;
+  }
+  [data-count-up] > .sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: inherit;
+  }
 }
 
 /* Skeleton pulse (DESIGN.md 10.8): opacity 0.6 → 1 in 1.2 s */

@@ -198,7 +198,7 @@ test.describe("pages du site en V2", () => {
   // (the text keeps its case for screen readers).
   for (const [path, eyebrows] of [
     ["/concept", ["L'idée de départ", "Le cœur du concept", "Ce que Leenkey ouvre ensuite"]],
-    ["/tarifs", ["Formule Autonomie gratuite"]],
+    ["/tarifs", ["Freemium"]],
     ["/faq", ["Questions fréquentes"]],
     [
       "/investir",
@@ -289,8 +289,14 @@ test.describe("pages du site en V2", () => {
   }) => {
     await page.goto("/investir");
     const market = page.locator("#marche");
-    // In the text of the agency, then in large beside it.
-    await expect(market.getByText("15\u202f000\u202f€", { exact: true })).toHaveCount(2);
+    // In the text of the agency, then in large beside it, rolled up to it once in view.
+    await expect(
+      market.locator("strong").getByText("15\u202f000\u202f€", { exact: true }),
+    ).toHaveCount(1);
+    const figure = market.locator("[data-count-up]");
+    await figure.scrollIntoViewIfNeeded();
+    await expect(figure.locator('[aria-hidden="true"]')).toHaveText("15\u202f000\u202f€");
+    await expect(figure.locator(".sr-only")).toHaveText("15\u202f000\u202f€");
     await expect(
       market.getByText("prélevés sur une seule vente à 300\u202f000\u202f€", { exact: true }),
     ).toBeVisible();

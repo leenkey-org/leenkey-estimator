@@ -201,7 +201,7 @@ export const site = {
       // put forward, no plan « recommandé » (Younes, 2026-11-04).
       items: {
         autonomie: {
-          tag: "Pour piloter vous-même",
+          tag: "Pour avancer à votre rythme",
           text: "Pour piloter votre vente en toute autonomie.",
           note: "Sans engagement · sans carte bancaire",
         },
@@ -305,29 +305,26 @@ export const site = {
         "Leenkey leur donne les outils, la méthode et l'accompagnement pour réussir leur vente en toute sérénité.",
     },
     // The words of the V1 landing (« Ce que vous obtenez en quelques
-    // minutes. »), in the four cards of the page (Younes, 2026-11-04).
+    // minutes. »), in the four cards of the page, numbered as in the V1
+    // (Younes, 2026-11-04).
     tool: {
       eyebrow: "Le cœur du concept",
       title: "Ce que vous obtenez en quelques minutes.",
       lead: "Tout commence par une analyse sérieuse de votre bien. Gratuite et sans engagement.",
       items: [
         {
-          label: "Ce qu'il produit",
           title: "Une fourchette de valeur, pas un prix figé",
           text: "Une valeur indicative accompagnée d'une fourchette, dont la précision s'affine selon les informations renseignées sur votre bien.",
         },
         {
-          label: "Ses références",
           title: "Les ventes réelles de votre quartier",
           text: "Les transactions immobilières publiées par l'administration fiscale, localisées à l'adresse et analysées pour retenir les références les plus pertinentes.",
         },
         {
-          label: "Ce qu'il prend en compte",
           title: "Ce qui fait monter ou baisser le prix",
           text: `État, DPE, extérieurs, prestations, étage${NBSP}: chaque critère est chiffré séparément.`,
         },
         {
-          label: "Ce que vous recevez",
           title: "Un rapport complet en PDF",
           text: `Quatre pages reçues par email${NBSP}: valorisation, marché local, stratégie de vente et plan d'action.`,
         },
@@ -382,10 +379,10 @@ export const site = {
       "Trois formules à forfait fixe, jamais de commission : Autonomie gratuite, Accompagné et Sérénité payées à la souscription.",
     // The pill of the V1 page, without its emoji (L1-50), without the launch
     // phase: Autonomie is free, with no end (Younes, 2026-11-04).
-    eyebrow: "Formule Autonomie gratuite",
+    eyebrow: "Freemium",
     title: "Une formule pour chaque vendeur.",
     accent: "chaque vendeur.",
-    lead: "Accédez gratuitement à Leenkey avec la formule Autonomie. Aucun engagement, aucune carte bancaire demandée. Vendez votre bien et économisez réellement.",
+    lead: "Commencez gratuitement avec Autonomie. Aucun engagement, aucune carte bancaire demandée. Vendez votre bien et économisez réellement.",
     view: "Affichage des formules",
     views: { price: "Prix des formules", savings: "Mon économie vs agence" },
     free: "Gratuit",

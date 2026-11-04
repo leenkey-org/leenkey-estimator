@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Check, CircleCheck, ChartLine, LayoutList, Plus } from "lucide-react";
+import { CircleCheck, ChartLine, KeyRound, LayoutList, Plus } from "lucide-react";
 import { PillLink } from "@/components/shared/pill-link";
 import { getProfile } from "@/core/auth/session";
 import { ROUTES } from "@/leenkey/navigation/spaces";
@@ -55,7 +55,8 @@ export async function HomeHero() {
           <div className="max-w-160 lg:max-w-[48%] xl:max-w-160">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/6 py-1.25 pr-3.5 pl-1.25 text-lk-label font-medium lg:mb-5.5 lg:gap-2.5 lg:border-white/18 lg:bg-lk-night/35 lg:pr-4 lg:pl-1.5 lg:text-lk-compact">
               <span className="lk-gradient-brand flex size-5.5 items-center justify-center rounded-full lg:size-6">
-                <Check aria-hidden="true" strokeWidth={2.8} className="size-3 lg:size-3.25" />
+                {/* The key of the slogan. */}
+                <KeyRound aria-hidden="true" strokeWidth={2.6} className="size-3 lg:size-3.25" />
               </span>
               {t.hero.badge}
             </p>

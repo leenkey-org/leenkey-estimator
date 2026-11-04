@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { countable } from "@/lib/figures";
 import { formatInteger, formatPrice } from "@/lib/format";
 
 // Figures that roll up, as on the V1 (leenkey.js, « count-up for stats »,
@@ -9,10 +10,13 @@ import { formatInteger, formatPrice } from "@/lib/format";
 // simulator). The page is drawn with the figure itself: without JavaScript,
 // with reduced motion, or already on screen when the page wakes up, nothing
 // moves (DESIGN.md 9). Screen readers read the figure only, never the
-// figures it rolls through.
+// figures it rolls through; on paper, the figure itself (app/globals.css,
+// [data-count-up]).
 
 const FIRST_MS = 1300;
 const CHANGE_MS = 600;
+/** Part of the figure in view before it starts rolling. */
+const THRESHOLD = 0.3;
 
 const FORMATS = {
   /** Cents, as « 16 010 € ». */
@@ -22,14 +26,6 @@ const FORMATS = {
 } as const;
 
 export type CountUpFormat = keyof typeof FORMATS;
-
-/** The number at the start of a figure and what follows it (« 300+ », « 15 ans »), or null. */
-export function countable(text: string): { value: number; suffix: string } | null {
-  const match = /^(\d+(?:\s\d+)*)(\D*)$/u.exec(text);
-  if (!match) return null;
-  const value = Number(match[1].replace(/\s/gu, ""));
-  return Number.isFinite(value) ? { value, suffix: match[2] } : null;
-}
 
 export function CountUp({
   value,
@@ -72,12 +68,14 @@ export function CountUp({
       roll(shownRef.current, CHANGE_MS);
       return () => cancelAnimationFrame(frame);
     }
-    // On screen when the page wakes up: it stays as drawn, never back to 0.
+    // On screen when the page wakes up: it stays as drawn, never back to 0;
+    // already at 0 (changed before it rolled), it rolls to the new figure.
     const box = node.getBoundingClientRect();
     if (box.top < window.innerHeight && box.bottom > 0) {
       started.current = true;
-      show(value);
-      return;
+      if (shownRef.current === value) return;
+      roll(shownRef.current, CHANGE_MS);
+      return () => cancelAnimationFrame(frame);
     }
     show(0);
     const observer = new IntersectionObserver(
@@ -87,7 +85,7 @@ export function CountUp({
         started.current = true;
         roll(0, FIRST_MS);
       },
-      { threshold: 0.5 },
+      { threshold: THRESHOLD },
     );
     observer.observe(node);
     return () => {
@@ -97,9 +95,19 @@ export function CountUp({
   }, [value]);
 
   return (
-    <span ref={element}>
+    <span ref={element} data-count-up="">
       <span aria-hidden="true">{text(shown)}</span>
       <span className="sr-only">{text(value)}</span>
     </span>
   );
+}
+
+/**
+ * A figure written as text that rolls up when it is a number (« 300+ »,
+ * « 15 000 € »), as it is written otherwise (« 24 / 7 »). For the Server
+ * Components: the text is read here, in the browser bundle.
+ */
+export function CountUpText({ text }: { text: string }) {
+  const figure = countable(text);
+  return figure ? <CountUp value={figure.value} suffix={figure.suffix} /> : text;
 }
