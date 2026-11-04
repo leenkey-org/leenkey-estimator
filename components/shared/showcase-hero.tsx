@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 export type ShowcaseHeroProps = {
   /** Anchor of the hero (« #valoriser »), also the id of its title. */
   id: string;
-  /** The pill above the title (« Ni agence, ni seul · Vendre accompagné »), its icon first. */
+  /** The pill above the title (« Parce que le lien, c'est la clé »), its icon first. */
   badge?: { text: string; icon: LucideIcon };
   /** Or the label in capitals of the V1 pages (« Qui sommes-nous »). */
   eyebrow?: string;

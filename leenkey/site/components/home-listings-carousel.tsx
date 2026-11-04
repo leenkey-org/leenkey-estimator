@@ -124,7 +124,9 @@ export function HomeListingsCarousel({
               onClick={() => setCategory(value)}
               className={cn(
                 "-mb-px flex min-w-14 shrink-0 flex-col items-center gap-1.5 border-b-2 px-0.5 pt-1 pb-3 text-lk-caption font-medium md:min-w-16 md:gap-2 md:pt-1.5 md:pb-3.5 md:text-lk-label",
-                "transition-colors duration-140 ease-out-lk",
+                "rounded-t-lk-md transition-colors duration-140 ease-out-lk",
+                // Pressed on a phone: a light blue ground under the tab (2026-11-04).
+                "[-webkit-tap-highlight-color:transparent] active:bg-lk-blue-tint active:text-lk-ink",
                 // In ink, its icon in the gradient and the indigo line (redesign D).
                 active
                   ? "border-lk-indigo-mark text-lk-ink"

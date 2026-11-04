@@ -40,7 +40,7 @@ describe("labels above the titles of the V1 pages", () => {
       "L'idée de départ",
       "Le cœur du concept",
       "Ce que Leenkey ouvre ensuite",
-      "Phase de lancement · Freemium",
+      "Freemium",
       "Questions fréquentes",
       "Opportunité d'investissement · Proptech France 2026",
       "Ce que personne n'a encore vraiment résolu",

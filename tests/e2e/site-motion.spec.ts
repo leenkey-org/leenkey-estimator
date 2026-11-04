@@ -63,8 +63,8 @@ test.describe("mouvement des pages publiques", () => {
     ).toEqual([0, 0.08, 0.16]);
     await scrollToEnd(page);
     expect(await waiting(page)).toBe(0);
-    // The halos of the last banner breathe (redesign D); the orbs behind the
-    // simulator, there with the plans of the database, float.
+    // The halos of the last banner breathe (redesign D); the house of the logo
+    // behind the simulator, there with the plans of the database, floats.
     const animations = await page
       .locator("[data-shape]")
       .evaluateAll((all) => all.map((shape) => getComputedStyle(shape).animationName));
@@ -73,6 +73,34 @@ test.describe("mouvement des pages publiques", () => {
     // A link of a section that has risen works as before.
     await page.getByRole("link", { name: "Toutes les questions" }).click();
     await expect(page).toHaveURL("/faq");
+  });
+
+  test("les chiffres défilent jusqu'à leur valeur ; jamais à 0 avec le mouvement réduit, ni imprimés", async ({
+    page,
+  }) => {
+    await page.goto("/qui-sommes-nous");
+    const figures = page.locator("[data-count-up]");
+    await expect(figures).toHaveCount(3);
+    const finals = await figures.locator(".sr-only").allTextContents();
+    expect(finals[0]).toBe("15 ans");
+    for (const [index, figure] of (await figures.all()).entries()) {
+      await figure.scrollIntoViewIfNeeded();
+      await expect(figure.locator("[data-count-up-shown]")).toHaveText(finals[index]);
+    }
+    // « 24 / 7 » is not a number: written as it is.
+    await expect(page.getByText("24 / 7", { exact: true })).toBeVisible();
+
+    // Reduced motion: drawn with their figure, never at 0.
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/qui-sommes-nous");
+    await expect(figures.locator("[data-count-up-shown]")).toHaveText(finals);
+
+    // On paper, the figure itself, whatever was shown on the screen.
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/qui-sommes-nous");
+    await page.emulateMedia({ media: "print" });
+    await expect(figures.locator("[data-count-up-shown]").first()).toBeHidden();
+    await expect(figures.locator(".sr-only").first()).toBeVisible();
   });
 
   for (const path of ["/concept", "/tarifs", "/faq", "/investir", "/qui-sommes-nous", "/contact"]) {

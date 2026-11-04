@@ -845,7 +845,7 @@ export const publicPages = {
       "Sur navy (/tarifs, /faq) : SegmentedPicker tone dark (cadre de verre, l'option choisie en blanc à texte bleu, anneau de focus blanc), FaqList tone dark (cartes de verre, question blanche, « + » --lk-blue-light, réponse blanc à 72 %)",
     pickerLabel: "Affichage des formules",
     picker: [
-      { value: "price", label: "Gratuit pendant le lancement" },
+      { value: "price", label: "Prix des formules" },
       { value: "savings", label: "Mon économie vs agence" },
     ],
     badgeCaption:

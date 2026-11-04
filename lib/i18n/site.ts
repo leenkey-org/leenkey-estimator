@@ -38,7 +38,8 @@ export const site = {
     metaDescription:
       "La plateforme qui accompagne les propriétaires dans la vente de leur bien, sans agence : analyse de valeur, dossier, annonce, négociation, jusqu'à la signature. Forfait fixe et transparent.",
     hero: {
-      badge: "Ni agence, ni seul · 0\u00A0€ de commission",
+      // The slogan of Leenkey (Younes, 2026-11-04).
+      badge: "Parce que le lien, c'est la clé",
       // Redesign D (docs/design-handoff-d/SPECS.md 3, item 1): the title of the
       // charte, its second line in the gradient.
       title: "Vendez votre bien autrement.",
@@ -136,7 +137,8 @@ export const site = {
       prices: "Prix de vente",
       agency: `Agence (hypothèse${NBSP}: 5${N}% du prix)`,
       agencyShort: `Agence (hyp. 5${N}%)`,
-      approximately: (amount: string) => `≈${NBSP}${amount}`,
+      // Before the fee of the agency, which rolls up as the price changes.
+      approximately: `≈${NBSP}`,
       accompanied: "Leenkey Accompagné",
       autonomy: "Leenkey Autonomie",
       saved: "Vous économisez environ",
@@ -195,16 +197,16 @@ export const site = {
       free: "Gratuit",
       taxes: "TTC",
       // By plan code: the short texts of the home page (the names and the
-      // prices come from the plans table, the reference data). The label of
-      // the plan put forward is to be validated (SPECS.md 2, DECISIONS Q60).
+      // prices come from the plans table, the reference data). Autonomie is
+      // put forward, no plan « recommandé » (Younes, 2026-11-04).
       items: {
         autonomie: {
-          tag: "Pour piloter seul",
+          tag: "Pour avancer à votre rythme",
           text: "Pour piloter votre vente en toute autonomie.",
           note: "Sans engagement · sans carte bancaire",
         },
         accompagne: {
-          tag: "Notre recommandation",
+          tag: "Pour être accompagné",
           text: "Un conseiller dédié à vos côtés, du prix à la signature.",
           note: "Forfait fixe · payé à la souscription",
         },
@@ -226,7 +228,7 @@ export const site = {
           answer: [
             "Oui. La formule ",
             { strong: "Autonomie est gratuite" },
-            " pendant la phase pilote, sans engagement et sans carte bancaire. Elle inclut l'analyse de votre bien, un call stratégique de 30 minutes et la mise en place du dossier de vente.",
+            ", sans engagement et sans carte bancaire. Elle inclut l'analyse de votre bien, un call stratégique de 30 minutes et la mise en place du dossier de vente.",
           ],
         },
         {
@@ -274,59 +276,57 @@ export const site = {
       lead: "C'est la première question que se pose tout propriétaire. Et c'est exactement là que Leenkey commence : par une valorisation honnête, avant tout engagement commercial.",
       action: "Valoriser mon bien",
     },
+    // The two alternatives of the V1 (/investir, « Le problème »), word for
+    // word in the cards of the page: neither said to be a bad choice
+    // (Younes, 2026-11-04).
     options: {
       eyebrow: "L'idée de départ",
-      title: "Aujourd'hui, vendre laisse le choix entre deux mauvaises options.",
-      lead: "Leenkey est né d'un constat simple. Pour vendre un bien en France, il faut choisir : payer cher, ou avancer seul, sans outil fiable.",
+      title:
+        "Vendre un bien immobilier en France, c'est encore aujourd'hui choisir entre deux alternatives.",
       items: [
         {
-          title: "L'agence",
-          text: `3 à 5${N}% de commission sur le prix de vente, pour un travail que vous pourriez piloter vous-même.`,
+          title: "Vendre seul",
+          text: "Sans véritable plan d'action, avec des informations souvent contradictoires et sans accompagnement pour sécuriser chaque étape de la vente.",
         },
         {
-          title: "Seul, sans outil",
-          text: "Aucun repère fiable, aucun accompagnement. Vous improvisez chaque étape, sans savoir si vous vendez au bon prix.",
+          title: "Passer par une agence",
+          // The V1 card: « prélevés sur une seule vente à 300 000 € ».
+          text: `Et accepter de céder en moyenne 5${N}% du prix de vente en honoraires, soit environ 15${N}000${N}€ sur une vente à 300${N}000${N}€.`,
         },
       ],
       or: "ou",
-      // Before each option, with the cross of the V1.
+      // Above each alternative.
       option: (index: number) => `Option ${index}`,
       question: [
-        "Avant de parler de vente, une seule question compte : ",
-        { strong: "combien vaut votre bien ?" },
+        "Des milliers de propriétaires ",
+        { strong: "veulent vendre seuls, mais pas sans aide." },
       ],
       answer:
-        "La réponse qui vous est donnée aujourd'hui est soit trop vague (les analyses de valeur en ligne), soit intéressée (l'agent qui veut le mandat). Leenkey commence là, par un outil de valorisation sérieux qui donne une réponse honnête avant tout engagement.",
+        "Leenkey leur donne les outils, la méthode et l'accompagnement pour réussir leur vente en toute sérénité.",
     },
+    // The words of the V1 landing (« Ce que vous obtenez en quelques
+    // minutes. »), in the four cards of the page, numbered as in the V1
+    // (Younes, 2026-11-04).
     tool: {
       eyebrow: "Le cœur du concept",
-      title: "L'outil de valorisation.",
-      lead: "Pas un algorithme basé sur le code postal et les m². Une valorisation construite après une vraie analyse de marché.",
+      title: "Ce que vous obtenez en quelques minutes.",
+      lead: "Tout commence par une analyse sérieuse de votre bien. Gratuite et sans engagement.",
       items: [
         {
-          label: "Ce que nous avons étudié",
-          title: "Une analyse de fond, pas une moyenne",
-          list: [
-            "Les transactions réelles enregistrées par les notaires, secteur par secteur",
-            "Les critères qui font vraiment varier le prix : DPE, étage, orientation, état, travaux, transports, commerces",
-            "Les tendances du marché local sur 12 mois glissants",
-            "Les écarts constatés entre prix affiché et prix de vente réel",
-          ],
+          title: "Une fourchette de valeur, pas un prix figé",
+          text: "Une valeur indicative accompagnée d'une fourchette, dont la précision s'affine selon les informations renseignées sur votre bien.",
         },
         {
-          label: "Ce que l'outil prend en compte",
-          title: "Tous les facteurs de valeur, pondérés",
-          text: "Pas seulement la surface et la localisation. L'état du bien, les prestations, le DPE, la situation juridique, l'environnement immédiat, les risques. Chaque critère est pondéré selon son impact réel sur le marché local.",
+          title: "Les ventes réelles de votre quartier",
+          text: "Les transactions immobilières publiées par l'administration fiscale, localisées à l'adresse et analysées pour retenir les références les plus pertinentes.",
         },
         {
-          label: "Ce qu'il produit",
-          title: "Une fourchette réaliste, analysée",
-          text: "Pas un chiffre sorti du chapeau. Une fourchette réaliste avec une analyse détaillée : quels éléments tirent le prix vers le haut, lesquels le pénalisent, et où se situe votre bien face aux ventes récentes comparables.",
+          title: "Ce qui fait monter ou baisser le prix",
+          text: `État, DPE, extérieurs, prestations, étage${NBSP}: chaque critère est chiffré séparément.`,
         },
         {
-          label: "Pourquoi c'est différent",
-          title: "Vous comprenez le prix",
-          text: "Les outils en ligne donnent une moyenne. Leenkey donne une analyse. La différence : vous comprenez pourquoi votre bien vaut ce prix. Et ça change tout pour la suite de la vente.",
+          title: "Un rapport complet en PDF",
+          text: `Quatre pages reçues par email${NBSP}: valorisation, marché local, stratégie de vente et plan d'action.`,
         },
       ],
       quote: [
@@ -341,10 +341,11 @@ export const site = {
       lead: "L'accès à une plateforme complète pour vendre sans agence, mais avec tout l'accompagnement nécessaire.",
       items: [
         {
-          title: "Une annonce professionnelle",
-          // V1: « diffusion sur tous les portails majeurs depuis un seul
-          // endroit »; the listings are exclusive to Leenkey.
-          text: "Rédaction optimisée, photos conseillées, diffusion en exclusivité sur Leenkey.",
+          // Not « professionnelle »: the seller writes it, guided (Younes,
+          // 2026-11-04). V1: « diffusion sur tous les portails majeurs depuis
+          // un seul endroit »; the listings are exclusive to Leenkey.
+          title: "Une annonce optimisée",
+          text: "Rédaction guidée, photos conseillées, diffusion en exclusivité sur Leenkey.",
         },
         {
           title: "Un espace de gestion",
@@ -355,10 +356,11 @@ export const site = {
           text: "Un conseiller disponible aux moments qui comptent : la négociation, les questions juridiques, la coordination avec le notaire. Pas un chatbot, une personne.",
         },
         {
-          title: "Gratuit pendant le lancement",
           // V1: « Leenkey est entièrement gratuit […] tous les outils »; the
-          // V2 sells Accompagné and Sérénité.
-          text: `Pendant notre phase pilote, la formule Autonomie est entièrement gratuite. Aucune commission, aucun engagement${NBSP}: vous profitez de ses outils, et vous gardez 100${N}% du fruit de votre vente.`,
+          // V2 sells Accompagné and Sérénité; Autonomie is free with no end of
+          // a launch phase (Younes, 2026-11-04).
+          title: "Une formule gratuite",
+          text: `La formule Autonomie est entièrement gratuite. Aucune commission, aucun engagement${NBSP}: vous profitez de ses outils, et vous gardez 100${N}% du fruit de votre vente.`,
         },
       ],
     },
@@ -374,14 +376,15 @@ export const site = {
   pricing: {
     metaTitle: "Tarifs · Leenkey",
     metaDescription:
-      "Trois formules à forfait fixe, jamais de commission : Autonomie gratuite pendant la phase pilote, Accompagné et Sérénité payées à la souscription.",
-    // The pill of the V1 page, without its emoji (L1-50).
-    eyebrow: "Phase de lancement · Freemium",
+      "Trois formules à forfait fixe, jamais de commission : Autonomie gratuite, Accompagné et Sérénité payées à la souscription.",
+    // The pill of the V1 page, without its emoji (L1-50), without the launch
+    // phase: Autonomie is free, with no end (Younes, 2026-11-04).
+    eyebrow: "Freemium",
     title: "Une formule pour chaque vendeur.",
     accent: "chaque vendeur.",
-    lead: "Pendant notre phase pilote, accédez à la version gratuite de Leenkey. Aucun engagement, aucune carte bancaire demandée. Vendez votre bien et économisez réellement.",
+    lead: "Commencez gratuitement avec Autonomie. Aucun engagement, aucune carte bancaire demandée. Vendez votre bien et économisez réellement.",
     view: "Affichage des formules",
-    views: { price: "Gratuit pendant le lancement", savings: "Mon économie vs agence" },
+    views: { price: "Prix des formules", savings: "Mon économie vs agence" },
     free: "Gratuit",
     taxes: "TTC",
     savings: (amount: string) => `\u2212${amount} vs agence`,
@@ -423,7 +426,7 @@ export const site = {
           { strong: "trois formules transparentes" },
           " à forfait fixe\u00A0— jamais de commission au pourcentage. La formule ",
           { strong: "Autonomie est gratuite" },
-          " pendant notre phase de lancement, et inclut l'analyse de votre bien, un call stratégique de 30 minutes et la mise en place du dossier de vente. Pour aller plus loin, la formule ",
+          " et inclut l'analyse de votre bien, un call stratégique de 30 minutes et la mise en place du dossier de vente. Pour aller plus loin, la formule ",
           { strong: `Accompagné à 990${N}€ TTC` },
           " et la formule ",
           { strong: `Sérénité à 1${N}500${N}€ TTC` },

@@ -55,6 +55,10 @@ test.describe("pages du site en V2", () => {
     await expect(page.getByText("diffusion en exclusivité sur Leenkey")).toBeVisible();
     await expect(page.getByText(/portails/)).toHaveCount(0);
     await expect(page.getByText("la formule Autonomie est entièrement gratuite")).toBeVisible();
+    // Free with no end of a launch phase; the seller writes the listing (2026-11-04).
+    await expect(page.getByRole("heading", { name: "Une formule gratuite" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Une annonce optimisée" })).toBeVisible();
+    await expect(page.getByText(/phase pilote|lancement|professionnelle/)).toHaveCount(0);
     await expect(
       page.getByRole("main").getByRole("link", { name: "Valoriser mon bien", exact: true }),
     ).toHaveAttribute("href", "/estimer");
@@ -194,7 +198,7 @@ test.describe("pages du site en V2", () => {
   // (the text keeps its case for screen readers).
   for (const [path, eyebrows] of [
     ["/concept", ["L'idée de départ", "Le cœur du concept", "Ce que Leenkey ouvre ensuite"]],
-    ["/tarifs", ["Phase de lancement · Freemium"]],
+    ["/tarifs", ["Freemium"]],
     ["/faq", ["Questions fréquentes"]],
     [
       "/investir",
@@ -249,13 +253,35 @@ test.describe("pages du site en V2", () => {
   test("/concept : les deux options de la V1 et l'outil sur la nuit", async ({ page }) => {
     await page.goto("/concept");
     const options = page.locator("#idee");
+    // The two alternatives of the V1, neither said to be a bad choice (2026-11-04).
+    await expect(options.getByRole("heading", { level: 2 })).toHaveText(
+      "Vendre un bien immobilier en France, c'est encore aujourd'hui choisir entre deux alternatives.",
+    );
     await expect(options.getByText(/^Option [12]$/)).toHaveText(["Option 1", "Option 2"]);
+    await expect(options.getByRole("heading", { level: 3 })).toHaveText([
+      "Vendre seul",
+      "Passer par une agence",
+    ]);
     await expect(options.getByText("ou", { exact: true })).toBeVisible();
+    await expect(options.getByText("veulent vendre seuls, mais pas sans aide.")).toBeVisible();
+    await expect(options.getByText(/mauvaises?|intéressée/)).toHaveCount(0);
     const tool = page.locator("#outil");
     expect(await tool.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
       "rgb(2, 13, 33)",
     );
     await expect(tool.locator("ol > li")).toHaveCount(4);
+    // The words of the V1 landing: the references come from the tax administration.
+    await expect(tool.getByRole("heading", { level: 2 })).toHaveText(
+      "Ce que vous obtenez en quelques minutes.",
+    );
+    await expect(tool.getByRole("heading", { level: 3 })).toHaveText([
+      "Une fourchette de valeur, pas un prix figé",
+      "Les ventes réelles de votre quartier",
+      "Ce qui fait monter ou baisser le prix",
+      "Un rapport complet en PDF",
+    ]);
+    await expect(tool.getByText(/administration fiscale/)).toBeVisible();
+    await expect(tool.getByText(/notaires/)).toHaveCount(0);
   });
 
   test("/investir : l'encart du marché, la frise et les trois sources de la V1", async ({
@@ -263,8 +289,14 @@ test.describe("pages du site en V2", () => {
   }) => {
     await page.goto("/investir");
     const market = page.locator("#marche");
-    // In the text of the agency, then in large beside it.
-    await expect(market.getByText("15\u202f000\u202f€", { exact: true })).toHaveCount(2);
+    // In the text of the agency, then in large beside it, rolled up to it once in view.
+    await expect(
+      market.locator("strong").getByText("15\u202f000\u202f€", { exact: true }),
+    ).toHaveCount(1);
+    const figure = market.locator("[data-count-up]");
+    await figure.scrollIntoViewIfNeeded();
+    await expect(figure.locator("[data-count-up-shown]")).toHaveText("15\u202f000\u202f€");
+    await expect(figure.locator(".sr-only")).toHaveText("15\u202f000\u202f€");
     await expect(
       market.getByText("prélevés sur une seule vente à 300\u202f000\u202f€", { exact: true }),
     ).toBeVisible();
@@ -363,7 +395,7 @@ test.describe("/tarifs (base de seed)", () => {
     const plans = page.locator("article");
     // On the night, the white focus ring of the switch (L1-50), before any click:
     // after one, Chromium keeps a focus set by script without its ring.
-    const chosen = page.getByRole("radio", { name: "Gratuit pendant le lancement" });
+    const chosen = page.getByRole("radio", { name: "Prix des formules" });
     await chosen.focus();
     await expect(chosen).toHaveCSS("outline-style", "solid");
     await expect(chosen).toHaveCSS("outline-color", "rgb(255, 255, 255)");
@@ -372,7 +404,7 @@ test.describe("/tarifs (base de seed)", () => {
     await expect(plans.nth(2)).toContainText("−13 500 € vs agence");
     await expect(plans.nth(1)).toContainText("Économie indicative sur un bien à 350 000 €");
     await expect(plans.nth(0)).toContainText("Gratuit");
-    await page.getByRole("radio", { name: "Gratuit pendant le lancement" }).click();
+    await page.getByRole("radio", { name: "Prix des formules" }).click();
     await expect(plans.nth(1)).toContainText("990 €");
   });
 });

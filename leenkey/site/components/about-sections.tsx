@@ -11,6 +11,7 @@ import { VISION_ANCHOR } from "../anchors";
 import { CtaPanel } from "./cta-panel";
 import { RichText } from "./rich-text";
 import { cardDark, cardTextDark, cardTitleDark } from "./site-styles";
+import { CountUpText } from "@/components/shared/count-up";
 
 // Sections of /qui-sommes-nous (L1-43), in the order of the V1 page, in its
 // direction since L1-50 (DECISIONS 2026-10-23): Cédric's photo in the hero
@@ -93,7 +94,9 @@ export function AboutFigures() {
               {figure.label}
             </dt>
             <dd className="text-lk-h1-lg font-bold text-wide tabular-nums lg:text-lk-display-md">
-              <span className="lk-text-grad">{figure.value}</span>
+              <span className="lk-text-grad">
+                <CountUpText text={figure.value} />
+              </span>
             </dd>
           </div>
         ))}
