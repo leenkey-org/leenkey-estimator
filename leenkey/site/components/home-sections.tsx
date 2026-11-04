@@ -84,10 +84,12 @@ export async function SavingsSection() {
       aria-labelledby="economies"
       className="relative isolate mt-10 overflow-hidden border-y border-lk-line bg-lk-surface md:mt-22"
     >
-      {/* The house of the logo in place of the orbs and dots (Younes, 2026-11-04). */}
+      {/* The house of the logo in place of the orbs and dots (Younes, 2026-11-04):
+          top right on a phone and a tablet, under the prices from 1 024 px
+          (the card of the simulator would hide it on the right). */}
       <BrandHouse
         data-shape="house"
-        className="lk-float-slow pointer-events-none absolute -top-4 -right-6 -z-10 h-36 w-auto rotate-[8deg] text-lk-brand-blue opacity-10 md:top-12 md:right-[6%] md:h-56 lg:right-[4%]"
+        className="lk-float-slow pointer-events-none absolute -top-4 -right-6 -z-10 h-36 w-auto rotate-[8deg] text-lk-brand-blue opacity-10 md:top-12 md:right-[6%] md:h-56 lg:top-auto lg:right-auto lg:bottom-4 lg:left-[36%] lg:h-32"
       />
       <div className="lk-frame max-md:[--lk-gutter:1rem] py-10 md:py-22">
         <SavingsSimulator
