@@ -104,6 +104,7 @@ test("dossiers : la liste, le paiement à vérifier, puis un dossier traité de 
   // An empty note is refused; a note is added.
   await page.getByRole("button", { name: "Ajouter la note" }).click();
   await expect(page.getByText("La note doit faire de 1 à 4 000 caractères.")).toBeVisible();
+  await expect(notes.getByLabel("Nouvelle note")).toBeFocused();
   await notes.getByLabel("Nouvelle note").fill("Vendeur rappelé : remboursement du doublon prévu.");
   await page.getByRole("button", { name: "Ajouter la note" }).click();
   await expect(feedback(page, "Note ajoutée.")).toBeVisible();
@@ -117,19 +118,30 @@ test("dossiers : la liste, le paiement à vérifier, puis un dossier traité de 
   await task.check();
   await expect(feedback(page, "Tâche cochée.")).toBeVisible();
   await expect(task).toBeChecked();
+  // Read out without taking the focus: the keyboard stays on the list.
+  await expect(task).toBeFocused();
 
   // Every change in the history, by Cédric.
   const history = page.getByRole("region", { name: "Historique" });
   await expect(history.getByText("Statut : Nouveau → En cours par Cédric")).toBeVisible();
-  await expect(history.getByText("Suivi par Cédric par Cédric")).toBeVisible();
+  await expect(history.getByText("Suit le dossier par Cédric")).toBeVisible();
   await expect(history.getByText("Note ajoutée par Cédric")).toBeVisible();
   await expect(history.getByText(/^Tâche cochée : .+ par Cédric$/)).toBeVisible();
 
-  // Closed: out of the open ones.
+  // Closed, reopened, closed again: out of the open ones.
+  await page.getByRole("button", { name: "Clore le dossier" }).click();
+  await expect(feedback(page, "Dossier clos.")).toBeVisible();
+  await page.getByRole("button", { name: "Rouvrir le dossier" }).click();
+  await expect(feedback(page, "Dossier rouvert.")).toBeVisible();
   await page.getByRole("button", { name: "Clore le dossier" }).click();
   await expect(feedback(page, "Dossier clos.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Rouvrir le dossier" })).toBeVisible();
-  await page.goto("/admin/dossiers?statut=clos");
+
+  // The search reads the open cases; the closed ones one click away.
+  await page.goto("/admin/dossiers?q=LK-0008");
+  await expect(page.getByText("Aucun dossier ouvert ne correspond à « LK-0008 »")).toBeVisible();
+  await page.getByRole("link", { name: "Chercher dans les dossiers clos" }).click();
+  await expect(page).toHaveURL("/admin/dossiers?statut=clos&q=LK-0008");
   await expect(table.locator("tbody tr").filter({ hasText: "LK-0008" })).toHaveCount(1);
 });
 
@@ -148,13 +160,14 @@ test("signalements : la conversation lue et tracée, l'utilisateur averti, le si
     page.getByRole("heading", { level: 1, name: "Signalement · LK-0001" }),
   ).toBeVisible();
 
-  // The whole conversation, each reading in the history.
+  // The whole conversation; its reading in the history, at once.
   const conversation = page.getByRole("region", { name: "Conversation signalée" });
   await expect(conversation.getByText("votre lecture est enregistrée")).toBeVisible();
   await expect(conversation.getByText(/David Moreau, acquéreur/).first()).toBeVisible();
-  await page.reload();
   const history = page.getByRole("region", { name: "Historique" });
+  await expect(history.getByText("Conversation lue par Cédric")).toHaveCount(1);
   // Read twice, written once (one reading per half hour).
+  await page.reload();
   await expect(history.getByText("Conversation lue par Cédric")).toHaveCount(1);
   await expectNoSeriousViolation(page);
 
@@ -167,6 +180,8 @@ test("signalements : la conversation lue et tracée, l'utilisateur averti, le si
   await expect(feedback(page, "Avertissement enregistré.")).toContainText(EMAIL_NOTE);
   await expect(history.getByText("Utilisateur averti par Cédric")).toBeVisible();
   await expect(history.getByText("« Merci de rester courtois dans vos échanges. »")).toBeVisible();
+  // A second warning would send a second email: the first one is said.
+  await expect(page.getByText("Averti le", { exact: true })).toBeVisible();
 
   // Closed with what was done.
   await page.getByRole("button", { name: "Clore le signalement" }).click();

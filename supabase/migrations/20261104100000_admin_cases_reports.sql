@@ -277,9 +277,11 @@ returns table (
   reporter_id uuid,
   reporter_first_name text,
   reporter_last_name text,
+  reporter_deleted boolean,
   target_id uuid,
   target_first_name text,
   target_last_name text,
+  target_deleted boolean,
   target_suspended_at timestamptz
 )
 language plpgsql stable security invoker set search_path = '' as $$
@@ -291,7 +293,9 @@ begin
     select r.id, r.reason, r.created_at, r.resolved_at, r.conversation_id,
            c.listing_id, l.title, l.reference,
            r.reporter_id, rp.first_name, rp.last_name,
-           t.id, t.first_name, t.last_name, t.suspended_at
+           rp.id is null or rp.deleted_at is not null,
+           t.id, t.first_name, t.last_name,
+           t.id is null or t.deleted_at is not null, t.suspended_at
       from public.reports r
       left join public.conversations c on c.id = r.conversation_id
       left join public.listings l on l.id = c.listing_id
@@ -336,7 +340,8 @@ begin
 end;
 $$;
 
--- Every message of the reported conversation, in order, the reading written
+-- The messages of the reported conversation, in order (the last 1000), the
+-- reading written
 -- to the history of the report: once per admin and per half hour, so that a
 -- page read again after a decision does not fill the history.
 create function public.admin_report_read(p_report uuid)
@@ -360,11 +365,13 @@ begin
                          jsonb_build_object('conversation_id', v_conversation));
   end if;
   return query
-    select m.id, m.sender_id, m.body, m.kind, m.created_at
-      from public.messages m
-     where m.conversation_id = v_conversation
-     order by m.created_at, m.id
-     limit 1000;
+    select x.id, x.sender_id, x.body, x.kind, x.created_at
+      from (select m.id, m.sender_id, m.body, m.kind, m.created_at
+              from public.messages m
+             where m.conversation_id = v_conversation
+             order by m.created_at desc, m.id desc
+             limit 1000) x
+     order by x.created_at, x.id;
 end;
 $$;
 
@@ -432,7 +439,9 @@ declare
   v_info jsonb;
   v_admin uuid;
 begin
+  -- entity_id: the same event for each admin (one email for the team).
   select jsonb_build_object(
+           'entity_id', new.id,
            'report_id', new.id,
            'conversation_id', new.conversation_id,
            'listing_title', l.title,
@@ -448,7 +457,7 @@ begin
      where 'admin' = any(p.roles) and p.deleted_at is null and p.suspended_at is null
   loop
     perform public.notification_add(
-      v_admin, 'report.created', coalesce(v_info, jsonb_build_object('report_id', new.id)),
+      v_admin, 'report.created', coalesce(v_info, jsonb_build_object('entity_id', new.id, 'report_id', new.id)),
       '/admin/signalements/' || new.id, 'reports:review',
       -- By email too, unless it is an old one (imported, seed): in the app only.
       case when new.created_at > now() - interval '1 hour' then now() end);

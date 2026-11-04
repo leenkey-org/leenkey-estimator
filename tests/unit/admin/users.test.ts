@@ -229,6 +229,7 @@ describe("suspension email", () => {
     expect(text).toContain(props.reason);
     expect(text).toContain(props.contactEmail);
     expect(text).toContain("sous 48 h, 7 j/7");
+    expect(text).toContain("parce que vous avez un compte sur Leenkey");
     expect(text).not.toMatch(/\bon\b/i);
     const html = await render(AccountSuspendedEmail({ ...props, firstName: null }));
     expect(html).toContain("Bonjour,");

@@ -1,6 +1,7 @@
 import type { EmailDelivery } from "@/core/notifications/email";
 import { fr } from "@/lib/i18n/fr";
 import type { AccountDecisionInput, CaseCommand, ReportCommand } from "@/lib/validations/admin";
+import type { Database } from "@/types/database";
 import type { CaseCommandResult } from "./cases/actions";
 import type { ReportCommandResult } from "./reports/actions";
 import type { AccountDecisionResult } from "./users/actions";
@@ -9,8 +10,17 @@ import type { AccountDecisionResult } from "./users/actions";
 // L1-30a, cases and reports L1-30c), as plain values (unit-tested): the
 // outcome, then what became of the email to the person concerned.
 
-/** reload: no answer from the server, the page may be out of date. */
-export type Feedback = { tone: "success" | "warning" | "danger"; text: string; reload?: boolean };
+/**
+ * reload: no answer from the server, the page may be out of date. keepFocus:
+ * the outcome is read out without taking the focus (a task ticked: the
+ * keyboard stays on the list).
+ */
+export type Feedback = {
+  tone: "success" | "warning" | "danger";
+  text: string;
+  reload?: boolean;
+  keepFocus?: boolean;
+};
 
 /** The email of a decision, said for its recipient (the seller, the holder of the account). */
 export type EmailNotes = { sent: string; failed: string };
@@ -65,27 +75,48 @@ const CASE_ERROR = {
   unavailable: c.errors.unavailable,
 } as const;
 
-/** What a change of a case says (L1-30c); null: no answer from the server. */
-export function caseFeedback(command: CaseCommand, result: CaseCommandResult | null): Feedback {
+type CaseStatus = Database["public"]["Enums"]["case_status"];
+
+/**
+ * What a change of a case says (L1-30c); null: no answer from the server.
+ * from: the status of the case before the change (« Dossier rouvert. »).
+ */
+export function caseFeedback(
+  command: CaseCommand,
+  result: CaseCommandResult | null,
+  from?: CaseStatus,
+): Feedback {
   if (!result) return { tone: "danger", text: c.errors.network, reload: true };
-  if (!result.ok) return { tone: "danger", text: CASE_ERROR[result.error] };
-  const text =
-    command.action === "status"
-      ? command.status === "closed"
-        ? c.result.closed
-        : command.status === "in_progress"
-          ? c.result.started
-          : c.result.reopened
-      : command.action === "follow"
-        ? command.follow
-          ? c.result.followed
-          : c.result.unfollowed
-        : command.action === "note"
-          ? c.result.noted
-          : command.done
-            ? c.result.taskDone
-            : c.result.taskUndone;
-  return { tone: "success", text };
+  if (!result.ok) {
+    // Only a note can be refused for its length: any other change, the page.
+    const text =
+      result.error === "invalid" && command.action !== "note"
+        ? c.errors.invalidChange
+        : CASE_ERROR[result.error];
+    return { tone: "danger", text };
+  }
+  switch (command.action) {
+    case "status":
+      return {
+        tone: "success",
+        text:
+          command.status === "closed"
+            ? c.result.closed
+            : from === "closed"
+              ? c.result.reopened
+              : c.result.started,
+      };
+    case "follow":
+      return { tone: "success", text: command.follow ? c.result.followed : c.result.unfollowed };
+    case "note":
+      return { tone: "success", text: c.result.noted };
+    case "task":
+      return {
+        tone: "success",
+        text: command.done ? c.result.taskDone : c.result.taskUndone,
+        keepFocus: true,
+      };
+  }
 }
 
 const r = fr.adminReports;

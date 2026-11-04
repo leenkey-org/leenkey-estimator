@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { SectionTitle } from "@/components/shared/section-title";
-import { StatusBadge } from "@/components/shared/status-badge";
+import { pillClassName, StatusBadge } from "@/components/shared/status-badge";
 import { requireAdmin } from "@/core/auth/session";
-import { adminCase, type AdminCaseDetail } from "@/leenkey/admin/cases/queries";
+import { adminCase, isCheckNote, type AdminCaseDetail } from "@/leenkey/admin/cases/queries";
 import { CaseStatusBadge, CheckBadge } from "@/leenkey/admin/components/case-badges";
 import { CaseDecisions, CaseNoteForm, CaseTasks } from "@/leenkey/admin/components/case-decisions";
 import { ModerationFeedback } from "@/leenkey/admin/components/listing-moderation";
@@ -73,9 +73,11 @@ function historyLine(entry: AdminCaseDetail["history"][number], names: Record<st
     case "case.status":
       return t.history.status(statusLabel(meta.from), statusLabel(meta.to));
     case "case.assign":
-      return typeof meta.to === "string"
-        ? t.history.followed(names[meta.to] ?? fr.adminUsers.noName)
-        : t.history.unfollowed;
+      if (typeof meta.to !== "string") return t.history.unfollowed;
+      // « Suit le dossier par Cédric », not « Suivi par Cédric par Cédric ».
+      return meta.to === entry.actorId
+        ? t.history.followedSelf
+        : t.history.followed(names[meta.to] ?? fr.adminUsers.noName);
     case "case.note":
       return t.history.note;
     case "case.task": {
@@ -211,7 +213,7 @@ export default async function AdminCasePage({ params }: Props) {
                   key={note.id}
                   className={cn(
                     "flex flex-col gap-1 px-5 py-3",
-                    note.automatic && note.body.includes("À vérifier") && "bg-lk-danger-bg/40",
+                    isCheckNote(note) && "bg-lk-danger-bg/40",
                   )}
                 >
                   <p className="text-lk-caption text-lk-ink-3">
@@ -259,7 +261,8 @@ export default async function AdminCasePage({ params }: Props) {
                   </span>
                   <span
                     className={cn(
-                      "shrink-0 rounded-full px-2.5 py-1 text-lk-micro font-semibold",
+                      pillClassName,
+                      "shrink-0 px-2.5 py-1.25 text-lk-micro font-semibold",
                       STEP_TONE[step.state],
                     )}
                   >

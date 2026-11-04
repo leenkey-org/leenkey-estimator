@@ -66,6 +66,7 @@ export type AdminCaseHistoryEntry = {
   id: number;
   action: string;
   at: string;
+  actorId: string | null;
   actorName: string | null;
   meta: Record<string, unknown>;
 };
@@ -108,9 +109,12 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const one = <T>(value: T | T[] | null | undefined): T | null =>
   Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
 
-/** A note Stripe wrote about a payment to check (stripe_checkout_complete, L1-26). */
+/**
+ * A note Stripe wrote about a payment to check (stripe_checkout_complete,
+ * L1-26): the same rule as case_has_check in SQL.
+ */
 export const isCheckNote = (note: { automatic: boolean; body: string }) =>
-  note.automatic && note.body.includes("À vérifier");
+  note.automatic && (note.body.startsWith("À vérifier") || note.body.includes("À vérifier :"));
 
 function logFailure(read: string, error: unknown, context: Record<string, unknown> = {}) {
   console.error(`[admin] ${read} failed`, {
@@ -222,7 +226,8 @@ export const adminCase = cache(async (id: string): Promise<QueryResult<AdminCase
         .from("case_notes")
         .select("id, author_id, body, created_at")
         .eq("case_id", id)
-        .order("created_at", { ascending: true })
+        // The latest ones, shown from the oldest (reversed below).
+        .order("created_at", { ascending: false })
         .limit(SHEET_LIMIT),
       supabase
         .from("audit_log")
@@ -315,7 +320,7 @@ export const adminCase = cache(async (id: string): Promise<QueryResult<AdminCase
       }
     }
     const listing = one(property.data?.listing);
-    const caseNotes: AdminCaseNote[] = notes.data.map((note) => ({
+    const caseNotes: AdminCaseNote[] = [...notes.data].reverse().map((note) => ({
       id: note.id,
       body: note.body,
       at: note.created_at,
@@ -363,6 +368,7 @@ export const adminCase = cache(async (id: string): Promise<QueryResult<AdminCase
           id: entry.id,
           action: entry.action,
           at: entry.created_at,
+          actorId: entry.actor_id,
           actorName: entry.actor_id ? (people.get(entry.actor_id)?.name ?? null) : null,
           meta:
             entry.meta && typeof entry.meta === "object" && !Array.isArray(entry.meta)

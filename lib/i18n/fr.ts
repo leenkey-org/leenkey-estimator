@@ -1496,6 +1496,9 @@ export const fr = {
       title: "Aucun dossier",
       text: "Aucun dossier ne correspond à ce filtre.",
       search: (query: string) => `Aucun dossier ne correspond à « ${query} ».`,
+      searchOpen: (query: string) =>
+        `Aucun dossier ouvert ne correspond à « ${query} ». Il est peut-être clos.`,
+      searchClosed: "Chercher dans les dossiers clos",
       action: "Voir les dossiers ouverts",
     },
     error: "Les dossiers n'ont pas pu être chargés.",
@@ -1545,6 +1548,7 @@ export const fr = {
     history: {
       status: (from: string, to: string) => `Statut : ${from} → ${to}`,
       followed: (name: string) => `Suivi par ${name}`,
+      followedSelf: "Suit le dossier",
       unfollowed: "Plus suivi",
       note: "Note ajoutée",
       taskDone: (title: string) => `Tâche cochée : ${title}`,
@@ -1564,6 +1568,7 @@ export const fr = {
     },
     errors: {
       invalid: "La note doit faire de 1 à 4\u00A0000 caractères.",
+      invalidChange: "Cette modification n'est pas possible : rechargez la page.",
       conflict: "Ce dossier a déjà changé : rechargez la page.",
       notFound: "Ce dossier n'existe plus.",
       forbidden: "Cette action est réservée à l'équipe Leenkey.",
@@ -1600,6 +1605,7 @@ export const fr = {
     by: (name: string) => `Par ${name}`,
     about: (name: string) => `concerne ${name}`,
     someone: "un compte supprimé",
+    deleted: "Compte supprimé",
     noListing: "Sans annonce",
     openLabel: (reason: string) => `Ouvrir le signalement « ${reason} »`,
     empty: {
@@ -1635,16 +1641,19 @@ export const fr = {
       history: "Historique",
       historyEmpty: "Aucune action pour l'instant.",
       error: "Ce signalement n'a pas pu être chargé.",
+      warned: "Averti le",
+      historyError: "L'historique n'a pas pu être chargé.",
     },
     actions: {
       label: "Décisions sur le signalement",
-      warn: (name: string) => `Avertir ${name}`,
+      warn: (name: string | null) => (name ? `Avertir ${name}` : "Avertir l'autre partie"),
       resolve: "Clore le signalement",
     },
     warnDialog: {
       title: "Avertir l'utilisateur",
       text: "Il reçoit ce message par email, avec le rappel qu'un nouveau manquement peut suspendre son compte. Rien ne change sur son compte.",
       reason: "Message envoyé à l'utilisateur",
+      hint: "Au moins 3\u00A0caractères, envoyé tel quel.",
       confirm: "Envoyer l'avertissement",
     },
     // Provisional wording, to be validated by Cédric (Q74).
@@ -1657,6 +1666,7 @@ export const fr = {
       title: "Clore le signalement",
       text: "Indiquez la suite donnée : elle reste dans l'historique. Personne n'est prévenu.",
       reason: "Suite donnée",
+      hint: "Au moins 3\u00A0caractères, gardé dans l'historique.",
       confirm: "Clore le signalement",
     },
     resolveTemplates: [
@@ -1699,6 +1709,8 @@ export const fr = {
     footer: {
       why: "Vous recevez cet email parce que vous vendez un bien sur Leenkey.",
       whyBuyer: "Vous recevez cet email parce que vous avez contacté un vendeur sur Leenkey.",
+      // A decision on the account itself (suspension, warning): seller or buyer.
+      whyAccount: "Vous recevez cet email parce que vous avez un compte sur Leenkey.",
       preferences: "Gérer mes notifications",
       internal: "Notification interne du back office de Leenkey.",
     },
@@ -1831,7 +1843,7 @@ export const fr = {
         count > 1 ? "Des conversations ont été signalées" : "Une conversation a été signalée",
       text: (count: number) =>
         count > 1
-          ? `${count}\u00A0utilisateurs ont signalé une conversation.`
+          ? `${count}\u00A0conversations ont été signalées.`
           : "Un utilisateur a signalé une conversation.",
       reason: "Motif",
       action: (count: number) => (count > 1 ? "Voir les signalements" : "Voir le signalement"),

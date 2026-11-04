@@ -107,9 +107,22 @@ export default async function AdminCasesPage({ searchParams }: Props) {
       <EmptyState
         className="py-10"
         title={t.empty.title}
-        description={query.query ? t.empty.search(query.query) : t.empty.text}
+        description={
+          query.query
+            ? query.status
+              ? t.empty.search(query.query)
+              : t.empty.searchOpen(query.query)
+            : t.empty.text
+        }
         action={
-          query.status || query.query ? (
+          query.query && !query.status ? (
+            // Without a filter the search reads the open cases only.
+            <Button asChild variant="outline-ink">
+              <Link href={adminCasesHref({ status: "closed", query: query.query })}>
+                {t.empty.searchClosed}
+              </Link>
+            </Button>
+          ) : query.status || query.query ? (
             <Button asChild variant="outline-ink">
               <Link href={adminCasesHref({})}>{t.empty.action}</Link>
             </Button>

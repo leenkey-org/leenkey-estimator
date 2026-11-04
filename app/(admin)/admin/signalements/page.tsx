@@ -34,7 +34,15 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 const COLUMNS = [t.table.reason, t.table.by, t.table.target, t.table.listing, t.table.received];
 
 const sheetHref = (row: AdminReportRow) => `/admin/signalements/${row.id}`;
-const nameOf = (name: string | null) => name ?? t.someone;
+/** In a sentence (« Par … », « concerne … »): a deleted account, else its name. */
+const nameOf = (name: string | null, deleted: boolean) =>
+  deleted ? t.someone : (name ?? fr.adminUsers.noName);
+/** In a cell of the table. */
+const cellNameOf = (name: string | null, deleted: boolean) =>
+  deleted ? t.deleted : (name ?? fr.adminUsers.noName);
+/** The name of a link stays short: a motive runs up to 2000 characters. */
+const clip = (text: string, max = 100) =>
+  text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
 const listingOf = (row: AdminReportRow) =>
   [row.reference, row.listingTitle].filter(Boolean).join(" · ") || t.noListing;
 
@@ -99,14 +107,16 @@ export default async function AdminReportsPage({ searchParams }: Props) {
             <li key={row.id}>
               <Link
                 href={sheetHref(row)}
+                prefetch={false}
                 className="flex items-center gap-3 rounded-lk-md border border-lk-line bg-lk-surface p-3 hover:bg-lk-stone-2"
               >
                 <span className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="line-clamp-2 text-lk-label font-semibold text-lk-ink">
-                    {row.reason}
+                    {clip(row.reason)}
                   </span>
                   <span className="text-lk-caption text-lk-ink-2">
-                    {t.by(nameOf(row.reporterName))} · {t.about(nameOf(row.targetName))}
+                    {t.by(nameOf(row.reporterName, row.reporterDeleted))} ·{" "}
+                    {t.about(nameOf(row.targetName, row.targetDeleted))}
                   </span>
                   <span className="text-lk-caption text-lk-ink-3">
                     {[
@@ -130,18 +140,22 @@ export default async function AdminReportsPage({ searchParams }: Props) {
               // The whole row opens the sheet (a target of 44 px at least).
               <DataTableRow key={row.id} className="relative has-[a:hover]:bg-lk-stone-2">
                 <DataTableRowHeader>
+                  {/* No prefetch: opening the sheet reads the conversation, traced. */}
                   <Link
                     href={sheetHref(row)}
-                    aria-label={t.openLabel(row.reason)}
+                    prefetch={false}
+                    aria-label={t.openLabel(clip(row.reason))}
                     className="line-clamp-2 max-w-80 font-semibold text-lk-ink underline-offset-2 before:absolute before:inset-0 hover:underline"
                   >
-                    {row.reason}
+                    {clip(row.reason)}
                   </Link>
                 </DataTableRowHeader>
-                <DataTableCell className="text-lk-ink-2">{nameOf(row.reporterName)}</DataTableCell>
+                <DataTableCell className="text-lk-ink-2">
+                  {cellNameOf(row.reporterName, row.reporterDeleted)}
+                </DataTableCell>
                 <DataTableCell>
                   <span className="flex flex-col items-start gap-1 text-lk-ink-2">
-                    {nameOf(row.targetName)}
+                    {cellNameOf(row.targetName, row.targetDeleted)}
                     {row.targetSuspended ? <AccountStatusBadge suspended /> : null}
                   </span>
                 </DataTableCell>

@@ -12,6 +12,7 @@ import { ModerationFeedback } from "@/leenkey/admin/components/listing-moderatio
 import { ReportDecisions } from "@/leenkey/admin/components/report-decisions";
 import {
   adminReport,
+  adminReportHistory,
   adminReportMessages,
   type AdminReportPerson,
 } from "@/leenkey/admin/reports/queries";
@@ -119,8 +120,13 @@ export default async function AdminReportPage({ params }: Props) {
   }
   if (!result.data) notFound();
   const report = result.data;
+  // The messages first: the history read after them shows this reading.
   const messages = await adminReportMessages(report.id);
+  const history = await adminReportHistory(report.id);
   const now = new Date();
+  const warnedAt = history.ok
+    ? (history.data.find((entry) => entry.action === "report.warn")?.at ?? null)
+    : null;
   const closed = report.resolvedAt !== null;
   const target = report.target;
   const actionable = target !== null && !target.deleted && !target.team;
@@ -147,6 +153,8 @@ export default async function AdminReportPage({ params }: Props) {
       label: closed ? d.closed : d.received,
       value: formatDateTime(report.resolvedAt ?? report.createdAt, now),
     },
+    // A second warning sends a second email: the first one is said here.
+    ...(warnedAt ? [{ label: d.warned, value: formatDateTime(warnedAt, now) }] : []),
   ];
 
   return (
@@ -171,7 +179,7 @@ export default async function AdminReportPage({ params }: Props) {
           <div className="flex flex-wrap items-center gap-2">
             <ReportDecisions
               reportId={report.id}
-              targetName={nameOf(target)}
+              targetName={target?.name ?? null}
               canWarn={actionable && !closed}
               closed={closed}
             />
@@ -189,7 +197,19 @@ export default async function AdminReportPage({ params }: Props) {
         <Section id="conversation" title={d.conversation}>
           <p className="text-lk-caption text-lk-ink-3">{d.conversationNote}</p>
           {!messages.ok ? (
-            <InlineAlert tone="danger">{t.error}</InlineAlert>
+            <InlineAlert
+              tone="danger"
+              action={
+                <Link
+                  href={`/admin/signalements/${report.id}`}
+                  className="font-semibold underline underline-offset-2 hover:no-underline"
+                >
+                  {t.retry}
+                </Link>
+              }
+            >
+              {t.error}
+            </InlineAlert>
           ) : messages.data.length === 0 ? (
             <p className={empty}>{d.conversationEmpty}</p>
           ) : (
@@ -226,11 +246,13 @@ export default async function AdminReportPage({ params }: Props) {
         </Section>
 
         <Section id="historique" title={d.history}>
-          {report.history.length === 0 ? (
+          {!history.ok ? (
+            <InlineAlert tone="danger">{d.historyError}</InlineAlert>
+          ) : history.data.length === 0 ? (
             <p className={empty}>{d.historyEmpty}</p>
           ) : (
             <ol className={`flex flex-col divide-y divide-lk-line ${box}`}>
-              {report.history.map((entry) => (
+              {history.data.map((entry) => (
                 <li key={entry.id} className="flex flex-col gap-0.5 px-5 py-3">
                   <p className="text-lk-label font-semibold text-lk-ink">
                     {t.history.actions[entry.action] ?? t.history.other}

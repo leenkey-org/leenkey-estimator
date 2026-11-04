@@ -1,6 +1,6 @@
 "use client";
 
-import { useOptimistic, useState, useTransition, type FormEvent } from "react";
+import { useOptimistic, useRef, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/shared/button";
 import { Checkbox } from "@/components/shared/checkbox";
@@ -22,12 +22,21 @@ const t = fr.adminCases;
 
 type CaseStatus = Database["public"]["Enums"]["case_status"];
 
-/** Sends a change and says its outcome; returns whether it was saved. */
+type RunOptions = {
+  /** The status before the change: « Dossier rouvert. » after « Clos ». */
+  from?: CaseStatus;
+  /** In the transition, before the request (an optimistic state). */
+  onStart?: () => void;
+  /** After a change saved. */
+  onDone?: () => void;
+};
+
+/** Sends a change and says its outcome. */
 function useCaseChange() {
   const report = useModerationFeedback();
   const router = useRouter();
   const [working, startTransition] = useTransition();
-  const run = (command: CaseCommand, onDone?: () => void, onStart?: () => void) =>
+  const run = (command: CaseCommand, { from, onStart, onDone }: RunOptions = {}) =>
     startTransition(async () => {
       onStart?.();
       let result: CaseCommandResult | null = null;
@@ -39,7 +48,7 @@ function useCaseChange() {
       }
       if (result?.ok === false && result.error === "not_found") router.refresh();
       if (result?.ok) onDone?.();
-      report(caseFeedback(command, result));
+      report(caseFeedback(command, result, from));
     });
   return { working, run };
 }
@@ -74,7 +83,9 @@ export function CaseDecisions({
         <Button
           variant="secondary"
           disabled={working}
-          onClick={() => run({ action: "status", caseId, status: "in_progress" })}
+          onClick={() =>
+            run({ action: "status", caseId, status: "in_progress" }, { from: "closed" })
+          }
         >
           {t.actions.reopen}
         </Button>
@@ -102,17 +113,20 @@ export function CaseNoteForm({ caseId }: { caseId: string }) {
   const { working, run } = useCaseChange();
   const [body, setBody] = useState("");
   const [invalid, setInvalid] = useState(false);
+  const field = useRef<HTMLTextAreaElement>(null);
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (!body.trim()) {
       setInvalid(true);
+      field.current?.focus();
       return;
     }
-    run({ action: "note", caseId, body: body.trim() }, () => setBody(""));
+    run({ action: "note", caseId, body: body.trim() }, { onDone: () => setBody("") });
   };
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-3">
       <Textarea
+        ref={field}
         label={t.detail.noteField}
         value={body}
         maxLength={4000}
@@ -147,14 +161,17 @@ export function CaseTasks({
     <ul aria-busy={working || undefined} className="flex flex-col gap-3">
       {shown.map((task) => (
         <li key={task.id}>
+          {/* Never disabled while a change is sent: a disabled box would
+              lose the focus of the keyboard; a click then waits. */}
           <Checkbox
             label={task.title}
             checked={task.done}
-            disabled={working}
             onChange={(event) => {
+              if (working) return;
               const done = event.target.checked;
-              run({ action: "task", caseId, taskId: task.id, done }, undefined, () =>
-                setShown({ id: task.id, done }),
+              run(
+                { action: "task", caseId, taskId: task.id, done },
+                { onStart: () => setShown({ id: task.id, done }) },
               );
             }}
           />

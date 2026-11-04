@@ -185,8 +185,10 @@ export default async function AdminHomePage() {
                     key={`${item.kind}-${item.id}`}
                     className="border-t border-lk-line first:border-t-0"
                   >
+                    {/* A report: no prefetch, its sheet reads the conversation (traced). */}
                     <Link
                       href={todoHref(item)}
+                      prefetch={item.kind === "report" ? false : undefined}
                       className="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-lk-stone-2 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-brand-blue focus-visible:outline-solid"
                     >
                       {item.kind === "listing" ? (

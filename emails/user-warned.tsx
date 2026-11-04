@@ -26,7 +26,7 @@ export function UserWarnedEmail({
 }: UserWarnedEmailProps) {
   const copy = t.userWarned;
   return (
-    <EmailLayout preview={copy.text} title={copy.title} siteUrl={siteUrl}>
+    <EmailLayout preview={copy.text} title={copy.title} siteUrl={siteUrl} why={t.footer.whyAccount}>
       <Text style={emailText}>{t.greeting(firstName)}</Text>
       <Text style={emailText}>{copy.text}</Text>
       <EmailQuote label={copy.reason} text={reason} />

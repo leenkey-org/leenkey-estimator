@@ -208,11 +208,12 @@ select is((select meta->>'to' from audit_log where entity = 'case' and entity_id
 -- The admin: the reports ------------------------------------------------------------
 select is((select count(*)::int from notifications
             where profile_id = tests.uid('admin') and type = 'report.created'
-              and link = '/admin/signalements/' || :'report' and data->>'excerpt' = 'Messages insistants du vendeur.'),
+              and link = '/admin/signalements/' || :'report' and data->>'excerpt' = 'Messages insistants du vendeur.'
+              and data->>'entity_id' = :'report'),
           1, 'admin: told of the report sent, with its reason');
-select is((select row(reporter_first_name, target_id, target_first_name)::text from admin_reports()
-            where id = :'report'),
-          format('(Chloé,%s,Alice)', tests.uid('seller_a')),
+select is((select row(reporter_first_name, reporter_deleted, target_id, target_first_name, target_deleted)::text
+             from admin_reports() where id = :'report'),
+          format('(Chloé,f,%s,Alice,f)', tests.uid('seller_a')),
           'admin: who reported whom');
 select is((select row(open, resolved)::text from admin_report_counts()), '(1,0)', 'admin: one open report');
 

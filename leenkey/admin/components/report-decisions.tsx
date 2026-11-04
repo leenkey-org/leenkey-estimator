@@ -33,8 +33,8 @@ export function ReportDecisions({
   closed,
 }: {
   reportId: string;
-  /** « Alice Martin », for the button of the warning. */
-  targetName: string;
+  /** « Alice Martin », for the button of the warning; null: no name. */
+  targetName: string | null;
   /** Someone to warn: an account that exists, not of the team. */
   canWarn: boolean;
   closed: boolean;

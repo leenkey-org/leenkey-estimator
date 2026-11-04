@@ -9,9 +9,10 @@ import { fullName, type QueryResult } from "../users/queries";
 // Reads of the reports of the back office (L1-30c, SPEC-V2 section 17), with
 // the admin's session: admin_reports and admin_report_counts check
 // is_admin(). The messages of a reported conversation are read through
-// admin_report_read only, which writes each reading to the history of the
+// admin_report_read only, which writes the reading to the history of the
 // report (« lecture complète autorisée dans ce cadre, tracée »): the page
-// reads them, never its metadata. Each read calls requireAdmin() too.
+// reads them, never its metadata, then the history (which shows that
+// reading). Each read calls requireAdmin() too.
 
 type Role = Database["public"]["Enums"]["user_role"];
 
@@ -23,7 +24,9 @@ export type AdminReportRow = {
   reference: string | null;
   listingTitle: string | null;
   reporterName: string | null;
+  reporterDeleted: boolean;
   targetName: string | null;
+  targetDeleted: boolean;
   targetSuspended: boolean;
 };
 
@@ -58,7 +61,6 @@ export type AdminReportDetail = {
   reporter: AdminReportPerson | null;
   /** The other party of the conversation: the one the report is about. */
   target: AdminReportPerson | null;
-  history: AdminReportHistoryEntry[];
 };
 
 export type AdminReportMessage = {
@@ -113,10 +115,12 @@ export async function adminReports({
             row.reporter_first_name as string | null,
             row.reporter_last_name as string | null,
           ),
+          reporterDeleted: row.reporter_deleted,
           targetName: fullName(
             row.target_first_name as string | null,
             row.target_last_name as string | null,
           ),
+          targetDeleted: row.target_deleted,
           targetSuspended: (row.target_suspended_at as string | null) !== null,
         })),
       },
@@ -147,8 +151,9 @@ const reasonOf = (meta: unknown) =>
     : null;
 
 /**
- * The sheet of a report, without its messages; null when it does not exist or
- * the id is not one. Read once per request: the metadata and the page share it.
+ * The sheet of a report, without its messages nor its history; null when it
+ * does not exist or the id is not one. Read once per request: the metadata
+ * and the page share it.
  */
 export const adminReport = cache(
   async (id: string): Promise<QueryResult<AdminReportDetail | null>> => {
@@ -174,22 +179,9 @@ export const adminReport = cache(
             ? conversation.buyer_id
             : conversation.seller_id;
 
-      const audit = await supabase
-        .from("audit_log")
-        .select("id, action, actor_id, created_at, meta")
-        .eq("entity", "report")
-        .eq("entity_id", id)
-        .order("created_at", { ascending: false })
-        .limit(SHEET_LIMIT);
-      if (audit.error) throw new Error(`audit_log: ${audit.error.code}`);
-
-      const wanted = [
-        ...new Set(
-          [report.reporter_id, targetId, ...audit.data.map((entry) => entry.actor_id)].filter(
-            (value): value is string => typeof value === "string",
-          ),
-        ),
-      ];
+      const wanted = [report.reporter_id, targetId].filter(
+        (value): value is string => typeof value === "string",
+      );
       const people = new Map<
         string,
         { name: string | null; deleted: boolean; suspended: boolean; roles: Role[] }
@@ -241,13 +233,6 @@ export const adminReport = cache(
             : null,
           reporter: personOf(report.reporter_id),
           target: personOf(targetId),
-          history: audit.data.map((entry) => ({
-            id: entry.id,
-            action: entry.action,
-            at: entry.created_at,
-            actorName: entry.actor_id ? (people.get(entry.actor_id)?.name ?? null) : null,
-            reason: reasonOf(entry.meta),
-          })),
         },
       };
     } catch (error) {
@@ -285,3 +270,56 @@ export const adminReportMessages = cache(
     }
   },
 );
+
+/**
+ * The history of a report (audit_log), the latest first. Read by the page
+ * after the messages: it shows the reading just written.
+ */
+export async function adminReportHistory(
+  id: string,
+): Promise<QueryResult<AdminReportHistoryEntry[]>> {
+  await requireAdmin();
+  if (!UUID.test(id)) return { ok: true, data: [] };
+  try {
+    const supabase = await createClient();
+    const audit = await supabase
+      .from("audit_log")
+      .select("id, action, actor_id, created_at, meta")
+      .eq("entity", "report")
+      .eq("entity_id", id)
+      .order("created_at", { ascending: false })
+      .limit(SHEET_LIMIT);
+    if (audit.error) throw new Error(`audit_log: ${audit.error.code}`);
+    const actors = [
+      ...new Set(
+        audit.data
+          .map((entry) => entry.actor_id)
+          .filter((value): value is string => typeof value === "string"),
+      ),
+    ];
+    const names = new Map<string, string | null>();
+    if (actors.length > 0) {
+      const rows = await supabase
+        .from("profiles")
+        .select("id, first_name, last_name")
+        .in("id", actors);
+      if (rows.error) throw new Error(`profiles: ${rows.error.code}`);
+      for (const person of rows.data) {
+        names.set(person.id, fullName(person.first_name, person.last_name));
+      }
+    }
+    return {
+      ok: true,
+      data: audit.data.map((entry) => ({
+        id: entry.id,
+        action: entry.action,
+        at: entry.created_at,
+        actorName: entry.actor_id ? (names.get(entry.actor_id) ?? null) : null,
+        reason: reasonOf(entry.meta),
+      })),
+    };
+  } catch (error) {
+    logFailure("report history", error, { entity_id: id });
+    return { ok: false, error: "unavailable" };
+  }
+}
