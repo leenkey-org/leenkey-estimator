@@ -1001,6 +1001,8 @@ export const emails = {
     rejected: "Annonce à corriger (vendeur)",
     suspended: "Annonce suspendue (vendeur)",
     accountSuspended: "Compte suspendu (vendeur ou acquéreur)",
+    userWarned: "Avertissement après un signalement (vendeur ou acquéreur)",
+    reportsToReview: "Conversation signalée (équipe)",
     planActivated: "Formule activée (vendeur)",
     planPurchased: "Formule souscrite ou passage à une formule supérieure (équipe)",
     messageSeller: "Nouveau message (vendeur)",
@@ -1017,6 +1019,8 @@ export const emails = {
       "La description est trop courte pour être publiée : précisez l'étage, l'exposition, les pièces et les charges, puis renvoyez l'annonce.",
     excerpt: "Bonjour, la maison est-elle toujours disponible ? Je peux visiter samedi matin.",
     reply: "Oui, elle est toujours disponible. Samedi 10 h vous convient-il ?",
+    warning: "Merci de rester courtois dans vos échanges.",
+    reportReason: "Messages insistants après un refus de visite.",
     others: [
       {
         title: "Appartement 3 pièces avec balcon",

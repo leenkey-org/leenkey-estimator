@@ -33,10 +33,12 @@ const KIND: Record<AdminTodoItem["kind"], { icon: LucideIcon; label: string }> =
   report: { icon: Flag, label: t.todo.kinds.report },
 };
 
-/** Where an item is dealt with: a listing on its page, cases and reports in their lists (L1-30c). */
+/** Where an item is dealt with: its own page (cases and reports since L1-30c). */
 function todoHref(item: AdminTodoItem): string {
   if (item.kind === "listing") return `/admin/annonces/${item.id}`;
-  return item.kind === "case" ? ROUTES.adminCases : ROUTES.adminReports;
+  return item.kind === "case"
+    ? `${ROUTES.adminCases}/${item.id}`
+    : `${ROUTES.adminReports}/${item.id}`;
 }
 
 /** A counter of the dashboard, a link to where it is dealt with when it has one. */
@@ -183,8 +185,10 @@ export default async function AdminHomePage() {
                     key={`${item.kind}-${item.id}`}
                     className="border-t border-lk-line first:border-t-0"
                   >
+                    {/* A report: no prefetch, its sheet reads the conversation (traced). */}
                     <Link
                       href={todoHref(item)}
+                      prefetch={item.kind === "report" ? false : undefined}
                       className="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-lk-stone-2 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-brand-blue focus-visible:outline-solid"
                     >
                       {item.kind === "listing" ? (

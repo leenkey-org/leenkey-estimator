@@ -12,6 +12,16 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-04 · L1-30c · PR #73 · Back office : dossiers et signalements
+- Ajouté : `/admin/dossiers` (résumé, recherche, filtres Ouverts, Nouveaux, En cours, Clos ; cartes en mobile, tableau à partir de 1 024 px) avec le badge « Paiement à vérifier » des paiements gardés par L1-26.
+- Ajouté : fiche `/admin/dossiers/[id]` : « Prendre en charge », « Clore le dossier », « Rouvrir le dossier », « Suivre ce dossier », notes internes, tâches de Leenkey de l'étape en cours à cocher, étapes de la vente, historique.
+- Ajouté : `/admin/signalements` (ouverts, clos) et fiche `/admin/signalements/[id]` : la conversation lue en entier, la lecture tracée (une fois par demi-heure) ; tant qu'il est ouvert, « Avertir … » par email (motifs fréquents ou texte libre, tracé aussi sur le compte), « Suspendre le compte », « Clore le signalement » avec la suite donnée.
+- Ajouté : notification « Conversation signalée » à chaque admin et email groupé de l'équipe ; emails « Un message de l'équipe Leenkey » (utilisateur averti) et « Conversation signalée » (équipe), à l'aperçu `/design/emails`.
+- Modifié : « À traiter » du tableau de bord, la cloche de l'admin et la fiche d'un compte mènent à la fiche du dossier ou du signalement.
+- Corrigé : l'email de suspension d'un compte (L1-30a) disait « parce que vous vendez un bien sur Leenkey » à un acquéreur ; il dit, comme l'avertissement, « parce que vous avez un compte sur Leenkey ».
+- Migration : `20261104100000_admin_cases_reports.sql` (fonctions `admin_cases`, `admin_case_counts`, `admin_case_set_status`, `admin_case_assign`, `admin_case_add_note`, `admin_case_task_set`, `admin_reports`, `admin_report_counts`, `admin_report_read`, `admin_report_resolve`, `admin_report_warn`, réservées à l'admin et tracées dans `audit_log` ; déclencheur `reports_notify`).
+- Tests : RLS (`rls_admin_cases_reports.sql`, 62, cinq comptes et visiteur), unitaires (`tests/unit/admin/cases.test.ts`, 22), E2E (`admin-cases.spec.ts` en 1 280 et 390 px sur la pile locale ; 404 des fiches pour un non-admin dans `navigation.spec.ts`).
+
 ### 2026-11-04 · Site · PR #72 · Retouches du site public
 - Modifié : nouveau slogan « Parce que le lien, c'est la clé » dans la pastille de l'accueil.
 - Modifié : la formule Autonomie est dite gratuite, sans phase de lancement (accueil, `/concept`, `/tarifs`, `/faq`).

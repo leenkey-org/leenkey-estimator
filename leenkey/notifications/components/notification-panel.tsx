@@ -101,7 +101,7 @@ export function NotificationPanel({
         time={formatNotificationTime(notification.createdAt, now)}
         dateTime={notification.createdAt}
         unread={!notification.readAt}
-        href={internalLink(notification.link)}
+        href={internalLink(description.link)}
         onSelect={() => {
           if (!notification.readAt) markRead(notification.id);
           close();

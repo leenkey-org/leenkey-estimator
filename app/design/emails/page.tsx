@@ -16,6 +16,8 @@ import { ListingsToReviewEmail, listingsToReviewSubject } from "@/emails/listing
 import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
 import { PlanActivatedEmail, planActivatedSubject } from "@/emails/plan-activated";
 import { PlanPurchasedEmail, planPurchasedSubject } from "@/emails/plan-purchased";
+import { ReportsToReviewEmail, reportsToReviewSubject } from "@/emails/reports-to-review";
+import { UserWarnedEmail, userWarnedSubject } from "@/emails/user-warned";
 import { formatPrice } from "@/lib/format";
 import { isProduction } from "@/lib/env";
 import { fr } from "@/lib/i18n/fr";
@@ -116,6 +118,25 @@ function previews(): Preview[] {
         firstName: s.buyer,
         reason: s.reason,
         contactEmail: fr.legal.contactEmail,
+        siteUrl: site,
+      }),
+    },
+    {
+      name: t.names.userWarned,
+      subject: userWarnedSubject(),
+      element: UserWarnedEmail({
+        firstName: s.buyer,
+        reason: s.warning,
+        contactEmail: fr.legal.contactEmail,
+        siteUrl: site,
+      }),
+    },
+    {
+      name: t.names.reportsToReview,
+      subject: reportsToReviewSubject(1, s.reference),
+      element: ReportsToReviewEmail({
+        items: [{ reason: s.reportReason, reference: s.reference }],
+        url: `${site}/admin/signalements`,
         siteUrl: site,
       }),
     },

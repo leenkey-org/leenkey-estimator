@@ -38,7 +38,18 @@ type Entry = {
   filters: readonly NotificationFilter[];
   title: (data: Record<string, unknown>) => string;
   detail: (data: Record<string, unknown>) => string | null;
+  /** A link from its facts, more precise than the one written with it (L1-30c). */
+  link?: (data: Record<string, unknown>) => string | null;
 };
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** The sheet of a case of the back office, from its id. */
+function caseLink(data: Record<string, unknown>): string | null {
+  return typeof data.case_id === "string" && UUID.test(data.case_id)
+    ? `/admin/dossiers/${data.case_id}`
+    : null;
+}
 
 function text(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
@@ -109,6 +120,8 @@ const CATALOG: Record<string, Entry> = {
       data.check === true
         ? t.caseCreated.checkTitle(data.held === true)
         : t.caseCreated.title(text(data.plan_name), data.upgrade === true),
+    // Written with the list (L1-26): the sheet of the case since L1-30c.
+    link: caseLink,
     detail: (data) => t.caseCreated.detail(text(data.reference)),
   },
   "plan.refunded": {
@@ -122,6 +135,20 @@ const CATALOG: Record<string, Entry> = {
         typeof data.amount_cents === "number" ? formatAmount(data.amount_cents) : null,
         text(data.reference),
       ),
+  },
+  // L1-30c: a conversation reported, to each admin (and by email, grouped).
+  "report.created": {
+    icon: Flag,
+    tone: "warning",
+    filters: [],
+    title: () => t.reportCreated.title,
+    detail: (data) => {
+      const excerpt = text(data.excerpt);
+      return t.reportCreated.detail(
+        excerpt ? `${excerpt}${data.truncated === true ? "…" : ""}` : null,
+        text(data.reference),
+      );
+    },
   },
   // In the app only (SPEC-V2 section 10): « Étape 3 sur 6 · Maison 5 pièces ».
   "step.advanced": {
@@ -147,6 +174,8 @@ export type NotificationDescription = {
   detail: string | null;
   icon: LucideIcon;
   tone: NotificationTone;
+  /** Where it leads: from its facts when its type says so, else the link written with it. */
+  link: string | null;
 };
 
 /** Title, detail and visual of a notification: written at its creation, or from its type. */
@@ -158,6 +187,7 @@ export function describeNotification(notification: NotificationView): Notificati
       detail: notification.body,
       icon: Bell,
       tone: "stone",
+      link: notification.link,
     };
   }
   return {
@@ -165,6 +195,7 @@ export function describeNotification(notification: NotificationView): Notificati
     detail: notification.body ?? entry.detail(notification.data),
     icon: entry.icon,
     tone: entry.tone,
+    link: entry.link?.(notification.data) ?? notification.link,
   };
 }
 

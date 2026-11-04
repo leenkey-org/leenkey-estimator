@@ -130,6 +130,7 @@ describe("wording of the notifications (from type and data)", () => {
         "message.new",
         "plan.activated",
         "plan.refunded",
+        "report.created",
         "step.advanced",
       ].sort(),
     );

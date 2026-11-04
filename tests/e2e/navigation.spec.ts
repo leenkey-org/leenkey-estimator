@@ -900,8 +900,11 @@ test.describe("comptes connectés (base de seed)", () => {
       "/admin/annonces",
       "/admin/utilisateurs",
       "/admin/dossiers",
+      // The sheets too (L1-30c): the one of a report reads the conversation.
+      "/admin/dossiers/5eed5000-0000-4000-8000-000000000001",
       "/admin/offres",
       "/admin/signalements",
+      "/admin/signalements/5eed6000-0000-4000-8000-000000000001",
       "/admin/assistant",
     ]) {
       const response = await page.goto(path);

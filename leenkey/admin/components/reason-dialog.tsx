@@ -25,6 +25,8 @@ export type ReasonDialogCopy = {
   tone: "danger" | "primary";
   /** Frequent motives, buttons that fill the field. */
   templates: readonly string[];
+  /** Help of the field (what becomes of the text); « envoyé tel quel » by default. */
+  hint?: string;
 };
 
 /**
@@ -150,7 +152,7 @@ export function ReasonDialog({
               <Textarea
                 ref={field}
                 label={copy.reason}
-                help={labels.reasonHint}
+                help={copy.hint ?? labels.reasonHint}
                 value={reason}
                 maxLength={1000}
                 required

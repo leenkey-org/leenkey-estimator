@@ -50,7 +50,7 @@ export function ModerationFeedback({ children }: { children: ReactNode }) {
     [],
   );
   useEffect(() => {
-    if (feedback) region.current?.focus();
+    if (feedback && !feedback.keepFocus) region.current?.focus();
   }, [feedback]);
   return (
     <FeedbackContext.Provider value={report}>

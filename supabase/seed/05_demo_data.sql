@@ -310,3 +310,37 @@ update public.listings l
    set views_count = v.total
   from (select listing_id, sum(count)::int as total from public.listing_views group by listing_id) v
  where v.listing_id = l.id and l.id in (select listing_id from seed_new_listings);
+
+-- The cases and the report of the back office (L1-30c), created once each:
+-- the case of the plan of LK-0001, in progress; a payment of LK-0008 to
+-- check (the note Stripe writes, L1-26); seller_a reporting the messages of
+-- buyer_d on LK-0001 (its trigger tells the admin).
+insert into public.cases (id, property_id, profile_id, source, plan, status, subject, created_at)
+select c.id, i.property_id, i.owner_id, 'plan_purchase', c.plan, c.status,
+       c.subject || ' · ' || l.reference, now() - make_interval(days => c.days_ago)
+from (values
+  ('5eed5000-0000-4000-8000-000000000001'::uuid, 1, 'accompagne'::public.plan_code,
+   'in_progress'::public.case_status, 'Formule Accompagné souscrite', 20),
+  ('5eed5000-0000-4000-8000-000000000008'::uuid, 8, 'serenite'::public.plan_code,
+   'new'::public.case_status, 'Paiement de la formule Accompagné à vérifier', 1))
+  as c(id, n, plan, status, subject, days_ago)
+join seed_ids i using (n)
+join public.listings l on l.property_id = i.property_id
+on conflict (id) do nothing;
+
+insert into public.case_notes (id, case_id, author_id, body, created_at)
+values
+  ('5eed5100-0000-4000-8000-000000000001'::uuid, '5eed5000-0000-4000-8000-000000000001'::uuid,
+   '5eed0000-0000-4000-8000-0000000000ad'::uuid,
+   'Premier appel fait : prix revu avec la vendeuse après l''analyse de valeur.', now() - interval '19 days'),
+  ('5eed5100-0000-4000-8000-000000000008'::uuid, '5eed5000-0000-4000-8000-000000000008'::uuid, null,
+   'À vérifier : une formule égale ou supérieure était déjà active ; paiement gardé, formule non activée.',
+   now() - interval '1 day')
+on conflict (id) do nothing;
+
+insert into public.reports (id, conversation_id, reporter_id, reason, created_at)
+values ('5eed6000-0000-4000-8000-000000000001'::uuid, '5eed2000-0000-4000-8000-000000000012'::uuid,
+        '5eed0000-0000-4000-8000-00000000000a'::uuid,
+        'Messages insistants : me demande mon numéro de téléphone à chaque message.',
+        now() - interval '3 hours')
+on conflict (id) do nothing;
