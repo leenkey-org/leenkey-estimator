@@ -296,11 +296,18 @@ export default async function AdminUserPage({ params }: Props) {
           ) : (
             <ul className={`flex flex-col divide-y divide-lk-line ${box}`}>
               {user.cases.map((item) => (
-                <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                <li
+                  key={item.id}
+                  className="relative flex items-center justify-between gap-3 px-4 py-3 has-[a:hover]:bg-lk-stone-2"
+                >
                   <span className="flex min-w-0 flex-col">
-                    <span className="truncate text-lk-label font-semibold text-lk-ink">
+                    {/* The whole row opens the case (L1-30c). */}
+                    <Link
+                      href={`/admin/dossiers/${item.id}`}
+                      className="truncate text-lk-label font-semibold text-lk-ink underline-offset-2 before:absolute before:inset-0 hover:underline"
+                    >
                       {item.subject}
-                    </span>
+                    </Link>
                     <span className="text-lk-caption text-lk-ink-3">
                       {formatDateShort(item.createdAt, now)}
                     </span>

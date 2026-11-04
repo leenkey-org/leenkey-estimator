@@ -1868,6 +1868,8 @@ Mise en œuvre (L1-30a, `DECISIONS.md` 2026-11-03) : recherche (prénom, nom, em
 
 Liste (source, formule, bien, statut, ancienneté, assigné). Détail : résumé IA, bien, historique d'étapes, notes internes (`case_notes`), changement de statut, bouton « Synthèse avant appel » (`admin_case_summary`), cocher les tâches `owner = leenkey` de l'étape du bien.
 
+Mise en œuvre (L1-30c, `DECISIONS.md` 2026-11-04) : « assigné » se lit « Suivi par » (un admin suit le dossier) ; recherche (sujet, référence, ville, compte) et filtres (ouverts, nouveaux, en cours, clos) ; un paiement « à vérifier » noté par le webhook de L1-26 est signalé dans la liste et sur la fiche ; les tâches à cocher sont celles de Leenkey (`leenkey` ou `both`) sans déclencheur automatique ; chaque changement est écrit dans `audit_log`. « Synthèse avant appel » arrive avec L1-30d.
+
 ### Messages clients `/admin/messages`
 
 Boîte partagée des conversations conseiller (`advisor`) : non-lues en tête, filtre par formule, indicateur « en attente de réponse depuis plus de 24 h » en orange. Répondre depuis la liste ou depuis le dossier.
@@ -1879,6 +1881,8 @@ Lecture seule : toutes les offres et leur journal, filtres, accès à la synthè
 ### Signalements `/admin/signalements`
 
 Conversation signalée (lecture complète autorisée dans ce cadre, traçée), actions : clore, avertir, suspendre un utilisateur.
+
+Mise en œuvre (L1-30c, `DECISIONS.md` 2026-11-04) : la lecture de la conversation est écrite dans l'historique du signalement (une fois par admin et par demi-heure) ; l'avertissement n'est possible que tant que le signalement est ouvert ; « avertir » envoie un email à l'autre partie de la conversation (textes provisoires, Q74) et s'inscrit aussi dans l'historique de son compte ; « clore » garde la suite donnée ; un signalement reçu notifie chaque admin (application et email groupé de l'équipe).
 
 Version minimale retenue (décision du 2026-10-15, dossier juridique) : le motif est obligatoire à l'envoi d'un signalement ; quand une annonce est refusée ou suspendue, le motif est communiqué au vendeur par e-mail (section 17, Annonces) ; le vendeur conteste en écrivant au back office (conversation conseiller s'il en a une, sinon formulaire de contact), et la contestation est traitée par Cédric. Pas de procédure de recours plus formelle en V2.
 

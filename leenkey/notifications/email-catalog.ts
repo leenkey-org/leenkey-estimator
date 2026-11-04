@@ -7,6 +7,7 @@ import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
 import { ListingToReviewEmail, listingToReviewSubject } from "@/emails/listing-submitted";
 import { ListingsToReviewEmail, listingsToReviewSubject } from "@/emails/listings-to-review";
 import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
+import { ReportsToReviewEmail, reportsToReviewSubject } from "@/emails/reports-to-review";
 import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { absoluteUrl, siteUrl } from "@/lib/site";
@@ -23,6 +24,8 @@ const POLICIES: Record<string, EmailPolicy> = {
   // « Digest si > 3 en 1 h »: one email, then the next ones together, 20 minutes later at the
   // earliest: never more than 3 in an hour.
   "listing.pending": { audience: "team", throttleMinutes: 20 },
+  // A report (L1-30c): the first at once, the next ones together 20 minutes later at the earliest.
+  "report.created": { audience: "team", throttleMinutes: 20 },
 };
 
 export function emailPolicy(type: string): EmailPolicy | null {
@@ -127,6 +130,27 @@ async function listingsToReview(email: PlannedEmail): Promise<RenderedEmail | nu
   );
 }
 
+/** Conversations reported: the reason of each, written by a user, made safe for a mail client. */
+async function reportsToReview(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const [first] = email.items;
+  if (!first) return null;
+  const count = email.items.length;
+  return rendered(
+    reportsToReviewSubject(count, text(first.data.reference)),
+    ReportsToReviewEmail({
+      items: email.items.map((item) => {
+        const reason = emailSafeText(item.data.excerpt);
+        return {
+          reason: reason ? `${reason}${item.data.truncated === true ? "…" : ""}` : null,
+          reference: text(item.data.reference),
+        };
+      }),
+      url: absoluteUrl(count > 1 ? "/admin/signalements" : (first.link ?? "/admin/signalements")),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
 /** The email of a group, ready to leave; null when its type has none. */
 export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEmail | null> {
   switch (email.type) {
@@ -134,6 +158,8 @@ export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEm
       return newMessages(email);
     case "listing.pending":
       return listingsToReview(email);
+    case "report.created":
+      return reportsToReview(email);
     default:
       return Promise.resolve(null);
   }

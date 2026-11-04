@@ -400,6 +400,13 @@ export const fr = {
         detail: (reference: string | null) =>
           reference ? `Dossier à suivre pour ${reference}.` : "Un dossier à suivre.",
       },
+      // L1-30c: a conversation reported, to the team.
+      reportCreated: {
+        title: "Conversation signalée",
+        detail: (excerpt: string | null, reference: string | null) =>
+          [excerpt ? `«\u00A0${excerpt}\u00A0»` : null, reference].filter(Boolean).join(" · ") ||
+          null,
+      },
       planRefunded: {
         title: (full: boolean) => (full ? "Formule remboursée" : "Remboursement partiel"),
         checkTitle: "Remboursement à vérifier",
@@ -951,25 +958,11 @@ export const fr = {
       title: "Dossier de vente",
     },
     admin: {
-      cases: {
-        metaTitle: "Dossiers · Back office · Leenkey",
-        title: "Dossiers",
-        comingTitle: "Le suivi des dossiers arrive",
-        comingText:
-          "Nous préparons l'écran des dossiers d'accompagnement : formules payantes et demandes de conseiller.",
-      },
       offers: {
         metaTitle: "Offres · Back office · Leenkey",
         title: "Offres",
         comingTitle: "Le suivi des offres arrive",
         comingText: "Nous préparons l'écran qui réunira les offres d'achat et leur historique.",
-      },
-      reports: {
-        metaTitle: "Signalements · Back office · Leenkey",
-        title: "Signalements",
-        comingTitle: "Le traitement des signalements arrive",
-        comingText:
-          "Nous préparons l'écran des signalements, avec leur motif et les suites données.",
       },
       assistant: {
         metaTitle: "Assistant · Back office · Leenkey",
@@ -1408,6 +1401,7 @@ export const fr = {
         "user.suspend": "Compte suspendu",
         "user.unsuspend": "Compte réactivé",
         "user.set_roles": "Rôles modifiés",
+        "user.warn": "Averti après un signalement",
       } as Record<string, string>,
       other: "Modifié",
       by: (name: string) => `par ${name}`,
@@ -1446,6 +1440,255 @@ export const fr = {
       unavailable: "La décision n'a pas pu être enregistrée. Réessayez.",
       network:
         "Pas de réponse du serveur : la décision a peut-être été enregistrée. Rechargez la page pour vérifier le statut du compte avant de recommencer.",
+    },
+  },
+  // L1-30c: the cases of the back office (SPEC-V2 section 17).
+  adminCases: {
+    metaTitle: "Dossiers · Back office · Leenkey",
+    detailMetaTitle: (subject: string) => `${subject} · Dossiers · Back office · Leenkey`,
+    title: "Dossiers",
+    summary: {
+      open: (count: number) => `${count}\u00A0${count > 1 ? "dossiers ouverts" : "dossier ouvert"}`,
+      toCheck: (count: number) =>
+        `${count}\u00A0${count > 1 ? "paiements à vérifier" : "paiement à vérifier"}`,
+      closed: (count: number) => `${count}\u00A0clos`,
+    },
+    filters: {
+      label: "Statut des dossiers",
+      open: "Ouverts",
+      new: "Nouveaux",
+      in_progress: "En cours",
+      closed: "Clos",
+    },
+    search: {
+      label: "Rechercher un dossier",
+      placeholder: "Sujet, référence, ville ou vendeur",
+      submit: "Rechercher",
+    },
+    limited: (count: number) =>
+      `Les ${count}\u00A0premiers dossiers sont affichés : précisez la recherche ou le filtre.`,
+    table: {
+      label: "Dossiers",
+      subject: "Dossier",
+      source: "Origine",
+      plan: "Formule",
+      property: "Bien",
+      status: "Statut",
+      age: "Ancienneté",
+      followed: "Suivi par",
+    },
+    sources: {
+      plan_purchase: "Achat de formule",
+      assistant_handoff: "Assistant",
+      manual: "Manuel",
+    },
+    status: {
+      new: "Nouveau",
+      in_progress: "En cours",
+      closed: "Clos",
+    },
+    toCheck: "Paiement à vérifier",
+    since: (wait: string) => `Depuis ${wait}`,
+    nobody: "Personne",
+    noProperty: "Sans bien",
+    openLabel: (subject: string) => `Ouvrir le dossier « ${subject} »`,
+    empty: {
+      title: "Aucun dossier",
+      text: "Aucun dossier ne correspond à ce filtre.",
+      search: (query: string) => `Aucun dossier ne correspond à « ${query} ».`,
+      action: "Voir les dossiers ouverts",
+    },
+    error: "Les dossiers n'ont pas pu être chargés.",
+    retry: "Réessayer",
+    back: "Tous les dossiers",
+    detail: {
+      info: "Informations",
+      account: "Compte",
+      property: "Bien",
+      plan: "Formule",
+      source: "Origine",
+      opened: "Ouvert le",
+      followed: "Suivi par",
+      deletedAccount: "Compte supprimé",
+      aiSummary: "Résumé de l'assistant",
+      toCheckTitle: "Paiement à vérifier",
+      toCheckText:
+        "Une note automatique signale un paiement à vérifier : lisez-la avant d'écrire au vendeur.",
+      notes: "Notes internes",
+      notesNote: "Lues par l'équipe seulement, jamais par le vendeur.",
+      notesEmpty: "Aucune note pour l'instant.",
+      automatic: "Leenkey, automatique",
+      noteField: "Nouvelle note",
+      noteSubmit: "Ajouter la note",
+      tasks: "Tâches de Leenkey",
+      tasksLead: (step: string) => `Étape en cours : ${step}.`,
+      tasksEmpty: "Aucune tâche de Leenkey à cette étape.",
+      noSale: "Ce dossier n'est rattaché à aucun bien : pas d'étape ni de tâche.",
+      steps: "Étapes de la vente",
+      stepState: {
+        done: "Terminée",
+        current: "En cours",
+        next: "À venir",
+      },
+      history: "Historique",
+      historyEmpty: "Aucune action pour l'instant.",
+      error: "Ce dossier n'a pas pu être chargé.",
+    },
+    actions: {
+      label: "Décisions sur le dossier",
+      start: "Prendre en charge",
+      close: "Clore le dossier",
+      reopen: "Rouvrir le dossier",
+      follow: "Suivre ce dossier",
+      unfollow: "Ne plus suivre",
+    },
+    history: {
+      status: (from: string, to: string) => `Statut : ${from} → ${to}`,
+      followed: (name: string) => `Suivi par ${name}`,
+      unfollowed: "Plus suivi",
+      note: "Note ajoutée",
+      taskDone: (title: string) => `Tâche cochée : ${title}`,
+      taskUndone: (title: string) => `Tâche décochée : ${title}`,
+      other: "Modifié",
+      by: (name: string) => `par ${name}`,
+    },
+    result: {
+      started: "Dossier pris en charge.",
+      closed: "Dossier clos.",
+      reopened: "Dossier rouvert.",
+      followed: "Vous suivez ce dossier.",
+      unfollowed: "Vous ne suivez plus ce dossier.",
+      noted: "Note ajoutée.",
+      taskDone: "Tâche cochée.",
+      taskUndone: "Tâche décochée.",
+    },
+    errors: {
+      invalid: "La note doit faire de 1 à 4\u00A0000 caractères.",
+      conflict: "Ce dossier a déjà changé : rechargez la page.",
+      notFound: "Ce dossier n'existe plus.",
+      forbidden: "Cette action est réservée à l'équipe Leenkey.",
+      unavailable: "La modification n'a pas pu être enregistrée. Réessayez.",
+      network:
+        "Pas de réponse du serveur : la modification a peut-être été enregistrée. Rechargez la page avant de recommencer.",
+    },
+  },
+  // L1-30c: the reports of the back office (SPEC-V2 section 17). The
+  // reported conversation is read in full here, each reading traced.
+  adminReports: {
+    metaTitle: "Signalements · Back office · Leenkey",
+    detailMetaTitle: (label: string) => `${label} · Signalements · Back office · Leenkey`,
+    title: "Signalements",
+    summary: {
+      open: (count: number) =>
+        `${count}\u00A0${count > 1 ? "signalements ouverts" : "signalement ouvert"}`,
+      closed: (count: number) => `${count}\u00A0clos`,
+    },
+    filters: {
+      label: "Statut des signalements",
+      open: "Ouverts",
+      closed: "Clos",
+    },
+    table: {
+      label: "Signalements",
+      reason: "Motif",
+      by: "Signalé par",
+      target: "Concerne",
+      listing: "Annonce",
+      received: "Reçu",
+    },
+    limited: (count: number) => `Les ${count}\u00A0premiers signalements sont affichés.`,
+    by: (name: string) => `Par ${name}`,
+    about: (name: string) => `concerne ${name}`,
+    someone: "un compte supprimé",
+    noListing: "Sans annonce",
+    openLabel: (reason: string) => `Ouvrir le signalement « ${reason} »`,
+    empty: {
+      openTitle: "Aucun signalement ouvert",
+      openText: "Les conversations signalées par les utilisateurs arrivent ici.",
+      closedTitle: "Aucun signalement clos",
+      closedText: "Les signalements traités restent ici, avec leur suite.",
+    },
+    error: "Les signalements n'ont pas pu être chargés.",
+    retry: "Réessayer",
+    back: "Tous les signalements",
+    detail: {
+      title: (reference: string | null) =>
+        reference ? `Signalement · ${reference}` : "Signalement",
+      reason: "Motif du signalement",
+      reporter: "Signalé par",
+      target: "Concerne",
+      listing: "Annonce",
+      received: "Reçu le",
+      closed: "Clos le",
+      open: "Ouvert",
+      suspended: "Compte suspendu",
+      deleted: "Compte supprimé",
+      team: "Un compte de l'équipe ne s'avertit ni ne se suspend.",
+      conversation: "Conversation signalée",
+      conversationNote:
+        "Vous lisez cette conversation dans le cadre du signalement : votre lecture est enregistrée dans l'historique.",
+      conversationEmpty: "Aucun message dans cette conversation.",
+      seller: "vendeur",
+      buyer: "acquéreur",
+      from: (name: string, role: string) => `${name}, ${role}`,
+      system: "Message automatique",
+      history: "Historique",
+      historyEmpty: "Aucune action pour l'instant.",
+      error: "Ce signalement n'a pas pu être chargé.",
+    },
+    actions: {
+      label: "Décisions sur le signalement",
+      warn: (name: string) => `Avertir ${name}`,
+      resolve: "Clore le signalement",
+    },
+    warnDialog: {
+      title: "Avertir l'utilisateur",
+      text: "Il reçoit ce message par email, avec le rappel qu'un nouveau manquement peut suspendre son compte. Rien ne change sur son compte.",
+      reason: "Message envoyé à l'utilisateur",
+      confirm: "Envoyer l'avertissement",
+    },
+    // Provisional wording, to be validated by Cédric (Q74).
+    warnTemplates: [
+      "Merci de rester courtois dans vos échanges.",
+      "La messagerie ne sert ni au démarchage ni à la publicité.",
+      "Ne demandez ni paiement ni coordonnées bancaires dans la messagerie.",
+    ],
+    resolveDialog: {
+      title: "Clore le signalement",
+      text: "Indiquez la suite donnée : elle reste dans l'historique. Personne n'est prévenu.",
+      reason: "Suite donnée",
+      confirm: "Clore le signalement",
+    },
+    resolveTemplates: [
+      "Sans suite : rien d'anormal dans l'échange.",
+      "Utilisateur averti.",
+      "Compte suspendu.",
+    ],
+    history: {
+      actions: {
+        "report.read": "Conversation lue",
+        "report.warn": "Utilisateur averti",
+        "report.resolve": "Signalement clos",
+      } as Record<string, string>,
+      other: "Modifié",
+      by: (name: string) => `par ${name}`,
+      reason: (reason: string) => `« ${reason} »`,
+    },
+    result: {
+      resolved: "Signalement clos.",
+      warned: "Avertissement enregistré.",
+      emailSent: "L'utilisateur est prévenu par email.",
+      emailFailed: "L'email n'a pas pu partir : prévenez l'utilisateur autrement.",
+    },
+    errors: {
+      invalid: "Le texte doit faire au moins 3\u00A0caractères.",
+      conflict:
+        "Ce signalement est déjà clos, ou personne ne peut être averti : rechargez la page.",
+      notFound: "Ce signalement n'existe plus.",
+      forbidden: "Cette action est réservée à l'équipe Leenkey.",
+      unavailable: "La décision n'a pas pu être enregistrée. Réessayez.",
+      network:
+        "Pas de réponse du serveur : la décision a peut-être été enregistrée. Rechargez la page avant de recommencer.",
     },
   },
   // Transactional emails (SPEC-V2 section 18, DESIGN.md 14), texts of emails/.
@@ -1563,6 +1806,35 @@ export const fr = {
         `Le vendeur de ${property} a payé la formule ${plan} : elle n'est pas activée, la commande est à vérifier. Écrivez-lui sous 24\u00A0h pour l'activer ou la rembourser.`,
       check: "À vérifier :",
       action: "Voir les dossiers",
+    },
+    // L1-30c: a warning after a report. Provisional wording, to be validated by Cédric (Q74).
+    userWarned: {
+      subject: "Un message de l'équipe Leenkey",
+      title: "Un rappel de l'équipe Leenkey",
+      text: "Un de vos échanges sur Leenkey nous a été signalé. Merci de tenir compte de ce message de l'équipe.",
+      reason: "Message de l'équipe",
+      next: "En cas de nouveau manquement, votre compte pourra être suspendu.",
+      contest: {
+        before: "Si vous n'êtes pas d'accord, écrivez-nous à ",
+        after: " : nous vous répondons sous 48\u00A0h, 7\u00A0j/7.",
+      },
+    },
+    // L1-30c: reports, to the team (cron of L1-22, grouped).
+    reportsToReview: {
+      subject: (count: number, reference: string | null) =>
+        count > 1
+          ? `${count}\u00A0conversations signalées`
+          : reference
+            ? `Conversation signalée (${reference})`
+            : "Conversation signalée",
+      title: (count: number) =>
+        count > 1 ? "Des conversations ont été signalées" : "Une conversation a été signalée",
+      text: (count: number) =>
+        count > 1
+          ? `${count}\u00A0utilisateurs ont signalé une conversation.`
+          : "Un utilisateur a signalé une conversation.",
+      reason: "Motif",
+      action: (count: number) => (count > 1 ? "Voir les signalements" : "Voir le signalement"),
     },
     accountSuspended: {
       subject: "Votre compte Leenkey est suspendu",

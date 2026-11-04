@@ -33,10 +33,12 @@ const KIND: Record<AdminTodoItem["kind"], { icon: LucideIcon; label: string }> =
   report: { icon: Flag, label: t.todo.kinds.report },
 };
 
-/** Where an item is dealt with: a listing on its page, cases and reports in their lists (L1-30c). */
+/** Where an item is dealt with: its own page (cases and reports since L1-30c). */
 function todoHref(item: AdminTodoItem): string {
   if (item.kind === "listing") return `/admin/annonces/${item.id}`;
-  return item.kind === "case" ? ROUTES.adminCases : ROUTES.adminReports;
+  return item.kind === "case"
+    ? `${ROUTES.adminCases}/${item.id}`
+    : `${ROUTES.adminReports}/${item.id}`;
 }
 
 /** A counter of the dashboard, a link to where it is dealt with when it has one. */

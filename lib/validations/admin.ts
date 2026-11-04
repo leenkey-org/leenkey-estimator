@@ -124,3 +124,91 @@ export const accountDecisionSchema = z.discriminatedUnion("action", [
 ]);
 
 export type AccountDecisionInput = z.infer<typeof accountDecisionSchema>;
+
+// L1-30c: the cases and the reports of the back office (SPEC-V2 section 17).
+
+type CaseStatus = Database["public"]["Enums"]["case_status"];
+
+/** Status filters of /admin/dossiers (without one: the open cases), with their URL value. */
+export const ADMIN_CASE_FILTERS = [
+  { status: "new", param: "nouveaux" },
+  { status: "in_progress", param: "en-cours" },
+  { status: "closed", param: "clos" },
+] as const satisfies ReadonlyArray<{ status: CaseStatus; param: string }>;
+
+export type AdminCasesQuery = { status?: CaseStatus; query?: string };
+
+const CASE_PARAMS = ADMIN_CASE_FILTERS.map((filter) => filter.param) as [string, ...string[]];
+
+const firstOf = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+
+/** /admin/dossiers?statut=en-cours&q=LK-0001; anything unknown is ignored. */
+export function parseAdminCasesQuery(
+  params: Record<string, string | string[] | undefined>,
+): AdminCasesQuery {
+  const param = z.enum(CASE_PARAMS).safeParse(firstOf(params.statut));
+  const query = z.string().trim().min(1).max(100).safeParse(firstOf(params.q));
+  return {
+    status: param.success
+      ? ADMIN_CASE_FILTERS.find((filter) => filter.param === param.data)?.status
+      : undefined,
+    query: query.success ? query.data : undefined,
+  };
+}
+
+/** Address of the list of the cases for a filter and a search. */
+export function adminCasesHref({ status, query }: AdminCasesQuery): string {
+  const params = new URLSearchParams();
+  const param = ADMIN_CASE_FILTERS.find((filter) => filter.status === status)?.param;
+  if (param) params.set("statut", param);
+  if (query) params.set("q", query);
+  const search = params.toString();
+  return search ? `/admin/dossiers?${search}` : "/admin/dossiers";
+}
+
+export type AdminReportsQuery = { closed: boolean };
+
+/** /admin/signalements?statut=clos: the closed reports; the open ones otherwise. */
+export function parseAdminReportsQuery(
+  params: Record<string, string | string[] | undefined>,
+): AdminReportsQuery {
+  return { closed: firstOf(params.statut) === "clos" };
+}
+
+export function adminReportsHref({ closed }: AdminReportsQuery): string {
+  return closed ? "/admin/signalements?statut=clos" : "/admin/signalements";
+}
+
+const caseId = z.string().uuid();
+
+/** A change of a case: its status, who follows it (the admin, or nobody), a note, a task of Leenkey. */
+export const caseCommandSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("status"),
+    caseId,
+    status: z.enum(["new", "in_progress", "closed"]),
+  }),
+  z.object({ action: z.literal("follow"), caseId, follow: z.boolean() }),
+  z.object({
+    action: z.literal("note"),
+    caseId,
+    body: z
+      .string()
+      .trim()
+      .min(1)
+      .refine((value) => reasonLength(value) <= 4000),
+  }),
+  z.object({ action: z.literal("task"), caseId, taskId: z.string().uuid(), done: z.boolean() }),
+]);
+
+export type CaseCommand = z.infer<typeof caseCommandSchema>;
+
+const reportId = z.string().uuid();
+
+/** A report closed with what was done, or its other party warned (the reason sent by email). */
+export const reportCommandSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("resolve"), reportId, note: reason }),
+  z.object({ action: z.literal("warn"), reportId, reason }),
+]);
+
+export type ReportCommand = z.infer<typeof reportCommandSchema>;
