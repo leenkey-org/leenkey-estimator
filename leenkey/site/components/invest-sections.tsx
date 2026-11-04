@@ -31,6 +31,7 @@ import { CtaPanel } from "./cta-panel";
 import { RichText } from "./rich-text";
 import { card, cardText, cardTitle, iconTile } from "./site-styles";
 import { StagePill, type Stage } from "./stage-pill";
+import { CountUp, countable } from "@/components/shared/count-up";
 
 // Sections of /investir (L1-43), in the order of the V1 page, in its
 // direction since L1-50 (DECISIONS 2026-10-23): its hero, its labels above
@@ -145,7 +146,7 @@ export function MarketSection() {
           className="flex flex-col gap-3 rounded-lk-xl bg-linear-135 from-lk-blue to-lk-blue-mid px-7 py-10 text-white shadow-lk-cta lg:px-9 lg:py-14"
         >
           <p className="text-lk-display font-bold text-wide tabular-nums md:text-lk-display-md lg:text-lk-display-lg">
-            {m.example.value}
+            <MarketFigure text={m.example.value} />
           </p>
           <p className="text-lk-body-lg text-pretty">{m.example.label}</p>
         </div>
@@ -573,4 +574,10 @@ export function InvestCta() {
       href={`#${FORM}`}
     />
   );
+}
+
+/** The figure of the market (« 15 000 € »), rolling up as on the V1. */
+function MarketFigure({ text }: { text: string }) {
+  const figure = countable(text);
+  return figure ? <CountUp value={figure.value} suffix={figure.suffix} /> : text;
 }

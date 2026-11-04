@@ -1,16 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Camera,
-  ChartLine,
-  Check,
-  CircleX,
-  Euro,
-  LayoutPanelLeft,
-  Search,
-  Users,
-} from "lucide-react";
+import { ArrowRight, Camera, ChartLine, Euro, LayoutPanelLeft, Search, Users } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { ShowcaseHero } from "@/components/shared/showcase-hero";
@@ -58,26 +48,18 @@ export function ConceptHero() {
 }
 
 /**
- * The agency, or alone without a tool, each behind the red cross of the V1
- * (« Option 1 », « Option 2 »), « ou » in a round between them; then the
- * one question that counts, centred, its end in the blue gradient.
+ * The two alternatives of the V1, « Option 1 » and « Option 2 » (neither
+ * crossed out: Younes, 2026-11-04), « ou » in a round between them; then
+ * the line of the V1, centred, its end in the blue gradient.
  */
 export function OptionsSection() {
-  const [agency, alone] = t.options.items;
   return (
-    <MarketingSection
-      id="idee"
-      look="showcase"
-      eyebrow={t.options.eyebrow}
-      title={t.options.title}
-      lead={t.options.lead}
-    >
+    <MarketingSection id="idee" look="showcase" eyebrow={t.options.eyebrow} title={t.options.title}>
       <OptionPair
         or={t.options.or}
-        options={[agency, alone].map((option, index) => (
+        options={t.options.items.map((option, index) => (
           <>
-            <p className="flex items-center gap-1.5 text-lk-caption font-bold tracking-lk-caps text-lk-danger uppercase">
-              <CircleX aria-hidden="true" className="size-4 shrink-0" />
+            <p className="text-lk-caption font-bold tracking-lk-caps text-lk-ink-3 uppercase">
               {t.options.option(index + 1)}
             </p>
             <h3 className={cardTitle}>{option.title}</h3>
@@ -115,9 +97,10 @@ function OptionPair({ options, or }: { options: readonly ReactNode[]; or: string
 }
 
 /**
- * « L'outil de valorisation. », on navy as in the V1: what was studied,
- * taken into account, produced, in four glass cards numbered 01 to 04, then
- * the line of the V1 in a frame of the light blue with its icon.
+ * « Ce que vous obtenez en quelques minutes. », on navy as in the V1: what
+ * the tool produces, its references, what it takes into account, the report,
+ * in four glass cards numbered 01 to 04, then the line of the V1 in a frame
+ * of the light blue with its icon.
  */
 export function ToolSection() {
   return (
@@ -138,21 +121,7 @@ export function ToolSection() {
               {item.label}
             </p>
             <h3 className="text-lk-h3-lg font-bold text-white lg:text-lk-h2">{item.title}</h3>
-            {"list" in item ? (
-              <ul className="flex flex-col gap-2">
-                {item.list.map((line) => (
-                  <li key={line} className="flex gap-2.5 text-lk-compact text-white/80">
-                    <Check
-                      aria-hidden="true"
-                      className="mt-0.5 size-4 shrink-0 text-lk-blue-light"
-                    />
-                    <span>{line}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className={cardTextDark}>{item.text}</p>
-            )}
+            <p className={cardTextDark}>{item.text}</p>
           </li>
         ))}
       </ol>

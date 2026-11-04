@@ -23,7 +23,7 @@ const WAVE = "M0 0 H100 C58 16 26 38 40 60 C52 80 34 93 0 100 Z";
 /**
  * Top of the home page of the redesign D (docs/design-handoff-d/SPECS.md 3,
  * items 1 to 3): the night band under the headers, its halos breathing, the
- * badge « Ni agence, ni seul », the title and its line in the gradient, the
+ * badge (the slogan « Parce que le lien, c'est la clé »), the title and its line in the gradient, the
  * lead. From 1 024 px, the photo on the right (46 %) cut by the wave, its
  * grid of dots, and from 1 280 px the « Exemple » card on it; below, the
  * photo under the text, its top left corner rounded 130 px, the card over its

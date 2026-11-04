@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type ReactNode } from "react";
+import { CountUp } from "@/components/shared/count-up";
 import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -13,7 +14,8 @@ const t = fr.site.home.savings;
  * 3, item 5): native radio buttons drawn as pills (arrows move between them)
  * under the head of the section (`intro`), then the bars of the agency, of
  * the Accompagné plan and of Autonomie (from 768 px), and the amount saved,
- * read again when it changes. From 1 024 px, the bars on the right.
+ * read again when it changes. The fee of the agency and the amount saved roll
+ * up to their new figure (CountUp). From 1 024 px, the bars on the right.
  */
 export function SavingsSimulator({
   accompaniedCents,
@@ -45,7 +47,9 @@ export function SavingsSimulator({
                 <span
                   className={cn(
                     "flex h-11 cursor-pointer items-center rounded-full border px-4 text-lk-compact font-semibold tabular md:h-11.5 md:px-5",
-                    "transition-colors duration-140 ease-out-lk",
+                    "transition-[color,background-color,border-color,scale] duration-140 ease-out-lk",
+                    // Pressed on a phone (Younes, 2026-11-04).
+                    "[-webkit-tap-highlight-color:transparent] active:scale-[0.96] motion-reduce:active:scale-100",
                     // Chosen: the gradient of an action, white text (redesign D).
                     "peer-checked:lk-gradient peer-checked:border-transparent peer-checked:text-white",
                     "border-lk-line-strong bg-lk-surface text-lk-ink hover:border-lk-blue-border",
@@ -70,7 +74,12 @@ export function SavingsSimulator({
               <span className="hidden md:inline">{t.agency}</span>
             </>
           }
-          amount={t.approximately(formatPrice(result.agencyCents))}
+          amount={
+            <>
+              {t.approximately}
+              <CountUp value={result.agencyCents} format="price" />
+            </>
+          }
           track="bg-lk-agency"
         />
         <Bar
@@ -95,7 +104,7 @@ export function SavingsSimulator({
             {t.saved}
           </span>
           <span className="lk-gradient-text text-lk-c-amount font-bold tracking-lk-d-tight tabular md:text-lk-c-amount-lg">
-            {formatPrice(result.savedCents)}
+            <CountUp value={result.savedCents} format="price" />
           </span>
         </p>
         <p className="text-lk-caption text-lk-ink-3">{t.note}</p>
@@ -113,7 +122,7 @@ function Bar({
   className,
 }: {
   label: React.ReactNode;
-  amount: string;
+  amount: React.ReactNode;
   blue?: boolean;
   track: string;
   /** Width of the blue part, in %. */

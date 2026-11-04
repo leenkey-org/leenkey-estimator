@@ -67,7 +67,7 @@ test.describe("accueil", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Vendez votre bien autrement. Moins de frais, plus de contrôle.",
     );
-    await expect(hero.getByText("Ni agence, ni seul · 0 € de commission")).toBeVisible();
+    await expect(hero.getByText("Parce que le lien, c'est la clé")).toBeVisible();
     // Its rights confirmed (Q57): in production too, so in CI. Decorative.
     // Beside the text from 1 024 px, under it below: the one shown.
     const photo = hero.locator('img[src*="/images/accueil/maison-"]:visible');
@@ -374,7 +374,7 @@ test.describe("accueil", () => {
     await expect(
       page.getByRole("heading", { name: "Biens à vendre près de chez vous" }),
     ).toHaveCount(0);
-    await expect(page.getByText("Notre recommandation")).toHaveCount(0);
+    await expect(page.getByText("Pour être accompagné")).toHaveCount(0);
     // Nor the savings: the price of Accompagné is never written in the code.
     await expect(
       page.getByRole("heading", { name: "Combien vous économisez avec Leenkey" }),
@@ -471,6 +471,11 @@ test.describe("accueil (base de seed)", () => {
     await expect(cards.nth(0)).toContainText("Gratuit");
     await expect(cards.nth(1)).toContainText("990 € TTC");
     await expect(cards.nth(2)).toContainText("1 500 € TTC");
-    await expect(cards.nth(1)).toContainText("Notre recommandation");
+    // The free plan put forward, no plan « recommandé » (2026-11-04).
+    await expect(cards.nth(0)).toContainText("Pour piloter vous-même");
+    await expect(cards.nth(1)).toContainText("Pour être accompagné");
+    await expect(page.getByText("Notre recommandation")).toHaveCount(0);
+    await expect(cards.nth(0).locator(".lk-gradient-border")).toHaveCount(1);
+    await expect(cards.nth(1).locator(".lk-gradient-border")).toHaveCount(0);
   });
 });

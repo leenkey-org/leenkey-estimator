@@ -49,6 +49,8 @@ export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
               "group -mb-px flex min-h-16 flex-1 flex-col items-center justify-center gap-1 border-b-3 border-transparent px-1 pt-3 pb-2.5 text-lk-label font-semibold text-lk-ink-3",
               "md:flex-none md:flex-row md:gap-2.25 md:px-4 md:pt-4.5 md:pb-4 md:text-lk-title",
               "transition-colors duration-140 ease-out-lk hover:text-lk-ink",
+              // Pressed on a phone: a light blue ground under the tab (2026-11-04).
+              "rounded-t-lk-md [-webkit-tap-highlight-color:transparent] active:bg-lk-blue-tint active:text-lk-ink",
               "data-[state=active]:border-lk-indigo-mark data-[state=active]:text-lk-ink",
               "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
             )}

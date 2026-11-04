@@ -11,6 +11,7 @@ import { VISION_ANCHOR } from "../anchors";
 import { CtaPanel } from "./cta-panel";
 import { RichText } from "./rich-text";
 import { cardDark, cardTextDark, cardTitleDark } from "./site-styles";
+import { CountUp, countable } from "@/components/shared/count-up";
 
 // Sections of /qui-sommes-nous (L1-43), in the order of the V1 page, in its
 // direction since L1-50 (DECISIONS 2026-10-23): Cédric's photo in the hero
@@ -78,6 +79,12 @@ function FounderPhoto() {
   );
 }
 
+/** A figure that rolls up when it can (« 300+ »), as it is written otherwise (« 24 / 7 »). */
+function Figure({ text }: { text: string }) {
+  const figure = countable(text);
+  return figure ? <CountUp value={figure.value} suffix={figure.suffix} /> : text;
+}
+
 /** The figures of the founder's career, centred on white, in the blue gradient. */
 export function AboutFigures() {
   return (
@@ -93,7 +100,9 @@ export function AboutFigures() {
               {figure.label}
             </dt>
             <dd className="text-lk-h1-lg font-bold text-wide tabular-nums lg:text-lk-display-md">
-              <span className="lk-text-grad">{figure.value}</span>
+              <span className="lk-text-grad">
+                <Figure text={figure.value} />
+              </span>
             </dd>
           </div>
         ))}

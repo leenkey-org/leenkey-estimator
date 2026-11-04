@@ -142,8 +142,8 @@ describe("texts of the home page (direction C, then the redesign D)", () => {
     expect(JSON.stringify(home)).not.toMatch(/Estimer mon bien|Obtenir mon estimation/);
   });
 
-  it("the badge of the hero and the title of the charte D, its second line in the gradient", () => {
-    expect(home.hero.badge).toBe("Ni agence, ni seul · 0 € de commission");
+  it("the slogan in the badge of the hero, the title of the charte D, its second line in the gradient", () => {
+    expect(home.hero.badge).toBe("Parce que le lien, c'est la clé");
     expect(home.hero.title).toBe("Vendez votre bien autrement.");
     expect(home.hero.titleAccent).toBe("Moins de frais, plus de contrôle.");
   });

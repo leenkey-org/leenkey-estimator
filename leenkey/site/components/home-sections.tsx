@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ChartLine, FileText, PenLine, Search, Tag, UserRound } from "lucide-react";
 import { Accented } from "@/components/shared/accented";
 import { Button } from "@/components/shared/button";
+import { BrandHouse } from "@/components/shared/brand-house";
 import { DecorativeShapes } from "@/components/shared/decorative-shapes";
 import { FaqList } from "@/components/shared/faq-list";
 import { MarketingSection } from "@/components/shared/marketing-section";
@@ -70,7 +71,7 @@ async function accompaniedCents(): Promise<number | null> {
 }
 
 /**
- * « Combien vous économisez avec Leenkey »: white, its shapes behind. Left
+ * « Combien vous économisez avec Leenkey »: white, the house of the logo behind. Left
  * out without the plans table, as the plan cards: a price is never written
  * in the code (CLAUDE.md section 5).
  */
@@ -83,25 +84,8 @@ export async function SavingsSection() {
       aria-labelledby="economies"
       className="relative isolate mt-10 overflow-hidden border-y border-lk-line bg-lk-surface md:mt-22"
     >
-      <DecorativeShapes
-        shapes={[
-          {
-            kind: "orb",
-            className: "-top-22 -right-22 size-60 md:-top-30 md:-right-25 md:size-90",
-          },
-          {
-            kind: "dots",
-            slow: true,
-            className: "bottom-12 left-10 hidden h-25 w-37.5 md:block",
-          },
-          {
-            kind: "orb-solid",
-            slow: true,
-            className:
-              "top-9 right-6 size-8.5 md:top-17.5 md:right-auto md:left-[44%] md:size-11.5",
-          },
-        ]}
-      />
+      {/* The house of the logo in place of the orbs and dots (Younes, 2026-11-04). */}
+      <BrandHouse className="lk-float-slow pointer-events-none absolute -top-4 -right-6 -z-10 h-36 w-auto rotate-[8deg] text-lk-brand-blue opacity-10 md:top-12 md:right-[6%] md:h-56 lg:right-[4%]" />
       <div className="lk-frame max-md:[--lk-gutter:1rem] py-10 md:py-22">
         <SavingsSimulator
           accompaniedCents={planCents}
@@ -221,7 +205,9 @@ export async function PlansSection() {
                   plan.priceCents === 0 ? t.free : `${formatPrice(plan.priceCents)}\u00a0${t.taxes}`
                 }
                 note={t.items[plan.code].note}
-                featured={plan.code === "accompagne"}
+                // The free plan put forward (Younes, 2026-11-04): the place of a
+                // card, not a right (no hasEntitlement to read here).
+                featured={plan.priceCents === 0}
               />
             </li>
           ))}

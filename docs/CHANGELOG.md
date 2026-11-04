@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-04 · Site · PR #72 · Retouches du site public
+- Modifié : nouveau slogan « Parce que le lien, c'est la clé » dans la pastille de l'accueil.
+- Modifié : la formule Autonomie est dite gratuite, sans phase de lancement (accueil, `/concept`, `/tarifs`, `/faq`).
+- Modifié : formules de l'accueil sans « Notre recommandation », Autonomie mise en avant.
+- Modifié : `/concept` reprend les textes de la V1 (les deux alternatives, « Ce que vous obtenez en quelques minutes ») et dit « Une annonce optimisée ».
+- Ajouté : chiffres qui défilent (`CountUp`) dans le simulateur, sur `/investir` et `/qui-sommes-nous` ; la maison du logo à la place des formes du simulateur ; un effet au toucher sur les onglets et sélecteurs du site.
+
 ### 2026-11-03 · L1-26 · PR #71 · Paiement des formules par Stripe
 - Ajouté : page `/vendeur/formule` : les formules de la table `plans`, la formule en vigueur, « Passer à Sérénité pour 510 € », le récapitulatif de la commande avec ses deux cases jamais cochées d'avance et « Commander et payer … € TTC », le paiement sur Stripe Checkout, le retour (« Paiement en cours de confirmation », puis « C'est activé. ») et l'annulation ; lien « Voir les formules » dans « Ma vente ».
 - Ajouté : webhook `/api/webhooks/stripe` (signature vérifiée, idempotent) : formule activée, CGU et CGV acceptées avec leurs versions, dossier pour l'équipe, notifications et emails ; remboursements total et partiel.
