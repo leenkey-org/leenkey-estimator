@@ -85,7 +85,7 @@ test.describe("mouvement des pages publiques", () => {
     expect(finals[0]).toBe("15 ans");
     for (const [index, figure] of (await figures.all()).entries()) {
       await figure.scrollIntoViewIfNeeded();
-      await expect(figure.locator('[aria-hidden="true"]')).toHaveText(finals[index]);
+      await expect(figure.locator("[data-count-up-shown]")).toHaveText(finals[index]);
     }
     // « 24 / 7 » is not a number: written as it is.
     await expect(page.getByText("24 / 7", { exact: true })).toBeVisible();
@@ -93,13 +93,13 @@ test.describe("mouvement des pages publiques", () => {
     // Reduced motion: drawn with their figure, never at 0.
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/qui-sommes-nous");
-    await expect(figures.locator('[aria-hidden="true"]')).toHaveText(finals);
+    await expect(figures.locator("[data-count-up-shown]")).toHaveText(finals);
 
     // On paper, the figure itself, whatever was shown on the screen.
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto("/qui-sommes-nous");
     await page.emulateMedia({ media: "print" });
-    await expect(figures.locator('[aria-hidden="true"]').first()).toBeHidden();
+    await expect(figures.locator("[data-count-up-shown]").first()).toBeHidden();
     await expect(figures.locator(".sr-only").first()).toBeVisible();
   });
 

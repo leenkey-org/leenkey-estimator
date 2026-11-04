@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { countable } from "@/lib/figures";
 import { formatInteger, formatPrice } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 // Figures that roll up, as on the V1 (leenkey.js, « count-up for stats »,
 // Younes 2026-11-04): from 0 the first time the figure comes into view, then
@@ -31,11 +32,14 @@ export function CountUp({
   value,
   format = "integer",
   suffix = "",
+  className,
 }: {
   value: number;
   format?: CountUpFormat;
   /** After the number: « + », « ans », « % » (its space included). */
   suffix?: string;
+  /** Its alignment in the place it holds (« text-right » for an amount). */
+  className?: string;
 }) {
   const text = (count: number) => `${FORMATS[format](count)}${suffix}`;
   const element = useRef<HTMLSpanElement>(null);
@@ -94,9 +98,17 @@ export function CountUp({
     };
   }, [value]);
 
+  // The place of the widest figure is held, so that nothing around moves
+  // while it rolls (« 0 € » is narrower than « 16 010 € » and may unwrap a
+  // line): the figure shown over the one held, invisible.
   return (
-    <span ref={element} data-count-up="">
-      <span aria-hidden="true">{text(shown)}</span>
+    <span ref={element} data-count-up="" className={cn("inline-grid", className)}>
+      <span aria-hidden="true" className="invisible col-start-1 row-start-1">
+        {text(Math.max(shown, value))}
+      </span>
+      <span aria-hidden="true" data-count-up-shown="" className="col-start-1 row-start-1">
+        {text(shown)}
+      </span>
       <span className="sr-only">{text(value)}</span>
     </span>
   );

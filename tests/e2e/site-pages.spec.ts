@@ -295,7 +295,7 @@ test.describe("pages du site en V2", () => {
     ).toHaveCount(1);
     const figure = market.locator("[data-count-up]");
     await figure.scrollIntoViewIfNeeded();
-    await expect(figure.locator('[aria-hidden="true"]')).toHaveText("15\u202f000\u202f€");
+    await expect(figure.locator("[data-count-up-shown]")).toHaveText("15\u202f000\u202f€");
     await expect(figure.locator(".sr-only")).toHaveText("15\u202f000\u202f€");
     await expect(
       market.getByText("prélevés sur une seule vente à 300\u202f000\u202f€", { exact: true }),

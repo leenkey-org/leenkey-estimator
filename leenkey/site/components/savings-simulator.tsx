@@ -77,7 +77,7 @@ export function SavingsSimulator({
           amount={
             <>
               {t.approximately}
-              <CountUp value={result.agencyCents} format="price" />
+              <CountUp value={result.agencyCents} format="price" className="text-right" />
             </>
           }
           track="bg-lk-agency"
@@ -104,7 +104,7 @@ export function SavingsSimulator({
             {t.saved}
           </span>
           <span className="lk-gradient-text text-lk-c-amount font-bold tracking-lk-d-tight tabular md:text-lk-c-amount-lg">
-            <CountUp value={result.savedCents} format="price" />
+            <CountUp value={result.savedCents} format="price" className="text-right" />
           </span>
         </p>
         <p className="text-lk-caption text-lk-ink-3">{t.note}</p>

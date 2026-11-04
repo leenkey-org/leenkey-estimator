@@ -444,7 +444,7 @@ test.describe("accueil (base de seed)", () => {
     const saved = section.getByText("Vous économisez environ").locator("..");
     await expect(saved).toContainText("16 010 €");
     // The amount shown rolls up to it once in view, then to each new one.
-    const shown = saved.locator('[data-count-up] > [aria-hidden="true"]');
+    const shown = saved.locator("[data-count-up-shown]");
     await shown.scrollIntoViewIfNeeded();
     await expect(shown).toHaveText("16 010 €");
     await prices.getByText("600 000 €").click();
