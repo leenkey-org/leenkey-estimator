@@ -452,9 +452,11 @@ test.describe("mentions légales et CGU de la V1", () => {
     );
   });
 
-  test("/cgu : le sommaire mène à chaque article, version 1.0", async ({ page }) => {
+  test("/cgu : le sommaire mène à chaque article, version 1.1", async ({ page }) => {
     await page.goto("/cgu");
-    await expect(page.getByText("Dernière mise à jour : 28 juin 2026 · Version 1.0")).toBeVisible();
+    await expect(
+      page.getByText("Dernière mise à jour : 6 novembre 2026 · Version 1.1"),
+    ).toBeVisible();
     const toc = page.getByRole("navigation", { name: "Sommaire" });
     await expect(toc.getByRole("link")).toHaveCount(12);
     await toc.getByRole("link", { name: "5. Tarifs et paiement" }).click();

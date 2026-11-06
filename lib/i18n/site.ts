@@ -186,9 +186,11 @@ export const site = {
           tag: "Dossier vendeur",
         },
         {
+          // The plans of 2026-11-06: Accompagné up to the offer accepted,
+          // Sérénité up to the signature.
           title: "Signez",
-          text: "Analyse des offres, négociation et coordination du notaire. Un conseiller à vos côtés au moindre doute.",
-          tag: "Accompagné",
+          text: "Analyse des offres et aide à la décision, puis suivi jusqu'à la signature. Un conseiller à vos côtés au moindre doute.",
+          tag: "Accompagné ou Sérénité",
         },
       ],
     },
@@ -355,7 +357,7 @@ export const site = {
         },
         {
           title: "Un accompagnement humain",
-          text: "Un conseiller disponible aux moments qui comptent : la négociation, les questions juridiques, la coordination avec le notaire. Pas un chatbot, une personne.",
+          text: "Un conseiller disponible aux moments qui comptent : votre prix, les offres reçues, la préparation des échanges avec le notaire. Pas un chatbot, une personne.",
         },
         {
           // V1: « Leenkey est entièrement gratuit […] tous les outils »; the
@@ -464,7 +466,7 @@ export const site = {
       {
         question: "Et si je bloque en cours de route ?",
         answer: [
-          "Vous n'avancez jamais à l'aveugle. À chaque étape, vous pouvez solliciter votre conseiller, qui vous rappelle généralement sous 24 h. Le jargon est expliqué, les démarches détaillées. C'est le principe même de Leenkey.",
+          "Vous n'avancez jamais à l'aveugle. L'assistant Leenkey vous guide à chaque étape : le jargon est expliqué, les démarches détaillées. Avec Accompagné ou Sérénité, votre conseiller vous rappelle généralement sous 24 h. C'est le principe même de Leenkey.",
         ],
       },
     ],

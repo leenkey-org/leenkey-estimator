@@ -1448,7 +1448,7 @@ Forfait fixe par bien · 12 mois d'accompagnement.
 
 Ne jamais mentionner de « garantie juridique » ni de « relecture des actes » (exclu par le client), ni de photos professionnelles ou de visites réalisées par Leenkey (non proposées).
 
-**Durée et fin de formule** (décision du 2026-10-15 ; valeurs provisoires en attendant la fiche contractuelle de Cédric, Q30) : une formule payante couvre un bien pendant 12 mois à compter de la souscription, renouvelables à l'échéance, jamais automatiquement (2026-11-06 ; conditions du renouvellement : Q75). Sans renouvellement, le bien repasse en Autonomie : l'annonce reste en ligne, les prestations humaines s'arrêtent. Un passage d'Accompagné à Sérénité fait repartir les 12 mois. Sans demande de démarrage immédiat à la commande, le conseiller ne contacte le client qu'à partir du 15e jour (délai de rétractation, section 11).
+**Durée et fin de formule** (décision du 2026-10-15 ; valeurs provisoires en attendant la fiche contractuelle de Cédric, Q30) : une formule payante couvre un bien pendant 12 mois à compter de la souscription, renouvelables à l'échéance, jamais automatiquement : au tarif en vigueur, pour 12 nouveaux mois, proposé par le rappel 30 jours avant l'échéance, avec le choix de l'autre formule payante à son prix (2026-11-06, Q75). Sans renouvellement, le bien repasse en Autonomie : l'annonce reste en ligne, les prestations humaines s'arrêtent. Un passage d'Accompagné à Sérénité fait repartir les 12 mois. Sans demande de démarrage immédiat à la commande, le conseiller ne contacte le client qu'à partir du 15e jour (délai de rétractation, section 11).
 
 ### Tableau comparatif (page formules)
 
