@@ -466,7 +466,10 @@ test.describe("accueil (base de seed)", () => {
     page,
   }) => {
     await page.goto("/");
-    const section = page.getByRole("region", { name: "Choisissez votre niveau d'accompagnement" });
+    const section = page.getByRole("region", { name: "Les formules Leenkey" });
+    await expect(
+      section.getByText("Vendez à votre rythme, avec l'accompagnement qui vous convient."),
+    ).toBeVisible();
     await expect(section.getByRole("heading", { level: 3 })).toHaveText([
       "Autonomie",
       "Accompagné",
@@ -479,6 +482,9 @@ test.describe("accueil (base de seed)", () => {
     // The free plan put forward, no plan « recommandé » (2026-11-04).
     await expect(cards.nth(0)).toContainText("Pour avancer à votre rythme");
     await expect(cards.nth(1)).toContainText("Pour être accompagné");
+    // The plans as worded on 2026-11-06: twelve months, never a 30-minute call.
+    await expect(cards.nth(1)).toContainText("Forfait fixe par bien · 12 mois d'accompagnement");
+    await expect(section.getByText(/call/)).toHaveCount(0);
     await expect(page.getByText("Notre recommandation")).toHaveCount(0);
     await expect(cards.nth(0).locator(".lk-gradient-border")).toHaveCount(1);
     await expect(cards.nth(1).locator(".lk-gradient-border")).toHaveCount(0);

@@ -173,7 +173,7 @@ export function StepsSection() {
   );
 }
 
-/** « Choisissez votre niveau d'accompagnement »: the three plans, read from the plans table. */
+/** « Les formules Leenkey »: the three plans, read from the plans table. */
 export async function PlansSection() {
   const t = home.plans;
   const plans = await activePlans();
@@ -184,9 +184,12 @@ export async function PlansSection() {
       className="lk-frame max-md:[--lk-gutter:1rem] pt-12 md:pt-22"
     >
       <div data-reveal="" className="mb-3.5 flex flex-wrap items-end justify-between gap-4 md:mb-6">
-        <h2 id="formules" className={sectionTitle}>
-          {t.title}
-        </h2>
+        <div className="flex flex-col gap-1.5 md:gap-2">
+          <h2 id="formules" className={sectionTitle}>
+            {t.title}
+          </h2>
+          <p className="text-lk-compact text-lk-ink-2 md:text-lk-body">{t.lead}</p>
+        </div>
         <Link
           href={ROUTES.pricing}
           className="inline-flex min-h-11 items-center text-lk-compact font-semibold text-lk-blue underline-offset-3 hover:underline md:text-lk-body"

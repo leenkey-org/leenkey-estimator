@@ -1,58 +1,40 @@
--- Plans and entitlements. Texts: SPEC-V2 section 11 bis (client texts, kept as
--- provided; taglines in "on" until Cédric answers DECISIONS Q18).
--- description: first line shown before the feature list, following lines after it.
+-- Plans and entitlements. Texts: SPEC-V2 section 11 bis, the plans as Younes
+-- worded them on 2026-11-06 (DECISIONS.md), taglines in « nous ».
+-- description: first line shown before the feature list (empty: none),
+-- following lines after it. The price stays in price_cents only.
 -- stripe_price_id is filled by L1-26 from STRIPE_PRICE_* (test or live).
 
 insert into public.plans (code, name, tagline, price_cents, scope, description, features, position, active) values
-  ('autonomie', 'Autonomie', 'Tous les outils pour vendre vous-même.', 0, 'property',
-   'Sans engagement.',
+  ('autonomie', 'Autonomie', 'Tous les outils pour gérer votre vente vous-même.', 0, 'property',
+   E'\nGratuit, sans carte bancaire et sans obligation de passer à une formule payante.',
    array[
-     'Analyse et rapport de valeur du bien',
-     'Espace vendeur',
-     'Création de la fiche du bien',
-     'Création et rédaction de l''annonce avec l''IA',
-     'Publication de l''annonce sur Leenkey',
-     'Tableau de bord de suivi de la vente',
-     'Messagerie avec les acquéreurs',
-     'Agenda et demandes de visites',
-     'Accès aux informations déclarées par les acquéreurs',
-     'Réception des offres d''achat structurées',
-     'Assistant IA Leenkey pour vous accompagner dans le parcours',
-     'Checklist des étapes de la vente',
-     'Identification des documents et diagnostics à préparer'
+     'Rapport de valeur de votre bien',
+     'Création et publication de votre annonce sur Leenkey avec l''aide de l''IA',
+     'Espace personnel et suivi de votre vente',
+     'Messagerie et gestion des demandes de visite',
+     'Réception des offres d''achat',
+     'Accès aux informations communiquées par les acquéreurs',
+     'Assistant IA disponible pour vous guider à chaque étape',
+     'Checklist et liste des documents à préparer'
    ], 1, true),
-  ('accompagne', 'Accompagné', 'Vous vendez. On vous accompagne à chaque étape.', 99000, 'property',
-   E'Tout Autonomie, plus :\nLe propriétaire continue de gérer sa vente et réalise ses visites.',
+  ('accompagne', 'Accompagné', 'Vous gérez votre vente, un conseiller vous accompagne à chaque étape.', 99000, 'property',
+   E'Tout Autonomie, plus :\nForfait fixe par bien · 12 mois d''accompagnement',
    array[
-     'Conseiller Leenkey dédié',
-     'Stratégie de prix et de mise en vente',
-     'Échanges avec le conseiller pendant la commercialisation',
-     'Relecture et optimisation humaine de l''annonce',
-     'Conseils sur les photos et la présentation du bien',
-     'Suivi de la performance de l''annonce',
-     'Ajustement de la stratégie de vente si nécessaire',
-     'Accompagnement dans la gestion des acquéreurs',
-     'Conseils pour préparer les visites',
-     'Analyse des offres reçues',
-     'Analyse des informations et justificatifs de financement disponibles',
-     'Aide à la négociation',
-     'Accompagnement jusqu''à l''acceptation d''une offre'
+     'Un conseiller Leenkey dédié',
+     'Un regard personnalisé sur votre prix et votre stratégie de vente',
+     'Relecture et optimisation de votre annonce',
+     'Recommandations pour valoriser votre bien et préparer les visites',
+     'Suivi des performances de votre annonce et pistes d''amélioration',
+     'Accompagnement pour préparer vos échanges avec les acquéreurs',
+     'Analyse des offres reçues et des informations de financement communiquées',
+     'Aide à la décision jusqu''à l''acceptation d''une offre'
    ], 2, true),
-  ('serenite', 'Sérénité', 'On pilote avec vous jusqu''à la signature.', 150000, 'property',
-   'Tout Accompagné, plus :',
+  ('serenite', 'Sérénité', 'Votre vente avance, nous vous accompagnons jusqu''à la signature.', 150000, 'property',
+   E'Tout Accompagné, plus :\nForfait fixe par bien · 12 mois d''accompagnement',
    array[
-     'Constitution du dossier de vente complet',
-     'Contrôle des pièces nécessaires',
-     'Identification et suivi des documents manquants',
-     'Anticipation des diagnostics nécessaires',
-     'Analyse des documents',
-     'Signalement des éventuels points de vigilance',
-     'Préparation du dossier destiné au notaire',
-     'Coordination avec le notaire',
-     'Suivi de l''avancement du dossier',
-     'Accompagnement jusqu''au compromis ou avant-contrat',
-     'Suivi des conditions suspensives',
-     'Accompagnement jusqu''à la signature définitive'
+     'Préparation de votre dossier de vente : organisation des documents, diagnostics et identification des pièces manquantes.',
+     'Analyse des documents : lecture des pièces disponibles et signalement des éventuels points de vigilance.',
+     'Suivi jusqu''à la signature : accompagnement dans les démarches après l''acceptation de l''offre, rappels des échéances importantes et aide à la préparation des échanges avec le notaire.'
    ], 3, true)
 on conflict (code) do update set
   name = excluded.name, tagline = excluded.tagline, price_cents = excluded.price_cents,

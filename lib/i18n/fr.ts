@@ -1907,7 +1907,7 @@ export const fr = {
         `${price} TTC : la différence avec ${from}, déjà payée`,
       duration: "Durée",
       durationValue:
-        "12 mois à partir du paiement, sans renouvellement automatique. À l'échéance, votre bien repasse en Autonomie.",
+        "12 mois à partir du paiement, renouvelables à l'échéance, jamais automatiquement. Sans renouvellement, votre bien repasse en Autonomie.",
       withdrawal: "Rétractation",
       withdrawalValue: "Vous pouvez renoncer au contrat pendant 14 jours après la commande.",
       mediator: "Médiateur de la consommation",

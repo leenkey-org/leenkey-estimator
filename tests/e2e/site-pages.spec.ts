@@ -375,10 +375,18 @@ test.describe("/tarifs (base de seed)", () => {
       "Sérénité",
     ]);
     await expect(plans.nth(0)).toContainText("Disponible gratuitement");
-    await expect(plans.nth(0)).toContainText("Publication de l'annonce sur Leenkey");
+    await expect(plans.nth(0)).toContainText(
+      "Création et publication de votre annonce sur Leenkey avec l'aide de l'IA",
+    );
+    await expect(plans.nth(0)).toContainText(
+      "Gratuit, sans carte bancaire et sans obligation de passer à une formule payante.",
+    );
     await expect(plans.nth(1)).toContainText("990 €");
     await expect(plans.nth(1)).toContainText("Tout Autonomie, plus :");
-    await expect(plans.nth(1)).toContainText("Forfait fixe TTC · payé à la souscription");
+    await expect(plans.nth(1)).toContainText("Payé à la souscription, en une fois");
+    await expect(plans.nth(1)).toContainText("Forfait fixe par bien · 12 mois d'accompagnement");
+    await expect(plans.nth(2)).toContainText("Tout Accompagné, plus :");
+    await expect(plans.nth(2)).toContainText("Suivi jusqu'à la signature");
     await expect(plans.nth(2)).toContainText("1 500 €");
     // Only the free plan is the primary action.
     await expect(
