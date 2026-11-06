@@ -235,10 +235,12 @@ test.describe("accueil", () => {
       "/tarifs",
     );
     const faq = page.getByRole("region", { name: "Les trois questions essentielles." });
-    const answer = faq.getByText(/Elle inclut l'analyse de votre bien/);
+    const answer = faq.getByText(/Elle comprend le rapport de valeur de votre bien/);
     await expect(answer).toBeHidden();
     await faq.getByText("Est-ce vraiment gratuit pour commencer ?").click();
     await expect(answer).toBeVisible();
+    // No 30-minute call in Autonomie since 2026-11-06.
+    await expect(answer).not.toContainText("call");
     await expect(faq.getByRole("link", { name: "Toutes les questions" })).toHaveAttribute(
       "href",
       "/faq",
