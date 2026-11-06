@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import Stripe from "stripe";
+import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 import { consentValue } from "./google";
 
 // L1-26: the plan of a property and its payment (SPEC-V2 8.8 and 11), on the
@@ -136,7 +137,7 @@ test("payer Accompagné : retour de Stripe, confirmation par le webhook, une seu
     plan: "accompagne",
     kind: "new",
     early_start: "0",
-    cgu_version: "2026-06-28",
+    cgu_version: LEGAL_VERSIONS.cgu,
     cgv_version: "2026-10-17",
     env: "local",
   });

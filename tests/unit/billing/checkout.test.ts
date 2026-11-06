@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 
 // L1-26: who may start a payment, and what goes to Stripe
 // (leenkey/billing/actions.ts, startCheckout): a seller signed in and active,
@@ -89,7 +90,7 @@ const input = {
   propertyId: "5eed1000-0000-4000-8000-000000000009",
   plan: "accompagne",
   acceptedTerms: true,
-  cguVersion: "2026-06-28",
+  cguVersion: LEGAL_VERSIONS.cgu,
   cgvVersion: "2026-10-17",
   earlyStart: false,
 };
@@ -137,7 +138,7 @@ describe("startCheckout", () => {
         plan: "accompagne",
         kind: "new",
         early_start: "0",
-        cgu_version: "2026-06-28",
+        cgu_version: LEGAL_VERSIONS.cgu,
         cgv_version: "2026-10-17",
         env: "staging",
       },

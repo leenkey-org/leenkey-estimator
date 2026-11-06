@@ -108,7 +108,19 @@ describe("legal notice and CGU of the V1", () => {
       year: "numeric",
       timeZone: "UTC",
     });
-    expect(terms.updated).toBe(`Dernière mise à jour : ${date} · Version 1.0`);
+    expect(terms.updated).toBe(`Dernière mise à jour : ${date} · Version 1.1`);
+  });
+
+  it("the CGU describe the plans decided on 2026-11-06", () => {
+    const text = terms.sections
+      .find((section) => section.id === "tarifs")
+      ?.blocks.map((block) =>
+        block.kind === "p" ? plain(block.text) : block.kind === "subtitle" ? block.text : "",
+      )
+      .join(" ");
+    expect(text).toContain("Elle ne comprend pas d'accompagnement par un conseiller.");
+    expect(text).toContain("jamais renouvelée automatiquement");
+    expect(text).not.toMatch(/call|phase de lancement/);
   });
 
   it("the prices of the CGU are those of the plans table (seed)", async () => {

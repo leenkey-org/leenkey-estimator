@@ -1,8 +1,10 @@
 // Legal notice and terms of use of the V1 (« Mentions légales » of 23 July
 // 2026, « CGU » version 1.0 of 28 June 2026), word for word, in the legal
-// page template of the V2 (L1-43). The CGU are the version accepted at
-// signup (lib/legal/versions.ts): a change of their text is a new version.
-// Final texts from Cédric's lawyer (Q34). Part of fr.ts (fr.legal).
+// page template of the V2 (L1-43); CGU version 1.1 of 6 November 2026:
+// article 5 follows the plans decided by Cédric (DECISIONS.md 2026-11-06).
+// The CGU are the version accepted at signup (lib/legal/versions.ts): a
+// change of their text is a new version. Final texts from Cédric's lawyer
+// (Q34). Part of fr.ts (fr.legal).
 
 import type { Rich } from "./rich";
 
@@ -211,7 +213,7 @@ export const legalNotice = {
 export const terms = {
   metaTitle: "Conditions générales d'utilisation · Leenkey",
   title: "Conditions générales d'utilisation",
-  updated: "Dernière mise à jour : 28 juin 2026 · Version 1.0",
+  updated: "Dernière mise à jour : 6 novembre 2026 · Version 1.1",
   toc: "Sommaire",
   contact: "Pour toute question relative à ces CGU, contactez-nous à",
   sections: [
@@ -330,7 +332,7 @@ export const terms = {
             { strong: "Autonomie" },
             " est proposée ",
             { strong: "gratuitement" },
-            " durant la phase de lancement, sans engagement ni saisie de carte bancaire. Elle donne accès à l'analyse de valeur du bien, à un call stratégique avec un conseiller (30 minutes) et à la mise en place du dossier de vente.",
+            ", sans limite de durée, sans saisie de carte bancaire et sans obligation de souscrire une formule payante. Elle donne accès au rapport de valeur du bien, à la création et à la publication de l'annonce sur Leenkey avec l'aide de l'IA, à l'espace personnel de suivi de la vente, à la messagerie et à la gestion des demandes de visite, à la réception des offres d'achat, aux informations communiquées par les acquéreurs, à l'assistant IA, ainsi qu'à la checklist et à la liste des documents à préparer. Elle ne comprend pas d'accompagnement par un conseiller.",
           ],
         },
         { kind: "subtitle", text: "5.2 Formules payantes" },
@@ -346,6 +348,14 @@ export const terms = {
             ", dès activation des services associés à la formule choisie (création de l'espace personnel, diffusion de l'annonce, mobilisation du conseiller dédié).",
           ],
         },
+        {
+          kind: "p",
+          text: [
+            "Chaque formule payante couvre un bien pendant ",
+            { strong: `12${S}mois` },
+            " à compter de la souscription. Elle peut être renouvelée à l'échéance, à la demande du Vendeur et au tarif en vigueur ; elle n'est jamais renouvelée automatiquement. Sans renouvellement, le bien repasse en formule Autonomie.",
+          ],
+        },
         { kind: "subtitle", text: "5.3 Modalités de paiement" },
         {
           kind: "p",
@@ -357,7 +367,7 @@ export const terms = {
         {
           kind: "p",
           text: [
-            "Aucun remboursement n'est dû lorsque le Service a été pleinement exécuté. En cas de non-vente du bien, le Vendeur conserve l'accès à son dossier et à son conseiller pendant 12 mois à compter de la souscription, sans frais additionnels.",
+            "Aucun remboursement n'est dû lorsque le Service a été pleinement exécuté. En cas de non-vente du bien, le Vendeur conserve l'accès à son dossier et à son conseiller pendant 12 mois à compter de la souscription, sans frais additionnels ; il peut ensuite renouveler sa formule (article 5.2).",
           ],
         },
       ],

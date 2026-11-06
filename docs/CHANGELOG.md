@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-06 · Site · PR #75 · Points restants des formules
+- Modifié : CGU version 1.1 (article 5) : Autonomie gratuite sans limite de durée et sans conseiller, plus de « call stratégique » ni de « phase de lancement » ; 12 mois renouvelables à l'échéance, au tarif en vigueur, jamais automatiquement. Chaque compte accepte la nouvelle version à sa prochaine connexion.
+- Modifié : accueil, étape « Signez » (« Accompagné ou Sérénité ») ; FAQ « Et si je bloque en cours de route ? » (le conseiller avec une formule payante seulement) ; `/concept`, « Un accompagnement humain » sans « questions juridiques » ni « coordination avec le notaire ».
+
 ### 2026-11-06 · Site · PR #74 · Nouvelles fiches des formules
 - Modifié : contenu des formules (table `plans`, SPEC 11 bis) repris des textes de Younes : accroches en « nous », listes, « Forfait fixe par bien · 12 mois d'accompagnement ».
 - Modifié : section des formules de l'accueil « Les formules Leenkey », avec son sous-titre ; accroches des cartes de l'accueil et de `/tarifs` alignées.
