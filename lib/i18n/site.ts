@@ -193,7 +193,9 @@ export const site = {
       ],
     },
     plans: {
-      title: "Choisissez votre niveau d'accompagnement",
+      // The plans as Younes worded them (2026-11-06, DECISIONS.md).
+      title: "Les formules Leenkey",
+      lead: "Vendez à votre rythme, avec l'accompagnement qui vous convient.",
       free: "Gratuit",
       taxes: "TTC",
       // By plan code: the short texts of the home page (the names and the
@@ -202,18 +204,18 @@ export const site = {
       items: {
         autonomie: {
           tag: "Pour avancer à votre rythme",
-          text: "Pour piloter votre vente en toute autonomie.",
-          note: "Sans engagement · sans carte bancaire",
+          text: "Tous les outils pour gérer votre vente vous-même.",
+          note: "Sans carte bancaire et sans obligation de passer à une formule payante",
         },
         accompagne: {
           tag: "Pour être accompagné",
-          text: "Un conseiller dédié à vos côtés, du prix à la signature.",
-          note: "Forfait fixe · payé à la souscription",
+          text: "Vous gérez votre vente, un conseiller vous accompagne à chaque étape.",
+          note: "Forfait fixe par bien · 12 mois d'accompagnement · payé à la souscription",
         },
         serenite: {
-          tag: "Pour déléguer",
-          text: "Nous nous occupons de presque tout, vous gardez la décision.",
-          note: "Forfait fixe · payé à la souscription",
+          tag: "Pour aller jusqu'à la signature",
+          text: "Votre vente avance, nous vous accompagnons jusqu'à la signature.",
+          note: "Forfait fixe par bien · 12 mois d'accompagnement · payé à la souscription",
         },
       },
       all: "Voir le détail des formules",
@@ -228,7 +230,7 @@ export const site = {
           answer: [
             "Oui. La formule ",
             { strong: "Autonomie est gratuite" },
-            ", sans engagement et sans carte bancaire. Elle inclut l'analyse de votre bien, un call stratégique de 30 minutes et la mise en place du dossier de vente.",
+            ", sans carte bancaire et sans obligation de passer à une formule payante. Elle comprend le rapport de valeur de votre bien, la création et la publication de votre annonce avec l'aide de l'IA, la messagerie, les demandes de visite et la réception des offres d'achat.",
           ],
         },
         {
@@ -382,7 +384,7 @@ export const site = {
     eyebrow: "Freemium",
     title: "Une formule pour chaque vendeur.",
     accent: "chaque vendeur.",
-    lead: "Commencez gratuitement avec Autonomie. Aucun engagement, aucune carte bancaire demandée. Vendez votre bien et économisez réellement.",
+    lead: "Commencez gratuitement avec Autonomie, puis choisissez l'accompagnement qui vous convient. Vendez votre bien et économisez réellement.",
     view: "Affichage des formules",
     views: { price: "Prix des formules", savings: "Mon économie vs agence" },
     free: "Gratuit",
@@ -391,22 +393,22 @@ export const site = {
     savingsNote: `Économie indicative sur un bien à 350${N}000${N}€`,
     unavailable: "Les formules n'ont pas pu être chargées. Réessayez dans un instant.",
     items: {
-      // No V1 note (« Sans engagement · sans CB · TTC »): the text of the
-      // plan already starts with « Sans engagement. », the lead says « aucune
-      // carte bancaire demandée ».
+      // The text of each plan (table plans) ends its card: « Gratuit, sans
+      // carte bancaire… », « Forfait fixe par bien · 12 mois
+      // d'accompagnement ». Under a paid price, when it is paid.
       autonomie: {
-        text: "Pour piloter votre vente en toute autonomie.",
+        text: "Tous les outils pour gérer votre vente vous-même.",
         badge: "Disponible gratuitement",
         action: "Commencer gratuitement",
       },
       accompagne: {
-        text: "Un conseiller dédié à vos côtés, du prix à la signature.",
-        note: "Forfait fixe TTC · payé à la souscription",
+        text: "Vous gérez votre vente, un conseiller vous accompagne à chaque étape.",
+        note: "Payé à la souscription, en une fois",
         action: "Choisir Accompagné",
       },
       serenite: {
-        text: "Nous nous occupons de presque tout, vous gardez la décision.",
-        note: "Forfait fixe TTC · payé à la souscription",
+        text: "Votre vente avance, nous vous accompagnons jusqu'à la signature.",
+        note: "Payé à la souscription, en une fois",
         action: "Choisir Sérénité",
       },
     },
@@ -426,13 +428,13 @@ export const site = {
           { strong: "trois formules transparentes" },
           " à forfait fixe\u00A0— jamais de commission au pourcentage. La formule ",
           { strong: "Autonomie est gratuite" },
-          " et inclut l'analyse de votre bien, un call stratégique de 30 minutes et la mise en place du dossier de vente. Pour aller plus loin, la formule ",
+          " : rapport de valeur de votre bien, création et publication de votre annonce avec l'aide de l'IA, messagerie, demandes de visite et réception des offres. Pour être accompagné, la formule ",
           { strong: `Accompagné à 990${N}€ TTC` },
           " et la formule ",
           { strong: `Sérénité à 1${N}500${N}€ TTC` },
           " sont payées ",
           { strong: "à la souscription" },
-          ", en une fois, sans engagement de durée.",
+          ", en une fois, pour 12\u00A0mois d'accompagnement renouvelables.",
         ],
       },
       {
@@ -450,7 +452,7 @@ export const site = {
       {
         question: "Combien de temps pour vendre ?",
         answer: [
-          "Une annonce bien préparée et diffusée en exclusivité fait toute la différence. C'est exactement ce que nous outillons.",
+          "Une annonce bien préparée et diffusée en exclusivité fait toute la différence. C'est précisément ce à quoi Leenkey vous aide, étape par étape.",
         ],
       },
       {

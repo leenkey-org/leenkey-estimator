@@ -235,10 +235,12 @@ test.describe("accueil", () => {
       "/tarifs",
     );
     const faq = page.getByRole("region", { name: "Les trois questions essentielles." });
-    const answer = faq.getByText(/Elle inclut l'analyse de votre bien/);
+    const answer = faq.getByText(/Elle comprend le rapport de valeur de votre bien/);
     await expect(answer).toBeHidden();
     await faq.getByText("Est-ce vraiment gratuit pour commencer ?").click();
     await expect(answer).toBeVisible();
+    // No 30-minute call in Autonomie since 2026-11-06.
+    await expect(answer).not.toContainText("call");
     await expect(faq.getByRole("link", { name: "Toutes les questions" })).toHaveAttribute(
       "href",
       "/faq",
@@ -466,7 +468,10 @@ test.describe("accueil (base de seed)", () => {
     page,
   }) => {
     await page.goto("/");
-    const section = page.getByRole("region", { name: "Choisissez votre niveau d'accompagnement" });
+    const section = page.getByRole("region", { name: "Les formules Leenkey" });
+    await expect(
+      section.getByText("Vendez à votre rythme, avec l'accompagnement qui vous convient."),
+    ).toBeVisible();
     await expect(section.getByRole("heading", { level: 3 })).toHaveText([
       "Autonomie",
       "Accompagné",
@@ -479,6 +484,9 @@ test.describe("accueil (base de seed)", () => {
     // The free plan put forward, no plan « recommandé » (2026-11-04).
     await expect(cards.nth(0)).toContainText("Pour avancer à votre rythme");
     await expect(cards.nth(1)).toContainText("Pour être accompagné");
+    // The plans as worded on 2026-11-06: twelve months, never a 30-minute call.
+    await expect(cards.nth(1)).toContainText("Forfait fixe par bien · 12 mois d'accompagnement");
+    await expect(section.getByText(/call/)).toHaveCount(0);
     await expect(page.getByText("Notre recommandation")).toHaveCount(0);
     await expect(cards.nth(0).locator(".lk-gradient-border")).toHaveCount(1);
     await expect(cards.nth(1).locator(".lk-gradient-border")).toHaveCount(0);

@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-06 · Site · PR #74 · Nouvelles fiches des formules
+- Modifié : contenu des formules (table `plans`, SPEC 11 bis) repris des textes de Younes : accroches en « nous », listes, « Forfait fixe par bien · 12 mois d'accompagnement ».
+- Modifié : section des formules de l'accueil « Les formules Leenkey », avec son sous-titre ; accroches des cartes de l'accueil et de `/tarifs` alignées.
+- Modifié : Autonomie sans « call stratégique de 30 minutes » (FAQ de l'accueil et de `/faq`) ; « sans engagement de durée » remplacé par 12 mois d'accompagnement renouvelables ; chapô de `/tarifs` sans « aucune carte bancaire demandée » ; réponse « Combien de temps pour vendre ? » sans « outillons ».
+- Modifié : récapitulatif de commande : « 12 mois à partir du paiement, renouvelables à l'échéance, jamais automatiquement. »
+
 ### 2026-11-04 · L1-30c · PR #73 · Back office : dossiers et signalements
 - Ajouté : `/admin/dossiers` (résumé, recherche, filtres Ouverts, Nouveaux, En cours, Clos ; cartes en mobile, tableau à partir de 1 024 px) avec le badge « Paiement à vérifier » des paiements gardés par L1-26.
 - Ajouté : fiche `/admin/dossiers/[id]` : « Prendre en charge », « Clore le dossier », « Rouvrir le dossier », « Suivre ce dossier », notes internes, tâches de Leenkey de l'étape en cours à cocher, étapes de la vente, historique.

@@ -156,6 +156,11 @@ describe("pages of the site (L1-42)", () => {
       outro: "Le propriétaire continue de gérer sa vente et réalise ses visites.",
     });
     expect(splitDescription("")).toEqual({ intro: null, outro: null });
+    // No line before the list (Autonomie): only the line after it.
+    expect(splitDescription("\nGratuit, sans carte bancaire.")).toEqual({
+      intro: null,
+      outro: "Gratuit, sans carte bancaire.",
+    });
   });
 
   it("« Mon économie vs agence »: the fee of the example minus the price", async () => {

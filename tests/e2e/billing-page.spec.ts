@@ -78,7 +78,7 @@ test("la page formule : trois formules, la formule actuelle, le récapitulatif e
   ).toBeFocused();
   await expect(recap).toContainText("Accompagné");
   await expect(recap).toContainText(
-    "12 mois à partir du paiement, sans renouvellement automatique",
+    "12 mois à partir du paiement, renouvelables à l'échéance, jamais automatiquement",
   );
   await expect(recap).toContainText("renoncer au contrat pendant 14 jours");
   // Never ticked beforehand (L1-40, decision of 2026-10-15).

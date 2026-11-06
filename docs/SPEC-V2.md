@@ -1432,21 +1432,27 @@ Tests : Stripe CLI (`npm run stripe:listen`) en local, cartes de test documenté
 
 ### Contenu des formules (texte client, à charger dans `plans`)
 
-**Autonomie, gratuit.** « Tous les outils pour vendre vous-même. » 0 € · Sans engagement.
-Analyse et rapport de valeur du bien · Espace vendeur · Création de la fiche du bien · Création et rédaction de l'annonce avec l'IA · Publication de l'annonce sur Leenkey · Tableau de bord de suivi de la vente · Messagerie avec les acquéreurs · Agenda et demandes de visites · Accès aux informations déclarées par les acquéreurs · Réception des offres d'achat structurées · Assistant IA Leenkey pour vous accompagner dans le parcours · Checklist des étapes de la vente · Identification des documents et diagnostics à préparer.
+Textes de Younes du 2026-11-06 (`DECISIONS.md`), qui remplacent ceux du cahier des charges. Titre de la section des formules de l'accueil : « Les formules Leenkey », sous-titre « Vendez à votre rythme, avec l'accompagnement qui vous convient. »
 
-**Accompagné, 990 €.** « Vous vendez. On vous accompagne à chaque étape. » Tout Autonomie, plus :
-Conseiller Leenkey dédié · Stratégie de prix et de mise en vente · Échanges avec le conseiller pendant la commercialisation · Relecture et optimisation humaine de l'annonce · Conseils sur les photos et la présentation du bien · Suivi de la performance de l'annonce · Ajustement de la stratégie de vente si nécessaire · Accompagnement dans la gestion des acquéreurs · Conseils pour préparer les visites · Analyse des offres reçues · Analyse des informations et justificatifs de financement disponibles · Aide à la négociation · Accompagnement jusqu'à l'acceptation d'une offre.
-Le propriétaire continue de gérer sa vente et réalise ses visites.
+**Autonomie, gratuit.** « Tous les outils pour gérer votre vente vous-même. »
+Rapport de valeur de votre bien · Création et publication de votre annonce sur Leenkey avec l'aide de l'IA · Espace personnel et suivi de votre vente · Messagerie et gestion des demandes de visite · Réception des offres d'achat · Accès aux informations communiquées par les acquéreurs · Assistant IA disponible pour vous guider à chaque étape · Checklist et liste des documents à préparer.
+Gratuit, sans carte bancaire et sans obligation de passer à une formule payante. Pas d'appel avec un conseiller (le « call stratégique de 30 minutes » de la V1 n'est plus proposé).
 
-**Sérénité, 1 500 €.** « On pilote avec vous jusqu'à la signature. » Tout Accompagné, plus :
-Constitution du dossier de vente complet · Contrôle des pièces nécessaires · Identification et suivi des documents manquants · Anticipation des diagnostics nécessaires · Analyse des documents · Signalement des éventuels points de vigilance · Préparation du dossier destiné au notaire · Coordination avec le notaire · Suivi de l'avancement du dossier · Accompagnement jusqu'au compromis ou avant-contrat · Suivi des conditions suspensives · Accompagnement jusqu'à la signature définitive.
+**Accompagné, 990 € TTC.** « Vous gérez votre vente, un conseiller vous accompagne à chaque étape. » Tout Autonomie, plus :
+Un conseiller Leenkey dédié · Un regard personnalisé sur votre prix et votre stratégie de vente · Relecture et optimisation de votre annonce · Recommandations pour valoriser votre bien et préparer les visites · Suivi des performances de votre annonce et pistes d'amélioration · Accompagnement pour préparer vos échanges avec les acquéreurs · Analyse des offres reçues et des informations de financement communiquées · Aide à la décision jusqu'à l'acceptation d'une offre.
+Forfait fixe par bien · 12 mois d'accompagnement.
+
+**Sérénité, 1 500 € TTC.** « Votre vente avance, nous vous accompagnons jusqu'à la signature. » Tout Accompagné, plus :
+Préparation de votre dossier de vente : organisation des documents, diagnostics et identification des pièces manquantes · Analyse des documents : lecture des pièces disponibles et signalement des éventuels points de vigilance · Suivi jusqu'à la signature : accompagnement dans les démarches après l'acceptation de l'offre, rappels des échéances importantes et aide à la préparation des échanges avec le notaire.
+Forfait fixe par bien · 12 mois d'accompagnement.
 
 Ne jamais mentionner de « garantie juridique » ni de « relecture des actes » (exclu par le client), ni de photos professionnelles ou de visites réalisées par Leenkey (non proposées).
 
-**Durée et fin de formule** (décision du 2026-10-15 ; valeurs provisoires en attendant la fiche contractuelle de Cédric, Q30) : une formule payante couvre un bien pendant 12 mois à compter de la souscription, sans renouvellement automatique. À l'échéance, le bien repasse en Autonomie : l'annonce reste en ligne, les prestations humaines s'arrêtent. Un passage d'Accompagné à Sérénité fait repartir les 12 mois. Sans demande de démarrage immédiat à la commande, le conseiller ne contacte le client qu'à partir du 15e jour (délai de rétractation, section 11).
+**Durée et fin de formule** (décision du 2026-10-15 ; valeurs provisoires en attendant la fiche contractuelle de Cédric, Q30) : une formule payante couvre un bien pendant 12 mois à compter de la souscription, renouvelables à l'échéance, jamais automatiquement (2026-11-06 ; conditions du renouvellement : Q75). Sans renouvellement, le bien repasse en Autonomie : l'annonce reste en ligne, les prestations humaines s'arrêtent. Un passage d'Accompagné à Sérénité fait repartir les 12 mois. Sans demande de démarrage immédiat à la commande, le conseiller ne contacte le client qu'à partir du 15e jour (délai de rétractation, section 11).
 
 ### Tableau comparatif (page formules)
+
+Libellés alignés sur les fiches du 2026-11-06.
 
 | Fonctionnalité | Autonomie | Accompagné | Sérénité |
 |---|---|---|---|
@@ -1460,13 +1466,13 @@ Ne jamais mentionner de « garantie juridique » ni de « relecture des actes »
 | Réception d'offres structurées | ✓ | ✓ | ✓ |
 | Checklist des documents | ✓ | ✓ | ✓ |
 | Conseiller dédié | — | ✓ | ✓ |
-| Stratégie de vente humaine | — | ✓ | ✓ |
-| Optimisation humaine de l'annonce | — | ✓ | ✓ |
-| Analyse accompagnée des offres | — | ✓ | ✓ |
-| Aide à la négociation | — | ✓ | ✓ |
-| Constitution du dossier complet | — | — | ✓ |
-| Analyse approfondie des documents | — | — | ✓ |
-| Coordination notaire | — | — | ✓ |
+| Regard personnalisé sur le prix et la stratégie | — | ✓ | ✓ |
+| Relecture et optimisation de l'annonce | — | ✓ | ✓ |
+| Analyse des offres et des informations de financement | — | ✓ | ✓ |
+| Aide à la décision jusqu'à l'acceptation d'une offre | — | ✓ | ✓ |
+| Préparation du dossier de vente | — | — | ✓ |
+| Analyse des documents | — | — | ✓ |
+| Aide à la préparation des échanges avec le notaire | — | — | ✓ |
 | Suivi jusqu'à la signature | — | — | ✓ |
 
 ### Droits (`plan_entitlements`)
