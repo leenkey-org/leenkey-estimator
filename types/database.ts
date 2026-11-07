@@ -1645,25 +1645,27 @@ export type Database = {
       }
       ai_visitor_answer: {
         Args: {
-          p_conversation: string
-          p_input_tokens: number
-          p_content: Json
-          p_model: string
           p_visitor: string
           p_output_tokens: number
+          p_input_tokens: number
+          p_model: string
+          p_content: Json
+          p_conversation: string
+          p_key: string
         }
         Returns: boolean
       }
       ai_visitor_ask: {
         Args: {
-          p_text?: string
+          p_key: string
           p_visitor: string
-          p_conversation?: string
           p_ip: string
+          p_conversation?: string
+          p_text?: string
         }
         Returns: {
-          conversation_id: string
           status: string
+          conversation_id: string
         }[]
       }
       ai_visitor_conversation: {
@@ -1675,16 +1677,24 @@ export type Database = {
         Returns: string
       }
       ai_visitor_history: {
-        Args: { p_visitor: string; p_conversation: string }
+        Args: { p_conversation: string; p_visitor: string; p_key: string }
         Returns: {
-          role: string
-          content: Json
           created_at: string
+          content: Json
+          role: string
         }[]
+      }
+      ai_visitor_purge: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       ai_visitor_questions: {
         Args: { p_visitor?: string; p_ip?: string }
         Returns: number
+      }
+      ai_visitor_server: {
+        Args: { p_key: string }
+        Returns: undefined
       }
       audit: {
         Args: {
@@ -1802,13 +1812,13 @@ export type Database = {
         }[]
       }
       knowledge_cards_visitor: {
-        Args: Record<PropertyKey, never>
+        Args: { p_key: string }
         Returns: {
-          category: string
           question: string
           step_code: string
-          answer: string
+          category: string
           id: string
+          answer: string
         }[]
       }
       legal_accept: {

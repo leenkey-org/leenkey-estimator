@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import Link from "next/link";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
@@ -22,6 +22,7 @@ const t = fr.visitorAssistant;
 type Item = { id: string; kind: "user" | "assistant"; text: string };
 type Saved = { conversationId: string | null; items: Item[] };
 type ChatError = keyof typeof t.errors;
+type ChatState = Saved & { streaming: boolean; error: ChatError | null; draft: string };
 
 /** The conversation kept while the visitor goes from page to page (this tab only). */
 const STORAGE_KEY = "lk-visitor-assistant";
@@ -53,7 +54,7 @@ function load(): Saved {
       return { conversationId: typeof id === "string" ? id : null, items };
     }
   } catch {
-    // Storage closed (private window, blocked): a new conversation.
+    // Storage closed (private window, blocked): the conversation lives in memory.
   }
   return { conversationId: null, items: [] };
 }
@@ -62,119 +63,181 @@ function save(saved: Saved) {
   try {
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
   } catch {
-    // Not kept: the conversation lives as long as the page.
+    // Not kept in the tab: the conversation lives as long as the page.
   }
 }
 
 const ERROR_OF: Record<string, ChatError> = { quota: "quota", busy: "busy" };
 
-/** The conversation of a visitor with the assistant of the site, its field at the bottom. */
-function VisitorChat({ initial, onChange }: { initial: Saved; onChange(saved: Saved): void }) {
-  const [items, setItems] = useState<Item[]>(initial.items);
-  const [conversationId, setConversationId] = useState(initial.conversationId);
-  const [draft, setDraft] = useState("");
-  const [streaming, setStreaming] = useState(false);
-  const [error, setError] = useState<ChatError | null>(null);
-  const next = useRef(0);
-  const writing = useRef<string | null>(null);
-  const written = useRef<string[]>([]);
-  const end = useRef<HTMLDivElement>(null);
-  const field = useRef<HTMLTextAreaElement>(null);
-  const request = useRef<AbortController | null>(null);
-  const errorId = `${useId()}-error`;
+const EMPTY: ChatState = {
+  conversationId: null,
+  items: [],
+  streaming: false,
+  error: null,
+  draft: "",
+};
 
-  const newId = () => `local-${Date.now()}-${(next.current += 1)}`;
+/*
+ * The conversation lives here, outside of the panel: closed during an
+ * answer, or left for another page of the site by one of its links, the
+ * answer goes on and is there when the panel opens again. Kept in the tab
+ * (sessionStorage) once the question is sent and at the end of each answer.
+ */
+let chat: ChatState | null = null;
+const listeners = new Set<() => void>();
+let running: AbortController | null = null;
+/** The question being answered; a new conversation ignores what comes from an older one. */
+let generation = 0;
+let counter = 0;
+
+function current(): ChatState {
+  chat ??= { ...EMPTY, ...load() };
+  return chat;
+}
+
+function update(change: (state: ChatState) => Partial<ChatState>, keep = false) {
+  const state = current();
+  chat = { ...state, ...change(state) };
+  if (keep) save({ conversationId: chat.conversationId, items: chat.items });
+  for (const listener of listeners) listener();
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function useChat(): ChatState {
+  return useSyncExternalStore(subscribe, current, () => EMPTY);
+}
+
+const newId = () => `local-${Date.now()}-${(counter += 1)}`;
+
+function setDraft(draft: string) {
+  update(() => ({ draft }));
+}
+
+/** A new conversation: the one in progress is let go (its answer is still logged). */
+function startOver() {
+  generation += 1;
+  running?.abort();
+  running = null;
+  update(() => ({ ...EMPTY }), true);
+}
+
+async function send(text: string) {
+  const message = text.trim();
+  const before = current();
+  if (!message || before.streaming) return;
+  const turn = (generation += 1);
+  const live = () => turn === generation;
+  const asked = before.conversationId;
+  const question: Item = { id: newId(), kind: "user", text: message };
+  update((state) => ({
+    draft: "",
+    items: [...state.items, question],
+    streaming: true,
+    error: null,
+  }));
+  let writing: string | null = null;
+  const written: string[] = [];
+  let ended = false;
+
+  function onEvent(event: StreamEvent) {
+    if (event.type === "conversation") {
+      // Another conversation than the one asked to go on (of another day,
+      // from another address): the assistant no longer reads the earlier
+      // questions, so the thread starts again from this one.
+      update(
+        (state) => ({
+          conversationId: event.id,
+          items: asked && asked !== event.id ? [question] : state.items,
+        }),
+        true,
+      );
+    } else if (event.type === "text") {
+      const id = writing;
+      if (id) {
+        update((state) => ({
+          items: state.items.map((item) =>
+            item.id === id ? { ...item, text: item.text + event.delta } : item,
+          ),
+        }));
+      } else {
+        const created = newId();
+        writing = created;
+        written.push(created);
+        update((state) => ({
+          items: [...state.items, { id: created, kind: "assistant", text: event.delta }],
+        }));
+      }
+    } else if (event.type === "done") {
+      if (event.reason === "length" || event.reason === "limit") update(() => ({ error: "cut" }));
+    } else if (event.type === "error") {
+      if (event.error === "refused") {
+        // The text written before the model declined is not an answer.
+        const dropped = new Set(written);
+        update((state) => ({ items: state.items.filter((item) => !dropped.has(item.id)) }));
+      }
+      update(() => ({ error: event.error === "refused" ? "refused" : "unavailable" }));
+    }
+  }
+
+  const controller = new AbortController();
+  running = controller;
+  try {
+    const response = await fetch("/api/ai/visitor", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ conversationId: asked, message }),
+      signal: controller.signal,
+    });
+    if (!live()) return;
+    if (!response.ok || !response.body) {
+      const data: unknown = await response.json().catch(() => null);
+      const code =
+        typeof data === "object" && data !== null && "error" in data ? String(data.error) : "";
+      // Refused before anything was written: as before, the text kept.
+      update(
+        () => ({ error: ERROR_OF[code] ?? "unavailable", items: before.items, draft: message }),
+        true,
+      );
+      return;
+    }
+    const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+    let buffer = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done || !live()) break;
+      const { events, rest } = readEvents(buffer + value);
+      buffer = rest;
+      for (const event of events) {
+        if (event.type === "done" || event.type === "error") ended = true;
+        onEvent(event);
+      }
+    }
+    if (!ended && live()) update(() => ({ error: "unavailable" }));
+  } catch {
+    if (live() && !controller.signal.aborted) update(() => ({ error: "unavailable" }));
+  } finally {
+    if (live()) {
+      running = null;
+      update(() => ({ streaming: false }), true);
+    }
+  }
+}
+
+/** The conversation of a visitor with the assistant of the site, its field at the bottom. */
+function VisitorChat({ field }: { field: RefObject<HTMLTextAreaElement | null> }) {
+  const { items, streaming, error, draft } = useChat();
+  const end = useRef<HTMLDivElement>(null);
+  const errorId = `${useId()}-error`;
 
   useEffect(() => {
     end.current?.scrollIntoView({ block: "end" });
   }, [items, error]);
-
-  useEffect(() => {
-    if (!streaming) onChange({ conversationId, items });
-  }, [conversationId, items, streaming, onChange]);
-
-  useEffect(() => () => request.current?.abort(), []);
-
-  function onEvent(event: StreamEvent) {
-    if (event.type === "conversation") {
-      setConversationId(event.id);
-    } else if (event.type === "text") {
-      const id = writing.current;
-      if (id) {
-        setItems((current) =>
-          current.map((item) =>
-            item.id === id ? { ...item, text: item.text + event.delta } : item,
-          ),
-        );
-      } else {
-        const created = newId();
-        writing.current = created;
-        written.current.push(created);
-        setItems((current) => [...current, { id: created, kind: "assistant", text: event.delta }]);
-      }
-    } else if (event.type === "done") {
-      if (event.reason === "length" || event.reason === "limit") setError("cut");
-    } else if (event.type === "error") {
-      if (event.error === "refused") {
-        // The text written before the model declined is not an answer.
-        const dropped = new Set(written.current);
-        setItems((current) => current.filter((item) => !dropped.has(item.id)));
-      }
-      setError(event.error === "refused" ? "refused" : "unavailable");
-    }
-  }
-
-  async function send(text: string) {
-    const message = text.trim();
-    if (!message || streaming) return;
-    const before = items;
-    setDraft("");
-    setItems((current) => [...current, { id: newId(), kind: "user", text: message }]);
-    field.current?.focus();
-    setStreaming(true);
-    setError(null);
-    writing.current = null;
-    written.current = [];
-    const controller = new AbortController();
-    request.current = controller;
-    let ended = false;
-    try {
-      const response = await fetch("/api/ai/visitor", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ conversationId, message }),
-        signal: controller.signal,
-      });
-      if (!response.ok || !response.body) {
-        const data: unknown = await response.json().catch(() => null);
-        const code =
-          typeof data === "object" && data !== null && "error" in data ? String(data.error) : "";
-        setError(ERROR_OF[code] ?? "unavailable");
-        // Refused before anything was written: as before, the text kept.
-        setItems(before);
-        setDraft(message);
-        return;
-      }
-      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
-      let buffer = "";
-      for (;;) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        const { events, rest } = readEvents(buffer + value);
-        buffer = rest;
-        for (const event of events) {
-          if (event.type === "done" || event.type === "error") ended = true;
-          onEvent(event);
-        }
-      }
-      if (!ended) setError("unavailable");
-    } catch {
-      if (!controller.signal.aborted) setError("unavailable");
-    } finally {
-      writing.current = null;
-      setStreaming(false);
-    }
-  }
 
   const errorText = error ? t.errors[error] : null;
   const contactAction = error === "quota" || error === "busy" || error === "refused";
@@ -199,7 +262,11 @@ function VisitorChat({ initial, onChange }: { initial: Saved; onChange(saved: Sa
                       variant="secondary"
                       size="sm"
                       disabled={streaming}
-                      onClick={() => void send(suggestion)}
+                      onClick={() => {
+                        // The suggestions leave with the first question: the field keeps the focus.
+                        field.current?.focus();
+                        void send(suggestion);
+                      }}
                     >
                       {suggestion}
                     </Button>
@@ -287,34 +354,16 @@ function VisitorChat({ initial, onChange }: { initial: Saved; onChange(saved: Sa
  * The assistant of the public site (DECISIONS.md 2026-11-07): « Une
  * question ? » at the bottom right of the pages that show it (above the tabs
  * of a phone), a panel on the right from 768 px, the whole screen below;
- * the conversation kept from page to page in the tab (sessionStorage).
+ * the conversation kept from page to page in the tab (sessionStorage), and
+ * its answer going on when the panel is closed.
  */
 export function VisitorAssistant() {
   const [open, setOpen] = useState(false);
-  const [saved, setSaved] = useState<Saved>({ conversationId: null, items: [] });
-  const [chat, setChat] = useState(0);
-
-  const change = (next: boolean) => {
-    if (next) {
-      setSaved(load());
-      setChat((current) => current + 1);
-    }
-    setOpen(next);
-  };
-
-  // Stable: the conversation calls it after each answer.
-  const keep = useCallback((next: Saved) => {
-    setSaved(next);
-    save(next);
-  }, []);
-
-  const startOver = () => {
-    keep({ conversationId: null, items: [] });
-    setChat((current) => current + 1);
-  };
+  const { items } = useChat();
+  const field = useRef<HTMLTextAreaElement>(null);
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={change}>
+    <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       <DialogPrimitive.Trigger asChild>
         {/* On a phone, a round button above the tabs (its name read, not
             shown), not to cover the page; with its name from 768 px. */}
@@ -355,13 +404,17 @@ export function VisitorAssistant() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={startOver}
-              disabled={saved.items.length === 0}
+              onClick={() => {
+                // The field takes the focus before the button is disabled.
+                field.current?.focus();
+                startOver();
+              }}
+              disabled={items.length === 0}
             >
               {t.newConversation}
             </Button>
           </div>
-          <VisitorChat key={chat} initial={saved} onChange={keep} />
+          <VisitorChat field={field} />
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

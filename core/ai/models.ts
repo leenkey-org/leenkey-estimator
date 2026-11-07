@@ -25,11 +25,12 @@ export const CHAT_SETTINGS = {
 
 /**
  * The assistant of the public site (DECISIONS.md 2026-11-07): short answers
- * (120 words), no tool, one call per question; 2 000 tokens at most,
- * thinking included, a cap on what a question of a visitor costs.
+ * (120 words, about 250 tokens), no tool, one call per question; 1 500
+ * tokens at most, thinking included, a cap on what a question of a visitor
+ * costs (also checked by ai_visitor_answer).
  */
 export const VISITOR_SETTINGS = {
-  maxTokens: 2_000,
+  maxTokens: 1_500,
 } as const;
 
 /**

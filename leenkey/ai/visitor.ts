@@ -1,5 +1,5 @@
 import "server-only";
-import { createHash, randomBytes } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 import type Anthropic from "@anthropic-ai/sdk";
 import type { AnswerLog } from "@/core/ai/chat";
 import { isAiMock, streamModel, type ModelCall } from "@/core/ai/client";
@@ -9,6 +9,7 @@ import { answerRow } from "@/core/ai/log";
 import { MODELS } from "@/core/ai/models";
 import { faqSection, promptFile } from "@/core/ai/prompts";
 import { splitDescription } from "@/core/billing/plan-text";
+import { paidPlansOrderable } from "@/lib/config/sales";
 import { formatPrice } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import type { VisitorChatRequest } from "@/lib/validations/assistant";
@@ -20,7 +21,11 @@ import { mockVisitorModel } from "./mock";
 // prompt: core/ai/prompts/visitor.md, then the plans on sale (table plans,
 // never written in the code) and the FAQ. No tool. The question is counted
 // and written by the SQL function ai_visitor_ask (the limits of the day),
-// the answer by ai_visitor_answer: no session, no service role.
+// the answer by ai_visitor_answer: no session, no service role. The server
+// proves to them that it is the site with a key derived from CRON_SECRET
+// (the Vault holds the same secret, ai_visitor_server); the visitor and its
+// address are known by hashes keyed with another key derived from it, that
+// nobody can compute or reverse without the secret.
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -31,7 +36,23 @@ export const VISITOR_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 
 const KEY = /^[0-9a-f]{64}$/;
 
-const sha256 = (text: string) => createHash("sha256").update(text).digest("hex");
+const hmac = (key: string, text: string) => createHmac("sha256", key).update(text).digest("hex");
+
+export type VisitorSecrets = {
+  /** Given to the SQL functions: the proof that the caller is the site. */
+  serverKey: string;
+  /** Keys the hashes of the visitor and of its address. */
+  hashKey: string;
+};
+
+/** The keys of the assistant of the site, derived from CRON_SECRET; none without it. */
+export function visitorSecrets(secret = process.env.CRON_SECRET): VisitorSecrets | null {
+  if (!secret) return null;
+  return {
+    serverKey: hmac(secret, "leenkey:ai-visitor:server"),
+    hashKey: hmac(secret, "leenkey:ai-visitor:hash"),
+  };
+}
 
 /** The cookie of the visitor, or a new one (to set on the response). */
 export function visitorCookie(current: string | undefined): { value: string; isNew: boolean } {
@@ -50,28 +71,60 @@ function parisDay(now: Date): string {
 }
 
 /**
- * What the database knows of a visitor: a hash of its cookie, and a hash of
- * its address with the day (never the address itself). Without an address
- * (local, tests), the visitor stands for it.
+ * What the database knows of a visitor: a keyed hash of its cookie, and a
+ * keyed hash of its address with the day (never the address itself, and no
+ * way back to it without the secret). Without an address (local, tests), the
+ * visitor stands for it.
  */
 export function visitorKeys(
+  hashKey: string,
   cookie: string,
   address: string | null,
   now: Date = new Date(),
 ): { visitorKey: string; ipKey: string } {
   return {
-    visitorKey: sha256(`leenkey-visitor:${cookie}`),
+    visitorKey: hmac(hashKey, `visitor:${cookie}`),
     ipKey: address
-      ? sha256(`leenkey-address:${parisDay(now)}:${address}`)
-      : sha256(`leenkey-address:none:${cookie}`),
+      ? hmac(hashKey, `address:${parisDay(now)}:${addressScope(address)}`)
+      : hmac(hashKey, `address:none:${cookie}`),
   };
 }
 
-/** The address of the visitor, as the platform gives it. */
+/** The groups of an IPv6 address, in full (« :: » expanded), or null. */
+function ipv6Groups(address: string): string[] | null {
+  const halves = address.toLowerCase().split("::");
+  if (halves.length > 2) return null;
+  const head = halves[0] ? halves[0].split(":") : [];
+  const tail = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
+  const missing = 8 - head.length - tail.length;
+  if (halves.length === 1 ? missing !== 0 : missing < 1) return null;
+  const groups = [...head, ...Array<string>(missing).fill("0"), ...tail];
+  if (!groups.every((group) => /^[0-9a-f]{1,4}$/.test(group))) return null;
+  return groups.map((group) => group.replace(/^0+(?=.)/, ""));
+}
+
+/**
+ * What stands for an address in the limits: an IPv4 address itself, an IPv6
+ * one by its /64 (a home or a phone gets a whole /64: changing its last 64
+ * bits is changing nothing). An IPv4 address written as IPv6 is IPv4.
+ */
+export function addressScope(address: string): string {
+  const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(address);
+  if (mapped?.[1]) return mapped[1];
+  if (!address.includes(":")) return address;
+  const groups = ipv6Groups(address);
+  return groups ? `${groups.slice(0, 4).join(":")}::/64` : address;
+}
+
+/**
+ * The address of the visitor, as Vercel gives it (headers it sets itself,
+ * never those of the request). Elsewhere (local, tests: Next.js sets
+ * x-forwarded-for to its own address), none.
+ */
 export function clientAddress(headers: Headers): string | null {
   const real = headers.get("x-real-ip")?.trim();
   if (real) return real;
-  const forwarded = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const forwarded = headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
   return forwarded || null;
 }
 
@@ -105,9 +158,34 @@ export function plansSection(plans: readonly VisitorPlan[]): string {
   return lines.join("\n");
 }
 
+/**
+ * How a paid plan is ordered today: from the account, or, while the paid
+ * plans cannot be ordered online (production before the final CGV and the
+ * mediator, lib/config/sales.ts), by writing to us. The same for every
+ * question of an environment (the prompt stays cached).
+ */
+export function orderingSection(orderable: boolean): string {
+  return [
+    "# Commande des formules payantes",
+    "",
+    orderable
+      ? "Accompagné et Sérénité se commandent en ligne, depuis l'espace vendeur (« Choisir ma formule »), pour le bien concerné : paiement par carte bancaire sur la page sécurisée de Stripe."
+      : "Accompagné et Sérénité ne se commandent pas encore en ligne. Pour en souscrire une, la personne crée son compte et ajoute son bien (Autonomie s'applique d'office), puis nous écrit depuis la page « Contact » : nous revenons vers elle sous 48 h, 7 j/7. Ne décris pas le paiement en ligne et ne dis pas quand il ouvrira.",
+  ].join("\n");
+}
+
 /** The system prompt of the assistant of the site: its rules, the plans, the FAQ. */
-export function visitorSystemPrompt(plans: readonly VisitorPlan[], cards: readonly FaqCard[]) {
-  return [promptFile("visitor"), plansSection(plans), faqSection(cards)].join("\n\n");
+export function visitorSystemPrompt(
+  plans: readonly VisitorPlan[],
+  cards: readonly FaqCard[],
+  orderable: boolean = paidPlansOrderable(),
+) {
+  return [
+    promptFile("visitor"),
+    orderingSection(orderable),
+    plansSection(plans),
+    faqSection(cards),
+  ].join("\n\n");
 }
 
 async function readPlans(supabase: Supabase): Promise<VisitorPlan[] | null> {
@@ -129,8 +207,8 @@ async function readPlans(supabase: Supabase): Promise<VisitorPlan[] | null> {
   }));
 }
 
-async function readCards(supabase: Supabase): Promise<FaqCard[] | null> {
-  const { data, error } = await supabase.rpc("knowledge_cards_visitor");
+async function readCards(supabase: Supabase, serverKey: string): Promise<FaqCard[] | null> {
+  const { data, error } = await supabase.rpc("knowledge_cards_visitor", { p_key: serverKey });
   if (error) {
     console.error("[ai] visitor cards read failed", { code: error.code });
     return null;
@@ -167,14 +245,16 @@ export type VisitorTurnError =
  * visitor or of yesterday: a new one, whose id the stream gives back.
  */
 export async function prepareVisitorTurn(
+  serverKey: string,
   keys: { visitorKey: string; ipKey: string },
   request: VisitorChatRequest,
 ): Promise<{ ok: true; data: VisitorTurn } | { ok: false; error: VisitorTurnError }> {
   const supabase = await createClient();
-  const [plans, cards] = await Promise.all([readPlans(supabase), readCards(supabase)]);
+  const [plans, cards] = await Promise.all([readPlans(supabase), readCards(supabase, serverKey)]);
   if (!plans || !cards) return { ok: false, error: "unavailable" };
 
   const asked = await supabase.rpc("ai_visitor_ask", {
+    p_key: serverKey,
     p_visitor: keys.visitorKey,
     p_ip: keys.ipKey,
     p_conversation: request.conversationId ?? undefined,
@@ -190,6 +270,7 @@ export async function prepareVisitorTurn(
   const conversationId = outcome.conversation_id;
 
   const log = await supabase.rpc("ai_visitor_history", {
+    p_key: serverKey,
     p_visitor: keys.visitorKey,
     p_conversation: conversationId,
   });
@@ -213,6 +294,7 @@ export async function prepareVisitorTurn(
       logAnswer: async (answer) => {
         const row = answerRow(answer);
         const { data, error } = await supabase.rpc("ai_visitor_answer", {
+          p_key: serverKey,
           p_visitor: keys.visitorKey,
           p_conversation: conversationId,
           p_content: row.content,

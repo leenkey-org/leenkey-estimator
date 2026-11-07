@@ -5,11 +5,15 @@ import { expect, test, type Page } from "@playwright/test";
 // with the deterministic model (AI_MOCK=1 on the server and in the run: never
 // the real model): « Une question ? » on the home page, a question asked
 // without an account, its answer streamed, the steps to go further, the
-// conversation kept from page to page; not on the other pages. Only
-// conversations of visitors are written (and their counts of the day).
+// conversation kept from page to page and when the panel is closed during
+// an answer, the limit of the day; not on the other pages, nor for an
+// account. Only conversations of visitors are written (and their counts of
+// the day).
 
 const seeded = process.env.E2E_SEED === "1";
 const mocked = process.env.AI_MOCK === "1";
+const SEED_PASSWORD = process.env.SEED_PASSWORD;
+const answerTo = (question: string) => `Réponse de test de l'assistant du site à : ${question}`;
 
 test.skip(!seeded || !mocked, "base et modèle déterministe requis (E2E_SEED=1, AI_MOCK=1)");
 
@@ -31,7 +35,7 @@ test("une question sans compte, sa réponse, les étapes pour avancer", async ({
 
   await panel.getByRole("button", { name: "Quelle formule me convient ?" }).click();
   const thread = panel.getByRole("log", { name: "Conversation avec l'assistant Leenkey" });
-  await expect(thread.getByText("Quelle formule me convient ?")).toBeVisible();
+  await expect(thread.getByText("Quelle formule me convient ?", { exact: true })).toBeVisible();
   await expect(
     thread.getByText("Réponse de test de l'assistant du site à : Quelle formule me convient ?"),
   ).toBeVisible();
@@ -85,6 +89,69 @@ test("le visiteur est reconnu par un cookie posé à sa première question", asy
   const cookie = (await context.cookies()).find((candidate) => candidate.name === "lk_visitor");
   expect(cookie?.httpOnly).toBe(true);
   expect(cookie?.value).toMatch(/^[0-9a-f]{64}$/);
+  // Sent back to the assistant only, never with the pages.
+  expect(cookie?.path).toBe("/api/ai/visitor");
+});
+
+test("une réponse continue quand le panneau est fermé, et s'affiche à sa réouverture", async ({
+  page,
+}) => {
+  // The answer held back a moment: the panel is closed before it arrives.
+  await page.route("**/api/ai/visitor", async (route) => {
+    const response = await route.fetch();
+    await new Promise((resolve) => setTimeout(resolve, 1_500));
+    await route.fulfill({ response });
+  });
+  await page.goto("/");
+  const panel = await openPanel(page);
+  await panel.getByRole("textbox", { name: "Votre question" }).fill("Et si je ferme ?");
+  await panel.getByRole("button", { name: "Envoyer" }).click();
+  await expect(panel.getByText("L'assistant écrit…")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  const again = await openPanel(page);
+  await expect(again.getByText("Et si je ferme ?", { exact: true })).toBeVisible();
+  await expect(again.getByText(answerTo("Et si je ferme ?"))).toBeVisible();
+
+  // « Nouvelle conversation »: the field keeps the focus.
+  await again.getByRole("button", { name: "Nouvelle conversation" }).click();
+  await expect(again.getByRole("textbox", { name: "Votre question" })).toBeFocused();
+});
+
+test("au-delà des questions du jour, la question est rendue et « Nous écrire » proposé", async ({
+  page,
+}) => {
+  await page.goto("/faq");
+  const panel = await openPanel(page);
+  await panel.getByRole("button", { name: "Est-ce vraiment gratuit ?" }).click();
+  await expect(panel.getByText(answerTo("Est-ce vraiment gratuit ?"))).toBeVisible();
+  // Nine more by the same visitor (its cookie): 10 in the day.
+  for (let n = 2; n <= 10; n += 1) {
+    const response = await page.request.post("/api/ai/visitor", {
+      data: { message: `Question ${n}` },
+    });
+    expect(response.status()).toBe(200);
+    await response.body();
+  }
+  const field = panel.getByRole("textbox", { name: "Votre question" });
+  await field.fill("Une question de trop");
+  await panel.getByRole("button", { name: "Envoyer" }).click();
+  await expect(
+    panel.getByText("Vous avez posé le nombre de questions possible pour aujourd'hui", {
+      exact: false,
+    }),
+  ).toBeVisible();
+  await expect(panel.getByRole("link", { name: "Nous écrire" })).toHaveAttribute(
+    "href",
+    "/contact",
+  );
+  await expect(field).toHaveValue("Une question de trop");
+  // Refused before it was written: not in the conversation.
+  await expect(
+    panel
+      .getByRole("log", { name: "Conversation avec l'assistant Leenkey" })
+      .getByText("Une question de trop", { exact: true }),
+  ).toHaveCount(0);
 });
 
 test("seulement sur les pages qui le proposent", async ({ page }) => {
@@ -96,6 +163,42 @@ test("seulement sur les pages qui le proposent", async ({ page }) => {
     await page.goto(path);
     await expect(page.getByRole("button", { name: "Une question ?" }), path).toHaveCount(0);
   }
+});
+
+test("pas pour un compte connecté : il a l'assistant de son espace", async ({ page }) => {
+  test.skip(!SEED_PASSWORD, "comptes de seed requis (SEED_PASSWORD)");
+  await page.goto("/connexion?next=%2F");
+  await page.getByLabel("Email").fill("buyer_c@test.leenkey.fr");
+  await page.getByLabel("Mot de passe").fill(SEED_PASSWORD ?? "");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await page.waitForURL((url) => url.pathname !== "/connexion");
+  for (const path of ["/", "/tarifs"]) {
+    await page.goto(path);
+    if (new URL(page.url()).pathname === "/conditions") {
+      // The current terms, accepted once (a new version since the seed).
+      await page.getByRole("checkbox").check();
+      await page.getByRole("button", { name: "Continuer" }).click();
+      await page.waitForURL((url) => url.pathname !== "/conditions");
+      await page.goto(path);
+    }
+    await expect(page).toHaveURL((url) => url.pathname === path);
+    await expect(page.getByRole("contentinfo")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Une question ?" }), path).toHaveCount(0);
+  }
+});
+
+test("seulement depuis ce site, en JSON", async ({ request }) => {
+  const other = await request.post("/api/ai/visitor", {
+    data: { message: "Bonjour" },
+    headers: { "sec-fetch-site": "cross-site" },
+  });
+  expect(other.status()).toBe(403);
+  expect(other.headers()["set-cookie"]).toBeUndefined();
+  const text = await request.post("/api/ai/visitor", {
+    data: JSON.stringify({ message: "Bonjour" }),
+    headers: { "content-type": "text/plain" },
+  });
+  expect(text.status()).toBe(415);
 });
 
 test("une question vide ou trop longue n'est pas envoyée", async ({ request }) => {

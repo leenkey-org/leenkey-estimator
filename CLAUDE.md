@@ -163,7 +163,7 @@ EMAIL_TEST_INBOX=               # destinataire unique des emails hors prod
 EMAIL_FROM=                     # facultatif : expéditeur des emails (Leenkey <bonjour@leenkey.fr> par défaut)
 ANTHROPIC_API_KEY=
 RESEND_API_KEY=
-CRON_SECRET=                    # vérifié sur chaque route /api/cron/*
+CRON_SECRET=                    # vérifié sur chaque route /api/cron/* ; aussi la source de la clé du serveur de l'assistant du site (dérivée, DECISIONS.md 2026-11-07)
 PREPROD_USER=                   # préprod uniquement : authentification Basic dans middleware.ts
 PREPROD_PASSWORD=               # préprod uniquement ; absentes en prod = pas de protection
 AI_MODEL_FAST=                  # facultatif, surcharge de core/ai/models.ts

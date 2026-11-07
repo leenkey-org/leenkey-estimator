@@ -1101,7 +1101,7 @@ export const fr = {
       // whole notice comes with the texts of the lawyer (Q34).
       visitor: [
         "Sur le site, l'assistant Leenkey répond à vos questions sur nos formules et vous aide à souscrire, sans compte. Ses réponses viennent uniquement de nos formules et de notre FAQ ; il ne donne pas d'avis juridique, fiscal ou financier, ni de valeur pour un bien.",
-        "Vos questions et ses réponses sont conservées 30 jours pour améliorer l'assistant, sans votre nom ni votre adresse IP (nous n'en gardons qu'une empreinte, renouvelée chaque jour). N'y écrivez pas d'informations personnelles. Le nombre de questions est limité chaque jour.",
+        "Vos questions et ses réponses sont conservées 30 jours pour améliorer l'assistant, sans votre nom. Votre adresse IP n'est pas enregistrée : pour limiter le nombre de questions par jour, nous n'en gardons qu'une empreinte, calculée avec une clé secrète, et nous l'effaçons le lendemain. N'y écrivez pas d'informations personnelles.",
       ],
       contact: "Pour toute question sur l'assistant, écrivez-nous à",
     },

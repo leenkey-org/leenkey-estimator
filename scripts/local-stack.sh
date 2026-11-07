@@ -97,6 +97,12 @@ case "${1:-}" in
       sleep 1
     done
     DATABASE_URL="$DB_URL" scripts/db-migrate.sh local
+    # The secret of the jobs in the Vault too, as on the preprod (DEMARRAGE.md):
+    # the assistant of the site derives its key from it (leenkey/ai/visitor.ts).
+    psql "$DB_URL" -q -v secret="$(cat $DIR/cron_secret)" >/dev/null <<'SQL'
+select vault.create_secret(:'secret', 'cron_secret', 'CRON_SECRET of the local stack')
+ where not exists (select 1 from vault.secrets where name = 'cron_secret');
+SQL
     # The photos of the demo properties are sent by their owners, through the gateway.
     SEED_PASSWORD="$(cat $DIR/seed_password)" DATABASE_URL="$DB_URL" \
       SEED_SUPABASE_URL="http://127.0.0.1:$GATEWAY" SEED_SUPABASE_ANON_KEY="$(cat $DIR/anon_key)" \

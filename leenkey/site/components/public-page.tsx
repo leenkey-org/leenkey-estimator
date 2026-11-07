@@ -48,7 +48,7 @@ export async function PublicPage({
         <BottomNav label={fr.nav.label} items={bottomTabs("buyer", false)} />
       )}
       <RevealOnScroll />
-      {assistant ? <VisitorAssistant /> : null}
+      {assistant && !profile ? <VisitorAssistant /> : null}
     </FacadeRoot>
   );
 }

@@ -10,6 +10,7 @@ import {
   VISITOR_COOKIE_MAX_AGE,
   visitorCookie,
   visitorKeys,
+  visitorSecrets,
 } from "@/leenkey/ai/visitor";
 import { visitorChatSchema } from "@/lib/validations/assistant";
 
@@ -17,16 +18,34 @@ import { visitorChatSchema } from "@/lib/validations/assistant";
 // a visitor, without an account; the answer streams as for the assistant of
 // the accounts (app/api/ai/chat): the id of the conversation, the text as it
 // is written, the end. Before the stream, an error is JSON with its status
-// (400 invalid, 429 the limit of the visitor or of the site, 503
-// unavailable). The visitor is known by a cookie set at its first question
-// (lk_visitor, needed for the service it asks: no consent asked).
+// (400 invalid, 403 sent by another site, 415 not JSON, 429 the limit of
+// the visitor or of the site, 503 unavailable). The visitor is known by a
+// cookie set at its first question (lk_visitor, needed for the service it
+// asks: no consent asked), sent back to this route only.
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 type StreamEvent = ChatEvent | { type: "conversation"; id: string };
 
+const PATH = "/api/ai/visitor";
+
+/**
+ * Asked by a page of this site: a browser says where a request comes from
+ * (Sec-Fetch-Site), and a page of another site never makes its visitors use
+ * up the questions of the day. A client that is not a browser says nothing
+ * and is bound by the limits of its address.
+ */
+function fromThisSite(request: Request): boolean {
+  const site = request.headers.get("sec-fetch-site");
+  return site === null || site === "same-origin";
+}
+
 export async function POST(request: Request): Promise<Response> {
+  if (!fromThisSite(request)) return Response.json({ error: "forbidden" }, { status: 403 });
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+    return Response.json({ error: "invalid" }, { status: 415 });
+  }
   const jar = await cookies();
   const cookie = visitorCookie(jar.get(VISITOR_COOKIE)?.value);
   const headers = new Headers({ "cache-control": "no-store" });
@@ -35,7 +54,7 @@ export async function POST(request: Request): Promise<Response> {
       "set-cookie",
       [
         `${VISITOR_COOKIE}=${cookie.value}`,
-        "Path=/",
+        `Path=${PATH}`,
         `Max-Age=${VISITOR_COOKIE_MAX_AGE}`,
         "HttpOnly",
         "SameSite=Lax",
@@ -54,10 +73,11 @@ export async function POST(request: Request): Promise<Response> {
   }
   const parsed = visitorChatSchema.safeParse(body);
   if (!parsed.success) return json({ error: "invalid" }, 400);
-  if (!isAiConfigured()) return json({ error: "unavailable" }, 503);
+  const secrets = visitorSecrets();
+  if (!isAiConfigured() || !secrets) return json({ error: "unavailable" }, 503);
 
-  const keys = visitorKeys(cookie.value, clientAddress(request.headers));
-  const prepared = await prepareVisitorTurn(keys, parsed.data);
+  const keys = visitorKeys(secrets.hashKey, cookie.value, clientAddress(request.headers));
+  const prepared = await prepareVisitorTurn(secrets.serverKey, keys, parsed.data);
   if (!prepared.ok) {
     const status = prepared.error === "unavailable" ? 503 : 429;
     return json({ error: prepared.error }, status);
