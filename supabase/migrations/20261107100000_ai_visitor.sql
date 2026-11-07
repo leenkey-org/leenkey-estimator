@@ -40,7 +40,8 @@ alter table public.ai_conversations
   add constraint ai_conversations_visitor_check check (
     case when context = 'visitor'
       then profile_id is null and kind = 'chat' and property_id is null
-           and visitor_key ~ '^[0-9a-f]{64}$' and (ip_key is null or ip_key ~ '^[0-9a-f]{64}$')
+           and visitor_key is not null and visitor_key ~ '^[0-9a-f]{64}$'
+           and (ip_key is null or ip_key ~ '^[0-9a-f]{64}$')
       else profile_id is not null and visitor_key is null and ip_key is null
     end);
 

@@ -113,7 +113,11 @@ export function addressScope(address: string): string {
   if (mapped?.[1]) return mapped[1];
   if (!address.includes(":")) return address;
   const groups = ipv6Groups(address);
-  return groups ? `${groups.slice(0, 4).join(":")}::/64` : address;
+  if (!groups) return address;
+  // No network of its own in its first 64 bits (« ::1 », IPv4 written in
+  // hexadecimal): the address itself, never a range shared by all of them.
+  if (groups.slice(0, 4).every((group) => group === "0")) return groups.join(":");
+  return `${groups.slice(0, 4).join(":")}::/64`;
 }
 
 /**

@@ -8,7 +8,7 @@
 -- to a visitor, and no account reads a conversation of a visitor but the admin.
 begin;
 \ir _helpers.psql
-select plan(55);
+select plan(56);
 \ir _plan.psql
 
 -- The secret of the jobs, as the Vault of the preprod holds it (a test one
@@ -221,6 +221,9 @@ reset role;
 select throws_ok($$insert into ai_conversations (profile_id, context, kind, visitor_key, ip_key)
                    values (null, 'visitor', 'chat', 'x', 'y')$$,
                  '23514', null, 'table: a visitor known by its hashes only');
+select throws_ok($$insert into ai_conversations (profile_id, context, kind, visitor_key, ip_key)
+                   values (null, 'visitor', 'chat', null, null)$$,
+                 '23514', null, 'table: a conversation of a visitor always has the hash of its visitor');
 
 select * from finish();
 rollback;

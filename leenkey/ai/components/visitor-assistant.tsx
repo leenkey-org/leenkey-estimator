@@ -113,6 +113,15 @@ function useChat(): ChatState {
   return useSyncExternalStore(subscribe, current, () => EMPTY);
 }
 
+/** Whether the conversation is empty: not rendered again at each piece of an answer. */
+function useEmptyChat(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => current().items.length === 0,
+    () => true,
+  );
+}
+
 const newId = () => `local-${Date.now()}-${(counter += 1)}`;
 
 function setDraft(draft: string) {
@@ -197,6 +206,8 @@ async function send(text: string) {
     if (!live()) return;
     if (!response.ok || !response.body) {
       const data: unknown = await response.json().catch(() => null);
+      // « Nouvelle conversation » meanwhile: nothing of this question comes back.
+      if (!live()) return;
       const code =
         typeof data === "object" && data !== null && "error" in data ? String(data.error) : "";
       // Refused before anything was written: as before, the text kept.
@@ -359,7 +370,7 @@ function VisitorChat({ field }: { field: RefObject<HTMLTextAreaElement | null> }
  */
 export function VisitorAssistant() {
   const [open, setOpen] = useState(false);
-  const { items } = useChat();
+  const empty = useEmptyChat();
   const field = useRef<HTMLTextAreaElement>(null);
 
   return (
@@ -409,7 +420,7 @@ export function VisitorAssistant() {
                 field.current?.focus();
                 startOver();
               }}
-              disabled={items.length === 0}
+              disabled={empty}
             >
               {t.newConversation}
             </Button>

@@ -109,6 +109,10 @@ describe("a visitor as the database knows it", () => {
     expect(addressScope("2001:0db8:0000:0001::1")).toBe("2001:db8:0:1::/64");
     expect(addressScope("2001:db8::1")).toBe("2001:db8:0:0::/64");
     expect(addressScope("not an address")).toBe("not an address");
+    // No network in the first 64 bits: the address itself, not a range shared by all.
+    expect(addressScope("::1")).toBe("0:0:0:0:0:0:0:1");
+    expect(addressScope("::ffff:102:304")).toBe("0:0:0:0:0:ffff:102:304");
+    expect(addressScope("::ffff:102:304")).not.toBe(addressScope("::ffff:102:305"));
     const day = new Date("2026-11-07T08:00:00Z");
     const key = "k".repeat(64);
     expect(visitorKeys(key, "a".repeat(64), "2001:db8:0:1::1", day).ipKey).toBe(

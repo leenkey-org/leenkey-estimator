@@ -8,7 +8,9 @@ import { expect, test, type Page } from "@playwright/test";
 // conversation kept from page to page and when the panel is closed during
 // an answer, the limit of the day; not on the other pages, nor for an
 // account. Only conversations of visitors are written (and their counts of
-// the day).
+// the day): about 28 questions a run (mobile and desktop), so about ten runs
+// a day on the same base before the 300 of the site are used up (« très
+// sollicité »); a fresh stack, or the next day, starts again from none.
 
 const seeded = process.env.E2E_SEED === "1";
 const mocked = process.env.AI_MOCK === "1";

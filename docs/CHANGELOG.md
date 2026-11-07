@@ -18,7 +18,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Sécurité : fonctions SQL réservées au serveur du site (clé dérivée de `CRON_SECRET`, comparée au `cron_secret` du Vault) ; empreintes calculées avec une clé secrète ; route refusée aux pages d'autres sites ; cookie limité à `/api/ai/visitor`.
 - Migration : `20261107100000_ai_visitor.sql` (contexte `visitor` du journal de l'assistant, fonctions `ai_visitor_server`, `ai_visitor_ask`, `ai_visitor_history`, `ai_visitor_answer`, `knowledge_cards_visitor`, `ai_visitor_purge` chaque nuit par `pg_cron`).
 - Préprod : rien à saisir si les tâches planifiées tournent déjà (`CRON_SECRET` dans Vercel et `cron_secret` dans le Vault, `DEMARRAGE.md`).
-- Tests : RLS (`rls_ai_visitor.sql`, 55, avec les cinq comptes et un visiteur), unitaires (`tests/unit/ai/visitor.test.ts`), E2E (`visitor-assistant.spec.ts` en 390 et 1 280 px : limite atteinte, panneau fermé pendant une réponse).
+- Tests : RLS (`rls_ai_visitor.sql`, 56, avec les cinq comptes et un visiteur), unitaires (`tests/unit/ai/visitor.test.ts`), E2E (`visitor-assistant.spec.ts` en 390 et 1 280 px : limite atteinte, panneau fermé pendant une réponse).
 
 ### 2026-11-06 · Site · PR #75 · Points restants des formules
 - Modifié : CGU version 1.1 (article 5) : Autonomie gratuite sans limite de durée et sans conseiller, plus de « call stratégique » ni de « phase de lancement » ; 12 mois renouvelables à l'échéance, au tarif en vigueur, jamais automatiquement. Chaque compte accepte la nouvelle version à sa prochaine connexion.
