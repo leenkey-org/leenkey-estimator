@@ -5,6 +5,7 @@ import { BOTTOM_NAV_OFFSET } from "@/components/shared/nav-items";
 import { RevealOnScroll } from "@/components/shared/reveal-on-scroll";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { getProfile } from "@/core/auth/session";
+import { VisitorAssistant } from "@/leenkey/ai/components/visitor-assistant";
 import { SiteMobileHeader } from "@/leenkey/navigation/components/site-mobile-header";
 import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
 import { SpaceBottomNav } from "@/leenkey/navigation/components/space";
@@ -22,14 +23,17 @@ import { cn } from "@/lib/utils";
  * enter the screen (DESIGN.md 9).
  *
  * `header="night"`: the headers on the night, for a page whose first band is
- * the night (the home page, the heroes of the showcase pages).
+ * the night (the home page, the heroes of the showcase pages). `assistant`:
+ * « Une question ? », the assistant of the site (DECISIONS.md 2026-11-07).
  */
 export async function PublicPage({
   children,
   header = "light",
+  assistant = false,
 }: {
   children: ReactNode;
   header?: "light" | "night";
+  assistant?: boolean;
 }) {
   const profile = await getProfile();
   return (
@@ -44,6 +48,7 @@ export async function PublicPage({
         <BottomNav label={fr.nav.label} items={bottomTabs("buyer", false)} />
       )}
       <RevealOnScroll />
+      {assistant ? <VisitorAssistant /> : null}
     </FacadeRoot>
   );
 }

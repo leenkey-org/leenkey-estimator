@@ -19,6 +19,7 @@
 - [ ] Uploads : type MIME vérifié côté serveur, taille maximale, conversion des images (photos : format lu dans le contenu, 60 millions de pixels au plus, métadonnées retirées, `core/images/webp.ts`)
 - [ ] Limites de débit : connexion, inscription, messages, assistant IA, offres (messages : 20 par heure et par expéditeur, 5 nouvelles conversations par jour et par acquéreur, contrôlées par la base depuis L1-21, test `supabase/tests/rls_messaging.sql`)
 - [ ] Quotas IA par utilisateur actifs, journalisation dans `ai_*`
+- [x] Assistant du site sans compte (2026-11-07) : 10 questions par jour par visiteur, 30 par adresse, 300 pour le site, contrôlées en base (`ai_visitor_ask`, verrou consultatif) ; ni table ni clé de service ouvertes au visiteur ; adresse IP gardée en empreinte du jour seulement ; conversations supprimées après 30 jours. Risque résiduel accepté : les fonctions appelées directement peuvent épuiser le plafond du jour, sans appel du modèle (`DECISIONS.md` 2026-11-07)
 
 ## Secrets et infrastructure
 - [ ] Aucun secret dans le code ni dans l'historique Git (`gitleaks` ou équivalent)

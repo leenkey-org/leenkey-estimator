@@ -1600,6 +1600,10 @@ Règles métier impératives, fournies par le client (à reprendre dans `base.md
 - Description d'annonce : `MODELS.fast` avec `listing-description.md`, entrée = caractéristiques + atouts + notes libres du vendeur. Règles : factuel, 800 à 1 100 caractères, pas de superlatifs (« exceptionnel », « rare », « coup de cœur »), pas d'information inventée.
 - Pré-analyse admin : calculée à la soumission (`listing.submitted`), stockée dans `listings` (colonne `review jsonb` à ajouter) : `{ completeness: 0-100, price_gap_pct, photos_count, issues: string[], verdict: 'ok'|'check' }`. Les règles de complétude et d'écart sont **calculées en code**, le modèle ne rédige que la phrase de synthèse.
 
+### Assistant du site public
+
+Ajout du 2026-11-07 (`DECISIONS.md`), hors cahier des charges : un visiteur sans compte pose ses questions depuis « Une question ? » (accueil, `/tarifs`, `/faq`, `/concept`, `/vendre`) et l'assistant l'aide à choisir sa formule et à souscrire. Prompt `core/ai/prompts/visitor.md`, formules lues dans `plans`, toute la FAQ, aucun outil, `MODELS.fast`, 2 000 tokens au plus par réponse. Route `/api/ai/visitor` (streaming, sans session) ; limites du jour : 10 questions par visiteur, 30 par adresse, 300 pour le site (`AI_VISITOR_LIMITS`, contrôlées par `ai_visitor_ask`) ; conversations journalisées sans compte (`ai_conversations.context = 'visitor'`), supprimées après 30 jours.
+
 ### Base de connaissances
 
 - Source principale : `supabase/seed/knowledge/faq-cedric-v2.md`, rédigée par le client (73 fiches). Une fiche par section `## Question`, métadonnées en commentaire HTML sur la ligne suivante (`audience`, `category`, `step_code`).

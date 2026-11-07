@@ -9,5 +9,13 @@ export const metadata: Metadata = { title: t.metaTitle };
 // L1-36: AI notice of the SPEC. TODO(client): final text from Cédric's
 // lawyer (Q34).
 export default function AiNoticePage() {
-  return <LegalPage title={t.title} lead={t.lead} contact={t.contact} />;
+  return (
+    <LegalPage title={t.title} lead={t.lead} contact={t.contact}>
+      {t.visitor.map((paragraph) => (
+        <p key={paragraph} className="text-lk-body text-pretty text-lk-ink-2">
+          {paragraph}
+        </p>
+      ))}
+    </LegalPage>
+  );
 }
