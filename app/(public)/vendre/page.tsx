@@ -41,7 +41,7 @@ export default async function SellStartPage() {
   const profile = await getProfile();
   const resume = await hasSale(profile?.id ?? null);
   return (
-    <PublicPage>
+    <PublicPage assistant>
       <MarketingSection id="vendre" title={t.title} titleAs="h1" lead={t.lead}>
         {resume ? (
           <InlineAlert

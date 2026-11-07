@@ -55,6 +55,8 @@ export type TurnInput = {
   log: TurnLog;
   emit(event: ChatEvent): void;
   signal?: AbortSignal;
+  /** Tokens of an answer at most, thinking included (CHAT_SETTINGS by default). */
+  maxTokens?: number;
 };
 
 /** The tools as the model reads them, by name: the same bytes at each call. */
@@ -81,11 +83,12 @@ export function chatRequest(
   system: string,
   tools: readonly AnyAiTool[],
   messages: Anthropic.MessageParam[],
+  maxTokens: number = CHAT_SETTINGS.maxTokens,
 ): ModelRequest {
   const definitions = toolDefinitions(tools);
   return {
     model,
-    max_tokens: CHAT_SETTINGS.maxTokens,
+    max_tokens: maxTokens,
     // One breakpoint at the end of the prompt (the tools come before it),
     // which the conversation does not move; the conversation itself cached
     // by the automatic breakpoint, which follows it.
@@ -168,14 +171,14 @@ async function prepareCall(
 }
 
 export async function runTurn(input: TurnInput): Promise<void> {
-  const { model, callModel, system, tools, ctx, log, emit, signal } = input;
+  const { model, callModel, system, tools, ctx, log, emit, signal, maxTokens } = input;
   let messages = input.messages;
   let retried = false;
 
   for (let step = 0; step < CHAT_SETTINGS.maxSteps; step += 1) {
     let message: Anthropic.Message;
     try {
-      message = await callModel(chatRequest(model, system, tools, messages), {
+      message = await callModel(chatRequest(model, system, tools, messages, maxTokens), {
         onText: (delta) => emit({ type: "text", delta }),
         signal,
       });

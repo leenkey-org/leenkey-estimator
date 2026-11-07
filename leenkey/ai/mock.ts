@@ -195,6 +195,17 @@ export const mockModel: ModelCall = async (request, { onText }) => {
   return say(`Réponse de test de l'assistant à : ${asked.slice(0, 80)}`);
 };
 
+/**
+ * The assistant of the public site in the tests (DECISIONS.md 2026-11-07):
+ * one sentence, whatever is asked; never a tool (it has none).
+ */
+export const mockVisitorModel: ModelCall = async (request, { onText }) => {
+  const asked = currentTurn(request.messages).text;
+  const answer = `Réponse de test de l'assistant du site à : ${asked.slice(0, 80)}`;
+  onText(answer);
+  return message([text(answer)], "end_turn");
+};
+
 /** The reply suggested by the model of the tests (messaging, L1-29). */
 export const MOCK_REPLY =
   "Bonjour, merci pour votre message. Je vérifie ce point et je reviens vers vous rapidement avec une réponse précise.";

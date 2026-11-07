@@ -1600,6 +1600,10 @@ Règles métier impératives, fournies par le client (à reprendre dans `base.md
 - Description d'annonce : `MODELS.fast` avec `listing-description.md`, entrée = caractéristiques + atouts + notes libres du vendeur. Règles : factuel, 800 à 1 100 caractères, pas de superlatifs (« exceptionnel », « rare », « coup de cœur »), pas d'information inventée.
 - Pré-analyse admin : calculée à la soumission (`listing.submitted`), stockée dans `listings` (colonne `review jsonb` à ajouter) : `{ completeness: 0-100, price_gap_pct, photos_count, issues: string[], verdict: 'ok'|'check' }`. Les règles de complétude et d'écart sont **calculées en code**, le modèle ne rédige que la phrase de synthèse.
 
+### Assistant du site public
+
+Ajout du 2026-11-07 (`DECISIONS.md`), hors cahier des charges : un visiteur sans compte (non connecté) pose ses questions depuis « Une question ? » (accueil, `/tarifs`, `/faq`, `/concept`, `/vendre`) et l'assistant l'aide à choisir sa formule et à souscrire. Prompt `core/ai/prompts/visitor.md`, puis la commande des formules payantes selon `paidPlansOrderable()`, les formules lues dans `plans` et toute la FAQ ; aucun outil, `MODELS.fast`, 1 500 tokens au plus par réponse. Route `/api/ai/visitor` (streaming, sans session, requêtes de ce site seulement) ; fonctions SQL réservées au serveur du site (clé dérivée de `CRON_SECRET`, `ai_visitor_server`) ; limites du jour : 10 questions par visiteur, 30 par adresse (IPv6 par /64), 300 pour le site (`AI_VISITOR_LIMITS`, contrôlées par `ai_visitor_ask`) ; conversations journalisées sans compte (`ai_conversations.context = 'visitor'`), empreinte de l'adresse effacée le lendemain, conversations supprimées après 30 jours (`ai_visitor_purge`, section 19).
+
 ### Base de connaissances
 
 - Source principale : `supabase/seed/knowledge/faq-cedric-v2.md`, rédigée par le client (73 fiches). Une fiche par section `## Question`, métadonnées en commentaire HTML sur la ligne suivante (`audience`, `category`, `step_code`).
@@ -1944,8 +1948,9 @@ Voir `CLAUDE.md` section 13. Détail :
 | `/api/cron/visit-feedback` | `0 8 * * *` | Demandes de retour J+1 |
 | `/api/cron/send-notification-emails` | `*/5 * * * *` | Envoi des emails de notification en attente (regroupement) |
 | `/api/cron/anonymize-deleted` | `0 2 * * 0` | Anonymisation des comptes supprimés depuis plus de 30 jours |
+| *(en base, sans route)* `purge-visitor-assistant` | `17 3 * * *` | Assistant du site (`DECISIONS.md` 2026-11-07) : `ai_visitor_purge()` efface l'empreinte des adresses des jours passés et supprime les conversations des visiteurs de plus de 30 jours |
 
-Tous protégés par `CRON_SECRET`, idempotents, journalisés. **Déclenchement** (décision du 2026-10-08) : par Supabase `pg_cron` + `pg_net` (requête HTTPS vers la route avec l'en-tête `Authorization: Bearer <CRON_SECRET>`), pas par Vercel Cron, tant que l'équipe Vercel est en plan Hobby. Le secret est stocké dans Supabase Vault.
+Tous protégés par `CRON_SECRET` (la tâche en base n'appelle aucune route), idempotents, journalisés. **Déclenchement** (décision du 2026-10-08) : par Supabase `pg_cron` + `pg_net` (requête HTTPS vers la route avec l'en-tête `Authorization: Bearer <CRON_SECRET>`), pas par Vercel Cron, tant que l'équipe Vercel est en plan Hobby. Le secret est stocké dans Supabase Vault.
 
 ---
 

@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export default async function PricingPage() {
   const plans = await activePlans();
   return (
-    <PublicPage header="night">
+    <PublicPage assistant header="night">
       <MarketingSection
         id="tarifs"
         titleAs="h1"

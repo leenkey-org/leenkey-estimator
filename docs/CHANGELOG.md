@@ -12,6 +12,14 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-07 · Site · PR #76 · Assistant du site public
+- Ajouté : « Une question ? » sur l'accueil, `/tarifs`, `/faq`, `/concept` et `/vendre`, pour un visiteur non connecté : il pose ses questions, l'assistant l'aide à choisir sa formule et à souscrire (formules lues dans la table `plans`, FAQ, aucun outil), avec « Valoriser mon bien », « Voir les formules », « Créer mon compte ».
+- Ajouté : limites du jour (10 questions par visiteur, 30 par adresse, IPv6 par /64, 300 pour le site), conversations sans compte gardées 30 jours, empreinte de l'adresse effacée le lendemain, mentions aux pages « Intelligence artificielle » et « Cookies » (`lk_visitor`) ; la commande des formules payantes décrite selon qu'elle est ouverte en ligne ou non.
+- Sécurité : fonctions SQL réservées au serveur du site (clé dérivée de `CRON_SECRET`, comparée au `cron_secret` du Vault) ; empreintes calculées avec une clé secrète ; route refusée aux pages d'autres sites ; cookie limité à `/api/ai/visitor`.
+- Migration : `20261107100000_ai_visitor.sql` (contexte `visitor` du journal de l'assistant, fonctions `ai_visitor_server`, `ai_visitor_ask`, `ai_visitor_history`, `ai_visitor_answer`, `knowledge_cards_visitor`, `ai_visitor_purge` chaque nuit par `pg_cron`).
+- Préprod : rien à saisir si les tâches planifiées tournent déjà (`CRON_SECRET` dans Vercel et `cron_secret` dans le Vault, `DEMARRAGE.md`).
+- Tests : RLS (`rls_ai_visitor.sql`, 56, avec les cinq comptes et un visiteur), unitaires (`tests/unit/ai/visitor.test.ts`), E2E (`visitor-assistant.spec.ts` en 390 et 1 280 px : limite atteinte, panneau fermé pendant une réponse).
+
 ### 2026-11-06 · Site · PR #75 · Points restants des formules
 - Modifié : CGU version 1.1 (article 5) : Autonomie gratuite sans limite de durée et sans conseiller, plus de « call stratégique » ni de « phase de lancement » ; 12 mois renouvelables à l'échéance, au tarif en vigueur, jamais automatiquement. Chaque compte accepte la nouvelle version à sa prochaine connexion.
 - Modifié : accueil, étape « Signez » (« Accompagné ou Sérénité ») ; FAQ « Et si je bloque en cours de route ? » (le conseiller avec une formule payante seulement) ; `/concept`, « Un accompagnement humain » sans « questions juridiques » ni « coordination avec le notaire ».

@@ -25,6 +25,19 @@ export const chatRequestSchema = z.union([
 
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
 
+/** A question of a visitor of the public site: 500 characters at most (also in SQL). */
+export const VISITOR_MESSAGE_MAX = 500;
+
+/** A question to the assistant of the public site (no account, no property). */
+export const visitorChatSchema = z
+  .object({
+    conversationId: z.string().uuid().nullish(),
+    message: z.string().trim().min(1).max(VISITOR_MESSAGE_MAX),
+  })
+  .strict();
+
+export type VisitorChatRequest = z.infer<typeof visitorChatSchema>;
+
 /** A change proposed by the assistant, confirmed or cancelled by the person. */
 export const toolCallSchema = z.object({
   conversationId: z.string().uuid(),

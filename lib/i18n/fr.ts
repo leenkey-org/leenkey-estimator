@@ -1037,6 +1037,21 @@ export const fr = {
           duration: "6 mois",
         },
         {
+          name: "lk_visitor",
+          provider: "Leenkey",
+          purpose:
+            "Compter vos questions à l'assistant du site et retrouver votre conversation, une fois que vous lui avez écrit",
+          kind: "necessary",
+          duration: "30 jours",
+        },
+        {
+          name: "lk-visitor-assistant",
+          provider: "Leenkey (stockage de votre navigateur)",
+          purpose: "Garder votre conversation avec l'assistant du site d'une page à l'autre",
+          kind: "necessary",
+          duration: "Jusqu'à la fermeture de l'onglet",
+        },
+        {
           name: "lk_vues",
           provider: "Leenkey",
           purpose: "Compter une seule visite par jour et par annonce, sans donnée personnelle",
@@ -1082,6 +1097,12 @@ export const fr = {
       metaTitle: "Intelligence artificielle · Leenkey",
       title: "Intelligence artificielle",
       lead: "Comment l'assistant Leenkey utilise l'intelligence artificielle, et ce qu'il ne fait jamais seul.",
+      // The assistant of the public site (DECISIONS.md 2026-11-07); the
+      // whole notice comes with the texts of the lawyer (Q34).
+      visitor: [
+        "Sur le site, l'assistant Leenkey répond à vos questions sur nos formules et vous aide à souscrire, sans compte. Ses réponses viennent uniquement de nos formules et de notre FAQ ; il ne donne pas d'avis juridique, fiscal ou financier, ni de valeur pour un bien.",
+        "Vos questions et ses réponses sont conservées 30 jours pour améliorer l'assistant, sans votre nom. Votre adresse IP n'est pas enregistrée : pour limiter le nombre de questions par jour, nous n'en gardons qu'une empreinte, calculée avec une clé secrète, et nous l'effaçons le lendemain. N'y écrivez pas d'informations personnelles.",
+      ],
       contact: "Pour toute question sur l'assistant, écrivez-nous à",
     },
     reporting: {
@@ -2519,6 +2540,47 @@ export const fr = {
     back: "Retour à Ma vente",
     unavailable:
       "Votre conversation avec l'assistant n'a pas pu être lue. Réessayez dans quelques instants.",
+  },
+  // The assistant of the public site (DECISIONS.md 2026-11-07): a visitor
+  // without an account, helped to choose a plan and to subscribe.
+  visitorAssistant: {
+    open: "Une question ?",
+    title: "Assistant Leenkey",
+    close: "Fermer l'assistant",
+    newConversation: "Nouvelle conversation",
+    thread: "Conversation avec l'assistant Leenkey",
+    you: "Vous",
+    name: "Assistant Leenkey",
+    intro:
+      "Bonjour. Je réponds à vos questions sur Leenkey et je vous aide à choisir la formule adaptée à votre vente, puis à la souscrire.",
+    suggestionsLabel: "Questions fréquentes",
+    suggestions: [
+      "Est-ce vraiment gratuit ?",
+      "Quelle formule me convient ?",
+      "Comment souscrire à une formule ?",
+    ],
+    next: {
+      label: "Pour avancer",
+      valuation: "Valoriser mon bien",
+      plans: "Voir les formules",
+      signUp: "Créer mon compte",
+    },
+    disclaimer:
+      "Réponses générales, sans avis juridique. N'écrivez pas d'informations personnelles.",
+    howItWorks: "Comment fonctionne l'assistant",
+    field: "Votre question",
+    send: "Envoyer",
+    writing: "L'assistant écrit…",
+    errors: {
+      unavailable: "L'assistant ne répond pas pour le moment. Réessayez dans quelques instants.",
+      refused:
+        "L'assistant ne peut pas répondre à cette question. Écrivez-nous : nous vous répondons sous 48 h, 7 j/7.",
+      quota:
+        "Vous avez posé le nombre de questions possible pour aujourd'hui. Écrivez-nous : nous vous répondons sous 48 h, 7 j/7.",
+      busy: "L'assistant est très sollicité aujourd'hui. Écrivez-nous : nous vous répondons sous 48 h, 7 j/7.",
+      cut: "La réponse de l'assistant a été interrompue. Reformulez votre question si besoin.",
+      contact: "Nous écrire",
+    },
   },
   // Public site in V2 (lib/i18n/site.ts).
   site,

@@ -29,3 +29,16 @@ export function dailyLimit(
   if (roles.includes("buyer")) limits.push(AI_DAILY_LIMITS.buyer);
   return limits.length === 0 ? 0 : Math.max(...limits);
 }
+
+/**
+ * The assistant of the public site (DECISIONS.md 2026-11-07), without an
+ * account: questions per day per visitor (a cookie), per address (several
+ * people behind one), and for the whole site, which caps what it costs.
+ * Counted in SQL (ai_visitor_ask, supabase/migrations/20261107100000): the
+ * same numbers there (tests/unit/ai/visitor.test.ts).
+ */
+export const AI_VISITOR_LIMITS = {
+  perVisitor: 10,
+  perAddress: 30,
+  site: 300,
+} as const;

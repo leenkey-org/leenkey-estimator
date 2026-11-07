@@ -149,11 +149,10 @@ export function logRequest(supabase: Supabase, conversationId: string, text: str
   });
 }
 
-export function logAnswer(supabase: Supabase, conversationId: string, answer: AnswerLog) {
+/** An answer as the log keeps it: its blocks, the model and the tokens billed in full. */
+export function answerRow(answer: AnswerLog) {
   const { usage } = answer;
-  return insert(supabase, {
-    conversation_id: conversationId,
-    role: "assistant",
+  return {
     content: {
       type: "assistant",
       blocks: answer.blocks as Json,
@@ -162,10 +161,18 @@ export function logAnswer(supabase: Supabase, conversationId: string, answer: An
         cacheReadInputTokens: usage.cache_read_input_tokens ?? 0,
         cacheCreationInputTokens: usage.cache_creation_input_tokens ?? 0,
       },
-    },
+    } satisfies Json,
     model: answer.model,
     input_tokens: usage.input_tokens,
     output_tokens: usage.output_tokens,
+  };
+}
+
+export function logAnswer(supabase: Supabase, conversationId: string, answer: AnswerLog) {
+  return insert(supabase, {
+    conversation_id: conversationId,
+    role: "assistant",
+    ...answerRow(answer),
   });
 }
 

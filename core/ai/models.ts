@@ -24,6 +24,16 @@ export const CHAT_SETTINGS = {
 } as const;
 
 /**
+ * The assistant of the public site (DECISIONS.md 2026-11-07): short answers
+ * (120 words, about 250 tokens), no tool, one call per question; 1 500
+ * tokens at most, thinking included, a cap on what a question of a visitor
+ * costs (also checked by ai_visitor_answer).
+ */
+export const VISITOR_SETTINGS = {
+  maxTokens: 1_500,
+} as const;
+
+/**
  * A suggestion (L1-29): a reply in the messaging, a description of a
  * listing; one call, not streamed, adaptive thinking at low effort. 4 000
  * tokens at most, thinking included: a description is about 300.
