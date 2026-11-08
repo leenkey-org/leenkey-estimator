@@ -51,8 +51,10 @@ export default async function PropertyStepsPage({ params }: Props) {
       >
         {sale.steps.map((step, index) => {
           const current = step.code === sale.currentStepCode;
-          const past = currentIndex >= 0 && index < currentIndex;
           const count = stepCount(step);
+          // « Terminée »: a step passed with all its tasks done (a task skipped
+          // on the way stays to do, DECISIONS 2026-10-26).
+          const finished = currentIndex >= 0 && index < currentIndex && count.done === count.total;
           // Ticked by hand up to the current step: the later ones wait for it.
           const lines = taskLines(step, property, editable && stepTickable(sale, step));
           return (
@@ -76,7 +78,7 @@ export default async function PropertyStepsPage({ params }: Props) {
                   {t.step(index + 1, sale.steps.length, step.title)}
                 </h3>
                 <span className="text-lk-caption tabular text-lk-ink-3">
-                  {current ? `${t.steps.current} · ` : past ? `${t.steps.done} · ` : ""}
+                  {current ? `${t.steps.current} · ` : finished ? `${t.steps.done} · ` : ""}
                   {t.steps.count(count.done, count.total)}
                 </span>
               </div>

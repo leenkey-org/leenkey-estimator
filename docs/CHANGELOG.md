@@ -13,7 +13,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 -->
 
 ### 2026-11-08 · Vendeur · PR #78 · Étapes de la vente à l'horizontale
-- Modifié : onglet « Étapes » de la fiche du bien : les étapes côte à côte dans une rangée qui défile sur le côté (arrêt sur chaque carte), ouverte sur l'étape en cours ; « Terminée » sur les étapes passées ; « Étape précédente » / « Étape suivante » à partir de 768 px (demande de Younes).
+- Modifié : onglet « Étapes » de la fiche du bien : les étapes côte à côte dans une rangée qui défile sur le côté (arrêt sur chaque carte), ouverte sur l'étape en cours ; « Terminée » sur les étapes passées dont toutes les tâches sont faites ; « Voir l'étape précédente » / « Voir l'étape suivante » à partir de 768 px (demande de Younes).
 - Ajouté : `HorizontalScroller` (`components/shared/horizontal-scroller.tsx`), rangée nommée qui prend le focus (flèches du clavier).
 - Tests : E2E (`seller-dashboard.spec.ts` : ouverture sur l'étape en cours, boutons à partir de 768 px, rien de plus large que l'écran, axe).
 

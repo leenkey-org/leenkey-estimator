@@ -149,15 +149,14 @@ test("une vente en ligne : en-tête, prochaine action, chiffres, à faire, conve
     ),
   ).toBe(true);
   if ((page.viewportSize()?.width ?? 0) >= 768) {
-    // From 768 px, « Étape suivante » and « Étape précédente » turn it.
-    await page.getByRole("button", { name: "Étape suivante" }).click();
-    await expect(steps.nth(3)).toBeInViewport();
-    // The one before shows at the edge, the one before it no longer.
+    // From 768 px, « Voir l'étape suivante » and « … précédente » turn it:
+    // the step before the previous one leaves the row, then comes back.
+    await page.getByRole("button", { name: "Voir l'étape suivante" }).click();
     await expect(steps.nth(1)).not.toBeInViewport();
-    await page.getByRole("button", { name: "Étape précédente" }).click();
-    await expect(steps.nth(2)).toBeInViewport();
+    await page.getByRole("button", { name: "Voir l'étape précédente" }).click();
+    await expect(steps.nth(1)).toBeInViewport();
   } else {
-    await expect(page.getByRole("button", { name: "Étape suivante" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Voir l'étape suivante" })).toBeHidden();
   }
   // The later steps wait for this one: their tasks by hand, nothing to tick yet.
   const notary = steps.nth(4);

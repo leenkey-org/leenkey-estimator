@@ -40,18 +40,26 @@ export function HorizontalScroller({
   const measure = useCallback(() => {
     const row = track.current;
     if (!row) return;
-    setEdges({
-      atStart: row.scrollLeft <= 4,
-      atEnd: row.scrollLeft + row.clientWidth >= row.scrollWidth - 4,
-    });
+    const atStart = row.scrollLeft <= 4;
+    const atEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 4;
+    // The same edges: no new render at each frame of a scroll.
+    setEdges((edges) =>
+      edges.atStart === atStart && edges.atEnd === atEnd ? edges : { atStart, atEnd },
+    );
   }, []);
 
-  // Opens on the card given, at once (no motion on arrival).
+  // Opens on the card given, at once (no motion on arrival). When the card
+  // given changes while the person acts in the row (a task ticked that ends
+  // the current step), the row stays where they are.
   useEffect(() => {
     const row = track.current;
+    if (row?.contains(document.activeElement)) {
+      measure();
+      return;
+    }
     const list = row?.firstElementChild;
     const card = list?.children[start];
-    if (row && card instanceof HTMLElement && start > 0) {
+    if (row && card instanceof HTMLElement) {
       // The card at the start of the row: where it sits in the row, less the
       // room kept before a card that stops (scroll-padding).
       const style = getComputedStyle(row);
@@ -111,11 +119,14 @@ export function HorizontalScroller({
         onScroll={measure}
         className={cn(
           "snap-x snap-mandatory overflow-x-auto pb-2 [scrollbar-width:thin]",
-          "rounded-lk-md focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
+          // The ring inside the row: at the edges of a phone it would be cut.
+          "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
           className,
         )}
       >
-        <ol className="relative flex gap-3 md:gap-4">
+        {/* The room after the last card (the end padding of a scrolled row
+            does not count): the gap plus 8, then 24, as before the first. */}
+        <ol className="relative flex gap-3 after:w-2 after:shrink-0 md:gap-4 md:after:w-6">
           {Children.toArray(children).map((child, index) => (
             <li key={index} className={cn("flex shrink-0 snap-start", itemClassName)}>
               {child}
