@@ -9,7 +9,13 @@ import { ListingToReviewEmail, listingToReviewSubject } from "@/emails/listing-s
 import { ListingsToReviewEmail, listingsToReviewSubject } from "@/emails/listings-to-review";
 import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
 import { ReportsToReviewEmail, reportsToReviewSubject } from "@/emails/reports-to-review";
-import { formatPrice } from "@/lib/format";
+import { formatAmount, formatPrice } from "@/lib/format";
+import { PlanEndingEmail, planEndingSubject } from "@/emails/plan-ending";
+import {
+  WithdrawalsToProcessEmail,
+  withdrawalsToProcessSubject,
+} from "@/emails/withdrawals-to-process";
+import { legalDate, legalDateTime } from "@/leenkey/billing/withdrawal";
 import { fr } from "@/lib/i18n/fr";
 import { roleLabels } from "./catalog";
 import { absoluteUrl, siteUrl } from "@/lib/site";
@@ -30,6 +36,10 @@ const POLICIES: Record<string, EmailPolicy> = {
   "report.created": { audience: "team", throttleMinutes: 20 },
   // A new account, its email confirmed (2026-11-08): the first at once, the next ones together.
   "account.created": { audience: "team", throttleMinutes: 20 },
+  // A withdrawal to refund (L1-40): the first at once, the next ones together.
+  "plan.withdrawn": { audience: "team", throttleMinutes: 20 },
+  // A plan ending within 30 days (L1-40): once per plan (its own group).
+  "plan.ending": { audience: "recipient", throttleMinutes: 60 },
 };
 
 export function emailPolicy(type: string): EmailPolicy | null {
@@ -187,6 +197,55 @@ async function accountsCreated(email: PlannedEmail): Promise<RenderedEmail | nul
   );
 }
 
+/** Withdrawals to refund (L1-40), to the team: one line each. */
+async function withdrawalsToProcess(email: PlannedEmail): Promise<RenderedEmail | null> {
+  if (email.items.length === 0) return null;
+  const items = email.items.map((item) => {
+    const requested = text(item.data.requested_at);
+    // A passage renounced with the plan it replaced: both are refunded.
+    const amount =
+      Number(item.data.amount_paid_cents) + (Number(item.data.replaced_amount_paid_cents) || 0);
+    const replaced = text(item.data.replaced_plan_name);
+    const plan = text(item.data.plan_name) ?? "";
+    return {
+      planName: replaced ? `${plan} + ${replaced}` : plan,
+      property: text(item.data.reference) ?? "",
+      amount: formatAmount(Number.isFinite(amount) ? amount : 0),
+      requestedAt: requested ? legalDateTime(requested) : "",
+      earlyStart: item.data.early_start === true,
+    };
+  });
+  return rendered(
+    withdrawalsToProcessSubject(items),
+    WithdrawalsToProcessEmail({
+      items,
+      casesUrl: absoluteUrl("/admin/dossiers"),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
+/** A plan ending within 30 days (L1-40), to its owner; an answer goes to Leenkey. */
+async function planEnding(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  const endsAt = text(last?.data.ends_at);
+  if (!last || !endsAt) return null;
+  const planName = text(last.data.plan_name) ?? "";
+  const endsOn = legalDate(endsAt);
+  return rendered(
+    planEndingSubject(planName, endsOn),
+    PlanEndingEmail({
+      firstName: email.firstName,
+      planName,
+      property: text(last.data.reference) ?? "",
+      endsOn,
+      planUrl: absoluteUrl(last.link ?? "/vendeur/formule"),
+      siteUrl: siteUrl(),
+    }),
+    fr.legal.contactEmail,
+  );
+}
+
 /** The email of a group, ready to leave; null when its type has none. */
 export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEmail | null> {
   switch (email.type) {
@@ -196,6 +255,10 @@ export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEm
       return listingsToReview(email);
     case "report.created":
       return reportsToReview(email);
+    case "plan.withdrawn":
+      return withdrawalsToProcess(email);
+    case "plan.ending":
+      return planEnding(email);
     case "account.created":
       return accountsCreated(email);
     default:

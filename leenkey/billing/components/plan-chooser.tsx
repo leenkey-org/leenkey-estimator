@@ -53,6 +53,7 @@ const ERRORS: Record<StartCheckoutError, string> = {
   not_found: t.errors.notFound,
   sold: t.errors.sold,
   current: t.errors.current,
+  withdrawn: t.errors.withdrawn,
   lower: t.errors.lower,
   closed: t.errors.closed,
   unavailable: t.errors.unavailable,

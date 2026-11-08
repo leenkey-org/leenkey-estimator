@@ -43,3 +43,22 @@ export type CheckoutMetadata = z.infer<typeof checkoutMetadataSchema>;
 
 /** The session of a return from Stripe (`?session_id=`), read to know whether it is active. */
 export const sessionIdSchema = z.string().regex(/^cs_[A-Za-z0-9_]{1,200}$/);
+
+/** « Renoncer au contrat » (L1-40): the subscription the seller renounces. */
+export const withdrawSchema = z.object({ subscriptionId: z.string().uuid() });
+
+/** The answer of subscription_withdraw (supabase/migrations/20261108180000_plan_withdrawal_term.sql). */
+export const withdrawalResultSchema = z.object({
+  status: z.enum(["recorded", "already"]),
+  requested_at: z.string(),
+  plan_name: z.string().nullable(),
+  reference: z.string().nullable(),
+  activated_at: z.string(),
+  amount_paid_cents: z.number().int(),
+  early_start: z.boolean(),
+  property_id: z.string().uuid(),
+  // The plan a passage replaced, renounced with it while in its own period.
+  replaced_plan_name: z.string().nullable().optional(),
+  replaced_amount_paid_cents: z.number().int().optional(),
+  replaced_activated_at: z.string().optional(),
+});

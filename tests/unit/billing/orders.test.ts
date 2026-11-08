@@ -240,18 +240,52 @@ describe("emails of a plan", () => {
     planName: "Accompagné",
     property: "LK-0009",
     amount: "990 €",
+    orderedOn: "2 novembre 2026",
+    endsOn: "2 novembre 2027",
+    earlyStart: false,
+    features: ["Un conseiller Leenkey dédié", "Relecture et optimisation de votre annonce"],
+    cguVersion: "28 juin 2026",
+    cgvVersion: "17 octobre 2026",
+    withdrawalUntil: "16 novembre 2026",
+    mediator: null,
     planUrl: "https://leenkey.fr/vendeur/formule",
     siteUrl: "https://leenkey.fr",
   };
 
+  it("sums up the order on a durable medium (L1-40)", async () => {
+    expect(planActivatedSubject("Accompagné", "LK-0009")).toBe(
+      "Confirmation de votre souscription Leenkey · Accompagné · LK-0009",
+    );
+    const text = await render(
+      PlanActivatedEmail({ ...seller, contactFrom: "mardi 17 novembre" }),
+      EMAIL_PLAIN_TEXT,
+    );
+    expect(text).toMatch(
+      /Votre formule Accompagné, au prix de 990\s€ TTC pour le bien LK-0009, a été souscrite le 2 novembre 2026\./,
+    );
+    expect(text).toContain("jusqu'au 2 novembre 2027, sans renouvellement automatique");
+    expect(text).toContain("Un conseiller Leenkey dédié");
+    expect(text).toContain("version du 28 juin 2026");
+    expect(text).toContain("https://leenkey.fr/cgv");
+    expect(text).toContain("jusqu'au 16 novembre 2026 inclus");
+    expect(text).toContain("Formulaire de rétractation");
+    expect(text).toContain("36 rue Pierre Brossolette, 91360 Épinay-sur-Orge");
+    expect(text).toContain("Formule souscrite : Accompagné");
+    expect(text).toContain("Médiateur de la consommation : en cours de désignation.");
+    expect(text).not.toContain("montant proportionnel");
+    const early = await render(
+      PlanActivatedEmail({ ...seller, contactFrom: null, earlyStart: true }),
+      EMAIL_PLAIN_TEXT,
+    );
+    expect(early).toContain("montant proportionnel aux prestations déjà fournies");
+  });
+
   it("tells the seller what was paid and when the advisor gets in touch", async () => {
-    expect(planActivatedSubject("Accompagné")).toBe("Votre formule Accompagné est activée");
     const later = await render(
       PlanActivatedEmail({ ...seller, contactFrom: "mardi 17 novembre" }),
       EMAIL_PLAIN_TEXT,
     );
     expect(later).toContain("Bonjour Bruno,");
-    expect(later).toContain("votre formule Accompagné est active pour votre bien LK-0009");
     expect(later).toContain("990 € TTC");
     expect(later).toContain("à partir du mardi 17 novembre");
     const now = await render(

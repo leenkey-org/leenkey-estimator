@@ -1,6 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { revalidatePath } from "next/cache";
 import { allPlans } from "@/core/billing/plans";
 import { createCheckoutSession, retrievePrice, stripeConfigured } from "@/core/billing/stripe";
 import { getProfile, getUser } from "@/core/auth/session";
@@ -9,10 +10,17 @@ import { appEnv } from "@/lib/env";
 import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 import { absoluteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
-import { checkoutSchema, sessionIdSchema } from "@/lib/validations/billing";
+import {
+  checkoutSchema,
+  sessionIdSchema,
+  withdrawalResultSchema,
+  withdrawSchema,
+} from "@/lib/validations/billing";
+import { emailWithdrawalReceived } from "./emails";
 import type { Database } from "@/types/database";
 import { checkoutMetadata, planChoice } from "./orders";
 import { priceIdFor, priceMatches } from "./prices";
+import { canWithdraw } from "./withdrawal";
 
 type PlanCode = Database["public"]["Enums"]["plan_code"];
 
@@ -30,6 +38,7 @@ export type StartCheckoutError =
   | "not_found"
   | "sold"
   | "current"
+  | "withdrawn"
   | "lower"
   | "closed"
   | "unavailable";
@@ -86,6 +95,18 @@ export async function startCheckout(input: unknown): Promise<StartCheckoutResult
     ? property.data.listing[0]
     : property.data.listing;
   if (listing?.status === "sold") return refuse("sold");
+  // A plan being renounced (L1-40): nothing else is ordered until its refund.
+  const renounced = await supabase
+    .from("subscriptions")
+    .select("id")
+    .eq("property_id", propertyId)
+    .is("replaced_by", null)
+    .is("refunded_at", null)
+    .not("withdrawal_requested_at", "is", null)
+    .gt("ends_at", new Date().toISOString())
+    .limit(1);
+  if (renounced.error) return refuse("unavailable", { ...context, reason: "read" });
+  if (renounced.data.length > 0) return refuse("withdrawn");
 
   const choice = planChoice(plans, progress.data ?? "autonomie", plan);
   if (choice.status === "current") return refuse("current");
@@ -185,4 +206,120 @@ export async function checkoutStatus(sessionId: unknown): Promise<CheckoutStatus
       activatedAt: data.activated_at,
     },
   };
+}
+
+// --- Withdrawal (L1-40, SPEC-V2 section 11) ----------------------------------
+
+export type WithdrawError =
+  | "session"
+  | "invalid"
+  | "not_found"
+  | "over"
+  | "not_in_force"
+  | "unavailable";
+
+export type WithdrawResult =
+  | { ok: true; data: { requestedAt: string; acknowledged: boolean } }
+  | { ok: false; error: WithdrawError };
+
+/**
+ * « Renoncer au contrat »: within the 14 days (the last day checked here, the
+ * base refusing only far past it), recorded by subscription_withdraw with the
+ * seller's session, then the acknowledgment by email at once; the team hears
+ * of it through the notifications. A second request keeps the first and sends
+ * nothing. A suspended account may still renounce: a right of the consumer.
+ */
+export async function withdrawPlan(input: unknown): Promise<WithdrawResult> {
+  const [user, profile] = await Promise.all([getUser(), getProfile()]);
+  if (!user || !profile) return { ok: false, error: "session" };
+  const parsed = withdrawSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const supabase = await createClient();
+  const { data: subscription, error: readError } = await supabase
+    .from("subscriptions")
+    .select("id, activated_at, withdrawal_requested_at")
+    .eq("id", parsed.data.subscriptionId)
+    .maybeSingle();
+  if (readError) {
+    console.error("[billing] withdrawal read failed", {
+      user_id: user.id,
+      entity_id: parsed.data.subscriptionId,
+      code: readError.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  if (!subscription) return { ok: false, error: "not_found" };
+  if (!subscription.withdrawal_requested_at && !canWithdraw(subscription.activated_at)) {
+    return { ok: false, error: "over" };
+  }
+  // After a passage, the plan replaced goes with it while in its own period.
+  const replaced = await supabase
+    .from("subscriptions")
+    .select("activated_at")
+    .eq("replaced_by", subscription.id)
+    .is("withdrawal_requested_at", null)
+    .is("refunded_at", null)
+    .gt("amount_paid_cents", 0)
+    .maybeSingle();
+  if (replaced.error) {
+    console.error("[billing] withdrawal read failed", {
+      user_id: user.id,
+      entity_id: subscription.id,
+      code: replaced.error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  const { data, error } = await supabase.rpc("subscription_withdraw", {
+    p_subscription_id: subscription.id,
+    p_with_replaced: replaced.data ? canWithdraw(replaced.data.activated_at) : false,
+  });
+  if (error) {
+    if (error.code === "22023") return { ok: false, error: "over" };
+    if (error.code === "55000") return { ok: false, error: "not_in_force" };
+    if (error.code === "42501") return { ok: false, error: "not_found" };
+    console.error("[billing] withdrawal not recorded", {
+      user_id: user.id,
+      entity_id: subscription.id,
+      code: error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  const result = withdrawalResultSchema.safeParse(data);
+  if (!result.success) {
+    console.error("[billing] withdrawal answer unexpected", {
+      user_id: user.id,
+      entity_id: subscription.id,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  const recorded = result.data;
+  let acknowledged = true;
+  if (recorded.status === "recorded") {
+    const delivery = await emailWithdrawalReceived({
+      sellerEmail: user.email ?? null,
+      sellerFirstName: profile.firstName ?? null,
+      planName: recorded.plan_name ?? "",
+      property: recorded.reference ?? "",
+      propertyId: recorded.property_id,
+      amountCents: recorded.amount_paid_cents + (recorded.replaced_amount_paid_cents ?? 0),
+      activatedAt: recorded.activated_at,
+      requestedAt: recorded.requested_at,
+      earlyStart: recorded.early_start,
+      replaced:
+        recorded.replaced_plan_name && recorded.replaced_activated_at
+          ? { planName: recorded.replaced_plan_name, activatedAt: recorded.replaced_activated_at }
+          : null,
+    });
+    // Recorded all the same; the page says the email did not leave and
+    // stands for it (the request, its date and time).
+    acknowledged = delivery !== "failed";
+    if (!acknowledged) {
+      console.error("[billing] withdrawal acknowledgment not sent", {
+        user_id: user.id,
+        entity_id: subscription.id,
+      });
+    }
+  }
+  revalidatePath("/vendeur/formule");
+  return { ok: true, data: { requestedAt: recorded.requested_at, acknowledged } };
 }

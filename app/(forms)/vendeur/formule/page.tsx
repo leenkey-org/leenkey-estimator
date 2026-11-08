@@ -6,9 +6,11 @@ import { Button } from "@/components/shared/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { iconButtonVariants } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
-import { requireProfile } from "@/core/auth/session";
+import { getUser, requireProfile } from "@/core/auth/session";
 import { PaymentConfirmation } from "@/leenkey/billing/components/payment-confirmation";
 import { PlanChooser } from "@/leenkey/billing/components/plan-chooser";
+import { WithdrawalPanel } from "@/leenkey/billing/components/withdrawal-panel";
+import { canWithdraw, legalDate, withdrawalLastDay } from "@/leenkey/billing/withdrawal";
 import { planPage } from "@/leenkey/billing/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { paidPlansOrderable, SALES_TERMS } from "@/lib/config/sales";
@@ -45,7 +47,8 @@ function Body({ children }: { children: React.ReactNode }) {
 // the payment on Stripe, and the return from it (?paiement=ok: the state the
 // webhook wrote; ?paiement=annule). A plan is chosen per property: the one of
 // ?bien=, else the one of « Ma vente ». The comparison table of 11 bis comes
-// with L1-33, the withdrawal button and the summary email with L1-40.
+// with L1-33. L1-40: « Renoncer au contrat » during the 14 days, above the
+// plans (« visible, directe et accessible »), then the date of the request.
 export default async function PlanPage({ searchParams }: Props) {
   const profile = await requireProfile();
   const query = await searchParams;
@@ -142,7 +145,19 @@ export default async function PlanPage({ searchParams }: Props) {
 
   const now = new Date();
   const sold = data.property.status === "sold";
-  const orderable = paidPlansOrderable() && !sold;
+  const active = data.active;
+  // Renounceable: paid, within the 14 days (or already renounced, to say it).
+  const withdrawal =
+    active &&
+    (active.withdrawalRequestedAt ||
+      (active.amountPaidCents > 0 && canWithdraw(active.activatedAt, now)))
+      ? active
+      : null;
+  const withdrawn = Boolean(active?.withdrawalRequestedAt);
+  const planName = (code: string) => data.prices.find((plan) => plan.code === code)?.name ?? code;
+  const user = withdrawal ? await getUser() : null;
+  // Nothing else is ordered while a plan is being renounced (L1-40).
+  const orderable = paidPlansOrderable() && !sold && !withdrawn;
   const activeNote = data.active?.endsAt
     ? t.activeSince(
         formatDateShort(data.active.activatedAt, now),
@@ -182,6 +197,31 @@ export default async function PlanPage({ searchParams }: Props) {
             </details>
           ) : null}
         </div>
+        {withdrawal ? (
+          <WithdrawalPanel
+            subscriptionId={withdrawal.id}
+            planName={planName(withdrawal.plan)}
+            propertyName={
+              data.property.reference
+                ? `${data.property.name} · ${data.property.reference}`
+                : data.property.name
+            }
+            orderedOn={legalDate(withdrawal.activatedAt)}
+            lastDay={legalDate(withdrawalLastDay(withdrawal.activatedAt))}
+            earlyStart={withdrawal.earlyStart}
+            name={data.sellerName}
+            replaced={
+              withdrawal.replaced && canWithdraw(withdrawal.replaced.activatedAt, now)
+                ? {
+                    planName: planName(withdrawal.replaced.plan),
+                    orderedOn: legalDate(withdrawal.replaced.activatedAt),
+                  }
+                : null
+            }
+            email={user?.email ?? null}
+            requestedAt={withdrawal.withdrawalRequestedAt}
+          />
+        ) : null}
         {sold ? <InlineAlert tone="info">{t.sold}</InlineAlert> : null}
         {!sold && !paidPlansOrderable() ? (
           <InlineAlert

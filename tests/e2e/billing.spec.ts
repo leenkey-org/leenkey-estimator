@@ -175,6 +175,8 @@ test("payer Accompagné : retour de Stripe, confirmation par le webhook, une seu
   await expect(
     plansAfter.getByRole("button", { name: "Passer à Sérénité pour 510 €" }),
   ).toBeVisible();
+  // L1-40: « Renoncer au contrat » offered during the 14 days (used at the end).
+  await expect(page.getByRole("button", { name: "Renoncer au contrat" })).toBeVisible();
 
   // The seller's bell says it.
   await page.goto(`/vendeur?bien=${LK0009}`);
@@ -328,4 +330,27 @@ test("retour après annulation, et un événement d'un autre produit est ignoré
     },
   });
   expect(await ignored.json()).toMatchObject({ outcome: "ignored" });
+});
+
+test("renoncer au contrat pendant les 14 jours : accusé, puis plus de commande (L1-40)", async ({
+  page,
+}) => {
+  await signIn(page, "seller_b", planPage(LK0009));
+  const withdrawal = page.getByRole("region", { name: "Droit de rétractation" });
+  await expect(withdrawal).toContainText(/jusqu'au \d{1,2} \S+ \d{4} inclus/);
+  await withdrawal.getByRole("button", { name: "Renoncer au contrat" }).click();
+  const dialog = page.getByRole("dialog", { name: "Renoncer à votre formule ?" });
+  await expect(dialog).toContainText(/Formule \S+ pour .+, souscrite le /);
+  await expect(dialog).toContainText(/Au nom de \S+/);
+  await expect(dialog).toContainText(/Un accusé de réception part à \S+@\S+/);
+  await dialog.getByRole("button", { name: "Confirmer la rétractation" }).click();
+  await expect(page.getByText(/^Rétractation enregistrée le /)).toBeVisible();
+  // The focus goes to the confirmation (the dialog and its button are gone).
+  await expect(page.locator(":focus")).toContainText("Rétractation enregistrée le ");
+  // Kept: the page says it again, without the button nor any order.
+  await page.reload();
+  await expect(page.getByText(/^Rétractation enregistrée le /)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Renoncer au contrat" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^(Choisir|Passer à) / })).toHaveCount(0);
+  await expectNoSeriousViolation(page);
 });
