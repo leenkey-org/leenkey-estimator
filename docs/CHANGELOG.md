@@ -14,9 +14,9 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 
 ### 2026-11-08 · L1-38 · PR #79 · En-têtes de sécurité et limites de débit
 - Ajouté : en-têtes de sécurité sur toutes les réponses (HSTS, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, CSP `frame-ancestors`, `object-src`, `base-uri`, `form-action`).
-- Ajouté : limites par adresse : inscription 5 par heure, connexion 20 par quart d'heure, mot de passe oublié 5 par heure, formulaire de contact 5 par heure (« Trop de tentatives », 429 pour le contact).
+- Ajouté : limites par adresse : inscription et nouvel envoi du lien de confirmation 5 par heure, échecs de connexion 20 par quart d'heure, mot de passe oublié 5 par heure, formulaire de contact 5 par heure, rapport d'analyse par email 5 par heure, analyse écrite par le modèle 20 par heure (« Trop de tentatives. Réessayez plus tard. », 429 pour les routes, message propre au formulaire de contact).
 - Migration : `20261108160000_rate_limits.sql` (table `rate_limits` fermée à tous, `rate_limit_hit` réservée au serveur du site, purge chaque nuit).
-- Tests : RLS (`rls_rate_limits.sql`, 21, cinq comptes et visiteur), unitaires (`tests/unit/security`), E2E (`security.spec.ts` : en-têtes, 429 du contact, « Trop de tentatives » du mot de passe oublié).
+- Tests : RLS (`rls_rate_limits.sql`, 27, cinq comptes et visiteur), unitaires (`tests/unit/security` : client public, vérification sans compter, panne), E2E (`security.spec.ts` : en-têtes ; sur la pile locale seulement, 429 du contact et « Trop de tentatives » du mot de passe oublié).
 
 ### 2026-11-08 · Vendeur · PR #78 · Étapes de la vente à l'horizontale
 - Modifié : onglet « Étapes » de la fiche du bien : les étapes côte à côte dans une rangée qui défile sur le côté (arrêt sur chaque carte), ouverte sur l'étape en cours ; « Terminée » sur les étapes passées dont toutes les tâches sont faites ; « Voir l'étape précédente » / « Voir l'étape suivante » à partir de 768 px (demande de Younes).

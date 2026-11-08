@@ -4,8 +4,12 @@ import { expect, test } from "@playwright/test";
 // Security of every page and limits of requests per address (L1-38). The
 // address of a request is the one the platform gives (x-real-ip): on the
 // local stack the test sends it, a new one each run (a window lasts an hour).
+// On the preprod, Vercel puts the real one, that of the machine of the tests,
+// which would be held back an hour: the limits are tested on the local stack
+// only (E2E_MUTATE=1).
 
-const seeded = process.env.E2E_SEED === "1";
+const local = process.env.E2E_SEED === "1" && process.env.E2E_MUTATE === "1";
+const LOCAL_ONLY = "pile locale requise (E2E_SEED=1, E2E_MUTATE=1)";
 
 /** An address of the documentation range, new at each run (its own /64). */
 const address = () =>
@@ -25,7 +29,7 @@ test("les en-têtes de sécurité de chaque page", async ({ request }) => {
 });
 
 test("le formulaire de contact : 5 messages par heure et par adresse", async ({ request }) => {
-  test.skip(!seeded, "pile locale requise (E2E_SEED=1)");
+  test.skip(!local, LOCAL_ONLY);
   const from = address();
   const statuses: number[] = [];
   for (let n = 0; n < 6; n += 1) {
@@ -40,6 +44,12 @@ test("le formulaire de contact : 5 messages par heure et par adresse", async ({ 
   }
   expect(statuses.slice(0, 5)).not.toContain(429);
   expect(statuses.at(5)).toBe(429);
+  const refused = await request.post("/api/contact", {
+    headers: { "x-real-ip": from },
+    data: { source: "contact", data: { name: "Test", email: "test@example.com" } },
+  });
+  expect(refused.status()).toBe(429);
+  expect(((await refused.json()) as { error: string }).error).toContain("Réessayez plus tard");
   // Another address is not held back.
   const other = await request.post("/api/contact", {
     headers: { "x-real-ip": address() },
@@ -54,18 +64,17 @@ test("le formulaire de contact : 5 messages par heure et par adresse", async ({ 
 test("mot de passe oublié : au-delà de 5 demandes par heure, « Trop de tentatives »", async ({
   page,
 }) => {
-  test.skip(!seeded, "pile locale requise (E2E_SEED=1)");
+  test.skip(!local, LOCAL_ONLY);
   await page.setExtraHTTPHeaders({ "x-real-ip": address() });
   await page.goto("/mot-de-passe-oublie");
   for (let n = 0; n < 5; n += 1) {
     await page.getByLabel("Email").fill(`personne-${n}@example.com`);
     await page.getByRole("button", { name: /Envoyer/ }).click();
-    await expect(page.getByText("Trop de tentatives")).toHaveCount(0);
+    // The answer of the request first, then the next one.
+    await expect(page.getByRole("heading", { name: "Vérifiez votre boîte mail" })).toBeVisible();
     await page.goto("/mot-de-passe-oublie");
   }
   await page.getByLabel("Email").fill("personne-6@example.com");
   await page.getByRole("button", { name: /Envoyer/ }).click();
-  await expect(
-    page.getByText("Trop de tentatives. Réessayez dans quelques minutes."),
-  ).toBeVisible();
+  await expect(page.getByText("Trop de tentatives. Réessayez plus tard.")).toBeVisible();
 });

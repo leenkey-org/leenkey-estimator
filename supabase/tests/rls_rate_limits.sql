@@ -1,10 +1,11 @@
 -- Limits of requests per address (L1-38): the table is open to nobody, the
 -- function counts only with the key of the server (derived from the
 -- cron_secret of the Vault), and refuses once the limit of the bucket is
--- passed; the counts of past windows are purged.
+-- passed; a check without counting (sign-in) writes nothing; the counts of
+-- past windows are purged, those of the current ones kept.
 begin;
 \ir _helpers.psql
-select plan(21);
+select plan(27);
 \ir _plan.psql
 
 select vault.create_secret('rls-test-cron-secret', 'cron_secret')
@@ -13,7 +14,8 @@ select encode(extensions.hmac('leenkey:rate-limit:server', decrypted_secret, 'sh
   from vault.decrypted_secrets where name = 'cron_secret' \gset
 select encode(sha256('not-the-key'), 'hex') as forged,
        encode(sha256('address-one'), 'hex') as a1,
-       encode(sha256('address-two'), 'hex') as a2 \gset
+       encode(sha256('address-two'), 'hex') as a2,
+       encode(sha256('address-three'), 'hex') as a3 \gset
 delete from rate_limits;
 
 -- Nobody reads or writes the table -------------------------------------------------
@@ -64,6 +66,20 @@ select is((select count(*)::int from (select rate_limit_hit(:'key', 'signin', :'
 select is((select count(*)::int from (select rate_limit_hit(:'key', 'reset', :'a1') as ok
                                         from generate_series(1, 7)) x where ok), 5,
           'reset: 5 in the hour');
+select is((select count(*)::int from (select rate_limit_hit(:'key', 'report', :'a1') as ok
+                                        from generate_series(1, 7)) x where ok), 5,
+          'report: 5 in the hour');
+select is((select count(*)::int from (select rate_limit_hit(:'key', 'estimate', :'a1') as ok
+                                        from generate_series(1, 22)) x where ok), 20,
+          'estimate: 20 in the hour');
+select ok(not rate_limit_hit(:'key', 'signin', :'a1', false),
+          'signin: checked without counting, an address past its limit is refused');
+select ok(rate_limit_hit(:'key', 'signin', :'a3', false),
+          'signin: checked without counting, a new address passes');
+reset role;
+select is((select count(*)::int from rate_limits where key = :'a3'), 0,
+          'signin: a check without counting writes nothing');
+\ir _as.psql
 
 -- The next window, and the purge ------------------------------------------------------
 reset role;
@@ -75,6 +91,8 @@ update rate_limits set window_start = now() - interval '2 days' where bucket = '
 select rate_limits_purge();
 select is((select count(*)::int from rate_limits where bucket = 'contact'), 0,
           'purge: the counts of past windows are deleted after a day');
+select ok((select count(*)::int from rate_limits where bucket = 'reset') > 0,
+          'purge: the counts of the current windows are kept');
 
 select * from finish();
 rollback;

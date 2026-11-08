@@ -170,6 +170,10 @@ export async function resendConfirmation(
 ): Promise<FormResult> {
   const parsed = resendSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { ok: false, error: t.emailInvalid };
+  // Counted with the sign-ups: 5 emails an hour per address (L1-38).
+  if (!(await allowRequest("signup", await headers()))) {
+    return { ok: false, error: t.tooManyRequests };
+  }
   const supabase = await createClient();
   const { error } = await supabase.auth.resend({
     type: "signup",
@@ -210,8 +214,11 @@ export async function signIn(
     const errors = fieldErrors(parsed.error);
     return { ok: false, error: t.summary(Object.keys(errors).length), fieldErrors: errors, values };
   }
-  // 20 sign-ins a quarter of an hour per address (L1-38).
-  if (!(await allowRequest("signin", await headers()))) {
+  // 20 failed sign-ins a quarter of an hour per address (L1-38): checked
+  // first, counted only when the password is refused, so that people behind
+  // one address (an office, a mobile network) who sign in do not use it up.
+  const requestHeaders = await headers();
+  if (!(await allowRequest("signin", requestHeaders, { count: false }))) {
     return { ok: false, error: t.tooManyRequests, values };
   }
   const supabase = await createClient();
@@ -220,6 +227,7 @@ export async function signIn(
     password: parsed.data.password,
   });
   if (error) {
+    if (error.code === "invalid_credentials") await allowRequest("signin", requestHeaders);
     return {
       ok: false,
       error: authErrorMessage(error, "signIn"),

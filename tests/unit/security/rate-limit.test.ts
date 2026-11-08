@@ -1,12 +1,21 @@
 import { createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Limits of requests per address (L1-38): the same numbers in the code and in
 // SQL, the keys derived as the base derives its own, an address known by a
 // keyed hash, the security headers of every response.
 
 vi.mock("server-only", () => ({}));
+
+// The base, through the public client only: never the client of the session.
+const rpc = vi.fn();
+vi.mock("@/lib/supabase/public", () => ({ createPublicClient: () => ({ rpc }) }));
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: () => {
+    throw new Error("the limits never read the session of the visitor");
+  },
+}));
 
 const migration = readFileSync("supabase/migrations/20261108160000_rate_limits.sql", "utf8");
 
@@ -48,6 +57,49 @@ describe("limits of requests", () => {
   it("lets a request through without an address (local, tests)", async () => {
     const { allowRequest } = await import("@/lib/rate-limit");
     await expect(allowRequest("signin", new Headers())).resolves.toBe(true);
+  });
+
+  describe("with an address and the secret", () => {
+    const from = new Headers({ "x-real-ip": "203.0.113.7" });
+    beforeEach(() => {
+      vi.stubEnv("CRON_SECRET", "a-secret");
+      rpc.mockReset();
+    });
+    afterEach(() => vi.unstubAllEnvs());
+
+    it("counts through the public client, a cookie of session never in the way", async () => {
+      const { allowRequest, rateKey, rateLimitKeys } = await import("@/lib/rate-limit");
+      rpc.mockResolvedValueOnce({ data: true, error: null });
+      await expect(allowRequest("contact", from)).resolves.toBe(true);
+      const keys = rateLimitKeys("a-secret");
+      expect(rpc).toHaveBeenCalledWith("rate_limit_hit", {
+        p_server: keys?.serverKey,
+        p_bucket: "contact",
+        p_key: rateKey(keys?.hashKey ?? "", "contact", "203.0.113.7"),
+        p_count: true,
+      });
+      rpc.mockResolvedValueOnce({ data: false, error: null });
+      await expect(allowRequest("contact", from)).resolves.toBe(false);
+    });
+
+    it("a sign-in is checked without counting", async () => {
+      const { allowRequest } = await import("@/lib/rate-limit");
+      rpc.mockResolvedValueOnce({ data: true, error: null });
+      await allowRequest("signin", from, { count: false });
+      expect(rpc.mock.calls[0]?.[1]).toMatchObject({ p_bucket: "signin", p_count: false });
+    });
+
+    it("lets the request through when the base does not answer", async () => {
+      const { allowRequest } = await import("@/lib/rate-limit");
+      const log = vi.spyOn(console, "error").mockImplementation(() => {});
+      rpc.mockResolvedValueOnce({ data: null, error: { code: "PGRST301", message: "x" } });
+      await expect(allowRequest("signup", from)).resolves.toBe(true);
+      expect(log).toHaveBeenCalledWith("[rate-limit] count failed", {
+        bucket: "signup",
+        code: "PGRST301",
+      });
+      log.mockRestore();
+    });
   });
 });
 

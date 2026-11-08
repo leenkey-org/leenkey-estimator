@@ -137,7 +137,7 @@ export const fr = {
       invalidCredentials: "Email ou mot de passe incorrect.",
       emailNotConfirmed:
         "Votre email n'est pas encore confirmé. Cliquez sur le lien reçu, ou demandez-en un nouveau.",
-      tooManyRequests: "Trop de tentatives. Réessayez dans quelques minutes.",
+      tooManyRequests: "Trop de tentatives. Réessayez plus tard.",
       alreadyRegistered: "Un compte existe déjà avec cet email. Connectez-vous.",
       generic: "Une erreur est survenue. Réessayez dans un instant.",
       summary: (count: number) =>

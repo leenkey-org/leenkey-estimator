@@ -2131,7 +2131,12 @@ export type Database = {
         }[]
       }
       rate_limit_hit: {
-        Args: { p_bucket: string; p_server: string; p_key: string }
+        Args: {
+          p_bucket: string
+          p_count?: boolean
+          p_key: string
+          p_server: string
+        }
         Returns: boolean
       }
       rate_limit_server: {
