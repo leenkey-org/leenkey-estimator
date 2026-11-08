@@ -252,7 +252,12 @@ export const fr = {
       title: "Toutes les étapes",
       back: "Ma vente",
       current: "Étape en cours",
+      done: "Terminée",
       count: (done: number, total: number) => `${done} sur ${total}`,
+      // The steps side by side, swiped (Younes, DECISIONS 2026-11-07).
+      region: "Étapes de la vente",
+      previous: "Voir l'étape précédente",
+      next: "Voir l'étape suivante",
     },
   },
   // « Vendre » (Younes, DECISIONS 2026-10-26): the two ways to start a sale,

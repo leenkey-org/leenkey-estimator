@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-08 · Vendeur · PR #78 · Étapes de la vente à l'horizontale
+- Modifié : onglet « Étapes » de la fiche du bien : les étapes côte à côte dans une rangée qui défile sur le côté (arrêt sur chaque carte), ouverte sur l'étape en cours ; « Terminée » sur les étapes passées dont toutes les tâches sont faites ; « Voir l'étape précédente » / « Voir l'étape suivante » à partir de 768 px (demande de Younes).
+- Ajouté : `HorizontalScroller` (`components/shared/horizontal-scroller.tsx`), rangée nommée qui prend le focus (flèches du clavier).
+- Tests : E2E (`seller-dashboard.spec.ts` : ouverture sur l'étape en cours, boutons à partir de 768 px, rien de plus large que l'écran, axe).
+
 ### 2026-11-08 · IA · PR #77 · Assistant du site : 100 questions par jour
 - Modifié : plafond de tout le site à 100 questions par jour au lancement (300 avant), décision de Younes ; au plus 2,5 à 4 € par jour du modèle.
 - Migration : `20261108150000_ai_visitor_site_limit.sql` (`ai_visitor_ask` remplacée, limite seule changée).

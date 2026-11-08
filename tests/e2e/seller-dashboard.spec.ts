@@ -135,6 +135,29 @@ test("une vente en ligne : en-tête, prochaine action, chiffres, à faire, conve
     "Étape 3 sur 6 · Gérer mes contacts et mes visites",
   );
   await expect(steps.nth(2)).toHaveAttribute("aria-current", "step");
+  // Side by side in a row swiped sideways (Younes, 2026-11-07), opened on the
+  // current step: the earlier ones out of the screen, nothing wider than it.
+  const row = page.getByRole("region", { name: "Étapes de la vente" });
+  await expect(row).toBeVisible();
+  await expect(steps.nth(2)).toBeInViewport();
+  await expect(steps.nth(0)).not.toBeInViewport();
+  await expect(steps.nth(1)).toContainText("Terminée");
+  await expect(steps.nth(2)).toContainText("Étape en cours");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+    ),
+  ).toBe(true);
+  if ((page.viewportSize()?.width ?? 0) >= 768) {
+    // From 768 px, « Voir l'étape suivante » and « … précédente » turn it:
+    // the step before the previous one leaves the row, then comes back.
+    await page.getByRole("button", { name: "Voir l'étape suivante" }).click();
+    await expect(steps.nth(1)).not.toBeInViewport();
+    await page.getByRole("button", { name: "Voir l'étape précédente" }).click();
+    await expect(steps.nth(1)).toBeInViewport();
+  } else {
+    await expect(page.getByRole("button", { name: "Voir l'étape suivante" })).toBeHidden();
+  }
   // The later steps wait for this one: their tasks by hand, nothing to tick yet.
   const notary = steps.nth(4);
   await expect(notary).toHaveAccessibleName(/^Étape 5 sur 6 · /);
