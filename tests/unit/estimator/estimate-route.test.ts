@@ -5,6 +5,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   received: [] as unknown[],
   recorded: null as { id: string; claimToken: string | null } | null,
+  allowed: true,
+}));
+
+vi.mock("server-only", () => ({}));
+// L1-38: 20 analyses an hour per address.
+vi.mock("@/lib/rate-limit", async (original) => ({
+  ...(await original<typeof import("@/lib/rate-limit")>()),
+  allowRequest: async () => mocks.allowed,
 }));
 
 vi.mock("@/lib/legacy-api/estimate", () => ({
@@ -40,6 +48,7 @@ const request = () =>
 beforeEach(() => {
   mocks.received.length = 0;
   mocks.recorded = null;
+  mocks.allowed = true;
 });
 
 describe("/api/estimate", () => {
@@ -62,5 +71,14 @@ describe("/api/estimate", () => {
   it("answers as the V1 alone when the analysis cannot be kept", async () => {
     const response = await POST(request());
     expect(await response.json()).toEqual({ ref: "EST-2026-12345", analyse: "Analyse rédigée." });
+  });
+
+  it("past the limit of the address: 429, neither the model nor the record called", async () => {
+    mocks.allowed = false;
+    const response = await POST(request());
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
+    expect(await response.json()).toEqual({ error: "Trop de tentatives. Réessayez plus tard." });
+    expect(mocks.received).toHaveLength(0);
   });
 });

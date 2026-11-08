@@ -916,6 +916,9 @@ export const site = {
       text: "Merci ! Nous revenons vers vous sous 48 h, 7 j/7. Un email de confirmation vient d'être envoyé à l'adresse indiquée.",
     },
     failed: "Erreur d'envoi. Réessayez ou contactez-nous par email.",
+    // Past 5 messages an hour from the same address (L1-38).
+    tooMany:
+      "Trop de messages envoyés depuis votre connexion. Réessayez plus tard ou écrivez-nous par email.",
     errors: {
       motif: "Choisissez le motif de votre demande.",
       required: "À renseigner pour envoyer votre demande.",

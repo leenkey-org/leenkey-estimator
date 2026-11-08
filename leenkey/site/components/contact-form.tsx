@@ -57,7 +57,7 @@ export function ContactForm({
   const sending = useRef(false);
   const [values, setValues] = useState<Values>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<ContactField, ContactError>>>({});
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "failed">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "failed" | "tooMany">("idle");
 
   const errorOf = (field: ContactField) => {
     const key = errors[field];
@@ -84,6 +84,7 @@ export function ContactForm({
     sending.current = true;
     setStatus("sending");
     let ok = false;
+    let tooMany = false;
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
@@ -93,12 +94,13 @@ export function ContactForm({
         signal: AbortSignal.timeout(20_000),
       });
       ok = response.ok;
+      tooMany = response.status === 429;
     } catch (error) {
       console.error("[site] contact form not sent", error);
     }
     sending.current = false;
     if (!ok) {
-      setStatus("failed");
+      setStatus(tooMany ? "tooMany" : "failed");
       return;
     }
     flushSync(() => setStatus("sent"));
@@ -122,9 +124,9 @@ export function ContactForm({
         hidden={sent}
         className={cn("flex flex-col gap-3.5", box)}
       >
-        {status === "failed" ? (
+        {status === "failed" || status === "tooMany" ? (
           <InlineAlert tone="danger">
-            {t.failed}{" "}
+            {status === "tooMany" ? t.tooMany : t.failed}{" "}
             <a
               href={`mailto:${fr.legal.contactEmail}`}
               className="font-semibold underline underline-offset-2"

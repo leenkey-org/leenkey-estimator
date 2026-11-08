@@ -870,6 +870,18 @@ create table audit_log (
   meta jsonb,
   created_at timestamptz not null default now()
 );
+
+-- Limites de débit par adresse (L1-38, DECISIONS.md 2026-11-08) : une ligne
+-- par compteur, l'adresse connue par une empreinte HMAC (clé serveur), écrite
+-- seulement par rate_limit_hit(), effacée après un jour (section 19).
+create table rate_limits (
+  bucket text not null check (bucket in ('signup','signin','reset','contact','report','estimate')),
+  key text not null,                    -- empreinte hexadécimale (64)
+  window_start timestamptz not null,
+  hits int not null default 0,
+  created_at timestamptz not null default now(),
+  primary key (bucket, key, window_start)
+);
 ```
 
 ### Vue publique des annonces
@@ -962,6 +974,7 @@ Matrice (L = lecture, E = écriture) :
 | `ai_*` | — | L les siennes | L les siennes | L |
 | `notifications` | — | L/E (`read_at`) les siennes | idem | L |
 | `audit_log` | — | — | — | L |
+| `rate_limits` | — | — | — | — (aucune politique : seule `rate_limit_hit()`, appelée par le serveur du site avec sa clé, y écrit) |
 
 Les transitions de statut (annonces, offres) sont contrôlées par des **fonctions SQL** `security definer` appelées depuis les server actions (`listing_submit`, `listing_pause`, `listing_suspend`, `listing_unsuspend`, `offer_submit`, `offer_answer`…), pas par des `update` libres. Les politiques `update` directes sur `status` sont refusées. `listing_suspend` et `listing_unsuspend` vérifient `is_admin()`, exigent un motif pour la suspension et écrivent dans `audit_log` ; toutes les fonctions vendeur refusent une annonce `suspended`.
 
@@ -1948,6 +1961,7 @@ Voir `CLAUDE.md` section 13. Détail :
 | `/api/cron/visit-feedback` | `0 8 * * *` | Demandes de retour J+1 |
 | `/api/cron/send-notification-emails` | `*/5 * * * *` | Envoi des emails de notification en attente (regroupement) |
 | `/api/cron/anonymize-deleted` | `0 2 * * 0` | Anonymisation des comptes supprimés depuis plus de 30 jours |
+| *(en base, sans route)* `purge-rate-limits` | `41 3 * * *` | Limites de débit (L1-38) : `rate_limits_purge()` supprime les compteurs des fenêtres de plus d'un jour |
 | *(en base, sans route)* `purge-visitor-assistant` | `17 3 * * *` | Assistant du site (`DECISIONS.md` 2026-11-07) : `ai_visitor_purge()` efface l'empreinte des adresses des jours passés et supprime les conversations des visiteurs de plus de 30 jours |
 
 Tous protégés par `CRON_SECRET` (la tâche en base n'appelle aucune route), idempotents, journalisés. **Déclenchement** (décision du 2026-10-08) : par Supabase `pg_cron` + `pg_net` (requête HTTPS vers la route avec l'en-tête `Authorization: Bearer <CRON_SECRET>`), pas par Vercel Cron, tant que l'équipe Vercel est en plan Hobby. Le secret est stocké dans Supabase Vault.

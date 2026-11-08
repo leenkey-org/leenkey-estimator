@@ -10,6 +10,32 @@ const V1_PAGES = [
   ["investir", "/investir"],
 ] as const;
 
+/**
+ * Security headers of every response (L1-38, CLAUDE.md section 11). The CSP
+ * holds the directives that close a whole class of attacks without listing
+ * the scripts of the site: no framing of Leenkey (clickjacking), no plugin,
+ * no <base> pointed elsewhere, forms sent to Leenkey or Stripe Checkout only.
+ * A list of the script sources would break Google Tag Manager, whose tags
+ * are not known yet (DECISIONS Q40); it waits for that answer (BACKLOG-V3).
+ * HSTS without includeSubDomains: other subdomains of leenkey.fr are
+ * Cédric's (mail, IONOS) and may not all serve HTTPS.
+ */
+export const SECURITY_HEADERS = [
+  {
+    key: "Content-Security-Policy",
+    value:
+      "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self' https://checkout.stripe.com",
+  },
+  { key: "Strict-Transport-Security", value: "max-age=31536000" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()",
+  },
+] as const;
+
 const nextConfig: NextConfig = {
   // Photos of the properties (L1-12): already WebP in three widths, served by
   // the route /img; the loader picks the width, without the optimiser.
@@ -32,6 +58,9 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/og/**": ["./public/brand/logo-white.svg"],
     "/**": ["./core/ai/prompts/**/*.md"],
+  },
+  async headers() {
+    return [{ source: "/:path*", headers: [...SECURITY_HEADERS] }];
   },
   // The addresses of the V1 pages are kept, as permanent redirects
   // (CLAUDE.md section 16).
