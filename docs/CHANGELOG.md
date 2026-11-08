@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-08 · IA · PR #77 · Assistant du site : 100 questions par jour
+- Modifié : plafond de tout le site à 100 questions par jour au lancement (300 avant), décision de Younes ; au plus 2,5 à 4 € par jour du modèle.
+- Migration : `20261108150000_ai_visitor_site_limit.sql` (`ai_visitor_ask` remplacée, limite seule changée).
+- Tests : RLS (`rls_ai_visitor.sql`, le 101e refusé), unitaires (la limite lue dans la dernière migration qui écrit `ai_visitor_ask`).
+
 ### 2026-11-07 · Site · PR #76 · Assistant du site public
 - Ajouté : « Une question ? » sur l'accueil, `/tarifs`, `/faq`, `/concept` et `/vendre`, pour un visiteur non connecté : il pose ses questions, l'assistant l'aide à choisir sa formule et à souscrire (formules lues dans la table `plans`, FAQ, aucun outil), avec « Valoriser mon bien », « Voir les formules », « Créer mon compte ».
 - Ajouté : limites du jour (10 questions par visiteur, 30 par adresse, IPv6 par /64, 300 pour le site), conversations sans compte gardées 30 jours, empreinte de l'adresse effacée le lendemain, mentions aux pages « Intelligence artificielle » et « Cookies » (`lk_visitor`) ; la commande des formules payantes décrite selon qu'elle est ouverte en ligne ou non.

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { createHmac } from "node:crypto";
 import { VISITOR_SETTINGS } from "@/core/ai/models";
@@ -13,17 +13,26 @@ import { VISITOR_MESSAGE_MAX, visitorChatSchema } from "@/lib/validations/assist
 vi.mock("server-only", () => ({}));
 
 const migration = readFileSync("supabase/migrations/20261107100000_ai_visitor.sql", "utf8");
+/** The last migration that writes ai_visitor_ask: the limits in force. */
+const askMigration = readdirSync("supabase/migrations")
+  .filter((file) => file.endsWith(".sql"))
+  .sort()
+  .map((file) => readFileSync(`supabase/migrations/${file}`, "utf8"))
+  .filter((sql) => /function public\.ai_visitor_ask\(/.test(sql))
+  .at(-1);
 
 describe("limits of the assistant of the site", () => {
   it("are the same in the code and in SQL", () => {
-    expect(migration).toContain(`public.ai_visitor_questions() >= ${AI_VISITOR_LIMITS.site}`);
-    expect(migration).toContain(
+    expect(askMigration).toContain(`public.ai_visitor_questions() >= ${AI_VISITOR_LIMITS.site}`);
+    expect(askMigration).toContain(
       `public.ai_visitor_questions(p_visitor, null) >= ${AI_VISITOR_LIMITS.perVisitor}`,
     );
-    expect(migration).toContain(
+    expect(askMigration).toContain(
       `public.ai_visitor_questions(null, p_ip) >= ${AI_VISITOR_LIMITS.perAddress}`,
     );
-    expect(migration).toContain(`char_length(v_text) > ${VISITOR_MESSAGE_MAX}`);
+    expect(askMigration).toContain(`char_length(v_text) > ${VISITOR_MESSAGE_MAX}`);
+    // 100 for the site at launch (DECISIONS.md 2026-11-08).
+    expect(AI_VISITOR_LIMITS.site).toBe(100);
     // An answer within the cap of the route, never more.
     expect(migration).toContain(`p_output_tokens > ${VISITOR_SETTINGS.maxTokens}`);
   });
