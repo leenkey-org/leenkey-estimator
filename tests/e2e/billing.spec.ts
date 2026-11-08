@@ -176,6 +176,22 @@ test("payer Accompagné : retour de Stripe, confirmation par le webhook, une seu
     plansAfter.getByRole("button", { name: "Passer à Sérénité pour 510 €" }),
   ).toBeVisible();
 
+  // L1-40: « Renoncer au contrat » during the 14 days, above the plans.
+  const withdrawal = page.getByRole("region", { name: "Droit de rétractation" });
+  await expect(withdrawal).toContainText(/jusqu'au \d{1,2} \S+ \d{4} inclus/);
+  await withdrawal.getByRole("button", { name: "Renoncer au contrat" }).click();
+  const dialog = page.getByRole("dialog", { name: "Renoncer à votre formule ?" });
+  await expect(dialog).toContainText("Formule Accompagné pour");
+  await expect(dialog).toContainText(/Un accusé de réception part à \S+@\S+/);
+  await dialog.getByRole("button", { name: "Confirmer la rétractation" }).click();
+  await expect(page.getByText(/^Rétractation enregistrée le /)).toBeVisible();
+  // The focus goes to the confirmation (the dialog and its button are gone).
+  await expect(page.locator(":focus")).toContainText("Rétractation enregistrée le ");
+  // Kept: the page says it again, and the button is gone.
+  await page.reload();
+  await expect(page.getByText(/^Rétractation enregistrée le /)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Renoncer au contrat" })).toHaveCount(0);
+
   // The seller's bell says it.
   await page.goto(`/vendeur?bien=${LK0009}`);
   await page

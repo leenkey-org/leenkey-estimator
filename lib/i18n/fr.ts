@@ -388,6 +388,21 @@ export const fr = {
     retry: "Réessayer",
     types: {
       // L1-26: a plan paid (seller), its case and its refunds (team).
+      // L1-40: a plan ending within 30 days, to its owner.
+      planEnding: {
+        title: (plan: string | null) =>
+          plan ? `Votre formule ${plan} se termine bientôt` : "Votre formule se termine bientôt",
+        detail: (date: string | null) =>
+          date
+            ? `Le ${date}. Sans renouvellement, votre bien repasse en Autonomie.`
+            : "Sans renouvellement, votre bien repasse en Autonomie.",
+      },
+      // L1-40: a withdrawal to refund, to the team.
+      planWithdrawn: {
+        title: "Rétractation à rembourser",
+        detail: (plan: string | null, reference: string | null) =>
+          [plan ? `Formule ${plan}` : null, reference].filter(Boolean).join(" · ") || null,
+      },
       planActivated: {
         title: (plan: string | null) => (plan ? `Formule ${plan} activée` : "Formule activée"),
         detail: (reference: string | null) =>
@@ -1819,15 +1834,85 @@ export const fr = {
     // du compte (motif, email) »). Provisional text, as the listing one (Q71).
     // L1-26: a plan paid; the full summary of the order comes with L1-40.
     planActivated: {
-      subject: (plan: string) => `Votre formule ${plan} est activée`,
+      // The summary of the order, on a durable medium (L1-40, SPEC 11).
+      subject: (plan: string, property: string) =>
+        `Confirmation de votre souscription Leenkey · ${plan} · ${property}`,
       title: (plan: string) => `Votre formule ${plan} est activée`,
       text: (plan: string, property: string) =>
         `Merci : votre formule ${plan} est active pour votre bien ${property}.`,
+      ordered: (plan: string, amount: string, property: string, date: string) =>
+        `Votre formule ${plan}, au prix de ${amount} TTC pour le bien ${property}, a été souscrite le ${date}.`,
+      duration: (until: string) =>
+        `Durée du contrat : 12 mois, jusqu'au ${until}, sans renouvellement automatique. À l'échéance, votre bien repasse en Autonomie : votre annonce reste en ligne.`,
+      includes: "Ce que comprend votre formule",
+      terms: (cgu: string, cgv: string) =>
+        `Vous avez accepté nos conditions générales d'utilisation (version du ${cgu}) et de vente (version du ${cgv}), à relire à tout moment :`,
+      cgv: "conditions générales de vente",
+      cgu: "conditions générales d'utilisation",
+      withdrawalTitle: "Votre droit de rétractation",
+      withdrawal: (date: string, email: string) =>
+        `Vous pouvez renoncer à votre formule, sans motif, jusqu'au ${date} inclus : depuis votre espace (« Renoncer au contrat », sur la page de votre formule), par email à ${email}, ou avec le formulaire ci-dessous. Nous vous remboursons au plus tard 14 jours après votre demande, par le moyen de paiement utilisé, sans frais.`,
+      withdrawalEarly:
+        "Vous avez demandé que les prestations commencent avant la fin de ce délai : en cas de rétractation, un montant proportionnel aux prestations déjà fournies peut rester dû.",
+      formTitle: "Formulaire de rétractation",
+      form: (address: string, plan: string, reference: string, date: string) => [
+        `À l'attention de ${address}.`,
+        "Je vous notifie par la présente ma rétractation du contrat de prestation de services ci-dessous :",
+        `Formule souscrite : ${plan}`,
+        `Référence : ${reference}`,
+        `Commandée le : ${date}`,
+        "Nom et prénom : ____________________",
+        "Adresse : ____________________",
+        "Adresse électronique : ____________________",
+        "Date : ____________________",
+        "Signature (uniquement sur papier) : ____________________",
+      ],
+      mediator: (name: string) => `Médiateur de la consommation : ${name}.`,
+      mediatorPending: "Médiateur de la consommation : en cours de désignation.",
       paid: (amount: string) => `Montant payé : ${amount} TTC, une seule fois, pour ce bien.`,
       contactNow: "Votre conseiller Leenkey vous contacte sous 24\u00A0h.",
       contactLater: (date: string) =>
         `Votre conseiller Leenkey vous contacte à partir du ${date}, après le délai de rétractation de 14\u00A0jours.`,
       receipt: "Stripe vous envoie le reçu de votre paiement par email.",
+      action: "Voir ma formule",
+    },
+    // L1-40: the acknowledgment of a withdrawal, to the seller.
+    withdrawalReceived: {
+      subject: (plan: string) => `Accusé de réception de votre rétractation · formule ${plan}`,
+      title: "Votre rétractation est bien reçue",
+      text: (at: string, plan: string, property: string, ordered: string) =>
+        `Nous avons reçu le ${at} votre demande de rétractation pour la formule ${plan} (bien ${property}), souscrite le ${ordered}.`,
+      refund: (amount: string) =>
+        `Nous vous remboursons ${amount} TTC au plus tard 14 jours après votre demande, par le moyen de paiement utilisé lors de la commande, sans frais.`,
+      early:
+        "Vous aviez demandé un démarrage immédiat des prestations : un montant proportionnel à ce qui a déjà été fourni peut être retenu. Nous vous l'indiquons avant le remboursement.",
+      contact: (email: string) => `Pour toute question : ${email}.`,
+      action: "Voir ma formule",
+    },
+    // L1-40: withdrawals to refund, to the team (grouped).
+    withdrawalsToProcess: {
+      subject: (count: number, plan: string, property: string) =>
+        count > 1
+          ? `${count}\u00A0rétractations à rembourser`
+          : `Rétractation à rembourser · formule ${plan} · ${property}`,
+      title: (count: number) =>
+        count > 1 ? `${count}\u00A0rétractations à rembourser` : "Une rétractation à rembourser",
+      text: "À rembourser depuis Stripe sous 14 jours : le remboursement met fin à la formule. Une note est dans le dossier du bien.",
+      item: (plan: string, property: string, amount: string, at: string) =>
+        `Formule ${plan} · ${property} · ${amount} TTC payés · demande du ${at}`,
+      early: "démarrage immédiat demandé : un montant proportionnel peut être retenu",
+      action: "Voir les dossiers",
+    },
+    // L1-40: a plan ending within 30 days, to its owner.
+    planEnding: {
+      subject: (plan: string, date: string) => `Votre formule ${plan} se termine le ${date}`,
+      title: (plan: string) => `Votre formule ${plan} se termine bientôt`,
+      text: (plan: string, property: string, date: string) =>
+        `Votre formule ${plan} pour votre bien ${property} prend fin le ${date}.`,
+      after:
+        "Sans renouvellement, votre bien repasse en Autonomie : votre annonce reste en ligne et vous gardez tous les outils ; l'accompagnement de votre conseiller s'arrête.",
+      renew: (email: string) =>
+        `Pour la renouveler 12 mois au tarif en vigueur, ou choisir l'autre formule, répondez à cet email ou écrivez-nous à ${email}.`,
       action: "Voir ma formule",
     },
     planPurchased: {
@@ -1988,6 +2073,29 @@ export const fr = {
       network: "Pas de réponse du serveur : rien n'a été débité. Réessayez.",
     },
     cancelled: "Le paiement a été annulé : rien n'a été débité.",
+    // L1-40: « Renoncer au contrat » during the 14 days (SPEC 11).
+    withdrawal: {
+      title: "Droit de rétractation",
+      text: (date: string) =>
+        `Vous pouvez renoncer à votre formule, sans motif, jusqu'au ${date} inclus. Nous vous remboursons sous 14 jours.`,
+      early:
+        "Vous avez demandé que les prestations commencent avant la fin de ce délai : un montant proportionnel à ce qui a déjà été fourni peut rester dû.",
+      action: "Renoncer au contrat",
+      dialogTitle: "Renoncer à votre formule ?",
+      dialogText: (plan: string, property: string, date: string) =>
+        `Formule ${plan} pour ${property}, souscrite le ${date}. Nous vous remboursons sous 14 jours, par le moyen de paiement utilisé lors de la commande.`,
+      dialogEmail: (email: string) => `Un accusé de réception part à ${email}.`,
+      confirm: "Confirmer la rétractation",
+      labels: { back: "Retour", close: "Fermer", cancel: "Annuler" },
+      done: (date: string) =>
+        `Rétractation enregistrée le ${date}. Nous vous remboursons sous 14 jours, par le moyen de paiement utilisé ; un accusé de réception vous a été envoyé par email.`,
+      errors: {
+        session: "Votre session a expiré. Reconnectez-vous pour renoncer au contrat.",
+        over: "Le délai de rétractation de 14 jours est passé. Pour toute question, écrivez-nous.",
+        notInForce: "Cette formule n'est plus en vigueur : il n'y a rien à renoncer.",
+        unavailable: "La rétractation n'a pas pu être enregistrée. Réessayez, ou écrivez-nous.",
+      },
+    },
     confirmation: {
       pendingTitle: "Paiement en cours de confirmation",
       pendingText: "Stripe nous confirme votre paiement : cela prend quelques secondes.",

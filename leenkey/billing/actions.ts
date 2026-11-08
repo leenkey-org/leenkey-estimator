@@ -1,6 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { revalidatePath } from "next/cache";
 import { allPlans } from "@/core/billing/plans";
 import { createCheckoutSession, retrievePrice, stripeConfigured } from "@/core/billing/stripe";
 import { getProfile, getUser } from "@/core/auth/session";
@@ -9,10 +10,17 @@ import { appEnv } from "@/lib/env";
 import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 import { absoluteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
-import { checkoutSchema, sessionIdSchema } from "@/lib/validations/billing";
+import {
+  checkoutSchema,
+  sessionIdSchema,
+  withdrawalResultSchema,
+  withdrawSchema,
+} from "@/lib/validations/billing";
+import { emailWithdrawalReceived } from "./emails";
 import type { Database } from "@/types/database";
 import { checkoutMetadata, planChoice } from "./orders";
 import { priceIdFor, priceMatches } from "./prices";
+import { canWithdraw } from "./withdrawal";
 
 type PlanCode = Database["public"]["Enums"]["plan_code"];
 
@@ -185,4 +193,95 @@ export async function checkoutStatus(sessionId: unknown): Promise<CheckoutStatus
       activatedAt: data.activated_at,
     },
   };
+}
+
+// --- Withdrawal (L1-40, SPEC-V2 section 11) ----------------------------------
+
+export type WithdrawError =
+  | "session"
+  | "invalid"
+  | "not_found"
+  | "over"
+  | "not_in_force"
+  | "unavailable";
+
+export type WithdrawResult =
+  | { ok: true; data: { requestedAt: string } }
+  | { ok: false; error: WithdrawError };
+
+/**
+ * « Renoncer au contrat »: within the 14 days (the last day checked here, the
+ * base refusing only far past it), recorded by subscription_withdraw with the
+ * seller's session, then the acknowledgment by email at once; the team hears
+ * of it through the notifications. A second request keeps the first and sends
+ * nothing. A suspended account may still renounce: a right of the consumer.
+ */
+export async function withdrawPlan(input: unknown): Promise<WithdrawResult> {
+  const [user, profile] = await Promise.all([getUser(), getProfile()]);
+  if (!user || !profile) return { ok: false, error: "session" };
+  const parsed = withdrawSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const supabase = await createClient();
+  const { data: subscription, error: readError } = await supabase
+    .from("subscriptions")
+    .select("id, activated_at, withdrawal_requested_at")
+    .eq("id", parsed.data.subscriptionId)
+    .maybeSingle();
+  if (readError) {
+    console.error("[billing] withdrawal read failed", {
+      user_id: user.id,
+      entity_id: parsed.data.subscriptionId,
+      code: readError.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  if (!subscription) return { ok: false, error: "not_found" };
+  if (!subscription.withdrawal_requested_at && !canWithdraw(subscription.activated_at)) {
+    return { ok: false, error: "over" };
+  }
+  const { data, error } = await supabase.rpc("subscription_withdraw", {
+    p_subscription_id: subscription.id,
+  });
+  if (error) {
+    if (error.code === "22023") return { ok: false, error: "over" };
+    if (error.code === "55000") return { ok: false, error: "not_in_force" };
+    if (error.code === "42501") return { ok: false, error: "not_found" };
+    console.error("[billing] withdrawal not recorded", {
+      user_id: user.id,
+      entity_id: subscription.id,
+      code: error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  const result = withdrawalResultSchema.safeParse(data);
+  if (!result.success) {
+    console.error("[billing] withdrawal answer unexpected", {
+      user_id: user.id,
+      entity_id: subscription.id,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  const recorded = result.data;
+  if (recorded.status === "recorded") {
+    const delivery = await emailWithdrawalReceived({
+      sellerEmail: user.email ?? null,
+      sellerFirstName: profile.firstName ?? null,
+      planName: recorded.plan_name ?? "",
+      property: recorded.reference ?? "",
+      propertyId: recorded.property_id,
+      amountCents: recorded.amount_paid_cents,
+      activatedAt: recorded.activated_at,
+      requestedAt: recorded.requested_at,
+      earlyStart: recorded.early_start,
+    });
+    if (delivery === "failed") {
+      // Recorded all the same: the team, told by the notification, writes to the seller.
+      console.error("[billing] withdrawal acknowledgment not sent", {
+        user_id: user.id,
+        entity_id: subscription.id,
+      });
+    }
+  }
+  revalidatePath("/vendeur/formule");
+  return { ok: true, data: { requestedAt: recorded.requested_at } };
 }

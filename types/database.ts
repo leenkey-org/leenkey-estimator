@@ -1257,6 +1257,7 @@ export type Database = {
           amount_paid_cents: number
           discount_cents: number
           early_start_requested_at: string | null
+          end_reminded_at: string | null
           ends_at: string | null
           id: string
           owner_id: string
@@ -1275,6 +1276,7 @@ export type Database = {
           amount_paid_cents?: number
           discount_cents?: number
           early_start_requested_at?: string | null
+          end_reminded_at?: string | null
           ends_at?: string | null
           id?: string
           owner_id: string
@@ -1293,6 +1295,7 @@ export type Database = {
           amount_paid_cents?: number
           discount_cents?: number
           early_start_requested_at?: string | null
+          end_reminded_at?: string | null
           ends_at?: string | null
           id?: string
           owner_id?: string
@@ -2249,6 +2252,14 @@ export type Database = {
           p_event_id: string
           p_session_id: string
         }
+        Returns: Json
+      }
+      subscription_withdraw: {
+        Args: { p_subscription_id: string }
+        Returns: Json
+      }
+      subscriptions_daily: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       team_email_addresses: {

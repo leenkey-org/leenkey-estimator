@@ -1,4 +1,5 @@
 import {
+  CalendarClock,
   CircleAlert,
   CircleCheck,
   ClipboardList,
@@ -12,6 +13,7 @@ import {
 import type { NotificationTone } from "@/components/shared/notification-item";
 import type { NotificationView } from "@/core/notifications/types";
 import type { Space } from "@/leenkey/navigation/spaces";
+import { legalDate } from "@/leenkey/billing/withdrawal";
 import { formatAmount } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 
@@ -115,6 +117,25 @@ const CATALOG: Record<string, Entry> = {
       const title = text(data.title);
       return title ? t.listingRejected.detail(title) : null;
     },
+  },
+  // L1-40: a plan ending within 30 days (the seller), a withdrawal to refund (the team).
+  "plan.ending": {
+    icon: CalendarClock,
+    tone: "warning",
+    filters: [],
+    title: (data) => t.planEnding.title(text(data.plan_name)),
+    detail: (data) => {
+      const endsAt = text(data.ends_at);
+      return t.planEnding.detail(endsAt ? legalDate(endsAt) : null);
+    },
+  },
+  "plan.withdrawn": {
+    icon: CircleAlert,
+    tone: "warning",
+    filters: [],
+    title: () => t.planWithdrawn.title,
+    link: caseLink,
+    detail: (data) => t.planWithdrawn.detail(text(data.plan_name), text(data.reference)),
   },
   // L1-26: a plan paid (the seller), its case and its refunds (the team).
   "plan.activated": {

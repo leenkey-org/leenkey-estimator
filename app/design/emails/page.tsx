@@ -15,6 +15,12 @@ import {
 import { ListingsToReviewEmail, listingsToReviewSubject } from "@/emails/listings-to-review";
 import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
 import { PlanActivatedEmail, planActivatedSubject } from "@/emails/plan-activated";
+import { PlanEndingEmail, planEndingSubject } from "@/emails/plan-ending";
+import { WithdrawalReceivedEmail, withdrawalReceivedSubject } from "@/emails/withdrawal-received";
+import {
+  WithdrawalsToProcessEmail,
+  withdrawalsToProcessSubject,
+} from "@/emails/withdrawals-to-process";
 import { PlanPurchasedEmail, planPurchasedSubject } from "@/emails/plan-purchased";
 import { ReportsToReviewEmail, reportsToReviewSubject } from "@/emails/reports-to-review";
 import { AccountsCreatedEmail, accountsCreatedSubject } from "@/emails/accounts-created";
@@ -152,13 +158,77 @@ function previews(): Preview[] {
     },
     {
       name: t.names.planActivated,
-      subject: planActivatedSubject("Accompagné"),
+      subject: planActivatedSubject("Accompagné", s.reference),
       element: PlanActivatedEmail({
         firstName: "Bruno",
         planName: "Accompagné",
         property: s.reference,
         amount: formatPrice(99000),
+        orderedOn: "2 novembre 2026",
+        endsOn: "2 novembre 2027",
         contactFrom: "mardi 17 novembre",
+        earlyStart: false,
+        features: [
+          "Un conseiller Leenkey dédié",
+          "Un regard personnalisé sur votre prix et votre stratégie de vente",
+          "Relecture et optimisation de votre annonce",
+        ],
+        cguVersion: "28 juin 2026",
+        cgvVersion: "17 octobre 2026",
+        withdrawalUntil: "16 novembre 2026",
+        mediator: null,
+        planUrl: `${site}/vendeur/formule`,
+        siteUrl: site,
+      }),
+    },
+    {
+      name: t.names.withdrawalReceived,
+      subject: withdrawalReceivedSubject("Accompagné"),
+      element: WithdrawalReceivedEmail({
+        firstName: "Bruno",
+        planName: "Accompagné",
+        property: s.reference,
+        requestedAt: "5 novembre 2026 à 14:05",
+        orderedOn: "2 novembre 2026",
+        amount: formatPrice(99000),
+        earlyStart: false,
+        planUrl: `${site}/vendeur/formule`,
+        siteUrl: site,
+      }),
+    },
+    {
+      name: t.names.withdrawalsToProcess,
+      subject: withdrawalsToProcessSubject([
+        {
+          planName: "Accompagné",
+          property: s.reference,
+          amount: formatPrice(99000),
+          requestedAt: "5 novembre 2026 à 14:05",
+          earlyStart: false,
+        },
+      ]),
+      element: WithdrawalsToProcessEmail({
+        items: [
+          {
+            planName: "Accompagné",
+            property: s.reference,
+            amount: formatPrice(99000),
+            requestedAt: "5 novembre 2026 à 14:05",
+            earlyStart: false,
+          },
+        ],
+        casesUrl: `${site}/admin/dossiers`,
+        siteUrl: site,
+      }),
+    },
+    {
+      name: t.names.planEnding,
+      subject: planEndingSubject("Sérénité", "2 décembre 2026"),
+      element: PlanEndingEmail({
+        firstName: "Bruno",
+        planName: "Sérénité",
+        property: s.reference,
+        endsOn: "2 décembre 2026",
         planUrl: `${site}/vendeur/formule`,
         siteUrl: site,
       }),

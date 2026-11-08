@@ -1436,7 +1436,7 @@ Créés par Younes dans Stripe (test puis live), identifiants reportés dans `pl
 
 Remboursements : faits par Cédric depuis le dashboard Stripe (hors application en V2).
 
-Mise en œuvre (L1-26, `DECISIONS.md` 2026-11-03) : identifiants des prix lus dans `STRIPE_PRICE_*` (pas dans `plans.stripe_price_id`), montant vérifié contre la table `plans` à chaque commande ; écritures du webhook dans deux fonctions SQL idempotentes (`stripe_checkout_complete`, `stripe_charge_refunded`) ; la conversation conseiller au paiement arrive avec L1-34, l'email récapitulatif, la rétractation et l'échéance avec L1-40 ; au remboursement, la vente suit la formule en vigueur (déclencheurs de L1-23).
+Mise en œuvre (L1-26, `DECISIONS.md` 2026-11-03) : identifiants des prix lus dans `STRIPE_PRICE_*` (pas dans `plans.stripe_price_id`), montant vérifié contre la table `plans` à chaque commande ; écritures du webhook dans deux fonctions SQL idempotentes (`stripe_checkout_complete`, `stripe_charge_refunded`) ; la conversation conseiller au paiement arrive avec L1-34, l'email récapitulatif, la rétractation et l'échéance avec L1-40 ; au remboursement, la vente suit la formule en vigueur (déclencheurs de L1-23). Mise en œuvre de L1-40 (`DECISIONS.md` 2026-11-08) : bouton « Renoncer au contrat » au-dessus des formules pendant les 14 jours (dernier jour calculé comme le premier contact, `withdrawalEnds`), boîte de confirmation (formule, bien, date de la commande, adresse de l'accusé de réception), fonction `subscription_withdraw` (propriétaire seulement, une seule fois, refus au-delà de 20 jours en base), note et réouverture du dossier, notification et email à l'équipe ; email récapitulatif complet au paiement ; job `subscriptions-daily` (section 19). Le renouvellement en ligne est reporté (`BACKLOG-V3.md`) : le rappel invite à le demander par email.
 
 Tests : Stripe CLI (`npm run stripe:listen`) en local, cartes de test documentées dans `docs/RECETTE.md`.
 
@@ -1938,7 +1938,10 @@ Gabarit commun (`docs/DESIGN.md` 14) : fond `#F4F4F1`, carte blanche 560 px rayo
 | Rappel de visite | cron J-1 | Idem |
 | Documents partagés | `document.shared` | Liste, lien |
 | Demande d'accès aux documents | `document.access_requested` | Acquéreur, statut financement, lien |
-| Formule activée | `plan.activated` | Formule, prochaine étape, lien vers la conversation conseiller |
+| Formule activée | `plan.activated` | Récapitulatif de la commande (L1-40) : formule, prix, bien, date, durée et échéance, début des prestations, prestations vendues, versions des CGU et CGV acceptées avec leurs liens, rétractation et formulaire type, médiateur ; sujet « Confirmation de votre souscription Leenkey · [formule] · [référence] » |
+| Accusé de réception d'une rétractation | « Renoncer au contrat » (L1-40) | Date et heure de la demande, formule, remboursement sous 14 jours |
+| Admin : rétractation à rembourser | `plan.withdrawn` (L1-40) | Formule, bien, montant, date ; plusieurs en moins de 20 minutes : un seul email |
+| Formule qui se termine | `plan.ending`, 30 jours avant l'échéance (L1-40) | Date de fin, retour en Autonomie, renouvellement à demander par email |
 | Message du conseiller | `advisor.message` | Aperçu, lien |
 | Offre retirée | `offer.withdrawn` | Date et heure du retrait |
 | Alertes | cron | Digest de biens |
@@ -1963,6 +1966,7 @@ Voir `CLAUDE.md` section 13. Détail :
 | `/api/cron/visit-feedback` | `0 8 * * *` | Demandes de retour J+1 |
 | `/api/cron/send-notification-emails` | `*/5 * * * *` | Envoi des emails de notification en attente (regroupement) |
 | `/api/cron/anonymize-deleted` | `0 2 * * 0` | Anonymisation des comptes supprimés depuis plus de 30 jours |
+| *(en base, sans route)* `subscriptions-daily` | `23 7 * * *` | Formules (L1-40) : `subscriptions_daily()` remet la vente d'un bien dont la formule est échue sur la formule en vigueur (Autonomie) et prévient une fois le propriétaire d'une formule qui se termine dans 30 jours (`plan.ending`, email par le job des notifications) |
 | *(en base, sans route)* `purge-rate-limits` | `41 3 * * *` | Limites de débit (L1-38) : `rate_limits_purge()` supprime les compteurs des fenêtres de plus d'un jour |
 | *(en base, sans route)* `purge-visitor-assistant` | `17 3 * * *` | Assistant du site (`DECISIONS.md` 2026-11-07) : `ai_visitor_purge()` efface l'empreinte des adresses des jours passés et supprime les conversations des visiteurs de plus de 30 jours |
 

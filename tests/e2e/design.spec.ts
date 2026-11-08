@@ -106,7 +106,14 @@ test.describe("catalogue /design", () => {
     await page.getByRole("link", { name: "Aperçu des emails" }).click();
     await expect(page).toHaveURL("/design/emails");
     await expect(page.getByRole("heading", { level: 1, name: "Emails" })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(15);
+    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(18);
+    // L1-40: the summary of an order, a withdrawal, the end of a plan.
+    await expect(
+      page.getByText("Sujet : Confirmation de votre souscription Leenkey · Accompagné · LK-"),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Sujet : Accusé de réception de votre rétractation · formule Accompagné"),
+    ).toBeVisible();
     // 2026-11-08: the new accounts, for the team.
     await expect(page.getByText("Sujet : Nouveau compte sur Leenkey")).toBeVisible();
     await expect(page.getByText("Sujet : 3 annonces à valider")).toBeVisible();

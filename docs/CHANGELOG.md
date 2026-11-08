@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-08 · L1-40 · PR #81 · Vente conforme des formules : rétractation, récapitulatif, échéance
+- Ajouté : « Renoncer au contrat » sur la page de la formule pendant les 14 jours (boîte de confirmation, accusé de réception immédiat par email, note et réouverture du dossier, « Rétractation à rembourser » à toute l'équipe dans la cloche et par email).
+- Modifié : l'email « formule activée » devient le récapitulatif de la commande : prix, durée et date de fin, prestations vendues, CGU et CGV acceptées, rétractation et formulaire type, médiateur.
+- Ajouté : job quotidien `subscriptions-daily` : retour en Autonomie de la vente à l'échéance, rappel 30 jours avant la fin (cloche et email « Votre formule … se termine le … »).
+- Migration : `20261108180000_plan_withdrawal_term.sql` (`subscription_withdraw`, `subscriptions_daily`, `subscriptions.end_reminded_at`).
+- Tests : RLS (`rls_plan_withdrawal_term.sql`, 19, cinq comptes et visiteur), unitaires (récapitulatif, cloche), E2E (`billing.spec.ts` : rétractation après un paiement ; aperçu des emails).
+
 ### 2026-11-08 · Emails · PR #80 · Emails à l'équipe et nouveau compte
 - Modifié : les emails destinés à Leenkey (annonce à valider, signalement, commande d'une formule) partent à tous les admins actifs (adresse confirmée de leur compte) et à `ADMIN_NOTIFICATION_EMAIL` si elle est définie, en un seul email.
 - Ajouté : « Nouveau compte » dans la cloche des admins à la confirmation d'une adresse email, et email « Nouveau compte sur Leenkey » (regroupé sur 20 minutes) ; aperçu dans `/design/emails`.

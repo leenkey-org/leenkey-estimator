@@ -120,11 +120,29 @@ async function checkoutCompleted(
   // plan in force); the team checks it and writes to the seller.
   const held = result.status === "held";
 
-  const seller = await supabase
-    .from("profiles")
-    .select("first_name, last_name")
-    .eq("id", order.owner_id)
-    .maybeSingle();
+  const [seller, subscription] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("first_name, last_name")
+      .eq("id", order.owner_id)
+      .maybeSingle(),
+    // The plan as it was sold, and its end, for the summary of the order (L1-40).
+    result.subscriptionId
+      ? supabase
+          .from("subscriptions")
+          .select("activated_at, ends_at, plan_snapshot")
+          .eq("id", result.subscriptionId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  const snapshot = subscription.data?.plan_snapshot;
+  const features =
+    snapshot &&
+    typeof snapshot === "object" &&
+    !Array.isArray(snapshot) &&
+    Array.isArray(snapshot.features)
+      ? snapshot.features.filter((item): item is string => typeof item === "string")
+      : [];
   const sellerName =
     [seller.data?.first_name, seller.data?.last_name].filter(Boolean).join(" ") || "Le vendeur";
   const paid: PaidOrder = {
@@ -137,7 +155,13 @@ async function checkoutCompleted(
     propertyId: order.property_id,
     amountCents: amount,
     earlyStart: order.early_start === "1",
-    activatedAt: new Date(),
+    activatedAt: subscription.data?.activated_at
+      ? new Date(subscription.data.activated_at)
+      : new Date(),
+    endsAt: subscription.data?.ends_at ? new Date(subscription.data.ends_at) : null,
+    features,
+    cguVersion: order.cgu_version,
+    cgvVersion: order.cgv_version,
     held,
     check: result.check,
   };
@@ -185,6 +209,7 @@ function readResult(data: unknown): {
   status: string;
   planName: string | null;
   reference: string | null;
+  subscriptionId: string | null;
   /** What the team has to check (stripe_checkout_complete), in French. */
   check: string[];
 } {
@@ -194,6 +219,7 @@ function readResult(data: unknown): {
     status: text(record.status) ?? "unknown",
     planName: text(record.plan_name),
     reference: text(record.reference),
+    subscriptionId: text(record.subscription_id),
     check: Array.isArray(record.check)
       ? record.check.filter((item): item is string => typeof item === "string")
       : [],

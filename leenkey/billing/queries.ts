@@ -9,7 +9,7 @@ import type { Database } from "@/types/database";
 // Reads of /vendeur/formule (L1-26, SPEC-V2 8.8), with the seller's session:
 // the RLS gives them their properties and their subscriptions; the plan in
 // force is property_current_plan, as the rights read it (an ended plan is
-// already back to Autonomie, before the cron of L1-40 moves the sale).
+// already back to Autonomie, before the daily job of L1-40 moves the sale).
 
 type PlanCode = Database["public"]["Enums"]["plan_code"];
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
@@ -25,12 +25,15 @@ export type PlanPage = {
   /** The price of every plan, on sale or not: what a passage costs. */
   prices: { code: PlanCode; name: string; priceCents: number }[];
   current: PlanCode;
-  /** The paid plan in force: since when, until when, immediate start asked. */
+  /** The paid plan in force: since when, until when, immediate start asked, its withdrawal (L1-40). */
   active: {
+    id: string;
     plan: PlanCode;
     activatedAt: string;
     endsAt: string | null;
     earlyStart: boolean;
+    amountPaidCents: number;
+    withdrawalRequestedAt: string | null;
   } | null;
 };
 
@@ -49,7 +52,9 @@ export async function planPage(
       supabase.rpc("property_current_plan", { p: property.id }),
       supabase
         .from("subscriptions")
-        .select("plan, activated_at, ends_at, early_start_requested_at")
+        .select(
+          "id, plan, activated_at, ends_at, early_start_requested_at, amount_paid_cents, withdrawal_requested_at",
+        )
         .eq("property_id", property.id)
         .is("replaced_by", null)
         .is("refunded_at", null)
@@ -86,10 +91,13 @@ export async function planPage(
         active:
           active && active.plan === current
             ? {
+                id: active.id,
                 plan: active.plan,
                 activatedAt: active.activated_at,
                 endsAt: active.ends_at,
                 earlyStart: active.early_start_requested_at !== null,
+                amountPaidCents: active.amount_paid_cents,
+                withdrawalRequestedAt: active.withdrawal_requested_at,
               }
             : null,
       },

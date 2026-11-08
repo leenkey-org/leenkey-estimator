@@ -59,7 +59,7 @@ export function checkoutMetadata(order: {
 }
 
 /** « 2026-11-03 », the day of Paris of a moment. */
-function parisDay(date: Date): string {
+export function parisDay(date: Date): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(date);
 }
 
