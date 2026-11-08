@@ -83,16 +83,16 @@ test("inscription, puis confirmation depuis un autre navigateur", async ({ page,
   await admin.getByLabel("Email").fill("admin@test.leenkey.fr");
   await admin.getByLabel("Mot de passe").fill(SEED_PASSWORD ?? "");
   await admin.getByRole("button", { name: "Se connecter" }).click();
-  await admin.waitForURL((url) => url.pathname !== "/connexion");
-  if (new URL(admin.url()).pathname === "/conditions") {
-    await admin.getByRole("checkbox").check();
+  // On a fresh stack the admin of the seed accepts the terms first: the
+  // space may send there only once /admin started to load.
+  const bell = admin.getByRole("button", { name: /^Notifications/ }).locator("visible=true");
+  const terms = admin.getByRole("checkbox");
+  await expect(bell.or(terms)).toBeVisible({ timeout: 15_000 });
+  if (await terms.isVisible()) {
+    await terms.check();
     await admin.getByRole("button", { name: "Continuer" }).click();
-    await admin.waitForURL((url) => url.pathname !== "/conditions");
   }
-  await admin
-    .getByRole("button", { name: /^Notifications/ })
-    .locator("visible=true")
-    .click();
+  await bell.click();
   await expect(
     admin
       .getByRole("dialog", { name: "Notifications" })
