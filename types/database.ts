@@ -1007,6 +1007,30 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          bucket: string
+          created_at: string
+          hits: number
+          key: string
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          hits?: number
+          key: string
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          hits?: number
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           conversation_id: string | null
@@ -2105,6 +2129,18 @@ export type Database = {
           seller_first_name: string
           plan: Database["public"]["Enums"]["plan_code"]
         }[]
+      }
+      rate_limit_hit: {
+        Args: { p_bucket: string; p_server: string; p_key: string }
+        Returns: boolean
+      }
+      rate_limit_server: {
+        Args: { p_key: string }
+        Returns: undefined
+      }
+      rate_limits_purge: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       report_target: {
         Args: { p_buyer: string; p_reporter: string; p_seller: string }

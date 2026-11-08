@@ -8,6 +8,7 @@ import { safeNextPath } from "@/core/auth/next-path";
 import { getUser, missingAcceptances } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { LEGAL_VERSIONS } from "@/lib/legal/versions";
+import { allowRequest } from "@/lib/rate-limit";
 import { fr } from "@/lib/i18n/fr";
 import {
   acceptTermsSchema,
@@ -126,6 +127,10 @@ export async function signUp(
     const errors = fieldErrors(parsed.error);
     return { ok: false, error: t.summary(Object.keys(errors).length), fieldErrors: errors, values };
   }
+  // 5 sign-ups an hour per address (L1-38).
+  if (!(await allowRequest("signup", await headers()))) {
+    return { ok: false, error: t.tooManyRequests, values };
+  }
   const input = parsed.data;
   const { firstName, lastName } = splitFullName(input.fullName);
   // SPEC-V2 8.2: a new seller starts with the creation of the property.
@@ -205,6 +210,10 @@ export async function signIn(
     const errors = fieldErrors(parsed.error);
     return { ok: false, error: t.summary(Object.keys(errors).length), fieldErrors: errors, values };
   }
+  // 20 sign-ins a quarter of an hour per address (L1-38).
+  if (!(await allowRequest("signin", await headers()))) {
+    return { ok: false, error: t.tooManyRequests, values };
+  }
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,
@@ -238,6 +247,10 @@ export async function requestPasswordReset(
   const parsed = forgotPasswordSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { ok: false, error: t.summary(1), fieldErrors: fieldErrors(parsed.error), values };
+  }
+  // 5 requests an hour per address (L1-38).
+  if (!(await allowRequest("reset", await headers()))) {
+    return { ok: false, error: t.tooManyRequests, values };
   }
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
