@@ -96,7 +96,9 @@ test("inscription, puis confirmation depuis un autre navigateur", async ({ page,
   await expect(
     admin
       .getByRole("dialog", { name: "Notifications" })
-      .getByText("Camille M. · Acquéreur", { exact: true }),
+      .getByText("Camille M. · Acquéreur", { exact: true })
+      // The newest first: another run on the same stack left its own.
+      .first(),
   ).toBeVisible();
   await admin.context().close();
 

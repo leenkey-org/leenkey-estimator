@@ -52,6 +52,17 @@ function caseLink(data: Record<string, unknown>): string | null {
     : null;
 }
 
+/** « Vendeur, Acquéreur »: the roles of an account, as the back office names them. */
+export function roleLabels(roles: unknown): string {
+  const labels = fr.adminUsers.roles;
+  return (Array.isArray(roles) ? (roles as unknown[]) : [])
+    .map((role) =>
+      role === "seller" || role === "buyer" || role === "admin" ? labels[role] : null,
+    )
+    .filter((label): label is (typeof labels)[keyof typeof labels] => label !== null)
+    .join(", ");
+}
+
 function text(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
@@ -148,15 +159,7 @@ const CATALOG: Record<string, Entry> = {
       const name = [text(data.first_name), initial ? `${initial}.` : null]
         .filter(Boolean)
         .join(" ");
-      const roles: unknown[] = Array.isArray(data.roles) ? data.roles : [];
-      const labels = fr.adminUsers.roles;
-      const named = roles
-        .map((role) =>
-          role === "seller" || role === "buyer" || role === "admin" ? labels[role] : null,
-        )
-        .filter(Boolean)
-        .join(", ");
-      return t.accountCreated.detail(name || null, named || null);
+      return t.accountCreated.detail(name || null, roleLabels(data.roles) || null);
     },
   },
   // L1-30c: a conversation reported, to each admin (and by email, grouped).

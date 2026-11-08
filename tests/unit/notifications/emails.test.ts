@@ -235,7 +235,7 @@ describe("« Nouveau compte »", () => {
     expect(email?.subject).toBe("2\u00A0nouveaux comptes sur Leenkey");
     expect(email?.text).toContain("Alice M. · Vendeur, Acquéreur");
     expect(email?.text).not.toContain("www.promo.example");
-    expect(email?.text).toContain("M. · Acquéreur");
+    expect(email?.text).toContain("Sans nom · Acquéreur");
     expect(email?.html).toContain("https://leenkey-v2.vercel.app/admin/utilisateurs");
   });
 });
@@ -245,15 +245,16 @@ describe("sendNotificationEmails", () => {
 
   function client(
     rows: unknown[],
-    { claimed = true, team = [] }: { claimed?: boolean | string[]; team?: string[] } = {},
+    { claimed = true, team = [] }: { claimed?: boolean | string[]; team?: string[] | "error" } = {},
   ) {
     const updates: Update[] = [];
     const supabase = {
       // The queue, and the addresses of the admins of the team.
-      rpc: vi.fn(async (fn: string) => ({
-        data: fn === "team_email_addresses" ? team : rows,
-        error: null,
-      })),
+      rpc: vi.fn(async (fn: string) =>
+        fn === "team_email_addresses" && team === "error"
+          ? { data: null, error: { code: "57014", message: "canceled" } }
+          : { data: fn === "team_email_addresses" ? team : rows, error: null },
+      ),
       from: () => ({
         update(values: Record<string, unknown>) {
           const update: Update = { values, ids: [], filters: [] };
@@ -408,6 +409,45 @@ describe("sendNotificationEmails", () => {
     expect(mocks.sendEmail).not.toHaveBeenCalled();
     expect(summary.skipped).toBe(1);
     expect(updates[0].values).toEqual({ email_skipped_at: NOW.toISOString() });
+  });
+
+  it("the addresses of the team unknown (base down): its emails wait, the others leave", async () => {
+    const { sendNotificationEmails } = await import("@/leenkey/notifications/send-emails");
+    const pending = row({
+      id: "p1",
+      profile_id: "admin",
+      type: "listing.pending",
+      group_key: "listings:review",
+      link: "/admin/annonces/l1",
+      email: null,
+      data: { entity_id: "l1", reference: "LK-0042", title: "Maison" },
+    });
+    process.env.NEXT_PUBLIC_ENV = "production";
+    process.env.ADMIN_NOTIFICATION_EMAIL = "Admin@Exemple.test";
+    mocks.sendEmail.mockResolvedValue("sent");
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { supabase, updates } = client([pending, row()], { team: "error" });
+    // @ts-expect-error: a script of answers, not a client.
+    const summary = await sendNotificationEmails(supabase, NOW, { paceMs: 0 });
+    // The message of the seller leaves; the email of the team is neither sent
+    // to part of it nor dropped: nothing written on its row.
+    expect(mocks.sendEmail).toHaveBeenCalledTimes(1);
+    expect(mocks.sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "seller_a@exemple.test" }),
+    );
+    expect(summary).toMatchObject({ sent: 1, skipped: 0, postponed: 1 });
+    expect(updates.some((update) => update.ids.includes("p1"))).toBe(false);
+    log.mockRestore();
+    delete process.env.ADMIN_NOTIFICATION_EMAIL;
+  });
+
+  it("an address of the team once, whatever its case", async () => {
+    const { teamAddresses } = await import("@/leenkey/notifications/send-emails");
+    process.env.ADMIN_NOTIFICATION_EMAIL = "Contact.Leenkey@Exemple.test ";
+    const { supabase } = client([], { team: ["contact.leenkey@exemple.test"] });
+    // @ts-expect-error: a script of answers, not a client.
+    await expect(teamAddresses(supabase)).resolves.toEqual(["contact.leenkey@exemple.test"]);
+    delete process.env.ADMIN_NOTIFICATION_EMAIL;
   });
 
   it("stops sending at the end of its time: the rest waits for the next run", async () => {

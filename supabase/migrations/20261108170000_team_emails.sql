@@ -30,27 +30,33 @@ begin
   if old.confirmed_at is not null or new.confirmed_at is null then
     return null;
   end if;
-  -- entity_id: the same event for each admin (one email for the team).
-  select jsonb_build_object(
-           'entity_id', p.id,
-           'profile_id', p.id,
-           'first_name', p.first_name,
-           'last_initial', left(p.last_name, 1),
-           'roles', to_jsonb(p.roles))
-    into v_info
-    from public.profiles p
-   where p.id = new.id;
-  if v_info is null then
-    return null;
-  end if;
-  for v_admin in
-    select p.id from public.profiles p
-     where 'admin' = any(p.roles) and p.deleted_at is null and p.suspended_at is null
-       and p.id <> new.id
-  loop
-    perform public.notification_add(
-      v_admin, 'account.created', v_info, '/admin/utilisateurs/' || new.id, 'accounts:new', now());
-  end loop;
+  -- A notification never holds back the confirmation of an account: any
+  -- error is a warning in the logs, the confirmation goes through.
+  begin
+    -- entity_id: the same event for each admin (one email for the team).
+    select jsonb_build_object(
+             'entity_id', p.id,
+             'profile_id', p.id,
+             'first_name', p.first_name,
+             'last_initial', left(p.last_name, 1),
+             'roles', to_jsonb(p.roles))
+      into v_info
+      from public.profiles p
+     where p.id = new.id;
+    if v_info is not null then
+      for v_admin in
+        select p.id from public.profiles p
+         where 'admin' = any(p.roles) and p.deleted_at is null and p.suspended_at is null
+           and p.id <> new.id
+      loop
+        perform public.notification_add(
+          v_admin, 'account.created', v_info, '/admin/utilisateurs/' || new.id,
+          'accounts:new', now());
+      end loop;
+    end if;
+  exception when others then
+    raise warning 'accounts_notify: % (%)', sqlerrm, sqlstate;
+  end;
   return null;
 end;
 $$;

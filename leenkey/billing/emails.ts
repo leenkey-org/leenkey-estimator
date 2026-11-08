@@ -78,7 +78,7 @@ export async function emailPlanPurchased(
 ): Promise<EmailDelivery> {
   // Every admin of the team (2026-11-08).
   const to = await teamAddresses(supabase);
-  if (to.length === 0) return "failed";
+  if (!to || to.length === 0) return "failed";
   try {
     const [html, text] = await rendered(
       PlanPurchasedEmail({

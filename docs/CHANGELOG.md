@@ -15,8 +15,8 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 ### 2026-11-08 · Emails · PR #80 · Emails à l'équipe et nouveau compte
 - Modifié : les emails destinés à Leenkey (annonce à valider, signalement, commande d'une formule) partent à tous les admins actifs (adresse confirmée de leur compte) et à `ADMIN_NOTIFICATION_EMAIL` si elle est définie, en un seul email.
 - Ajouté : « Nouveau compte » dans la cloche des admins à la confirmation d'une adresse email, et email « Nouveau compte sur Leenkey » (regroupé sur 20 minutes) ; aperçu dans `/design/emails`.
-- Migration : `20261108170000_team_emails.sql` (`team_email_addresses()`, réservée au rôle de service ; déclencheur `on_auth_user_confirmed`).
-- Tests : RLS (`rls_team_emails.sql`, 13), unitaires (routage vers plusieurs adresses, email d'équipe à tous les admins, rendu), E2E (inscription : la notification arrive chez l'admin ; aperçu des emails).
+- Migration : `20261108170000_team_emails.sql` (`team_email_addresses()`, réservée au rôle de service ; déclencheur `on_auth_user_confirmed` sur `auth.users.confirmed_at`, qui ne bloque jamais une confirmation).
+- Tests : RLS (`rls_team_emails.sql`, 17 : admins supprimés ou suspendus exclus, jamais sur son propre compte), unitaires (routage vers plusieurs adresses, email d'équipe à tous les admins, base injoignable : l'email d'équipe attend le passage suivant, rendu), E2E (inscription : la notification arrive chez l'admin ; aperçu des emails).
 
 ### 2026-11-08 · L1-38 · PR #79 · En-têtes de sécurité et limites de débit
 - Ajouté : en-têtes de sécurité sur toutes les réponses (HSTS, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, CSP `frame-ancestors`, `object-src`, `base-uri`, `form-action`).

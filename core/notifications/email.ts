@@ -40,9 +40,13 @@ export async function sendEmail(email: OutgoingEmail): Promise<EmailDelivery> {
   }
   const route = routeEmail(email, env, process.env.EMAIL_TEST_INBOX);
   if (!route) {
-    console.error("[email] not sent: EMAIL_TEST_INBOX missing outside production", {
-      subject: email.subject,
-    });
+    const recipients = typeof email.to === "string" ? [email.to] : email.to;
+    console.error(
+      recipients.filter(Boolean).length === 0
+        ? "[email] not sent: no recipient"
+        : "[email] not sent: EMAIL_TEST_INBOX missing outside production",
+      { subject: email.subject },
+    );
     return "failed";
   }
   try {

@@ -49,14 +49,21 @@ type Changes = Database["public"]["Tables"]["notifications"]["Update"];
 /**
  * The addresses of the team (2026-11-08): every confirmed, active admin
  * account (team_email_addresses, service role), and ADMIN_NOTIFICATION_EMAIL
- * when set; one email to all of them. Outside production any address does:
- * the test inbox gets it.
+ * when set; one email to all of them, each address once whatever its case.
+ * Outside production any address does: the test inbox gets it. Null when the
+ * base does not answer: the emails of the team wait for the next run rather
+ * than leave to part of it, or never.
  */
-export async function teamAddresses(supabase: Client): Promise<string[]> {
+export async function teamAddresses(supabase: Client): Promise<string[] | null> {
   const { data, error } = await supabase.rpc("team_email_addresses");
-  if (error) console.error("[notifications] team addresses read failed", { code: error.code });
+  if (error) {
+    console.error("[notifications] team addresses read failed", { code: error.code });
+    return null;
+  }
   const configured = process.env.ADMIN_NOTIFICATION_EMAIL;
-  const addresses = [...new Set([...(data ?? []), ...(configured ? [configured] : [])])];
+  const addresses = [
+    ...new Set([...data, ...(configured ? [configured] : [])].map((a) => a.trim().toLowerCase())),
+  ].filter(Boolean);
   if (addresses.length > 0) return addresses;
   return appEnv() === "production" ? [] : ["admin@leenkey.fr"];
 }
@@ -174,19 +181,27 @@ export async function sendNotificationEmails(
   for (const { ids, until } of plan.postponed) {
     summary.postponed += await updateWaiting(supabase, ids, { email_after: until.toISOString() });
   }
-  // Read once, when an email of the team is due.
+  // Read once, when an email of the team is due; unknown (the base did not
+  // answer), the emails of the team stay due for the next run.
   const team = plan.emails.some((email) => email.audience === "team")
     ? await teamAddresses(supabase)
     : [];
-  for (const [index, email] of plan.emails.entries()) {
+  const emails = team
+    ? plan.emails
+    : plan.emails.filter((email) => {
+        if (email.audience !== "team") return true;
+        summary.postponed += email.ids.length;
+        return false;
+      });
+  for (const [index, email] of emails.entries()) {
     if (Date.now() - started > budgetMs) {
       // Still due: the next run takes them.
-      summary.postponed += plan.emails.slice(index).reduce((sum, rest) => sum + rest.ids.length, 0);
+      summary.postponed += emails.slice(index).reduce((sum, rest) => sum + rest.ids.length, 0);
       break;
     }
     if (index > 0) await pause(paceMs);
     try {
-      const outcome = await deliver(supabase, email, now, team);
+      const outcome = await deliver(supabase, email, now, team ?? []);
       if (outcome === "sent") summary.sent += 1;
       else if (outcome === "failed") summary.failed += 1;
       else if (outcome === "skipped") summary.skipped += email.ids.length;

@@ -128,6 +128,8 @@ describe("routeEmail", () => {
       "b@exemple.test",
     ]);
     expect(routeEmail({ to: [], subject: "x" }, "production", undefined)).toBeNull();
+    // Nobody to write to: nothing leaves, even to the test inbox.
+    expect(routeEmail({ to: [], subject: "x" }, "staging", "boite@exemple.test")).toBeNull();
     // Elsewhere, still the test inbox only.
     expect(routeEmail(team, "staging", "boite@exemple.test")?.to).toEqual(["boite@exemple.test"]);
   });

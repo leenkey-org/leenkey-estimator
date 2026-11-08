@@ -11,6 +11,7 @@ import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
 import { ReportsToReviewEmail, reportsToReviewSubject } from "@/emails/reports-to-review";
 import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
+import { roleLabels } from "./catalog";
 import { absoluteUrl, siteUrl } from "@/lib/site";
 import { adminListingsHref } from "@/lib/validations/admin";
 
@@ -154,24 +155,21 @@ async function reportsToReview(email: PlannedEmail): Promise<RenderedEmail | nul
   );
 }
 
-/** The email of a group, ready to leave; null when its type has none. */
-/** « Alice D. »: the first name (made safe for a mail client) and the initial of the last name. */
+/**
+ * « Alice D. »: the first name (made safe for a mail client) and the initial
+ * of the last name; without a first name to show, « Sans nom » rather than an
+ * initial alone.
+ */
 export function accountName(item: QueuedNotification): string {
   const first = emailSafeText(item.data.first_name);
+  if (!first) return fr.adminUsers.noName;
   const initial = text(item.data.last_initial);
-  return [first, initial ? `${initial}.` : null].filter(Boolean).join(" ") || fr.adminUsers.noName;
+  return initial ? `${first} ${initial}.` : first;
 }
 
 /** « Vendeur, Acquéreur »: the roles of the account. */
 export function accountRoles(item: QueuedNotification): string {
-  const roles: unknown[] = Array.isArray(item.data.roles) ? item.data.roles : [];
-  const labels = fr.adminUsers.roles;
-  return roles
-    .map((role) =>
-      role === "seller" || role === "buyer" || role === "admin" ? labels[role] : null,
-    )
-    .filter((label): label is (typeof labels)[keyof typeof labels] => label !== null)
-    .join(", ");
+  return roleLabels(item.data.roles);
 }
 
 /** Accounts confirmed: one email for one, a list for several. */
@@ -189,6 +187,7 @@ async function accountsCreated(email: PlannedEmail): Promise<RenderedEmail | nul
   );
 }
 
+/** The email of a group, ready to leave; null when its type has none. */
 export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEmail | null> {
   switch (email.type) {
     case "message.new":

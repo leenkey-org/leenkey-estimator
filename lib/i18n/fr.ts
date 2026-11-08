@@ -405,12 +405,13 @@ export const fr = {
         detail: (reference: string | null) =>
           reference ? `Dossier à suivre pour ${reference}.` : "Un dossier à suivre.",
       },
-      // L1-30c: a conversation reported, to the team.
+      // 2026-11-08: an account confirmed, to the team.
       accountCreated: {
         title: "Nouveau compte",
         detail: (name: string | null, roles: string | null) =>
           [name, roles].filter(Boolean).join(" · ") || null,
       },
+      // L1-30c: a conversation reported, to the team.
       reportCreated: {
         title: "Conversation signalée",
         detail: (excerpt: string | null, reference: string | null) =>

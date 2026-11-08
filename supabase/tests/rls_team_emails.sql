@@ -3,7 +3,7 @@
 -- is told of an account once its email is confirmed (account.created), once.
 begin;
 \ir _helpers.psql
-select plan(13);
+select plan(17);
 \ir _plan.psql
 
 -- Confirms an email as Supabase Auth does: email_confirmed_at, from which it
@@ -41,6 +41,10 @@ select ok(not exists (select 1 from team_email_addresses() a where a = 'admin@rl
 select tests.confirm_email(tests.uid('admin'), now());
 select ok(exists (select 1 from team_email_addresses() a where a = 'admin@rls.leenkey.test'),
           'team: a confirmed admin gets the emails of the team');
+select is((select count(*)::int from notifications
+            where profile_id = tests.uid('admin') and type = 'account.created'
+              and data->>'profile_id' = tests.uid('admin')::text), 0,
+          'team: an admin is never told of their own account');
 select ok(not exists (select 1 from team_email_addresses() a where a = 'seller_a@rls.leenkey.test'),
           'team: never an account that is not admin');
 update profiles set suspended_at = now() where id = tests.uid('admin');
@@ -85,6 +89,24 @@ select is((select count(*)::int from notifications
             where type = 'account.created' and data->>'profile_id' = '00000000-0000-4000-a000-0000000000f1'), 0,
           'admin: an account made already confirmed (seed) tells no one');
 
+-- Deleted or suspended, an admin gets neither the emails nor the notifications.
+update profiles set deleted_at = now() where id = tests.uid('admin');
+select ok(not exists (select 1 from team_email_addresses() a where a = 'admin@rls.leenkey.test'),
+          'team: never a deleted admin');
+select tests.confirm_email(tests.uid('seller_b'), now());
+select is((select count(*)::int from notifications
+            where profile_id = tests.uid('admin') and type = 'account.created'
+              and data->>'profile_id' = tests.uid('seller_b')::text), 0,
+          'team: a deleted admin is not told of a new account');
+update profiles set deleted_at = null, suspended_at = now() where id = tests.uid('admin');
+select tests.confirm_email(tests.uid('buyer_d'), now());
+select is((select count(*)::int from notifications
+            where profile_id = tests.uid('admin') and type = 'account.created'
+              and data->>'profile_id' = tests.uid('buyer_d')::text), 0,
+          'team: a suspended admin is not told of a new account');
+update profiles set suspended_at = null where id = tests.uid('admin');
+
+-- The admin has a notification of seller_a's account: nobody else reads it.
 \set who seller_b
 \ir _as.psql
 select is((select count(*)::int from notifications where type = 'account.created'), 0,
