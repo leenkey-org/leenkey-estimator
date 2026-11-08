@@ -1,6 +1,6 @@
 -- The assistant of the public site (DECISIONS.md 2026-11-07): the route of
 -- the site asks through ai_visitor_ask (the limits of the day: 10 per
--- visitor, 30 per address, 300 for the site), reads back only the
+-- visitor, 30 per address, 100 for the site), reads back only the
 -- conversation of a visitor (ai_visitor_history) and writes one answer per
 -- question (ai_visitor_answer), each time with the key of the server
 -- (derived from the cron_secret of the Vault): called straight, with the
@@ -160,19 +160,19 @@ select is((select count(*)::int from (
 select is((select status from ai_visitor_ask(:'key', encode(sha256('visitor-200'), 'hex'), :'ip1', null, 'Bonjour')),
           'ip_limit', 'address: the 31st question of the day is refused');
 
--- 300 for the site (32 asked so far).
+-- 100 for the site (32 asked so far).
 reset role;
 insert into ai_conversations (profile_id, context, kind, visitor_key, ip_key)
 select null, 'visitor', 'chat', encode(sha256(convert_to('bulk-' || n, 'UTF8')), 'hex'), encode(sha256(convert_to('bulk-ip-' || n, 'UTF8')), 'hex')
-  from generate_series(1, 268) n;
+  from generate_series(1, 68) n;
 insert into ai_messages (conversation_id, role, content)
 select c.id, 'user', '{"type":"user","text":"x","context":null}'
-  from ai_conversations c where c.visitor_key in (select encode(sha256(convert_to('bulk-' || n, 'UTF8')), 'hex') from generate_series(1, 268) n);
+  from ai_conversations c where c.visitor_key in (select encode(sha256(convert_to('bulk-' || n, 'UTF8')), 'hex') from generate_series(1, 68) n);
 select is((select count(*)::int from ai_messages m join ai_conversations c on c.id = m.conversation_id
-            where c.context = 'visitor' and m.role = 'user'), 300, 'site: 300 questions asked today');
+            where c.context = 'visitor' and m.role = 'user'), 100, 'site: 100 questions asked today');
 \ir _as.psql
-select is((select status from ai_visitor_ask(:'key', encode(sha256('visitor-300'), 'hex'), encode(sha256('address-300'), 'hex'), null, 'Bonjour')),
-          'site_limit', 'site: the 301st question of the day is refused, whoever asks');
+select is((select status from ai_visitor_ask(:'key', encode(sha256('visitor-100'), 'hex'), encode(sha256('address-100'), 'hex'), null, 'Bonjour')),
+          'site_limit', 'site: the 101st question of the day is refused, whoever asks');
 
 -- The next day: the limits start again, yesterday's conversation is not reused,
 -- and the purge of the night clears the hash of yesterday's addresses.
