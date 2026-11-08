@@ -47,6 +47,8 @@ test.beforeEach(() => {
 });
 
 test("inscription, puis confirmation depuis un autre navigateur", async ({ page, browser }) => {
+  // Four browsers and the sign-in of the admin: more than the default time.
+  test.slow();
   await page.goto("/inscription?next=%2Facquereur%3Fbienvenue%3D1");
   await page.getByText("J'achète").click();
   await page.getByLabel("Prénom et nom").fill("Camille Martin");
@@ -73,6 +75,32 @@ test("inscription, puis confirmation depuis un autre navigateur", async ({ page,
   await other.getByRole("button", { name: "Confirmer mon adresse" }).click();
   await expect(other).toHaveURL(/\/acquereur\?bienvenue=1$/);
   await expect(other.getByRole("heading", { level: 1 })).toHaveText("Bonjour Camille");
+
+  // The team is told of the new account (2026-11-08): in the bell of the
+  // admins at once, by email through the cron (grouped).
+  const admin = await (await browser.newContext()).newPage();
+  await admin.goto("/connexion?next=%2Fadmin");
+  await admin.getByLabel("Email").fill("admin@test.leenkey.fr");
+  await admin.getByLabel("Mot de passe").fill(SEED_PASSWORD ?? "");
+  await admin.getByRole("button", { name: "Se connecter" }).click();
+  // On a fresh stack the admin of the seed accepts the terms first: the
+  // space may send there only once /admin started to load.
+  const bell = admin.getByRole("button", { name: /^Notifications/ }).locator("visible=true");
+  const terms = admin.getByRole("checkbox");
+  await expect(bell.or(terms)).toBeVisible({ timeout: 15_000 });
+  if (await terms.isVisible()) {
+    await terms.check();
+    await admin.getByRole("button", { name: "Continuer" }).click();
+  }
+  await bell.click();
+  await expect(
+    admin
+      .getByRole("dialog", { name: "Notifications" })
+      .getByText("Camille M. · Acquéreur", { exact: true })
+      // The newest first: another run on the same stack left its own.
+      .first(),
+  ).toBeVisible();
+  await admin.context().close();
 
   // A used link is refused clearly.
   const third = await (await browser.newContext()).newPage();

@@ -143,7 +143,7 @@ async function checkoutCompleted(
   };
   const [toSeller, toTeam] = await Promise.all([
     held ? Promise.resolve("none" as const) : emailPlanActivated(paid),
-    emailPlanPurchased(paid),
+    emailPlanPurchased(paid, supabase),
   ]);
   log(held ? "payment recorded, plan held" : "payment recorded", {
     event_id: eventId,

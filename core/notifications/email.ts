@@ -12,7 +12,8 @@ const DEFAULT_FROM = "Leenkey <bonjour@leenkey.fr>";
 const RESEND_URL = "https://api.resend.com/emails";
 
 export type OutgoingEmail = {
-  to: string;
+  /** One recipient, or several (the admins of the team: one email to all of them). */
+  to: string | readonly string[];
   subject: string;
   html: string;
   text: string;
@@ -39,9 +40,13 @@ export async function sendEmail(email: OutgoingEmail): Promise<EmailDelivery> {
   }
   const route = routeEmail(email, env, process.env.EMAIL_TEST_INBOX);
   if (!route) {
-    console.error("[email] not sent: EMAIL_TEST_INBOX missing outside production", {
-      subject: email.subject,
-    });
+    const recipients = typeof email.to === "string" ? [email.to] : email.to;
+    console.error(
+      recipients.filter(Boolean).length === 0
+        ? "[email] not sent: no recipient"
+        : "[email] not sent: EMAIL_TEST_INBOX missing outside production",
+      { subject: email.subject },
+    );
     return "failed";
   }
   try {
@@ -50,12 +55,12 @@ export async function sendEmail(email: OutgoingEmail): Promise<EmailDelivery> {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: process.env.EMAIL_FROM || DEFAULT_FROM,
-        to: [route.to],
+        to: route.to,
         subject: route.subject,
         html: email.html,
         text: email.text,
         // Outside production, an answer goes back to the test inbox too.
-        ...(email.replyTo ? { reply_to: env === "production" ? email.replyTo : route.to } : {}),
+        ...(email.replyTo ? { reply_to: env === "production" ? email.replyTo : route.to[0] } : {}),
       }),
       // Short: the caller waits (a decision of the back office).
       signal: AbortSignal.timeout(5_000),

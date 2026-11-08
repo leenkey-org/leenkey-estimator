@@ -4,14 +4,20 @@ import type { AppEnv } from "@/lib/env";
 // recipient in production; elsewhere only to EMAIL_TEST_INBOX, the subject
 // prefixed with « [PREPROD] » or « [LOCAL] ».
 
-/** Recipient and subject of an email in an environment; null when it must not leave. */
+/**
+ * Recipients and subject of an email in an environment (one recipient or
+ * several, as the admins of the team); null when it must not leave: no
+ * recipient, or no test inbox outside production.
+ */
 export function routeEmail(
-  email: { to: string; subject: string },
+  email: { to: string | readonly string[]; subject: string },
   env: AppEnv,
   testInbox: string | undefined,
-): { to: string; subject: string } | null {
-  if (env === "production") return { to: email.to, subject: email.subject };
+): { to: string[]; subject: string } | null {
+  const to = (typeof email.to === "string" ? [email.to] : [...email.to]).filter(Boolean);
+  if (to.length === 0) return null;
+  if (env === "production") return { to, subject: email.subject };
   if (!testInbox) return null;
   const prefix = env === "staging" ? "[PREPROD]" : "[LOCAL]";
-  return { to: testInbox, subject: `${prefix} ${email.subject}` };
+  return { to: [testInbox], subject: `${prefix} ${email.subject}` };
 }

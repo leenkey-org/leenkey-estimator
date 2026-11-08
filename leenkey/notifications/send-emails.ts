@@ -46,11 +46,26 @@ export type SendSummary = {
 type Client = SupabaseClient<Database>;
 type Changes = Database["public"]["Tables"]["notifications"]["Update"];
 
-/** ADMIN_NOTIFICATION_EMAIL; outside production any address does: the test inbox gets it. */
-export function teamAddress(): string | null {
-  const address = process.env.ADMIN_NOTIFICATION_EMAIL;
-  if (address) return address;
-  return appEnv() === "production" ? null : "admin@leenkey.fr";
+/**
+ * The addresses of the team (2026-11-08): every confirmed, active admin
+ * account (team_email_addresses, service role), and ADMIN_NOTIFICATION_EMAIL
+ * when set; one email to all of them, each address once whatever its case.
+ * Outside production any address does: the test inbox gets it. Null when the
+ * base does not answer: the emails of the team wait for the next run rather
+ * than leave to part of it, or never.
+ */
+export async function teamAddresses(supabase: Client): Promise<string[] | null> {
+  const { data, error } = await supabase.rpc("team_email_addresses");
+  if (error) {
+    console.error("[notifications] team addresses read failed", { code: error.code });
+    return null;
+  }
+  const configured = process.env.ADMIN_NOTIFICATION_EMAIL;
+  const addresses = [
+    ...new Set([...data, ...(configured ? [configured] : [])].map((a) => a.trim().toLowerCase())),
+  ].filter(Boolean);
+  if (addresses.length > 0) return addresses;
+  return appEnv() === "production" ? [] : ["admin@leenkey.fr"];
 }
 
 function chunks(ids: readonly string[]): string[][] {
@@ -110,8 +125,13 @@ async function release(supabase: Client, ids: readonly string[], claimedAt: stri
 
 type Outcome = "sent" | "failed" | "skipped" | "taken";
 
-async function deliver(supabase: Client, email: PlannedEmail, now: Date): Promise<Outcome> {
-  const to = email.audience === "team" ? teamAddress() : email.email;
+async function deliver(
+  supabase: Client,
+  email: PlannedEmail,
+  now: Date,
+  team: readonly string[],
+): Promise<Outcome> {
+  const to = email.audience === "team" ? (team.length > 0 ? team : null) : email.email;
   if (!to) {
     console.error("[notifications] email without recipient", {
       type: email.type,
@@ -161,15 +181,27 @@ export async function sendNotificationEmails(
   for (const { ids, until } of plan.postponed) {
     summary.postponed += await updateWaiting(supabase, ids, { email_after: until.toISOString() });
   }
-  for (const [index, email] of plan.emails.entries()) {
+  // Read once, when an email of the team is due; unknown (the base did not
+  // answer), the emails of the team stay due for the next run.
+  const team = plan.emails.some((email) => email.audience === "team")
+    ? await teamAddresses(supabase)
+    : [];
+  const emails = team
+    ? plan.emails
+    : plan.emails.filter((email) => {
+        if (email.audience !== "team") return true;
+        summary.postponed += email.ids.length;
+        return false;
+      });
+  for (const [index, email] of emails.entries()) {
     if (Date.now() - started > budgetMs) {
       // Still due: the next run takes them.
-      summary.postponed += plan.emails.slice(index).reduce((sum, rest) => sum + rest.ids.length, 0);
+      summary.postponed += emails.slice(index).reduce((sum, rest) => sum + rest.ids.length, 0);
       break;
     }
     if (index > 0) await pause(paceMs);
     try {
-      const outcome = await deliver(supabase, email, now);
+      const outcome = await deliver(supabase, email, now, team ?? []);
       if (outcome === "sent") summary.sent += 1;
       else if (outcome === "failed") summary.failed += 1;
       else if (outcome === "skipped") summary.skipped += email.ids.length;

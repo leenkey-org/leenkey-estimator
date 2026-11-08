@@ -405,6 +405,12 @@ export const fr = {
         detail: (reference: string | null) =>
           reference ? `Dossier à suivre pour ${reference}.` : "Un dossier à suivre.",
       },
+      // 2026-11-08: an account confirmed, to the team.
+      accountCreated: {
+        title: "Nouveau compte",
+        detail: (name: string | null, roles: string | null) =>
+          [name, roles].filter(Boolean).join(" · ") || null,
+      },
       // L1-30c: a conversation reported, to the team.
       reportCreated: {
         title: "Conversation signalée",
@@ -1873,6 +1879,17 @@ export const fr = {
           : "Un utilisateur a signalé une conversation.",
       reason: "Motif",
       action: (count: number) => (count > 1 ? "Voir les signalements" : "Voir le signalement"),
+    },
+    // 2026-11-08: the accounts confirmed since the last email, to the team (cron of L1-22, grouped).
+    accountsCreated: {
+      subject: (count: number) =>
+        count > 1 ? `${count}\u00A0nouveaux comptes sur Leenkey` : "Nouveau compte sur Leenkey",
+      title: (count: number) => (count > 1 ? "De nouveaux comptes" : "Un nouveau compte"),
+      text: (count: number) =>
+        count > 1
+          ? `${count}\u00A0personnes ont confirmé leur adresse email et créé leur compte.`
+          : "Une personne a confirmé son adresse email et créé son compte.",
+      action: (count: number) => (count > 1 ? "Voir les comptes" : "Voir le compte"),
     },
     accountSuspended: {
       subject: "Votre compte Leenkey est suspendu",

@@ -106,7 +106,9 @@ test.describe("catalogue /design", () => {
     await page.getByRole("link", { name: "Aperçu des emails" }).click();
     await expect(page).toHaveURL("/design/emails");
     await expect(page.getByRole("heading", { level: 1, name: "Emails" })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(14);
+    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(15);
+    // 2026-11-08: the new accounts, for the team.
+    await expect(page.getByText("Sujet : Nouveau compte sur Leenkey")).toBeVisible();
     await expect(page.getByText("Sujet : 3 annonces à valider")).toBeVisible();
     // L1-30a: the suspension of an account.
     await expect(page.getByText("Sujet : Votre compte Leenkey est suspendu")).toBeVisible();
