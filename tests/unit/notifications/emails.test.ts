@@ -240,6 +240,67 @@ describe("« Nouveau compte »", () => {
   });
 });
 
+describe("« Rétractation à rembourser » and « Votre formule se termine » (L1-40)", () => {
+  it("the team: the plans renounced, both of a passage, the amount to refund", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const email = await renderNotificationEmail(
+      planned(
+        [
+          queued({
+            type: "plan.withdrawn",
+            profileId: "admin",
+            email: null,
+            firstName: null,
+            groupKey: "plans:withdrawn",
+            link: "/admin/dossiers",
+            data: {
+              entity_id: "s1",
+              plan_name: "Sérénité",
+              reference: "LK-0009",
+              amount_paid_cents: 51000,
+              replaced_plan_name: "Accompagné",
+              replaced_amount_paid_cents: 99000,
+              requested_at: "2026-11-05T13:05:00Z",
+              early_start: true,
+            },
+          }),
+        ],
+        { audience: "team" },
+      ),
+    );
+    expect(email?.subject).toBe(
+      "Rétractation à rembourser · formule Sérénité + Accompagné · LK-0009",
+    );
+    expect(email?.text).toMatch(/1\s500\s€ TTC payés · demande du 5 novembre 2026 à 14:05/);
+    expect(email?.text).toContain("démarrage immédiat demandé");
+    expect(email?.html).toContain("https://leenkey-v2.vercel.app/admin/dossiers");
+  });
+
+  it("the owner: the date of the end, back to Autonomie, an answer goes to Leenkey", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const email = await renderNotificationEmail(
+      planned([
+        queued({
+          type: "plan.ending",
+          groupKey: "plan-ending:s3",
+          link: "/vendeur/formule?bien=p3",
+          data: {
+            entity_id: "s3",
+            plan_name: "Sérénité",
+            reference: "LK-0003",
+            ends_at: "2027-11-02T10:00:00Z",
+          },
+        }),
+      ]),
+    );
+    expect(email?.subject).toBe("Votre formule Sérénité se termine le 2 novembre 2027");
+    expect(email?.text).toContain("Bonjour Alice");
+    expect(email?.text).toContain("votre bien repasse en Autonomie");
+    expect(email?.replyTo).toBe("contact.leenkey@gmail.com");
+    for (const text of [email?.text ?? ""]) expect(text).not.toMatch(/\bon\b/i);
+  });
+});
+
 describe("sendNotificationEmails", () => {
   type Update = { values: Record<string, unknown>; ids: string[]; filters: string[] };
 

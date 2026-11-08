@@ -17,6 +17,8 @@ const small = { ...emailText, fontSize: "14px" };
 export type PlanActivatedEmailProps = {
   firstName: string | null;
   planName: string;
+  /** A passage to a dearer plan: the difference was paid. */
+  upgrade?: boolean;
   /** « LK-0001 », or the town of a property without a listing yet. */
   property: string;
   /** « 990 € » */
@@ -46,6 +48,7 @@ export const planActivatedSubject = (planName: string, property: string) =>
 export function PlanActivatedEmail({
   firstName,
   planName,
+  upgrade = false,
   property,
   amount,
   orderedOn,
@@ -63,13 +66,15 @@ export function PlanActivatedEmail({
   const legal = fr.legal;
   return (
     <EmailLayout
-      preview={t.ordered(planName, amount, property, orderedOn)}
+      preview={(upgrade ? t.orderedUpgrade : t.ordered)(planName, amount, property, orderedOn)}
       title={t.title(planName)}
       siteUrl={siteUrl}
       action={{ href: planUrl, label: t.action }}
     >
       <Text style={emailText}>{fr.emails.greeting(firstName)}</Text>
-      <Text style={emailText}>{t.ordered(planName, amount, property, orderedOn)}</Text>
+      <Text style={emailText}>
+        {(upgrade ? t.orderedUpgrade : t.ordered)(planName, amount, property, orderedOn)}
+      </Text>
       <Text style={emailText}>{t.duration(endsOn)}</Text>
       <Text style={emailText}>{contactFrom ? t.contactLater(contactFrom) : t.contactNow}</Text>
 

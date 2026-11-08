@@ -192,6 +192,7 @@ function previews(): Preview[] {
         orderedOn: "2 novembre 2026",
         amount: formatPrice(99000),
         earlyStart: false,
+        replaced: null,
         planUrl: `${site}/vendeur/formule`,
         siteUrl: site,
       }),

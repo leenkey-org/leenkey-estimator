@@ -20,6 +20,8 @@ export type WithdrawalReceivedEmailProps = {
   /** « 990 € » */
   amount: string;
   earlyStart: boolean;
+  /** The plan a passage replaced, renounced with it. */
+  replaced: { planName: string; orderedOn: string } | null;
   planUrl: string;
   siteUrl: string;
 };
@@ -34,6 +36,7 @@ export function WithdrawalReceivedEmail({
   orderedOn,
   amount,
   earlyStart,
+  replaced,
   planUrl,
   siteUrl,
 }: WithdrawalReceivedEmailProps) {
@@ -46,6 +49,9 @@ export function WithdrawalReceivedEmail({
     >
       <Text style={emailText}>{fr.emails.greeting(firstName)}</Text>
       <Text style={emailText}>{t.text(requestedAt, planName, property, orderedOn)}</Text>
+      {replaced ? (
+        <Text style={emailText}>{t.replaced(replaced.planName, replaced.orderedOn)}</Text>
+      ) : null}
       <Text style={emailText}>{t.refund(amount)}</Text>
       {earlyStart ? <Text style={emailText}>{t.early}</Text> : null}
       <Text style={emailText}>{t.contact(fr.legal.contactEmail)}</Text>

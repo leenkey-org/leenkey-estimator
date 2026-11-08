@@ -202,9 +202,13 @@ async function withdrawalsToProcess(email: PlannedEmail): Promise<RenderedEmail 
   if (email.items.length === 0) return null;
   const items = email.items.map((item) => {
     const requested = text(item.data.requested_at);
-    const amount = Number(item.data.amount_paid_cents);
+    // A passage renounced with the plan it replaced: both are refunded.
+    const amount =
+      Number(item.data.amount_paid_cents) + (Number(item.data.replaced_amount_paid_cents) || 0);
+    const replaced = text(item.data.replaced_plan_name);
+    const plan = text(item.data.plan_name) ?? "";
     return {
-      planName: text(item.data.plan_name) ?? "",
+      planName: replaced ? `${plan} + ${replaced}` : plan,
       property: text(item.data.reference) ?? "",
       amount: formatAmount(Number.isFinite(amount) ? amount : 0),
       requestedAt: requested ? legalDateTime(requested) : "",

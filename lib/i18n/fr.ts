@@ -1842,6 +1842,8 @@ export const fr = {
         `Merci : votre formule ${plan} est active pour votre bien ${property}.`,
       ordered: (plan: string, amount: string, property: string, date: string) =>
         `Votre formule ${plan}, au prix de ${amount} TTC pour le bien ${property}, a été souscrite le ${date}.`,
+      orderedUpgrade: (plan: string, amount: string, property: string, date: string) =>
+        `Votre passage à la formule ${plan}, au prix de ${amount} TTC pour le bien ${property}, a été souscrit le ${date}.`,
       duration: (until: string) =>
         `Durée du contrat : 12 mois, jusqu'au ${until}, sans renouvellement automatique. À l'échéance, votre bien repasse en Autonomie : votre annonce reste en ligne.`,
       includes: "Ce que comprend votre formule",
@@ -1859,7 +1861,7 @@ export const fr = {
         `À l'attention de ${address}.`,
         "Je vous notifie par la présente ma rétractation du contrat de prestation de services ci-dessous :",
         `Formule souscrite : ${plan}`,
-        `Référence : ${reference}`,
+        `Référence du bien : ${reference}`,
         `Commandée le : ${date}`,
         "Nom et prénom : ____________________",
         "Adresse : ____________________",
@@ -1882,6 +1884,8 @@ export const fr = {
       title: "Votre rétractation est bien reçue",
       text: (at: string, plan: string, property: string, ordered: string) =>
         `Nous avons reçu le ${at} votre demande de rétractation pour la formule ${plan} (bien ${property}), souscrite le ${ordered}.`,
+      replaced: (plan: string, ordered: string) =>
+        `Elle comprend la formule ${plan}, souscrite le ${ordered} puis remplacée, encore dans son délai.`,
       refund: (amount: string) =>
         `Nous vous remboursons ${amount} TTC au plus tard 14 jours après votre demande, par le moyen de paiement utilisé lors de la commande, sans frais.`,
       early:
@@ -2066,6 +2070,8 @@ export const fr = {
       notFound: "Ce bien n'existe plus.",
       sold: "Ce bien est vendu : il n'y a plus de formule à choisir.",
       current: "Cette formule est déjà la vôtre pour ce bien.",
+      withdrawn:
+        "Votre rétractation est en cours : il n'est pas possible de commander une autre formule pour ce bien d'ici le remboursement.",
       lower: "Votre formule actuelle comprend déjà celle-ci.",
       closed: "Les formules payantes ne sont pas encore ouvertes à la commande.",
       unavailable:
@@ -2085,15 +2091,23 @@ export const fr = {
       dialogText: (plan: string, property: string, date: string) =>
         `Formule ${plan} pour ${property}, souscrite le ${date}. Nous vous remboursons sous 14 jours, par le moyen de paiement utilisé lors de la commande.`,
       dialogEmail: (email: string) => `Un accusé de réception part à ${email}.`,
+      dialogName: (name: string) => `Au nom de ${name}.`,
+      dialogReplaced: (plan: string, date: string) =>
+        `Votre formule ${plan}, souscrite le ${date} puis remplacée, est encore dans son délai : elle est comprise dans cette rétractation.`,
       confirm: "Confirmer la rétractation",
       labels: { back: "Retour", close: "Fermer", cancel: "Annuler" },
       done: (date: string) =>
         `Rétractation enregistrée le ${date}. Nous vous remboursons sous 14 jours, par le moyen de paiement utilisé ; un accusé de réception vous a été envoyé par email.`,
+      doneNoEmail: (date: string, email: string) =>
+        `Rétractation enregistrée le ${date}. Nous vous remboursons sous 14 jours, par le moyen de paiement utilisé. L'accusé de réception n'a pas pu partir par email : cette page en tient lieu, et vous pouvez le demander à ${email}.`,
+      withdrawnNote:
+        "Votre rétractation est en cours : il n'est pas possible de commander une autre formule pour ce bien d'ici le remboursement.",
       errors: {
         session: "Votre session a expiré. Reconnectez-vous pour renoncer au contrat.",
-        over: "Le délai de rétractation de 14 jours est passé. Pour toute question, écrivez-nous.",
-        notInForce: "Cette formule n'est plus en vigueur : il n'y a rien à renoncer.",
-        unavailable: "La rétractation n'a pas pu être enregistrée. Réessayez, ou écrivez-nous.",
+        over: "Le délai de rétractation de 14 jours est passé. Pour toute question, écrivez-nous à contact.leenkey@gmail.com.",
+        notInForce: "Cette formule n'est plus en vigueur : la rétractation ne s'applique plus.",
+        unavailable:
+          "La rétractation n'a pas pu être enregistrée. Réessayez, ou écrivez-nous à contact.leenkey@gmail.com.",
       },
     },
     confirmation: {

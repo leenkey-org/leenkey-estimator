@@ -38,6 +38,7 @@ export type StartCheckoutError =
   | "not_found"
   | "sold"
   | "current"
+  | "withdrawn"
   | "lower"
   | "closed"
   | "unavailable";
@@ -94,6 +95,18 @@ export async function startCheckout(input: unknown): Promise<StartCheckoutResult
     ? property.data.listing[0]
     : property.data.listing;
   if (listing?.status === "sold") return refuse("sold");
+  // A plan being renounced (L1-40): nothing else is ordered until its refund.
+  const renounced = await supabase
+    .from("subscriptions")
+    .select("id")
+    .eq("property_id", propertyId)
+    .is("replaced_by", null)
+    .is("refunded_at", null)
+    .not("withdrawal_requested_at", "is", null)
+    .gt("ends_at", new Date().toISOString())
+    .limit(1);
+  if (renounced.error) return refuse("unavailable", { ...context, reason: "read" });
+  if (renounced.data.length > 0) return refuse("withdrawn");
 
   const choice = planChoice(plans, progress.data ?? "autonomie", plan);
   if (choice.status === "current") return refuse("current");
@@ -206,7 +219,7 @@ export type WithdrawError =
   | "unavailable";
 
 export type WithdrawResult =
-  | { ok: true; data: { requestedAt: string } }
+  | { ok: true; data: { requestedAt: string; acknowledged: boolean } }
   | { ok: false; error: WithdrawError };
 
 /**
@@ -239,8 +252,26 @@ export async function withdrawPlan(input: unknown): Promise<WithdrawResult> {
   if (!subscription.withdrawal_requested_at && !canWithdraw(subscription.activated_at)) {
     return { ok: false, error: "over" };
   }
+  // After a passage, the plan replaced goes with it while in its own period.
+  const replaced = await supabase
+    .from("subscriptions")
+    .select("activated_at")
+    .eq("replaced_by", subscription.id)
+    .is("withdrawal_requested_at", null)
+    .is("refunded_at", null)
+    .gt("amount_paid_cents", 0)
+    .maybeSingle();
+  if (replaced.error) {
+    console.error("[billing] withdrawal read failed", {
+      user_id: user.id,
+      entity_id: subscription.id,
+      code: replaced.error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
   const { data, error } = await supabase.rpc("subscription_withdraw", {
     p_subscription_id: subscription.id,
+    p_with_replaced: replaced.data ? canWithdraw(replaced.data.activated_at) : false,
   });
   if (error) {
     if (error.code === "22023") return { ok: false, error: "over" };
@@ -262,6 +293,7 @@ export async function withdrawPlan(input: unknown): Promise<WithdrawResult> {
     return { ok: false, error: "unavailable" };
   }
   const recorded = result.data;
+  let acknowledged = true;
   if (recorded.status === "recorded") {
     const delivery = await emailWithdrawalReceived({
       sellerEmail: user.email ?? null,
@@ -269,13 +301,19 @@ export async function withdrawPlan(input: unknown): Promise<WithdrawResult> {
       planName: recorded.plan_name ?? "",
       property: recorded.reference ?? "",
       propertyId: recorded.property_id,
-      amountCents: recorded.amount_paid_cents,
+      amountCents: recorded.amount_paid_cents + (recorded.replaced_amount_paid_cents ?? 0),
       activatedAt: recorded.activated_at,
       requestedAt: recorded.requested_at,
       earlyStart: recorded.early_start,
+      replaced:
+        recorded.replaced_plan_name && recorded.replaced_activated_at
+          ? { planName: recorded.replaced_plan_name, activatedAt: recorded.replaced_activated_at }
+          : null,
     });
-    if (delivery === "failed") {
-      // Recorded all the same: the team, told by the notification, writes to the seller.
+    // Recorded all the same; the page says the email did not leave and
+    // stands for it (the request, its date and time).
+    acknowledged = delivery !== "failed";
+    if (!acknowledged) {
       console.error("[billing] withdrawal acknowledgment not sent", {
         user_id: user.id,
         entity_id: subscription.id,
@@ -283,5 +321,5 @@ export async function withdrawPlan(input: unknown): Promise<WithdrawResult> {
     }
   }
   revalidatePath("/vendeur/formule");
-  return { ok: true, data: { requestedAt: recorded.requested_at } };
+  return { ok: true, data: { requestedAt: recorded.requested_at, acknowledged } };
 }

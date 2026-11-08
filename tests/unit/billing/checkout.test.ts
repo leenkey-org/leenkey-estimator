@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   sessions: [] as Record<string, unknown>[],
   configured: true,
   accompagneOnSale: true,
+  renounced: false,
 }));
 
 vi.mock("server-only", () => ({}));
@@ -71,8 +72,10 @@ vi.mock("@/core/billing/stripe", () => ({
 
 function chain(result: unknown) {
   const self: Record<string, unknown> = {};
-  for (const name of ["select", "eq", "is"]) self[name] = () => self;
+  for (const name of ["select", "eq", "is", "not", "gt"]) self[name] = () => self;
   self.maybeSingle = async () => ({ data: result, error: null });
+  // A plan being renounced (L1-40).
+  self.limit = async () => ({ data: mocks.renounced ? [{ id: "s1" }] : [], error: null });
   return self;
 }
 vi.mock("@/lib/supabase/server", () => ({
@@ -105,6 +108,7 @@ beforeEach(() => {
   mocks.sessions = [];
   mocks.configured = true;
   mocks.accompagneOnSale = true;
+  mocks.renounced = false;
   vi.stubEnv("NEXT_PUBLIC_ENV", "staging");
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://leenkey-v2.vercel.app");
   vi.stubEnv("STRIPE_PRICE_ACCOMPAGNE", "price_a");
@@ -181,6 +185,13 @@ describe("startCheckout", () => {
       error: "invalid",
     });
     expect(mocks.sessions).toEqual([]);
+  });
+
+  it("refuses any order while the plan in force is being renounced (L1-40)", async () => {
+    mocks.plan = "accompagne";
+    mocks.renounced = true;
+    expect(await start({ ...input, plan: "serenite" })).toEqual({ ok: false, error: "withdrawn" });
+    expect(mocks.sessions).toHaveLength(0);
   });
 
   it("refuses a visitor, a suspended account, a property of another or sold", async () => {

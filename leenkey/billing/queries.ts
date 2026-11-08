@@ -18,6 +18,8 @@ export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavai
 
 export type PlanPage = {
   property: { id: string; name: string; reference: string | null; status: ListingStatus | null };
+  /** « Prénom Nom » of the seller: who renounces (L1-40, article D221-5). */
+  sellerName: string | null;
   /** The other properties of the seller, to choose the plan of another one. */
   others: { id: string; name: string }[];
   /** The plans on sale, and the one in force even when withdrawn from sale. */
@@ -34,6 +36,8 @@ export type PlanPage = {
     earlyStart: boolean;
     amountPaidCents: number;
     withdrawalRequestedAt: string | null;
+    /** The plan this one replaced (a passage), still renounceable with it. */
+    replaced: { plan: PlanCode; activatedAt: string; amountPaidCents: number } | null;
   } | null;
 };
 
@@ -48,7 +52,7 @@ export async function planPage(
   if (!property) return { ok: true, data: null };
   try {
     const supabase = await createClient();
-    const [progress, subscription] = await Promise.all([
+    const [progress, subscription, seller] = await Promise.all([
       supabase.rpc("property_current_plan", { p: property.id }),
       supabase
         .from("subscriptions")
@@ -62,11 +66,24 @@ export async function planPage(
         .order("activated_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
+      supabase.from("profiles").select("first_name, last_name").eq("id", profileId).maybeSingle(),
     ]);
     if (progress.error) throw new Error(`property_current_plan: ${progress.error.code}`);
     if (subscription.error) throw new Error(`subscriptions: ${subscription.error.code}`);
     const current = progress.data ?? "autonomie";
     const active = subscription.data;
+    // A passage: the plan replaced, not renounced nor refunded, paid.
+    const replaced = active
+      ? await supabase
+          .from("subscriptions")
+          .select("plan, activated_at, amount_paid_cents")
+          .eq("replaced_by", active.id)
+          .is("withdrawal_requested_at", null)
+          .is("refunded_at", null)
+          .gt("amount_paid_cents", 0)
+          .maybeSingle()
+      : null;
+    if (replaced?.error) throw new Error(`subscriptions: ${replaced.error.code}`);
     return {
       ok: true,
       data: {
@@ -76,6 +93,8 @@ export async function planPage(
           reference: property.listing?.reference ?? null,
           status: property.listingStatus,
         },
+        sellerName:
+          [seller.data?.first_name, seller.data?.last_name].filter(Boolean).join(" ") || null,
         others: properties.data
           .filter((other) => other.id !== property.id && other.listingStatus !== "sold")
           .map((other) => ({ id: other.id, name: propertyName(other) })),
@@ -98,6 +117,13 @@ export async function planPage(
                 earlyStart: active.early_start_requested_at !== null,
                 amountPaidCents: active.amount_paid_cents,
                 withdrawalRequestedAt: active.withdrawal_requested_at,
+                replaced: replaced?.data
+                  ? {
+                      plan: replaced.data.plan,
+                      activatedAt: replaced.data.activated_at,
+                      amountPaidCents: replaced.data.amount_paid_cents,
+                    }
+                  : null,
               }
             : null,
       },

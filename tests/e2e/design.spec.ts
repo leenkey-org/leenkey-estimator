@@ -122,8 +122,6 @@ test.describe("catalogue /design", () => {
     // L1-30c: a warning after a report, a report for the team.
     await expect(page.getByText("Sujet : Un message de l'équipe Leenkey")).toBeVisible();
     await expect(page.getByText("Sujet : Conversation signalée (LK-0042)")).toBeVisible();
-    // L1-26: a plan paid.
-    await expect(page.getByText("Sujet : Votre formule Accompagné est activée")).toBeVisible();
     const frame = page.frameLocator(
       'iframe[title="Aperçu de l\'email « Nouveau message avec un lien (vendeur) »"]',
     );

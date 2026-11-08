@@ -13,7 +13,10 @@
 --    site (leenkey/billing/orders.ts, withdrawalEnds), which refuses past it;
 --    the base only refuses a request more than 20 days after the order, so
 --    that it never refuses one the law allows. A suspended account may still
---    withdraw: a right of the consumer.
+--    withdraw: a right of the consumer. After a passage (Accompagné, then
+--    Sérénité within a few days), the plan replaced may still be in its own
+--    period: p_with_replaced (the site checks its last day) renounces both
+--    contracts at once.
 -- 2. subscriptions_daily, every morning: the sale of a property whose plan
 --    ended follows the plan in force again (sale_progress.plan, as the
 --    trigger of the subscriptions does when they change), and the owner of a
@@ -22,10 +25,15 @@
 
 alter table public.subscriptions add column end_reminded_at timestamptz;
 
-create function public.subscription_withdraw(p_subscription_id uuid) returns jsonb
+create function public.subscription_withdraw(
+  p_subscription_id uuid,
+  p_with_replaced boolean default false
+) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
   v_sub public.subscriptions%rowtype;
+  v_prev public.subscriptions%rowtype;
+  v_prev_name text;
   v_owner uuid;
   v_place text;
   v_reference text;
@@ -68,6 +76,22 @@ begin
   end if;
 
   update public.subscriptions set withdrawal_requested_at = v_now where id = v_sub.id;
+  -- The plan this one replaced, still in its own period: renounced with it.
+  if coalesce(p_with_replaced, false) then
+    select s.* into v_prev from public.subscriptions s
+     where s.replaced_by = v_sub.id and s.withdrawal_requested_at is null
+       and s.refunded_at is null and s.amount_paid_cents > 0
+       and v_now <= s.activated_at + interval '20 days'
+       for update;
+    if v_prev.id is not null then
+      update public.subscriptions set withdrawal_requested_at = v_now where id = v_prev.id;
+      select pl.name into v_prev_name from public.plans pl where pl.code = v_prev.plan;
+      v_info := v_info || jsonb_build_object(
+        'replaced_plan_name', v_prev_name,
+        'replaced_amount_paid_cents', v_prev.amount_paid_cents,
+        'replaced_activated_at', v_prev.activated_at);
+    end if;
+  end if;
 
   -- The case of the plan: the open one, else the last one, reopened.
   select c.id into v_case from public.cases c
@@ -91,7 +115,12 @@ begin
     to_char(v_sub.activated_at at time zone 'Europe/Paris', 'DD/MM/YYYY'),
     case when v_sub.early_start_requested_at is not null
          then ', démarrage immédiat demandé : un montant proportionnel aux prestations fournies peut rester dû'
-         else '' end));
+         else '' end)
+    || case when v_prev.id is not null
+            then format(' Comprend aussi la formule %s remplacée (%s € payés le %s), encore dans son délai.',
+                        coalesce(v_prev_name, v_prev.plan::text), public.euros(v_prev.amount_paid_cents),
+                        to_char(v_prev.activated_at at time zone 'Europe/Paris', 'DD/MM/YYYY'))
+            else '' end);
 
   v_info := v_info || jsonb_build_object('status', 'recorded', 'requested_at', v_now,
                                          'case_id', v_case);
@@ -157,6 +186,6 @@ begin
 end;
 $$;
 
-revoke execute on function public.subscription_withdraw(uuid) from public, anon;
-grant execute on function public.subscription_withdraw(uuid) to authenticated;
+revoke execute on function public.subscription_withdraw(uuid, boolean) from public, anon;
+grant execute on function public.subscription_withdraw(uuid, boolean) to authenticated;
 revoke execute on function public.subscriptions_daily() from public, anon, authenticated;

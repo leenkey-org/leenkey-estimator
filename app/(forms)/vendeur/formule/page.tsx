@@ -146,13 +146,18 @@ export default async function PlanPage({ searchParams }: Props) {
   const now = new Date();
   const sold = data.property.status === "sold";
   const active = data.active;
+  // Renounceable: paid, within the 14 days (or already renounced, to say it).
   const withdrawal =
-    active && (active.withdrawalRequestedAt || canWithdraw(active.activatedAt, now))
+    active &&
+    (active.withdrawalRequestedAt ||
+      (active.amountPaidCents > 0 && canWithdraw(active.activatedAt, now)))
       ? active
       : null;
+  const withdrawn = Boolean(active?.withdrawalRequestedAt);
   const planName = (code: string) => data.prices.find((plan) => plan.code === code)?.name ?? code;
   const user = withdrawal ? await getUser() : null;
-  const orderable = paidPlansOrderable() && !sold;
+  // Nothing else is ordered while a plan is being renounced (L1-40).
+  const orderable = paidPlansOrderable() && !sold && !withdrawn;
   const activeNote = data.active?.endsAt
     ? t.activeSince(
         formatDateShort(data.active.activatedAt, now),
@@ -204,6 +209,15 @@ export default async function PlanPage({ searchParams }: Props) {
             orderedOn={legalDate(withdrawal.activatedAt)}
             lastDay={legalDate(withdrawalLastDay(withdrawal.activatedAt))}
             earlyStart={withdrawal.earlyStart}
+            name={data.sellerName}
+            replaced={
+              withdrawal.replaced && canWithdraw(withdrawal.replaced.activatedAt, now)
+                ? {
+                    planName: planName(withdrawal.replaced.plan),
+                    orderedOn: legalDate(withdrawal.replaced.activatedAt),
+                  }
+                : null
+            }
             email={user?.email ?? null}
             requestedAt={withdrawal.withdrawalRequestedAt}
           />

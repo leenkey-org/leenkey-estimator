@@ -2255,7 +2255,7 @@ export type Database = {
         Returns: Json
       }
       subscription_withdraw: {
-        Args: { p_subscription_id: string }
+        Args: { p_subscription_id: string; p_with_replaced?: boolean }
         Returns: Json
       }
       subscriptions_daily: {

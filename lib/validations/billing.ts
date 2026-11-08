@@ -57,4 +57,8 @@ export const withdrawalResultSchema = z.object({
   amount_paid_cents: z.number().int(),
   early_start: z.boolean(),
   property_id: z.string().uuid(),
+  // The plan a passage replaced, renounced with it while in its own period.
+  replaced_plan_name: z.string().nullable().optional(),
+  replaced_amount_paid_cents: z.number().int().optional(),
+  replaced_activated_at: z.string().optional(),
 });

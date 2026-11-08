@@ -28,6 +28,10 @@ export type WithdrawalPanelProps = {
   /** « 23 novembre 2026 », the last day. */
   lastDay: string;
   earlyStart: boolean;
+  /** « Prénom Nom »: who renounces (article D221-5). */
+  name: string | null;
+  /** The plan a passage replaced, still in its own period: renounced with it. */
+  replaced: { planName: string; orderedOn: string } | null;
   email: string | null;
   /** The request already recorded, an ISO date; null until then. */
   requestedAt: string | null;
@@ -46,6 +50,8 @@ export function WithdrawalPanel({
   orderedOn,
   lastDay,
   earlyStart,
+  name,
+  replaced,
   email,
   requestedAt,
 }: WithdrawalPanelProps) {
@@ -55,6 +61,7 @@ export function WithdrawalPanel({
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(requestedAt);
+  const [acknowledged, setAcknowledged] = useState(true);
   // Recorded now (not on load): the focus goes to the confirmation, the
   // dialog and its button being gone.
   const justDone = useRef(false);
@@ -83,13 +90,18 @@ export function WithdrawalPanel({
     }
     justDone.current = true;
     setOpen(false);
+    setAcknowledged(result.data.acknowledged);
     setDone(result.data.requestedAt);
   };
 
   if (done) {
     return (
       <div ref={doneRef} tabIndex={-1} className="outline-none">
-        <InlineAlert tone="success">{t.done(legalDateTime(done))}</InlineAlert>
+        <InlineAlert tone="success">
+          {acknowledged
+            ? t.done(legalDateTime(done))
+            : t.doneNoEmail(legalDateTime(done), fr.legal.contactEmail)}
+        </InlineAlert>
       </div>
     );
   }
@@ -133,7 +145,11 @@ export function WithdrawalPanel({
           if (!justDone.current) triggerRef.current?.focus();
         }}
       >
-        {email ? <p className="text-lk-secondary text-lk-ink-2">{t.dialogEmail(email)}</p> : null}
+        <div className="flex flex-col gap-2 text-lk-secondary text-lk-ink-2">
+          {replaced ? <p>{t.dialogReplaced(replaced.planName, replaced.orderedOn)}</p> : null}
+          {name ? <p>{t.dialogName(name)}</p> : null}
+          {email ? <p>{t.dialogEmail(email)}</p> : null}
+        </div>
       </ConfirmDialog>
     </section>
   );

@@ -17,7 +17,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Modifié : l'email « formule activée » devient le récapitulatif de la commande : prix, durée et date de fin, prestations vendues, CGU et CGV acceptées, rétractation et formulaire type, médiateur.
 - Ajouté : job quotidien `subscriptions-daily` : retour en Autonomie de la vente à l'échéance, rappel 30 jours avant la fin (cloche et email « Votre formule … se termine le … »).
 - Migration : `20261108180000_plan_withdrawal_term.sql` (`subscription_withdraw`, `subscriptions_daily`, `subscriptions.end_reminded_at`).
-- Tests : RLS (`rls_plan_withdrawal_term.sql`, 19, cinq comptes et visiteur), unitaires (récapitulatif, cloche), E2E (`billing.spec.ts` : rétractation après un paiement ; aperçu des emails).
+- Tests : RLS (`rls_plan_withdrawal_term.sql`, 24, cinq comptes et visiteur : propriétaire seulement, une fois, formule remplacée comprise, formule remboursée refusée, rappel unique et jamais pour une formule rétractée, remboursée ou un bien vendu, vente inchangée tant que la formule est en vigueur), unitaires (délai à minuit de Paris et jour férié, action, récapitulatif, emails de l'équipe et du rappel, commande refusée pendant une rétractation), E2E (`billing.spec.ts` : rétractation après un paiement ; aperçu des emails).
 
 ### 2026-11-08 · Emails · PR #80 · Emails à l'équipe et nouveau compte
 - Modifié : les emails destinés à Leenkey (annonce à valider, signalement, commande d'une formule) partent à tous les admins actifs (adresse confirmée de leur compte) et à `ADMIN_NOTIFICATION_EMAIL` si elle est définie, en un seul email.

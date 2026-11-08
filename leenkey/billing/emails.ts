@@ -62,6 +62,7 @@ export async function emailPlanActivated(order: PaidOrder): Promise<EmailDeliver
       PlanActivatedEmail({
         firstName: order.sellerFirstName,
         planName: order.planName,
+        upgrade: order.upgrade,
         property: order.property,
         amount: formatAmount(order.amountCents),
         orderedOn: legalDate(order.activatedAt),
@@ -142,6 +143,8 @@ export type WithdrawalRequest = {
   activatedAt: string;
   requestedAt: string;
   earlyStart: boolean;
+  /** The plan a passage replaced, renounced with it. */
+  replaced: { planName: string; activatedAt: string } | null;
 };
 
 /**
@@ -160,6 +163,12 @@ export async function emailWithdrawalReceived(request: WithdrawalRequest): Promi
         orderedOn: legalDate(request.activatedAt),
         amount: formatAmount(request.amountCents),
         earlyStart: request.earlyStart,
+        replaced: request.replaced
+          ? {
+              planName: request.replaced.planName,
+              orderedOn: legalDate(request.replaced.activatedAt),
+            }
+          : null,
         planUrl: absoluteUrl(`/vendeur/formule?bien=${request.propertyId}`),
         siteUrl: siteUrl(),
       }),
