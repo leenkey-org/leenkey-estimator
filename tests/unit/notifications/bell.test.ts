@@ -123,6 +123,7 @@ describe("wording of the notifications (from type and data)", () => {
   it("each type written by the database has its words", () => {
     expect(NOTIFICATION_TYPES.sort()).toEqual(
       [
+        "account.created",
         "case.created",
         "listing.pending",
         "listing.published",

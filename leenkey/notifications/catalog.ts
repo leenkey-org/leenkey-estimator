@@ -6,6 +6,7 @@ import {
   Folder,
   MessageCircle,
   Bell,
+  UserPlus,
   type LucideIcon,
 } from "lucide-react";
 import type { NotificationTone } from "@/components/shared/notification-item";
@@ -135,6 +136,28 @@ const CATALOG: Record<string, Entry> = {
         typeof data.amount_cents === "number" ? formatAmount(data.amount_cents) : null,
         text(data.reference),
       ),
+  },
+  // 2026-11-08: an account confirmed, to each admin (and by email, grouped).
+  "account.created": {
+    icon: UserPlus,
+    tone: "stone",
+    filters: [],
+    title: () => t.accountCreated.title,
+    detail: (data) => {
+      const initial = text(data.last_initial);
+      const name = [text(data.first_name), initial ? `${initial}.` : null]
+        .filter(Boolean)
+        .join(" ");
+      const roles: unknown[] = Array.isArray(data.roles) ? data.roles : [];
+      const labels = fr.adminUsers.roles;
+      const named = roles
+        .map((role) =>
+          role === "seller" || role === "buyer" || role === "admin" ? labels[role] : null,
+        )
+        .filter(Boolean)
+        .join(", ");
+      return t.accountCreated.detail(name || null, named || null);
+    },
   },
   // L1-30c: a conversation reported, to each admin (and by email, grouped).
   "report.created": {

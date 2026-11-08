@@ -4,6 +4,7 @@ import { render } from "@react-email/components";
 import type { EmailPolicy, PlannedEmail, QueuedNotification } from "@/core/notifications/batch";
 import { emailSafeText } from "@/core/notifications/user-text";
 import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
+import { AccountsCreatedEmail, accountsCreatedSubject } from "@/emails/accounts-created";
 import { ListingToReviewEmail, listingToReviewSubject } from "@/emails/listing-submitted";
 import { ListingsToReviewEmail, listingsToReviewSubject } from "@/emails/listings-to-review";
 import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
@@ -26,6 +27,8 @@ const POLICIES: Record<string, EmailPolicy> = {
   "listing.pending": { audience: "team", throttleMinutes: 20 },
   // A report (L1-30c): the first at once, the next ones together 20 minutes later at the earliest.
   "report.created": { audience: "team", throttleMinutes: 20 },
+  // A new account, its email confirmed (2026-11-08): the first at once, the next ones together.
+  "account.created": { audience: "team", throttleMinutes: 20 },
 };
 
 export function emailPolicy(type: string): EmailPolicy | null {
@@ -152,6 +155,40 @@ async function reportsToReview(email: PlannedEmail): Promise<RenderedEmail | nul
 }
 
 /** The email of a group, ready to leave; null when its type has none. */
+/** « Alice D. »: the first name (made safe for a mail client) and the initial of the last name. */
+export function accountName(item: QueuedNotification): string {
+  const first = emailSafeText(item.data.first_name);
+  const initial = text(item.data.last_initial);
+  return [first, initial ? `${initial}.` : null].filter(Boolean).join(" ") || fr.adminUsers.noName;
+}
+
+/** « Vendeur, Acquéreur »: the roles of the account. */
+export function accountRoles(item: QueuedNotification): string {
+  const roles: unknown[] = Array.isArray(item.data.roles) ? item.data.roles : [];
+  const labels = fr.adminUsers.roles;
+  return roles
+    .map((role) =>
+      role === "seller" || role === "buyer" || role === "admin" ? labels[role] : null,
+    )
+    .filter((label): label is (typeof labels)[keyof typeof labels] => label !== null)
+    .join(", ");
+}
+
+/** Accounts confirmed: one email for one, a list for several. */
+async function accountsCreated(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const [first] = email.items;
+  if (!first) return null;
+  const count = email.items.length;
+  return rendered(
+    accountsCreatedSubject(count),
+    AccountsCreatedEmail({
+      items: email.items.map((item) => ({ name: accountName(item), roles: accountRoles(item) })),
+      url: absoluteUrl(count > 1 ? "/admin/utilisateurs" : (first.link ?? "/admin/utilisateurs")),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
 export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEmail | null> {
   switch (email.type) {
     case "message.new":
@@ -160,6 +197,8 @@ export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEm
       return listingsToReview(email);
     case "report.created":
       return reportsToReview(email);
+    case "account.created":
+      return accountsCreated(email);
     default:
       return Promise.resolve(null);
   }

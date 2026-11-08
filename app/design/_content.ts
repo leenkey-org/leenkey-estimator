@@ -1003,6 +1003,7 @@ export const emails = {
     accountSuspended: "Compte suspendu (vendeur ou acquéreur)",
     userWarned: "Avertissement après un signalement (vendeur ou acquéreur)",
     reportsToReview: "Conversation signalée (équipe)",
+    accountsCreated: "Nouveau compte (équipe)",
     planActivated: "Formule activée (vendeur)",
     planPurchased: "Formule souscrite ou passage à une formule supérieure (équipe)",
     messageSeller: "Nouveau message (vendeur)",

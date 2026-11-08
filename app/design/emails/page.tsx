@@ -17,6 +17,7 @@ import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
 import { PlanActivatedEmail, planActivatedSubject } from "@/emails/plan-activated";
 import { PlanPurchasedEmail, planPurchasedSubject } from "@/emails/plan-purchased";
 import { ReportsToReviewEmail, reportsToReviewSubject } from "@/emails/reports-to-review";
+import { AccountsCreatedEmail, accountsCreatedSubject } from "@/emails/accounts-created";
 import { UserWarnedEmail, userWarnedSubject } from "@/emails/user-warned";
 import { formatPrice } from "@/lib/format";
 import { isProduction } from "@/lib/env";
@@ -137,6 +138,15 @@ function previews(): Preview[] {
       element: ReportsToReviewEmail({
         items: [{ reason: s.reportReason, reference: s.reference }],
         url: `${site}/admin/signalements`,
+        siteUrl: site,
+      }),
+    },
+    {
+      name: t.names.accountsCreated,
+      subject: accountsCreatedSubject(1),
+      element: AccountsCreatedEmail({
+        items: [{ name: "Alice M.", roles: "Vendeur" }],
+        url: `${site}/admin/utilisateurs`,
         siteUrl: site,
       }),
     },

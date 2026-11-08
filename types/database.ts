@@ -2251,6 +2251,10 @@ export type Database = {
         }
         Returns: Json
       }
+      team_email_addresses: {
+        Args: Record<PropertyKey, never>
+        Returns: string[]
+      }
     }
     Enums: {
       acquisition_mode: "own_name" | "joint" | "sci" | "other"

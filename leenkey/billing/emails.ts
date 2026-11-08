@@ -4,7 +4,9 @@ import { sendEmail, type EmailDelivery } from "@/core/notifications/email";
 import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
 import { PlanActivatedEmail, planActivatedSubject } from "@/emails/plan-activated";
 import { PlanPurchasedEmail, planPurchasedSubject } from "@/emails/plan-purchased";
-import { teamAddress } from "@/leenkey/notifications/send-emails";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { teamAddresses } from "@/leenkey/notifications/send-emails";
+import type { Database } from "@/types/database";
 import { formatAmount, formatDate } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { absoluteUrl, siteUrl } from "@/lib/site";
@@ -70,9 +72,13 @@ export async function emailPlanActivated(order: PaidOrder): Promise<EmailDeliver
   }
 }
 
-export async function emailPlanPurchased(order: PaidOrder): Promise<EmailDelivery> {
-  const to = teamAddress();
-  if (!to) return "failed";
+export async function emailPlanPurchased(
+  order: PaidOrder,
+  supabase: SupabaseClient<Database>,
+): Promise<EmailDelivery> {
+  // Every admin of the team (2026-11-08).
+  const to = await teamAddresses(supabase);
+  if (to.length === 0) return "failed";
   try {
     const [html, text] = await rendered(
       PlanPurchasedEmail({

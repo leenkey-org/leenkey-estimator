@@ -198,13 +198,62 @@ describe("« Annonce à valider »", () => {
   });
 });
 
+describe("« Nouveau compte »", () => {
+  const account = (id: string, first: unknown, roles: string[]) =>
+    queued({
+      id: `account-${id}`,
+      type: "account.created",
+      profileId: "admin",
+      email: null,
+      firstName: null,
+      groupKey: "accounts:new",
+      link: `/admin/utilisateurs/${id}`,
+      data: { entity_id: id, profile_id: id, first_name: first, last_initial: "M", roles },
+    });
+
+  it("one account: its name, its roles, a link to it in the back office", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const email = await renderNotificationEmail(
+      planned([account("u1", "Alice", ["seller"])], { audience: "team" }),
+    );
+    expect(email?.subject).toBe("Nouveau compte sur Leenkey");
+    expect(email?.text).toContain("Alice M. · Vendeur");
+    expect(email?.html).toContain("https://leenkey-v2.vercel.app/admin/utilisateurs/u1");
+  });
+
+  it("several: a list, the link to the accounts; a name like a link stays out", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const email = await renderNotificationEmail(
+      planned(
+        [
+          account("u1", "Alice", ["seller", "buyer"]),
+          account("u2", "www.promo.example", ["buyer"]),
+        ],
+        { audience: "team" },
+      ),
+    );
+    expect(email?.subject).toBe("2\u00A0nouveaux comptes sur Leenkey");
+    expect(email?.text).toContain("Alice M. · Vendeur, Acquéreur");
+    expect(email?.text).not.toContain("www.promo.example");
+    expect(email?.text).toContain("M. · Acquéreur");
+    expect(email?.html).toContain("https://leenkey-v2.vercel.app/admin/utilisateurs");
+  });
+});
+
 describe("sendNotificationEmails", () => {
   type Update = { values: Record<string, unknown>; ids: string[]; filters: string[] };
 
-  function client(rows: unknown[], { claimed = true }: { claimed?: boolean | string[] } = {}) {
+  function client(
+    rows: unknown[],
+    { claimed = true, team = [] }: { claimed?: boolean | string[]; team?: string[] } = {},
+  ) {
     const updates: Update[] = [];
     const supabase = {
-      rpc: vi.fn(async () => ({ data: rows, error: null })),
+      // The queue, and the addresses of the admins of the team.
+      rpc: vi.fn(async (fn: string) => ({
+        data: fn === "team_email_addresses" ? team : rows,
+        error: null,
+      })),
       from: () => ({
         update(values: Record<string, unknown>) {
           const update: Update = { values, ids: [], filters: [] };
@@ -326,7 +375,7 @@ describe("sendNotificationEmails", () => {
     expect(summary).toMatchObject({ sent: 0, failed: 0 });
   });
 
-  it("the team email goes to ADMIN_NOTIFICATION_EMAIL, never to nobody in production", async () => {
+  it("the team email goes to every admin and ADMIN_NOTIFICATION_EMAIL, never to nobody in production", async () => {
     const { sendNotificationEmails } = await import("@/leenkey/notifications/send-emails");
     const pending = row({
       id: "p1",
@@ -339,10 +388,15 @@ describe("sendNotificationEmails", () => {
     });
     process.env.ADMIN_NOTIFICATION_EMAIL = "admin@exemple.test";
     mocks.sendEmail.mockResolvedValue("sent");
+    // The two admin accounts (2026-11-08), the configured address once.
+    const team = ["contact.leenkey@exemple.test", "admin@exemple.test"];
     // @ts-expect-error: a script of answers, not a client.
-    await sendNotificationEmails(client([pending]).supabase, NOW, { paceMs: 0 });
+    await sendNotificationEmails(client([pending], { team }).supabase, NOW, { paceMs: 0 });
     expect(mocks.sendEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ to: "admin@exemple.test", subject: "Annonce à valider (LK-0042)" }),
+      expect.objectContaining({
+        to: ["contact.leenkey@exemple.test", "admin@exemple.test"],
+        subject: "Annonce à valider (LK-0042)",
+      }),
     );
 
     mocks.sendEmail.mockClear();

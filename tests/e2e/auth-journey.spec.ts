@@ -47,6 +47,8 @@ test.beforeEach(() => {
 });
 
 test("inscription, puis confirmation depuis un autre navigateur", async ({ page, browser }) => {
+  // Four browsers and the sign-in of the admin: more than the default time.
+  test.slow();
   await page.goto("/inscription?next=%2Facquereur%3Fbienvenue%3D1");
   await page.getByText("J'achète").click();
   await page.getByLabel("Prénom et nom").fill("Camille Martin");
@@ -73,6 +75,30 @@ test("inscription, puis confirmation depuis un autre navigateur", async ({ page,
   await other.getByRole("button", { name: "Confirmer mon adresse" }).click();
   await expect(other).toHaveURL(/\/acquereur\?bienvenue=1$/);
   await expect(other.getByRole("heading", { level: 1 })).toHaveText("Bonjour Camille");
+
+  // The team is told of the new account (2026-11-08): in the bell of the
+  // admins at once, by email through the cron (grouped).
+  const admin = await (await browser.newContext()).newPage();
+  await admin.goto("/connexion?next=%2Fadmin");
+  await admin.getByLabel("Email").fill("admin@test.leenkey.fr");
+  await admin.getByLabel("Mot de passe").fill(SEED_PASSWORD ?? "");
+  await admin.getByRole("button", { name: "Se connecter" }).click();
+  await admin.waitForURL((url) => url.pathname !== "/connexion");
+  if (new URL(admin.url()).pathname === "/conditions") {
+    await admin.getByRole("checkbox").check();
+    await admin.getByRole("button", { name: "Continuer" }).click();
+    await admin.waitForURL((url) => url.pathname !== "/conditions");
+  }
+  await admin
+    .getByRole("button", { name: /^Notifications/ })
+    .locator("visible=true")
+    .click();
+  await expect(
+    admin
+      .getByRole("dialog", { name: "Notifications" })
+      .getByText("Camille M. · Acquéreur", { exact: true }),
+  ).toBeVisible();
+  await admin.context().close();
 
   // A used link is refused clearly.
   const third = await (await browser.newContext()).newPage();

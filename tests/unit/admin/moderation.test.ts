@@ -115,12 +115,26 @@ describe("routeEmail", () => {
   const email = { to: "vendeur@exemple.test", subject: "Votre annonce est en ligne" };
 
   it("sends to the recipient in production only", () => {
-    expect(routeEmail(email, "production", "boite@exemple.test")).toEqual(email);
+    expect(routeEmail(email, "production", "boite@exemple.test")).toEqual({
+      to: ["vendeur@exemple.test"],
+      subject: email.subject,
+    });
+  });
+
+  it("sends one email to every admin of the team in production", () => {
+    const team = { to: ["a@exemple.test", "b@exemple.test"], subject: "Annonce à valider" };
+    expect(routeEmail(team, "production", undefined)?.to).toEqual([
+      "a@exemple.test",
+      "b@exemple.test",
+    ]);
+    expect(routeEmail({ to: [], subject: "x" }, "production", undefined)).toBeNull();
+    // Elsewhere, still the test inbox only.
+    expect(routeEmail(team, "staging", "boite@exemple.test")?.to).toEqual(["boite@exemple.test"]);
   });
 
   it("sends everything to the test inbox elsewhere, with a prefix", () => {
     expect(routeEmail(email, "staging", "boite@exemple.test")).toEqual({
-      to: "boite@exemple.test",
+      to: ["boite@exemple.test"],
       subject: "[PREPROD] Votre annonce est en ligne",
     });
     expect(routeEmail(email, "local", "boite@exemple.test")?.subject).toBe(

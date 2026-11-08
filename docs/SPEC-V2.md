@@ -1398,6 +1398,7 @@ Fonction unique `notify(profileId, type, payload)` dans `core/notifications/`. E
 | `advisor.message_from_client` (admin) | oui | oui | — |
 | `offer.withdrawn` | oui | oui | — |
 | `listing.revised` (admin) | oui | non | — |
+| `account.created` (admin) | oui | oui | À la confirmation de l'adresse email ; emails regroupés sur 20 minutes (`DECISIONS.md` 2026-11-08) |
 | `plan.activated` | oui | oui | — |
 | `alert.match` | non | oui | Digest quotidien |
 | `step.advanced` | oui | non | — |
@@ -1917,7 +1918,7 @@ Base de connaissances (liste, recherche test, import), journal des conversations
 
 ## 18. Emails transactionnels
 
-React Email dans `emails/`, envoi par Resend depuis `Leenkey <bonjour@leenkey.fr>` (prod) pour tous les emails utilisateurs ; les notifications internes (annonce à valider, dossier créé, message client, signalement) sont envoyées à `admin@leenkey.fr` (variable `ADMIN_NOTIFICATION_EMAIL`) ; en staging, préfixe `[PREPROD]` et redirection de tous les envois vers `EMAIL_TEST_INBOX`.
+React Email dans `emails/`, envoi par Resend depuis `Leenkey <bonjour@leenkey.fr>` (prod) pour tous les emails utilisateurs ; les notifications internes (annonce à valider, dossier créé, message client, signalement, commande d'une formule, nouveau compte) sont envoyées à l'adresse confirmée de chaque admin actif et à `ADMIN_NOTIFICATION_EMAIL` si elle est définie, en un seul email adressé à tous (`DECISIONS.md` 2026-11-08) ; en staging, préfixe `[PREPROD]` et redirection de tous les envois vers `EMAIL_TEST_INBOX`.
 
 Gabarit commun (`docs/DESIGN.md` 14) : fond `#F4F4F1`, carte blanche 560 px rayon 6 px, bandeau haut 8 px `#1156FC`, logo « Leenkey » en texte 20 px 700, titres Archivo avec repli Arial gras (les clients mail ignorent `font-stretch`), corps 15 px / 1,6 `#0F1E35`, un bouton principal `#1156FC` 48 px rayon 4 px texte blanc 600, pied de page 12 px `#5B6474` avec lien vers les préférences de notification et adresse légale (placeholder).
 
@@ -1941,6 +1942,7 @@ Gabarit commun (`docs/DESIGN.md` 14) : fond `#F4F4F1`, carte blanche 560 px rayo
 | Message du conseiller | `advisor.message` | Aperçu, lien |
 | Offre retirée | `offer.withdrawn` | Date et heure du retrait |
 | Alertes | cron | Digest de biens |
+| Admin : nouveau compte | confirmation de l'adresse email (`account.created`) | Prénom et initiale, rôles, lien vers la fiche du compte ; plusieurs comptes en moins de 20 minutes : un seul email « N nouveaux comptes » (`DECISIONS.md` 2026-11-08) |
 | Admin : annonce à valider, dossier créé | admin | Lien back office (plusieurs annonces en moins de 20 minutes : un seul email « N annonces à valider », L1-22) |
 
 Aperçu de tous les emails : `/design/emails` (local et préprod, L1-22 ; au lieu de `npm run email:dev`, sans dépendance de plus).
