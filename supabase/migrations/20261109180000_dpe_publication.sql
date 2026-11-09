@@ -55,9 +55,11 @@ comment on column public.properties.energy_price_year is
 -- 2. ---------------------------------------------------------------------------
 -- dpe_missing: a class, the date, the range or the year is missing;
 -- dpe_outdated: the DPE is dated before 1 July 2021, more than 10 years ago,
--- or later than today; exemption_reason: exempt without a motive.
+-- or later than today; exemption_reason: exempt without a motive. Today in
+-- Paris, as the form says it (parisToday), not in UTC.
 create function public.property_dpe_issue(p public.properties) returns text
 language sql stable set search_path = '' as $$
+  with today as (select (now() at time zone 'Europe/Paris')::date as d)
   select case
     when p.type is null or p.type = 'terrain' then null
     when p.dpe_exempt then
@@ -66,9 +68,10 @@ language sql stable set search_path = '' as $$
          or p.energy_cost_min_cents is null or p.energy_cost_max_cents is null
          or p.energy_price_year is null then 'dpe_missing'
     when p.dpe_date < date '2021-07-01'
-         or p.dpe_date <= (current_date - interval '10 years')::date
-         or p.dpe_date > current_date then 'dpe_outdated'
-  end;
+         or p.dpe_date <= (today.d - interval '10 years')::date
+         or p.dpe_date > today.d then 'dpe_outdated'
+  end
+  from today;
 $$;
 
 -- 3. ---------------------------------------------------------------------------

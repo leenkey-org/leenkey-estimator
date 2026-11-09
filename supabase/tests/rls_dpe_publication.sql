@@ -41,7 +41,7 @@ update properties set dpe_date = date '2021-06-30', energy_cost_min_cents = 9000
  where id = :'flat';
 select throws_ok(format($$select listing_submit(%L)$$, :'flat_listing'), '22023', 'dpe: dpe_outdated',
                  'seller_a: a DPE made before 1 July 2021 is no longer valid');
-update properties set dpe_date = current_date + 1 where id = :'flat';
+update properties set dpe_date = current_date + 2 where id = :'flat';
 select throws_ok(format($$select listing_submit(%L)$$, :'flat_listing'), '22023', 'dpe: dpe_outdated',
                  'seller_a: nor a DPE dated after today');
 select throws_ok(format($$update properties set energy_cost_min_cents = 200000 where id = %L$$, :'flat'),
