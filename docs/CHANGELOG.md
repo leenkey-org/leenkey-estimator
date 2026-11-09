@@ -14,9 +14,9 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 
 ### 2026-11-09 · L1-39 · PR #83 · Page « Mon compte »
 - Ajouté : `/compte` en lignes (informations personnelles, adresse email, mot de passe, notifications, « Mes espaces », cookies, déconnexion, fermeture du compte par email) ; pages `/compte/informations`, `/compte/email`, `/compte/mot-de-passe`.
-- Ajouté : changement d'adresse confirmé depuis l'ancienne et la nouvelle adresse (modèle Supabase `email-change.html`, page « Plus qu'un lien ») ; changement de mot de passe avec le mot de passe actuel, autres appareils déconnectés ; « Je vends » ou « J'achète » ajouté au compte.
+- Ajouté : changement d'adresse confirmé depuis l'ancienne et la nouvelle adresse (modèle Supabase `email-change.html`, page « Plus qu'un lien »), ses liens ne connectant jamais le navigateur qui les ouvre, 5 demandes par heure ; changement de mot de passe avec le mot de passe actuel, autres appareils déconnectés, modèle de la notification *Password changed* ; « Je vends » ou « J'achète » ajouté au compte.
 - Modifié : `SavedNotice` partagé (`components/shared/`) ; erreurs de Supabase Auth dans `leenkey/auth/errors.ts`.
-- Tests : unitaires (schémas, actions : adresse sans casse, mot de passe actuel vérifié et compté, sessions fermées, rôles), E2E (`account.spec.ts` en lecture à 390 et 1 280 px avec axe ; `account-live.spec.ts` : compte neuf, informations, rôle, mot de passe, adresse confirmée depuis deux navigateurs).
+- Tests : unitaires (schémas, actions : adresse sans casse et limitée, mot de passe actuel vérifié et compté, sessions fermées, rôles ; liens du changement d'adresse sans session), E2E (`account.spec.ts` en lecture à 390 et 1 280 px avec axe ; `account-live.spec.ts` : compte neuf, informations et rôle à 390 px, mot de passe, adresse confirmée depuis deux navigateurs, second lien ouvert dans le navigateur d'un autre compte).
 
 ### 2026-11-09 · Légal · PR #82 · Textes légaux de la mise en ligne
 - Ajouté : CGV, politique de confidentialité, signalement et modération, page Intelligence artificielle, rédigées à partir du dossier juridique du 9 octobre ; plus de mention « en cours de rédaction ».

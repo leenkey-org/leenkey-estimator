@@ -28,6 +28,10 @@ export const passwordChangeSchema = z
   .refine((value) => value.password === value.confirm, {
     path: ["confirm"],
     message: fr.auth.errors.passwordMismatch,
+  })
+  .refine((value) => value.password !== value.current, {
+    path: ["password"],
+    message: fr.auth.errors.passwordSame,
   });
 
 /** The roles a person adds to their account (never « admin »). */

@@ -1,4 +1,4 @@
-import { expect, test, type Browser, type Page } from "@playwright/test";
+import { expect, test, type Browser, type BrowserContext, type Page } from "@playwright/test";
 
 // L1-39: the changes of « Mon compte » on a new account, with the real emails
 // of the local stack: informations, « Je vends » added, password (the current
@@ -19,21 +19,20 @@ test.skip(
 );
 test.describe.configure({ mode: "serial" });
 
-async function emailLink(to: string, subject: string, after = 0): Promise<string> {
+/**
+ * The link of the newest email to `to` with `subject`, once there are
+ * `count` of them (Mailpit lists the newest first).
+ */
+async function emailLink(to: string, subject: string, count = 1): Promise<string> {
   for (let attempt = 0; attempt < 40; attempt++) {
     const search = await fetch(
       `${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:"${to}" subject:"${subject}"`)}`,
     );
-    const { messages } = (await search.json()) as {
-      messages?: Array<{ ID: string; Created: string }>;
-    };
-    const latest = messages?.find((message) => new Date(message.Created).getTime() >= after);
-    if (latest) {
+    const { messages } = (await search.json()) as { messages?: Array<{ ID: string }> };
+    if (messages && messages.length >= count) {
       const message = (await (
-        await fetch(`${MAILPIT_URL}/api/v1/message/${latest.ID}`)
-      ).json()) as {
-        HTML: string;
-      };
+        await fetch(`${MAILPIT_URL}/api/v1/message/${messages[0].ID}`)
+      ).json()) as { HTML: string };
       const href = message.HTML.match(/href="([^"]*\/auth\/confirm\?[^"]*)"/)?.[1];
       if (href) return href.replace(/&amp;/g, "&");
     }
@@ -45,6 +44,7 @@ async function emailLink(to: string, subject: string, after = 0): Promise<string
 const stamp = Date.now();
 const email = `dominique.${stamp}@exemple.test`;
 const newEmail = `dominique.nouveau.${stamp}@exemple.test`;
+const thirdEmail = `dominique.troisieme.${stamp}@exemple.test`;
 const password = "Maison-91-Athis";
 const newPassword = "Jardin-91-Juvisy";
 
@@ -53,12 +53,28 @@ async function signIn(page: Page, address: string, secret: string, path = "/comp
   await page.getByLabel("Email").fill(address);
   await page.getByLabel("Mot de passe").fill(secret);
   await page.getByRole("button", { name: "Se connecter" }).click();
+  await page.waitForURL((url) => url.pathname !== "/connexion");
+  // A seed account accepts the terms of the launch first.
+  if (new URL(page.url()).pathname === "/conditions") {
+    await page.getByRole("checkbox").check();
+    await page.getByRole("button", { name: "Continuer" }).click();
+  }
   await expect(page).toHaveURL(path);
 }
 
-async function newPage(browser: Browser): Promise<Page> {
-  return (await browser.newContext()).newPage();
+const opened: BrowserContext[] = [];
+
+async function newPage(browser: Browser, viewport = { width: 1280, height: 900 }): Promise<Page> {
+  const context = await browser.newContext({ viewport });
+  opened.push(context);
+  return context.newPage();
 }
+
+test.afterAll(async () => {
+  await Promise.all(opened.map((context) => context.close()));
+});
+
+const PHONE = { width: 390, height: 844 };
 
 test("inscription d'un acquéreur", async ({ page, browser }) => {
   test.slow();
@@ -76,7 +92,10 @@ test("inscription d'un acquéreur", async ({ page, browser }) => {
   await expect(other).toHaveURL(/\/acquereur/);
 });
 
-test("informations : un prénom est demandé, puis retour au compte", async ({ page }) => {
+test("informations, à 390 px : un prénom est demandé, puis retour au compte", async ({
+  browser,
+}) => {
+  const page = await newPage(browser, PHONE);
   await signIn(page, email, password);
   await page.getByRole("link", { name: /Prénom et nom/ }).click();
   await expect(page).toHaveURL("/compte/informations");
@@ -100,7 +119,8 @@ test("informations : un prénom est demandé, puis retour au compte", async ({ p
   await expect(page.getByRole("link", { name: /Téléphone/ })).toContainText("06 98 76 54 32");
 });
 
-test("« Je vends » ajouté au compte", async ({ page }) => {
+test("« Je vends » ajouté au compte, à 390 px", async ({ browser }) => {
+  const page = await newPage(browser, PHONE);
   await signIn(page, email, password);
   const spaces = page.getByRole("region", { name: "Mes espaces" });
   await spaces.getByRole("button", { name: "Ajouter « Je vends »" }).click();
@@ -167,7 +187,6 @@ test("adresse email : confirmée depuis les deux adresses", async ({ page, brows
   await page.getByRole("button", { name: "Recevoir les liens de confirmation" }).click();
   await expect(page.getByText("Cette adresse est déjà celle d'un autre compte.")).toBeVisible();
 
-  const asked = Date.now() - 1_000;
   await page.getByLabel("Nouvelle adresse email").fill(newEmail);
   await page.getByRole("button", { name: "Recevoir les liens de confirmation" }).click();
   await expect(page.locator(":focus")).toContainText(
@@ -179,8 +198,8 @@ test("adresse email : confirmée depuis les deux adresses", async ({ page, brows
   );
 
   const subject = "Confirmez le changement d'adresse email";
-  const toNew = await emailLink(newEmail, subject, asked);
-  const toCurrent = await emailLink(email, subject, asked);
+  const toNew = await emailLink(newEmail, subject);
+  const toCurrent = await emailLink(email, subject);
   expect(toNew).toMatch(/\/auth\/confirm\?token_hash=[^&]+&type=email_change$/);
 
   // The new address first, from another browser: one link of two.
@@ -205,4 +224,44 @@ test("adresse email : confirmée depuis les deux adresses", async ({ page, brows
 
   const fresh = await newPage(browser);
   await signIn(fresh, newEmail, newPassword);
+});
+
+test("le second lien ouvert dans un navigateur d'un autre compte ne l'y fait jamais entrer", async ({
+  browser,
+}) => {
+  test.slow();
+  const page = await newPage(browser);
+  await signIn(page, newEmail, newPassword, "/compte/email");
+  await page.getByLabel("Nouvelle adresse email").fill(thirdEmail);
+  await page.getByRole("button", { name: "Recevoir les liens de confirmation" }).click();
+  await expect(page.locator(":focus")).toContainText("Deux liens sont partis");
+  const subject = "Confirmez le changement d'adresse email";
+  const toNew = await emailLink(thirdEmail, subject);
+  // The current address got the first round as its new address: two now.
+  const toCurrent = await emailLink(newEmail, subject, 2);
+
+  // The current address first, from a browser without a session.
+  const visitor = await newPage(browser);
+  await visitor.goto(toCurrent);
+  await visitor.getByRole("button", { name: "Confirmer" }).click();
+  await expect(visitor).toHaveURL("/confirmation/adresse");
+  await expect(visitor.getByRole("link", { name: "Se connecter" })).toBeVisible();
+
+  // The second link in a browser signed in to another account: the address
+  // changes, the browser stays in its own account.
+  const other = await newPage(browser);
+  await signIn(other, "seller_b@test.leenkey.fr", process.env.SEED_PASSWORD ?? "");
+  await other.goto(toNew);
+  await other.getByRole("button", { name: "Confirmer" }).click();
+  await expect(other).toHaveURL("/confirmation/adresse?etat=fait");
+  await expect(other.getByRole("heading", { level: 1 })).toHaveText(
+    "Votre adresse email est modifiée",
+  );
+  await other.goto("/compte");
+  await expect(other.getByRole("link", { name: /Adresse email/ })).toContainText(
+    "seller_b@test.leenkey.fr",
+  );
+
+  const fresh = await newPage(browser);
+  await signIn(fresh, thirdEmail, newPassword);
 });

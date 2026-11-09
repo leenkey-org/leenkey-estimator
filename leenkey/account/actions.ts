@@ -10,7 +10,7 @@ import { ROUTES } from "@/leenkey/navigation/spaces";
 import { fr } from "@/lib/i18n/fr";
 import { allowRequest } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
-import { createPublicClient } from "@/lib/supabase/public";
+import { createStatelessClient } from "@/lib/supabase/public";
 import {
   addRoleSchema,
   emailChangeSchema,
@@ -93,6 +93,11 @@ export async function changeEmail(
       values,
     };
   }
+  // Each request sends two emails, one to any address: counted with the
+  // password resets of the address (L1-38), 5 an hour.
+  if (!(await allowRequest("reset", await headers()))) {
+    return { ok: false, error: errors.tooManyRequests, values };
+  }
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ email: next });
   if (error?.code === "email_exists" || error?.code === "user_already_exists") {
@@ -109,10 +114,11 @@ export async function changeEmail(
 }
 
 /**
- * A new password, the current one checked first: a session left open on a
- * shared computer does not take the account. The check signs in on a client
- * without cookies; counted with the failed sign-ins of the address (L1-38).
- * Then every other session is closed, that check's included.
+ * A new password, the current one checked first, on a client without
+ * cookies whose session is closed at once; a wrong one is counted with the
+ * failed sign-ins of the address (L1-38). Then every other session is
+ * closed. The check holds for this page only: Supabase Auth changes a
+ * password with the access token alone (DECISIONS 2026-11-09, SECURITE).
  */
 export async function changePassword(
   _previous: FormResult | null,
@@ -131,10 +137,13 @@ export async function changePassword(
   if (!(await allowRequest("signin", requestHeaders, { count: false }))) {
     return { ok: false, error: errors.tooManyRequests };
   }
-  const check = await createPublicClient().auth.signInWithPassword({
+  const verifier = createStatelessClient();
+  const check = await verifier.auth.signInWithPassword({
     email: user.email,
     password: parsed.data.current,
   });
+  // The session of the check is closed at once, whatever comes next.
+  if (!check.error) await verifier.auth.signOut({ scope: "local" });
   if (check.error) {
     if (check.error.code === "invalid_credentials") {
       await allowRequest("signin", requestHeaders);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/shared/button";
 import { InfoNote } from "@/components/shared/info-note";
@@ -9,6 +9,7 @@ import { Input } from "@/components/shared/input";
 import { fr } from "@/lib/i18n/fr";
 import { PASSWORD_MAX, PASSWORD_MIN } from "@/lib/validations/auth";
 import { changePassword } from "../actions";
+import { focusFirstInvalid } from "./focus";
 
 const t = fr.account.password;
 
@@ -16,9 +17,13 @@ const t = fr.account.password;
 export function PasswordForm() {
   const [state, action, pending] = useActionState(changePassword, null);
   const failed = state?.ok === false ? state : null;
+  const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (failed) focusFirstInvalid(formRef.current);
+  }, [failed]);
   const errors = failed?.fieldErrors ?? {};
   return (
-    <form action={action} noValidate className="mt-6 flex flex-col gap-4">
+    <form ref={formRef} action={action} noValidate className="mt-6 flex flex-col gap-4">
       <div aria-live="polite" className="empty:hidden">
         {failed ? <InlineAlert tone="danger">{failed.error}</InlineAlert> : null}
       </div>

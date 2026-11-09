@@ -14,6 +14,8 @@ export type AccountOverview = {
   /** A change of address asked and not confirmed yet from both addresses. */
   newEmail: string | null;
   roles: string[];
+  /** A suspended account adds no space (profile_add_role refuses it). */
+  suspended: boolean;
 };
 
 export async function accountOverview(
@@ -22,7 +24,7 @@ export async function accountOverview(
 ): Promise<AccountOverview | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("first_name, last_name, phone, roles")
+    .select("first_name, last_name, phone, roles, suspended_at")
     .eq("id", user.id)
     .maybeSingle();
   if (error || !data) {
@@ -37,5 +39,6 @@ export async function accountOverview(
     email: user.email ?? null,
     newEmail: user.new_email ?? null,
     roles: data.roles,
+    suspended: data.suspended_at !== null,
   };
 }

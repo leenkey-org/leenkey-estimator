@@ -10,21 +10,25 @@ import { cn } from "@/lib/utils";
 export const accountRowClass =
   "flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-brand-blue focus-visible:outline-solid";
 
+export const accountListClass =
+  "flex flex-col overflow-hidden rounded-lk-md border border-lk-line bg-lk-surface";
+
 export function AccountSection({
   id,
   title,
+  bare = false,
   children,
 }: {
   id: string;
   title: string;
+  /** The children bring their own list (and what goes under it). */
+  bare?: boolean;
   children: ReactNode;
 }) {
   return (
     <section aria-labelledby={id} className="mt-8 flex flex-col gap-3">
       <SectionTitle id={id}>{title}</SectionTitle>
-      <ul className="flex flex-col overflow-hidden rounded-lk-md border border-lk-line bg-lk-surface">
-        {children}
-      </ul>
+      {bare ? children : <ul className={accountListClass}>{children}</ul>}
     </section>
   );
 }
@@ -69,7 +73,9 @@ export function AccountRowText({
       <span className="text-lk-label font-semibold text-lk-ink">{label}</span>
       <span className={cn("text-lk-caption text-lk-ink-3", !wrap && "truncate")}>{value}</span>
       {detail ? (
-        <span className="text-lk-caption font-semibold text-lk-warning">{detail}</span>
+        <span className="text-lk-caption font-semibold text-lk-warning [overflow-wrap:anywhere]">
+          {detail}
+        </span>
       ) : null}
     </span>
   );

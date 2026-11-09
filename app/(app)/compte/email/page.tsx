@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { InlineAlert } from "@/components/shared/inline-alert";
 import { getUser, requireProfile } from "@/core/auth/session";
 import { EmailForm } from "@/leenkey/account/components/email-form";
 import { ROUTES } from "@/leenkey/navigation/spaces";
@@ -24,14 +23,11 @@ export default async function AccountEmailPage() {
     >
       <dl className="mt-6 flex flex-col gap-0.5">
         <dt className="text-lk-caption text-lk-ink-3">{t.current}</dt>
-        <dd className="break-all text-lk-body font-semibold text-lk-ink">{user?.email}</dd>
+        <dd className="text-lk-body font-semibold text-lk-ink [overflow-wrap:anywhere]">
+          {user?.email}
+        </dd>
       </dl>
-      {user?.new_email ? (
-        <InlineAlert tone="warning" className="mt-4">
-          {t.pending(user.new_email)}
-        </InlineAlert>
-      ) : null}
-      <EmailForm />
+      <EmailForm pending={user?.new_email ?? null} />
     </SpacePage>
   );
 }

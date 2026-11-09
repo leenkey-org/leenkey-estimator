@@ -9,18 +9,31 @@ import { AuthShell } from "../../_components/auth-shell";
 
 const t = fr.account.emailChange;
 
-export const metadata: Metadata = { title: t.halfMetaTitle };
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-// One link of a change of address opened (L1-39): Supabase Auth waits for
-// the other one, sent to the other address, before changing it. Reached
-// from either browser, with or without a session.
-export default async function EmailChangeHalfPage() {
-  const user = await getUser();
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}): Promise<Metadata> {
+  return { title: (await searchParams).etat === "fait" ? t.doneMetaTitle : t.halfMetaTitle };
+}
+
+// A link of a change of address opened (L1-39), never signing this browser
+// in (leenkey/auth/actions.ts, confirmEmailChange): the first of the two
+// links (« Plus qu'un lien »), or the second one from a browser that is not
+// signed in to the account (?etat=fait).
+export default async function EmailChangePage({ searchParams }: { searchParams: SearchParams }) {
+  const done = (await searchParams).etat === "fait";
+  const user = done ? null : await getUser();
   return (
-    <AuthShell title={t.halfTitle} lead={t.halfLead}>
+    <AuthShell title={done ? t.doneTitle : t.halfTitle} lead={done ? t.doneLead : t.halfLead}>
       <Link
         href={user ? ROUTES.account : "/connexion"}
-        className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "w-full")}
+        className={cn(
+          buttonVariants({ variant: done ? "primary" : "secondary", size: "lg" }),
+          "w-full",
+        )}
       >
         {user ? fr.account.back : t.halfAction}
       </Link>

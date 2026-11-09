@@ -38,7 +38,10 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
   const [profile, params] = await Promise.all([requireProfile(), searchParams]);
   const user = await getUser();
   const account = user ? await accountOverview(await createClient(), user) : null;
-  const saved = typeof params.modifie === "string" ? SAVED[params.modifie] : undefined;
+  const saved =
+    typeof params.modifie === "string" && Object.hasOwn(SAVED, params.modifie)
+      ? SAVED[params.modifie]
+      : undefined;
   const fullName = [account?.firstName, account?.lastName].filter(Boolean).join(" ");
 
   return (
@@ -56,12 +59,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
         <>
           <AccountSection id="compte-informations" title={t.sections.identity}>
             <AccountRow
-              href="/compte/informations"
+              href={ROUTES.accountIdentity}
               label={t.rows.name}
               value={fullName || t.notSet}
             />
             <AccountRow
-              href="/compte/informations"
+              href={ROUTES.accountIdentity}
               label={t.rows.phone}
               value={account.phone || t.notSet}
             />
@@ -69,13 +72,13 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
 
           <AccountSection id="compte-connexion" title={t.sections.signIn}>
             <AccountRow
-              href="/compte/email"
+              href={ROUTES.accountEmail}
               label={t.rows.email}
               value={account.email ?? t.notSet}
               detail={account.newEmail ? t.emailPending(account.newEmail) : null}
             />
             <AccountRow
-              href="/compte/mot-de-passe"
+              href={ROUTES.accountPassword}
               label={t.rows.password}
               value={t.rows.passwordValue}
             />
@@ -89,8 +92,11 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
             />
           </AccountSection>
 
-          <AccountSection id="compte-espaces" title={t.sections.spaces}>
-            <RoleRows roles={account.roles.filter((role) => role !== "admin")} />
+          <AccountSection id="compte-espaces" title={t.sections.spaces} bare>
+            <RoleRows
+              roles={account.roles.filter((role) => role !== "admin")}
+              suspended={account.suspended}
+            />
           </AccountSection>
 
           <AccountSection id="compte-cookies" title={t.sections.privacy}>

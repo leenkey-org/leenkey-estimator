@@ -204,6 +204,7 @@ export const fr = {
       addLabel: (role: string) => `Ajouter « ${role} »`,
       added: (role: string) => `« ${role} » est ajouté à votre compte.`,
       error: "Ce changement n'a pas pu être enregistré. Réessayez dans un instant.",
+      suspended: "Votre compte est suspendu : aucun espace ne peut y être ajouté.",
     },
     // Until the deletion from this page (L2-10): the way of the CGU, article 17.
     closeText: {
@@ -268,6 +269,9 @@ export const fr = {
       halfLead:
         "Cette adresse est confirmée. Ouvrez maintenant le lien envoyé à votre autre adresse : le changement est fait une fois les deux liens ouverts.",
       halfAction: "Se connecter",
+      doneMetaTitle: "Adresse modifiée · Leenkey",
+      doneTitle: "Votre adresse email est modifiée",
+      doneLead: "Connectez-vous désormais avec votre nouvelle adresse email.",
     },
     errors: {
       session: "Votre session a expiré. Connectez-vous de nouveau.",

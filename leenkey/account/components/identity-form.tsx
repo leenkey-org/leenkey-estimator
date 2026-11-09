@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
 import { fr } from "@/lib/i18n/fr";
 import { updateIdentity } from "../actions";
+import { focusFirstInvalid } from "./focus";
 
 const t = fr.account.identity;
 
@@ -17,10 +18,14 @@ export function IdentityForm({
 }) {
   const [state, action, pending] = useActionState(updateIdentity, null);
   const failed = state?.ok === false ? state : null;
+  const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (failed) focusFirstInvalid(formRef.current);
+  }, [failed]);
   const errors = failed?.fieldErrors ?? {};
   const value = (key: keyof typeof initial) => failed?.values?.[key] ?? initial[key];
   return (
-    <form action={action} noValidate className="mt-6 flex flex-col gap-4">
+    <form ref={formRef} action={action} noValidate className="mt-6 flex flex-col gap-4">
       <div aria-live="polite" className="empty:hidden">
         {failed ? <InlineAlert tone="danger">{failed.error}</InlineAlert> : null}
       </div>

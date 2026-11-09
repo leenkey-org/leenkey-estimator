@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   updateUserArgs: [] as Record<string, unknown>[],
   check: { error: null as { code: string } | null },
   signOuts: [] as unknown[],
+  checkSignOuts: [] as unknown[],
   rpc: { data: ["buyer", "seller"] as unknown, error: null as { code: string } | null },
   allowed: true,
   counted: 0,
@@ -36,8 +37,14 @@ vi.mock("@/lib/rate-limit", () => ({
   },
 }));
 vi.mock("@/lib/supabase/public", () => ({
-  createPublicClient: () => ({
-    auth: { signInWithPassword: async () => mocks.check },
+  createStatelessClient: () => ({
+    auth: {
+      signInWithPassword: async () => mocks.check,
+      signOut: async (options: unknown) => {
+        mocks.checkSignOuts.push(options);
+        return { error: null };
+      },
+    },
   }),
 }));
 vi.mock("@/lib/supabase/server", () => ({
@@ -80,6 +87,7 @@ beforeEach(() => {
   mocks.updateUserArgs = [];
   mocks.check = { error: null };
   mocks.signOuts = [];
+  mocks.checkSignOuts = [];
   mocks.rpc = { data: ["buyer", "seller"], error: null };
   mocks.allowed = true;
   mocks.counted = 0;
@@ -161,6 +169,18 @@ describe("changeEmail", () => {
     });
   });
 
+  it("counted with the password resets: too many, nothing is sent", async () => {
+    const { changeEmail } = await import("@/leenkey/account/actions");
+    await changeEmail(null, form({ email: "nouveau@exemple.test" }));
+    expect(mocks.counted).toBe(1);
+    mocks.allowed = false;
+    expect(await changeEmail(null, form({ email: "nouveau@exemple.test" }))).toMatchObject({
+      ok: false,
+      error: "Trop de tentatives. Réessayez plus tard.",
+    });
+    expect(mocks.updateUserArgs).toHaveLength(1);
+  });
+
   it("without a session, nothing is asked", async () => {
     const { changeEmail } = await import("@/leenkey/account/actions");
     mocks.user = null;
@@ -182,8 +202,37 @@ describe("changePassword", () => {
       "NEXT_REDIRECT /compte?modifie=mot-de-passe",
     );
     expect(mocks.updateUserArgs[0]).toEqual({ password: "Jardin-91-Juvisy" });
+    expect(mocks.checkSignOuts).toEqual([{ scope: "local" }]);
     expect(mocks.signOuts).toEqual([{ scope: "others" }]);
     expect(mocks.counted).toBe(0);
+  });
+
+  it("the session of the check is closed even when the change is refused", async () => {
+    const { changePassword } = await import("@/leenkey/account/actions");
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.updateUser = { error: { code: "weak_password" } };
+    expect(await changePassword(null, form(filled))).toMatchObject({ ok: false });
+    expect(mocks.checkSignOuts).toEqual([{ scope: "local" }]);
+    expect(mocks.signOuts).toEqual([]);
+    log.mockRestore();
+  });
+
+  it("the same password again is refused before any check", async () => {
+    const { changePassword } = await import("@/leenkey/account/actions");
+    expect(
+      await changePassword(
+        null,
+        form({
+          current: "Jardin-91-Juvisy",
+          password: "Jardin-91-Juvisy",
+          confirm: "Jardin-91-Juvisy",
+        }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      fieldErrors: { password: "Choisissez un mot de passe différent de l'ancien." },
+    });
+    expect(mocks.checkSignOuts).toEqual([]);
   });
 
   it("a wrong current password changes nothing and counts as a failed sign-in", async () => {

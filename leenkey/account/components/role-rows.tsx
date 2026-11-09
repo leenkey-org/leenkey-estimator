@@ -10,7 +10,7 @@ import { ROUTES } from "@/leenkey/navigation/spaces";
 import { fr } from "@/lib/i18n/fr";
 import type { AddableRole } from "@/lib/validations/account";
 import { addRole } from "../actions";
-import { AccountRowText, accountRowClass } from "./account-list";
+import { AccountRowText, accountListClass, accountRowClass } from "./account-list";
 
 const t = fr.account.roles;
 
@@ -25,10 +25,17 @@ const ROLES: {
 
 /**
  * « Mes espaces » (SPEC-V2 8.14, DECISIONS Q41): « Je vends » and « J'achète »,
- * each a way to its space once held, else « Ajouter ». The rows of a list
- * section (AccountSection); the outcome under the list.
+ * each a way to its space once held, else « Ajouter » (not for a suspended
+ * account). The list of a bare AccountSection, the outcome under it.
  */
-export function RoleRows({ roles }: { roles: readonly string[] }) {
+export function RoleRows({
+  roles,
+  suspended = false,
+}: {
+  roles: readonly string[];
+  /** A suspended account adds no space: only the ones it holds. */
+  suspended?: boolean;
+}) {
   const router = useRouter();
   const [held, setHeld] = useState<readonly string[]>(roles);
   const [outcome, setOutcome] = useState<{ tone: "success" | "danger"; text: string } | null>(null);
@@ -57,42 +64,46 @@ export function RoleRows({ roles }: { roles: readonly string[] }) {
     });
   };
 
+  const rows = ROLES.filter(({ role }) => held.includes(role) || !suspended);
   return (
     <>
-      {ROLES.map(({ role, href, copy }) =>
-        held.includes(role) ? (
-          <li key={role} className="border-t border-lk-line first:border-t-0">
-            <Link href={href} className={accountRowClass}>
-              <AccountRowText label={copy.label} value={copy.open} />
-              <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-lk-ink-3" />
-            </Link>
-          </li>
-        ) : (
-          <li
-            key={role}
-            className="flex min-h-14 items-center gap-3 border-t border-lk-line px-4 py-3 first:border-t-0"
-          >
-            <AccountRowText label={copy.label} value={copy.hint} wrap />
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              aria-label={t.addLabel(copy.label)}
-              loading={adding === role}
-              disabled={adding !== null}
-              onClick={() => add(role, copy.label)}
+      <ul className={accountListClass}>
+        {rows.map(({ role, href, copy }) =>
+          held.includes(role) ? (
+            <li key={role} className="border-t border-lk-line first:border-t-0">
+              <Link href={href} className={accountRowClass}>
+                <AccountRowText label={copy.label} value={copy.open} />
+                <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-lk-ink-3" />
+              </Link>
+            </li>
+          ) : (
+            <li
+              key={role}
+              className="flex min-h-14 items-center gap-3 border-t border-lk-line px-4 py-3 first:border-t-0"
             >
-              {t.add}
-            </Button>
-          </li>
-        ),
-      )}
+              <AccountRowText label={copy.label} value={copy.hint} wrap />
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                aria-label={t.addLabel(copy.label)}
+                loading={adding === role}
+                disabled={adding !== null}
+                onClick={() => add(role, copy.label)}
+              >
+                {t.add}
+              </Button>
+            </li>
+          ),
+        )}
+      </ul>
+      {suspended && rows.length === 0 ? (
+        <p className="text-lk-secondary text-lk-ink-2">{t.suspended}</p>
+      ) : null}
       {outcome ? (
-        <li className="border-t border-lk-line p-3">
-          <div ref={outcomeRef} tabIndex={-1} className="outline-none">
-            <InlineAlert tone={outcome.tone}>{outcome.text}</InlineAlert>
-          </div>
-        </li>
+        <div ref={outcomeRef} tabIndex={-1} className="outline-none">
+          <InlineAlert tone={outcome.tone}>{outcome.text}</InlineAlert>
+        </div>
       ) : null}
     </>
   );
