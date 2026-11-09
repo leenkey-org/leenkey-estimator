@@ -17,7 +17,7 @@
 --    exemption (or land), which it reads before it shows.
 -- 5. public_listing_energy(slug): what the page of a published listing shows
 --    of it, beside public_listings (whose columns stay as they are).
--- Nothing is dropped: the file only adds and replaces.
+-- The file only adds and replaces (applied to staging without a confirmation).
 
 -- 1. ---------------------------------------------------------------------------
 alter table public.properties
@@ -141,9 +141,9 @@ $$;
 -- 4. ---------------------------------------------------------------------------
 -- A listing sent stays as it is (L1-14b): its DPE, once complete, is not
 -- emptied (« dpe: keep »). A listing sent before L1-65 without one keeps it
--- so until the seller completes it. An exemption, its motive, or land drop
--- the mentions of the DPE: once sent, only the team declares them, having
--- read them (« dpe: exemption »).
+-- so until the seller completes it. An exemption, its motive, or land take
+-- the mentions of the DPE off the page: once sent, only the team declares
+-- them, having read them (« dpe: exemption »).
 create function public.properties_keep_dpe() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
