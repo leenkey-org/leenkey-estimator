@@ -4,7 +4,7 @@
 
 - [`2026-10-09-dossier-juridique.md`](2026-10-09-dossier-juridique.md) : projet de textes daté du 9 octobre 2026, transmis le 15 octobre. Il contient une note de cadrage interne, des mentions légales, des CGU, des CGV, une politique de confidentialité, une politique de cookies, une politique de signalement et de modération, les mentions du parcours de souscription et le formulaire de rétractation, les notices courtes des formulaires, et une fiche d'intégration.
 - **Non publiable en l'état** : le document le dit lui-même. Il ne vaut pas consultation d'avocat et contient des passages `[À COMPLÉTER]` et `[À CONFIRMER]`.
-- Versions définitives relues par l'avocat de Leenkey attendues **avant le 27 novembre 2026** (`DECISIONS.md`, Q34). En attendant, la préprod affiche les pages légales « En cours de rédaction ».
+- **Publié le 9 novembre 2026** : sur décision de Younes, les textes rédigés à partir de ce dossier tiennent lieu de la relecture par l'avocat pour la mise en ligne (`DECISIONS.md` 2026-11-09, Q34). Ils sont dans `lib/i18n/legal-policies.ts` (CGU 2.0, CGV, confidentialité, signalement, intelligence artificielle) et `lib/i18n/legal-texts.ts` (mentions légales) ; la politique cookies dans `lib/i18n/fr.ts`.
 - La note de cadrage est **interne** : elle ne doit jamais apparaître sur le site.
 
 ## Ce qui est déjà intégré au produit (décision du 2026-10-15)

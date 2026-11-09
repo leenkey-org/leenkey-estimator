@@ -68,6 +68,13 @@ export function ListingDecisionEmail({
         <Text style={emailText}>{copy.text(title)}</Text>
         <EmailQuote label={copy.reason} text={reason ?? ""} />
         <Text style={emailText}>{copy.next}</Text>
+        <Text style={emailText}>
+          {copy.contest.before}
+          <Link href={`mailto:${contactEmail}`} style={emailLink}>
+            {contactEmail}
+          </Link>
+          {copy.contest.after}
+        </Text>
       </EmailLayout>
     );
   }

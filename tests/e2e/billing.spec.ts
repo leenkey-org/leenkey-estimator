@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import Stripe from "stripe";
+import { SALES_TERMS } from "@/lib/config/sales";
 import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 import { consentValue } from "./google";
 
@@ -138,7 +139,7 @@ test("payer Accompagné : retour de Stripe, confirmation par le webhook, une seu
     kind: "new",
     early_start: "0",
     cgu_version: LEGAL_VERSIONS.cgu,
-    cgv_version: "2026-10-17",
+    cgv_version: SALES_TERMS.cgvVersion,
     env: "local",
   });
   // Never the email of the seller in the address.

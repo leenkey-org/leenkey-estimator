@@ -1967,6 +1967,7 @@ Voir `CLAUDE.md` section 13. Détail :
 | `/api/cron/send-notification-emails` | `*/5 * * * *` | Envoi des emails de notification en attente (regroupement) |
 | `/api/cron/anonymize-deleted` | `0 2 * * 0` | Anonymisation des comptes supprimés depuis plus de 30 jours |
 | *(en base, sans route)* `subscriptions-daily` | `23 7 * * *` | Formules (L1-40) : `subscriptions_daily()` remet la vente d'un bien dont la formule est échue sur la formule en vigueur (Autonomie) et prévient une fois le propriétaire d'une formule qui se termine dans 30 jours (`plan.ending`, email par le job des notifications) |
+| *(en base, sans route)* `purge-estimations` | `53 3 * * *` | Analyses de valeur faites sans compte : `estimations_purge()` supprime celles qui ont plus de 12 mois et ne sont rattachées ni à un compte ni à un bien (politique de confidentialité, `DECISIONS.md` 2026-11-09) |
 | *(en base, sans route)* `purge-rate-limits` | `41 3 * * *` | Limites de débit (L1-38) : `rate_limits_purge()` supprime les compteurs des fenêtres de plus d'un jour |
 | *(en base, sans route)* `purge-visitor-assistant` | `17 3 * * *` | Assistant du site (`DECISIONS.md` 2026-11-07) : `ai_visitor_purge()` efface l'empreinte des adresses des jours passés et supprime les conversations des visiteurs de plus de 30 jours |
 

@@ -417,10 +417,15 @@ test.describe("/tarifs (base de seed)", () => {
   });
 });
 
-test.describe("mentions légales et CGU de la V1", () => {
+test.describe("textes légaux en vigueur (2026-11-09)", () => {
   for (const [path, title] of [
     ["/mentions-legales", "Mentions légales"],
     ["/cgu", "Conditions générales d'utilisation"],
+    ["/cgv", "Conditions générales de vente"],
+    ["/confidentialite", "Politique de confidentialité"],
+    ["/cookies", "Politique cookies"],
+    ["/signalement", "Signalement et modération"],
+    ["/intelligence-artificielle", "Intelligence artificielle"],
   ] as const) {
     test(`${path} : le texte en vigueur, sans mention de rédaction @a11y`, async ({ page }) => {
       const response = await page.goto(path);
@@ -452,20 +457,28 @@ test.describe("mentions légales et CGU de la V1", () => {
     );
   });
 
-  test("/cgu : le sommaire mène à chaque article, version 1.1", async ({ page }) => {
+  test("/cgu : le sommaire mène à chaque article, version 2.0", async ({ page }) => {
     await page.goto("/cgu");
     await expect(
-      page.getByText("Dernière mise à jour : 6 novembre 2026 · Version 1.1"),
+      page.getByText("En vigueur depuis le 9 novembre 2026 · Version 2.0"),
     ).toBeVisible();
     const toc = page.getByRole("navigation", { name: "Sommaire" });
-    await expect(toc.getByRole("link")).toHaveCount(12);
-    await toc.getByRole("link", { name: "5. Tarifs et paiement" }).click();
-    await expect(page).toHaveURL(/\/cgu#tarifs$/);
-    await expect(page.getByRole("heading", { name: "5. Tarifs et paiement" })).toBeInViewport();
+    await expect(toc.getByRole("link")).toHaveCount(20);
+    await toc.getByRole("link", { name: "5. Formules et prix" }).click();
+    await expect(page).toHaveURL(/\/cgu#formules$/);
+    await expect(page.getByRole("heading", { name: "5. Formules et prix" })).toBeInViewport();
     // No sticky header on a legal page: the article 24 px under the top of the screen.
-    await expectAnchorUnderHeaders(page, "tarifs", 24);
-    await expect(page.getByRole("status").filter({ hasText: "Important :" })).toHaveCount(0);
-    await expect(page.getByText("pas une agence immobilière")).toBeVisible();
+    await expectAnchorUnderHeaders(page, "formules", 24);
+    await expect(page.getByText(/ne représente ni le vendeur ni l'acquéreur/)).toBeVisible();
+  });
+
+  test("/cgv : la rétractation, son bouton et le formulaire type", async ({ page }) => {
+    await page.goto("/cgv#retractation");
+    await expect(
+      page.getByRole("heading", { name: "10. Droit de rétractation de 14 jours" }),
+    ).toBeInViewport();
+    await expect(page.getByText(/« Renoncer au contrat »/).first()).toBeVisible();
+    await expect(page.getByText("Formule souscrite : ____________________")).toBeVisible();
   });
 });
 

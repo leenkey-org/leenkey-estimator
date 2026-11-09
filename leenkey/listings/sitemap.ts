@@ -21,6 +21,12 @@ const PAGES: ReadonlyArray<{ path: string; changeFrequency: ChangeFrequency; pri
   { path: "/contact", changeFrequency: "yearly", priority: 0.5 },
   { path: "/mentions-legales", changeFrequency: "yearly", priority: 0.2 },
   { path: "/cgu", changeFrequency: "yearly", priority: 0.2 },
+  // The legal texts of the launch (DECISIONS.md 2026-11-09).
+  { path: "/cgv", changeFrequency: "yearly", priority: 0.2 },
+  { path: "/confidentialite", changeFrequency: "yearly", priority: 0.2 },
+  { path: "/cookies", changeFrequency: "yearly", priority: 0.2 },
+  { path: "/signalement", changeFrequency: "yearly", priority: 0.2 },
+  { path: "/intelligence-artificielle", changeFrequency: "yearly", priority: 0.2 },
 ];
 
 export type SitemapListing = { slug: string; publishedAt: string | null };

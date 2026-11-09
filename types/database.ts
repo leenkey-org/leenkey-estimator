@@ -1808,6 +1808,10 @@ export type Database = {
           claim_token: string
         }[]
       }
+      estimations_purge: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       euros: {
         Args: { p_cents: number }
         Returns: string

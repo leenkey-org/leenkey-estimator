@@ -8,13 +8,13 @@ const t = fr.legal.cookies;
 export const metadata: Metadata = { title: t.metaTitle };
 
 // L1-36, L1-37. Every cookie and browser storage of the code (consent,
-// session, email links, listing views, valuation tool, GA4 after consent),
-// with the fields of the legal file (name, provider, purpose, category,
-// lifetime). TODO(client): final text from Cédric's lawyer (Q34), who also
-// confirms the exemption of the functional ones.
+// session, email links, listing views, valuation tool, map, GA4 after
+// consent), with the fields of the legal file (name, provider, purpose,
+// category, lifetime); published for the launch (DECISIONS.md 2026-11-09).
 export default function CookiesPage() {
   return (
-    <LegalPage title={t.title} lead={t.lead} contact={t.contact}>
+    <LegalPage title={t.title} lead={t.lead} updated={t.updated} contact={t.contact} draft={false}>
+      <p className="text-lk-body text-pretty text-lk-ink-2">{t.intro}</p>
       <section aria-labelledby="liste-des-cookies" className="flex flex-col gap-3">
         <h2 id="liste-des-cookies" className="text-lk-h3 font-semibold text-lk-ink">
           {t.listTitle}

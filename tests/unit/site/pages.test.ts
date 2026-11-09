@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emailHref, LEENKEY_WHATSAPP, whatsappHref } from "@/leenkey/site/contact-links";
-import { LEGAL_VERSIONS } from "@/lib/legal/versions";
+import { LEGAL_VERSIONS, termsExempt } from "@/lib/legal/versions";
 import { fr } from "@/lib/i18n/fr";
 import type { LegalSection } from "@/lib/i18n/legal-texts";
 import type { Rich } from "@/lib/i18n/rich";
@@ -9,7 +9,7 @@ import type { Rich } from "@/lib/i18n/rich";
 // in V2 (DECISIONS 2026-10-19).
 
 const invest = fr.site.invest;
-const { notice, terms } = fr.legal;
+const { notice, terms, salesTerms, privacy, reporting, ai } = fr.legal;
 
 /** Every text of a part of fr, as plain strings (bold parts and links too). */
 function texts(value: unknown): string[] {
@@ -80,10 +80,15 @@ describe("texts of /investir", () => {
   });
 });
 
-describe("legal notice and CGU of the V1", () => {
+describe("legal texts of the launch (2026-11-09)", () => {
   const sets: [string, readonly LegalSection[]][] = [
     ["notice", notice.sections],
     ["terms", terms.sections],
+    // The model form of withdrawal closes the CGV, without a number.
+    ["salesTerms", salesTerms.sections.filter((section) => section.id !== "formulaire")],
+    ["privacy", privacy.sections],
+    ["reporting", reporting.sections],
+    ["ai", ai.sections],
   ];
 
   it("unique anchors, numbered titles in order", () => {
@@ -108,18 +113,18 @@ describe("legal notice and CGU of the V1", () => {
       year: "numeric",
       timeZone: "UTC",
     });
-    expect(terms.updated).toBe(`Dernière mise à jour : ${date} · Version 1.1`);
+    expect(terms.updated).toBe(`En vigueur depuis le ${date} · Version 2.0`);
   });
 
   it("the CGU describe the plans decided on 2026-11-06", () => {
     const text = terms.sections
-      .find((section) => section.id === "tarifs")
+      .find((section) => section.id === "formules")
       ?.blocks.map((block) =>
         block.kind === "p" ? plain(block.text) : block.kind === "subtitle" ? block.text : "",
       )
       .join(" ");
     expect(text).toContain("Elle ne comprend pas d'accompagnement par un conseiller.");
-    expect(text).toContain("jamais renouvelée automatiquement");
+    expect(text).toContain("jamais renouvelées automatiquement");
     expect(text).not.toMatch(/call|phase de lancement/);
   });
 
@@ -133,7 +138,7 @@ describe("legal notice and CGU of the V1", () => {
       return formatPrice(Number(match[1])).replace(/[\u00A0\u202F]/g, " ");
     };
     const paid = terms.sections
-      .find((section) => section.id === "tarifs")
+      .find((section) => section.id === "formules")
       ?.blocks.find(
         (block) => block.kind === "p" && plain(block.text).startsWith("Les formules Accompagné"),
       );
@@ -141,5 +146,39 @@ describe("legal notice and CGU of the V1", () => {
     expect(plain(paid.text)).toContain(`Accompagné (${price("accompagne")} TTC)`);
     expect(plain(paid.text)).toContain(`Sérénité (${price("serenite")} TTC)`);
     expect(plain(paid.text)).toContain("à la souscription");
+  });
+
+  it("no placeholder, no « on », the editorial rules of the site", () => {
+    const all = sets
+      .flatMap(([, sections]) => texts(sections))
+      .concat(texts(salesTerms.sections))
+      .join(" ");
+    expect(all).not.toMatch(/À COMPLÉTER|À CONFIRMER|À VALIDER|\[|\]/);
+    // « façon » is not « on »: letters with accents count as letters.
+    expect(all).not.toMatch(/(^|[^\p{L}])on([^\p{L}]|$)/iu);
+    expect(all).not.toMatch(/au succès|prix ferme/i);
+  });
+
+  it("the CGV give the withdrawal, its button and its model form", () => {
+    const text = texts(salesTerms.sections).join(" ");
+    expect(text).toContain("« Renoncer au contrat »");
+    expect(text).toContain("14 jours");
+    expect(text).toContain("Formule souscrite : ____________________");
+    expect(text).toContain("510");
+  });
+
+  it("the page of the plan, where the withdrawal is, skips the gate of new terms", () => {
+    expect(termsExempt("/vendeur/formule")).toBe(true);
+    expect(termsExempt("/vendeur/formule?bien=5eed&retour=1")).toBe(true);
+    expect(termsExempt("/vendeur")).toBe(false);
+    expect(termsExempt("/vendeur/formule/autre")).toBe(false);
+    expect(termsExempt("/vendeur/biens/5eed")).toBe(false);
+  });
+
+  it("the moderation is told as it is done: by a person, with a way to contest", () => {
+    const all = [terms, reporting, ai].flatMap((text) => texts(text.sections)).join(" ");
+    expect(all).not.toMatch(/outils automatiques\. Ces contrôles/);
+    expect(all).toContain("Aucun outil automatique ne prend de décision de modération");
+    expect(fr.emails.listingRejected.contest.before).toContain("pas d'accord");
   });
 });

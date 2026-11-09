@@ -32,7 +32,8 @@
 - [x] Aucune clé dans les journaux : une erreur du SDK Anthropic (ou de `fetch`) peut citer l'en-tête d'authentification ; les erreurs de l'assistant sont journalisées par leur type, leur statut et l'id de la requête seulement (`describeError`, `core/ai/client.ts`), le reste masqué (`redactSecrets`), testé. Incident du 2026-11-02 : une clé de préprod collée avec un retour à la ligne a été citée par l'erreur dans les journaux Vercel de `leenkey-v2` (rétention d'une heure) ; clé à révoquer et à remplacer (CLAUDE.md 11), correctif PR #68
 
 ## RGPD
-- [ ] Pages légales publiées (mentions, CGU, CGV, confidentialité, cookies)
+- [x] Pages légales publiées (mentions, CGU 2.0, CGV, confidentialité, cookies, signalement, intelligence artificielle), le 9 novembre 2026, non relues par un avocat (`DECISIONS.md` 2026-11-09) ; reste à publier le médiateur de la consommation (Q32)
+- [ ] `leenkey-prod` créé en `eu-west-3` (la politique de confidentialité dit les données hébergées dans l'Union européenne) ; reçus et factures Stripe envoyés par email (annoncés par les CGV)
 - [ ] Export et suppression de compte fonctionnels depuis `/compte`
 - [ ] Emails hors prod redirigés vers `EMAIL_TEST_INBOX`
 - [ ] Sauvegarde quotidienne et restauration testée (P-03)
