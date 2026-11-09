@@ -312,9 +312,10 @@ describe("DPE (L1-65)", () => {
     expect(issues({ energyCostMinEuros: 1500 })).toEqual([["energyCostMaxEuros", "costRange"]]);
     expect(issues({ dpeDate: "2999-01-01" })).toEqual([["dpeDate", "dateFuture"]]);
     expect(issues({ dpeDate: "2024-02-30" })).toEqual([["dpeDate", "date"]]);
-    expect(issues({ dpeExempt: true, dpeExemptionReason: "x" })?.[0]?.[0]).toBe(
-      "dpeExemptionReason",
-    );
+    expect(issues({ dpeExempt: true, dpeExemptionReason: " x " })).toEqual([
+      ["dpeExemptionReason", "reasonLength"],
+    ]);
+    expect(issues({ energyCostMinEuros: 980.5 })).toEqual([["energyCostMinEuros", "wholeEuros"]]);
     expect(issues({ energyPriceYear: 2014 })?.[0]?.[0]).toBe("energyPriceYear");
   });
 

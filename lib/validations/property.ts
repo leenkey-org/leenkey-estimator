@@ -72,6 +72,14 @@ const money = (max: number) =>
     .refine((euros) => Math.abs(euros * 100 - Math.round(euros * 100)) < 1e-6, "cents")
     .nullable();
 
+/** Euros without cents (the range of a DPE). */
+const wholeEuros = z
+  .number()
+  .min(0)
+  .max(100_000)
+  .refine((euros) => Number.isInteger(euros), "wholeEuros")
+  .nullable();
+
 /** « 2024-03-18 »: a day of the calendar, as the date input gives it. */
 const isoDate = z
   .string()
@@ -103,10 +111,15 @@ const characteristicsFields = z.object({
   // year of the prices, or an exemption and its motive. Optional in a draft;
   // asked to send the listing for review (dpeIssue, listing_submit).
   dpeExempt: z.boolean(),
-  dpeExemptionReason: z.string().trim().min(3).max(300).nullable(),
+  dpeExemptionReason: z
+    .string()
+    .trim()
+    .max(300)
+    .refine((text) => text.length >= 3, "reasonLength")
+    .nullable(),
   dpeDate: isoDate.nullable(),
-  energyCostMinEuros: whole(0, 100_000),
-  energyCostMaxEuros: whole(0, 100_000),
+  energyCostMinEuros: wholeEuros,
+  energyCostMaxEuros: wholeEuros,
   energyPriceYear: whole(2015, 2100),
 });
 

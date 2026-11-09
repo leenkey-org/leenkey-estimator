@@ -767,6 +767,8 @@ export const fr = {
         otherReason: "Autre motif",
         otherReasonLabel: "Précisez le motif",
         reasonNote: "Nous relisons le motif avant de publier votre annonce.",
+        reasonLocked: (email: string) =>
+          `Le motif ne change plus une fois l'annonce envoyée. Pour le corriger, écrivez-nous à ${email}.`,
         outdated:
           "Ce DPE n'est plus valable : un DPE doit dater du 1er juillet 2021 au plus tôt et de moins de 10 ans. Un nouveau DPE sera demandé pour envoyer votre annonce.",
       },
@@ -781,6 +783,8 @@ export const fr = {
       roomsAtLeastOne: "Un logement compte au moins une pièce.",
       cents: "Deux chiffres après la virgule au plus.",
       costRange: "Le minimum ne peut pas dépasser le maximum.",
+      wholeEuros: "En euros, sans centimes.",
+      reasonLength: "Le motif compte au moins 3 caractères.",
       dateFuture: "La date du DPE ne peut pas être dans le futur.",
       date: "Saisissez une date valide.",
     } as Record<string, string>,
@@ -1061,6 +1065,8 @@ export const fr = {
         field: "À renseigner.",
         // L1-65: properties_keep_dpe.
         dpe: "Le DPE de votre annonce reste nécessaire : classes, date de moins de 10 ans (1er juillet 2021 au plus tôt), dépenses d'énergie et année des prix, ou le motif de l'exemption.",
+        dpeExemption: (email: string) =>
+          `Une fois l'annonce envoyée, l'exemption du DPE et le passage en terrain passent par notre équipe, qui les relit : écrivez-nous à ${email}.`,
       },
     },
   },
@@ -2930,7 +2936,7 @@ export const fr = {
       exempt: "Bien non soumis au DPE.",
       excessive: "Logement à consommation énergétique excessive.",
       costs: (min: string, max: string, year: number) =>
-        `Montant estimé des dépenses annuelles d'énergie pour un usage standard : entre ${min} et ${max} par an. Prix moyens des énergies indexés au 1er janvier ${year}.`,
+        `Montant estimé des dépenses annuelles d'énergie pour un usage standard : entre ${min} et ${max} par an. Prix moyens des énergies indexés au 1er janvier ${year} (abonnements compris).`,
       date: (date: string) => `DPE réalisé le ${date}.`,
       risks:
         "Les informations sur les risques auxquels ce bien est exposé sont disponibles sur le site Géorisques\u00A0:",

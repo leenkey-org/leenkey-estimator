@@ -91,6 +91,9 @@ test("ses caractéristiques changent, l'annonce reste en ligne ; son adresse ne 
   await expect(page.getByText(/^Votre annonce reste en ligne/)).toBeVisible();
   // The photos change in their tab, not here.
   await expect(page.getByRole("button", { name: "Ajouter des photos" })).toHaveCount(0);
+  // Its DPE stays (L1-65): an exemption or land goes through the team.
+  await expect(page.getByLabel("Mon bien n'est pas soumis au DPE")).toHaveCount(0);
+  await expect(page.getByLabel("Type de bien").locator("option[value=terrain]")).toHaveCount(0);
   await expectNoSeriousViolation(page);
 
   // Always complete: without its surface, nothing is saved.

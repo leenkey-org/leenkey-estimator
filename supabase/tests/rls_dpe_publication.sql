@@ -1,11 +1,12 @@
 -- L1-65: the DPE asked to send a listing for review. A draft is saved
 -- without it; the sending is refused while the DPE is missing, outdated or
 -- an exemption has no motive; land is not concerned; once sent, a complete
--- DPE stays complete; the page of a published listing reads its mentions,
--- never the motive of an exemption. Fixtures in postal code 99994.
+-- DPE stays complete and only the team declares an exemption; the page of a
+-- published listing reads its mentions, never the motive of an exemption.
+-- Fixtures in postal code 99994.
 begin;
 \ir _helpers.psql
-select plan(25);
+select plan(32);
 \ir _plan.psql
 
 -- ===========================================================================
@@ -25,7 +26,7 @@ returning id as land \gset
 insert into listings (property_id, title, description, price_cents)
 values (:'flat', 'Appartement', 'Description.', 20000000) returning id as flat_listing, slug as flat_slug \gset
 insert into listings (property_id, title, description, price_cents)
-values (:'cabin', 'Maison', 'Description.', 9000000) returning id as cabin_listing \gset
+values (:'cabin', 'Maison', 'Description.', 9000000) returning id as cabin_listing, slug as cabin_slug \gset
 insert into listings (property_id, title, description, price_cents)
 values (:'land', 'Terrain', 'Description.', 5000000) returning id as land_listing \gset
 
@@ -54,14 +55,16 @@ select is(listing_submit(:'flat_listing'), 'pending'::listing_status,
 select throws_ok(format($$update properties set dpe_date = null where id = %L$$, :'flat'), '22023', null,
                  'seller_a: a listing sent keeps its DPE');
 select throws_ok(format($$update properties set dpe_exempt = true, dpe_exemption_reason = null, dpe_class = null where id = %L$$, :'flat'),
-                 '22023', null, 'seller_a: nor turns into an exemption without a motive');
+                 '22023', 'dpe: exemption', 'seller_a: nor turns into an exemption once sent');
 update properties set dpe_class = 'C' where id = :'flat';
 select is((select dpe_class from properties where id = :'flat'), 'C',
           'seller_a: its classes still change while it stays complete');
 
--- An exemption, with its motive.
+-- An exemption, with its motive, and no DPE.
 select throws_ok(format($$update properties set dpe_exemption_reason = 'Sans DPE' where id = %L$$, :'cabin'),
                  '23514', null, 'a motive only with an exemption');
+select throws_ok(format($$update properties set dpe_exempt = true, dpe_exemption_reason = 'Lieu de culte', dpe_class = 'G' where id = %L$$, :'cabin'),
+                 '23514', null, 'an exempt property has no class of DPE');
 update properties set dpe_exempt = true where id = :'cabin';
 select throws_ok(format($$select listing_submit(%L)$$, :'cabin_listing'), '22023', 'dpe: exemption_reason',
                  'seller_a: an exemption needs its motive');
@@ -85,6 +88,31 @@ select is(listing_publish(:'flat_listing'), 'published'::listing_status, 'admin:
 select is(listing_publish(:'cabin_listing'), 'published'::listing_status, 'admin: publishes the house');
 select is((select dpe_exemption_reason from properties where id = :'cabin'),
           'Bâtiment indépendant de moins de 50 m²', 'admin: reads the motive of the exemption');
+
+-- Online: the mentions change only once the team has read them.
+\set who seller_a
+\ir _as.psql
+select throws_ok(format($$update properties set dpe_exemption_reason = 'Lieu de culte' where id = %L$$, :'cabin'),
+                 '22023', 'dpe: exemption', 'seller_a: the motive of an exemption online is changed by the team');
+select throws_ok(format($$update properties set dpe_exempt = true, dpe_exemption_reason = 'Lieu de culte', dpe_class = null, ges_class = null,
+                            dpe_date = null, energy_cost_min_cents = null, energy_cost_max_cents = null, energy_price_year = null
+                          where id = %L$$, :'flat'),
+                 '22023', 'dpe: exemption', 'seller_a: a listing online never drops its DPE for an exemption');
+select throws_ok(format($$update properties set type = 'terrain' where id = %L$$, :'flat'),
+                 '22023', 'dpe: exemption', 'seller_a: nor becomes land');
+\set who buyer_c
+\ir _as.psql
+select is((select count(*)::int from properties where id in (:'flat', :'cabin')), 0,
+          'buyer_c: never reads the properties of seller_a');
+\set who buyer_d
+\ir _as.psql
+update properties set dpe_exempt = false, dpe_exemption_reason = null where id = :'cabin';
+update properties set dpe_class = 'A' where id = :'flat';
+\set who admin
+\ir _as.psql
+select is((select row(p.dpe_exempt, p.dpe_exemption_reason, f.dpe_class)::text
+             from properties p, properties f where p.id = :'cabin' and f.id = :'flat'),
+          '(t,"Bâtiment indépendant de moins de 50 m²",C)', 'buyer_d: never writes the DPE of seller_a');
 
 -- A listing sent before L1-65 without its DPE (written as it was then).
 reset role;
@@ -115,6 +143,9 @@ select is((select dpe_date from public_listing_energy(:'flat_slug')), current_da
           'anon: with the date of its DPE');
 select is((select count(*)::int from public_listing_energy('appartement-inconnu-lk9999')), 0,
           'anon: nothing for a listing that is not online');
+select is((select row(dpe_exempt, dpe_date, energy_cost_min_cents, energy_cost_max_cents, energy_price_year)::text
+             from public_listing_energy(:'cabin_slug')),
+          '(t,,,,)', 'anon: an exempt listing, without its motive');
 
 \set who seller_b
 \ir _as.psql

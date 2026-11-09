@@ -305,7 +305,7 @@ test("envoyer une annonce en validation en mobile : prix, description, aperçu",
   await expect(page.getByText("Logement à consommation énergétique excessive.")).toBeVisible();
   await expect(
     page.getByText(
-      /^Montant estimé des dépenses annuelles d'énergie pour un usage standard : entre 1\s980\s€ et 2\s680\s€ par an\. Prix moyens des énergies indexés au 1er janvier 2023\.$/,
+      /^Montant estimé des dépenses annuelles d'énergie pour un usage standard : entre 1\s980\s€ et 2\s680\s€ par an\. Prix moyens des énergies indexés au 1er janvier 2023 \(abonnements compris\)\.$/,
     ),
   ).toBeVisible();
   await expect(page.getByText("DPE réalisé le 12 mars 2024.")).toBeVisible();

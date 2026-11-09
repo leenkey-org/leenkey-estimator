@@ -21,7 +21,7 @@ const flat: Pick<PublicListing, "type" | "dpe" | "energy"> = {
 describe("energyMentions", () => {
   it("gives the range of the costs, the year of the prices and the date of the DPE", () => {
     expect(plain(energyMentions(flat))).toEqual([
-      "Montant estimé des dépenses annuelles d'énergie pour un usage standard : entre 980 € et 1 330 € par an. Prix moyens des énergies indexés au 1er janvier 2023.",
+      "Montant estimé des dépenses annuelles d'énergie pour un usage standard : entre 980 € et 1 330 € par an. Prix moyens des énergies indexés au 1er janvier 2023 (abonnements compris).",
       "DPE réalisé le 12 mars 2024.",
     ]);
   });

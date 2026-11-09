@@ -77,6 +77,7 @@ const text = (value: number | null) => (value === null ? "" : String(value).repl
 const amountText = (value: number | null) =>
   value === null || Number.isInteger(value) ? text(value) : value.toFixed(2).replace(".", ",");
 const AMOUNT_FIELDS: readonly NumberField[] = ["chargesMonthlyEuros", "propertyTaxYearlyEuros"];
+const COST_FIELDS: readonly NumberField[] = ["energyCostMinEuros", "energyCostMaxEuros"];
 
 const energy = fr.properties.characteristics.energy;
 const OTHER_REASON = "other";
@@ -178,7 +179,11 @@ export function CharacteristicsStep({
     const typed: Partial<Record<NumberField, number | null>> = {};
     const invalid: Partial<Record<CharacteristicsField, string>> = {};
     for (const field of NUMBER_FIELDS) {
-      const value = shows(field) ? parseFrenchNumber(numbers[field]) : null;
+      // Exempt: the range of the DPE is hidden, so not read.
+      const value =
+        shows(field) && !(dpeExempt && COST_FIELDS.includes(field))
+          ? parseFrenchNumber(numbers[field])
+          : null;
       if (Number.isNaN(value)) invalid[field] = errors.number;
       else typed[field] = value;
     }
@@ -245,17 +250,19 @@ export function CharacteristicsStep({
                 ? common.notFound
                 : result.error === "dpe"
                   ? edits.required.dpe
-                  : result.error === "incomplete"
-                    ? edit
-                      ? land
-                        ? edits.required.land
-                        : edits.required.characteristics
-                      : land
-                        ? t.requiredLand
-                        : t.required
-                    : result.error === "invalid"
-                      ? null
-                      : common.error,
+                  : result.error === "dpe_exemption"
+                    ? edits.required.dpeExemption(fr.legal.contactEmail)
+                    : result.error === "incomplete"
+                      ? edit
+                        ? land
+                          ? edits.required.land
+                          : edits.required.characteristics
+                        : land
+                          ? t.requiredLand
+                          : t.required
+                      : result.error === "invalid"
+                        ? null
+                        : common.error,
         );
         return;
       }
@@ -286,7 +293,8 @@ export function CharacteristicsStep({
     <UnitInput
       label={label}
       unit={unit}
-      inputMode="decimal"
+      // The range of a DPE in whole euros; the other amounts may have cents.
+      inputMode={COST_FIELDS.includes(field) ? "numeric" : "decimal"}
       value={numbers[field]}
       error={fieldErrors[field]}
       onChange={(event) => setNumber(field, event.target.value)}
@@ -322,7 +330,10 @@ export function CharacteristicsStep({
           setFieldErrors((current) => ({ ...current, type: undefined }));
         }}
       >
-        {PROPERTY_TYPES.map((value) => (
+        {/* Once sent, a property becomes land through the team (properties_keep_dpe). */}
+        {PROPERTY_TYPES.filter(
+          (value) => !edit || value !== "terrain" || initial.type === "terrain",
+        ).map((value) => (
           <option key={value} value={value}>
             {fr.search.types[value]}
           </option>
@@ -346,17 +357,21 @@ export function CharacteristicsStep({
               <p>{energy.note}</p>
             </InfoNote>
           )}
-          <Checkbox
-            label={energy.exempt}
-            checked={dpeExempt}
-            onChange={(event) => setDpeExempt(event.target.checked)}
-          />
+          {/* Once sent, an exemption is declared by the team, which reads it (properties_keep_dpe). */}
+          {edit && !initial.dpeExempt ? null : (
+            <Checkbox
+              label={energy.exempt}
+              checked={dpeExempt}
+              onChange={(event) => setDpeExempt(event.target.checked)}
+            />
+          )}
           {dpeExempt ? (
             <>
               <Select
                 label={energy.reason}
                 placeholder={energy.reasonPlaceholder}
                 value={reason}
+                disabled={Boolean(edit)}
                 error={reason === OTHER_REASON ? undefined : fieldErrors.dpeExemptionReason}
                 onChange={(event) => {
                   setReason(event.target.value);
@@ -374,6 +389,7 @@ export function CharacteristicsStep({
                 <Input
                   label={energy.otherReasonLabel}
                   value={otherReason}
+                  disabled={Boolean(edit)}
                   maxLength={300}
                   error={fieldErrors.dpeExemptionReason}
                   onChange={(event) => {
@@ -382,7 +398,9 @@ export function CharacteristicsStep({
                   }}
                 />
               ) : null}
-              <p className="text-lk-caption text-lk-ink-3">{energy.reasonNote}</p>
+              <p className="text-lk-caption text-lk-ink-3">
+                {edit ? energy.reasonLocked(fr.legal.contactEmail) : energy.reasonNote}
+              </p>
             </>
           ) : (
             <>

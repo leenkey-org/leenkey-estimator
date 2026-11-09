@@ -173,8 +173,18 @@ export type SaveCharacteristicsResult =
   | { ok: true; data: { complete: boolean } }
   | {
       ok: false;
-      /** dpe: the property of a listing sent keeps its DPE (properties_keep_dpe, L1-65). */
-      error: "auth" | "invalid" | "incomplete" | "not_found" | "dpe" | "unavailable";
+      /**
+       * Once sent (properties_keep_dpe, L1-65): dpe, its DPE stays complete;
+       * dpe_exemption, an exemption or land is declared by the team.
+       */
+      error:
+        | "auth"
+        | "invalid"
+        | "incomplete"
+        | "not_found"
+        | "dpe"
+        | "dpe_exemption"
+        | "unavailable";
       /** Field and message key (fr.properties.errors). */
       fieldErrors?: Partial<Record<CharacteristicsField, string>>;
     };
@@ -242,8 +252,12 @@ export async function saveCharacteristics(
       entity_id: value.propertyId,
       code: error.code,
     });
-    // 22023 once sent: its type, surface and rooms are checked above, so its DPE.
-    if (error.code === "22023" && !inCreation(draft.status)) return { ok: false, error: "dpe" };
+    if (error.code === "22023" && error.message.startsWith("dpe: exemption")) {
+      return { ok: false, error: "dpe_exemption" };
+    }
+    if (error.code === "22023" && error.message.startsWith("dpe: ")) {
+      return { ok: false, error: "dpe" };
+    }
     return { ok: false, error: "unavailable" };
   }
   if (!data) return { ok: false, error: "not_found" };

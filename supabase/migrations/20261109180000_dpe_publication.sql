@@ -13,7 +13,8 @@
 --    1 July 2021, or more than 10 years old) or an exemption has no motive;
 --    listing_publish too (a listing sent before L1-65 without one).
 -- 4. properties_keep_dpe: the property of a listing sent (in review, online,
---    paused) keeps a DPE that was complete.
+--    paused) keeps a DPE that was complete; only the team turns it into an
+--    exemption (or land), which it reads before it shows.
 -- 5. public_listing_energy(slug): what the page of a published listing shows
 --    of it, beside public_listings (whose columns stay as they are).
 -- Nothing is dropped: the file only adds and replaces.
@@ -34,7 +35,12 @@ alter table public.properties
     check (energy_cost_min_cents >= 0 and energy_cost_max_cents >= 0
            and energy_cost_min_cents <= energy_cost_max_cents),
   add constraint properties_energy_price_year
-    check (energy_price_year between 2015 and 2100);
+    check (energy_price_year between 2015 and 2100),
+  -- Exempt: no class nor mention of a DPE beside « Bien non soumis au DPE ».
+  add constraint properties_dpe_exempt_without_dpe
+    check (not dpe_exempt or (dpe_class is null and ges_class is null and dpe_date is null
+                              and energy_cost_min_cents is null and energy_cost_max_cents is null
+                              and energy_price_year is null));
 
 -- Written by the seller with step 2, as the other characteristics (column
 -- grants of L1-04).
@@ -134,18 +140,26 @@ $$;
 
 -- 4. ---------------------------------------------------------------------------
 -- A listing sent stays as it is (L1-14b): its DPE, once complete, is not
--- emptied. A listing sent before L1-65 without one keeps it so until the
--- seller completes it.
+-- emptied (« dpe: keep »). A listing sent before L1-65 without one keeps it
+-- so until the seller completes it. An exemption, its motive, or land drop
+-- the mentions of the DPE: once sent, only the team declares them, having
+-- read them (« dpe: exemption »).
 create function public.properties_keep_dpe() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
-  if public.property_dpe_issue(new) is not null
-     and public.property_dpe_issue(old) is null
-     and exists (select 1 from public.listings l
+  if not exists (select 1 from public.listings l
                   where l.property_id = new.id and l.deleted_at is null
                     and l.status not in ('draft', 'rejected')) then
-    raise exception 'the property of a listing sent for review keeps its DPE'
-      using errcode = '22023';
+    return new;
+  end if;
+  if not public.is_admin()
+     and ((new.dpe_exempt and (not old.dpe_exempt
+                               or new.dpe_exemption_reason is distinct from old.dpe_exemption_reason))
+          or (new.type = 'terrain' and old.type is distinct from 'terrain')) then
+    raise exception 'dpe: exemption' using errcode = '22023';
+  end if;
+  if public.property_dpe_issue(new) is not null and public.property_dpe_issue(old) is null then
+    raise exception 'dpe: keep' using errcode = '22023';
   end if;
   return new;
 end;
