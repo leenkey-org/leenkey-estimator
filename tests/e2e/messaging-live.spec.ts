@@ -220,9 +220,12 @@ test("premier message depuis une annonce, liste du vendeur, signalement", async 
     await expect(inbox(seller).getByRole("link", { name: /David/ })).toHaveCount(2, {
       timeout: 10_000,
     });
-    // Two properties with conversations: one group each.
-    await expect(inbox(seller).getByRole("heading")).toHaveCount(2);
+    // Properties with conversations: one group each (LK-0008 and LK-0010; and
+    // LK-0009, its adviser opened, once billing.spec.ts paid for it, L1-34).
+    expect(await inbox(seller).getByRole("heading").count()).toBeGreaterThanOrEqual(2);
     const line = inbox(seller).locator(`a[href="${conversation}"]`);
+    // In the group of its own property.
+    await expect(inbox(seller).getByRole("region").filter({ has: line })).toHaveCount(1);
     await expect(line.getByText("Non lu")).toBeAttached();
   });
 

@@ -72,13 +72,13 @@ test("une vente en ligne : en-tête, prochaine action, chiffres, à faire, conve
   await expect(progress).toHaveAccessibleName("Étape 3 sur 6 · Gérer mes contacts et mes visites");
   await expect(top.getByText("Accompagné", { exact: true })).toBeVisible();
 
-  // Nothing waits for the seller (both contacts answered, the visits come
-  // with lot 3): the listing as buyers see it.
+  // Both contacts answered, the visits come with lot 3: what waits is the
+  // welcome of the adviser, not read yet (rule 3, L1-34).
   const next = nextAction(page);
-  await expect(next.getByText("Gérer mes contacts et mes visites")).toBeVisible();
-  await expect(next.getByRole("link", { name: "Voir l'annonce en ligne" })).toHaveAttribute(
+  await expect(next.getByText("Votre conseiller Leenkey vous a écrit")).toBeVisible();
+  await expect(next.getByRole("link", { name: "Lire le message" })).toHaveAttribute(
     "href",
-    /^\/annonce\/.+lk0001$/,
+    "/messages/5eed2000-0000-4000-8000-000000000001",
   );
 
   // Its figures: views of the last 7 days, two contacts, one qualified (Chloé).

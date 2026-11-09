@@ -702,6 +702,8 @@ test.describe("comptes connectés (base de seed)", () => {
         /^Annonces\s*\d+$/,
         "Utilisateurs",
         /^Dossiers(\s*\d+)?$/,
+        // L1-34: its count once a seller wrote (the seed has none unread).
+        /^Messages(\s*\d+)?$/,
         "Offres",
         /^Signalements(\s*\d+)?$/,
         "Assistant",
