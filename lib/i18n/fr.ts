@@ -2,6 +2,7 @@
 import { aiText, privacyText, reportingText, salesTermsText, termsV2 } from "./legal-policies";
 import { legalNotice } from "./legal-texts";
 import { site } from "./site";
+import type { Database } from "@/types/database";
 
 /** « de David », « d'Alice », « d'Hélène »: the elision before a vowel or an h (« de Yann »). */
 function of(name: string): string {
@@ -2137,6 +2138,54 @@ export const fr = {
     otherPropertiesLabel: "Vos autres biens",
     free: "Gratuit",
     taxes: "TTC",
+    // The comparison table of the plans (SPEC-V2 11 bis, wording of the plans
+    // of 2026-11-06): a row without a feature is in every plan (the steps of
+    // a sale never depend on a plan); a row with one is ticked for the plans
+    // that have it in plan_entitlements (L1-33), so that the table never
+    // says other than the rights.
+    comparison: {
+      title: "Comparer les formules",
+      caption: "Ce que comprend chaque formule",
+      toggle: "Comparer les formules en détail",
+      feature: "Ce qui est inclus",
+      included: "Inclus",
+      notIncluded: "Non inclus",
+      rows: [
+        { label: "Analyse de valeur" },
+        { label: "Espace vendeur / tableau de bord" },
+        { label: "Assistant IA" },
+        { label: "Création de l'annonce avec l'IA" },
+        { label: "Publication sur Leenkey" },
+        { label: "Messagerie acquéreurs" },
+        { label: "Agenda / visites" },
+        { label: "Réception d'offres structurées" },
+        { label: "Checklist des documents" },
+        { label: "Conseiller dédié", feature: "advisor" },
+        {
+          label: "Regard personnalisé sur le prix et la stratégie",
+          feature: "human_price_strategy",
+        },
+        { label: "Relecture et optimisation de l'annonce", feature: "human_listing_review" },
+        {
+          label: "Analyse des offres et des informations de financement",
+          feature: "human_offer_analysis",
+        },
+        {
+          label: "Aide à la décision jusqu'à l'acceptation d'une offre",
+          feature: "negotiation_support",
+        },
+        { label: "Préparation du dossier de vente", feature: "sale_file_building" },
+        { label: "Analyse des documents", feature: "deep_document_review" },
+        {
+          label: "Aide à la préparation des échanges avec le notaire",
+          feature: "notary_coordination",
+        },
+        { label: "Suivi jusqu'à la signature", feature: "closing_follow_up" },
+      ] as const satisfies readonly {
+        label: string;
+        feature?: Database["public"]["Enums"]["plan_feature"];
+      }[],
+    },
     badge: "Le plus complet",
     current: "Formule actuelle",
     activeSince: (since: string, until: string) => `Active depuis le ${since}, jusqu'au ${until}.`,

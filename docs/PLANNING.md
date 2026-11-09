@@ -86,7 +86,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 
 - [x] **L1-26** Stripe : `startCheckout`, webhook idempotent, upgrade, écran de confirmation, page formule · PR : #71 · Testé en préprod : ☐
 - [x] **L1-40** Vente conforme des formules : récapitulatif avant paiement, cases non précochées, « Commander et payer », e-mail récapitulatif, bouton de rétractation (14 jours), contact au 15e jour sans démarrage immédiat, retour en Autonomie à l'échéance · PR : #81 · Testé en préprod : ☐
-- [ ] **L1-33** `plan_entitlements`, `hasEntitlement`, contenu des formules dans `plans`, page formules avec tableau comparatif (déclencheurs : voir L2-09) · PR : · Testé en préprod : ☐
+- [x] **L1-33** `plan_entitlements`, `hasEntitlement`, contenu des formules dans `plans`, page formules avec tableau comparatif (déclencheurs : voir L2-09) · PR : #84 · Testé en préprod : ☐
 - [x] **L1-28** Assistant : route de streaming, outils vendeur, confirmation, quotas, journalisation, panneau desktop +… · PR : #67 · Testé en préprod : ☐
 - [ ] **L1-30** Back office complet lot 1 : tableau de bord, utilisateurs, dossiers, signalements (résumé du jour par l'assistant : S6),… · PR : · Testé en préprod : ☐
   - [x] **L1-30a** Tableau de bord (tuiles, « À traiter », compteurs de la barre latérale et de l'en-tête mobile), utilisateurs (liste, fiche, suspension du compte avec email) · PR : #70 · Testé en préprod : ☐

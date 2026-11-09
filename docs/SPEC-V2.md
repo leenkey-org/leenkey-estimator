@@ -529,7 +529,7 @@ create table upgrade_prompts (           -- déclencheurs de montée en gamme af
 ```
 
 **Extensibilité demandée par le client** : la formule reste rattachée au bien, mais rien dans le code ne doit l'empêcher d'introduire plus tard une remise multi-biens ou une formule investisseur. Conséquences :
-- Les droits se testent uniquement par `hasEntitlement(propertyId, feature)` (`core/billing/entitlements.ts`), jamais par `plan === 'serenite'`.
+- Les droits se testent uniquement par `hasEntitlement(propertyId, feature)` (`leenkey/billing/entitlements.ts`, qui appelle la fonction SQL `has_entitlement(property, feature)` : propriétaire du bien et admins seulement), jamais par `plan === 'serenite'`. Dans `leenkey/` et non `core/` : la fonction connaît le bien (CLAUDE.md section 3, L1-33).
 - Les prix viennent de `plans` et de Stripe, jamais du code.
 - Le checkout accepte des codes promo Stripe (`allow_promotion_codes`) et enregistre la remise.
 - `plans.scope` et `subscriptions.discount_cents` existent dès la V2 sans être utilisés.
@@ -1272,7 +1272,7 @@ Maquette : `Formule.dc.html` (contenu à mettre à jour selon la section 11 bis)
 
 - Titre « Un forfait fixe par bien. Jamais de commission. »
 - Trois cartes, contenu lu depuis `plans` : nom, phrase d'accroche, prix, liste des inclusions. Autonomie : formule actuelle par défaut. Sérénité mise en avant « Le plus complet ».
-- Sous les cartes : le tableau comparatif de la section 11 bis (19 lignes, coches et tirets), repliable sur mobile.
+- Sous les cartes : le tableau comparatif de la section 11 bis (18 lignes, coches et tirets), repliable sur mobile.
 - Formule actuelle marquée d'une coche verte. Formule inférieure : non sélectionnable. Passage Accompagné → Sérénité : bouton « Passer à Sérénité pour 510 € ».
 - Si la page est ouverte depuis un déclencheur (`?from=offer_received`), rappel du contexte en tête : « Vous avez reçu une offre de 327 000 €… ».
 - Rassurance : « Paiement sécurisé par carte via Stripe. Reçu envoyé par email. Forfait payé une fois, pour ce bien. Sans abonnement. »
