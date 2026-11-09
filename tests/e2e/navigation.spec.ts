@@ -851,7 +851,7 @@ test.describe("comptes connectés (base de seed)", () => {
     await expect(menu.getByRole("menuitem")).toHaveText(
       isMobile
         ? ["Back office", "Voir le site", "Mon compte", "Se déconnecter"]
-        : ["Cockpit", "Mon compte", "Se déconnecter"],
+        : ["Cockpit", "Ma formule", "Mon compte", "Se déconnecter"],
     );
     await expect(menu.getByRole("menuitem", { name: homeLabel })).toHaveAttribute("href", home);
     if (isMobile) {

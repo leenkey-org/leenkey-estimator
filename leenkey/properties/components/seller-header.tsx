@@ -91,7 +91,7 @@ export function SellerHeader({
       {planHref ? (
         <Link
           href={planHref}
-          className="-my-2 inline-flex min-h-11 items-center self-start text-lk-caption font-semibold text-white underline underline-offset-2 hover:no-underline focus-visible:outline-white"
+          className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-full border border-white/35 px-4 text-lk-caption font-semibold text-white transition-colors duration-140 ease-out-lk hover:bg-white/10 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white"
         >
           {fr.billing.entry}
         </Link>

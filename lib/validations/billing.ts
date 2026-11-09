@@ -4,7 +4,7 @@ import { z } from "zod";
 // startCheckout, and what the webhook reads back in the metadata of the
 // Checkout Session it receives.
 
-const planCode = z.enum(["autonomie", "accompagne", "serenite"]);
+export const planCode = z.enum(["autonomie", "accompagne", "serenite"]);
 const version = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 /**

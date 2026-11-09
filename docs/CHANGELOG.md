@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-09 · Formules · PR #85 · Accès aux formules
+- Corrigé : sur `/tarifs`, « Choisir Accompagné » et « Choisir Sérénité » menaient à l'estimateur : ils ouvrent la commande de la formule (après la connexion) ; « Commencer gratuitement » mène à `/vendre`.
+- Ajouté : « Ma formule » dans le menu du compte d'un vendeur et dans `/compte` ; « Voir les formules » plus visible dans l'en-tête de « Ma vente ».
+- Tests : unitaires (menu du compte), E2E (liens de `/tarifs`, commande ouverte depuis `/tarifs`, « Ma formule »).
+
 ### 2026-11-09 · L1-33 · PR #84 · Droits des formules et tableau comparatif
 - Ajouté : `has_entitlement(property, feature)` en SQL et `hasEntitlement(propertyId, feature)` (`leenkey/billing/entitlements.ts`) : un droit se lit dans `plan_entitlements`, jamais dans le nom de la formule.
 - Ajouté : tableau comparatif des formules (18 lignes, coches lues dans `plan_entitlements`) sous les cartes de `/vendeur/formule` (replié sur téléphone) et sur `/tarifs`.

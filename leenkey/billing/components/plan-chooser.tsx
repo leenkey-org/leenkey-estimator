@@ -43,6 +43,8 @@ export type PlanChooserProps = {
    */
   versions: { cgu: { id: string; date: string }; cgv: { id: string; date: string } };
   mediator: string | null;
+  /** A plan chosen before the page (/tarifs): its order open, when it can be ordered. */
+  initialPlan?: PlanCode | null;
 };
 
 const ERRORS: Record<StartCheckoutError, string> = {
@@ -81,8 +83,15 @@ export function PlanChooser({
   orderable,
   versions,
   mediator,
+  initialPlan = null,
 }: PlanChooserProps) {
-  const [selected, setSelected] = useState<PlanCode | null>(null);
+  const [selected, setSelected] = useState<PlanCode | null>(() =>
+    initialPlan && orderable && planChoice(prices, current, initialPlan)?.status === "order"
+      ? initialPlan
+      : null,
+  );
+  // Opened by the link of /tarifs: the page keeps the focus at its top.
+  const openedByLink = useRef(selected !== null);
   const [terms, setTerms] = useState(false);
   const [earlyStart, setEarlyStart] = useState(false);
   const [termsError, setTermsError] = useState(false);
@@ -101,6 +110,10 @@ export function PlanChooser({
   const currentPlan = prices.find((plan) => plan.code === current);
 
   useEffect(() => {
+    if (openedByLink.current) {
+      openedByLink.current = false;
+      return;
+    }
     if (selected) recapTitle.current?.focus();
   }, [selected]);
 

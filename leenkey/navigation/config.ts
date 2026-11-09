@@ -193,6 +193,8 @@ export function accountMenu(profile: { firstName: string | null; roles: readonly
   homeLabel: string;
   /** The Cockpit of an admin who also sells or buys. */
   cockpit?: { href: string; label: string };
+  /** « Ma formule »: a seller's way to the plans of their properties. */
+  plans?: { href: string; label: string };
   accountHref: string;
 } {
   const admin = profile.roles.includes("admin");
@@ -203,6 +205,9 @@ export function accountMenu(profile: { firstName: string | null; roles: readonly
     homeLabel: admin ? fr.nav.backOffice : fr.nav.menu.home,
     ...(admin && clientRoles.length > 0
       ? { cockpit: { href: homePathForRoles(clientRoles), label: fr.nav.menu.home } }
+      : {}),
+    ...(profile.roles.includes("seller")
+      ? { plans: { href: ROUTES.plan, label: fr.nav.menu.plans } }
       : {}),
     accountHref: ROUTES.account,
   };

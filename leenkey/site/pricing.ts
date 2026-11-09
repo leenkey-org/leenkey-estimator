@@ -13,3 +13,8 @@ export function savingCents(priceCents: number): number | null {
   if (priceCents <= 0) return null;
   return Math.max(0, EXAMPLE_AGENCY_FEE_CENTS - priceCents);
 }
+
+/** The order of a paid plan from /tarifs: the page of the plans, that plan chosen. */
+export function planOrderHref(code: string): string {
+  return `/vendeur/formule?${new URLSearchParams({ formule: code }).toString()}`;
+}

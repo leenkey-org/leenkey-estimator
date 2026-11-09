@@ -193,3 +193,46 @@ async function expectHeadersFit(table: ReturnType<Page["getByRole"]>) {
     expect(scroll, (await header.textContent()) ?? "").toBeLessThanOrEqual(client);
   }
 }
+
+test("« Choisir Accompagné » de /tarifs ouvre sa commande, après la connexion (2026-11-09)", async ({
+  page,
+}) => {
+  await page.goto("/tarifs");
+  await page.getByRole("link", { name: "Choisir Accompagné" }).click();
+  // Signed out: the sign-in first, then back to the order.
+  await expect(page).toHaveURL(/\/connexion\?next=%2Fvendeur%2Fformule%3Fformule%3Daccompagne/);
+  await page.getByLabel("Email").fill("seller_a@test.leenkey.fr");
+  await page.getByLabel("Mot de passe").fill(SEED_PASSWORD ?? "");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await page.waitForURL((url) => url.pathname !== "/connexion");
+  if (new URL(page.url()).pathname === "/conditions") {
+    await page.getByRole("checkbox").check();
+    await page.getByRole("button", { name: "Continuer" }).click();
+  }
+  await expect(page).toHaveURL("/vendeur/formule?formule=accompagne");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+  // For a property on Autonomie, the order of Accompagné is open at once.
+  await page.goto(`${planPage(LK0003)}&formule=accompagne`);
+  const recap = recapOf(page);
+  await expect(recap).toContainText("Accompagné");
+  await expect(recap.getByRole("button", { name: /Commander et payer/ })).toBeVisible();
+  // A plan that cannot be ordered (the one in force) opens the list instead.
+  await page.goto(`${planPage(LK0001)}&formule=accompagne`);
+  await expect(recapOf(page)).toHaveCount(0);
+  await expect(plansList(page)).toBeVisible();
+});
+
+test("« Ma formule » dans le compte d'un vendeur (2026-11-09)", async ({ page, isMobile }) => {
+  await signIn(page, "/compte");
+  await expect(page.getByRole("link", { name: /Ma formule/ })).toHaveAttribute(
+    "href",
+    "/vendeur/formule",
+  );
+  if (!isMobile) {
+    await page.getByRole("button", { name: "Menu du compte" }).click();
+    await expect(page.getByRole("menuitem", { name: "Ma formule" })).toHaveAttribute(
+      "href",
+      "/vendeur/formule",
+    );
+  }
+});

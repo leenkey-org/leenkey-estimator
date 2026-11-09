@@ -175,6 +175,7 @@ export const fr = {
       signIn: "Connexion",
       notifications: "Notifications",
       spaces: "Mes espaces",
+      plan: "Formule",
       privacy: "Cookies",
       close: "Fermer mon compte",
     },
@@ -186,6 +187,8 @@ export const fr = {
       passwordValue: "Modifier votre mot de passe",
       notifications: "Emails de Leenkey",
       notificationsValue: "Choisir les emails que vous recevez",
+      plan: "Ma formule",
+      planValue: "Voir ou changer la formule de vos biens",
     },
     notSet: "Non renseigné",
     emailPending: (email: string) => `Nouvelle adresse à confirmer : ${email}`,
@@ -465,6 +468,8 @@ export const fr = {
       trigger: "Menu du compte",
       // The space of a client, seller or buyer (Younes, 2026-10-28).
       home: "Cockpit",
+      // The plans of a seller's properties (/vendeur/formule).
+      plans: "Ma formule",
       account: "Mon compte",
       signOut: "Se déconnecter",
     },
