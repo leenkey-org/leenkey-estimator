@@ -1,47 +1,136 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Bell, ChevronRight } from "lucide-react";
 import { Button } from "@/components/shared/button";
-import { ComingSoon } from "@/components/shared/coming-soon";
-import { requireProfile } from "@/core/auth/session";
+import { CookieSettingsButton } from "@/components/shared/cookie-settings-button";
+import { InlineAlert } from "@/components/shared/inline-alert";
+import { SavedNotice } from "@/components/shared/saved-notice";
+import { SectionTitle } from "@/components/shared/section-title";
+import { getUser, requireProfile } from "@/core/auth/session";
+import {
+  AccountRow,
+  AccountSection,
+  accountRowClass,
+} from "@/leenkey/account/components/account-list";
+import { RoleRows } from "@/leenkey/account/components/role-rows";
+import { accountOverview } from "@/leenkey/account/queries";
 import { signOut } from "@/leenkey/auth/actions";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { fr } from "@/lib/i18n/fr";
+import { createClient } from "@/lib/supabase/server";
 import { SpacePage } from "../_components/space-page";
 
-const t = fr.placeholders.account;
+const t = fr.account;
 
 export const metadata: Metadata = { title: t.metaTitle };
 
-// Placeholder until the account page (L1-39), with the way to the email
-// preferences (L1-22). On mobile, the « Compte » tab is the only way to sign
-// out: the account menu sits in the TopNav.
-export default async function AccountPage() {
-  const profile = await requireProfile();
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+const SAVED: Record<string, string> = {
+  informations: t.saved.identity,
+  email: t.saved.email,
+  "mot-de-passe": t.saved.password,
+};
+
+// « Mon compte » (L1-39, SPEC-V2 8.14, DESIGN.md 13.1 G9): what the account
+// holds, in rows of 56 px, each to the page that changes it; the spaces of
+// the account (« Je vends », « J'achète »), cookies, sign-out, and how to
+// close the account until its deletion from here (L2-10).
+export default async function AccountPage({ searchParams }: { searchParams: SearchParams }) {
+  const [profile, params] = await Promise.all([requireProfile(), searchParams]);
+  const user = await getUser();
+  const account = user ? await accountOverview(await createClient(), user) : null;
+  const saved =
+    typeof params.modifie === "string" && Object.hasOwn(SAVED, params.modifie)
+      ? SAVED[params.modifie]
+      : undefined;
+  const fullName = [account?.firstName, account?.lastName].filter(Boolean).join(" ");
+
   return (
     <SpacePage title={t.title} roles={profile.roles} profileId={profile.id}>
-      <Link
-        href={ROUTES.notificationSettings}
-        className="mt-6 flex min-h-14 items-center gap-3 rounded-lk-md border border-lk-line bg-lk-surface px-4 py-3 text-lk-ink transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue"
-      >
-        <Bell aria-hidden="true" className="size-4.5 shrink-0 text-lk-ink-2" />
-        <span className="min-w-0 flex-1 text-lk-compact font-semibold">
-          {fr.notifications.preferences.title}
-        </span>
-        <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-lk-ink-3" />
-      </Link>
-      <ComingSoon
-        className="mt-6"
-        title={t.comingTitle}
-        text={t.comingText}
-        action={
-          <form action={signOut}>
-            <Button type="submit" variant="secondary">
+      {saved ? (
+        <div className="mt-6">
+          <SavedNotice text={saved} />
+        </div>
+      ) : null}
+      {!account ? (
+        <InlineAlert tone="danger" className="mt-6">
+          {fr.auth.errors.generic}
+        </InlineAlert>
+      ) : (
+        <>
+          <AccountSection id="compte-informations" title={t.sections.identity}>
+            <AccountRow
+              href={ROUTES.accountIdentity}
+              label={t.rows.name}
+              value={fullName || t.notSet}
+            />
+            <AccountRow
+              href={ROUTES.accountIdentity}
+              label={t.rows.phone}
+              value={account.phone || t.notSet}
+            />
+          </AccountSection>
+
+          <AccountSection id="compte-connexion" title={t.sections.signIn}>
+            <AccountRow
+              href={ROUTES.accountEmail}
+              label={t.rows.email}
+              value={account.email ?? t.notSet}
+              detail={account.newEmail ? t.emailPending(account.newEmail) : null}
+            />
+            <AccountRow
+              href={ROUTES.accountPassword}
+              label={t.rows.password}
+              value={t.rows.passwordValue}
+            />
+          </AccountSection>
+
+          <AccountSection id="compte-notifications" title={t.sections.notifications}>
+            <AccountRow
+              href={ROUTES.notificationSettings}
+              label={t.rows.notifications}
+              value={t.rows.notificationsValue}
+            />
+          </AccountSection>
+
+          <AccountSection id="compte-espaces" title={t.sections.spaces} bare>
+            <RoleRows
+              roles={account.roles.filter((role) => role !== "admin")}
+              suspended={account.suspended}
+            />
+          </AccountSection>
+
+          <AccountSection id="compte-cookies" title={t.sections.privacy}>
+            <li>
+              <CookieSettingsButton
+                className={`${accountRowClass} text-lk-label font-semibold text-lk-ink`}
+              />
+            </li>
+          </AccountSection>
+
+          <form action={signOut} className="mt-8">
+            <Button type="submit" variant="secondary" className="w-full md:w-auto">
               {fr.spaces.signOut}
             </Button>
           </form>
-        }
-      />
+
+          <section
+            aria-labelledby="compte-fermer"
+            className="mt-10 flex flex-col gap-2 border-t border-lk-line pt-6"
+          >
+            <SectionTitle id="compte-fermer">{t.sections.close}</SectionTitle>
+            <p className="text-lk-secondary text-lk-ink-2">
+              {t.closeText.before}
+              <a
+                href={`mailto:${fr.legal.contactEmail}`}
+                className="rounded-lk-sm font-semibold text-lk-blue underline underline-offset-2 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue"
+              >
+                {fr.legal.contactEmail}
+              </a>
+              {t.closeText.after}
+            </p>
+          </section>
+        </>
+      )}
     </SpacePage>
   );
 }

@@ -11,6 +11,9 @@ export const EXPIRED_LINK_PATH = "/connexion?lien=expire";
 /** Page with the button that uses the token of an email link. */
 export const CONFIRMATION_PATH = "/confirmation";
 
+/** One link of a change of address opened, the other one still to open (L1-39). */
+export const EMAIL_CHANGE_HALF_PATH = "/confirmation/adresse";
+
 /**
  * Token of an email link, kept for /confirmation only: httpOnly (never read
  * by a script), never in a page address (analytics would record it), one

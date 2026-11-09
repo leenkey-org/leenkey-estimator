@@ -25,13 +25,15 @@ export default async function ConfirmationPage({ searchParams }: { searchParams:
   const link = decodeConfirmLink((await cookies()).get(CONFIRM_COOKIE.name)?.value);
   if (!link) redirect(EXPIRED_LINK_PATH);
   const t = fr.auth.confirm;
-  const recovery = link.type === "recovery";
+  const copy =
+    link.type === "recovery"
+      ? { title: t.recoveryTitle, lead: t.recoveryLead, submit: t.recoverySubmit }
+      : link.type === "email_change"
+        ? fr.account.emailChange
+        : { title: t.emailTitle, lead: t.emailLead, submit: t.emailSubmit };
   return (
-    <AuthShell
-      title={recovery ? t.recoveryTitle : t.emailTitle}
-      lead={recovery ? t.recoveryLead : t.emailLead}
-    >
-      <ConfirmForm label={recovery ? t.recoverySubmit : t.emailSubmit} />
+    <AuthShell title={copy.title} lead={copy.lead}>
+      <ConfirmForm label={copy.submit} />
     </AuthShell>
   );
 }

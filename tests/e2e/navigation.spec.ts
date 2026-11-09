@@ -976,7 +976,7 @@ test.describe("comptes connectés (base de seed)", () => {
     await expect(bell.locator("visible=true")).toHaveCount(1);
   });
 
-  test("« Compte » déconnecte en mobile (jusqu'à la page compte)", async ({ page, isMobile }) => {
+  test("« Compte » déconnecte en mobile", async ({ page, isMobile }) => {
     test.skip(!isMobile, "en desktop, le menu du compte");
     await signIn(page, "buyer_c", "/acquereur");
     await mainNav(page).getByRole("link", { name: "Compte" }).click();

@@ -33,8 +33,8 @@ async function emailLink(to: string, subject: string): Promise<string> {
 }
 
 async function signOut(page: Page) {
-  // Mobile: the account page holds the sign-out button until L1-39 (the
-  // account menu of the TopNav is desktop only, tests/e2e/navigation.spec.ts).
+  // Mobile: the account page holds the sign-out button (the account menu of
+  // the TopNav is desktop only, tests/e2e/navigation.spec.ts).
   await page.goto("/compte");
   await page.getByRole("button", { name: "Se déconnecter" }).click();
   await page.waitForURL((url) => url.pathname === "/");

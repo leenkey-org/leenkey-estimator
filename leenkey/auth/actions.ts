@@ -2,11 +2,11 @@
 
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import type { AuthError } from "@supabase/supabase-js";
 import { splitFullName } from "@/core/auth/identity";
 import { safeNextPath } from "@/core/auth/next-path";
 import { getUser, missingAcceptances } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { createStatelessClient } from "@/lib/supabase/public";
 import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 import { allowRequest } from "@/lib/rate-limit";
 import { fr } from "@/lib/i18n/fr";
@@ -22,9 +22,11 @@ import {
 import {
   CONFIRM_COOKIE,
   decodeConfirmLink,
+  EMAIL_CHANGE_HALF_PATH,
   EXPIRED_LINK_PATH,
   pathAfterEmailLink,
 } from "./landing";
+import { authErrorMessage, isAddressEmailLimit } from "./errors";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { homePathForRoles } from "./routes";
 
@@ -64,42 +66,6 @@ async function siteOrigin(): Promise<string> {
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
   return host ? `${h.get("x-forwarded-proto") ?? "https"}://${host}` : "http://localhost:3000";
-}
-
-/**
- * Supabase Auth refuses a second email to the same address within a minute
- * (« For security purposes… »). It only happens for an address that has an
- * account: telling it would reveal which addresses are registered, so the
- * answer stays « sent ». The quota of the whole project shares the error code
- * with another message: that one is told (« Trop de tentatives »).
- */
-function isAddressEmailLimit(error: AuthError | null, action: string): boolean {
-  if (error?.code !== "over_email_send_rate_limit") return false;
-  if (!/security purposes/i.test(error.message)) return false;
-  console.warn(`[auth] ${action}: email not sent, limit per address`);
-  return true;
-}
-
-function authErrorMessage(error: AuthError, action: string): string {
-  switch (error.code) {
-    case "invalid_credentials":
-      return t.invalidCredentials;
-    case "email_not_confirmed":
-      return t.emailNotConfirmed;
-    case "user_already_exists":
-    case "email_exists":
-      return t.alreadyRegistered;
-    case "weak_password":
-      return t.passwordWeak;
-    case "same_password":
-      return t.passwordSame;
-    case "over_request_rate_limit":
-    case "over_email_send_rate_limit":
-      return t.tooManyRequests;
-    default:
-      console.error(`[auth] ${action} failed`, { code: error.code, status: error.status });
-      return t.generic;
-  }
 }
 
 async function rolesOf(userId: string): Promise<string[]> {
@@ -193,6 +159,7 @@ export async function confirmEmailLink(): Promise<void> {
   store.delete({ name: CONFIRM_COOKIE.name, path: CONFIRM_COOKIE.options.path });
   if (!link) redirect(EXPIRED_LINK_PATH);
   const { token_hash, type } = link;
+  if (type === "email_change") await confirmEmailChange(token_hash);
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({ type, token_hash });
   if (error) {
@@ -200,6 +167,40 @@ export async function confirmEmailLink(): Promise<void> {
     redirect(EXPIRED_LINK_PATH);
   }
   redirect(await pathAfterEmailLink(supabase, type));
+}
+
+/**
+ * A link of a change of address (L1-39), verified on a client without
+ * cookies: it never signs this browser in, so that a link of someone else's
+ * account (sent to trap a person) cannot put them in that account. The
+ * first of the two links changes nothing yet; the second changes the
+ * address, and its session is closed at once. The person signed in to the
+ * account comes back to it; anyone else is told to sign in.
+ */
+async function confirmEmailChange(tokenHash: string): Promise<never> {
+  const verifier = createStatelessClient();
+  const { data, error } = await verifier.auth.verifyOtp({
+    type: "email_change",
+    token_hash: tokenHash,
+  });
+  if (error) {
+    console.error("[auth] verifyOtp failed", { code: error.code, type: "email_change" });
+    redirect(EXPIRED_LINK_PATH);
+  }
+  if (!data.session) redirect(EMAIL_CHANGE_HALF_PATH);
+  const { error: signOutError } = await verifier.auth.signOut({ scope: "local" });
+  if (signOutError) {
+    console.error("[auth] email change session not closed", {
+      user_id: data.user?.id,
+      code: signOutError.code,
+    });
+  }
+  const current = await getUser();
+  redirect(
+    current && current.id === data.user?.id
+      ? `${ROUTES.account}?modifie=email`
+      : `${EMAIL_CHANGE_HALF_PATH}?etat=fait`,
+  );
 }
 
 // --- Sign-in and sign-out --------------------------------------------------

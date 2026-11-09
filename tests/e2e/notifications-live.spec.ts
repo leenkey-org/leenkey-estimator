@@ -219,7 +219,7 @@ test("préférences des emails, depuis la roue du panneau", async ({ browser, ba
   // Back to the account.
   await page.getByRole("link", { name: "Mon compte" }).click();
   await expect(page).toHaveURL("/compte");
-  await expect(page.getByRole("link", { name: "Notifications" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: /Emails de Leenkey/ })).toHaveAttribute(
     "href",
     "/compte/notifications",
   );
