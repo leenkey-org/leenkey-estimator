@@ -57,6 +57,7 @@ select throws_ok(format($$update sale_task_status set done_by = tests.uid('selle
                  '42501', null, 'seller_a: cannot attribute a task to someone else');
 with u as (update sale_progress set plan = 'serenite' where property_id = :'prop_a' returning 1)
 select is((select count(*) from u)::int, 0, 'seller_a: cannot change the plan of the sale');
+select tests.dpe(:'listing_a');
 select lives_ok(format($$select listing_submit(%L)$$, :'listing_a'), 'seller_a: submits the listing');
 
 \set who seller_b

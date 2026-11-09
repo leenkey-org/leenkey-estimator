@@ -173,12 +173,13 @@ export type SaveCharacteristicsResult =
   | { ok: true; data: { complete: boolean } }
   | {
       ok: false;
-      error: "auth" | "invalid" | "incomplete" | "not_found" | "unavailable";
+      /** dpe: the property of a listing sent keeps its DPE (properties_keep_dpe, L1-65). */
+      error: "auth" | "invalid" | "incomplete" | "not_found" | "dpe" | "unavailable";
       /** Field and message key (fr.properties.errors). */
       fieldErrors?: Partial<Record<CharacteristicsField, string>>;
     };
 
-const NOT_A_FIELD = new Set(["propertyId", "isNewBuild", "features"]);
+const NOT_A_FIELD = new Set(["propertyId", "isNewBuild", "features", "dpeExempt"]);
 
 /**
  * Step 2, saved as a draft at any time (« Enregistrer », « Précédent »);
@@ -241,6 +242,8 @@ export async function saveCharacteristics(
       entity_id: value.propertyId,
       code: error.code,
     });
+    // 22023 once sent: its type, surface and rooms are checked above, so its DPE.
+    if (error.code === "22023" && !inCreation(draft.status)) return { ok: false, error: "dpe" };
     return { ok: false, error: "unavailable" };
   }
   if (!data) return { ok: false, error: "not_found" };

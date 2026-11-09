@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { flushSync } from "react-dom";
 import { Button } from "@/components/shared/button";
+import { Checkbox } from "@/components/shared/checkbox";
 import { ChipToggle } from "@/components/shared/chip-toggle";
 import { FormActionBar } from "@/components/shared/form-action-bar";
 import { InfoNote } from "@/components/shared/info-note";
@@ -15,6 +16,7 @@ import { Select } from "@/components/shared/select";
 import { UnitInput } from "@/components/shared/unit-input";
 import { fr } from "@/lib/i18n/fr";
 import {
+  dpeOutdated,
   forType,
   HEATING_OPTIONS,
   NOT_FOR_TYPE,
@@ -22,6 +24,7 @@ import {
   PROPERTY_FEATURES,
   type Characteristics,
   type CharacteristicsField,
+  parisToday,
   type PropertyFeature,
 } from "@/lib/validations/property";
 import { DPE_CLASSES, PROPERTY_TYPES } from "@/lib/validations/search";
@@ -42,9 +45,15 @@ const edits = fr.properties.edit;
 // land), here and on the server. Then the photos (L1-12), saved as soon as
 // they are added: the step waits for them before going on. Once the listing
 // is sent (L1-14b, `edit`), the same fields without the photos (their own
-// tab), « Annuler » and « Enregistrer », always complete.
+// tab), « Annuler » and « Enregistrer », always complete. The DPE (L1-65)
+// in one block where Bien.png shows it: the classes, its date, the range of
+// the costs and the year of the prices, or « non soumis » and its motive;
+// optional here, asked to send the listing for review.
 
-type NumberField = Exclude<CharacteristicsField, "type" | "dpe" | "ges" | "heating">;
+type NumberField = Exclude<
+  CharacteristicsField,
+  "type" | "dpe" | "ges" | "heating" | "dpeExemptionReason" | "dpeDate" | "energyPriceYear"
+>;
 type PropertyType = (typeof PROPERTY_TYPES)[number];
 
 const NUMBER_FIELDS: readonly NumberField[] = [
@@ -58,6 +67,8 @@ const NUMBER_FIELDS: readonly NumberField[] = [
   "chargesMonthlyEuros",
   "propertyTaxYearlyEuros",
   "coproLots",
+  "energyCostMinEuros",
+  "energyCostMaxEuros",
 ];
 
 const text = (value: number | null) => (value === null ? "" : String(value).replace(".", ","));
@@ -65,6 +76,14 @@ const text = (value: number | null) => (value === null ? "" : String(value).repl
 const amountText = (value: number | null) =>
   value === null || Number.isInteger(value) ? text(value) : value.toFixed(2).replace(".", ",");
 const AMOUNT_FIELDS: readonly NumberField[] = ["chargesMonthlyEuros", "propertyTaxYearlyEuros"];
+
+const energy = fr.properties.characteristics.energy;
+const OTHER_REASON = "other";
+/** The reference years of the prices a DPE can carry: since its reform, to this year. */
+const priceYears = (today: string) => {
+  const last = Number(today.slice(0, 4));
+  return Array.from({ length: last - 2021 + 1 }, (_, index) => last - index);
+};
 
 export function CharacteristicsStep({
   propertyId,
@@ -99,6 +118,22 @@ export function CharacteristicsStep({
   const [dpe, setDpe] = useState(initial.dpe);
   const [ges, setGes] = useState(initial.ges);
   const [heating, setHeating] = useState(initial.heating);
+  const [dpeExempt, setDpeExempt] = useState(initial.dpeExempt);
+  const listedReason = (energy.reasons as readonly string[]).includes(
+    initial.dpeExemptionReason ?? "",
+  );
+  const [reason, setReason] = useState(
+    initial.dpeExemptionReason === null
+      ? ""
+      : listedReason
+        ? initial.dpeExemptionReason
+        : OTHER_REASON,
+  );
+  const [otherReason, setOtherReason] = useState(
+    listedReason ? "" : (initial.dpeExemptionReason ?? ""),
+  );
+  const [dpeDate, setDpeDate] = useState(initial.dpeDate ?? "");
+  const [priceYear, setPriceYear] = useState(initial.energyPriceYear);
   const [features, setFeatures] = useState<PropertyFeature[]>(initial.features);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<CharacteristicsField, string>>>({});
   const [error, setError] = useState<string | null>(null);
@@ -111,6 +146,14 @@ export function CharacteristicsStep({
   const land = type === "terrain";
   const shows = (field: CharacteristicsField) => !hidden.fields.includes(field);
   const shownFeatures = PROPERTY_FEATURES.filter((feature) => !hidden.features.includes(feature));
+  const today = parisToday();
+  const years = priceYears(today);
+  // Said as soon as the date is typed (a date after today is an error of the field).
+  const outdated = !dpeExempt && dpeDate !== "" && dpeDate <= today && dpeOutdated(dpeDate, today);
+
+  function clearError(field: CharacteristicsField) {
+    setFieldErrors((current) => ({ ...current, [field]: undefined }));
+  }
 
   function setNumber(field: NumberField, value: string) {
     setNumbers((current) => ({ ...current, [field]: value }));
@@ -142,6 +185,7 @@ export function CharacteristicsStep({
       showErrors(invalid);
       return;
     }
+    const exemptionReason = (reason === OTHER_REASON ? otherReason : reason).trim();
     // As the server saves it: the hidden fields empty, no rooms for land.
     const payload = forType({
       propertyId,
@@ -161,6 +205,12 @@ export function CharacteristicsStep({
       chargesMonthlyEuros: typed.chargesMonthlyEuros ?? null,
       propertyTaxYearlyEuros: typed.propertyTaxYearlyEuros ?? null,
       coproLots: typed.coproLots ?? null,
+      dpeExempt,
+      dpeExemptionReason: exemptionReason === "" ? null : exemptionReason,
+      dpeDate: dpeDate === "" ? null : dpeDate,
+      energyCostMinEuros: typed.energyCostMinEuros ?? null,
+      energyCostMaxEuros: typed.energyCostMaxEuros ?? null,
+      energyPriceYear: priceYear,
     });
     setError(null);
     submitting.current = true;
@@ -192,17 +242,19 @@ export function CharacteristicsStep({
               ? common.signedOut
               : result.error === "not_found"
                 ? common.notFound
-                : result.error === "incomplete"
-                  ? edit
-                    ? land
-                      ? edits.required.land
-                      : edits.required.characteristics
-                    : land
-                      ? t.requiredLand
-                      : t.required
-                  : result.error === "invalid"
-                    ? null
-                    : common.error,
+                : result.error === "dpe"
+                  ? edits.required.dpe
+                  : result.error === "incomplete"
+                    ? edit
+                      ? land
+                        ? edits.required.land
+                        : edits.required.characteristics
+                      : land
+                        ? t.requiredLand
+                        : t.required
+                    : result.error === "invalid"
+                      ? null
+                      : common.error,
         );
         return;
       }
@@ -285,18 +337,121 @@ export function CharacteristicsStep({
         {land ? unitInput("propertyTaxYearlyEuros", t.tax, t.perYear) : null}
       </div>
 
-      {shows("dpe") ? (
-        <SegmentedPicker
-          label={t.dpe}
-          value={dpe ?? ""}
-          onValueChange={(value) => setDpe(DPE_CLASSES.find((letter) => letter === value) ?? null)}
-          options={DPE_CLASSES.map((letter) => ({
-            value: letter,
-            label: letter,
-            ariaLabel: t.energyClass(t.dpe, letter),
-          }))}
-        />
-      ) : null}
+      {land ? null : (
+        <fieldset className="flex flex-col gap-4">
+          <legend className="mb-1 text-lk-h3 font-semibold text-lk-ink">{energy.legend}</legend>
+          {edit ? null : (
+            <InfoNote>
+              <p>{energy.note}</p>
+            </InfoNote>
+          )}
+          <Checkbox
+            label={energy.exempt}
+            checked={dpeExempt}
+            onChange={(event) => setDpeExempt(event.target.checked)}
+          />
+          {dpeExempt ? (
+            <>
+              <Select
+                label={energy.reason}
+                placeholder={energy.reasonPlaceholder}
+                value={reason}
+                error={reason === OTHER_REASON ? undefined : fieldErrors.dpeExemptionReason}
+                onChange={(event) => {
+                  setReason(event.target.value);
+                  clearError("dpeExemptionReason");
+                }}
+              >
+                {energy.reasons.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+                <option value={OTHER_REASON}>{energy.otherReason}</option>
+              </Select>
+              {reason === OTHER_REASON ? (
+                <Input
+                  label={energy.otherReasonLabel}
+                  value={otherReason}
+                  maxLength={300}
+                  error={fieldErrors.dpeExemptionReason}
+                  onChange={(event) => {
+                    setOtherReason(event.target.value);
+                    clearError("dpeExemptionReason");
+                  }}
+                />
+              ) : null}
+              <p className="text-lk-caption text-lk-ink-3">{energy.reasonNote}</p>
+            </>
+          ) : (
+            <>
+              <SegmentedPicker
+                label={t.dpe}
+                value={dpe ?? ""}
+                onValueChange={(value) =>
+                  setDpe(DPE_CLASSES.find((letter) => letter === value) ?? null)
+                }
+                options={DPE_CLASSES.map((letter) => ({
+                  value: letter,
+                  label: letter,
+                  ariaLabel: t.energyClass(t.dpe, letter),
+                }))}
+              />
+              <SegmentedPicker
+                label={t.ges}
+                value={ges ?? ""}
+                onValueChange={(value) =>
+                  setGes(DPE_CLASSES.find((letter) => letter === value) ?? null)
+                }
+                options={DPE_CLASSES.map((letter) => ({
+                  value: letter,
+                  label: letter,
+                  ariaLabel: t.energyClass(t.ges, letter),
+                }))}
+              />
+              <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+                <Input
+                  type="date"
+                  label={energy.date}
+                  help={energy.dateHelp}
+                  min="2021-07-01"
+                  max={today}
+                  value={dpeDate}
+                  error={fieldErrors.dpeDate}
+                  onChange={(event) => {
+                    setDpeDate(event.target.value);
+                    clearError("dpeDate");
+                  }}
+                />
+                <Select
+                  label={energy.priceYear}
+                  help={energy.priceYearHelp}
+                  placeholder={energy.priceYearPlaceholder}
+                  value={priceYear === null ? "" : String(priceYear)}
+                  error={fieldErrors.energyPriceYear}
+                  onChange={(event) => {
+                    setPriceYear(event.target.value === "" ? null : Number(event.target.value));
+                    clearError("energyPriceYear");
+                  }}
+                >
+                  {(priceYear !== null && !years.includes(priceYear)
+                    ? [priceYear, ...years]
+                    : years
+                  ).map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </Select>
+                {unitInput("energyCostMinEuros", energy.costMin, t.perYear)}
+                {unitInput("energyCostMaxEuros", energy.costMax, t.perYear)}
+              </div>
+              {outdated ? <InlineAlert tone="warning">{energy.outdated}</InlineAlert> : null}
+              <p className="text-lk-caption text-lk-ink-3">{energy.costHelp}</p>
+            </>
+          )}
+        </fieldset>
+      )}
 
       {shownFeatures.length > 0 ? (
         <fieldset className="flex flex-col gap-2">
@@ -347,19 +502,6 @@ export function CharacteristicsStep({
           ) : null}
         </div>
       )}
-
-      {shows("ges") ? (
-        <SegmentedPicker
-          label={t.ges}
-          value={ges ?? ""}
-          onValueChange={(value) => setGes(DPE_CLASSES.find((letter) => letter === value) ?? null)}
-          options={DPE_CLASSES.map((letter) => ({
-            value: letter,
-            label: letter,
-            ariaLabel: t.energyClass(t.ges, letter),
-          }))}
-        />
-      ) : null}
 
       {land ? null : (
         <fieldset className="flex flex-col gap-4">

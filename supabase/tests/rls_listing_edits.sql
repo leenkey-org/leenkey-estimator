@@ -20,6 +20,7 @@ values (:'prop', 'Appartement à retoucher', 'Description.', 25000000)
 returning id as listing \gset
 select lives_ok(format($$update properties set address_line = '7 rue des Retouches' where id = %L$$, :'prop'),
                 'seller_a: changes the address of a draft (step 1)');
+select tests.dpe(:'listing');
 select listing_submit(:'listing') \gset
 
 -- ===========================================================================
@@ -125,6 +126,7 @@ returning id as prop_r \gset
 insert into listings (property_id, title, description, price_cents)
 values (:'prop_r', 'Maison à revoir', 'Description.', 31000000)
 returning id as listing_r \gset
+select tests.dpe(:'listing_r');
 select listing_submit(:'listing_r') \gset
 \set who admin
 \ir _as.psql

@@ -738,6 +738,39 @@ export const fr = {
       tax: "Taxe foncière",
       perYear: "€ / an",
       lots: "Lots de copropriété",
+      // L1-65: the DPE, asked to send the listing for review (Cédric, 2026-11-09).
+      energy: {
+        legend: "Diagnostic de performance énergétique (DPE)",
+        note: "Vous pouvez enregistrer votre annonce sans le DPE. Il est demandé pour l'envoyer en validation : une annonce de vente doit l'afficher.",
+        exempt: "Mon bien n'est pas soumis au DPE",
+        energyClass: "Classe énergie (DPE)",
+        climateClass: "Classe climat (GES)",
+        date: "Date du DPE",
+        dateHelp: "Inscrite sur le rapport de votre diagnostiqueur.",
+        costMin: "Dépenses d'énergie, minimum",
+        costMax: "Dépenses d'énergie, maximum",
+        costHelp:
+          "La fourchette des dépenses annuelles d'énergie estimées, telle qu'elle figure sur le DPE.",
+        priceYear: "Année de référence des prix",
+        priceYearHelp:
+          "« Prix moyens des énergies indexés au 1er janvier » de cette année, sur le DPE.",
+        priceYearPlaceholder: "Choisir",
+        reason: "Motif de l'exemption",
+        reasonPlaceholder: "Choisir le motif",
+        // Provisional list, to validate by Cédric (DECISIONS Q77).
+        reasons: [
+          "Construction provisoire prévue pour 2 ans au plus",
+          "Bâtiment indépendant de moins de 50 m²",
+          "Lieu de culte",
+          "Bâtiment agricole, artisanal ou industriel peu consommateur d'énergie",
+          "Monument historique",
+        ],
+        otherReason: "Autre motif",
+        otherReasonLabel: "Précisez le motif",
+        reasonNote: "Nous relisons le motif avant de publier votre annonce.",
+        outdated:
+          "Ce DPE n'est plus valable : un DPE doit dater du 1er juillet 2021 au plus tôt et de moins de 10 ans. Un nouveau DPE sera demandé pour envoyer votre annonce.",
+      },
     },
     errors: {
       required: "À renseigner pour continuer.",
@@ -748,6 +781,9 @@ export const fr = {
       floorAboveTotal: "L'étage ne peut pas dépasser le nombre d'étages.",
       roomsAtLeastOne: "Un logement compte au moins une pièce.",
       cents: "Deux chiffres après la virgule au plus.",
+      costRange: "Le minimum ne peut pas dépasser le maximum.",
+      dateFuture: "La date du DPE ne peut pas être dans le futur.",
+      date: "Saisissez une date valide.",
     } as Record<string, string>,
     photos: {
       title: "Photos",
@@ -846,10 +882,20 @@ export const fr = {
         characteristics:
           "Il manque le type, la surface ou les pièces de votre bien : complétez l'étape 2.",
         listing: "Il manque le prix ou la description : complétez l'étape 3.",
+        // L1-65: what listing_submit refuses (property_dpe_issue).
+        dpe: {
+          dpe_missing:
+            "Il manque le DPE de votre bien : classes énergie et climat, date, dépenses d'énergie et année des prix. Une annonce de vente doit l'afficher : complétez l'étape 2.",
+          dpe_outdated:
+            "Le DPE de votre bien n'est plus valable : réalisé avant le 1er juillet 2021 ou il y a plus de 10 ans. Un DPE à jour doit figurer sur votre annonce : complétez l'étape 2.",
+          exemption_reason:
+            "Indiquez pourquoi votre bien n'est pas soumis au DPE : complétez l'étape 2.",
+        },
         notFound: "Cette annonce a déjà été envoyée, ou ne peut plus être modifiée.",
         unavailable: "L'envoi n'a pas pu se faire. Réessayez.",
       },
       fix: "Compléter",
+      fixDpe: "Compléter le DPE",
       // A listing refused by Leenkey, corrected through the steps (L1-19).
       rejected: "Votre annonce est à corriger",
       rejectedNext: "Corrigez-la à l'étape qui convient, puis envoyez-la de nouveau.",
@@ -1014,6 +1060,8 @@ export const fr = {
         land: "Le type et la surface restent nécessaires à votre annonce.",
         listing: "Le prix et la description restent nécessaires à votre annonce.",
         field: "À renseigner.",
+        // L1-65: properties_keep_dpe.
+        dpe: "Le DPE de votre annonce reste nécessaire : classes, date de moins de 10 ans (1er juillet 2021 au plus tôt), dépenses d'énergie et année des prix, ou le motif de l'exemption.",
       },
     },
   },
@@ -1404,6 +1452,10 @@ export const fr = {
       published: "Publiée le",
       rejection: "Motif du refus",
       suspension: "Motif de la suspension",
+      // L1-65: to read before publishing.
+      dpeExemption: "Non soumis au DPE, selon le vendeur",
+      dpeMissing:
+        "Le DPE de cette annonce manque ou n'est plus valable : elle ne peut pas être publiée. Refusez-la avec le motif « Une information obligatoire manque ».",
       preview: "Aperçu de l'annonce",
       history: "Historique",
       historyEmpty: "Aucune décision pour l'instant.",
@@ -1475,6 +1527,8 @@ export const fr = {
       notFound: "Cette annonce n'existe plus.",
       forbidden: "Cette action est réservée à l'équipe Leenkey.",
       unavailable: "La décision n'a pas pu être enregistrée. Réessayez.",
+      // L1-65: listing_publish.
+      dpe: "Cette annonce n'a pas de DPE valable : elle ne peut pas être publiée. Refusez-la avec le motif « Une information obligatoire manque » : le vendeur le complètera.",
       network:
         "Pas de réponse du serveur : la décision a peut-être été enregistrée. Rechargez la page pour vérifier le statut de l'annonce avant de recommencer.",
       reload: "Recharger la page",
@@ -2845,6 +2899,7 @@ export const fr = {
       propertyTaxValue: (amount: string) => `${amount} / an`,
       dpe: "Classe énergie (DPE)",
       ges: "Émissions (GES)",
+      notSubject: "Non soumis au DPE",
       heating: "Chauffage",
       type: "Type de bien",
       surface: "Surface habitable",
@@ -2868,6 +2923,19 @@ export const fr = {
       coproLots: "Lots de copropriété",
       votedWorks: "Travaux votés",
       procedures: "Procédures en cours",
+    },
+    // L1-65: the mentions a listing for sale carries (code de la construction
+    // L126-33 ; Géorisques: Cédric, 2026-11-09). Wordings: DECISIONS Q77.
+    energy: {
+      label: "Informations réglementaires",
+      exempt: "Bien non soumis au DPE.",
+      excessive: "Logement à consommation énergétique excessive.",
+      costs: (min: string, max: string, year: number) =>
+        `Montant estimé des dépenses annuelles d'énergie pour un usage standard : entre ${min} et ${max} par an. Prix moyens des énergies indexés au 1er janvier ${year}.`,
+      date: (date: string) => `DPE réalisé le ${date}.`,
+      risks:
+        "Les informations sur les risques auxquels ce bien est exposé sont disponibles sur le site Géorisques :",
+      risksLink: "www.georisques.gouv.fr",
     },
     actions: {
       contact: "Contacter le vendeur",

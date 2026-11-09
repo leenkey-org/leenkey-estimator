@@ -260,13 +260,59 @@ test("envoyer une annonce en validation en mobile : prix, description, aperçu",
   await expectNoSeriousViolation(page);
   await page.setViewportSize({ width: 390, height: 844 });
 
-  // Back to step 3, everything kept; then sent for review.
+  // Back to step 3, everything kept.
   await page.getByRole("link", { name: "Précédent", exact: true }).click();
   await expect(page).toHaveURL(`/vendeur/biens/${id}/prix`);
   // Written back as French numbers are: « 320 000 », a narrow space.
   await expect(price).toHaveValue("320\u202F000");
   await next.click();
   await expect(page).toHaveURL(`/vendeur/biens/${id}/apercu`);
+
+  // Without its DPE, said before the sending, then refused (L1-65).
+  const missing = /^Il manque le DPE de votre bien/;
+  await expect(page.getByText(missing)).toBeVisible();
+  await page.getByRole("button", { name: "Envoyer en validation" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: missing })).toBeVisible();
+  await expect(page).toHaveURL(`/vendeur/biens/${id}/apercu`);
+  await page.getByRole("link", { name: "Compléter le DPE" }).first().click();
+  await expect(page).toHaveURL(`/vendeur/biens/${id}/caracteristiques`);
+  const energy = page.getByRole("group", { name: "Diagnostic de performance énergétique (DPE)" });
+  await expect(energy).toBeVisible();
+  await energy.getByRole("radio", { name: "DPE classe F" }).click();
+  await energy.getByRole("radio", { name: "GES classe E" }).click();
+  const date = energy.getByLabel("Date du DPE");
+  await date.fill("2021-06-30");
+  await expect(energy.getByText(/^Ce DPE n'est plus valable/)).toBeVisible();
+  await date.fill("2024-03-12");
+  await expect(energy.getByText(/^Ce DPE n'est plus valable/)).toHaveCount(0);
+  await energy.getByLabel("Année de référence des prix").selectOption("2023");
+  await energy.getByLabel("Dépenses d'énergie, minimum").fill("1980");
+  await energy.getByLabel("Dépenses d'énergie, maximum").fill("1500");
+  await next.click();
+  await expect(energy.getByLabel("Dépenses d'énergie, maximum")).toHaveAccessibleDescription(
+    /Le minimum ne peut pas dépasser le maximum\./,
+  );
+  await energy.getByLabel("Dépenses d'énergie, maximum").fill("2680");
+  await expectNoSeriousViolation(page);
+  await next.click();
+  await expect(page).toHaveURL(`/vendeur/biens/${id}/prix`);
+  await next.click();
+  await expect(page).toHaveURL(`/vendeur/biens/${id}/apercu`);
+  await expect(page.getByText(missing)).toHaveCount(0);
+  // The mentions of a listing for sale, as its page will show them.
+  await expect(page.getByText("Logement à consommation énergétique excessive.")).toBeVisible();
+  await expect(
+    page.getByText(
+      /^Montant estimé des dépenses annuelles d'énergie pour un usage standard : entre 1\s980\s€ et 2\s680\s€ par an\. Prix moyens des énergies indexés au 1er janvier 2023\.$/,
+    ),
+  ).toBeVisible();
+  await expect(page.getByText("DPE réalisé le 12 mars 2024.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "www.georisques.gouv.fr" })).toHaveAttribute(
+    "href",
+    "https://www.georisques.gouv.fr",
+  );
+
+  // Then sent for review.
   await page.getByRole("button", { name: "Envoyer en validation" }).click();
   await expect(page).toHaveURL(`/vendeur/biens/${id}/envoye`);
   await expect(page.getByRole("heading", { level: 1, name: "C'est envoyé." })).toBeVisible();

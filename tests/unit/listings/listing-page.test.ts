@@ -57,6 +57,13 @@ const flat: PublicListing = {
   propertyTaxYearlyCents: 115_000,
   coproLots: 48,
   sellerFirstName: "Alice",
+  energy: {
+    exempt: false,
+    date: "2024-03-12",
+    costMinCents: 98_000,
+    costMaxCents: 133_000,
+    priceYear: 2023,
+  },
   accompanied: true,
   photos: [],
 };

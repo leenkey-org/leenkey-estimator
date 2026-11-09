@@ -58,6 +58,8 @@ export type AdminListingDetail = {
   suspendedAt: string | null;
   rejectionReason: string | null;
   suspensionReason: string | null;
+  /** Not subject to the DPE: the motive given by the seller, read at the review (L1-65). */
+  dpeExemptionReason: string | null;
   sellerName: string | null;
   plan: PlanCode;
   history: AdminHistoryEntry[];
@@ -170,7 +172,7 @@ export async function adminListingCounts(): Promise<QueryResult<AdminListingCoun
 }
 
 const DETAIL_COLUMNS =
-  `id, reference, slug, title, description, price_cents, status, created_at, submitted_at, published_at, suspended_at, rejection_reason, suspension_reason, property:properties!inner(${LISTING_PROPERTY_COLUMNS})` as const;
+  `id, reference, slug, title, description, price_cents, status, created_at, submitted_at, published_at, suspended_at, rejection_reason, suspension_reason, property:properties!inner(${LISTING_PROPERTY_COLUMNS}, dpe_exemption_reason)` as const;
 
 /**
  * One listing with its seller, plan and decisions; null when unknown or
@@ -238,6 +240,7 @@ export const adminListing = cache(async function adminListing(
         suspendedAt: row.suspended_at,
         rejectionReason: row.rejection_reason,
         suspensionReason: row.suspension_reason,
+        dpeExemptionReason: property.dpe_exempt ? property.dpe_exemption_reason : null,
         sellerName,
         plan,
         history: audit.data.map((entry) => {

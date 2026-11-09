@@ -141,6 +141,7 @@ update properties set type = 'appartement', surface_m2 = 52, rooms = 2 where id 
 insert into listings (property_id, title, description, price_cents)
 values (:'prop_a', 'Appartement en photos', 'Description.', 21000000)
 returning id as listing_a \gset
+select tests.dpe(:'listing_a');
 select listing_submit(:'listing_a') \gset
 select gen_random_uuid() as sent_file \gset
 select lives_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('photos', %L, %L)$$,
@@ -158,6 +159,7 @@ select lives_ok(format($$insert into storage.objects (bucket_id, name, owner) va
 select lives_ok(format($$insert into photos (property_id, storage_path) values (%L, %L)$$,
                        :'prop_a', :'prop_a' || '/' || :'again_file'),
                 'seller_a: and adds its photo');
+select tests.dpe(:'listing_a');
 select listing_submit(:'listing_a') \gset
 \set who admin
 \ir _as.psql

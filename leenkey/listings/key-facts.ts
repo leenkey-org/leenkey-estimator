@@ -60,7 +60,10 @@ export type FactsInput = Pick<
   | "chargesMonthlyCents"
   | "propertyTaxYearlyCents"
   | "coproLots"
->;
+> & {
+  /** « Non soumis au DPE » in place of its classes (L1-65). */
+  energy?: Pick<PublicListing["energy"], "exempt">;
+};
 
 // Groups and pictograms of the grid of the listing page (KeyFactsGrid, L1-55);
 // the table of the seller's page and of the back office ignores them.
@@ -214,8 +217,8 @@ export function listingKeyFacts(
   const facts: Array<KeyFact | null> = [
     coOwnership ? fact(t.charges, money(listing.chargesMonthlyCents, t.chargesValue)) : null,
     taxes,
-    fact(t.dpe, listing.dpe),
-    fact(t.ges, listing.ges),
+    fact(t.dpe, listing.energy?.exempt ? t.notSubject : listing.dpe),
+    fact(t.ges, listing.energy?.exempt ? t.notSubject : listing.ges),
     fact(t.heating, listing.heating),
     fact(t.type, fr.search.types[listing.type]),
     fact(t.surface, formatSurface(listing.surfaceM2)),

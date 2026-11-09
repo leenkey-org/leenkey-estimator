@@ -12,7 +12,7 @@ type PlanCode = Database["public"]["Enums"]["plan_code"];
 
 /** The property embedded under its listing: what the listing page shows of it. */
 export const LISTING_PROPERTY_COLUMNS =
-  "owner_id, type, city, postal_code, district, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, has_elevator, has_balcony, has_terrace, has_garden, has_parking, has_cellar, orientation, build_year, is_new_build, dpe_class, ges_class, heating, charges_monthly_cents, property_tax_yearly_cents, copro_lots, deleted_at, owner:profiles!properties_owner_id_fkey(first_name, last_name), progress:sale_progress(plan), photos(storage_path, width, height, caption, position)";
+  "owner_id, type, city, postal_code, district, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, has_elevator, has_balcony, has_terrace, has_garden, has_parking, has_cellar, orientation, build_year, is_new_build, dpe_class, ges_class, heating, charges_monthly_cents, property_tax_yearly_cents, copro_lots, dpe_exempt, dpe_date, energy_cost_min_cents, energy_cost_max_cents, energy_price_year, deleted_at, owner:profiles!properties_owner_id_fkey(first_name, last_name), progress:sale_progress(plan), photos(storage_path, width, height, caption, position)";
 
 type ListingRow = Pick<
   Tables["listings"]["Row"],
@@ -46,6 +46,11 @@ type PropertyRow = Pick<
   | "charges_monthly_cents"
   | "property_tax_yearly_cents"
   | "copro_lots"
+  | "dpe_exempt"
+  | "dpe_date"
+  | "energy_cost_min_cents"
+  | "energy_cost_max_cents"
+  | "energy_price_year"
 > & {
   owner: { first_name: string | null } | null;
   progress: { plan: PlanCode } | { plan: PlanCode }[] | null;
@@ -108,6 +113,13 @@ export function listingForPage(
     propertyTaxYearlyCents: property.property_tax_yearly_cents,
     coproLots: property.copro_lots,
     sellerFirstName: property.owner?.first_name ?? null,
+    energy: {
+      exempt: property.dpe_exempt,
+      date: property.dpe_date,
+      costMinCents: property.energy_cost_min_cents,
+      costMaxCents: property.energy_cost_max_cents,
+      priceYear: property.energy_price_year,
+    },
     accompanied,
     photos: [...property.photos]
       .sort((a, b) => a.position - b.position)

@@ -99,6 +99,7 @@ const ERROR = {
   not_found: "notFound",
   conflict: "conflict",
   unavailable: "unavailable",
+  dpe: "dpe",
 } as const;
 
 /** null: no answer (network, timeout, a deployment in between). */

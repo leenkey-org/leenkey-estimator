@@ -39,6 +39,7 @@ update properties set type = 'appartement', surface_m2 = 48 where id = :'draft';
 select throws_ok(format($$select listing_submit(%L)$$, :'draft_listing'), '22023', null,
                  'seller_a: the rooms are still required');
 update properties set rooms = 2 where id = :'draft';
+select tests.dpe(:'draft_listing');
 select is(listing_submit(:'draft_listing'), 'pending'::listing_status,
           'seller_a: once complete, the listing goes for review');
 select throws_ok(format($$update properties set surface_m2 = 0 where id = %L$$, :'draft'), '23514', null,
@@ -58,6 +59,7 @@ select ok((select surface_m2 is null from properties where id = :'draft'),
 select throws_ok(format($$select listing_submit(%L)$$, :'draft_listing'), '22023', null,
                  'seller_a: and its listing is not sent again while it is');
 update properties set surface_m2 = 48 where id = :'draft';
+select tests.dpe(:'draft_listing');
 select is(listing_submit(:'draft_listing'), 'pending'::listing_status,
           'seller_a: complete, sent again');
 
@@ -106,6 +108,7 @@ update properties set surface_m2 = null where id = :'draft';
 select ok((select surface_m2 is null from properties where id = :'draft'),
           'seller_a: a rejected listing is a draft again, its property may be incomplete');
 update properties set surface_m2 = 48 where id = :'draft';
+select tests.dpe(:'draft_listing');
 select is(listing_submit(:'draft_listing'), 'pending'::listing_status,
           'seller_a: corrected, sent again');
 \set who admin

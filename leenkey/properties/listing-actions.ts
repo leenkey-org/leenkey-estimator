@@ -12,7 +12,7 @@ import {
   submitListingSchema,
   type ListingDraftField,
 } from "@/lib/validations/listing";
-import { missingCharacteristics } from "@/lib/validations/property";
+import { dpeIssue, missingCharacteristics, type DpeIssue } from "@/lib/validations/property";
 import type { TablesInsert } from "@/types/database";
 import { inCreation } from "./creation";
 import { readDraft } from "./drafts";
@@ -146,7 +146,15 @@ export type SubmitListingResult =
        * price or description yet (step 3).
        */
       error: "auth" | "invalid" | "not_found" | "characteristics" | "listing" | "unavailable";
+    }
+  | {
+      ok: false;
+      /** The DPE to complete at step 2 (L1-65): what is missing. */
+      error: "dpe";
+      issue: DpeIssue;
     };
+
+const DPE_ISSUES: readonly DpeIssue[] = ["dpe_missing", "dpe_outdated", "exemption_reason"];
 
 /**
  * Step 4: « Envoyer en validation ». listing_submit checks the property and
@@ -166,7 +174,9 @@ export async function submitListing(input: unknown): Promise<SubmitListingResult
 
   const { data: listing, error } = await supabase
     .from("listings")
-    .select("id, reference, title, description, property:properties!inner(type, surface_m2, rooms)")
+    .select(
+      "id, reference, title, description, property:properties!inner(type, surface_m2, rooms, dpe_class, ges_class, dpe_exempt, dpe_exemption_reason, dpe_date, energy_cost_min_cents, energy_cost_max_cents, energy_price_year)",
+    )
     .eq("property_id", propertyId)
     .is("deleted_at", null)
     .maybeSingle();
@@ -188,6 +198,19 @@ export async function submitListing(input: unknown): Promise<SubmitListingResult
   if (missingCharacteristics(characteristics).length > 0) {
     return { ok: false, error: "characteristics" };
   }
+  const issue = dpeIssue({
+    type: property.type,
+    dpe: property.dpe_class,
+    ges: property.ges_class,
+    dpeExempt: property.dpe_exempt,
+    dpeExemptionReason: property.dpe_exemption_reason,
+    dpeDate: property.dpe_date,
+    // Only whether they are known matters here, not the unit.
+    energyCostMinEuros: property.energy_cost_min_cents,
+    energyCostMaxEuros: property.energy_cost_max_cents,
+    energyPriceYear: property.energy_price_year,
+  });
+  if (issue) return { ok: false, error: "dpe", issue };
 
   const sent = await supabase.rpc("listing_submit", { p_listing_id: listing.id });
   if (sent.error) {
@@ -196,7 +219,10 @@ export async function submitListing(input: unknown): Promise<SubmitListingResult
       entity_id: listing.id,
       code: sent.error.code,
     });
-    // 22023: no longer a draft (sent from another tab), or changed meanwhile.
+    // 22023: the DPE changed meanwhile (« dpe: <issue> »), no longer a draft
+    // (sent from another tab), or changed meanwhile.
+    const late = DPE_ISSUES.find((value) => sent.error.message === `dpe: ${value}`);
+    if (sent.error.code === "22023" && late) return { ok: false, error: "dpe", issue: late };
     return { ok: false, error: sent.error.code === "22023" ? "not_found" : "unavailable" };
   }
 

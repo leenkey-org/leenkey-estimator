@@ -271,6 +271,14 @@ describe("submitListing (step 4)", () => {
         rooms: 3,
         city: "Épinay-sur-Orge",
         postal_code: "91360",
+        dpe_class: "D" as string | null,
+        ges_class: "C",
+        dpe_exempt: false,
+        dpe_exemption_reason: null as string | null,
+        dpe_date: "2024-03-12" as string | null,
+        energy_cost_min_cents: 98_000,
+        energy_cost_max_cents: 133_000,
+        energy_price_year: 2023,
       },
     },
     error: null,
@@ -306,13 +314,58 @@ describe("submitListing (step 4)", () => {
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
 
+  it("asks for the DPE before the call (L1-65)", async () => {
+    const { submitListing } = await import("@/leenkey/properties/listing-actions");
+    const property = listingRow.data.property;
+    const answer = (changes: Partial<typeof property>) => ({
+      ...listingRow,
+      data: { ...listingRow.data, property: { ...property, ...changes } },
+    });
+    mocks.answers.push(draftRow, answer({ dpe_date: null }));
+    expect(await submitListing({ propertyId })).toEqual({
+      ok: false,
+      error: "dpe",
+      issue: "dpe_missing",
+    });
+    mocks.answers.push(draftRow, answer({ dpe_date: "2021-06-30" }));
+    expect(await submitListing({ propertyId })).toEqual({
+      ok: false,
+      error: "dpe",
+      issue: "dpe_outdated",
+    });
+    mocks.answers.push(draftRow, answer({ dpe_exempt: true, dpe_class: null }));
+    expect(await submitListing({ propertyId })).toEqual({
+      ok: false,
+      error: "dpe",
+      issue: "exemption_reason",
+    });
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("reads a DPE emptied meanwhile from the refusal of listing_submit", async () => {
+    const { submitListing } = await import("@/leenkey/properties/listing-actions");
+    mocks.answers.push(draftRow, listingRow);
+    mocks.rpc.mockResolvedValue({
+      data: null,
+      error: { code: "22023", message: "dpe: dpe_missing" },
+    });
+    expect(await submitListing({ propertyId })).toEqual({
+      ok: false,
+      error: "dpe",
+      issue: "dpe_missing",
+    });
+  });
+
   it("reads a refused transition as a listing already sent", async () => {
     const { submitListing } = await import("@/leenkey/properties/listing-actions");
     mocks.answers.push(draftRow, listingRow);
-    mocks.rpc.mockResolvedValue({ data: null, error: { code: "22023" } });
+    mocks.rpc.mockResolvedValue({
+      data: null,
+      error: { code: "22023", message: "the listing is pending: submit is not allowed" },
+    });
     expect(await submitListing({ propertyId })).toEqual({ ok: false, error: "not_found" });
     mocks.answers.push(draftRow, listingRow);
-    mocks.rpc.mockResolvedValue({ data: null, error: { code: "57014" } });
+    mocks.rpc.mockResolvedValue({ data: null, error: { code: "57014", message: "timeout" } });
     expect(await submitListing({ propertyId })).toEqual({ ok: false, error: "unavailable" });
     expect(mocks.after).not.toHaveBeenCalled();
     expect(await submitListing({ propertyId: "pas-un-id" })).toEqual({

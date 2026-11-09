@@ -12,6 +12,14 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-09 · L1-65 · PR #87 · DPE à l'envoi en validation
+- Ajouté : à l'étape 2, le bloc « Diagnostic de performance énergétique (DPE) » : classes énergie et climat, date, fourchette des dépenses annuelles d'énergie, année des prix ; ou « Mon bien n'est pas soumis au DPE » et son motif.
+- Modifié : « Envoyer en validation » demande un DPE valable (du 1er juillet 2021 au plus tôt, de moins de 10 ans), sauf exemption motivée ou terrain ; l'aperçu le signale avant l'envoi avec « Compléter le DPE ». Un brouillon s'enregistre toujours sans DPE ; une annonce envoyée garde son DPE complet.
+- Ajouté : sur la page annonce, « Informations réglementaires » : non soumis au DPE, consommation énergétique excessive (F et G), dépenses annuelles et année des prix, date du DPE, lien Géorisques sur toutes les annonces ; dans le back office, le motif d'une exemption.
+- Migration : `20261109180000_dpe_publication.sql` (colonnes, `property_dpe_issue`, `listing_submit`, `listing_publish`, `properties_keep_dpe`, `public_listing_energy`, sans suppression).
+- Modifié : l'équipe ne peut publier qu'une annonce dont le DPE est valable (sa fiche le signale sinon).
+- Tests : RLS (`rls_dpe_publication.sql`, 25 ; DPE posé avant l'envoi dans les autres fichiers), unitaires (règle du DPE, schéma, mentions, refus d'envoi), E2E (envoi refusé puis DPE complété, exemption, lien Géorisques).
+
 ### 2026-11-09 · L1-34 · PR #86 · Conversation conseiller
 - Ajouté : la conversation « Mon conseiller Leenkey » (`kind = 'advisor'`), ouverte par la base au paiement d'une formule qui comprend le conseiller, avec son message d'accueil ; épinglée en tête des conversations du bien (avatar « LK »), fermée en écriture quand la formule ne le comprend plus.
 - Ajouté : sur « Ma vente », la carte du conseiller (dernier message, « Écrire à mon conseiller »), la prochaine action « Votre conseiller Leenkey vous a écrit », et en Autonomie l'invitation vers les formules.

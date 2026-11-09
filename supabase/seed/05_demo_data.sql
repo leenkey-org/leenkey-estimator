@@ -127,21 +127,33 @@ create temporary table seed_new (property_id uuid primary key) on commit drop;
 create temporary table seed_new_listings (listing_id uuid primary key, property_id uuid) on commit drop;
 
 -- Properties (the trigger creates sale_progress: Autonomie, first step).
+-- Their DPE (L1-65), but land: made 2 to 22 months ago, the yearly energy
+-- costs of an average household from its class and surface, the prices of
+-- the year before.
 with ins as (
   insert into public.properties (
     id, owner_id, type, address_line, postal_code, city, location, surface_m2, rooms, bedrooms,
     floor, floors_total, has_elevator, has_balcony, has_terrace, has_garden, has_parking, has_cellar,
     orientation, build_year, dpe_class, ges_class, heating, charges_monthly_cents,
     property_tax_yearly_cents, copro_lots, estimation_value_cents, estimation_low_cents,
-    estimation_high_cents, created_at)
+    estimation_high_cents, dpe_date, energy_cost_min_cents, energy_cost_max_cents,
+    energy_price_year, created_at)
   select i.property_id, i.owner_id, p.type, p.address_line, p.postal_code, p.city,
          extensions.st_setsrid(extensions.st_makepoint(p.lng, p.lat), 4326)::extensions.geography,
          p.surface_m2, p.rooms, p.bedrooms, p.floor, p.floors_total, p.has_elevator, p.has_balcony,
          p.has_terrace, p.has_garden, p.has_parking, p.has_cellar, p.orientation, p.build_year,
          p.dpe_class, p.ges_class, p.heating, p.charges_monthly_cents, p.property_tax_yearly_cents,
          p.copro_lots, p.estimation_value_cents, p.estimation_low_cents, p.estimation_high_cents,
+         e.dpe_date, e.cost_cents, round(e.cost_cents * 1.35 / 1000) * 1000,
+         case when e.dpe_date is not null then extract(year from e.dpe_date)::int - 1 end,
          now() - make_interval(days => p.days_ago + 10)
   from seed_props p join seed_ids i using (n)
+  cross join lateral (
+    select case when p.dpe_class is not null then current_date - (60 + p.n * 37) end as dpe_date,
+           (round(p.surface_m2 * case p.dpe_class
+              when 'A' then 5 when 'B' then 8 when 'C' then 11 when 'D' then 15
+              when 'E' then 20 when 'F' then 27 when 'G' then 35 end / 10) * 1000)::int as cost_cents
+  ) e
   on conflict (id) do nothing
   returning id
 )

@@ -370,6 +370,13 @@ create table properties (
   charges_monthly_cents int,
   property_tax_yearly_cents int,
   copro_lots int,
+  -- DPE (L1-65) : exemption et son motif, ou date, fourchette des dépenses annuelles et année des prix ;
+  -- exigés pour l'envoi en validation (property_dpe_issue), jamais pour un brouillon ; pas pour un terrain
+  dpe_exempt boolean not null default false,
+  dpe_exemption_reason text,            -- 3 à 300 caractères, seulement si dpe_exempt ; lu par l'équipe, jamais public
+  dpe_date date,                        -- valable du 1er juillet 2021, 10 ans
+  energy_cost_min_cents int, energy_cost_max_cents int,   -- min <= max
+  energy_price_year smallint,           -- « prix moyens des énergies indexés au 1er janvier [année] »
   estimation_id uuid,                   -- lien vers estimations(id) (FK ajoutée avec la table estimations, L1-04)
   estimation_value_cents bigint,
   estimation_low_cents bigint, estimation_high_cents bigint,
@@ -1185,6 +1192,8 @@ Création en 4 étapes (ordre de `docs/DESIGN.md` 12.2), `ProgressBar` « Étape
 
 Préremplissage depuis l'estimateur : `InfoNote` « Repris de votre analyse de valeur du [date]. Vérifiez et complétez. »
 
+DPE (L1-65, réponse de Cédric du 2026-11-09, `DECISIONS.md`) : à l'étape 2, un bloc « Diagnostic de performance énergétique (DPE) » : classes énergie et climat, date du DPE, fourchette des dépenses annuelles d'énergie (€ / an) et année de référence des prix ; ou « Mon bien n'est pas soumis au DPE » et le motif (Q77). Facultatif dans un brouillon ; exigé pour « Envoyer en validation » pour tous les types sauf le terrain (DPE du 1er juillet 2021 au plus tôt et de moins de 10 ans). L'aperçu le signale avant l'envoi, avec « Compléter le DPE ». Une fois l'annonce envoyée, un DPE complet le reste.
+
 Sauvegarde automatique à chaque étape (statut `draft`). Bouton « Enregistrer » explicite en haut.
 
 Fin : « Envoyer en validation » → statut `pending`, écran de fin sur `BrandPanel` : « C'est envoyé. Nous relisons votre annonce sous 24 h et vous prévenons par email. »
@@ -1217,6 +1226,7 @@ Ordre du contenu (mise en page mobile et desktop : `docs/DESIGN.md` 12.7 et 12.8
 5. Description (repliée à 6 lignes sur mobile).
 6. **« Ce que vous savez avant de visiter »** : une seule `KeyFactsTable` qui regroupe les caractéristiques complètes et les informations utiles avant visite : charges, taxe foncière, lots, travaux votés et procédures (issus de l'analyse des documents en L3 ; « Non renseigné » sinon), documents disponibles avec « Demander l'accès ». En desktop, la carte vient sous la `KeyFactsTable`, sur la largeur de la colonne (`docs/DESIGN.md` 12.8, L1-16).
 7. Carte avec la zone approximative (cercle de 400 m de rayon autour de `public_location`), jamais l'adresse, et « Voir la rue » (Street View le plus proche du point public), chargée quand le bloc approche de l'écran, sans clic (L1-16, L1-63).
+7 bis. **Informations réglementaires** (L1-65), sous les caractéristiques : « Bien non soumis au DPE. », ou « Logement à consommation énergétique excessive. » (classes F et G), la fourchette des dépenses annuelles d'énergie avec l'année des prix, la date du DPE ; pour toutes les annonces, terrain compris : « Les informations sur les risques auxquels ce bien est exposé sont disponibles sur le site Géorisques : www.georisques.gouv.fr » (lien). Le motif d'une exemption n'est pas public.
 8. Résumé de l'assistant (L2) : 2 phrases factuelles générées à la publication, stockées, régénérées à chaque modification. `AssistantNote` (encart `--lk-blue-tint`) ; en desktop, sous la `PriceColumn`.
 9. Barre d'action : mobile, `ActionBar` fixée en bas (« Contacter le vendeur » + bouton visite) ; desktop, `PriceColumn` collante à droite avec `PriceBlock`, `ContactCard` et les boutons « Contacter le vendeur », « Demander une visite », « Faire une offre » (L2).
 
@@ -1809,6 +1819,7 @@ Onglet « Documents » de la fiche du bien :
   - **Maison (11)** : DPE, amiante, plomb, électricité, gaz, ERP, termites, assainissement (non collectif ou contrôle de raccordement), titre de propriété, taxe foncière, factures des travaux de moins de 10 ans.
   - **Terrain (4)** : ERP, titre de propriété, taxe foncière, certificat d'urbanisme ou bornage si disponible.
   - Les diagnostics conditionnels (amiante, plomb, gaz, termites) sont marqués « non concerné » par le vendeur quand ils ne s'appliquent pas ; ils comptent alors comme présents. Le badge « Dossier complet » n'est affiché qu'à partir du lot 3.
+  - **Diagnostics personnalisés** (amendement de L3-04, demande de Cédric du 2026-11-09, Q77) : la liste des diagnostics se calcule à partir de six réponses du vendeur (type de bien, année de construction ou du permis, installation électrique et son âge, gaz et son âge, assainissement collectif ou non, adresse et classe énergie). Chaque diagnostic a l'un de trois statuts : « Document fourni », « À fournir », « Non concerné » (coché par le vendeur). Règles : DPE (sauf terrain) ; audit énergétique pour une maison ou un immeuble en monopropriété classé F ou G, et E depuis 2025 ; amiante (permis de construire avant le 1er juillet 1997) ; plomb (construction avant 1949) ; électricité et gaz (installation de plus de 15 ans) ; termites et mérule (zones arrêtées par la préfecture) ; ERP (tous) ; assainissement non collectif ; bruit (zone d'un plan d'exposition au bruit d'aérodrome). Autres pièces proposées selon le type : mesurage Carrez (lot de copropriété), surface Boutin (bien loué), étude de sol G1 (terrain constructible en zone d'aléa argile), DTA, DPE collectif, DTG, PPPT, carnet d'information du logement, rapport structurel. Libellé : « potentiellement obligatoire selon vos réponses, à confirmer par votre diagnostiqueur certifié » ; Leenkey n'affirme jamais qu'un diagnostic est ou n'est pas obligatoire. Contrôle Géorisques à partir de l'adresse : `BACKLOG-V3.md` (2026-11-09).
 - Partage : par document ou par lot (« Partager les diagnostics »), à un acquéreur ayant une relation avec le bien. Demandes d'accès des acquéreurs listées en tête avec Accorder / Refuser.
 
 ### Analyse IA
@@ -2124,6 +2135,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-31 | Passage à l'humain (`create_case`) côté vendeur, via la fonction SQL `create_case` (`security definer`) | L1-28, L1-30 | Dossier créé avec résumé, notification admin ; aucun import du client service role dans `core/ai/` (test) |
 | L1-33 | `plan_entitlements`, `hasEntitlement`, contenu des formules dans `plans`, page formules avec tableau comparatif | L1-26 | Aucun test de droit ne compare un nom de formule ; un vendeur Autonomie va jusqu'à la publication sans blocage |
 | L1-34 | Conversation conseiller, version simple : `kind = 'advisor'` sur la messagerie existante (mêmes écrans, mêmes composants), créée au webhook de paiement, épinglée en tête de liste côté vendeur, vue admin `/admin/messages` (liste filtrée), outil IA `contact_advisor` | L1-21, L1-26 | Après paiement test, le vendeur et l'admin échangent en temps réel |
+| L1-65 | DPE exigé pour l'envoi en validation (Q47, Q67 tranchées par Cédric le 2026-11-09) : exemption et son motif, date, fourchette des dépenses et année des prix ; mentions réglementaires et lien Géorisques sur la page annonce | L1-13, L1-60 | Un brouillon s'enregistre sans DPE ; l'envoi et la publication sont refusés sans DPE valable (RLS : `rls_dpe_publication.sql`) ; la page annonce montre les mentions |
 | L1-32 | Recette interne lot 1 : E2E 1, 2, 3, 7 verts, Lighthouse, axe, revue RLS | tout L1 | Tag `v2.0.0-lot1`, déploiement staging, `docs/RECETTE.md` à jour avec comptes et scénarios |
 
 ### Semaines 6 et 7 : lot 2

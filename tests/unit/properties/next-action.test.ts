@@ -116,6 +116,12 @@ const characteristics: SellerProperty["characteristics"] = {
   chargesMonthlyEuros: null,
   propertyTaxYearlyEuros: null,
   coproLots: null,
+  dpeExempt: false,
+  dpeExemptionReason: null,
+  dpeDate: null,
+  energyCostMinEuros: null,
+  energyCostMaxEuros: null,
+  energyPriceYear: null,
 };
 
 function listing(

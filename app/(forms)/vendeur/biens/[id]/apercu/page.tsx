@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { PriceColumn } from "@/leenkey/listings/components/listing-actions";
@@ -10,6 +11,7 @@ import { creationStep } from "@/leenkey/properties/creation";
 import { propertyForCreation } from "@/leenkey/properties/load";
 import { sellerListingPreview } from "@/leenkey/properties/preview";
 import { fr } from "@/lib/i18n/fr";
+import { dpeIssue } from "@/lib/validations/property";
 
 const t = fr.properties;
 
@@ -23,7 +25,8 @@ type Props = { params: Promise<{ id: string }> };
 // réelle dans un cadre bordé »): the listing as its page will show it, in a
 // frame, with the contact buttons inactive; then « Envoyer en validation ».
 // Without its price or its description, back to the step that asks for it.
-// A listing refused by Leenkey shows the motive of the refusal above it.
+// A listing refused by Leenkey shows the motive of the refusal above it;
+// one without its DPE says it before the sending (L1-65), which refuses it.
 export default async function PropertyPreviewPage({ params }: Props) {
   const { id } = await params;
   const property = await propertyForCreation(id);
@@ -46,6 +49,7 @@ export default async function PropertyPreviewPage({ params }: Props) {
   const step = creationStep(property.characteristics, property.listing);
   if (step !== "apercu" || !preview.data) redirect(`/vendeur/biens/${id}/${step}`);
   const listing = preview.data;
+  const dpe = dpeIssue(property.characteristics);
   return (
     <>
       {header}
@@ -62,6 +66,23 @@ export default async function PropertyPreviewPage({ params }: Props) {
                 </span>
               ) : null}
               <span className="block">{t.preview.rejectedNext}</span>
+            </InlineAlert>
+          ) : null}
+          {dpe ? (
+            <InlineAlert
+              tone="warning"
+              live={false}
+              className="mt-3 max-w-lk-prose"
+              action={
+                <Link
+                  href={`/vendeur/biens/${id}/caracteristiques`}
+                  className="font-semibold underline underline-offset-2 hover:no-underline"
+                >
+                  {t.preview.fixDpe}
+                </Link>
+              }
+            >
+              {t.preview.errors.dpe[dpe]}
             </InlineAlert>
           ) : null}
         </div>

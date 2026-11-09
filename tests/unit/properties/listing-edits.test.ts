@@ -127,6 +127,12 @@ const complete: Characteristics = {
   chargesMonthlyEuros: 210,
   propertyTaxYearlyEuros: 1150,
   coproLots: 48,
+  dpeExempt: false,
+  dpeExemptionReason: null,
+  dpeDate: null,
+  energyCostMinEuros: null,
+  energyCostMaxEuros: null,
+  energyPriceYear: null,
 };
 
 describe("saveCharacteristics once the listing is sent (L1-14b)", () => {

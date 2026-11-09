@@ -128,6 +128,12 @@ test("une analyse de valeur devient une annonce en validation", async ({ page })
   await expect(page.getByLabel("Chauffage")).toHaveValue("Individuel gaz");
   await expect(page.getByLabel("Charges", { exact: true })).toHaveValue("180");
   await expectNoSeriousViolation(page);
+  // Not subject to the DPE (L1-65): its classes go, a motive is asked.
+  await page.getByLabel("Mon bien n'est pas soumis au DPE").check();
+  await expect(page.getByRole("radio", { name: "DPE classe C" })).toHaveCount(0);
+  await page.getByLabel("Motif de l'exemption").selectOption("other");
+  await page.getByLabel("Précisez le motif").fill("Bâtiment classé, exempté par le diagnostiqueur");
+  await expectNoSeriousViolation(page);
   await page.getByRole("button", { name: "Continuer" }).click();
 
   // Step 3: the value of the analysis recalled, the gap to the price.
@@ -145,6 +151,7 @@ test("une analyse de valeur devient une annonce en validation", async ({ page })
 
   // Step 4, then sent for review: the criterion of L1-13.
   await expect(page).toHaveURL(`/vendeur/biens/${id}/apercu`);
+  await expect(page.getByText("Bien non soumis au DPE.")).toBeVisible();
   await page.getByRole("button", { name: "Envoyer en validation" }).click();
   await expect(page).toHaveURL(`/vendeur/biens/${id}/envoye`);
   await expect(page.getByRole("heading", { level: 1, name: "C'est envoyé." })).toBeVisible();
