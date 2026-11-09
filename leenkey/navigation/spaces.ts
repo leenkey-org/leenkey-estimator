@@ -47,6 +47,7 @@ export const ROUTES = {
   adminCases: "/admin/dossiers",
   adminOffers: "/admin/offres",
   adminReports: "/admin/signalements",
+  adminMessages: "/admin/messages",
   adminAssistant: "/admin/assistant",
 } as const;
 

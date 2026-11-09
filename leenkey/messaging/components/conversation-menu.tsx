@@ -32,11 +32,14 @@ const itemClassName = cn(
 export function ConversationMenu({
   conversationId,
   link,
+  report = true,
   onReported,
 }: {
   conversationId: string;
   /** The listing, or the seller's own property. */
   link?: { href: string; label: string };
+  /** Not between a seller and the Leenkey team (L1-34): the link only. */
+  report?: boolean;
   onReported: () => void;
 }) {
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -103,16 +106,18 @@ export function ConversationMenu({
                 <Link href={link.href}>{link.label}</Link>
               </MenuPrimitive.Item>
             ) : null}
-            <MenuPrimitive.Item
-              className={itemClassName}
-              onSelect={() => {
-                setFieldError(null);
-                setError(null);
-                setOpen(true);
-              }}
-            >
-              {t.thread.report}
-            </MenuPrimitive.Item>
+            {report ? (
+              <MenuPrimitive.Item
+                className={itemClassName}
+                onSelect={() => {
+                  setFieldError(null);
+                  setError(null);
+                  setOpen(true);
+                }}
+              >
+                {t.thread.report}
+              </MenuPrimitive.Item>
+            ) : null}
           </MenuPrimitive.Content>
         </MenuPrimitive.Portal>
       </MenuPrimitive.Root>

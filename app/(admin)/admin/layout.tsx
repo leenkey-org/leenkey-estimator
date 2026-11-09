@@ -26,6 +26,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         [ROUTES.adminListings]: waiting.listingsPending,
         [ROUTES.adminCases]: waiting.casesOpen,
         [ROUTES.adminReports]: waiting.reportsOpen,
+        [ROUTES.adminMessages]: waiting.advisorUnread,
       }
     : {};
   const items = ADMIN_NAV_ITEMS.map((item) =>

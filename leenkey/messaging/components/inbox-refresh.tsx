@@ -13,18 +13,31 @@ const GROUP_MS = 1000;
  * most once a second. `media`: only while the list is shown (from 1024 px
  * next to an open conversation).
  */
-export function InboxRefresh({ profileId, media }: { profileId: string; media?: string }) {
+export function InboxRefresh({
+  profileId,
+  media,
+  kind,
+}: {
+  profileId: string;
+  media?: string;
+  /** The team's inbox (L1-34): every conversation with the adviser. */
+  kind?: "advisor";
+}) {
   const router = useRouter();
   const timer = useRef<number | null>(null);
 
-  useConversationChanges(profileId, () => {
-    if (media && !window.matchMedia(media).matches) return;
-    if (timer.current !== null) return;
-    timer.current = window.setTimeout(() => {
-      timer.current = null;
-      router.refresh();
-    }, GROUP_MS);
-  });
+  useConversationChanges(
+    profileId,
+    () => {
+      if (media && !window.matchMedia(media).matches) return;
+      if (timer.current !== null) return;
+      timer.current = window.setTimeout(() => {
+        timer.current = null;
+        router.refresh();
+      }, GROUP_MS);
+    },
+    { kind },
+  );
 
   useEffect(
     () => () => {

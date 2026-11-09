@@ -6,8 +6,7 @@ import { creationHref, editHref, photosEditable, sheetHref, statusActions } from
 
 // The next action of a sale (SPEC-V2 8.7, L1-23), first rule that applies:
 // 1) listing refused, to correct; 2) offer received not read (L2);
-// 3) message of the advisor not read (with the advisor's conversation,
-// L1-29); 4) visit to confirm (L3); 5) a buyer waiting for an answer for more
+// 3) message of the advisor not read (L1-34); 4) visit to confirm (L3); 5) a buyer waiting for an answer for more
 // than 24 h; 6) the first task not done of the current step that the seller
 // can do; 7) else the advice of that step. The same for the three plans:
 // only the tasks change. Nothing once sold: the summary of the sale takes
@@ -20,10 +19,13 @@ export type SaleSituation = {
   property: Pick<SellerProperty, "id" | "listingStatus" | "characteristics" | "listing">;
   progress: Progress;
   waitingBuyers: readonly WaitingBuyer[];
+  /** The conversation with the adviser when its last message is unread (L1-34). */
+  advisorUnread?: { conversationId: string; since: string } | null;
 };
 
 export type NextAction =
   | { rule: "listingRejected"; href: string; reason: string | null }
+  | { rule: "advisorUnread"; href: string; since: string }
   | { rule: "buyerWaiting"; href: string; firstName: string | null; since: string }
   /** href null: a task ticked by hand, from the list of the tasks (L1-24). */
   | { rule: "task"; step: Step; task: StepTask; href: string | null }
@@ -69,6 +71,14 @@ export function getNextAction(situation: SaleSituation, now = new Date()): NextA
       rule: "listingRejected",
       href: creationHref(property),
       reason: property.listing?.rejectionReason ?? null,
+    };
+  }
+
+  if (situation.advisorUnread) {
+    return {
+      rule: "advisorUnread",
+      href: `/messages/${situation.advisorUnread.conversationId}`,
+      since: situation.advisorUnread.since,
     };
   }
 

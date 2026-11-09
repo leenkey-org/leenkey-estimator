@@ -7,6 +7,8 @@ type Enums = Database["public"]["Enums"];
 
 export type ConversationSummary = {
   id: string;
+  /** A listing (seller and buyer) or the adviser of a paid plan (seller and team, L1-34). */
+  kind: "listing" | "advisor";
   /** The side of the viewer in this conversation. */
   role: "seller" | "buyer";
   propertyId: string;
@@ -27,6 +29,8 @@ export type ConversationSummary = {
   lastMessageMine: boolean;
   unread: boolean;
   closed: boolean;
+  /** The plan of the property, for the adviser only (its header). */
+  plan: Enums["plan_code"] | null;
 };
 
 /** The listing a buyer writes to for the first time (/messages/nouveau). */

@@ -602,6 +602,7 @@ describe("the tools of the seller", () => {
     const names = ALL_TOOLS.map((item) => item.name);
     expect(new Set(names).size).toBe(names.length);
     expect(names.sort()).toEqual([
+      "contact_advisor",
       "draft_listing_description",
       "get_listing_stats",
       "get_my_properties",
@@ -625,7 +626,7 @@ describe("the tools of the seller", () => {
 
   it("every tool that writes is confirmed first and shows its change (CLAUDE.md 8)", () => {
     for (const item of ALL_TOOLS) {
-      const writes = item.name.startsWith("update_");
+      const writes = item.name.startsWith("update_") || item.name === "contact_advisor";
       expect(item.requiresConfirmation, item.name).toBe(writes);
       if (writes) expect(item.preview, item.name).toBeTypeOf("function");
     }
@@ -646,6 +647,26 @@ describe("the tools of the seller", () => {
     expect(price?.input.safeParse({ propertyId: id, priceEuros: 239_000.5 }).success).toBe(false);
     expect(price?.input.safeParse({ propertyId: id, priceEuros: 0 }).success).toBe(false);
     expect(price?.input.safeParse({ propertyId: "1", priceEuros: 1 }).success).toBe(false);
+  });
+
+  it("contact_advisor: a summary of 1 500 characters at most, read before it leaves (L1-34)", () => {
+    const handoff = ALL_TOOLS.find((item) => item.name === "contact_advisor");
+    const id = "5eed1000-0000-4000-8000-000000000001";
+    expect(handoff?.contexts).toEqual(["seller"]);
+    expect(handoff?.input.safeParse({ propertyId: id, summary: "x".repeat(1_500) }).success).toBe(
+      true,
+    );
+    expect(handoff?.input.safeParse({ propertyId: id, summary: "x".repeat(1_501) }).success).toBe(
+      false,
+    );
+    expect(handoff?.input.safeParse({ propertyId: id, summary: " " }).success).toBe(false);
+    expect(
+      actionPreview.safeParse({
+        kind: "advisor_handoff",
+        propertyName: "Maison",
+        summary: "Je me demande si je dois baisser le prix.",
+      }).success,
+    ).toBe(true);
   });
 
   it("the gap of a price to the analysis of value, one decimal", () => {

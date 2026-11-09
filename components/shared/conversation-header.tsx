@@ -9,11 +9,12 @@ import { cn } from "@/lib/utils";
  * 44 × 44, title 14 px 600 (the H1 of the page) and subtitle 12 px
  * --lk-ink-3, both cut on one line, then `action` (« Voir l'annonce ») and
  * the menu (MoreVertical) on the right. With `href`, the thumbnail and the
- * title lead to the property.
+ * title lead to the property. The adviser's variant: `avatar` (« LK »).
  */
 export function ConversationHeader({
   back,
   thumbSrc,
+  avatar,
   title,
   titleAs: Title = "h1",
   subtitle,
@@ -25,6 +26,8 @@ export function ConversationHeader({
   /** A link styled as an IconButton stone, with its accessible name. */
   back?: ReactNode;
   thumbSrc?: string | null;
+  /** In place of the thumbnail: the « LK » of the adviser (L1-34). */
+  avatar?: ReactNode;
   title: string;
   /** Another level where the page has its own H1 (/design). */
   titleAs?: "h1" | "h2" | "h3" | "h4";
@@ -47,7 +50,7 @@ export function ConversationHeader({
       {/* The link covers the thumbnail and the texts: a 44 px target, and its
           focus ring is drawn around them (the cut title would hide it). */}
       <div className="relative flex min-w-0 flex-1 items-center gap-3">
-        <PropertyThumb src={thumbSrc} className="size-11" />
+        {avatar ?? <PropertyThumb src={thumbSrc} className="size-11" />}
         <div className="flex min-w-0 flex-col">
           <Title className="truncate text-lk-compact font-semibold text-lk-ink">
             {href ? (

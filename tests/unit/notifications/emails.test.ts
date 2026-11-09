@@ -150,6 +150,57 @@ describe("« Nouveau message »", () => {
   });
 });
 
+describe("the conversation with the adviser (L1-34)", () => {
+  const advisorData = {
+    conversation_id: "c9",
+    message_id: "m1",
+    sender_first_name: "Cédric",
+    reference: "LK-0001",
+    listing_title: "Appartement 3 pièces avec balcon",
+    excerpt: "Bonjour Alice, je regarde votre prix.",
+    truncated: false,
+  };
+
+  it("to the seller: « Nouveau message de votre conseiller Leenkey », to the conversation", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const email = await renderNotificationEmail(
+      planned([queued({ type: "advisor.message", data: advisorData, link: "/messages/c9" })]),
+    );
+    expect(email?.subject).toBe("Nouveau message de votre conseiller Leenkey");
+    expect(email?.text).toContain("Bonjour Alice,");
+    expect(email?.text).toContain("Bonjour Alice, je regarde votre prix.");
+    expect(email?.text).toContain("https://leenkey-v2.vercel.app/messages/c9");
+    expect(email?.text).toContain("parce que vous vendez un bien sur Leenkey");
+    expect(email?.replyTo).toBe("contact.leenkey@gmail.com");
+  });
+
+  it("to the team: the seller and the reference, an internal email, to the back office", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const item = queued({
+      type: "advisor.message_from_client",
+      profileId: "admin",
+      email: null,
+      firstName: null,
+      link: "/admin/messages/c9",
+      data: {
+        ...advisorData,
+        sender_first_name: "Alice",
+        excerpt: "Faut-il baisser le prix ?",
+        handoff: false,
+      },
+    });
+    const email = await renderNotificationEmail(planned([item], { audience: "team" }));
+    expect(email?.subject).toBe("Message d'Alice à son conseiller (LK-0001)");
+    expect(email?.text).toContain("https://leenkey-v2.vercel.app/admin/messages/c9");
+    expect(email?.text).toContain("Notification interne du back office de Leenkey.");
+    expect(email?.text).toContain("Répondez depuis le back office");
+    expect(email?.text).toContain("Faut-il baisser le prix ?");
+    // The team is not greeted by the first name of the seller.
+    expect(email?.text).not.toContain("Bonjour Alice");
+    expect(email?.replyTo).toBeUndefined();
+  });
+});
+
 describe("« Annonce à valider »", () => {
   it("one listing: the email of L1-13, to the team", async () => {
     const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");

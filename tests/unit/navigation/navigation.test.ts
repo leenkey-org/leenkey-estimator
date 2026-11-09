@@ -291,6 +291,7 @@ describe("back office sidebar", () => {
       { href: "/admin/annonces", label: "Annonces", icon: "listings" },
       { href: "/admin/utilisateurs", label: "Utilisateurs", icon: "users" },
       { href: "/admin/dossiers", label: "Dossiers", icon: "folder" },
+      { href: "/admin/messages", label: "Messages", icon: "message" },
       { href: "/admin/offres", label: "Offres", icon: "file" },
       { href: "/admin/signalements", label: "Signalements", icon: "flag" },
       { href: "/admin/assistant", label: "Assistant", icon: "sparkles" },
@@ -337,8 +338,11 @@ describe("current item: longest prefix of the path", () => {
     expect(currentHref("/admin", ADMIN_NAV_ITEMS)).toBe("/admin");
     expect(currentHref("/admin/annonces", ADMIN_NAV_ITEMS)).toBe("/admin/annonces");
     expect(currentHref("/admin/annonces/7f3c", ADMIN_NAV_ITEMS)).toBe("/admin/annonces");
-    // A page without an item (/admin/messages joins with L1-34) lights none.
-    expect(currentHref("/admin/messages", ADMIN_NAV_ITEMS)).toBeNull();
+    // L1-34: the messages of the clients, and one of their conversations.
+    expect(currentHref("/admin/messages", ADMIN_NAV_ITEMS)).toBe("/admin/messages");
+    expect(currentHref("/admin/messages/7f3c", ADMIN_NAV_ITEMS)).toBe("/admin/messages");
+    // A page without an item lights none.
+    expect(currentHref("/admin/inconnue", ADMIN_NAV_ITEMS)).toBeNull();
   });
 
   it("TopNav: « Acheter » on the search and on a listing, « Vendre » on its page only", () => {

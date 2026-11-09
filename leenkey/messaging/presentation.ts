@@ -11,7 +11,8 @@ const t = fr.messaging;
 const SEPARATOR = `${NBSP}· `;
 
 type Kind = Pick<ConversationSummary, "propertyType" | "rooms" | "city">;
-type Party = Pick<ConversationSummary, "role" | "counterpartFirstName">;
+type Party = Pick<ConversationSummary, "role" | "counterpartFirstName"> &
+  Partial<Pick<ConversationSummary, "kind">>;
 
 /** « Appartement 3 p · Savigny-sur-Orge », « Terrain · Étampes » (docs/DESIGN.md 10.5). */
 export function conversationTitle({ propertyType, rooms, city }: Kind): string {
@@ -21,9 +22,38 @@ export function conversationTitle({ propertyType, rooms, city }: Kind): string {
   return city ? `${kind}${SEPARATOR}${city}` : kind;
 }
 
-/** The other party: their first name, or « l'acquéreur », « le vendeur ». */
-export function counterpartName({ role, counterpartFirstName }: Party): string {
+/**
+ * The other party: their first name, or « l'acquéreur », « le vendeur »;
+ * « Mon conseiller Leenkey » for the adviser (L1-34).
+ */
+export function counterpartName({ kind, role, counterpartFirstName }: Party): string {
+  if (kind === "advisor") return t.advisor.name;
   return counterpartFirstName ?? (role === "seller" ? t.someone.buyer : t.someone.seller);
+}
+
+/**
+ * The header of an open conversation: the property and « Avec Thomas »; for
+ * the adviser (SPEC 13, ConversationHeader), « Mon conseiller Leenkey », the
+ * plan of the property and « Réponse sous 24 h », or the property once closed.
+ */
+export function conversationHeading(
+  conversation: Party &
+    Kind &
+    Pick<ConversationSummary, "buyerFinancingStatus" | "listingTitle" | "closed" | "plan"> & {
+      kind: ConversationSummary["kind"];
+    },
+): { title: string; subtitle: string } {
+  if (conversation.kind === "advisor") {
+    const property = conversation.listingTitle ?? conversationTitle(conversation);
+    return {
+      title: t.advisor.name,
+      subtitle:
+        conversation.closed || !conversation.plan
+          ? property
+          : `${fr.plan[conversation.plan]}${SEPARATOR}${t.advisor.reply}`,
+    };
+  }
+  return { title: conversationTitle(conversation), subtitle: conversationSubtitle(conversation) };
 }
 
 /**
@@ -54,8 +84,11 @@ export function messagePreview({
  * seller, the listing for the buyer while it is online.
  */
 export function propertyHref(
-  conversation: Pick<ConversationSummary, "role" | "propertyId" | "listingSlug" | "listingStatus">,
+  conversation: Pick<ConversationSummary, "role" | "propertyId" | "listingSlug" | "listingStatus"> &
+    Partial<Pick<ConversationSummary, "kind">>,
 ): string | null {
+  // The adviser: the plan of the property (L1-34).
+  if (conversation.kind === "advisor") return `/vendeur/formule?bien=${conversation.propertyId}`;
   if (conversation.role === "seller") return sheetHref(conversation.propertyId);
   const { listingSlug, listingStatus } = conversation;
   return listingSlug && listingStatus === "published" ? `/annonce/${listingSlug}` : null;
@@ -66,7 +99,10 @@ export function propertyHref(
  * 2026-10-26): « Voir mon bien » for the seller, « Voir l'annonce » for the
  * buyer.
  */
-export function propertyHrefLabel(conversation: Pick<ConversationSummary, "role">): string {
+export function propertyHrefLabel(
+  conversation: Pick<ConversationSummary, "role"> & Partial<Pick<ConversationSummary, "kind">>,
+): string {
+  if (conversation.kind === "advisor") return t.advisor.plan;
   return conversation.role === "seller" ? t.thread.property : t.thread.listing;
 }
 

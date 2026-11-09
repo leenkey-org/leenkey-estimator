@@ -33,6 +33,16 @@ function ActionContent({ preview }: { preview: ActionPreview | null }) {
   const property = (
     <p className="text-lk-caption text-lk-ink-3">{t.action.property(preview.propertyName)}</p>
   );
+  if (preview.kind === "advisor_handoff") {
+    return (
+      <>
+        {property}
+        <ChangeBlock label={t.action.handoff.message} tone="after">
+          {preview.summary}
+        </ChangeBlock>
+      </>
+    );
+  }
   if (preview.kind === "listing_description") {
     return (
       <>
@@ -336,18 +346,21 @@ export function AssistantChat({
                 </MessageBubble>
               );
             }
-            const title =
-              item.name === "update_listing_price"
+            const handoff = item.name === "contact_advisor";
+            const title = handoff
+              ? t.action.handoff.title
+              : item.name === "update_listing_price"
                 ? t.action.priceTitle
                 : t.action.descriptionTitle;
+            const states = handoff ? t.action.handoff.states : t.action.states;
             return (
               <ConfirmActionCard
                 key={item.id}
                 title={title}
                 state={item.state}
                 busy={answering === item.toolCallId}
-                stateText={item.state === "pending" ? undefined : t.action.states[item.state]}
-                confirmLabel={t.action.confirm}
+                stateText={item.state === "pending" ? undefined : states[item.state]}
+                confirmLabel={handoff ? t.action.handoff.confirm : t.action.confirm}
                 cancelLabel={t.action.cancel}
                 onConfirm={() => void answer(item.toolCallId, true)}
                 onCancel={() => void answer(item.toolCallId, false)}

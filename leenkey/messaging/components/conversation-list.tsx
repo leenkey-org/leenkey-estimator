@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdvisorAvatar } from "@/components/shared/advisor-avatar";
 import { PropertyThumb } from "@/components/shared/property-thumb";
 import { SectionTitle } from "@/components/shared/section-title";
 import { capitalize, formatMessageTime } from "@/lib/format";
@@ -89,7 +90,11 @@ function ConversationLine({
           current ? "bg-lk-blue-tint" : "hover:bg-lk-stone-2",
         )}
       >
-        <PropertyThumb src={coverSrc(conversation.coverPath)} className="size-11" />
+        {conversation.kind === "advisor" ? (
+          <AdvisorAvatar label={fr.messaging.advisor.avatar} />
+        ) : (
+          <PropertyThumb src={coverSrc(conversation.coverPath)} className="size-11" />
+        )}
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <div className="flex items-baseline justify-between gap-3">
             <p className="truncate text-lk-compact font-semibold text-lk-ink">

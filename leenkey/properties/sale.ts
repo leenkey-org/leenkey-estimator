@@ -64,6 +64,7 @@ export async function saleSituation(
   const waitingBuyers: WaitingBuyer[] = conversations.data
     .filter(
       (conversation) =>
+        conversation.kind === "listing" &&
         conversation.role === "seller" &&
         conversation.propertyId === property.id &&
         !conversation.closed &&
@@ -74,5 +75,16 @@ export async function saleSituation(
       firstName: conversation.counterpartFirstName,
       since: conversation.lastMessageAt,
     }));
-  return { ok: true, data: { property, progress: progress.data, waitingBuyers } };
+  // The adviser wrote and the seller has not read it (L1-34; closed: no more).
+  const advisor = conversations.data.find(
+    (conversation) =>
+      conversation.kind === "advisor" &&
+      conversation.propertyId === property.id &&
+      conversation.unread &&
+      !conversation.closed,
+  );
+  const advisorUnread = advisor
+    ? { conversationId: advisor.id, since: advisor.lastMessageAt }
+    : null;
+  return { ok: true, data: { property, progress: progress.data, waitingBuyers, advisorUnread } };
 }

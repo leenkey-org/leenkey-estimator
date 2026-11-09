@@ -4,6 +4,7 @@ import { threadItems } from "@/core/messaging/thread";
 import { mergeMessages, toThreadMessage, type ThreadMessage } from "@/core/messaging/types";
 import { contactLinks } from "@/leenkey/listings/presentation";
 import {
+  conversationHeading,
   conversationSubtitle,
   conversationTitle,
   counterpartName,
@@ -29,6 +30,8 @@ const LISTING = "623efc8b-97d4-4902-ac43-406417498893";
 function conversation(overrides: Partial<ConversationSummary> = {}): ConversationSummary {
   return {
     id: CONVERSATION,
+    kind: "listing",
+    plan: null,
     role: "buyer",
     propertyId: "5eed1000-0000-4000-8000-000000000001",
     listingId: LISTING,
@@ -114,6 +117,39 @@ describe("a conversation in the messaging", () => {
   it("names that link by the side of the viewer (DECISIONS 2026-10-26)", () => {
     expect(propertyHrefLabel(conversation())).toBe("Voir l'annonce");
     expect(propertyHrefLabel(conversation({ role: "seller" }))).toBe("Voir mon bien");
+  });
+});
+
+describe("the conversation with the adviser (L1-34)", () => {
+  const advisor = conversation({
+    kind: "advisor",
+    role: "seller",
+    plan: "accompagne",
+    counterpartFirstName: null,
+    listingTitle: "Appartement 3 pièces avec balcon",
+  });
+
+  it("is « Mon conseiller Leenkey », its plan and its delay in the header (SPEC 13)", () => {
+    expect(counterpartName(advisor)).toBe("Mon conseiller Leenkey");
+    expect(plain(conversationHeading(advisor).title)).toBe("Mon conseiller Leenkey");
+    expect(plain(conversationHeading(advisor).subtitle)).toBe("Accompagné · Réponse sous 24 h");
+    // Closed (the plan no longer includes it): the property it was about.
+    expect(conversationHeading({ ...advisor, closed: true }).subtitle).toBe(
+      "Appartement 3 pièces avec balcon",
+    );
+  });
+
+  it("leads to the plan of the property, never to the listing", () => {
+    expect(propertyHref(advisor)).toBe(
+      "/vendeur/formule?bien=5eed1000-0000-4000-8000-000000000001",
+    );
+    expect(propertyHrefLabel(advisor)).toBe("Voir ma formule");
+  });
+
+  it("comes first in the group of its property", () => {
+    const listing = conversation({ id: "l1", role: "seller", listingTitle: "Maison A" });
+    const [group] = groupConversations([{ ...advisor, id: "adv" }, listing]);
+    expect(group.conversations.map((item) => item.id)).toEqual(["adv", "l1"]);
   });
 });
 

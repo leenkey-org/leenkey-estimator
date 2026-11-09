@@ -179,6 +179,21 @@ export function adminReportsHref({ closed }: AdminReportsQuery): string {
   return closed ? "/admin/signalements?statut=clos" : "/admin/signalements";
 }
 
+/** /admin/messages?formule=…: the advisor conversations of one paid plan (L1-34). */
+export const ADMIN_MESSAGE_PLANS = ["accompagne", "serenite"] as const;
+export type AdminMessagesQuery = { plan: (typeof ADMIN_MESSAGE_PLANS)[number] | null };
+
+export function parseAdminMessagesQuery(
+  params: Record<string, string | string[] | undefined>,
+): AdminMessagesQuery {
+  const plan = z.enum(ADMIN_MESSAGE_PLANS).safeParse(firstOf(params.formule));
+  return { plan: plan.success ? plan.data : null };
+}
+
+export function adminMessagesHref({ plan }: AdminMessagesQuery): string {
+  return plan ? `/admin/messages?formule=${plan}` : "/admin/messages";
+}
+
 const caseId = z.string().uuid();
 
 /** A change of a case: its status, who follows it (the admin, or nobody), a note, a task of Leenkey. */

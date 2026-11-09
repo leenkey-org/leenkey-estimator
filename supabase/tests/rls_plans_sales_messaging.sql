@@ -189,6 +189,9 @@ select is((select count(*) from reports where conversation_id = :'conv')::int, 1
 -- messaging: advisor conversation (created by the payment webhook)
 -- ===========================================================================
 reset role;
+-- L1-34: written while the plan in force includes the adviser (sub_a has ended).
+insert into plan_entitlements (plan, feature) values ('accompagne', 'advisor') on conflict do nothing;
+update subscriptions set ends_at = now() + interval '1 year' where id = :'sub_a';
 insert into conversations (kind, property_id, seller_id) values ('advisor', :'prop_a', tests.uid('seller_a'))
 returning id as advisor_conv \gset
 

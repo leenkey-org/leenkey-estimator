@@ -149,6 +149,30 @@ export const mockModel: ModelCall = async (request, { onText }) => {
   const wantsDescription = /description/i.test(asked);
   const wantsPrice = /prix/i.test(asked);
 
+  // contact_advisor (L1-34): « Transmettez ma question à mon conseiller ».
+  if (/conseiller/i.test(asked)) {
+    if (!result) return message([call("get_my_properties", {})], "tool_use");
+    if (result.name === "get_my_properties") {
+      const propertyId =
+        conversationProperty(file) ?? /"propertyId":"([0-9a-f-]{36})"/.exec(result.content)?.[1];
+      if (!propertyId) return say("Vous n'avez pas encore de bien.");
+      const summary = `Question transmise par l'assistant : ${asked.slice(0, 200)}`;
+      onText("Voici le message pour votre conseiller. ");
+      return message(
+        [
+          text("Voici le message pour votre conseiller. "),
+          call("contact_advisor", { propertyId, summary }),
+        ],
+        "tool_use",
+      );
+    }
+    if (result.name === "contact_advisor") {
+      if (result.content.includes('"sent":true')) return say("C'est transmis à votre conseiller.");
+      if (result.content.includes("cancelled")) return say("Très bien, je n'envoie rien.");
+      return say("Le message n'a pas pu être envoyé.");
+    }
+  }
+
   if (wantsDescription || wantsPrice) {
     const tool = wantsDescription ? "update_listing_description" : "update_listing_price";
     if (!result) return message([call("get_my_properties", {})], "tool_use");

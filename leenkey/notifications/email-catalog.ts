@@ -29,6 +29,9 @@ import { adminListingsHref } from "@/lib/validations/admin";
 const POLICIES: Record<string, EmailPolicy> = {
   // One email per conversation every 15 minutes at most, none once read.
   "message.new": { audience: "recipient", preference: "email_messages", throttleMinutes: 15 },
+  // L1-34: the adviser writes (as a message), a seller writes to the team (read by one: none).
+  "advisor.message": { audience: "recipient", preference: "email_messages", throttleMinutes: 15 },
+  "advisor.message_from_client": { audience: "team", throttleMinutes: 20 },
   // « Digest si > 3 en 1 h »: one email, then the next ones together, 20 minutes later at the
   // earliest: never more than 3 in an hour.
   "listing.pending": { audience: "team", throttleMinutes: 20 },
@@ -82,6 +85,44 @@ async function newMessages(email: PlannedEmail): Promise<RenderedEmail | null> {
       siteUrl: siteUrl(),
     }),
     fr.legal.contactEmail,
+  );
+}
+
+/**
+ * The conversation with the adviser (L1-34): to the seller, the messages of
+ * the team, as « Nouveau message de votre conseiller Leenkey »; to the team,
+ * the messages of a seller, with the reference of their property.
+ */
+async function advisorMessages(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  if (!last) return null;
+  const words = text(last.data.excerpt);
+  const excerpt = emailSafeText(words);
+  const count = email.items.length;
+  const team = email.audience === "team";
+  const senderName = team
+    ? emailSafeText(last.data.sender_first_name)
+    : fr.emails.newMessages.advisorSender;
+  const reference = text(last.data.reference);
+  return rendered(
+    team
+      ? fr.emails.newMessages.advisorTeamSubject(senderName, reference, count)
+      : newMessagesSubject(senderName, count),
+    NewMessagesEmail({
+      firstName: team ? null : email.firstName,
+      senderName,
+      listingTitle: emailSafeText(last.data.listing_title) ?? reference,
+      excerpt: excerpt ? `${excerpt}${last.data.truncated === true ? "…" : ""}` : null,
+      excerptHidden: Boolean(words) && !excerpt,
+      count,
+      recipient: team ? "team" : "seller",
+      conversationUrl: absoluteUrl(last.link ?? "/messages"),
+      siteUrl: siteUrl(),
+      subject: team
+        ? fr.emails.newMessages.advisorTeamSubject(senderName, reference, count)
+        : undefined,
+    }),
+    team ? undefined : fr.legal.contactEmail,
   );
 }
 
@@ -251,6 +292,9 @@ export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEm
   switch (email.type) {
     case "message.new":
       return newMessages(email);
+    case "advisor.message":
+    case "advisor.message_from_client":
+      return advisorMessages(email);
     case "listing.pending":
       return listingsToReview(email);
     case "report.created":

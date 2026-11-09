@@ -1423,6 +1423,29 @@ export type Database = {
           plans_amount_cents: number
         }[]
       }
+      admin_advisor_conversations: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          last_message_body: string
+          last_from_seller: boolean
+          unread: boolean
+          rooms: number
+          property_type: Database["public"]["Enums"]["property_type"]
+          city: string
+          cover_path: string
+          seller_first_name: string
+          seller_last_name: string
+          plan: Database["public"]["Enums"]["plan_code"]
+          closed_at: string
+          listing_title: string
+          reference: string
+          property_id: string
+          seller_id: string
+          case_id: string
+          last_message_at: string
+          id: string
+        }[]
+      }
       admin_case_add_note: {
         Args: { p_case: string; p_body: string }
         Returns: string
@@ -1501,6 +1524,7 @@ export type Database = {
           cases_open: number
           listings_pending: number
           listings_oldest_submitted_at: string
+          advisor_unread: number
         }[]
       }
       admin_listing_counts: {
@@ -1652,6 +1676,16 @@ export type Database = {
           email: string
         }[]
       }
+      ai_advisor_handoff: {
+        Args: {
+          p_conversation_id: string
+          p_tool_use_id: string
+          p_tool_name: string
+          p_property: string
+          p_summary: string
+        }
+        Returns: string
+      }
       ai_listing_update: {
         Args: {
           p_price_cents?: number
@@ -1759,6 +1793,13 @@ export type Database = {
         Args: { p_body: string; p_listing_id: string }
         Returns: string
       }
+      conversation_senders: {
+        Args: { p_conversation_id: string }
+        Returns: {
+          first_name: string
+          sender_id: string
+        }[]
+      }
       conversation_start: {
         Args: { p_listing_id: string }
         Returns: string
@@ -1766,7 +1807,15 @@ export type Database = {
       conversation_summaries: {
         Args: { p_conversation_id?: string }
         Returns: {
+          last_message_mine: boolean
+          last_message_at: string
+          buyer_financing_status: Database["public"]["Enums"]["financing_status"]
+          counterpart_first_name: string
+          cover_path: string
+          city: string
+          rooms: number
           id: string
+          kind: Database["public"]["Enums"]["conversation_kind"]
           role: string
           property_id: string
           listing_id: string
@@ -1774,16 +1823,10 @@ export type Database = {
           listing_status: Database["public"]["Enums"]["listing_status"]
           listing_title: string
           property_type: Database["public"]["Enums"]["property_type"]
-          rooms: number
-          city: string
-          cover_path: string
-          counterpart_first_name: string
-          buyer_financing_status: Database["public"]["Enums"]["financing_status"]
-          last_message_at: string
-          last_message_body: string
-          last_message_mine: boolean
-          unread: boolean
           closed_at: string
+          unread: boolean
+          last_message_body: string
+          plan: Database["public"]["Enums"]["plan_code"]
         }[]
       }
       cron_call: {

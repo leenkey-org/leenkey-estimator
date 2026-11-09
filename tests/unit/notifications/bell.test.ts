@@ -124,6 +124,8 @@ describe("wording of the notifications (from type and data)", () => {
     expect(NOTIFICATION_TYPES.sort()).toEqual(
       [
         "account.created",
+        "advisor.message",
+        "advisor.message_from_client",
         "case.created",
         "listing.pending",
         "listing.published",
@@ -145,6 +147,32 @@ describe("wording of the notifications (from type and data)", () => {
     expect(
       describeNotification(view({ data: { excerpt: "Long", truncated: true } })),
     ).toMatchObject({ title: "Nouveau message", detail: "« Long… »" });
+    // L1-34: the adviser to the seller; a seller to the team, its reference first.
+    expect(
+      describeNotification(view({ type: "advisor.message", data: { excerpt: "Bonjour" } })),
+    ).toMatchObject({
+      title: "Nouveau message de votre conseiller Leenkey",
+      detail: "«\u00A0Bonjour\u00A0»",
+    });
+    expect(
+      describeNotification(
+        view({
+          type: "advisor.message_from_client",
+          data: { sender_first_name: "Alice", reference: "LK-0001", excerpt: "Une question" },
+        }),
+      ),
+    ).toMatchObject({
+      title: "Message d'Alice à son conseiller",
+      detail: "LK-0001 · «\u00A0Une question\u00A0»",
+    });
+    expect(
+      describeNotification(
+        view({
+          type: "advisor.message_from_client",
+          data: { sender_first_name: "Alice", handoff: true, excerpt: "Faut-il baisser ?" },
+        }),
+      ).title,
+    ).toBe("Question d'Alice transmise par l'assistant");
     expect(
       describeNotification(
         view({

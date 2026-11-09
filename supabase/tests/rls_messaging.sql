@@ -154,8 +154,8 @@ select is((select count(*) from conversation_summaries())::int, 0, 'buyer_d: no 
 select is((select count(*) from conversation_summaries())::int, 0,
           'admin: not a participant, no summaries (the back office reads conversations, L1-34)');
 
--- The advisor conversation of a paid plan (made by the payment webhook)
--- stays out of the list until L1-34.
+-- An advisor conversation (L1-34): listed first for its seller; closed
+-- while the plan of the property has no adviser (Autonomie here).
 reset role;
 insert into conversations (kind, property_id, seller_id)
 values ('advisor', :'prop_a', tests.uid('seller_a'))
@@ -164,8 +164,8 @@ insert into messages (conversation_id, sender_id, body, kind)
 values (:'conv_advisor', tests.uid('admin'), 'Bonjour, je suis votre conseiller Leenkey.', 'system');
 \set who seller_a
 \ir _as.psql
-select is((select count(*) from conversation_summaries())::int, 1,
-          'seller_a: the advisor conversation is not listed before L1-34');
+select is((select array_agg(kind::text) from conversation_summaries()), array['advisor', 'listing'],
+          'seller_a: the advisor conversation listed first (L1-34)');
 
 -- ===========================================================================
 -- A closed conversation takes no new message

@@ -7,14 +7,19 @@ import { InboxPane } from "@/leenkey/messaging/components/inbox-pane";
 import { InboxRefresh } from "@/leenkey/messaging/components/inbox-refresh";
 import { MessagesLayout } from "@/leenkey/messaging/components/messages-layout";
 import {
-  conversationSubtitle,
+  conversationHeading,
   conversationTitle,
   counterpartName,
   coverSrc,
   propertyHref,
   propertyHrefLabel,
 } from "@/leenkey/messaging/presentation";
-import { getConversation, isUuid, listConversations } from "@/leenkey/messaging/queries";
+import {
+  getConversation,
+  isUuid,
+  listConversations,
+  threadSenders,
+} from "@/leenkey/messaging/queries";
 import { capitalize } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 
@@ -31,7 +36,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title:
       result?.ok && result.data
-        ? t.conversationMetaTitle(conversationTitle(result.data))
+        ? t.conversationMetaTitle(
+            result.data.kind === "advisor" ? t.advisor.name : conversationTitle(result.data),
+          )
         : t.metaTitle,
   };
 }
@@ -39,7 +46,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // L1-21: a conversation of the account (SPEC-V2 8.6, docs/DESIGN.md 12.9);
 // from 1024 px, the list on its left. Not one of theirs: a 404. The text of
 // a visit request already in the field with ?visite=1 (« Demander une
-// visite », until the visits of L3).
+// visite », until the visits of L3). The adviser (L1-34): « LK », the
+// plan, the admins by their first name, no report, closed without the right.
 export default async function ConversationPage({ params, searchParams }: Props) {
   const profile = await requireProfile();
   const { id } = await params;
@@ -51,6 +59,10 @@ export default async function ConversationPage({ params, searchParams }: Props) 
   if (!conversation) notFound();
   const visit = (await searchParams).visite === "1";
   const now = new Date();
+  // L1-34: with the adviser, the first names of the admins who answered.
+  const advisor = conversation.kind === "advisor";
+  const names = advisor ? await threadSenders(id) : {};
+  const heading = conversationHeading(conversation);
 
   return (
     <>
@@ -73,18 +85,21 @@ export default async function ConversationPage({ params, searchParams }: Props) 
           viewerId={profile.id}
           counterpart={capitalize(counterpartName(conversation))}
           header={{
-            title: conversationTitle(conversation),
-            subtitle: conversationSubtitle(conversation),
+            ...heading,
             thumbSrc: coverSrc(conversation.coverPath),
             href: propertyHref(conversation),
             hrefLabel: propertyHrefLabel(conversation),
+            advisor,
           }}
+          advisor={advisor ? { sellerId: profile.id, names } : null}
+          closedText={advisor ? t.advisor.closed : undefined}
+          report={!advisor}
           initialMessages={thread.data}
           financing={conversation.role === "seller" ? conversation.buyerFinancingStatus : null}
           unread={conversation.unread}
           closed={conversation.closed}
-          initialDraft={visit && !conversation.closed ? t.start.visit : ""}
-          suggestions={conversation.role === "seller"}
+          initialDraft={visit && !conversation.closed && !advisor ? t.start.visit : ""}
+          suggestions={conversation.role === "seller" && !advisor}
           now={now.toISOString()}
         />
       </MessagesLayout>
