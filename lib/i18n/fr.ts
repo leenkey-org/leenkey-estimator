@@ -2137,6 +2137,55 @@ export const fr = {
     otherPropertiesLabel: "Vos autres biens",
     free: "Gratuit",
     taxes: "TTC",
+    // The comparison table of the plans (SPEC-V2 11 bis, wording of the plans
+    // of 2026-11-06): what each plan includes, by plan code. Content, never
+    // a right (rights: plan_entitlements, hasEntitlement).
+    comparison: {
+      title: "Comparer les formules",
+      caption: "Ce que comprend chaque formule",
+      toggle: "Comparer les formules en détail",
+      feature: "Ce qui est inclus",
+      included: "Inclus",
+      notIncluded: "Non inclus",
+      rows: [
+        { label: "Analyse de valeur", plans: ["autonomie", "accompagne", "serenite"] },
+        {
+          label: "Espace vendeur / tableau de bord",
+          plans: ["autonomie", "accompagne", "serenite"],
+        },
+        { label: "Assistant IA", plans: ["autonomie", "accompagne", "serenite"] },
+        {
+          label: "Création de l'annonce avec l'IA",
+          plans: ["autonomie", "accompagne", "serenite"],
+        },
+        { label: "Publication sur Leenkey", plans: ["autonomie", "accompagne", "serenite"] },
+        { label: "Messagerie acquéreurs", plans: ["autonomie", "accompagne", "serenite"] },
+        { label: "Agenda / visites", plans: ["autonomie", "accompagne", "serenite"] },
+        { label: "Réception d'offres structurées", plans: ["autonomie", "accompagne", "serenite"] },
+        { label: "Checklist des documents", plans: ["autonomie", "accompagne", "serenite"] },
+        { label: "Conseiller dédié", plans: ["accompagne", "serenite"] },
+        {
+          label: "Regard personnalisé sur le prix et la stratégie",
+          plans: ["accompagne", "serenite"],
+        },
+        { label: "Relecture et optimisation de l'annonce", plans: ["accompagne", "serenite"] },
+        {
+          label: "Analyse des offres et des informations de financement",
+          plans: ["accompagne", "serenite"],
+        },
+        {
+          label: "Aide à la décision jusqu'à l'acceptation d'une offre",
+          plans: ["accompagne", "serenite"],
+        },
+        { label: "Préparation du dossier de vente", plans: ["serenite"] },
+        { label: "Analyse des documents", plans: ["serenite"] },
+        { label: "Aide à la préparation des échanges avec le notaire", plans: ["serenite"] },
+        { label: "Suivi jusqu'à la signature", plans: ["serenite"] },
+      ] as const satisfies readonly {
+        label: string;
+        plans: readonly ("autonomie" | "accompagne" | "serenite")[];
+      }[],
+    },
     badge: "Le plus complet",
     current: "Formule actuelle",
     activeSince: (since: string, until: string) => `Active depuis le ${since}, jusqu'au ${until}.`,

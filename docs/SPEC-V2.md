@@ -529,7 +529,7 @@ create table upgrade_prompts (           -- déclencheurs de montée en gamme af
 ```
 
 **Extensibilité demandée par le client** : la formule reste rattachée au bien, mais rien dans le code ne doit l'empêcher d'introduire plus tard une remise multi-biens ou une formule investisseur. Conséquences :
-- Les droits se testent uniquement par `hasEntitlement(propertyId, feature)` (`core/billing/entitlements.ts`), jamais par `plan === 'serenite'`.
+- Les droits se testent uniquement par `hasEntitlement(propertyId, feature)` (`leenkey/billing/entitlements.ts`, qui appelle la fonction SQL `has_entitlement(property, feature)` : propriétaire du bien et admins seulement), jamais par `plan === 'serenite'`. Dans `leenkey/` et non `core/` : la fonction connaît le bien (CLAUDE.md section 3, L1-33).
 - Les prix viennent de `plans` et de Stripe, jamais du code.
 - Le checkout accepte des codes promo Stripe (`allow_promotion_codes`) et enregistre la remise.
 - `plans.scope` et `subscriptions.discount_cents` existent dès la V2 sans être utilisés.

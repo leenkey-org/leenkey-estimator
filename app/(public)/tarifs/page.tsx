@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { activePlans } from "@/core/billing/plans";
+import { PlanComparisonTable } from "@/leenkey/billing/components/plan-comparison";
 import { PricingPlans } from "@/leenkey/site/components/pricing-plans";
 import { PublicPage } from "@/leenkey/site/components/public-page";
 import { fr } from "@/lib/i18n/fr";
@@ -40,6 +41,12 @@ export default async function PricingPage() {
           </InlineAlert>
         )}
       </MarketingSection>
+      {plans && plans.length > 0 ? (
+        // The comparison table of SPEC-V2 11 bis (L1-33), under the plans.
+        <MarketingSection id="comparer" title={fr.billing.comparison.title}>
+          <PlanComparisonTable plans={plans} className="mx-auto max-w-200" />
+        </MarketingSection>
+      ) : null}
     </PublicPage>
   );
 }

@@ -365,6 +365,20 @@ test.describe("pages du site en V2", () => {
 test.describe("/tarifs (base de seed)", () => {
   test.skip(!seeded, "base de seed requise (E2E_SEED=1)");
 
+  test("le tableau comparatif des formules sous les cartes (L1-33)", async ({ page }) => {
+    await page.goto("/tarifs#comparer");
+    const section = page.getByRole("region", { name: "Comparer les formules" });
+    await expect(section).toBeInViewport();
+    const table = section.getByRole("table", { name: "Ce que comprend chaque formule" });
+    await expect(table.getByRole("row")).toHaveCount(19);
+    await expect(
+      table.getByRole("row", { name: /^Préparation du dossier de vente/ }).getByRole("cell"),
+    ).toHaveText(["Non inclus", "Non inclus", "Inclus"]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      page.viewportSize()?.width ?? 0,
+    );
+  });
+
   test("les trois formules de la table plans, Autonomie mise en avant", async ({ page }) => {
     await page.goto("/tarifs");
     const plans = page.locator("article");

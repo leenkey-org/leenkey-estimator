@@ -8,6 +8,7 @@ import { iconButtonVariants } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { getUser, requireProfile } from "@/core/auth/session";
 import { PaymentConfirmation } from "@/leenkey/billing/components/payment-confirmation";
+import { PlanComparison } from "@/leenkey/billing/components/plan-comparison";
 import { PlanChooser } from "@/leenkey/billing/components/plan-chooser";
 import { WithdrawalPanel } from "@/leenkey/billing/components/withdrawal-panel";
 import { canWithdraw, legalDate, withdrawalLastDay } from "@/leenkey/billing/withdrawal";
@@ -46,8 +47,8 @@ function Body({ children }: { children: React.ReactNode }) {
 // three plans read in the table, the summary of the order and its two boxes,
 // the payment on Stripe, and the return from it (?paiement=ok: the state the
 // webhook wrote; ?paiement=annule). A plan is chosen per property: the one of
-// ?bien=, else the one of « Ma vente ». The comparison table of 11 bis comes
-// with L1-33. L1-40: « Renoncer au contrat » during the 14 days, above the
+// ?bien=, else the one of « Ma vente »; under them, the comparison table of
+// 11 bis (L1-33). L1-40: « Renoncer au contrat » during the 14 days, above the
 // plans (« visible, directe et accessible »), then the date of the request.
 export default async function PlanPage({ searchParams }: Props) {
   const profile = await requireProfile();
@@ -261,6 +262,7 @@ export default async function PlanPage({ searchParams }: Props) {
               : null
           }
         />
+        <PlanComparison plans={data.plans} />
       </Body>
     </>
   );

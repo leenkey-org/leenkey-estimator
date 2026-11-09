@@ -135,3 +135,43 @@ test("une formule payante : « Passer à Sérénité pour 510 € », la formule
   await expect(recap).toContainText("510 € TTC : la différence avec Accompagné, déjà payée");
   await expect(recap.getByRole("button", { name: "Commander et payer 510 € TTC" })).toBeVisible();
 });
+
+test("le tableau comparatif sous les formules, replié sur téléphone (L1-33)", async ({
+  page,
+  isMobile,
+}) => {
+  await signIn(page, planPage(LK0003));
+  const comparison = page.getByRole("region", { name: "Comparer les formules" });
+  const table = comparison
+    .getByRole("table", { name: "Ce que comprend chaque formule" })
+    .locator("visible=true");
+  if (isMobile) {
+    await expect(table).toHaveCount(0);
+    await comparison.getByText("Comparer les formules en détail").click();
+  }
+  await expect(table).toHaveCount(1);
+  await expect(table.getByRole("columnheader")).toHaveText([
+    "Ce qui est inclus",
+    "Autonomie",
+    "Accompagné",
+    "Sérénité",
+  ]);
+  await expect(table.getByRole("row")).toHaveCount(19);
+  const row = (label: string) => table.getByRole("row", { name: new RegExp(`^${label}`) });
+  await expect(row("Publication sur Leenkey").getByRole("cell")).toHaveText([
+    "Inclus",
+    "Inclus",
+    "Inclus",
+  ]);
+  await expect(row("Conseiller dédié").getByRole("cell")).toHaveText([
+    "Non inclus",
+    "Inclus",
+    "Inclus",
+  ]);
+  await expect(row("Suivi jusqu'à la signature").getByRole("cell")).toHaveText([
+    "Non inclus",
+    "Non inclus",
+    "Inclus",
+  ]);
+  await expectNoSeriousViolation(page);
+});

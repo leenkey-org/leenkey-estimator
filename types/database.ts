@@ -1820,6 +1820,13 @@ export type Database = {
         Args: { b: string; p: string }
         Returns: boolean
       }
+      has_entitlement: {
+        Args: {
+          p_feature: Database["public"]["Enums"]["plan_feature"]
+          p_property: string
+        }
+        Returns: boolean
+      }
       is_active_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean

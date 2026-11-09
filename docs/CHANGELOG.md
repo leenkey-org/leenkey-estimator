@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-09 · L1-33 · PR #84 · Droits des formules et tableau comparatif
+- Ajouté : `has_entitlement(property, feature)` en SQL et `hasEntitlement(propertyId, feature)` (`leenkey/billing/entitlements.ts`) : un droit se lit dans `plan_entitlements`, jamais dans le nom de la formule.
+- Ajouté : tableau comparatif des formules (18 lignes) sous les cartes de `/vendeur/formule` (replié sur téléphone) et sur `/tarifs`.
+- Migration : `20261109120000_has_entitlement.sql`.
+- Tests : RLS (`rls_has_entitlement.sql`, 14, cinq comptes et visiteur), unitaires (`hasEntitlement`, aucune comparaison de nom de formule dans le code), E2E (tableau sur les deux pages, mobile et desktop).
 ### 2026-11-09 · L1-39 · PR #83 · Page « Mon compte »
 - Ajouté : `/compte` en lignes (informations personnelles, adresse email, mot de passe, notifications, « Mes espaces », cookies, déconnexion, fermeture du compte par email) ; pages `/compte/informations`, `/compte/email`, `/compte/mot-de-passe`.
 - Ajouté : changement d'adresse confirmé depuis l'ancienne et la nouvelle adresse (modèle Supabase `email-change.html`, page « Plus qu'un lien »), ses liens ne connectant jamais le navigateur qui les ouvre, 5 demandes par heure ; changement de mot de passe avec le mot de passe actuel, autres appareils déconnectés, modèle de la notification *Password changed* ; « Je vends » ou « J'achète » ajouté au compte.
