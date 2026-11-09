@@ -285,14 +285,16 @@ test("envoyer une annonce en validation en mobile : prix, description, aperçu",
   await expect(energy.getByText(/^Ce DPE n'est plus valable/)).toBeVisible();
   await date.fill("2024-03-12");
   await expect(energy.getByText(/^Ce DPE n'est plus valable/)).toHaveCount(0);
-  await energy.getByLabel("Année de référence des prix").selectOption("2023");
-  await energy.getByLabel("Dépenses d'énergie, minimum").fill("1980");
-  await energy.getByLabel("Dépenses d'énergie, maximum").fill("1500");
+  await energy.getByLabel("Année des prix").selectOption("2023");
+  const costs = energy.getByRole("group", { name: "Dépenses annuelles d'énergie" });
+  await costs.getByLabel("Minimum").fill("1980");
+  await costs.getByLabel("Maximum").fill("1500");
   await next.click();
-  await expect(energy.getByLabel("Dépenses d'énergie, maximum")).toHaveAccessibleDescription(
+  await expect(costs.getByLabel("Maximum")).toHaveAccessibleDescription(
     /Le minimum ne peut pas dépasser le maximum\./,
   );
-  await energy.getByLabel("Dépenses d'énergie, maximum").fill("2680");
+  await expect(costs.getByLabel("Maximum")).toBeFocused();
+  await costs.getByLabel("Maximum").fill("2680");
   await expectNoSeriousViolation(page);
   await next.click();
   await expect(page).toHaveURL(`/vendeur/biens/${id}/prix`);

@@ -16,6 +16,7 @@ import { Select } from "@/components/shared/select";
 import { UnitInput } from "@/components/shared/unit-input";
 import { fr } from "@/lib/i18n/fr";
 import {
+  DPE_VALID_FROM,
   dpeOutdated,
   forType,
   HEATING_OPTIONS,
@@ -386,7 +387,7 @@ export function CharacteristicsStep({
           ) : (
             <>
               <SegmentedPicker
-                label={t.dpe}
+                label={energy.energyClass}
                 value={dpe ?? ""}
                 onValueChange={(value) =>
                   setDpe(DPE_CLASSES.find((letter) => letter === value) ?? null)
@@ -398,7 +399,7 @@ export function CharacteristicsStep({
                 }))}
               />
               <SegmentedPicker
-                label={t.ges}
+                label={energy.climateClass}
                 value={ges ?? ""}
                 onValueChange={(value) =>
                   setGes(DPE_CLASSES.find((letter) => letter === value) ?? null)
@@ -414,7 +415,7 @@ export function CharacteristicsStep({
                   type="date"
                   label={energy.date}
                   help={energy.dateHelp}
-                  min="2021-07-01"
+                  min={DPE_VALID_FROM}
                   max={today}
                   value={dpeDate}
                   error={fieldErrors.dpeDate}
@@ -443,11 +444,18 @@ export function CharacteristicsStep({
                     </option>
                   ))}
                 </Select>
-                {unitInput("energyCostMinEuros", energy.costMin, t.perYear)}
-                {unitInput("energyCostMaxEuros", energy.costMax, t.perYear)}
               </div>
               {outdated ? <InlineAlert tone="warning">{energy.outdated}</InlineAlert> : null}
-              <p className="text-lk-caption text-lk-ink-3">{energy.costHelp}</p>
+              <fieldset className="flex flex-col gap-2">
+                <legend className="mb-1.5 text-lk-label font-medium text-lk-ink">
+                  {energy.costs}
+                </legend>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+                  {unitInput("energyCostMinEuros", energy.costMin, t.perYear)}
+                  {unitInput("energyCostMaxEuros", energy.costMax, t.perYear)}
+                </div>
+                <p className="text-lk-caption text-lk-ink-3">{energy.costHelp}</p>
+              </fieldset>
             </>
           )}
         </fieldset>

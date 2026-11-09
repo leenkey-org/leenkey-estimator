@@ -746,14 +746,13 @@ export const fr = {
         energyClass: "Classe énergie (DPE)",
         climateClass: "Classe climat (GES)",
         date: "Date du DPE",
-        dateHelp: "Inscrite sur le rapport de votre diagnostiqueur.",
-        costMin: "Dépenses d'énergie, minimum",
-        costMax: "Dépenses d'énergie, maximum",
-        costHelp:
-          "La fourchette des dépenses annuelles d'énergie estimées, telle qu'elle figure sur le DPE.",
-        priceYear: "Année de référence des prix",
-        priceYearHelp:
-          "« Prix moyens des énergies indexés au 1er janvier » de cette année, sur le DPE.",
+        dateHelp: "Sur le rapport du diagnostiqueur.",
+        costs: "Dépenses annuelles d'énergie",
+        costMin: "Minimum",
+        costMax: "Maximum",
+        costHelp: "La fourchette estimée pour un usage standard, telle qu'elle figure sur le DPE.",
+        priceYear: "Année des prix",
+        priceYearHelp: "Celle des « prix moyens des énergies indexés au 1er janvier », sur le DPE.",
         priceYearPlaceholder: "Choisir",
         reason: "Motif de l'exemption",
         reasonPlaceholder: "Choisir le motif",
@@ -2934,7 +2933,7 @@ export const fr = {
         `Montant estimé des dépenses annuelles d'énergie pour un usage standard : entre ${min} et ${max} par an. Prix moyens des énergies indexés au 1er janvier ${year}.`,
       date: (date: string) => `DPE réalisé le ${date}.`,
       risks:
-        "Les informations sur les risques auxquels ce bien est exposé sont disponibles sur le site Géorisques :",
+        "Les informations sur les risques auxquels ce bien est exposé sont disponibles sur le site Géorisques\u00A0:",
       risksLink: "www.georisques.gouv.fr",
     },
     actions: {
