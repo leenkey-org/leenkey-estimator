@@ -97,7 +97,11 @@ export function AdvisorInbox({
                   {conversation.closed ? (
                     <span className="text-lk-caption text-lk-ink-3">{t.closed}</span>
                   ) : (
-                    <StatusBadge plan={conversation.plan} />
+                    <StatusBadge
+                      plan={conversation.plan}
+                      // On the tint of the open line, its outline keeps it apart.
+                      className={current ? "ring-1 ring-lk-blue-border ring-inset" : undefined}
+                    />
                   )}
                   {late ? (
                     <span className="inline-flex items-center gap-1 text-lk-caption font-semibold text-lk-warning">

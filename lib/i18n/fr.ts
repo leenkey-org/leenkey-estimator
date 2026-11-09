@@ -1520,8 +1520,7 @@ export const fr = {
       emptyTitle: "Rien à traiter",
       emptyText: "Aucune annonce, aucun dossier ni aucun signalement n'attend l'équipe.",
     },
-    later:
-      "Messages clients, offres et déclencheurs de montée en gamme s'ajouteront ici avec leurs écrans.",
+    later: "Offres et déclencheurs de montée en gamme s'ajouteront ici avec leurs écrans.",
     error: "Une partie du tableau de bord n'a pas pu être chargée.",
     retry: "Réessayer",
   },
