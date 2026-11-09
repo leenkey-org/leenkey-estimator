@@ -187,6 +187,17 @@ test("payer Accompagné : retour de Stripe, confirmation par le webhook, une seu
     .first()
     .click();
   await expect(page.getByText("Formule Accompagné activée").first()).toBeVisible();
+
+  // L1-34: the payment opened the conversation with the adviser, with its welcome
+  // (no immediate start asked: from the end of the 14 days).
+  await page.goto(`/vendeur?bien=${LK0009}`);
+  const adviser = page.getByRole("region", { name: "Mon conseiller Leenkey" });
+  await expect(adviser).toContainText("Bonjour, je suis votre conseiller Leenkey");
+  await adviser.getByRole("link", { name: "Écrire à mon conseiller" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Mon conseiller Leenkey");
+  await expect(page.getByRole("log", { name: "Messages de la conversation" })).toContainText(
+    "Votre accompagnement commence à la fin du délai de rétractation de 14 jours",
+  );
 });
 
 test("passer à Sérénité avec démarrage immédiat, puis un remboursement ramène Accompagné", async ({

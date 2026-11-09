@@ -49,14 +49,12 @@ export async function sendMessage(
     .single();
   if (error) {
     let reason = sendErrorOf(error);
-    // RLS refuses a closed conversation as an account that may no longer write.
+    // RLS refuses a closed conversation as an account that may no longer
+    // write: an account that may still write met a closed conversation (closed
+    // by a party, or, for some kinds, closed by the database itself).
     if (reason === "inactive") {
-      const conversation = await supabase
-        .from("conversations")
-        .select("closed_at")
-        .eq("id", conversationId)
-        .maybeSingle();
-      if (conversation.data?.closed_at) reason = "closed";
+      const active = await supabase.rpc("is_active_user");
+      if (active.data === true) reason = "closed";
     }
     if (reason === "unavailable") {
       console.error("[messaging] message not sent", {

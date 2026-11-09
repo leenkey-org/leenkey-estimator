@@ -249,6 +249,26 @@ describe("next action of the seller (SPEC-V2 8.7)", () => {
     });
   });
 
+  it("3) a message of the adviser not read, before a buyer waiting (L1-34)", () => {
+    const waiting = [
+      { conversationId: "first", firstName: "David", since: "2026-10-23T08:00:00Z" },
+    ];
+    const advisor = { conversationId: "adviser", since: "2026-10-26T09:00:00Z" };
+    expect(
+      getNextAction(
+        { ...situation("published", "contacts_visits", ONLINE, waiting), advisorUnread: advisor },
+        NOW,
+      ),
+    ).toEqual({ rule: "advisorUnread", href: "/messages/adviser", since: "2026-10-26T09:00:00Z" });
+    // A refused listing still comes first.
+    expect(
+      getNextAction(
+        { ...situation("rejected", "publish", PREPARED, []), advisorUnread: advisor },
+        NOW,
+      ),
+    ).toMatchObject({ rule: "listingRejected" });
+  });
+
   it("5) a buyer waiting for more than 24 h, the one waiting the longest first", () => {
     const waiting = [
       { conversationId: "recent", firstName: "Bruno", since: "2026-10-26T00:00:00Z" },

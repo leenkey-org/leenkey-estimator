@@ -6,7 +6,8 @@ import type { ContactListing, ConversationSummary } from "./types";
 
 // Reads of the messaging (L1-21, SPEC-V2 8.6), with the session of the
 // participant: conversation_summaries() gives a participant their listing
-// conversations only (supabase/migrations/20261019220000_messaging.sql).
+// conversations, and a seller the conversation with their adviser first
+// (L1-34, supabase/migrations/20261109140000_advisor_conversation.sql).
 
 export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavailable" };
 
@@ -32,6 +33,7 @@ export const listConversations = cache(async (): Promise<QueryResult<Conversatio
     ok: true,
     data: data.map((row) => ({
       id: row.id,
+      kind: row.kind === "advisor" ? "advisor" : "listing",
       role: row.role === "seller" ? "seller" : "buyer",
       propertyId: row.property_id,
       listingId: row.listing_id as string | null,
@@ -50,6 +52,8 @@ export const listConversations = cache(async (): Promise<QueryResult<Conversatio
       lastMessageMine: row.last_message_mine,
       unread: row.unread,
       closed: (row.closed_at as string | null) !== null,
+      plan: row.plan as ConversationSummary["plan"],
+      advisorOrderedAt: (row.advisor_ordered_at as string | null) ?? null,
     })),
   };
 });
@@ -132,4 +136,28 @@ export async function ownedPropertyId(
     return null;
   }
   return data[0]?.id ?? null;
+}
+
+/**
+ * The first names of the authors of a thread, by account (conversation_senders,
+ * for its participants and the team): the admins who answered a seller.
+ */
+export async function threadSenders(conversationId: string): Promise<Record<string, string>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("conversation_senders", {
+    p_conversation_id: conversationId,
+  });
+  if (error) {
+    console.error("[messaging] senders read failed", {
+      entity_id: conversationId,
+      code: error.code,
+    });
+    return {};
+  }
+  const names: Record<string, string> = {};
+  for (const row of data) {
+    const name = (row.first_name as string | null)?.trim();
+    if (row.sender_id && name) names[row.sender_id] = name;
+  }
+  return names;
 }

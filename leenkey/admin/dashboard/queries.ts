@@ -17,6 +17,8 @@ export type AdminCounts = {
   listingsOldestSubmittedAt: string | null;
   casesOpen: number;
   reportsOpen: number;
+  /** Advisor conversations where the seller wrote last, unread by the team (L1-34). */
+  advisorUnread: number;
 };
 
 /** Plans sold and sign-ups of the last days. */
@@ -70,6 +72,7 @@ export const adminCounts = cache(async (): Promise<QueryResult<AdminCounts>> => 
         listingsOldestSubmittedAt: (row?.listings_oldest_submitted_at as string | null) ?? null,
         casesOpen: row?.cases_open ?? 0,
         reportsOpen: row?.reports_open ?? 0,
+        advisorUnread: row?.advisor_unread ?? 0,
       },
     };
   } catch (error) {

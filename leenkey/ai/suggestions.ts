@@ -338,7 +338,8 @@ export async function suggestReply(
   const found = await getConversation(conversationId);
   if (!found.ok) return { ok: false, error: "unavailable" };
   const conversation = found.data;
-  if (!conversation || conversation.role !== "seller" || !conversation.listingId) {
+  // A buyer's conversation only: never the one with the adviser (L1-34).
+  if (!conversation || conversation.role !== "seller" || conversation.kind !== "listing") {
     return { ok: false, error: "not_found" };
   }
   if (conversation.closed) return { ok: false, error: "nothing" };

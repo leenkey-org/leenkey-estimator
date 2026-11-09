@@ -87,6 +87,14 @@ export function nextActionView(
         primary: { label: n.rejected.action, href: action.href },
         secondary: { label: n.rejected.secondary, href: links.sheet },
       };
+    case "advisorUnread":
+      return {
+        icon: "message",
+        title: n.advisor.title,
+        detail: n.advisor.text(formatRelative(action.since, now).toLocaleLowerCase("fr-FR")),
+        primary: { label: n.advisor.action, href: action.href },
+        secondary: null,
+      };
     case "buyerWaiting":
       return {
         icon: "message",
@@ -215,14 +223,20 @@ export function taskTickable(
 /** Financing at least declared (SPEC-V2 8.7): never the amounts, only the status. */
 const QUALIFIED = new Set(["declared", "document_provided", "document_checked"]);
 
-/** The conversations of the buyers about a property, the most recent first. */
+/**
+ * The conversations of the buyers about a property, the most recent first
+ * (never the one with the adviser, L1-34).
+ */
 export function propertyConversations(
   conversations: readonly ConversationSummary[],
   propertyId: string,
 ): ConversationSummary[] {
   return conversations
     .filter(
-      (conversation) => conversation.role === "seller" && conversation.propertyId === propertyId,
+      (conversation) =>
+        conversation.kind === "listing" &&
+        conversation.role === "seller" &&
+        conversation.propertyId === propertyId,
     )
     .sort((a, b) => b.lastMessageAt.localeCompare(a.lastMessageAt));
 }
@@ -256,4 +270,16 @@ export function daysOnSale(publishedAt: string | null, soldAt: string | null): n
   if (!publishedAt || !soldAt) return null;
   const days = Math.round((Date.parse(soldAt) - Date.parse(publishedAt)) / 86_400_000);
   return Math.max(1, days);
+}
+
+/** The conversation with the adviser of a property (L1-34), or null. */
+export function advisorConversation(
+  conversations: readonly ConversationSummary[],
+  propertyId: string,
+): ConversationSummary | null {
+  return (
+    conversations.find(
+      (conversation) => conversation.kind === "advisor" && conversation.propertyId === propertyId,
+    ) ?? null
+  );
 }

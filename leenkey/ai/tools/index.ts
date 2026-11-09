@@ -1,5 +1,6 @@
 import "server-only";
 import type { AiContext, AnyAiTool } from "@/core/ai/tools/types";
+import { contactAdvisorTool } from "./contact-advisor";
 import { draftListingDescriptionTool } from "./draft-listing-description";
 import { getListingStatsTool } from "./get-listing-stats";
 import { getMyPropertiesTool } from "./get-my-properties";
@@ -15,7 +16,7 @@ import { updateListingPriceTool } from "./update-listing-price";
 // none of them); search_knowledge (core/ai/tools) is not offered to the
 // model of the conversation: the whole FAQ is in its prompt (Q69, option a).
 // To come with their tasks: create_case
-// (L1-31), contact_advisor (L1-34), summarize_offer (L2), the tools of the
+// (L1-31), summarize_offer (L2), the tools of the
 // buyer (L2) and of the admin (L1-30), propose_visit_slot (L3).
 
 const TOOLS: readonly AnyAiTool[] = [
@@ -28,6 +29,7 @@ const TOOLS: readonly AnyAiTool[] = [
   draftListingDescriptionTool,
   updateListingDescriptionTool,
   updateListingPriceTool,
+  contactAdvisorTool,
 ];
 
 /** The tools of a context. */

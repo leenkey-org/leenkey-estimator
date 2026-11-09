@@ -133,6 +133,8 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
   { href: ROUTES.adminListings, label: admin.listings, icon: "listings" },
   { href: ROUTES.adminUsers, label: admin.users, icon: "users" },
   { href: ROUTES.adminCases, label: admin.cases, icon: "folder" },
+  // L1-34: the conversations with the sellers of a paid plan (SPEC-V2 17).
+  { href: ROUTES.adminMessages, label: admin.messages, icon: "message" },
   { href: ROUTES.adminOffers, label: admin.offers, icon: "file" },
   { href: ROUTES.adminReports, label: admin.reports, icon: "flag" },
   { href: ROUTES.adminAssistant, label: admin.assistant, icon: "sparkles" },

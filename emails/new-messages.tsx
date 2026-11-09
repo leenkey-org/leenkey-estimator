@@ -22,10 +22,15 @@ export type NewMessagesEmailProps = {
   /** The last message holds a link: its excerpt stays out of the email. */
   excerptHidden?: boolean;
   count: number;
-  /** The recipient sells (seller) or contacted a seller (buyer): the line of the footer. */
-  recipient: "seller" | "buyer";
+  /**
+   * The recipient sells (seller) or contacted a seller (buyer): the line of
+   * the footer; the team (L1-34): an internal notification.
+   */
+  recipient: "seller" | "buyer" | "team";
   conversationUrl: string;
   siteUrl: string;
+  /** In place of « Nouveau message de … » (the team's email, L1-34). */
+  subject?: string;
 };
 
 export function NewMessagesEmail({
@@ -38,15 +43,18 @@ export function NewMessagesEmail({
   recipient,
   conversationUrl,
   siteUrl,
+  subject: subjectOverride,
 }: NewMessagesEmailProps) {
   const copy = t.newMessages;
-  const subject = newMessagesSubject(senderName, count);
+  const subject = subjectOverride ?? newMessagesSubject(senderName, count);
+
   return (
     <EmailLayout
       preview={excerpt ?? subject}
       title={subject}
       siteUrl={siteUrl}
       action={{ href: conversationUrl, label: copy.action }}
+      internal={recipient === "team"}
       why={recipient === "buyer" ? t.footer.whyBuyer : t.footer.why}
     >
       <Text style={emailText}>{t.greeting(firstName)}</Text>
@@ -54,7 +62,7 @@ export function NewMessagesEmail({
       {excerpt ? <Text style={emailQuote}>{excerpt}</Text> : null}
       {excerptHidden ? <Text style={emailText}>{copy.hidden}</Text> : null}
       {count > 1 ? <Text style={emailText}>{copy.more(count - 1)}</Text> : null}
-      <Text style={emailText}>{copy.replyHint}</Text>
+      <Text style={emailText}>{recipient === "team" ? copy.advisorTeamReply : copy.replyHint}</Text>
     </EmailLayout>
   );
 }

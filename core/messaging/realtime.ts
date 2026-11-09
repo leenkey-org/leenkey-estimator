@@ -73,8 +73,14 @@ export function useThreadMessages(
  * may come from the cache of the router, on a back navigation, or a change
  * may have come before the subscription) and when the page is shown again.
  * New and changed rows only: Realtime does not check the RLS of a deletion.
+ * `kind`: every conversation of that kind instead of the account's own (the
+ * team, who reads them all and is not a column of the conversation).
  */
-export function useConversationChanges(profileId: string, onChange: () => void) {
+export function useConversationChanges(
+  profileId: string,
+  onChange: () => void,
+  { kind }: { kind?: string } = {},
+) {
   const onChangeRef = useRef(onChange);
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -82,21 +88,21 @@ export function useConversationChanges(profileId: string, onChange: () => void) 
 
   useEffect(() => {
     const changed = () => onChangeRef.current();
-    const changes = (event: "INSERT" | "UPDATE", column: "seller_id" | "buyer_id") =>
-      ({
-        event,
-        schema: "public",
-        table: "conversations",
-        filter: `${column}=eq.${profileId}`,
-      }) as const;
+    const changes = (event: "INSERT" | "UPDATE", filter: string) =>
+      ({ event, schema: "public", table: "conversations", filter }) as const;
+    const filters = kind
+      ? [`kind=eq.${kind}`]
+      : [`seller_id=eq.${profileId}`, `buyer_id=eq.${profileId}`];
     const end = subscribe(
-      `conversations:${profileId}`,
-      (channel) =>
-        channel
-          .on("postgres_changes", changes("INSERT", "seller_id"), changed)
-          .on("postgres_changes", changes("UPDATE", "seller_id"), changed)
-          .on("postgres_changes", changes("INSERT", "buyer_id"), changed)
-          .on("postgres_changes", changes("UPDATE", "buyer_id"), changed),
+      kind ? `conversations:${kind}:${profileId}` : `conversations:${profileId}`,
+      (channel) => {
+        for (const filter of filters) {
+          channel
+            .on("postgres_changes", changes("INSERT", filter), changed)
+            .on("postgres_changes", changes("UPDATE", filter), changed);
+        }
+        return channel;
+      },
       changed,
     );
     const onVisible = () => {
@@ -107,5 +113,5 @@ export function useConversationChanges(profileId: string, onChange: () => void) 
       document.removeEventListener("visibilitychange", onVisible);
       end();
     };
-  }, [profileId]);
+  }, [profileId, kind]);
 }

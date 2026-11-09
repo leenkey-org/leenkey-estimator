@@ -84,6 +84,32 @@ const CATALOG: Record<string, Entry> = {
       return excerpt ? t.messageNew.detail(excerpt, data.truncated === true) : null;
     },
   },
+  // L1-34: the conversation with the adviser.
+  "advisor.message": {
+    icon: MessageCircle,
+    tone: "blue",
+    filters: ["messages"],
+    title: () => t.advisorMessage.title,
+    detail: (data) => {
+      const excerpt = text(data.excerpt);
+      return excerpt ? t.messageNew.detail(excerpt, data.truncated === true) : null;
+    },
+  },
+  "advisor.message_from_client": {
+    icon: MessageCircle,
+    tone: "blue",
+    filters: [],
+    title: (data) =>
+      data.handoff === true
+        ? t.advisorFromClient.handoff(text(data.sender_first_name))
+        : t.advisorFromClient.title(text(data.sender_first_name)),
+    detail: (data) =>
+      t.advisorFromClient.detail(
+        text(data.reference),
+        text(data.excerpt),
+        data.truncated === true,
+      ) || null,
+  },
   "listing.pending": {
     icon: ClipboardList,
     tone: "stone",

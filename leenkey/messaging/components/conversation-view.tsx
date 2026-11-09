@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { AdvisorAvatar } from "@/components/shared/advisor-avatar";
 import { Button } from "@/components/shared/button";
 import { Composer } from "@/components/shared/composer";
 import { ConversationHeader } from "@/components/shared/conversation-header";
@@ -38,7 +39,21 @@ export type ConversationViewProps = {
     href: string | null;
     /** « Voir l'annonce » (buyer) or « Voir mon bien » (seller). */
     hrefLabel: string;
+    /** The « LK » of the adviser in place of the thumbnail (the seller's view, L1-34). */
+    advisor?: boolean;
   };
+  /** The list of the conversations (« Retour »). */
+  backHref?: string;
+  /**
+   * The conversation with the adviser (L1-34): its seller, whose messages
+   * are on one side and the team's on the other, and the first names of the
+   * admins who wrote (« Cédric, équipe Leenkey »).
+   */
+  advisor?: { sellerId: string; names: Record<string, string> } | null;
+  /** What the closed field says, in place of the closing of a listing conversation. */
+  closedText?: string;
+  /** « Signaler la conversation » in the menu (not between a seller and the team). */
+  report?: boolean;
   initialMessages: ThreadMessage[];
   /**
    * The seller's view: the financing status of the buyer, said by the header
@@ -68,6 +83,10 @@ export function ConversationView({
   viewerId,
   counterpart,
   header,
+  backHref = "/messages",
+  advisor = null,
+  closedText = t.thread.closed,
+  report = true,
   initialMessages,
   financing = null,
   unread,
@@ -211,6 +230,19 @@ export function ConversationView({
   const lastText = [...messages].reverse().find((message) => message.kind === "text");
   const lastFromCounterpart = lastText !== undefined && lastText.senderId !== viewerId;
 
+  // The side of a message: the viewer's; with the adviser, the team's or the seller's.
+  const isMine = (senderId: string) =>
+    advisor
+      ? (senderId === advisor.sellerId) === (viewerId === advisor.sellerId)
+      : senderId === viewerId;
+  const authorOf = (senderId: string) => {
+    if (senderId === viewerId) return t.thread.you;
+    if (!advisor || senderId === advisor.sellerId) return counterpart;
+    // An admin of the team, by their first name (SPEC 8.6); one not known yet: the team.
+    const name = advisor.names[senderId];
+    return name ? t.advisor.member(name) : t.advisor.team;
+  };
+
   const backClass = cn(
     iconButtonVariants({ variant: "stone" }),
     "inline-flex items-center justify-center lg:hidden",
@@ -225,11 +257,12 @@ export function ConversationView({
       >
         <ConversationHeader
           back={
-            <Link href="/messages" aria-label={t.thread.back} className={backClass}>
+            <Link href={backHref} aria-label={t.thread.back} className={backClass}>
               <ChevronLeft aria-hidden="true" />
             </Link>
           }
           thumbSrc={header.thumbSrc}
+          avatar={header.advisor ? <AdvisorAvatar label={t.advisor.avatar} /> : undefined}
           title={header.title}
           subtitle={header.subtitle}
           href={header.href}
@@ -248,15 +281,18 @@ export function ConversationView({
             ) : null
           }
           menu={
-            <ConversationMenu
-              conversationId={conversationId}
-              link={
-                header.href && header.hrefLabel
-                  ? { href: header.href, label: header.hrefLabel }
-                  : undefined
-              }
-              onReported={() => setReported(true)}
-            />
+            report || header.href ? (
+              <ConversationMenu
+                conversationId={conversationId}
+                link={
+                  header.href && header.hrefLabel
+                    ? { href: header.href, label: header.hrefLabel }
+                    : undefined
+                }
+                report={report}
+                onReported={() => setReported(true)}
+              />
+            ) : null
           }
         />
         {/* Under the status of the header, in sight however far the thread is scrolled. */}
@@ -274,15 +310,17 @@ export function ConversationView({
         {threadItems(messages, now).map((item) => {
           if (item.kind === "date") return <MessageDate key={item.key}>{item.label}</MessageDate>;
           const { message } = item;
-          if (message.kind !== "text") {
+          // A question passed on by the assistant (L1-34) reads as its author's message.
+          const handoff = message.kind === "assistant_handoff";
+          if (message.kind !== "text" && !handoff) {
             return <SystemMessage key={item.key}>{message.body}</SystemMessage>;
           }
-          const mine = message.senderId === viewerId;
+          const author = authorOf(message.senderId);
           return (
             <MessageBubble
               key={item.key}
-              mine={mine}
-              meta={`${mine ? t.thread.you : counterpart}${NBSP}· ${formatClock(message.createdAt)}`}
+              mine={isMine(message.senderId)}
+              meta={`${handoff ? t.advisor.handoff(author) : author}${NBSP}· ${formatClock(message.createdAt)}`}
             >
               {message.body}
             </MessageBubble>
@@ -293,7 +331,7 @@ export function ConversationView({
       <div className="sticky bottom-0 z-20">
         {isClosed ? (
           <div className="border-t border-lk-line bg-lk-surface px-3 pt-2.5 pb-[max(1.375rem,env(safe-area-inset-bottom))]">
-            <InlineAlert tone="info">{t.thread.closed}</InlineAlert>
+            <InlineAlert tone="info">{closedText}</InlineAlert>
           </div>
         ) : (
           <>

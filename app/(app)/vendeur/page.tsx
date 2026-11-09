@@ -13,6 +13,8 @@ import { requireProfile } from "@/core/auth/session";
 import { currentStep } from "@/core/steps/progress";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { ROUTES } from "@/leenkey/navigation/spaces";
+import { hasEntitlement } from "@/leenkey/billing/entitlements";
+import { AdvisorCard } from "@/leenkey/messaging/components/advisor-card";
 import { RecentConversations } from "@/leenkey/messaging/components/recent-conversations";
 import { PropertyList } from "@/leenkey/properties/components/property-list";
 import { SellerHeader } from "@/leenkey/properties/components/seller-header";
@@ -256,6 +258,9 @@ export default async function SellerHomePage({ searchParams }: Props) {
     const figures = saleFigures(data.data.conversations, data.data.views);
     const lines = step && situation ? taskLines(step, situation.property, editable) : [];
     const recent = data.data.conversations.slice(0, 3);
+    // The adviser (L1-34): the open conversation; without the right, the invitation.
+    const advisor = data.data.advisor && !data.data.advisor.closed ? data.data.advisor : null;
+    const advisorRight = advisor !== null || (await hasEntitlement(property.id, "advisor"));
     content = (
       <>
         {view ? (
@@ -289,6 +294,14 @@ export default async function SellerHomePage({ searchParams }: Props) {
                 ) : null}
               </>
             }
+          />
+        ) : null}
+
+        {advisor || !advisorRight ? (
+          <AdvisorCard
+            conversation={advisor}
+            plansHref={`${ROUTES.plan}?bien=${property.id}`}
+            now={now}
           />
         ) : null}
 

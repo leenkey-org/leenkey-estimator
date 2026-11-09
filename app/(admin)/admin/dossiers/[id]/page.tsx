@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,6 +11,8 @@ import { adminCase, isCheckNote, type AdminCaseDetail } from "@/leenkey/admin/ca
 import { CaseStatusBadge, CheckBadge } from "@/leenkey/admin/components/case-badges";
 import { CaseDecisions, CaseNoteForm, CaseTasks } from "@/leenkey/admin/components/case-decisions";
 import { ModerationFeedback } from "@/leenkey/admin/components/listing-moderation";
+import { adminAdvisorConversations } from "@/leenkey/admin/messages/queries";
+import { ROUTES } from "@/leenkey/navigation/spaces";
 import { formatDateTime } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
@@ -105,7 +108,7 @@ const STEP_TONE = {
 export default async function AdminCasePage({ params }: Props) {
   const admin = await requireAdmin();
   const { id } = await params;
-  const result = await adminCase(id);
+  const [result, advisors] = await Promise.all([adminCase(id), adminAdvisorConversations()]);
   if (!result.ok) {
     return (
       <AdminPage title={t.title} titleOnMobile back={backLink}>
@@ -129,7 +132,7 @@ export default async function AdminCasePage({ params }: Props) {
   const item = result.data;
   const now = new Date();
   const listing = item.property?.listing ?? null;
-  const facts = [
+  const facts: { label: string; value: ReactNode }[] = [
     {
       label: d.account,
       value: item.account.deleted ? (
@@ -159,6 +162,23 @@ export default async function AdminCasePage({ params }: Props) {
     { label: d.opened, value: formatDateTime(item.createdAt, now) },
     { label: d.followed, value: item.followedBy?.name ?? t.nobody },
   ];
+  // L1-34: the conversation with the adviser of the property, to answer from the case.
+  const conversation = advisors.ok
+    ? advisors.data.find((row) => row.propertyId === item.property?.id)
+    : undefined;
+  if (conversation) {
+    facts.push({
+      label: d.conversation,
+      value: (
+        <Link
+          href={`${ROUTES.adminMessages}/${conversation.id}`}
+          className="text-lk-blue underline-offset-2 hover:underline"
+        >
+          {d.conversationLink}
+        </Link>
+      ),
+    });
+  }
 
   return (
     <AdminPage title={item.subject} titleOnMobile back={backLink}>

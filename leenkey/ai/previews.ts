@@ -22,10 +22,22 @@ export const pricePreview = z.object({
   gapPercent: z.number().nullable(),
 });
 
-export const actionPreview = z.discriminatedUnion("kind", [descriptionPreview, pricePreview]);
+/** contact_advisor (L1-34): the summary the adviser will read. */
+export const handoffPreview = z.object({
+  kind: z.literal("advisor_handoff"),
+  propertyName: z.string(),
+  summary: z.string(),
+});
+
+export const actionPreview = z.discriminatedUnion("kind", [
+  descriptionPreview,
+  pricePreview,
+  handoffPreview,
+]);
 
 export type DescriptionPreview = z.infer<typeof descriptionPreview>;
 export type PricePreview = z.infer<typeof pricePreview>;
+export type HandoffPreview = z.infer<typeof handoffPreview>;
 export type ActionPreview = z.infer<typeof actionPreview>;
 
 /** The gap of a price to the analysis of value, in %, one decimal; null without one. */

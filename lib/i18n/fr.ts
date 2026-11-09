@@ -297,6 +297,12 @@ export const fr = {
         action: "Corriger l'annonce",
         secondary: "Voir le bien",
       },
+      // Rule 3 (L1-34): the adviser wrote, the seller has not read it yet.
+      advisor: {
+        title: "Votre conseiller Leenkey vous a écrit",
+        text: (since: string) => `Message reçu ${since}.`,
+        action: "Lire le message",
+      },
       waiting: {
         title: (firstName: string | null) =>
           firstName ? `Répondez à ${firstName}` : "Répondez à un acquéreur",
@@ -461,6 +467,7 @@ export const fr = {
       cases: "Dossiers",
       offers: "Offres",
       reports: "Signalements",
+      messages: "Messages",
       assistant: "Assistant",
       role: "Administrateur",
     },
@@ -564,6 +571,22 @@ export const fr = {
         title: (name: string | null) => (name ? `Nouveau message ${of(name)}` : "Nouveau message"),
         detail: (excerpt: string, truncated: boolean) =>
           `«\u00A0${excerpt}${truncated ? "…" : ""}\u00A0»`,
+      },
+      // L1-34: the adviser wrote to the seller; a seller wrote to the team.
+      advisorMessage: {
+        title: "Nouveau message de votre conseiller Leenkey",
+      },
+      advisorFromClient: {
+        title: (name: string | null) =>
+          name ? `Message ${of(name)} à son conseiller` : "Message d'un vendeur à son conseiller",
+        handoff: (name: string | null) =>
+          name
+            ? `Question ${of(name)} transmise par l'assistant`
+            : "Question transmise par l'assistant",
+        detail: (reference: string | null, excerpt: string | null, truncated: boolean) =>
+          [reference, excerpt ? `«\u00A0${excerpt}${truncated ? "…" : ""}\u00A0»` : null]
+            .filter(Boolean)
+            .join(" · "),
       },
       listingPending: {
         title: "Une annonce attend votre relecture",
@@ -1052,6 +1075,35 @@ export const fr = {
       label: "Votre message",
       send: "Envoyer",
     },
+    // L1-34: the conversation with the Leenkey adviser (SPEC-V2 8.6).
+    advisor: {
+      name: "Mon conseiller Leenkey",
+      team: "L'équipe Leenkey",
+      // An admin who answered: their first name (SPEC 8.6).
+      member: (firstName: string) => `${firstName}, équipe Leenkey`,
+      avatar: "LK",
+      // The header of the seller: the plan of the property, then the delay (SPEC 8.13).
+      reply: "Réponse sous 24\u00A0h",
+      // No immediate start (SPEC 11): the first contact after the withdrawal.
+      from: (date: string) => `Accompagnement à partir du ${date}`,
+      closed:
+        "Votre formule ne comprend plus de conseiller : cette conversation est fermée. Choisissez une formule pour échanger de nouveau avec l'équipe Leenkey.",
+      closedTeam:
+        "La formule de ce bien ne comprend plus de conseiller : la conversation est fermée.",
+      write: "Écrire à mon conseiller",
+      // Autonomie (SPEC 8.6): in place of the conversation, the way to the plans.
+      invite: {
+        title: "Échanger avec un conseiller Leenkey",
+        text: "Les formules Accompagné et Sérénité comprennent un conseiller qui vous répond sous 24\u00A0h.",
+        action: "Voir les formules",
+      },
+      // Its link in the header: the plan of the property.
+      plan: "Voir ma formule",
+      // A question passed on by the assistant (contact_advisor), signed by its author.
+      handoff: (author: string) => `${author}, via l'assistant`,
+      // The team's view: the case of the property, in the back office.
+      case: "Voir le dossier",
+    },
     start: {
       back: "Retour à l'annonce",
       intro: (name: string) => `Présentez-vous et posez vos questions : ${name} vous répond ici.`,
@@ -1440,6 +1492,8 @@ export const fr = {
       none: "Rien en attente",
       cases: "Dossiers ouverts",
       reports: "Signalements ouverts",
+      // L1-34: the sellers who wrote to their adviser, not read by the team.
+      messages: "Messages clients non lus",
       plans: (days: number) => `Formules vendues · ${days}\u00A0j`,
       plansAmount: (amount: string) => `${amount} TTC`,
       signups: (days: number) => `Inscriptions · ${days}\u00A0j`,
@@ -1466,8 +1520,7 @@ export const fr = {
       emptyTitle: "Rien à traiter",
       emptyText: "Aucune annonce, aucun dossier ni aucun signalement n'attend l'équipe.",
     },
-    later:
-      "Messages clients, offres et déclencheurs de montée en gamme s'ajouteront ici avec leurs écrans.",
+    later: "Offres et déclencheurs de montée en gamme s'ajouteront ici avec leurs écrans.",
     error: "Une partie du tableau de bord n'a pas pu être chargée.",
     retry: "Réessayer",
   },
@@ -1689,6 +1742,9 @@ export const fr = {
       source: "Origine",
       opened: "Ouvert le",
       followed: "Suivi par",
+      // L1-34: the conversation with the seller, to answer from the case.
+      conversation: "Conversation",
+      conversationLink: "Écrire au vendeur",
       deletedAccount: "Compte supprimé",
       aiSummary: "Résumé de l'assistant",
       toCheckTitle: "Paiement à vérifier",
@@ -1753,6 +1809,36 @@ export const fr = {
       network:
         "Pas de réponse du serveur : la modification a peut-être été enregistrée. Rechargez la page avant de recommencer.",
     },
+  },
+  // L1-34: the shared inbox of the advisor conversations (SPEC-V2 section 17).
+  adminMessages: {
+    metaTitle: "Messages clients · Back office · Leenkey",
+    detailMetaTitle: (name: string) => `${name} · Messages clients · Back office · Leenkey`,
+    title: "Messages clients",
+    summary: {
+      unread: (count: number) => `${count}\u00A0non ${count > 1 ? "lus" : "lu"}`,
+      late: (count: number) => `${count}\u00A0en attente depuis plus de 24\u00A0h`,
+    },
+    filters: {
+      label: "Formule des biens",
+      all: "Toutes",
+    },
+    list: "Conversations avec les vendeurs",
+    unread: "Non lu",
+    // The seller wrote last, more than 24 h ago (in orange, SPEC section 17).
+    late: (waiting: string) => `En attente depuis ${waiting}`,
+    mine: (body: string) => `Leenkey : ${body}`,
+    closed: "Fermée",
+    noName: "Vendeur",
+    empty: {
+      title: "Aucune conversation",
+      text: "Les conversations avec les vendeurs d'une formule Accompagné ou Sérénité arrivent ici, dès le paiement.",
+      filteredTitle: "Aucune conversation pour cette formule",
+      filteredText: "Choisissez « Toutes » pour voir les autres conversations.",
+    },
+    error: "Les messages n'ont pas pu être chargés.",
+    retry: "Réessayer",
+    back: "Tous les messages",
   },
   // L1-30c: the reports of the back office (SPEC-V2 section 17). The
   // reported conversation is read in full here, each reading traced.
@@ -1914,6 +2000,11 @@ export const fr = {
       replyHint:
         "Pour répondre, écrivez sur Leenkey : une réponse à cet email ne lui parvient pas.",
       action: "Lire la conversation",
+      // L1-34: the adviser to the seller; a seller to the team (internal).
+      advisorSender: "votre conseiller Leenkey",
+      advisorTeamSubject: (name: string | null, reference: string | null, count: number) =>
+        `${count > 1 ? `${count} messages` : "Message"} ${name ? of(name) : "d'un vendeur"} à son conseiller${reference ? ` (${reference})` : ""}`,
+      advisorTeamReply: "Répondez depuis le back office : le vendeur voit votre prénom.",
     },
     // L1-22: several listings sent for review at once, in one email (SPEC-V2 10).
     listingsToReview: {
@@ -2834,6 +2925,19 @@ export const fr = {
         declined: "Modification annulée : rien n'a changé.",
         superseded: "Proposition non confirmée : rien n'a changé.",
         error: "La modification n'a pas pu être faite : rien n'a changé.",
+      },
+      // contact_advisor (L1-34): the question passed on to the adviser.
+      handoff: {
+        title: "Écrire à mon conseiller",
+        message: "Message à votre conseiller",
+        confirm: "Envoyer",
+        states: {
+          confirmed:
+            "Message envoyé à votre conseiller Leenkey : sa réponse arrivera dans la messagerie.",
+          declined: "Message annulé : rien n'a été envoyé.",
+          superseded: "Message non confirmé : rien n'a été envoyé.",
+          error: "Le message n'a pas pu être envoyé.",
+        },
       },
     },
     errors: {

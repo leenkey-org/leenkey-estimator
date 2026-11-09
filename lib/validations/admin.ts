@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { planCode } from "./billing";
 import type { Database } from "@/types/database";
 
 // L1-19: back office of the listings (SPEC-V2 section 17).
@@ -177,6 +178,23 @@ export function parseAdminReportsQuery(
 
 export function adminReportsHref({ closed }: AdminReportsQuery): string {
   return closed ? "/admin/signalements?statut=clos" : "/admin/signalements";
+}
+
+/**
+ * /admin/messages?formule=…: the advisor conversations of one plan (L1-34);
+ * the plans offered are those of the conversations, never a list in the code.
+ */
+export type AdminMessagesQuery = { plan: z.infer<typeof planCode> | null };
+
+export function parseAdminMessagesQuery(
+  params: Record<string, string | string[] | undefined>,
+): AdminMessagesQuery {
+  const plan = planCode.safeParse(firstOf(params.formule));
+  return { plan: plan.success ? plan.data : null };
+}
+
+export function adminMessagesHref({ plan }: AdminMessagesQuery): string {
+  return plan ? `/admin/messages?formule=${plan}` : "/admin/messages";
 }
 
 const caseId = z.string().uuid();

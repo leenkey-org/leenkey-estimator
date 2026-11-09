@@ -2,7 +2,7 @@ import "server-only";
 import { listConversations } from "@/leenkey/messaging/queries";
 import type { ConversationSummary } from "@/leenkey/messaging/types";
 import { createClient } from "@/lib/supabase/server";
-import { propertyConversations, weekStart } from "./dashboard";
+import { advisorConversation, propertyConversations, weekStart } from "./dashboard";
 import type { SaleSituation } from "./next-action";
 import type { QueryResult, SellerProperty } from "./queries";
 import { saleSituation } from "./sale";
@@ -16,6 +16,8 @@ export type SaleDashboardData = {
   /** null: no progress for this property yet. */
   situation: SaleSituation | null;
   conversations: ConversationSummary[];
+  /** The conversation with the adviser of a paid plan (L1-34), or null. */
+  advisor: ConversationSummary | null;
   views: { count: number }[];
 };
 
@@ -48,6 +50,7 @@ export async function saleDashboard(
     data: {
       situation: situation.data,
       conversations: propertyConversations(conversations.data, property.id),
+      advisor: advisorConversation(conversations.data, property.id),
       views: views.data,
     },
   };
