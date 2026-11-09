@@ -8,7 +8,7 @@ export const PASSWORD_MIN = 8;
 // Supabase Auth hashes with bcrypt, which ignores everything beyond 72 bytes.
 export const PASSWORD_MAX = 72;
 
-const email = z
+export const emailField = z
   .string({ required_error: t.emailRequired })
   .trim()
   .toLowerCase()
@@ -16,7 +16,7 @@ const email = z
   .max(254, t.emailInvalid)
   .email(t.emailInvalid);
 
-const newPassword = z
+export const newPasswordField = z
   .string({ required_error: t.passwordRequired })
   .min(PASSWORD_MIN, t.passwordTooShort)
   // Bytes, not characters: « é » takes two.
@@ -27,6 +27,13 @@ const next = z.string().max(512).optional().catch(undefined);
 
 /** Ticked HTML checkbox: FormData gives "on", nothing when unticked. */
 const accepted = z.literal("on", { errorMap: () => ({ message: t.termsRequired }) });
+
+/** A phone number, empty allowed (« 06 12 34 56 78 », « +33 6 … »). */
+export const phoneField = z
+  .string()
+  .trim()
+  .max(30, t.phoneInvalid)
+  .regex(/^$|^\+?[0-9][0-9 .()-]{5,28}$/, t.phoneInvalid);
 
 export const signUpSchema = z.object({
   role: z.enum(["seller", "buyer"], { errorMap: () => ({ message: t.roleRequired }) }),
@@ -39,31 +46,26 @@ export const signUpSchema = z.object({
       const { firstName, lastName } = splitFullName(value);
       return firstName.length <= 80 && (lastName ?? "").length <= 80;
     }, t.nameTooLong),
-  email,
-  phone: z
-    .string()
-    .trim()
-    .max(30, t.phoneInvalid)
-    .regex(/^$|^\+?[0-9][0-9 .()-]{5,28}$/, t.phoneInvalid)
-    .optional(),
-  password: newPassword,
+  email: emailField,
+  phone: phoneField.optional(),
+  password: newPasswordField,
   acceptTerms: accepted,
   next,
 });
 export type SignUpInput = z.infer<typeof signUpSchema>;
 
 export const signInSchema = z.object({
-  email,
+  email: emailField,
   password: z.string({ required_error: t.passwordRequired }).min(1, t.passwordRequired),
   next,
 });
 
-export const forgotPasswordSchema = z.object({ email });
+export const forgotPasswordSchema = z.object({ email: emailField });
 
-export const resendSchema = z.object({ email });
+export const resendSchema = z.object({ email: emailField });
 
 export const resetPasswordSchema = z
-  .object({ password: newPassword, confirm: z.string() })
+  .object({ password: newPasswordField, confirm: z.string() })
   .refine((value) => value.password === value.confirm, {
     path: ["confirm"],
     message: t.passwordMismatch,

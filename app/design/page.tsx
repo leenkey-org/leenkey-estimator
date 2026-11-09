@@ -898,8 +898,8 @@ export default function DesignPage() {
             <div className="rounded-lk-md bg-lk-bg px-5">
               <ComingSoon
                 titleAs="h4"
-                title={fr.placeholders.account.comingTitle}
-                text={fr.placeholders.account.comingText}
+                title={fr.placeholders.admin.offers.comingTitle}
+                text={fr.placeholders.admin.offers.comingText}
               />
             </div>
             <Caption>{content.comingSoon.caption}</Caption>

@@ -74,10 +74,13 @@ case "${1:-}" in
       -e GOTRUE_SMTP_HOST=$HOST_IP -e GOTRUE_SMTP_PORT=$SMTP -e GOTRUE_SMTP_USER=local -e GOTRUE_SMTP_PASS=local \
       -e GOTRUE_SMTP_ADMIN_EMAIL=noreply@leenkey.test -e GOTRUE_SMTP_SENDER_NAME=Leenkey \
       -e GOTRUE_MAILER_URLPATHS_CONFIRMATION=/auth/v1/verify -e GOTRUE_MAILER_URLPATHS_RECOVERY=/auth/v1/verify \
+      -e GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE=/auth/v1/verify -e GOTRUE_MAILER_SECURE_EMAIL_CHANGE_ENABLED=true \
       -e GOTRUE_MAILER_TEMPLATES_CONFIRMATION="http://$HOST_IP:$GATEWAY/templates/confirmation.html" \
       -e GOTRUE_MAILER_TEMPLATES_RECOVERY="http://$HOST_IP:$GATEWAY/templates/recovery.html" \
+      -e GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE="http://$HOST_IP:$GATEWAY/templates/email-change.html" \
       -e "GOTRUE_MAILER_SUBJECTS_CONFIRMATION=Confirmez votre adresse email" \
       -e "GOTRUE_MAILER_SUBJECTS_RECOVERY=Choisissez un nouveau mot de passe" \
+      -e "GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE=Confirmez le changement d'adresse email" \
       -e GOTRUE_RATE_LIMIT_EMAIL_SENT=1000 -e GOTRUE_SMTP_MAX_FREQUENCY=1s \
       supabase/gotrue:v2.177.0 >/dev/null
     # As on the platform, the storage service brings its schema up to date

@@ -4,7 +4,7 @@ import { Button } from "@/components/shared/button";
 import { InfoNote } from "@/components/shared/info-note";
 import { KeyFactsTable } from "@/components/shared/key-facts-table";
 import { editableOnceSent } from "@/leenkey/properties/creation";
-import { SavedNotice } from "@/leenkey/properties/components/saved-notice";
+import { SavedNotice } from "@/components/shared/saved-notice";
 import { SheetSection } from "@/leenkey/properties/components/sheet-section";
 import { propertyForSheet } from "@/leenkey/properties/load";
 import { editHref, propertyName, sellerFacts } from "@/leenkey/properties/sheet";

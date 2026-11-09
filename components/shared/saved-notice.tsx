@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { InlineAlert } from "@/components/shared/inline-alert";
 
 /**
- * Outcome of a change made from the page of a property (L1-14b), at the top
- * of its tab: it takes the focus when the tab opens, so that it is read,
- * then `?modifie=1` leaves the address, so that a reload does not say it
- * again.
+ * Outcome of a change made on another page (a property, L1-14b; the
+ * account, L1-39), at the top of the page it comes back to: it takes the
+ * focus when the page opens, so that it is read, then `?modifie=…` leaves
+ * the address, so that a reload does not say it again.
  */
 export function SavedNotice({ text }: { text: string }) {
   const notice = useRef<HTMLDivElement>(null);

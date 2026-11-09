@@ -2,7 +2,6 @@
 
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import type { AuthError } from "@supabase/supabase-js";
 import { splitFullName } from "@/core/auth/identity";
 import { safeNextPath } from "@/core/auth/next-path";
 import { getUser, missingAcceptances } from "@/core/auth/session";
@@ -22,9 +21,11 @@ import {
 import {
   CONFIRM_COOKIE,
   decodeConfirmLink,
+  EMAIL_CHANGE_HALF_PATH,
   EXPIRED_LINK_PATH,
   pathAfterEmailLink,
 } from "./landing";
+import { authErrorMessage, isAddressEmailLimit } from "./errors";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { homePathForRoles } from "./routes";
 
@@ -64,42 +65,6 @@ async function siteOrigin(): Promise<string> {
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
   return host ? `${h.get("x-forwarded-proto") ?? "https"}://${host}` : "http://localhost:3000";
-}
-
-/**
- * Supabase Auth refuses a second email to the same address within a minute
- * (« For security purposes… »). It only happens for an address that has an
- * account: telling it would reveal which addresses are registered, so the
- * answer stays « sent ». The quota of the whole project shares the error code
- * with another message: that one is told (« Trop de tentatives »).
- */
-function isAddressEmailLimit(error: AuthError | null, action: string): boolean {
-  if (error?.code !== "over_email_send_rate_limit") return false;
-  if (!/security purposes/i.test(error.message)) return false;
-  console.warn(`[auth] ${action}: email not sent, limit per address`);
-  return true;
-}
-
-function authErrorMessage(error: AuthError, action: string): string {
-  switch (error.code) {
-    case "invalid_credentials":
-      return t.invalidCredentials;
-    case "email_not_confirmed":
-      return t.emailNotConfirmed;
-    case "user_already_exists":
-    case "email_exists":
-      return t.alreadyRegistered;
-    case "weak_password":
-      return t.passwordWeak;
-    case "same_password":
-      return t.passwordSame;
-    case "over_request_rate_limit":
-    case "over_email_send_rate_limit":
-      return t.tooManyRequests;
-    default:
-      console.error(`[auth] ${action} failed`, { code: error.code, status: error.status });
-      return t.generic;
-  }
 }
 
 async function rolesOf(userId: string): Promise<string[]> {
@@ -194,10 +159,15 @@ export async function confirmEmailLink(): Promise<void> {
   if (!link) redirect(EXPIRED_LINK_PATH);
   const { token_hash, type } = link;
   const supabase = await createClient();
-  const { error } = await supabase.auth.verifyOtp({ type, token_hash });
+  const { data, error } = await supabase.auth.verifyOtp({ type, token_hash });
   if (error) {
     console.error("[auth] verifyOtp failed", { code: error.code, type });
     redirect(EXPIRED_LINK_PATH);
+  }
+  // A change of address (L1-39): the first of its two links opens no
+  // session, the second changes the address and signs in.
+  if (type === "email_change") {
+    redirect(data.session ? `${ROUTES.account}?modifie=email` : EMAIL_CHANGE_HALF_PATH);
   }
   redirect(await pathAfterEmailLink(supabase, type));
 }

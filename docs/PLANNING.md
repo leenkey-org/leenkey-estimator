@@ -80,7 +80,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-25** Espace acquéreur v1 (accueil, profil projet et financement déclaratif, `FinancingBadge` côté vendeur) · PR : #64 · Testé en préprod : ☐
 - [x] **L1-27** Embeddings (Edge Function `embed`), import de la FAQ de Cédric, `search_knowledge` (avancé depuis S5) · PR : #66 · Testé en préprod : ☐
 - [x] **L1-38** En-têtes de sécurité et limitation de débit (`lib/rate-limit.ts`) · PR : #79 (liste des sources de la CSP après Q40) · Testé en préprod : ☐
-- [ ] **L1-39** Page `/compte` (informations, e-mail, mot de passe, notifications, rôles) · PR : · Testé en préprod : ☐
+- [x] **L1-39** Page `/compte` (informations, e-mail, mot de passe, notifications, rôles) · PR : #83 · Testé en préprod : ☐
 
 ## S5 · semaine du 9 nov. · Paiement, assistant, back office → livraison lot 1 (ven. 13 nov.)
 

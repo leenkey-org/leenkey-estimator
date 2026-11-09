@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/shared/button";
 import { editableOnceSent } from "@/leenkey/properties/creation";
-import { SavedNotice } from "@/leenkey/properties/components/saved-notice";
+import { SavedNotice } from "@/components/shared/saved-notice";
 import { SheetSection } from "@/leenkey/properties/components/sheet-section";
 import { propertyForSheet } from "@/leenkey/properties/load";
 import { editHref, pricePerM2Cents, propertyName } from "@/leenkey/properties/sheet";

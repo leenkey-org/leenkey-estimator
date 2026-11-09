@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Confirmez le changement d&#39;adresse email</title>
+  </head>
+  <!-- Supabase Auth template (Change email address, L1-39), sent to the current
+       address and to the new one, each with its own token: the change is done
+       once both links are opened (secure email change).
+       docs/DESIGN.md 14: #F4F4F1 background,
+       560 px white card, 8 px #1156FC band, Arial bold for titles (mail
+       clients ignore font-stretch), 48 px #1156FC button.
+       Link: /auth/confirm with the token hash, then the button of /confirmation,
+       valid from any browser. -->
+  <body style="margin:0;padding:0;background:#F4F4F1;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F4F1;">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border-radius:6px;overflow:hidden;">
+            <tr><td style="height:8px;background:#1156FC;font-size:0;line-height:0;">&nbsp;</td></tr>
+            <tr>
+              <td style="padding:32px 32px 8px;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:700;color:#0F1E35;">Leenkey</td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 0;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.2;font-weight:700;color:#0F1E35;">Confirmez le changement d&#39;adresse email</td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#0F1E35;">Bonjour, une demande a été faite pour remplacer l&#39;adresse {{ .Email }} par {{ .NewEmail }} sur votre compte Leenkey. Pour protéger votre compte, le changement doit être confirmé depuis les deux adresses.</td>
+            </tr>
+            <tr>
+              <td style="padding:24px 32px 0;">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="border-radius:4px;background:#1156FC;">
+                      <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email_change" style="display:inline-block;padding:0 24px;line-height:48px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:4px;">Confirmer le changement</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 32px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:#3E4757;">Ce lien est valable une heure. Si vous n&#39;êtes pas à l&#39;origine de cette demande, n&#39;ouvrez pas le lien : votre adresse ne change pas. Choisissez alors un nouveau mot de passe et écrivez-nous à contact.leenkey@gmail.com.</td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 32px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#5B6474;word-break:break-all;">
+                Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br />{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email_change
+              </td>
+            </tr>
+          </table>
+          <p style="margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#5B6474;">
+            Leenkey · SAS LEENKEY, RCS Évry 107 616 211
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
