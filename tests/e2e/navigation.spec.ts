@@ -734,7 +734,12 @@ test.describe("comptes connectés (base de seed)", () => {
   // (opening the conversation of buyer_c reads it).
   test("une conversation mène au bien, pour le vendeur", async ({ page, isMobile }) => {
     await signIn(page, "seller_a", "/messages");
-    await page.locator('main a[href^="/messages/"]:visible').first().click();
+    // A buyer's conversation: the adviser's, pinned first, leads to the plan (L1-34).
+    await page
+      .locator('main a[href^="/messages/"]:visible')
+      .filter({ hasNotText: "Mon conseiller Leenkey" })
+      .first()
+      .click();
     await expect(page).toHaveURL(/\/messages\/[0-9a-f-]{36}$/);
     await expect(await conversationLink(page, isMobile, "Voir mon bien")).toHaveAttribute(
       "href",

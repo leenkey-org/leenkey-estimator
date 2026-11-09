@@ -1739,6 +1739,9 @@ export const fr = {
       source: "Origine",
       opened: "Ouvert le",
       followed: "Suivi par",
+      // L1-34: the conversation with the seller, to answer from the case.
+      conversation: "Conversation",
+      conversationLink: "Écrire au vendeur",
       deletedAccount: "Compte supprimé",
       aiSummary: "Résumé de l'assistant",
       toCheckTitle: "Paiement à vérifier",

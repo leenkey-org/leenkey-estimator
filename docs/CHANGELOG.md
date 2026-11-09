@@ -12,6 +12,14 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-09 · L1-34 · PR #86 · Conversation conseiller
+- Ajouté : la conversation « Mon conseiller Leenkey » (`kind = 'advisor'`), ouverte par la base au paiement d'une formule qui comprend le conseiller, avec son message d'accueil ; épinglée en tête des conversations du bien (avatar « LK »), fermée en écriture quand la formule ne le comprend plus.
+- Ajouté : sur « Ma vente », la carte du conseiller (dernier message, « Écrire à mon conseiller »), la prochaine action « Votre conseiller Leenkey vous a écrit », et en Autonomie l'invitation vers les formules.
+- Ajouté : « Messages » dans le back office : `/admin/messages` (non-lus en tête, filtre par formule, attente de plus de 24 h en orange), la conversation côté équipe signée du prénom de l'admin, le lien depuis la fiche du dossier.
+- Ajouté : notifications et emails `advisor.message` (au vendeur) et `advisor.message_from_client` (à l'équipe) ; outil de l'assistant `contact_advisor`, après confirmation.
+- Migration : `20261109140000_advisor_conversation.sql`.
+- Tests : RLS (`rls_advisor_conversation.sql`, 36), unitaires (en-tête, règle 3, boîte de l'équipe, notifications, emails, outil), E2E (lecture sur le seed ; échange en temps réel vendeur et équipe ; `contact_advisor` ; conversation ouverte après un paiement test).
+
 ### 2026-11-09 · Formules · PR #85 · Accès aux formules
 - Corrigé : sur `/tarifs`, « Choisir Accompagné » et « Choisir Sérénité » menaient à l'estimateur : ils ouvrent la commande de la formule (après la connexion) ; « Commencer gratuitement » mène à `/vendre`.
 - Ajouté : « Ma formule » dans le menu du compte d'un vendeur et dans `/compte` ; « Voir les formules » plus visible dans l'en-tête de « Ma vente ».
