@@ -1,11 +1,10 @@
 // Published version (date) of each legal text accepted at signup (L1-09).
-// The texts are still provisional (DECISIONS Q34): when the final ones are
-// published, set their date here and every user accepts them again through
-// /conditions (legal_acceptances, context 'update').
+// A change of a text is a new date here: every user accepts it again
+// through /conditions (legal_acceptances, context 'update').
 export const LEGAL_VERSIONS = {
-  // 1.1: article 5, the plans decided by Cédric (2026-11-06).
-  cgu: "2026-11-06",
-  privacy: "2026-10-16",
+  // 2.0: the texts written for the launch (DECISIONS.md 2026-11-09).
+  cgu: "2026-11-09",
+  privacy: "2026-11-09",
 } as const;
 
 export type LegalDocument = keyof typeof LEGAL_VERSIONS;

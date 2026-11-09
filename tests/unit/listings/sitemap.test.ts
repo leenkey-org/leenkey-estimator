@@ -41,7 +41,7 @@ describe("sitemapEntries", () => {
   });
 
   it("still lists the pages without any listing (database unavailable)", () => {
-    expect(sitemapEntries([]).length).toBe(12);
+    expect(sitemapEntries([]).length).toBe(17);
   });
 });
 

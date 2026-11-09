@@ -35,12 +35,13 @@ test("le pied de page des pages V1 a les mêmes liens et l'adresse légale", asy
   await expect(footer).toContainText("36 rue Pierre Brossolette, 91360 Épinay-sur-Orge");
 });
 
-test("les pages en cours de rédaction le disent et donnent l'adresse légale", async ({ page }) => {
+test("les textes légaux sont publiés, datés, avec l'adresse légale (2026-11-09)", async ({
+  page,
+}) => {
   for (const path of ["/cgv", "/confidentialite", "/signalement", "/intelligence-artificielle"]) {
     await page.goto(path);
-    await expect(
-      page.getByRole("status").filter({ hasText: "en cours de rédaction" }),
-    ).toBeVisible();
+    await expect(page.getByText("en cours de rédaction")).toHaveCount(0);
+    await expect(page.getByText(/^En vigueur depuis le 9 novembre 2026/)).toBeVisible();
     await expect(page.locator("address")).toContainText("36 rue Pierre Brossolette");
   }
 });
@@ -48,7 +49,7 @@ test("les pages en cours de rédaction le disent et donnent l'adresse légale", 
 test("la politique cookies liste les cookies et le stockage du site", async ({ page }) => {
   await page.goto("/cookies");
   const list = page.getByRole("region", {
-    name: "Liste provisoire des cookies et du stockage du site",
+    name: "Liste des cookies et du stockage du site",
   });
   for (const name of [
     "sb-…-auth-token",
@@ -58,6 +59,8 @@ test("la politique cookies liste les cookies et le stockage du site", async ({ p
     "lk_vues",
     "leenkey_form_v1, leenkey_dashboard_v1",
     "lk_rappel_…",
+    "lk_estimation_claim",
+    "lk:maps:visited",
     "_ga, _ga_…",
   ]) {
     await expect(list.getByRole("heading", { level: 3, name, exact: true })).toBeVisible();

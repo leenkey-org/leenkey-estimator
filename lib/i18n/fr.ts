@@ -1,5 +1,6 @@
 // User-facing texts (CLAUDE.md section 9): no string literal in components.
-import { legalNotice, terms } from "./legal-texts";
+import { aiText, privacyText, reportingText, salesTermsText, termsV2 } from "./legal-policies";
+import { legalNotice } from "./legal-texts";
 import { site } from "./site";
 
 /** « de David », « d'Alice », « d'Hélène »: the elision before a vowel or an h (« de Yann »). */
@@ -1010,20 +1011,23 @@ export const fr = {
       metaTitle: "Politique de confidentialité · Leenkey",
       title: "Politique de confidentialité",
       contact: "Pour toute question sur vos données, écrivez-nous à",
+      ...privacyText,
     },
     notice: legalNotice,
-    terms,
+    terms: termsV2,
     salesTerms: {
       metaTitle: "Conditions générales de vente · Leenkey",
       title: "Conditions générales de vente",
       lead: "Elles s'appliquent aux formules Accompagné et Sérénité, payées à la souscription.",
       contact: "Pour toute question sur une commande, écrivez-nous à",
+      ...salesTermsText,
     },
     cookies: {
       metaTitle: "Politique cookies · Leenkey",
       title: "Politique cookies",
       lead: "Les cookies déposés par leenkey.fr, à quoi ils servent, et comment changer d'avis.",
-      listTitle: "Liste provisoire des cookies et du stockage du site",
+      updated: "En vigueur depuis le 9 novembre 2026",
+      listTitle: "Liste des cookies et du stockage du site",
       labels: {
         provider: "Fournisseur",
         purpose: "À quoi il sert",
@@ -1099,6 +1103,21 @@ export const fr = {
           duration: "Jusqu'à son effacement dans votre navigateur",
         },
         {
+          name: "lk_estimation_claim",
+          provider: "Leenkey (stockage de votre navigateur)",
+          purpose:
+            "Rattacher votre analyse de valeur au compte que vous créez ensuite, pour la reprendre dans votre annonce",
+          kind: "necessary",
+          duration: "Jusqu'à la création de votre annonce",
+        },
+        {
+          name: "lk:maps:visited",
+          provider: "Leenkey (stockage de votre navigateur)",
+          purpose: "Marquer sur la carte les annonces que vous avez déjà ouvertes",
+          kind: "necessary",
+          duration: "Jusqu'à la fermeture de l'onglet",
+        },
+        {
           name: "lk:search:last",
           provider: "Leenkey (stockage de votre navigateur)",
           purpose:
@@ -1115,7 +1134,9 @@ export const fr = {
         },
       ],
       noCookie:
-        "Vercel Web Analytics, la mesure d'audience de notre hébergeur, ne dépose ni cookie ni stockage dans votre navigateur.",
+        "Vercel Web Analytics, la mesure d'audience de notre hébergeur, ne dépose ni cookie ni stockage dans votre navigateur. Les cartes sont chargées depuis les serveurs de Google, qui reçoivent l'adresse IP de votre appareil et la zone affichée ; aucun cookie n'est déposé par leenkey.fr pour elles.",
+      intro:
+        "Un cookie ou un stockage du navigateur garde une information sur votre appareil. Ceux qui sont nécessaires au fonctionnement du site, ou à un service que vous demandez, sont déposés sans accord préalable ; les autres ne le sont qu'avec votre accord, que vous pouvez refuser aussi simplement qu'accepter, et retirer à tout moment. Vous pouvez aussi les gérer dans les réglages de votre navigateur : bloquer ceux qui sont nécessaires peut empêcher certaines fonctions de marcher.",
       manageText: "Vous pouvez changer d'avis à tout moment :",
       contact: "Pour toute question sur les cookies, écrivez-nous à",
     },
@@ -1123,19 +1144,15 @@ export const fr = {
       metaTitle: "Intelligence artificielle · Leenkey",
       title: "Intelligence artificielle",
       lead: "Comment l'assistant Leenkey utilise l'intelligence artificielle, et ce qu'il ne fait jamais seul.",
-      // The assistant of the public site (DECISIONS.md 2026-11-07); the
-      // whole notice comes with the texts of the lawyer (Q34).
-      visitor: [
-        "Sur le site, l'assistant Leenkey répond à vos questions sur nos formules et vous aide à souscrire, sans compte. Ses réponses viennent uniquement de nos formules et de notre FAQ ; il ne donne pas d'avis juridique, fiscal ou financier, ni de valeur pour un bien.",
-        "Vos questions et ses réponses sont conservées 30 jours pour améliorer l'assistant, sans votre nom. Votre adresse IP n'est pas enregistrée : pour limiter le nombre de questions par jour, nous n'en gardons qu'une empreinte, calculée avec une clé secrète, et nous l'effaçons le lendemain. N'y écrivez pas d'informations personnelles.",
-      ],
+      ...aiText,
       contact: "Pour toute question sur l'assistant, écrivez-nous à",
     },
     reporting: {
       metaTitle: "Signalement et modération · Leenkey",
       title: "Signalement et modération",
       lead: "Comment signaler une annonce ou un message, et comment nous traitons les signalements.",
-      contact: "Pour signaler un contenu dès maintenant, écrivez-nous à",
+      contact: "Pour signaler un contenu, écrivez-nous à",
+      ...reportingText,
     },
   },
   // Footer of the V2 pages and of the V1 marketing pages (L1-36).

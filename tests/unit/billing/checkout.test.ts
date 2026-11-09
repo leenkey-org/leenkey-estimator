@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SALES_TERMS } from "@/lib/config/sales";
 import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 
 // L1-26: who may start a payment, and what goes to Stripe
@@ -94,7 +95,7 @@ const input = {
   plan: "accompagne",
   acceptedTerms: true,
   cguVersion: LEGAL_VERSIONS.cgu,
-  cgvVersion: "2026-10-17",
+  cgvVersion: SALES_TERMS.cgvVersion,
   earlyStart: false,
 };
 
@@ -143,7 +144,7 @@ describe("startCheckout", () => {
         kind: "new",
         early_start: "0",
         cgu_version: LEGAL_VERSIONS.cgu,
-        cgv_version: "2026-10-17",
+        cgv_version: SALES_TERMS.cgvVersion,
         env: "staging",
       },
     });

@@ -8,10 +8,10 @@ import { appEnv, type AppEnv } from "@/lib/env";
 export type Mediator = { name: string; address: string; url: string };
 
 export const SALES_TERMS = {
-  /** Published version (date) of the CGV accepted at checkout: the provisional text of L1-36 (/cgv, Q34). */
-  cgvVersion: "2026-10-17",
-  /** The final CGV of Cédric's lawyer are published (Q34). */
-  cgvFinal: false,
+  /** Published version (date) of the CGV accepted at checkout (/cgv, lib/i18n/legal-policies.ts). */
+  cgvVersion: "2026-11-09",
+  /** The CGV for the launch are published (DECISIONS.md 2026-11-09, Q34). */
+  cgvFinal: true,
   /** The consumer mediator Leenkey joined (Q32), null until then. */
   mediator: null as Mediator | null,
 } as const;

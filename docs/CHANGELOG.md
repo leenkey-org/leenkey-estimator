@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-09 · Légal · PR #82 · Textes légaux de la mise en ligne
+- Ajouté : CGV, politique de confidentialité, signalement et modération, page Intelligence artificielle, rédigées à partir du dossier juridique du 9 octobre ; plus de mention « en cours de rédaction ».
+- Modifié : CGU 2.0 (20 articles), mentions légales (hébergement des données, activité, juridiction), politique cookies (inventaire complété) ; nouvelles versions à accepter à la connexion suivante ; pages légales dans le sitemap.
+- Ajouté : purge chaque nuit des analyses de valeur faites sans compte après 12 mois.
+- Migration : `20261109100000_estimations_purge.sql` (`estimations_purge`, réservée au job).
+- Tests : RLS (`rls_estimations_purge.sql`, 9, cinq comptes et visiteur), unitaires (numérotation, aucun repère « à compléter », aucun « on », rétractation et formulaire des CGV), E2E (pages publiées et datées, sommaire des CGU 2.0, rétractation des CGV, cookies).
+
 ### 2026-11-08 · L1-40 · PR #81 · Vente conforme des formules : rétractation, récapitulatif, échéance
 - Ajouté : « Renoncer au contrat » sur la page de la formule pendant les 14 jours (boîte de confirmation, accusé de réception immédiat par email, note et réouverture du dossier, « Rétractation à rembourser » à toute l'équipe dans la cloche et par email).
 - Modifié : l'email « formule activée » devient le récapitulatif de la commande : prix, durée et date de fin, prestations vendues, CGU et CGV acceptées, rétractation et formulaire type, médiateur.
