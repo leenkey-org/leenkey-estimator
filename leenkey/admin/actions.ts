@@ -18,7 +18,8 @@ type ListingStatus = Database["public"]["Enums"]["listing_status"];
 
 export type ModerationResult =
   | { ok: true; data: { status: ListingStatus; email: EmailDelivery | null } }
-  | { ok: false; error: ModerationError };
+  /** dpe: published without its DPE, refused by listing_publish (L1-65). */
+  | { ok: false; error: ModerationError | "dpe" };
 
 const DECISION = {
   publish: "published",
@@ -60,7 +61,8 @@ export async function moderateListing(input: unknown): Promise<ModerationResult>
       action: command.action,
       code: error.code,
     });
-    return { ok: false, error: moderationError(error.code) };
+    const dpe = error.code === "22023" && error.message.startsWith("dpe: ");
+    return { ok: false, error: dpe ? "dpe" : moderationError(error.code) };
   }
 
   const decision = DECISION[command.action];

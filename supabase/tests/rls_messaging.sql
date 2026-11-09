@@ -18,6 +18,7 @@ insert into listings (property_id, title, description, price_cents)
 values (:'prop_a', 'Appartement 3 pièces', 'Proche gare.', 35000000)
 returning id as listing_a \gset
 \o /dev/null
+select tests.dpe(:'listing_a');
 select listing_submit(:'listing_a');
 \o
 insert into photos (property_id, storage_path)
@@ -33,6 +34,7 @@ insert into listings (property_id, title, description, price_cents)
 values (:'prop_b', 'Maison 5 pièces', 'Jardin.', 42000000)
 returning id as listing_b \gset
 \o /dev/null
+select tests.dpe(:'listing_b');
 select listing_submit(:'listing_b');
 \o
 insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms)

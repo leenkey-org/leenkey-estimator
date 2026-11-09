@@ -108,6 +108,7 @@ select ok(tests.done(:'prop_a', 'listing_written'), 'a price and a description: 
 select is(tests.step(:'prop_a'), 'publish',
           'an event of step 2 brings the sale there, the documents of step 1 still to do');
 select ok(not tests.done(:'prop_a', 'checklist_viewed'), 'the task skipped stays to do');
+select tests.dpe(:'listing_a');
 select lives_ok(format($$select listing_submit(%L)$$, :'listing_a'), 'seller_a sends the listing');
 select ok(tests.done(:'prop_a', 'listing_submitted'), '« Annonce envoyée » ticked');
 select is(tests.step(:'prop_a'), 'publish', 'sent, waiting for Leenkey: still step 2');

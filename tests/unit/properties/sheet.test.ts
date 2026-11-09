@@ -34,6 +34,12 @@ const characteristics: SellerProperty["characteristics"] = {
   chargesMonthlyEuros: 180,
   propertyTaxYearlyEuros: 1150,
   coproLots: 40,
+  dpeExempt: false,
+  dpeExemptionReason: null,
+  dpeDate: null,
+  energyCostMinEuros: null,
+  energyCostMaxEuros: null,
+  energyPriceYear: null,
 };
 
 const listing: NonNullable<SellerProperty["listing"]> = {

@@ -887,6 +887,12 @@ export type Database = {
           deleted_at: string | null
           district: string | null
           dpe_class: string | null
+          dpe_date: string | null
+          dpe_exempt: boolean
+          dpe_exemption_reason: string | null
+          energy_cost_max_cents: number | null
+          energy_cost_min_cents: number | null
+          energy_price_year: number | null
           estimation_high_cents: number | null
           estimation_id: string | null
           estimation_low_cents: number | null
@@ -926,6 +932,12 @@ export type Database = {
           deleted_at?: string | null
           district?: string | null
           dpe_class?: string | null
+          dpe_date?: string | null
+          dpe_exempt?: boolean
+          dpe_exemption_reason?: string | null
+          energy_cost_max_cents?: number | null
+          energy_cost_min_cents?: number | null
+          energy_price_year?: number | null
           estimation_high_cents?: number | null
           estimation_id?: string | null
           estimation_low_cents?: number | null
@@ -965,6 +977,12 @@ export type Database = {
           deleted_at?: string | null
           district?: string | null
           dpe_class?: string | null
+          dpe_date?: string | null
+          dpe_exempt?: boolean
+          dpe_exemption_reason?: string | null
+          energy_cost_max_cents?: number | null
+          energy_cost_min_cents?: number | null
+          energy_price_year?: number | null
           estimation_high_cents?: number | null
           estimation_id?: string | null
           estimation_low_cents?: number | null
@@ -2107,6 +2125,16 @@ export type Database = {
           width: number
           path: string
           listing_id: string
+        }[]
+      }
+      public_listing_energy: {
+        Args: { p_slug: string }
+        Returns: {
+          dpe_date: string
+          dpe_exempt: boolean
+          energy_cost_max_cents: number
+          energy_cost_min_cents: number
+          energy_price_year: number
         }[]
       }
       public_listings_details: {

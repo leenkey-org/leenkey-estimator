@@ -43,7 +43,9 @@ insert into listings (property_id, title, description, price_cents)
 values (:'prop_p', 'Maison 5 pièces', 'Jardin.', 42000000)
 returning id as listing_p \gset
 \o /dev/null
+select tests.dpe(:'listing_a');
 select listing_submit(:'listing_a');
+select tests.dpe(:'listing_p');
 select listing_submit(:'listing_p');
 \o
 

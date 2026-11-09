@@ -57,7 +57,7 @@ describe("what changes once the listing is sent", () => {
 });
 
 // saveCharacteristics, with a script of answers for the Supabase client.
-type Answer = { data: unknown; error: { code: string } | null };
+type Answer = { data: unknown; error: { code: string; message?: string } | null };
 type Write = { table: string; op: string; values?: unknown };
 type Chain = {
   select(): Chain;
@@ -127,6 +127,12 @@ const complete: Characteristics = {
   chargesMonthlyEuros: 210,
   propertyTaxYearlyEuros: 1150,
   coproLots: 48,
+  dpeExempt: false,
+  dpeExemptionReason: null,
+  dpeDate: null,
+  energyCostMinEuros: null,
+  energyCostMaxEuros: null,
+  energyPriceYear: null,
 };
 
 describe("saveCharacteristics once the listing is sent (L1-14b)", () => {
@@ -169,6 +175,25 @@ describe("saveCharacteristics once the listing is sent (L1-14b)", () => {
       ok: true,
       data: { complete: false },
     });
+  });
+
+  it("says what the DPE of a listing sent needs, from the refusal of the base (L1-65)", async () => {
+    const { saveCharacteristics } = await import("@/leenkey/properties/actions");
+    const refused = (message: string) => ({ data: null, error: { code: "22023", message } });
+    mocks.answers.push(property("published"), refused("dpe: keep"));
+    expect(await saveCharacteristics(complete, "next")).toEqual({ ok: false, error: "dpe" });
+    mocks.answers.push(property("published"), refused("dpe: exemption"));
+    expect(await saveCharacteristics(complete, "next")).toEqual({
+      ok: false,
+      error: "dpe_exemption",
+    });
+    // Any other refusal is not read as one of the DPE.
+    mocks.answers.push(property("published"), refused("the property is incomplete"));
+    expect(await saveCharacteristics(complete, "next")).toEqual({
+      ok: false,
+      error: "unavailable",
+    });
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 
   it("changes nothing once suspended by Leenkey or sold", async () => {

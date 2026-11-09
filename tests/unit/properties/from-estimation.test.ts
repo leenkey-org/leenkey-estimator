@@ -60,6 +60,13 @@ describe("answers of the estimator", () => {
       chargesMonthlyEuros: 180.5,
       propertyTaxYearlyEuros: null,
       coproLots: null,
+      // The analysis has no DPE date nor costs (L1-65): asked at step 2.
+      dpeExempt: false,
+      dpeExemptionReason: null,
+      dpeDate: null,
+      energyCostMinEuros: null,
+      energyCostMaxEuros: null,
+      energyPriceYear: null,
     });
   });
 

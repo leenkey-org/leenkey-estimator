@@ -409,6 +409,12 @@ test.describe("page annonce (base de seed)", () => {
     ).toBeVisible();
     // Exact: « Où se situe le bien » holds it too.
     await expect(page.getByRole("heading", { name: "Le bien", exact: true })).toBeVisible();
+    // Where to read the risks the property is exposed to, on every listing (L1-65).
+    await expect(page.getByText("Informations réglementaires")).toBeVisible();
+    await expect(page.getByRole("link", { name: "www.georisques.gouv.fr" })).toHaveAttribute(
+      "href",
+      "https://www.georisques.gouv.fr",
+    );
 
     // The sign-up, then the first message to the seller (L1-21).
     const signUp = (visit: boolean) =>

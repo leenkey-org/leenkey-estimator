@@ -92,6 +92,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
   - [x] **L1-30a** Tableau de bord (tuiles, « À traiter », compteurs de la barre latérale et de l'en-tête mobile), utilisateurs (liste, fiche, suspension du compte avec email) · PR : #70 · Testé en préprod : ☐
   - [x] **L1-30c** Dossiers (liste, fiche, statut, suivi, notes, tâches de Leenkey), signalements (liste, fiche, lecture tracée, avertir, clore, notification de l'équipe) · PR : #73 · Testé en préprod : ☐
   - [ ] **L1-30d** Pré-analyse des annonces, `/admin/assistant`, « Rédiger avec l'assistant » du motif de refus, export CSV des annonces · PR : · Testé en préprod : ☐
+- [x] **L1-65** DPE exigé pour l'envoi en validation (exemption et motif, date, dépenses, année des prix), mentions réglementaires et Géorisques sur l'annonce (réponse de Cédric du 9 novembre) · PR : #87 · Testé en préprod : ☐
 - [ ] **L1-31** Passage à l’humain (`create_case`, fonction SQL `security definer`) côté vendeur · PR : · Testé en préprod : ☐
 - [x] **L1-34** Conversation conseiller : `kind = 'advisor'` sur la messagerie existante, créée au paiement, vue admin `/admin/messages`, outil `contact_advisor` · PR : #86 · Testé en préprod : ☐
 - [ ] **L1-32** Recette interne lot 1 : E2E 1, 2, 3, 7 verts, Lighthouse, axe, revue RLS · PR : · Testé en préprod : ☐

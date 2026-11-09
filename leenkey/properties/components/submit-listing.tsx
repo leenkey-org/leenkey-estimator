@@ -12,12 +12,17 @@ import { submitListing, type SubmitListingResult } from "../listing-actions";
 const t = fr.properties.preview;
 const common = fr.properties.creation;
 
-type Failure = Extract<SubmitListingResult, { ok: false }>["error"] | "network";
+type Failure = Extract<SubmitListingResult, { ok: false }> | { error: "network" };
 
 /** The message of a refusal, and the step that completes the listing. */
-function failure(error: Failure, propertyId: string): { text: string; href: string | null } {
+type Refusal = { text: string; href: string | null; action?: string };
+
+function failure(refusal: Failure, propertyId: string): Refusal {
   const step = (name: string) => `/vendeur/biens/${propertyId}/${name}`;
-  switch (error) {
+  if (refusal.error === "dpe" && "issue" in refusal) {
+    return { text: t.errors.dpe[refusal.issue], href: step("caracteristiques"), action: t.fixDpe };
+  }
+  switch (refusal.error) {
     case "auth":
       return { text: common.signedOut, href: null };
     case "characteristics":
@@ -40,7 +45,7 @@ function failure(error: Failure, propertyId: string): { text: string; href: stri
 export function SubmitListing({ propertyId }: { propertyId: string }) {
   const router = useRouter();
   const [sending, startSending] = useTransition();
-  const [error, setError] = useState<{ text: string; href: string | null } | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
   // One sending at a time: a second click would only race the first.
   const submitting = useRef(false);
 
@@ -57,7 +62,7 @@ export function SubmitListing({ propertyId }: { propertyId: string }) {
       }
       if (!result?.ok) {
         submitting.current = false;
-        setError(failure(result ? result.error : "network", propertyId));
+        setError(failure(result ?? { error: "network" }, propertyId));
         return;
       }
       // In the transition: the button stays busy until the end screen shows.
@@ -77,7 +82,7 @@ export function SubmitListing({ propertyId }: { propertyId: string }) {
                 href={error.href}
                 className="font-semibold underline underline-offset-2 hover:no-underline"
               >
-                {error.href === "/vendeur" ? common.leave : t.fix}
+                {error.action ?? (error.href === "/vendeur" ? common.leave : t.fix)}
               </Link>
             ) : undefined
           }

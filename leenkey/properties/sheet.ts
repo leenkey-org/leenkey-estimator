@@ -178,6 +178,7 @@ export function sellerFacts(
       buildYear: c.buildYear,
       isNewBuild: c.isNewBuild,
       dpe: c.dpe,
+      energy: { exempt: c.dpeExempt },
       ges: c.ges,
       heating: c.heating,
       chargesMonthlyCents: cents(c.chargesMonthlyEuros),

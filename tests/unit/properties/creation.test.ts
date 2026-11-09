@@ -16,8 +16,11 @@ import {
   addressQuerySchema,
   characteristicsIntentSchema,
   characteristicsSchema,
+  dpeIssue,
+  dpeOutdated,
   forType,
   missingCharacteristics,
+  parisToday,
   parseFrenchNumber,
   storableAddress,
   type Characteristics,
@@ -45,6 +48,12 @@ const empty: Characteristics = {
   chargesMonthlyEuros: null,
   propertyTaxYearlyEuros: null,
   coproLots: null,
+  dpeExempt: false,
+  dpeExemptionReason: null,
+  dpeDate: null,
+  energyCostMinEuros: null,
+  energyCostMaxEuros: null,
+  energyPriceYear: null,
 };
 
 describe("parseFrenchNumber", () => {
@@ -177,6 +186,12 @@ describe("fields of a type", () => {
     chargesMonthlyEuros: 40,
     propertyTaxYearlyEuros: 1500,
     coproLots: 12,
+    dpeExempt: false,
+    dpeExemptionReason: null,
+    dpeDate: null,
+    energyCostMinEuros: null,
+    energyCostMaxEuros: null,
+    energyPriceYear: null,
   };
 
   it("keeps the levels, lots, charges and Carrez surface of a house, not its floor nor lift", () => {
@@ -211,6 +226,102 @@ describe("fields of a type", () => {
     expect(
       characteristicsSchema.parse({ ...empty, type: "terrain", surfaceM2: 800, bedrooms: 3 }),
     ).toEqual({ ...empty, type: "terrain", surfaceM2: 800, rooms: 0 });
+  });
+});
+
+describe("DPE (L1-65)", () => {
+  const today = "2026-11-09";
+  const dpe: Characteristics = {
+    ...empty,
+    type: "appartement",
+    surfaceM2: 68,
+    rooms: 3,
+    dpe: "D",
+    ges: "C",
+    dpeDate: "2024-03-12",
+    energyCostMinEuros: 980,
+    energyCostMaxEuros: 1330,
+    energyPriceYear: 2023,
+  };
+
+  it("asks for the classes, the date, the range of the costs and the year of the prices", () => {
+    expect(dpeIssue(dpe, today)).toBeNull();
+    for (const field of [
+      "dpe",
+      "ges",
+      "dpeDate",
+      "energyCostMinEuros",
+      "energyCostMaxEuros",
+      "energyPriceYear",
+    ] as const) {
+      expect(dpeIssue({ ...dpe, [field]: null }, today), field).toBe("dpe_missing");
+    }
+  });
+
+  it("refuses a DPE made before 1 July 2021, 10 years ago or more, or after today", () => {
+    expect(dpeIssue({ ...dpe, dpeDate: "2021-06-30" }, today)).toBe("dpe_outdated");
+    expect(dpeIssue({ ...dpe, dpeDate: "2021-07-01" }, today)).toBeNull();
+    expect(dpeIssue({ ...dpe, dpeDate: "2026-11-10" }, today)).toBe("dpe_outdated");
+    expect(dpeOutdated("2026-11-09", today)).toBe(false);
+    // From 2031, 10 years: as current_date - interval '10 years' in SQL.
+    expect(dpeOutdated("2021-11-09", "2031-11-09")).toBe(true);
+    expect(dpeOutdated("2021-11-10", "2031-11-09")).toBe(false);
+  });
+
+  it("asks for nothing on land, a motive for an exemption", () => {
+    expect(dpeIssue({ ...empty, type: "terrain" }, today)).toBeNull();
+    expect(dpeIssue({ ...empty, type: null }, today)).toBeNull();
+    expect(dpeIssue({ ...empty, type: "maison", dpeExempt: true }, today)).toBe("exemption_reason");
+    expect(
+      dpeIssue(
+        { ...empty, type: "maison", dpeExempt: true, dpeExemptionReason: "Lieu de culte" },
+        today,
+      ),
+    ).toBeNull();
+  });
+
+  it("keeps no DPE for an exempt property, no motive for one with a DPE, none for land", () => {
+    expect(forType({ ...dpe, dpeExempt: true, dpeExemptionReason: "Lieu de culte" })).toEqual({
+      ...dpe,
+      dpe: null,
+      ges: null,
+      dpeDate: null,
+      energyCostMinEuros: null,
+      energyCostMaxEuros: null,
+      energyPriceYear: null,
+      dpeExempt: true,
+      dpeExemptionReason: "Lieu de culte",
+    });
+    expect(forType({ ...dpe, dpeExemptionReason: "Lieu de culte" })).toEqual(dpe);
+    expect(
+      forType({ ...dpe, type: "terrain", dpeExempt: true, dpeExemptionReason: "x" }),
+    ).toMatchObject({
+      dpeExempt: false,
+      dpeExemptionReason: null,
+      dpe: null,
+      dpeDate: null,
+    });
+  });
+
+  it("checks the range, a date of the calendar, never in the future, a motive of 3 characters", () => {
+    expect(characteristicsSchema.safeParse(dpe).success).toBe(true);
+    const issues = (values: Partial<Characteristics>) =>
+      characteristicsSchema
+        .safeParse({ ...dpe, ...values })
+        .error?.issues.map((issue) => [issue.path[0], issue.message]);
+    expect(issues({ energyCostMinEuros: 1500 })).toEqual([["energyCostMaxEuros", "costRange"]]);
+    expect(issues({ dpeDate: "2999-01-01" })).toEqual([["dpeDate", "dateFuture"]]);
+    expect(issues({ dpeDate: "2024-02-30" })).toEqual([["dpeDate", "date"]]);
+    expect(issues({ dpeExempt: true, dpeExemptionReason: " x " })).toEqual([
+      ["dpeExemptionReason", "reasonLength"],
+    ]);
+    expect(issues({ energyCostMinEuros: 980.5 })).toEqual([["energyCostMinEuros", "wholeEuros"]]);
+    expect(issues({ energyPriceYear: 2014 })?.[0]?.[0]).toBe("energyPriceYear");
+  });
+
+  it("dates today in Paris", () => {
+    expect(parisToday(new Date("2026-11-09T23:30:00Z"))).toBe("2026-11-10");
+    expect(parisToday(new Date("2026-11-09T12:00:00Z"))).toBe("2026-11-09");
   });
 });
 

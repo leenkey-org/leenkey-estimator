@@ -91,6 +91,7 @@ select lives_ok(format($$insert into photos (property_id, storage_path, position
 select throws_ok(format($$insert into photos (property_id, storage_path, position) values (%L, 'elsewhere/p2.webp', 1)$$,
                         :'prop_a'),
                  '23514', null, 'photo path must live under the property folder');
+select tests.dpe(:'listing_a');
 select is(listing_submit(:'listing_a'), 'pending'::listing_status, 'seller_a: submits the listing');
 select throws_ok(format($$select listing_publish(%L)$$, :'listing_a'), '42501', null, 'seller_a: cannot publish');
 

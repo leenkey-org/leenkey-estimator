@@ -4,6 +4,7 @@ import { cache } from "react";
 import type { DpeClass } from "@/components/shared/dpe-badge";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createPublicClient } from "@/lib/supabase/public";
+import { NO_ENERGY } from "./energy-mentions";
 import { DPE_CLASSES } from "@/lib/validations/search";
 import type { Database } from "@/types/database";
 import type { SitemapListing } from "./sitemap";
@@ -48,6 +49,8 @@ export type PublicListing = {
   propertyTaxYearlyCents: number | null;
   coproLots: number | null;
   sellerFirstName: string | null;
+  /** The mentions of its DPE (L1-65), beside its classes. */
+  energy: ListingEnergy;
   /** The plan of the sale includes a Leenkey adviser (plan_entitlements). */
   accompanied: boolean;
   /** In their order, the first is the main one (L1-12). */
@@ -57,6 +60,20 @@ export type PublicListing = {
    * for the map of the area (L1-16); read on the public page only.
    */
   location?: { lat: number; lng: number } | null;
+};
+
+/**
+ * What a listing for sale says of its DPE (L1-65, code de la construction
+ * L126-33): exempt, or the date of the DPE, the range of the yearly energy
+ * costs and the reference year of their prices. Empty for land, or a listing
+ * sent before L1-65 that its seller has not completed yet.
+ */
+export type ListingEnergy = {
+  exempt: boolean;
+  date: string | null;
+  costMinCents: number | null;
+  costMaxCents: number | null;
+  priceYear: number | null;
 };
 
 export type ListingPhoto = {
@@ -91,13 +108,16 @@ export const getPublicListing = cache(
     try {
       // Public data, also read by the cached share image: no session cookie.
       const supabase = createPublicClient();
-      const [listing, advisorPlans] = await Promise.all([
+      const [listing, advisorPlans, energy] = await Promise.all([
         supabase.from("public_listings").select(COLUMNS).eq("slug", slug).maybeSingle(),
         // « Vente accompagnée » is a right of the plan, never a plan name (CLAUDE.md 14).
         supabase.from("plan_entitlements").select("plan").eq("feature", "advisor"),
+        // Mentions required on a listing for sale: no page without them.
+        supabase.rpc("public_listing_energy", { p_slug: slug }).maybeSingle(),
       ]);
       if (listing.error) throw new Error(`public_listings: ${listing.error.message}`);
       if (advisorPlans.error) throw new Error(`plan_entitlements: ${advisorPlans.error.message}`);
+      if (energy.error) throw new Error(`public_listing_energy: ${energy.error.message}`);
       const row = listing.data;
       if (
         !row?.id ||
@@ -162,6 +182,16 @@ export const getPublicListing = cache(
           propertyTaxYearlyCents: row.property_tax_yearly_cents,
           coproLots: row.copro_lots,
           sellerFirstName: row.seller_first_name,
+          energy: energy.data
+            ? {
+                exempt: energy.data.dpe_exempt,
+                // Generated types declare the columns of a function result as never null.
+                date: (energy.data.dpe_date as string | null) ?? null,
+                costMinCents: (energy.data.energy_cost_min_cents as number | null) ?? null,
+                costMaxCents: (energy.data.energy_cost_max_cents as number | null) ?? null,
+                priceYear: (energy.data.energy_price_year as number | null) ?? null,
+              }
+            : NO_ENERGY,
           accompanied: (advisorPlans.data ?? []).some((entry) => entry.plan === row.plan),
           photos: (photos.data ?? []).map((photo) => ({
             path: photo.path,

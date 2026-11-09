@@ -35,3 +35,18 @@ update public.profiles set roles = '{admin}' where id = tests.uid('admin');
 
 -- pgTAP keeps its state in temp tables created by plan(): call
 -- \ir _plan.psql right after select plan(n) so test roles can write them.
+
+-- A valid DPE on the property of a listing (L1-65): what listing_submit asks
+-- before a sending, for the tests that are not about the DPE itself
+-- (rls_dpe_publication.sql is). Security definer: called under any role.
+create or replace function tests.dpe(p_listing uuid) returns void
+language sql security definer set search_path = '' as $$
+  update public.properties p
+     set dpe_class = coalesce(p.dpe_class, 'D'), ges_class = coalesce(p.ges_class, 'D'),
+         dpe_date = current_date - 30, energy_cost_min_cents = 120000,
+         energy_cost_max_cents = 170000, energy_price_year = 2023
+    from public.listings l
+   where l.id = p_listing and p.id = l.property_id;
+$$;
+grant usage on schema tests to anon, authenticated;
+grant execute on function tests.dpe(uuid) to anon, authenticated;

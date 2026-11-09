@@ -16,12 +16,14 @@ import {
 } from "@/leenkey/admin/components/listing-moderation";
 import { OutOfZoneFlag } from "@/leenkey/admin/components/listing-place";
 import { adminListing } from "@/leenkey/admin/queries";
+import { RegulatoryMentions } from "@/leenkey/listings/components/listing-body";
 import { ListingDescription } from "@/leenkey/listings/components/listing-description";
 import { listingKeyFacts } from "@/leenkey/listings/key-facts";
 import { galleryPhotos, listingKeyFigures } from "@/leenkey/listings/presentation";
 import { capitalize, formatDateShort, formatDateTime, formatRelative } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { adminListingsHref } from "@/lib/validations/admin";
+import { dpeIssue } from "@/lib/validations/property";
 import { AdminPage } from "../../_components/admin-page";
 
 const t = fr.adminListings;
@@ -128,6 +130,29 @@ export default async function AdminListingPage({ params }: Props) {
               <p className="text-lk-secondary whitespace-pre-line">{reason.text}</p>
             </div>
           ) : null}
+          {detail.status === "pending" &&
+          dpeIssue({
+            type: listing.type,
+            dpe: listing.dpe,
+            ges: listing.ges,
+            dpeExempt: listing.energy.exempt,
+            dpeExemptionReason: detail.dpeExemptionReason,
+            dpeDate: listing.energy.date,
+            // Only whether they are known matters here, not the unit.
+            energyCostMinEuros: listing.energy.costMinCents,
+            energyCostMaxEuros: listing.energy.costMaxCents,
+            energyPriceYear: listing.energy.priceYear,
+          }) ? (
+            <InlineAlert tone="warning" live={false}>
+              {t.detail.dpeMissing}
+            </InlineAlert>
+          ) : null}
+          {detail.dpeExemptionReason ? (
+            <div className="rounded-lk-md bg-lk-warning-bg px-4 py-3 text-lk-warning-fg">
+              <p className="text-lk-caption font-semibold">{t.detail.dpeExemption}</p>
+              <p className="text-lk-secondary whitespace-pre-line">{detail.dpeExemptionReason}</p>
+            </div>
+          ) : null}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <ListingModeration
               listingId={listing.id}
@@ -155,6 +180,7 @@ export default async function AdminListingPage({ params }: Props) {
             <KeyFigures items={listingKeyFigures(listing)} />
             <ListingDescription text={listing.description} />
             <KeyFactsTable items={listingKeyFacts(listing)} />
+            <RegulatoryMentions listing={listing} className="mt-0" />
           </div>
         </section>
 

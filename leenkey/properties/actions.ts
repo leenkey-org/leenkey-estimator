@@ -173,12 +173,23 @@ export type SaveCharacteristicsResult =
   | { ok: true; data: { complete: boolean } }
   | {
       ok: false;
-      error: "auth" | "invalid" | "incomplete" | "not_found" | "unavailable";
+      /**
+       * Once sent (properties_keep_dpe, L1-65): dpe, its DPE stays complete;
+       * dpe_exemption, an exemption or land is declared by the team.
+       */
+      error:
+        | "auth"
+        | "invalid"
+        | "incomplete"
+        | "not_found"
+        | "dpe"
+        | "dpe_exemption"
+        | "unavailable";
       /** Field and message key (fr.properties.errors). */
       fieldErrors?: Partial<Record<CharacteristicsField, string>>;
     };
 
-const NOT_A_FIELD = new Set(["propertyId", "isNewBuild", "features"]);
+const NOT_A_FIELD = new Set(["propertyId", "isNewBuild", "features", "dpeExempt"]);
 
 /**
  * Step 2, saved as a draft at any time (« Enregistrer », « Précédent »);
@@ -241,6 +252,12 @@ export async function saveCharacteristics(
       entity_id: value.propertyId,
       code: error.code,
     });
+    if (error.code === "22023" && error.message.startsWith("dpe: exemption")) {
+      return { ok: false, error: "dpe_exemption" };
+    }
+    if (error.code === "22023" && error.message.startsWith("dpe: ")) {
+      return { ok: false, error: "dpe" };
+    }
     return { ok: false, error: "unavailable" };
   }
   if (!data) return { ok: false, error: "not_found" };

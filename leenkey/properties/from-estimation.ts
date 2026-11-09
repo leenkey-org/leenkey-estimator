@@ -133,6 +133,12 @@ export function answersFromEstimation(input: unknown): EstimationAnswers {
     chargesMonthlyEuros: number.parse(situation.charges_copro_mensuelles),
     propertyTaxYearlyEuros: tax,
     coproLots: null,
+    dpeExempt: false,
+    dpeExemptionReason: null,
+    dpeDate: null,
+    energyCostMinEuros: null,
+    energyCostMaxEuros: null,
+    energyPriceYear: null,
   };
   // What step 2 would refuse is left empty, a field at a time.
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -185,6 +191,12 @@ const EMPTY: Omit<Characteristics, "propertyId"> = {
   chargesMonthlyEuros: null,
   propertyTaxYearlyEuros: null,
   coproLots: null,
+  dpeExempt: false,
+  dpeExemptionReason: null,
+  dpeDate: null,
+  energyCostMinEuros: null,
+  energyCostMaxEuros: null,
+  energyPriceYear: null,
 };
 
 /** The label to search again at step 1: 5 to 200 characters, as addressChoiceSchema. */

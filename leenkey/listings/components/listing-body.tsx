@@ -6,6 +6,7 @@ import { KeyFactsGrid } from "@/components/shared/key-facts-table";
 import { PriceBlock } from "@/components/shared/price-block";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
+import { energyMentions } from "../energy-mentions";
 import { bySection, factsPreview, listingKeyFacts } from "../key-facts";
 import {
   galleryPhotos,
@@ -21,6 +22,38 @@ const t = fr.listing;
 
 /** Facts shown before « Afficher les N caractéristiques ». */
 const FACTS_PREVIEW = 10;
+
+/**
+ * What a listing for sale must say (L1-65): the mentions of its DPE, then
+ * where to read the risks the property is exposed to, for every listing.
+ */
+export function RegulatoryMentions({
+  listing,
+  className,
+}: {
+  listing: Pick<PublicListing, "type" | "dpe" | "energy">;
+  className?: string;
+}) {
+  return (
+    <div className={cn("mt-6 flex flex-col gap-1.5 text-lk-compact text-lk-ink-2", className)}>
+      <p className="font-semibold text-lk-ink">{t.energy.label}</p>
+      {energyMentions(listing).map((line) => (
+        <p key={line}>{line}</p>
+      ))}
+      <p>
+        {t.energy.risks}{" "}
+        <a
+          href="https://www.georisques.gouv.fr"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-lk-blue underline underline-offset-2 hover:no-underline"
+        >
+          {t.energy.risksLink}
+        </a>
+      </p>
+    </div>
+  );
+}
 
 /** A block of the listing, a line above it (the sections of Airbnb). */
 function Block({
@@ -212,6 +245,7 @@ export function ListingBody({
             ) : (
               <KeyFactsGrid items={facts} headingLevel={factsHeading} />
             )}
+            <RegulatoryMentions listing={listing} />
           </Block>
 
           {map ? (
