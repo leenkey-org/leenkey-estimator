@@ -93,7 +93,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
   - [x] **L1-30c** Dossiers (liste, fiche, statut, suivi, notes, tâches de Leenkey), signalements (liste, fiche, lecture tracée, avertir, clore, notification de l'équipe) · PR : #73 · Testé en préprod : ☐
   - [ ] **L1-30d** Pré-analyse des annonces, `/admin/assistant`, « Rédiger avec l'assistant » du motif de refus, export CSV des annonces · PR : · Testé en préprod : ☐
 - [ ] **L1-31** Passage à l’humain (`create_case`, fonction SQL `security definer`) côté vendeur · PR : · Testé en préprod : ☐
-- [x] **L1-34** Conversation conseiller : `kind = 'advisor'` sur la messagerie existante, créée au paiement, vue admin `/admin/messages`, outil `contact_advisor` · PR : · Testé en préprod : ☐
+- [x] **L1-34** Conversation conseiller : `kind = 'advisor'` sur la messagerie existante, créée au paiement, vue admin `/admin/messages`, outil `contact_advisor` · PR : #86 · Testé en préprod : ☐
 - [ ] **L1-32** Recette interne lot 1 : E2E 1, 2, 3, 7 verts, Lighthouse, axe, revue RLS · PR : · Testé en préprod : ☐
 
 Toujours la semaine la plus risquée du projet. Ordre imposé : L1-26 et L1-33 (paiement) le lundi, L1-28 avant L1-29 et L1-31, L1-34 en dernier. Si L1-34 n'est pas prête jeudi soir, elle est livrée en S6 et la recette du lot 1 le dit explicitement.
