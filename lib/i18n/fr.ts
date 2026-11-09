@@ -2,6 +2,7 @@
 import { aiText, privacyText, reportingText, salesTermsText, termsV2 } from "./legal-policies";
 import { legalNotice } from "./legal-texts";
 import { site } from "./site";
+import type { Database } from "@/types/database";
 
 /** « de David », « d'Alice », « d'Hélène »: the elision before a vowel or an h (« de Yann »). */
 function of(name: string): string {
@@ -2138,8 +2139,10 @@ export const fr = {
     free: "Gratuit",
     taxes: "TTC",
     // The comparison table of the plans (SPEC-V2 11 bis, wording of the plans
-    // of 2026-11-06): what each plan includes, by plan code. Content, never
-    // a right (rights: plan_entitlements, hasEntitlement).
+    // of 2026-11-06): a row without a feature is in every plan (the steps of
+    // a sale never depend on a plan); a row with one is ticked for the plans
+    // that have it in plan_entitlements (L1-33), so that the table never
+    // says other than the rights.
     comparison: {
       title: "Comparer les formules",
       caption: "Ce que comprend chaque formule",
@@ -2148,42 +2151,39 @@ export const fr = {
       included: "Inclus",
       notIncluded: "Non inclus",
       rows: [
-        { label: "Analyse de valeur", plans: ["autonomie", "accompagne", "serenite"] },
-        {
-          label: "Espace vendeur / tableau de bord",
-          plans: ["autonomie", "accompagne", "serenite"],
-        },
-        { label: "Assistant IA", plans: ["autonomie", "accompagne", "serenite"] },
-        {
-          label: "Création de l'annonce avec l'IA",
-          plans: ["autonomie", "accompagne", "serenite"],
-        },
-        { label: "Publication sur Leenkey", plans: ["autonomie", "accompagne", "serenite"] },
-        { label: "Messagerie acquéreurs", plans: ["autonomie", "accompagne", "serenite"] },
-        { label: "Agenda / visites", plans: ["autonomie", "accompagne", "serenite"] },
-        { label: "Réception d'offres structurées", plans: ["autonomie", "accompagne", "serenite"] },
-        { label: "Checklist des documents", plans: ["autonomie", "accompagne", "serenite"] },
-        { label: "Conseiller dédié", plans: ["accompagne", "serenite"] },
+        { label: "Analyse de valeur" },
+        { label: "Espace vendeur / tableau de bord" },
+        { label: "Assistant IA" },
+        { label: "Création de l'annonce avec l'IA" },
+        { label: "Publication sur Leenkey" },
+        { label: "Messagerie acquéreurs" },
+        { label: "Agenda / visites" },
+        { label: "Réception d'offres structurées" },
+        { label: "Checklist des documents" },
+        { label: "Conseiller dédié", feature: "advisor" },
         {
           label: "Regard personnalisé sur le prix et la stratégie",
-          plans: ["accompagne", "serenite"],
+          feature: "human_price_strategy",
         },
-        { label: "Relecture et optimisation de l'annonce", plans: ["accompagne", "serenite"] },
+        { label: "Relecture et optimisation de l'annonce", feature: "human_listing_review" },
         {
           label: "Analyse des offres et des informations de financement",
-          plans: ["accompagne", "serenite"],
+          feature: "human_offer_analysis",
         },
         {
           label: "Aide à la décision jusqu'à l'acceptation d'une offre",
-          plans: ["accompagne", "serenite"],
+          feature: "negotiation_support",
         },
-        { label: "Préparation du dossier de vente", plans: ["serenite"] },
-        { label: "Analyse des documents", plans: ["serenite"] },
-        { label: "Aide à la préparation des échanges avec le notaire", plans: ["serenite"] },
-        { label: "Suivi jusqu'à la signature", plans: ["serenite"] },
+        { label: "Préparation du dossier de vente", feature: "sale_file_building" },
+        { label: "Analyse des documents", feature: "deep_document_review" },
+        {
+          label: "Aide à la préparation des échanges avec le notaire",
+          feature: "notary_coordination",
+        },
+        { label: "Suivi jusqu'à la signature", feature: "closing_follow_up" },
       ] as const satisfies readonly {
         label: string;
-        plans: readonly ("autonomie" | "accompagne" | "serenite")[];
+        feature?: Database["public"]["Enums"]["plan_feature"];
       }[],
     },
     badge: "Le plus complet",

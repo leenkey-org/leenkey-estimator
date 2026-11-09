@@ -142,9 +142,8 @@ test("le tableau comparatif sous les formules, replié sur téléphone (L1-33)",
 }) => {
   await signIn(page, planPage(LK0003));
   const comparison = page.getByRole("region", { name: "Comparer les formules" });
-  const table = comparison
-    .getByRole("table", { name: "Ce que comprend chaque formule" })
-    .locator("visible=true");
+  // getByRole leaves out the copy hidden at this width.
+  const table = comparison.getByRole("table", { name: "Ce que comprend chaque formule" });
   if (isMobile) {
     await expect(table).toHaveCount(0);
     await comparison.getByText("Comparer les formules en détail").click();
@@ -173,5 +172,24 @@ test("le tableau comparatif sous les formules, replié sur téléphone (L1-33)",
     "Non inclus",
     "Inclus",
   ]);
+  await expectHeadersFit(table);
   await expectNoSeriousViolation(page);
+
+  if (!isMobile) {
+    // 768 px, where the table unfolds: open, its names in their columns.
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await expect(table).toHaveCount(1);
+    await expectHeadersFit(table);
+  }
 });
+
+/** No name of a plan wider than its column (« Accompagné » on a phone). */
+async function expectHeadersFit(table: ReturnType<Page["getByRole"]>) {
+  for (const header of await table.getByRole("columnheader").all()) {
+    const { scroll, client } = await header.evaluate((element) => ({
+      scroll: element.scrollWidth,
+      client: element.clientWidth,
+    }));
+    expect(scroll, (await header.textContent()) ?? "").toBeLessThanOrEqual(client);
+  }
+}

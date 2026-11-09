@@ -1272,7 +1272,7 @@ Maquette : `Formule.dc.html` (contenu à mettre à jour selon la section 11 bis)
 
 - Titre « Un forfait fixe par bien. Jamais de commission. »
 - Trois cartes, contenu lu depuis `plans` : nom, phrase d'accroche, prix, liste des inclusions. Autonomie : formule actuelle par défaut. Sérénité mise en avant « Le plus complet ».
-- Sous les cartes : le tableau comparatif de la section 11 bis (19 lignes, coches et tirets), repliable sur mobile.
+- Sous les cartes : le tableau comparatif de la section 11 bis (18 lignes, coches et tirets), repliable sur mobile.
 - Formule actuelle marquée d'une coche verte. Formule inférieure : non sélectionnable. Passage Accompagné → Sérénité : bouton « Passer à Sérénité pour 510 € ».
 - Si la page est ouverte depuis un déclencheur (`?from=offer_received`), rappel du contexte en tête : « Vous avez reçu une offre de 327 000 €… ».
 - Rassurance : « Paiement sécurisé par carte via Stripe. Reçu envoyé par email. Forfait payé une fois, pour ce bien. Sans abonnement. »

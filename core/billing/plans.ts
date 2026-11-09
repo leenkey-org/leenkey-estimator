@@ -85,3 +85,39 @@ export const allPlans = cache(async function allPlans(): Promise<AnyPlan[] | nul
     return null;
   }
 });
+
+export type PlanFeature = Database["public"]["Enums"]["plan_feature"];
+
+/**
+ * The rights of each plan (table plan_entitlements, reference data of the
+ * seed, readable by every visitor): what the comparison table of the plans
+ * shows (L1-33), so that it never says other than the rights. Null when they
+ * cannot be read.
+ */
+export const planFeatures = cache(async function planFeatures(): Promise<Map<
+  PlanCode,
+  Set<PlanFeature>
+> | null> {
+  if (!isSupabaseConfigured()) return null;
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from("plan_entitlements").select("plan, feature");
+    if (error) {
+      console.error("[billing] plan entitlements read failed", { code: error.code });
+      return null;
+    }
+    const features = new Map<PlanCode, Set<PlanFeature>>();
+    for (const row of data) {
+      const set = features.get(row.plan) ?? new Set<PlanFeature>();
+      set.add(row.feature);
+      features.set(row.plan, set);
+    }
+    return features;
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("[billing] plan entitlements read failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+});

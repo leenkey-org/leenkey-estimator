@@ -374,6 +374,13 @@ test.describe("/tarifs (base de seed)", () => {
     await expect(
       table.getByRole("row", { name: /^Préparation du dossier de vente/ }).getByRole("cell"),
     ).toHaveText(["Non inclus", "Non inclus", "Inclus"]);
+    // No name of a plan wider than its column (« Accompagné » on a phone).
+    for (const header of await table.getByRole("columnheader").all()) {
+      expect(
+        await header.evaluate((element) => element.scrollWidth <= element.clientWidth),
+        (await header.textContent()) ?? "",
+      ).toBe(true);
+    }
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       page.viewportSize()?.width ?? 0,
     );

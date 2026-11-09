@@ -8,6 +8,7 @@ import { iconButtonVariants } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { getUser, requireProfile } from "@/core/auth/session";
 import { PaymentConfirmation } from "@/leenkey/billing/components/payment-confirmation";
+import { planFeatures } from "@/core/billing/plans";
 import { PlanComparison } from "@/leenkey/billing/components/plan-comparison";
 import { PlanChooser } from "@/leenkey/billing/components/plan-chooser";
 import { WithdrawalPanel } from "@/leenkey/billing/components/withdrawal-panel";
@@ -54,7 +55,7 @@ export default async function PlanPage({ searchParams }: Props) {
   const profile = await requireProfile();
   const query = await searchParams;
   const requested = first(query.bien) ?? null;
-  const result = await planPage(profile.id, requested);
+  const [result, features] = await Promise.all([planPage(profile.id, requested), planFeatures()]);
   const data = result.ok ? result.data : null;
   const backHref = data ? `${ROUTES.seller}?bien=${data.property.id}` : ROUTES.seller;
   const header = (
@@ -262,7 +263,7 @@ export default async function PlanPage({ searchParams }: Props) {
               : null
           }
         />
-        <PlanComparison plans={data.plans} />
+        {features ? <PlanComparison plans={data.plans} features={features} /> : null}
       </Body>
     </>
   );

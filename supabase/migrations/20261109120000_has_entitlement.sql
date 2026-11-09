@@ -2,9 +2,11 @@
 -- plan from the application (SPEC-V2 11 bis, CLAUDE.md 14): the plan in
 -- force of the property (property_current_plan) and the rows of
 -- plan_entitlements, never the name of the plan. Answered for the owner of
--- the property and the admins; false for anyone else, so that the plan of a
--- property is not read through it. SQL functions of the webhooks and crons
--- read plan_entitlements themselves.
+-- the property and the admins, false for anyone else: a right is asked for
+-- one's own property. Not a secret of the plan itself, which an account can
+-- read with property_current_plan and a visitor on a published listing
+-- (public_listings.plan). SQL functions of the webhooks and crons read
+-- plan_entitlements themselves.
 
 create function public.has_entitlement(p_property uuid, p_feature public.plan_feature)
 returns boolean

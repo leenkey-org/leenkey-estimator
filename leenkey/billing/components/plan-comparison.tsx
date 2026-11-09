@@ -1,5 +1,5 @@
 import { Check, ChevronDown, Minus } from "lucide-react";
-import type { PlanCode } from "@/core/billing/plans";
+import type { PlanCode, PlanFeature } from "@/core/billing/plans";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 
@@ -7,21 +7,36 @@ const t = fr.billing.comparison;
 
 type ComparedPlan = { code: PlanCode; name: string };
 
+/** The rights of each plan, as planFeatures() reads them in plan_entitlements. */
+export type PlanFeatures = ReadonlyMap<PlanCode, ReadonlySet<PlanFeature>>;
+
+/** Whether a row of the table is included in a plan: always, or by its right. */
+export function rowIncluded(
+  row: { label: string; feature?: PlanFeature },
+  plan: PlanCode,
+  features: PlanFeatures,
+): boolean {
+  return !row.feature || Boolean(features.get(plan)?.has(row.feature));
+}
+
 /**
  * The comparison table of the plans (SPEC-V2 8.8 and 11 bis, L1-33): a row
- * per feature, a column per plan in the order of the plans table, « Inclus »
- * or « Non inclus » told to screen readers. Content of fr.billing.comparison,
- * never a right (rights: hasEntitlement).
+ * per feature, a column per plan in the order of the plans table, ticked from
+ * plan_entitlements (never from the name of a plan), « Inclus » or « Non
+ * inclus » told to screen readers.
  */
 export function PlanComparisonTable({
   plans,
+  features,
   className,
 }: {
   plans: readonly ComparedPlan[];
+  features: PlanFeatures;
   className?: string;
 }) {
   return (
     <div
+      lang="fr"
       className={cn("overflow-hidden rounded-lk-md border border-lk-line bg-lk-surface", className)}
     >
       <table className="w-full table-fixed border-collapse text-left">
@@ -29,7 +44,7 @@ export function PlanComparisonTable({
         <colgroup>
           <col />
           {plans.map((plan) => (
-            <col key={plan.code} className="w-19 md:w-32" />
+            <col key={plan.code} className="w-19 md:w-24 lg:w-32" />
           ))}
         </colgroup>
         <thead>
@@ -41,10 +56,12 @@ export function PlanComparisonTable({
               {t.feature}
             </th>
             {plans.map((plan) => (
+              // « Accompagné » is wider than its column on a phone: cut at
+              // its syllables (French hyphenation) rather than over the next.
               <th
                 key={plan.code}
                 scope="col"
-                className="px-1 py-3 text-center text-lk-caption font-semibold text-lk-ink md:text-lk-label"
+                className="px-0.5 py-3 text-center text-lk-caption font-semibold text-lk-ink hyphens-auto md:px-1 lg:text-lk-label"
               >
                 {plan.name}
               </th>
@@ -61,7 +78,7 @@ export function PlanComparisonTable({
                 {row.label}
               </th>
               {plans.map((plan) => {
-                const included = (row.plans as readonly string[]).includes(plan.code);
+                const included = rowIncluded(row, plan.code, features);
                 return (
                   <td key={plan.code} className="px-1 py-2.5 text-center">
                     {included ? (
@@ -85,12 +102,18 @@ export function PlanComparisonTable({
  * Under the plans of /vendeur/formule (SPEC-V2 8.8): folded on a phone, so
  * that the summary of the order stays near; open from 768 px.
  */
-export function PlanComparison({ plans }: { plans: readonly ComparedPlan[] }) {
+export function PlanComparison({
+  plans,
+  features,
+}: {
+  plans: readonly ComparedPlan[];
+  features: PlanFeatures;
+}) {
   return (
-    <section aria-labelledby="comparer-formules" className="flex flex-col gap-3">
+    <section aria-labelledby="comparer-formules" className="flex flex-col gap-3 lg:max-w-200">
       <h2
         id="comparer-formules"
-        className="sr-only md:not-sr-only md:text-lk-h3 md:font-semibold md:text-lk-ink lg:text-lk-h3-lg"
+        className="sr-only md:not-sr-only md:text-lk-h3 md:font-bold md:text-wide md:text-lk-ink"
       >
         {t.title}
       </h2>
@@ -102,9 +125,9 @@ export function PlanComparison({ plans }: { plans: readonly ComparedPlan[] }) {
             className="size-4.5 shrink-0 text-lk-ink-3 transition-transform duration-140 group-open:rotate-180 motion-reduce:transition-none"
           />
         </summary>
-        <PlanComparisonTable plans={plans} className="mt-3" />
+        <PlanComparisonTable plans={plans} features={features} className="mt-3" />
       </details>
-      <PlanComparisonTable plans={plans} className="hidden md:block" />
+      <PlanComparisonTable plans={plans} features={features} className="hidden md:block" />
     </section>
   );
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { MarketingSection } from "@/components/shared/marketing-section";
-import { activePlans } from "@/core/billing/plans";
+import { activePlans, planFeatures } from "@/core/billing/plans";
 import { PlanComparisonTable } from "@/leenkey/billing/components/plan-comparison";
 import { PricingPlans } from "@/leenkey/site/components/pricing-plans";
 import { PublicPage } from "@/leenkey/site/components/public-page";
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 // table, so that this page says what is sold (SPEC-V2 11 bis); on the navy
 // of the V1 page, its label above the title, since L1-50.
 export default async function PricingPage() {
-  const plans = await activePlans();
+  const [plans, features] = await Promise.all([activePlans(), planFeatures()]);
   return (
     <PublicPage assistant header="night">
       <MarketingSection
@@ -41,10 +41,10 @@ export default async function PricingPage() {
           </InlineAlert>
         )}
       </MarketingSection>
-      {plans && plans.length > 0 ? (
+      {plans && plans.length > 0 && features ? (
         // The comparison table of SPEC-V2 11 bis (L1-33), under the plans.
         <MarketingSection id="comparer" title={fr.billing.comparison.title}>
-          <PlanComparisonTable plans={plans} className="mx-auto max-w-200" />
+          <PlanComparisonTable plans={plans} features={features} className="mx-auto max-w-200" />
         </MarketingSection>
       ) : null}
     </PublicPage>
