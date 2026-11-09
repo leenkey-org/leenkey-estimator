@@ -53,6 +53,7 @@ export const listConversations = cache(async (): Promise<QueryResult<Conversatio
       unread: row.unread,
       closed: (row.closed_at as string | null) !== null,
       plan: row.plan as ConversationSummary["plan"],
+      advisorOrderedAt: (row.advisor_ordered_at as string | null) ?? null,
     })),
   };
 });

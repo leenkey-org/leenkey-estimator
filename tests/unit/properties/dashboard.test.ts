@@ -147,6 +147,7 @@ function conversation(patch: Partial<ConversationSummary>): ConversationSummary 
     id: "c1",
     kind: "listing",
     plan: null,
+    advisorOrderedAt: null,
     role: "seller",
     propertyId: "p1",
     listingId: "l1",

@@ -1,6 +1,7 @@
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import { sheetHref } from "@/leenkey/properties/sheet";
-import { NBSP, formatRooms } from "@/lib/format";
+import { firstContactFrom } from "@/leenkey/billing/orders";
+import { NBSP, formatDateShort, formatRooms } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import type { ConversationSummary } from "./types";
 
@@ -39,19 +40,28 @@ export function counterpartName({ kind, role, counterpartFirstName }: Party): st
 export function conversationHeading(
   conversation: Party &
     Kind &
-    Pick<ConversationSummary, "buyerFinancingStatus" | "listingTitle" | "closed" | "plan"> & {
+    Pick<
+      ConversationSummary,
+      "buyerFinancingStatus" | "listingTitle" | "closed" | "plan" | "advisorOrderedAt"
+    > & {
       kind: ConversationSummary["kind"];
     },
+  now: Date = new Date(),
 ): { title: string; subtitle: string } {
   if (conversation.kind === "advisor") {
     const property = conversation.listingTitle ?? conversationTitle(conversation);
-    return {
-      title: t.advisor.name,
-      subtitle:
-        conversation.closed || !conversation.plan
-          ? property
-          : `${fr.plan[conversation.plan]}${SEPARATOR}${t.advisor.reply}`,
-    };
+    if (conversation.closed || !conversation.plan) {
+      return { title: t.advisor.name, subtitle: property };
+    }
+    // Before the end of the withdrawal, no « within 24 h » (SPEC 11).
+    const from = conversation.advisorOrderedAt
+      ? firstContactFrom(new Date(conversation.advisorOrderedAt), false)
+      : null;
+    const delay =
+      from && from.getTime() > now.getTime()
+        ? t.advisor.from(formatDateShort(from, now))
+        : t.advisor.reply;
+    return { title: t.advisor.name, subtitle: `${fr.plan[conversation.plan]}${SEPARATOR}${delay}` };
   }
   return { title: conversationTitle(conversation), subtitle: conversationSubtitle(conversation) };
 }

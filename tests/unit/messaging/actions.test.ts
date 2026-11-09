@@ -177,14 +177,17 @@ describe("a message in a conversation", () => {
   });
 
   it("tells a closed conversation from an account that may no longer write", async () => {
+    // An account that may still write: the conversation is closed (by a party,
+    // or the adviser's once the plan no longer includes it, L1-34).
     mocks.answers.push(refused("42501", "new row violates row-level security policy"));
-    mocks.answers.push(ok({ closed_at: "2026-10-19T08:00:00Z" }));
+    mocks.answers.push(ok(true));
     expect(await sendMessage({ conversationId: CONVERSATION, body: "Bonjour" })).toEqual({
       ok: false,
       error: "closed",
     });
+    expect(mocks.calls.at(-1)).toMatchObject({ target: "is_active_user", op: "rpc" });
     mocks.answers.push(refused("42501", "new row violates row-level security policy"));
-    mocks.answers.push(ok({ closed_at: null }));
+    mocks.answers.push(ok(false));
     expect(await sendMessage({ conversationId: CONVERSATION, body: "Bonjour" })).toEqual({
       ok: false,
       error: "inactive",

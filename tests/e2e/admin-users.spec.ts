@@ -71,6 +71,7 @@ test("tableau de bord : compteurs, « À traiter », aucun écart d'accessibilit
     "Annonces à valider",
     "Dossiers ouverts",
     "Signalements ouverts",
+    "Messages clients non lus",
     "Formules vendues · 30 j",
     "Inscriptions · 30 j",
   ]) {

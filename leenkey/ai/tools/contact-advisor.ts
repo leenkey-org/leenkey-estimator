@@ -76,6 +76,12 @@ export const contactAdvisorTool: AiTool<Input, Output, HandoffPreview> = {
     if (!error) return { sent: true, conversationId: data };
     if (error.code === "23505") return { sent: false, answered: true };
     if (error.code === "22023") return { sent: false, error: NO_ADVISOR };
+    if (error.code === "54000") {
+      return {
+        sent: false,
+        error: "Too many messages from the seller in the last hour: nothing was sent. Try later.",
+      };
+    }
     if (error.code !== "42501") {
       console.error("[ai] advisor handoff failed", {
         user_id: ctx.profileId,

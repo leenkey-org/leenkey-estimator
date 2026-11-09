@@ -21,6 +21,7 @@ const { readEvents } = await import("@/leenkey/ai/stream-events");
 const { gapPercent, actionPreview } = await import("@/leenkey/ai/previews");
 const { sellerContextText, typed } = await import("@/leenkey/ai/context");
 const { ALL_TOOLS, toolsFor } = await import("@/leenkey/ai/tools");
+const { isFailure } = await import("@/leenkey/ai/queries");
 const { chatRequestSchema } = await import("@/lib/validations/assistant");
 const { fr } = await import("@/lib/i18n/fr");
 
@@ -667,6 +668,14 @@ describe("the tools of the seller", () => {
         summary: "Je me demande si je dois baisser le prix.",
       }).success,
     ).toBe(true);
+  });
+
+  it("a confirmed tool that wrote nothing is a failure, never « done » (L1-34)", () => {
+    expect(isFailure({ updated: false, error: "x" })).toBe(true);
+    expect(isFailure({ sent: false, error: "x" })).toBe(true);
+    expect(isFailure({ updated: true })).toBe(false);
+    expect(isFailure({ sent: true, conversationId: "c" })).toBe(false);
+    expect(isFailure(null)).toBe(false);
   });
 
   it("the gap of a price to the analysis of value, one decimal", () => {

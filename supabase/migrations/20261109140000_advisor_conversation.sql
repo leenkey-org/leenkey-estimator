@@ -65,13 +65,14 @@ begin
    order by p.created_at, p.id
    limit 1;
   -- Immediate start asked, or not (L1-26): the adviser answers within 24 h,
-  -- or once the 14 days of the withdrawal are over (SPEC 11).
-  select s.early_start_requested_at is not null into v_early
-    from public.subscriptions s
-   where s.property_id = p_property and s.replaced_by is null and s.refunded_at is null
-     and s.ends_at > now()
-   order by s.activated_at desc
-   limit 1;
+  -- or once the 14 days of the withdrawal are over (SPEC 11); a plan ordered
+  -- more than 14 days ago (the conversations opened by this migration) has
+  -- started already.
+  select exists (
+    select 1 from public.subscriptions s
+     where s.property_id = p_property and s.refunded_at is null and s.ends_at > now()
+       and (s.early_start_requested_at is not null or s.activated_at <= now() - interval '14 days')
+  ) into v_early;
   insert into public.messages (conversation_id, sender_id, body, kind, meta)
   values (
     v_conversation, coalesce(v_sender, v_owner),
@@ -139,7 +140,8 @@ returns table (
   last_message_mine boolean,
   unread boolean,
   closed_at timestamptz,
-  plan public.plan_code
+  plan public.plan_code,
+  advisor_ordered_at timestamptz
 )
 language sql stable security definer set search_path = '' as $$
   select c.id, c.kind,
@@ -164,7 +166,19 @@ language sql stable security definer set search_path = '' as $$
          case when c.kind = 'advisor' and not public.advisor_right(c.property_id)
               then coalesce(c.closed_at, now()) else c.closed_at end,
          -- The plan of the property, said by the header of the adviser.
-         case when c.kind = 'advisor' then public.property_current_plan(c.property_id) end
+         case when c.kind = 'advisor' then public.property_current_plan(c.property_id) end,
+         -- The order of a plan whose adviser waits for the end of the withdrawal
+         -- (no immediate start, SPEC 11): the header says from when. An upgrade
+         -- keeps the adviser of the plan it replaced.
+         case when c.kind = 'advisor' then (
+           select s.activated_at from public.subscriptions s
+            where s.property_id = c.property_id and s.replaced_by is null
+              and s.refunded_at is null and s.ends_at > now()
+              and s.early_start_requested_at is null
+              and not exists (select 1 from public.subscriptions p2
+                               where p2.replaced_by = s.id and p2.refunded_at is null)
+            order by s.activated_at desc limit 1)
+         end
   from public.conversations c
   join public.properties p on p.id = c.property_id
   -- The listing of the conversation; for the adviser, the listing of the property.
@@ -276,6 +290,9 @@ declare
 begin
   if uid is null or not public.is_active_user() then
     raise exception 'not authenticated' using errcode = '42501';
+  end if;
+  if p_tool_name is distinct from 'contact_advisor' then
+    raise exception 'ai_advisor_handoff: contact_advisor only' using errcode = '22023';
   end if;
   if not exists (select 1 from public.ai_conversations a
                   where a.id = p_conversation_id and a.profile_id = uid) then

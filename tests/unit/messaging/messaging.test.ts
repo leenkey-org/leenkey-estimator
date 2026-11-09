@@ -32,6 +32,7 @@ function conversation(overrides: Partial<ConversationSummary> = {}): Conversatio
     id: CONVERSATION,
     kind: "listing",
     plan: null,
+    advisorOrderedAt: null,
     role: "buyer",
     propertyId: "5eed1000-0000-4000-8000-000000000001",
     listingId: LISTING,
@@ -136,6 +137,18 @@ describe("the conversation with the adviser (L1-34)", () => {
     // Closed (the plan no longer includes it): the property it was about.
     expect(conversationHeading({ ...advisor, closed: true }).subtitle).toBe(
       "Appartement 3 pièces avec balcon",
+    );
+  });
+
+  it("before the end of the withdrawal, the day the adviser starts, never « 24 h » (SPEC 11)", () => {
+    const now = new Date("2026-11-09T10:00:00Z");
+    const ordered = { ...advisor, advisorOrderedAt: "2026-11-05T10:00:00Z" };
+    const subtitle = plain(conversationHeading(ordered, now).subtitle);
+    expect(subtitle).toMatch(/^Accompagné · Accompagnement à partir du \d{1,2} \S+$/);
+    expect(subtitle).not.toContain("24 h");
+    // Once that day has come: within 24 h.
+    expect(plain(conversationHeading(ordered, new Date("2026-12-01T10:00:00Z")).subtitle)).toBe(
+      "Accompagné · Réponse sous 24 h",
     );
   });
 

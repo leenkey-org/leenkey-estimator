@@ -1827,6 +1827,7 @@ export type Database = {
           unread: boolean
           last_message_body: string
           plan: Database["public"]["Enums"]["plan_code"]
+          advisor_ordered_at: string
         }[]
       }
       cron_call: {

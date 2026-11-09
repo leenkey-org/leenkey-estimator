@@ -5,14 +5,12 @@ import { FilterPills } from "@/components/shared/filter-pills";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { requireAdmin } from "@/core/auth/session";
 import { AdvisorInbox } from "@/leenkey/admin/components/advisor-inbox";
+import { InboxRefresh } from "@/leenkey/messaging/components/inbox-refresh";
 import { adminMetadata } from "@/leenkey/admin/metadata";
 import { adminAdvisorConversations, awaitingAnswer } from "@/leenkey/admin/messages/queries";
 import { fr } from "@/lib/i18n/fr";
-import {
-  ADMIN_MESSAGE_PLANS,
-  adminMessagesHref,
-  parseAdminMessagesQuery,
-} from "@/lib/validations/admin";
+import { adminMessagesHref, parseAdminMessagesQuery } from "@/lib/validations/admin";
+import { planCode } from "@/lib/validations/billing";
 import { AdminPage } from "../_components/admin-page";
 
 const t = fr.adminMessages;
@@ -27,12 +25,17 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 // conversation (from 1024 px, this list stays on its left). The page checks
 // the admin role itself, not only the layout.
 export default async function AdminMessagesPage({ searchParams }: Props) {
-  await requireAdmin();
+  const profile = await requireAdmin();
   const query = parseAdminMessagesQuery(await searchParams);
   const list = await adminAdvisorConversations();
   const now = new Date();
 
   const all = list.ok ? list.data : [];
+  // The plans of the open conversations (those with the adviser), in their order.
+  const open = all.filter((row) => !row.closed);
+  const plans = planCode.options.filter(
+    (plan) => plan === query.plan || open.some((row) => row.plan === plan),
+  );
   const pills = [
     {
       href: adminMessagesHref({ plan: null }),
@@ -40,10 +43,10 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
       count: list.ok ? all.length : undefined,
       active: query.plan === null,
     },
-    ...ADMIN_MESSAGE_PLANS.map((plan) => ({
+    ...plans.map((plan) => ({
       href: adminMessagesHref({ plan }),
       label: fr.plan[plan],
-      count: list.ok ? all.filter((row) => !row.closed && row.plan === plan).length : undefined,
+      count: list.ok ? open.filter((row) => row.plan === plan).length : undefined,
       active: query.plan === plan,
     })),
   ];
@@ -92,6 +95,8 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
       ) : null}
       <FilterPills label={t.filters.label} items={pills} />
       {content}
+      {/* A seller writes, the team reads: the list follows (Realtime). */}
+      <InboxRefresh profileId={profile.id} kind="advisor" />
     </AdminPage>
   );
 }

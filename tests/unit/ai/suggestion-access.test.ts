@@ -168,6 +168,7 @@ beforeEach(() => {
   mocks.missing = [];
   mocks.conversation = {
     id: CONVERSATION,
+    kind: "listing",
     role: "seller",
     propertyId: PROPERTY,
     listingId: "5eed1000-0000-4000-8000-0000000000f8",
@@ -207,12 +208,23 @@ describe("a reply suggested", () => {
     ]);
   });
 
-  it("never for the buyer of the conversation, nor a conversation of someone else: nothing counted", async () => {
+  it("never for the buyer, a conversation of someone else or the adviser's: nothing counted", async () => {
     mocks.conversation = { ...mocks.conversation, role: "buyer" };
     expect(await suggestReply(seller, CONVERSATION)).toEqual({ ok: false, error: "not_found" });
     mocks.conversation = null;
     expect(await suggestReply(seller, CONVERSATION)).toEqual({ ok: false, error: "not_found" });
-    expect(steps()).toEqual(["conversation", "conversation"]);
+    // Nor the conversation with the adviser, though it has a listing (L1-34).
+    mocks.conversation = {
+      id: CONVERSATION,
+      kind: "advisor",
+      role: "seller",
+      propertyId: PROPERTY,
+      listingId: "5eed1000-0000-4000-8000-0000000000f8",
+      closed: false,
+      counterpartFirstName: null,
+    };
+    expect(await suggestReply(seller, CONVERSATION)).toEqual({ ok: false, error: "not_found" });
+    expect(steps()).toEqual(["conversation", "conversation", "conversation"]);
   });
 
   it("a closed conversation: nothing to answer, nothing counted", async () => {

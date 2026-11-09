@@ -12,10 +12,10 @@ const { awaitingAnswer } = await import("@/leenkey/admin/messages/queries");
 const NOW = new Date("2026-11-09T12:00:00Z");
 
 describe("the shared inbox of the advisor conversations", () => {
-  it("filters by a paid plan, any other value shows them all", () => {
+  it("filters by a plan, any other value shows them all", () => {
     expect(parseAdminMessagesQuery({ formule: "accompagne" })).toEqual({ plan: "accompagne" });
     expect(parseAdminMessagesQuery({ formule: ["serenite", "x"] })).toEqual({ plan: "serenite" });
-    expect(parseAdminMessagesQuery({ formule: "autonomie" })).toEqual({ plan: null });
+    expect(parseAdminMessagesQuery({ formule: "premium" })).toEqual({ plan: null });
     expect(parseAdminMessagesQuery({})).toEqual({ plan: null });
     expect(adminMessagesHref({ plan: "serenite" })).toBe("/admin/messages?formule=serenite");
     expect(adminMessagesHref({ plan: null })).toBe("/admin/messages");

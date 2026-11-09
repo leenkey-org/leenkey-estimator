@@ -62,7 +62,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
   // L1-34: with the adviser, the first names of the admins who answered.
   const advisor = conversation.kind === "advisor";
   const names = advisor ? await threadSenders(id) : {};
-  const heading = conversationHeading(conversation);
+  const heading = conversationHeading(conversation, now);
 
   return (
     <>

@@ -225,7 +225,11 @@ test("premier message depuis une annonce, liste du vendeur, signalement", async 
     expect(await inbox(seller).getByRole("heading").count()).toBeGreaterThanOrEqual(2);
     const line = inbox(seller).locator(`a[href="${conversation}"]`);
     // In the group of its own property.
-    await expect(inbox(seller).getByRole("region").filter({ has: line })).toHaveCount(1);
+    await expect(
+      inbox(seller)
+        .getByRole("region")
+        .filter({ has: seller.locator(`a[href="${conversation}"]`) }),
+    ).toHaveCount(1);
     await expect(line.getByText("Non lu")).toBeAttached();
   });
 

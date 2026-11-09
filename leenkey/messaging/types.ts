@@ -31,6 +31,11 @@ export type ConversationSummary = {
   closed: boolean;
   /** The plan of the property, for the adviser only (its header). */
   plan: Enums["plan_code"] | null;
+  /**
+   * The adviser only: the order of a plan without immediate start, whose
+   * adviser waits for the end of the withdrawal (SPEC 11); null once started.
+   */
+  advisorOrderedAt: string | null;
 };
 
 /** The listing a buyer writes to for the first time (/messages/nouveau). */

@@ -1084,6 +1084,8 @@ export const fr = {
       avatar: "LK",
       // The header of the seller: the plan of the property, then the delay (SPEC 8.13).
       reply: "Réponse sous 24\u00A0h",
+      // No immediate start (SPEC 11): the first contact after the withdrawal.
+      from: (date: string) => `Accompagnement à partir du ${date}`,
       closed:
         "Votre formule ne comprend plus de conseiller : cette conversation est fermée. Choisissez une formule pour échanger de nouveau avec l'équipe Leenkey.",
       closedTeam:
@@ -1490,6 +1492,8 @@ export const fr = {
       none: "Rien en attente",
       cases: "Dossiers ouverts",
       reports: "Signalements ouverts",
+      // L1-34: the sellers who wrote to their adviser, not read by the team.
+      messages: "Messages clients non lus",
       plans: (days: number) => `Formules vendues · ${days}\u00A0j`,
       plansAmount: (amount: string) => `${amount} TTC`,
       signups: (days: number) => `Inscriptions · ${days}\u00A0j`,
@@ -1807,8 +1811,6 @@ export const fr = {
         "Pas de réponse du serveur : la modification a peut-être été enregistrée. Rechargez la page avant de recommencer.",
     },
   },
-  // L1-30c: the reports of the back office (SPEC-V2 section 17). The
-  // reported conversation is read in full here, each reading traced.
   // L1-34: the shared inbox of the advisor conversations (SPEC-V2 section 17).
   adminMessages: {
     metaTitle: "Messages clients · Back office · Leenkey",
@@ -1839,6 +1841,8 @@ export const fr = {
     retry: "Réessayer",
     back: "Tous les messages",
   },
+  // L1-30c: the reports of the back office (SPEC-V2 section 17). The
+  // reported conversation is read in full here, each reading traced.
   adminReports: {
     metaTitle: "Signalements · Back office · Leenkey",
     detailMetaTitle: (label: string) => `${label} · Signalements · Back office · Leenkey`,
@@ -2930,7 +2934,7 @@ export const fr = {
         confirm: "Envoyer",
         states: {
           confirmed:
-            "Message envoyé à votre conseiller Leenkey : il vous répond sous 24\u00A0h dans la messagerie.",
+            "Message envoyé à votre conseiller Leenkey : sa réponse arrivera dans la messagerie.",
           declined: "Message annulé : rien n'a été envoyé.",
           superseded: "Message non confirmé : rien n'a été envoyé.",
           error: "Le message n'a pas pu être envoyé.",

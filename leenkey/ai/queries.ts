@@ -59,9 +59,13 @@ export async function assistantConversation(
   return { ok: true, data: { conversationId: conversation.data.id, items } };
 }
 
-/** The output of a tool that writes, when nothing was written ({ updated: false }). */
+/**
+ * The output of a tool that writes, when nothing was written: { updated:
+ * false } (the listing), { sent: false } (contact_advisor, L1-34).
+ */
 export function isFailure(result: unknown): boolean {
+  if (typeof result !== "object" || result === null) return false;
   return (
-    typeof result === "object" && result !== null && "updated" in result && result.updated === false
+    ("updated" in result && result.updated === false) || ("sent" in result && result.sent === false)
   );
 }

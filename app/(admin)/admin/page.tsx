@@ -82,9 +82,9 @@ function Tile({
 
 // L1-30a: the dashboard of the back office (SPEC-V2 section 17, template G7):
 // what waits for the team (listings to review with the oldest one and the
-// 24 h target, open cases, open reports), the plans sold and the sign-ups of
-// the last 30 days, then « À traiter », the oldest first. Not yet here, with
-// their screens: the messages of the customers (L1-34), the offers (L2) and
+// 24 h target, open cases, open reports, the messages of the customers not
+// read, L1-34), the plans sold and the sign-ups of the last 30 days, then
+// « À traiter », the oldest first. Not yet here, with their screens: the offers (L2) and
 // the upgrade prompts (L2-09); the daily brief of the assistant (L1-30b). The
 // page checks the admin role itself, not only the layout.
 export default async function AdminHomePage() {
@@ -120,7 +120,7 @@ export default async function AdminHomePage() {
       {counts.ok || activity.ok ? (
         <ul
           aria-label={t.tiles.label}
-          className="grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-5"
+          className="grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-6"
         >
           {counts.ok ? (
             <>
@@ -140,6 +140,11 @@ export default async function AdminHomePage() {
                 value={formatInteger(counts.data.reportsOpen)}
                 label={t.tiles.reports}
                 href={ROUTES.adminReports}
+              />
+              <Tile
+                value={formatInteger(counts.data.advisorUnread)}
+                label={t.tiles.messages}
+                href={ROUTES.adminMessages}
               />
             </>
           ) : null}

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { useRetry } from "@/components/shared/use-retry";
@@ -24,6 +25,8 @@ export default function ConversationError({
     console.error(error);
   }, [error]);
   const { retry, pending } = useRetry(reset);
+  // The team's conversations go back to its inbox (L1-34).
+  const back = usePathname().startsWith("/admin/") ? "/admin/messages" : "/messages";
 
   return (
     <div className="mx-auto flex w-full max-w-lk-form flex-col gap-4 px-5 py-16">
@@ -34,7 +37,7 @@ export default function ConversationError({
           {t.retry}
         </Button>
         <Button asChild variant="secondary">
-          <Link href="/messages">{t.back}</Link>
+          <Link href={back}>{t.back}</Link>
         </Button>
       </div>
     </div>

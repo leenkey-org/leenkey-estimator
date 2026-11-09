@@ -5,7 +5,7 @@
 -- inbox and the handoff of the assistant.
 begin;
 \ir _helpers.psql
-select plan(36);
+select plan(42);
 \ir _plan.psql
 
 insert into plans (code, name, tagline, price_cents, description, features, position) values
@@ -67,6 +67,8 @@ select is((select kind::text from conversation_summaries() limit 1), 'advisor',
           'seller_a: the adviser first in the list');
 select is((select unread from conversation_summaries() where id = :'conv'), true,
           'seller_a: the welcome is unread');
+select is((select row(plan, advisor_ordered_at)::text from conversation_summaries() where id = :'conv'),
+          '(accompagne,)', 'seller_a: its plan, an immediate start: no day to wait for');
 select lives_ok(format('insert into messages (conversation_id, sender_id, body) values (%L, %L, %L)',
                        :'conv', tests.uid('seller_a'), 'Bonjour, quel prix conseillez-vous ?'),
                 'seller_a: writes to the adviser');
@@ -118,6 +120,10 @@ select throws_ok('select admin_advisor_conversations()', '42501', null,
 select throws_ok(format($$select ai_advisor_handoff(%L, 'toolu_x', 'contact_advisor', %L, 'Une question')$$,
                         :'ai_b', :'paid'), '42501', null,
                  'anon: never hands a question over');
+select throws_ok('select * from conversation_summaries()', '42501', null,
+                 'anon: no conversation list');
+select throws_ok(format('select * from conversation_senders(%L)', :'conv'), '42501', null,
+                 'anon: never reads the authors of a thread');
 
 -- The team -----------------------------------------------------------------------
 \set who admin
@@ -171,6 +177,9 @@ select throws_ok(format($$select ai_advisor_handoff(%L, 'toolu_1', 'contact_advi
 select throws_ok(format($$select ai_advisor_handoff(%L, 'toolu_2', 'contact_advisor', %L, 'Une question')$$,
                         :'ai_a', :'free'), '22023', null,
                  'seller_a: no handoff without the adviser in the plan');
+select throws_ok(format($$select ai_advisor_handoff(%L, 'toolu_3', 'update_listing_price', %L, 'Une question')$$,
+                        :'ai_a', :'paid'), '22023', null,
+                 'seller_a: a handoff only as the tool contact_advisor');
 
 -- A refund closes it ---------------------------------------------------------------
 reset role;
@@ -182,6 +191,13 @@ select throws_ok(format('insert into messages (conversation_id, sender_id, body)
                  '42501', null, 'seller_a: a refunded plan closes the conversation');
 select ok((select closed_at is not null from conversation_summaries() where id = :'conv'),
           'seller_a: said closed in the list');
+\set who admin
+\ir _as.psql
+select throws_ok(format('insert into messages (conversation_id, sender_id, body) values (%L, %L, %L)',
+                        :'conv', tests.uid('admin'), 'Bonjour'),
+                 '42501', null, 'admin: the team no longer writes in it either');
+select ok((select closed_at is not null from admin_advisor_conversations() where id = :'conv'),
+          'admin: said closed in the shared inbox');
 
 select * from finish();
 rollback;
