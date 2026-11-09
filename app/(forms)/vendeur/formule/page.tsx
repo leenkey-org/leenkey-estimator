@@ -20,7 +20,7 @@ import { formatDate, formatDateShort } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 import { cn } from "@/lib/utils";
-import { sessionIdSchema } from "@/lib/validations/billing";
+import { planCode, sessionIdSchema } from "@/lib/validations/billing";
 
 const t = fr.billing;
 
@@ -251,6 +251,8 @@ export default async function PlanPage({ searchParams }: Props) {
           plans={data.plans}
           prices={data.prices}
           current={data.current}
+          // From « Choisir Accompagné » of /tarifs (?formule=): that order open.
+          initialPlan={planCode.safeParse(first(query.formule)).data ?? null}
           activeNote={activeNote}
           orderable={orderable}
           versions={{

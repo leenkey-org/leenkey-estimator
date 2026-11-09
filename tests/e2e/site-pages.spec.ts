@@ -409,10 +409,19 @@ test.describe("/tarifs (base de seed)", () => {
     await expect(plans.nth(2)).toContainText("Tout Accompagné, plus :");
     await expect(plans.nth(2)).toContainText("Suivi jusqu'à la signature");
     await expect(plans.nth(2)).toContainText("1 500 €");
-    // Only the free plan is the primary action.
+    // Only the free plan is the primary action: the two ways to start a
+    // sale; a paid plan, its order on the page of the plans (2026-11-09).
     await expect(
       plans.nth(0).getByRole("link", { name: "Commencer gratuitement" }),
-    ).toHaveAttribute("href", "/estimer");
+    ).toHaveAttribute("href", "/vendre");
+    await expect(plans.nth(1).getByRole("link", { name: "Choisir Accompagné" })).toHaveAttribute(
+      "href",
+      "/vendeur/formule?formule=accompagne",
+    );
+    await expect(plans.nth(2).getByRole("link", { name: "Choisir Sérénité" })).toHaveAttribute(
+      "href",
+      "/vendeur/formule?formule=serenite",
+    );
     // The V1 lists of another offer are gone.
     await expect(page.getByText("Garantie juridique")).toHaveCount(0);
   });

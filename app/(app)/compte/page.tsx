@@ -99,6 +99,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
             />
           </AccountSection>
 
+          {account.roles.includes("seller") ? (
+            <AccountSection id="compte-formule" title={t.sections.plan}>
+              <AccountRow href={ROUTES.plan} label={t.rows.plan} value={t.rows.planValue} />
+            </AccountSection>
+          ) : null}
+
           <AccountSection id="compte-cookies" title={t.sections.privacy}>
             <li>
               <CookieSettingsButton

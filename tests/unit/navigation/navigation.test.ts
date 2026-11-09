@@ -442,8 +442,11 @@ describe("bell and account menu", () => {
       initial: null,
       homeHref: "/vendeur",
       homeLabel: "Cockpit",
+      plans: { href: "/vendeur/formule", label: "Ma formule" },
       accountHref: "/compte",
     });
+    // « Ma formule » for a seller only.
+    expect(accountMenu({ firstName: "Chloé", roles: ["buyer"] })).not.toHaveProperty("plans");
     expect(accountMenu({ firstName: "Cédric", roles: ["admin"] })).not.toHaveProperty("cockpit");
   });
 
@@ -453,6 +456,7 @@ describe("bell and account menu", () => {
       homeHref: "/admin",
       homeLabel: "Back office",
       cockpit: { href: "/vendeur", label: "Cockpit" },
+      plans: { href: "/vendeur/formule", label: "Ma formule" },
       accountHref: "/compte",
     });
     expect(accountMenu({ firstName: "Younes", roles: ["buyer", "admin"] }).cockpit?.href).toBe(

@@ -32,6 +32,8 @@ export const ROUTES = {
   /** How the assistant uses artificial intelligence (L1-43). */
   aiPolicy: "/intelligence-artificielle",
   messages: "/messages",
+  /** The plans of a seller's property: order, passage, withdrawal (L1-26). */
+  plan: "/vendeur/formule",
   account: "/compte",
   accountIdentity: "/compte/informations",
   accountEmail: "/compte/email",

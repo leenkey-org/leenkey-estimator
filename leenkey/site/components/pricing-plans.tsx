@@ -10,7 +10,7 @@ import type { PlanView } from "@/core/billing/plan-text";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
-import { savingCents } from "../pricing";
+import { planOrderHref, savingCents } from "../pricing";
 
 const t = fr.site.pricing;
 type View = "price" | "savings";
@@ -21,7 +21,10 @@ type View = "price" | "savings";
  * switch « Mon économie vs agence » that shows, for a paid plan, the saving
  * on the example of the home page instead of its price. On the navy of the
  * V1 (L1-50): the glass cards, « Commencer gratuitement » in the gradient
- * with its arrow, the paid plans in a white outline.
+ * with its arrow, the paid plans in a white outline. « Commencer
+ * gratuitement » leads to the two ways to start a sale (/vendre); a paid plan
+ * to its order on the page of the plans, chosen already (sign-in or sign-up
+ * first, then back there).
  */
 export function PricingPlans({ plans }: { plans: readonly PlanView[] }) {
   const [view, setView] = useState<View>("price");
@@ -76,7 +79,7 @@ export function PricingPlans({ plans }: { plans: readonly PlanView[] }) {
                       trailingIcon={ArrowRight}
                       className="focus-visible:outline-white"
                     >
-                      <Link href={ROUTES.valuation}>{texts.action}</Link>
+                      <Link href={ROUTES.sell}>{texts.action}</Link>
                     </Button>
                   ) : (
                     <Button
@@ -85,7 +88,7 @@ export function PricingPlans({ plans }: { plans: readonly PlanView[] }) {
                       variant="night"
                       className="focus-visible:outline-white"
                     >
-                      <Link href={ROUTES.valuation}>{texts.action}</Link>
+                      <Link href={planOrderHref(plan.code)}>{texts.action}</Link>
                     </Button>
                   )
                 }
