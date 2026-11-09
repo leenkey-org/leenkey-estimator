@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emailHref, LEENKEY_WHATSAPP, whatsappHref } from "@/leenkey/site/contact-links";
-import { LEGAL_VERSIONS } from "@/lib/legal/versions";
+import { LEGAL_VERSIONS, termsExempt } from "@/lib/legal/versions";
 import { fr } from "@/lib/i18n/fr";
 import type { LegalSection } from "@/lib/i18n/legal-texts";
 import type { Rich } from "@/lib/i18n/rich";
@@ -165,5 +165,20 @@ describe("legal texts of the launch (2026-11-09)", () => {
     expect(text).toContain("14 jours");
     expect(text).toContain("Formule souscrite : ____________________");
     expect(text).toContain("510");
+  });
+
+  it("the page of the plan, where the withdrawal is, skips the gate of new terms", () => {
+    expect(termsExempt("/vendeur/formule")).toBe(true);
+    expect(termsExempt("/vendeur/formule?bien=5eed&retour=1")).toBe(true);
+    expect(termsExempt("/vendeur")).toBe(false);
+    expect(termsExempt("/vendeur/formule/autre")).toBe(false);
+    expect(termsExempt("/vendeur/biens/5eed")).toBe(false);
+  });
+
+  it("the moderation is told as it is done: by a person, with a way to contest", () => {
+    const all = [terms, reporting, ai].flatMap((text) => texts(text.sections)).join(" ");
+    expect(all).not.toMatch(/outils automatiques\. Ces contrôles/);
+    expect(all).toContain("Aucun outil automatique ne prend de décision de modération");
+    expect(fr.emails.listingRejected.contest.before).toContain("pas d'accord");
   });
 });

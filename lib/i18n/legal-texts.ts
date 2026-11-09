@@ -115,43 +115,11 @@ export const legalNotice = {
         {
           kind: "p",
           text: [
-            "Les données personnelles collectées sur ce site (nom, prénom, email, téléphone, données relatives au bien immobilier) sont traitées par Leenkey en qualité de responsable de traitement, dans le respect du Règlement Général sur la Protection des Données (Règlement UE 2016/679) et de la loi Informatique et Libertés modifiée.",
-          ],
-        },
-        { kind: "subtitle", text: "Finalités du traitement" },
-        {
-          kind: "list",
-          items: [
-            ["Établir une analyse de valorisation de votre bien immobilier"],
-            ["Vous transmettre votre rapport de valorisation personnalisé"],
-            ["Vous recontacter dans le cadre de votre demande"],
-            ["Améliorer nos services et notre algorithme"],
-          ],
-        },
-        { kind: "subtitle", text: "Vos droits" },
-        {
-          kind: "p",
-          text: [
-            "Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, de portabilité et d'opposition au traitement de vos données. Pour exercer ces droits, contactez-nous à ",
+            "Leenkey traite les données personnelles collectées sur ce site en qualité de responsable de traitement, dans le respect du règlement général sur la protection des données (RGPD) et de la loi Informatique et Libertés. Les données traitées, leurs finalités, leurs destinataires, leurs durées de conservation et vos droits sont décrits dans la ",
+            { link: "politique de confidentialité", href: "/confidentialite" },
+            ". Pour exercer vos droits : ",
             email,
             ".",
-          ],
-        },
-        {
-          kind: "p",
-          text: [
-            "Vous pouvez également introduire une réclamation auprès de la CNIL (",
-            { link: "www.cnil.fr", href: "https://www.cnil.fr" },
-            ").",
-          ],
-        },
-        { kind: "subtitle", text: "Durée de conservation" },
-        {
-          kind: "p",
-          text: [
-            "Vos données sont conservées ",
-            { strong: "3 ans" },
-            " à compter du dernier contact, sauf obligation légale de conservation plus longue (notamment comptable).",
           ],
         },
       ],
@@ -181,7 +149,7 @@ export const legalNotice = {
           text: [
             "Les rapports de valorisation fournis par Leenkey constituent une ",
             { strong: "analyse automatisée" },
-            " à titre informatif uniquement, basée sur les informations renseignées et les données de marché disponibles. Ils ne constituent ni une expertise immobilière ni une estimation au sens de la loi Hoguet, et ne peuvent engager la responsabilité de Leenkey quant au prix réel de vente.",
+            " à titre informatif uniquement, basée sur les informations renseignées et les données de marché disponibles. Ils ne constituent pas une expertise immobilière et ne garantissent pas le prix de vente.",
           ],
         },
         {

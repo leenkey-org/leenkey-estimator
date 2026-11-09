@@ -16,8 +16,9 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Ajouté : CGV, politique de confidentialité, signalement et modération, page Intelligence artificielle, rédigées à partir du dossier juridique du 9 octobre ; plus de mention « en cours de rédaction ».
 - Modifié : CGU 2.0 (20 articles), mentions légales (hébergement des données, activité, juridiction), politique cookies (inventaire complété) ; nouvelles versions à accepter à la connexion suivante ; pages légales dans le sitemap.
 - Ajouté : purge chaque nuit des analyses de valeur faites sans compte après 12 mois.
+- Modifié : la page de la formule (« Renoncer au contrat ») reste ouverte sans accepter d'abord les nouvelles CGU ; l'email d'une annonce à corriger donne la façon de contester la décision ; l'email de la formule annonce le reçu et la facture.
 - Migration : `20261109100000_estimations_purge.sql` (`estimations_purge`, réservée au job).
-- Tests : RLS (`rls_estimations_purge.sql`, 9, cinq comptes et visiteur), unitaires (numérotation, aucun repère « à compléter », aucun « on », rétractation et formulaire des CGV), E2E (pages publiées et datées, sommaire des CGU 2.0, rétractation des CGV, cookies).
+- Tests : RLS (`rls_estimations_purge.sql`, 9, cinq comptes et visiteur), unitaires (numérotation, aucun repère « à compléter », aucun « on », rétractation et formulaire des CGV, page de la formule hors acceptation, modération humaine et contestable), E2E (pages publiées et datées, sommaire des CGU 2.0, rétractation des CGV, cookies).
 
 ### 2026-11-08 · L1-40 · PR #81 · Vente conforme des formules : rétractation, récapitulatif, échéance
 - Ajouté : « Renoncer au contrat » sur la page de la formule pendant les 14 jours (boîte de confirmation, accusé de réception immédiat par email, note et réouverture du dossier, « Rétractation à rembourser » à toute l'équipe dans la cloche et par email).

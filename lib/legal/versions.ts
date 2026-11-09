@@ -25,3 +25,17 @@ export function missingLegalDocuments(
       ),
   );
 }
+
+/**
+ * Pages reached without accepting new versions of the CGU and privacy
+ * policy first: a right of the consumer never waits behind them (the
+ * withdrawal of a plan, « Renoncer au contrat », L1-40). An order made there
+ * records the CGU and the CGV it accepts itself (L1-26).
+ */
+export const TERMS_EXEMPT_PATHS: readonly string[] = ["/vendeur/formule"];
+
+/** Whether a path (« /vendeur/formule?bien=… ») skips the terms gate. */
+export function termsExempt(path: string): boolean {
+  const pathname = path.split(/[?#]/)[0] ?? path;
+  return TERMS_EXEMPT_PATHS.includes(pathname);
+}

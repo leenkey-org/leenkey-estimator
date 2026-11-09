@@ -157,7 +157,7 @@ const termsSections: readonly LegalSection[] = [
     title: "8. Annonces, contenus et modération",
     blocks: [
       para(
-        "Chaque annonce est relue par l'équipe Leenkey avant sa publication. Leenkey peut contrôler qu'une annonce est complète et cohérente, et modérer les contenus, avec l'aide d'outils automatiques. Ces contrôles ne valent ni certification de la propriété, ni garantie de l'état du bien, ni vérification complète de sa situation juridique, urbanistique, technique ou financière.",
+        "Chaque annonce est relue par l'équipe Leenkey avant sa publication. Leenkey peut contrôler qu'une annonce est complète et cohérente, et modérer les contenus. Ces contrôles ne valent ni certification de la propriété, ni garantie de l'état du bien, ni vérification complète de sa situation juridique, urbanistique, technique ou financière.",
       ),
       p(
         "Les contenus trompeurs, discriminatoires, frauduleux, contraires aux droits d'autrui ou aux présentes CGU peuvent être refusés, retirés ou suspendus. La procédure de signalement, d'information et de contestation est décrite dans la ",
@@ -260,7 +260,7 @@ const termsSections: readonly LegalSection[] = [
     title: "17. Suspension, signalement et clôture",
     blocks: [
       write(
-        "L'utilisateur peut demander la clôture de son compte à tout moment, depuis son espace ou en écrivant à ",
+        "L'utilisateur peut demander la clôture de son compte à tout moment en écrivant à ",
         ", sous réserve des obligations contractuelles ou légales encore en cours.",
       ),
       para(
@@ -455,7 +455,7 @@ const salesSections: readonly LegalSection[] = [
         kind: "list",
         items: [
           [
-            "utiliser le bouton « Renoncer au contrat », sur la page de sa formule dans son espace, visible pendant tout le délai ;",
+            "utiliser le bouton « Renoncer au contrat », sur la page de sa formule dans son espace, visible pendant tout le délai, sans autre formalité préalable ;",
           ],
           ["écrire une déclaration dénuée d'ambiguïté à ", email, " ;"],
           ["envoyer le formulaire de rétractation ci-dessous, par email ou par courrier."],
@@ -520,7 +520,7 @@ const salesSections: readonly LegalSection[] = [
     title: "16. Médiation de la consommation",
     blocks: [
       para(
-        "Après une réclamation écrite restée sans solution auprès de Leenkey, le client consommateur peut recourir gratuitement au médiateur de la consommation dont Leenkey relève. Ses coordonnées sont indiquées ici et dans le récapitulatif de chaque commande ; aucune formule payante ne peut être commandée tant qu'elles ne sont pas publiées.",
+        "Après une réclamation écrite restée sans solution auprès de Leenkey, le client consommateur peut recourir gratuitement au médiateur de la consommation dont Leenkey relève. Ses coordonnées seront indiquées ici et dans le récapitulatif de chaque commande ; tant qu'il n'est pas désigné, aucune formule payante ne peut être commandée.",
       ),
     ],
   },
@@ -601,7 +601,8 @@ const privacySections: readonly LegalSection[] = [
     blocks: [
       list(
         "Compte : prénom, nom, adresse email, téléphone s'il est donné, rôle (vendeur, acquéreur), date et version des conditions acceptées.",
-        "Analyse de valeur : les réponses au questionnaire sur le bien, l'adresse email et, s'il est donné, le numéro de téléphone.",
+        "Analyse de valeur : les réponses au questionnaire sur le bien, le prénom, le nom, l'adresse email et, s'il est donné, le numéro de téléphone.",
+        "Formulaire de contact : le motif, le prénom, le nom, l'adresse email, le téléphone s'il est donné et le message.",
         "Bien et annonce : adresse et caractéristiques du bien, photos, description, prix, documents du dossier de vente, état d'avancement de la vente.",
         "Projet acquéreur : critères de recherche, favoris, demandes de visite, offres, budget, apport et mode de financement déclarés, justificatif de financement s'il est déposé.",
         "Échanges : messages entre utilisateurs et avec Leenkey, signalements, demandes d'aide.",
@@ -622,6 +623,7 @@ const privacySections: readonly LegalSection[] = [
         "Faire fonctionner l'assistant que vous utilisez : exécution du service demandé.",
         "Relire les annonces, modérer les contenus, prévenir la fraude, limiter les abus et sécuriser le site : intérêt légitime de Leenkey et de ses utilisateurs, ou obligation légale.",
         "Répondre à vos demandes sur vos données : obligation légale.",
+        "Mesurer l'audience du site sans cookie, avec Vercel Web Analytics (pages vues, données agrégées) : intérêt légitime de Leenkey.",
         "Mesurer l'audience du site avec Google Analytics : votre consentement, que vous pouvez retirer à tout moment.",
       ),
       para(
@@ -659,11 +661,12 @@ const privacySections: readonly LegalSection[] = [
         "Vos données sont traitées par l'équipe Leenkey et par les prestataires techniques suivants, qui n'en font usage que pour nous rendre leur service :",
       ),
       list(
-        "Vercel Inc. (États-Unis) : hébergement du site ; serveurs de calcul à Paris.",
+        "Vercel Inc. (États-Unis) : hébergement du site, serveurs de calcul à Paris, et mesure d'audience sans cookie (Vercel Web Analytics).",
         "Supabase Inc. (États-Unis) : base de données, comptes et fichiers ; données hébergées dans l'Union européenne.",
         "Stripe Payments Europe (Irlande) : paiement des formules et factures.",
         "Anthropic PBC (États-Unis) : modèle d'intelligence artificielle de l'assistant et de l'analyse de valeur rédigée.",
         "Resend (États-Unis) : envoi des emails.",
+        "Google (Gmail) : boîte de réception de l'équipe Leenkey, qui reçoit les demandes d'analyse de valeur, les rapports demandés et les messages du formulaire de contact.",
         "Google (Google Maps Platform) : affichage des cartes, qui reçoit l'adresse IP du visiteur et la zone affichée, jamais l'adresse exacte d'un bien.",
         "IGN, Géoplateforme (France) : suggestion et localisation des adresses saisies par les vendeurs, sans nom, email ni adresse IP.",
         "Google (Google Analytics et Google Tag Manager) : mesure d'audience, seulement après votre accord.",
@@ -678,7 +681,7 @@ const privacySections: readonly LegalSection[] = [
     title: "8. Intelligence artificielle",
     blocks: [
       p(
-        "Les fonctionnalités qui utilisent l'intelligence artificielle sont signalées comme telles. Les questions posées à l'assistant et les textes nécessaires à sa réponse (par exemple la description d'une annonce) sont transmis à Anthropic pour produire la réponse. Aucun justificatif de financement ni aucune pièce d'identité ne lui est transmis. Les échanges avec l'assistant sont conservés dans votre espace et peuvent être relus par l'équipe Leenkey pour la qualité du service. Le détail figure sur la page ",
+        "Les fonctionnalités qui utilisent l'intelligence artificielle sont signalées comme telles. Les questions posées à l'assistant et les textes nécessaires à sa réponse (par exemple la description d'une annonce) sont transmis à Anthropic pour produire la réponse. Aucun justificatif de financement ni aucune pièce d'identité ne lui est transmis. Les échanges avec l'assistant sont enregistrés ; la dernière conversation reste affichée dans votre espace, et l'équipe Leenkey peut les relire pour la qualité du service. Le détail figure sur la page ",
         { link: "Intelligence artificielle", href: "/intelligence-artificielle" },
         ".",
       ),
@@ -689,10 +692,11 @@ const privacySections: readonly LegalSection[] = [
     title: "9. Durées de conservation",
     blocks: [
       list(
-        "Compte, biens, annonces, messages, offres et documents : tant que le compte est ouvert ; à sa suppression, ces données sont effacées ou rendues anonymes, sauf celles que la loi impose de garder.",
+        "Compte, biens, annonces, messages, offres, documents et conversations avec l'assistant de votre espace : tant que le compte est ouvert ; à sa suppression, ces données sont effacées ou rendues anonymes, sauf celles que la loi impose de garder.",
         "Analyse de valeur faite sans compte : 12 mois.",
         "Conversations avec l'assistant du site sans compte : 30 jours ; l'empreinte de l'adresse IP utilisée pour limiter le nombre de questions est effacée le lendemain.",
-        "Empreintes d'adresses IP utilisées pour limiter les tentatives (inscription, connexion, formulaire de contact) : un jour.",
+        "Empreintes d'adresses IP utilisées pour limiter les tentatives (inscription, connexion, mot de passe oublié, formulaire de contact, analyse de valeur, rapport par email) : 48 heures au plus.",
+        "Emails reçus par l'équipe Leenkey (demandes d'analyse de valeur, formulaire de contact) : 3 ans après le dernier échange.",
         "Factures et pièces comptables : 10 ans, comme l'impose la loi.",
         "Preuve des commandes et des conditions acceptées : le temps nécessaire à la preuve du contrat, dans la limite des délais de prescription.",
         "Cookies : selon les durées indiquées dans la politique cookies.",
@@ -725,7 +729,7 @@ const privacySections: readonly LegalSection[] = [
         "Vous pouvez accéder à vos données, les faire rectifier ou effacer, en limiter le traitement, vous opposer à leur traitement, en demander la portabilité et retirer votre consentement à tout moment. Aucune décision produisant des effets juridiques à votre égard n'est prise sur le seul fondement d'un traitement automatisé.",
       ),
       write(
-        "Vous pouvez modifier vos informations depuis votre espace, et exercer vos droits en écrivant à ",
+        "Vous pouvez exercer vos droits, y compris la modification de vos informations, en écrivant à ",
         ". Nous vous répondons dans un délai d'un mois, et pouvons vous demander un justificatif d'identité en cas de doute raisonnable.",
       ),
       p(
@@ -828,7 +832,7 @@ const reportingSections: readonly LegalSection[] = [
     title: "5. Information des personnes concernées",
     blocks: [
       para(
-        "Lorsqu'une mesure est prise, la personne concernée en est informée par email, avec ses motifs, la mesure décidée et la façon de la contester, sauf lorsque la loi ou la sécurité s'y opposent.",
+        "Lorsqu'une mesure est prise, la personne concernée en est informée par email, avec ses motifs, la mesure décidée et la façon de la contester, sauf lorsque la loi ou la sécurité s'y opposent. Une annonce à corriger peut aussi être modifiée puis envoyée de nouveau en relecture.",
       ),
     ],
   },
@@ -847,7 +851,7 @@ const reportingSections: readonly LegalSection[] = [
     title: "7. Outils automatiques",
     blocks: [
       para(
-        "L'assistant peut aider l'équipe à repérer, dans une annonce soumise, les informations manquantes ou incohérentes. Toute décision de refus, de retrait ou de suspension est prise par une personne de l'équipe Leenkey.",
+        "Aucun outil automatique ne prend de décision de modération : toute décision de refus, de retrait ou de suspension est prise par une personne de l'équipe Leenkey.",
       ),
     ],
   },
@@ -882,7 +886,7 @@ const aiSections: readonly LegalSection[] = [
     title: "1. Ce que fait l'assistant",
     blocks: [
       para(
-        "Dans votre espace, l'assistant Leenkey répond à vos questions sur la vente ou l'achat d'un bien, à partir de notre base de questions fréquentes et des informations de votre espace. Il peut aussi vous proposer un texte : une description d'annonce, une réponse à un message.",
+        "Dans votre espace vendeur, l'assistant Leenkey répond à vos questions sur la vente de votre bien, à partir de notre base de questions fréquentes et des informations de votre espace. Il peut aussi vous proposer un texte : une description d'annonce, une réponse à un message.",
       ),
       para(
         "Sur le site, sans compte, il répond à vos questions sur nos formules et vous aide à souscrire, à partir de nos formules et de notre FAQ seulement.",
@@ -899,7 +903,7 @@ const aiSections: readonly LegalSection[] = [
       list(
         "Il n'envoie aucun message et ne modifie rien sans votre confirmation : chaque action proposée s'affiche, et vous la validez ou la refusez.",
         "Il ne prend aucune décision sur une offre, un prix, un financement ou un compte.",
-        "Il ne donne pas d'avis juridique, fiscal ou financier engageant : pour ces questions, il vous oriente vers votre conseiller Leenkey ou un professionnel.",
+        "Il ne donne pas d'avis juridique, fiscal ou financier engageant : pour ces questions, il vous oriente vers l'équipe Leenkey ou un professionnel.",
         "Il n'est pas votre interlocuteur : il ne contacte pas l'autre partie et ne négocie pas.",
       ),
     ],
@@ -918,7 +922,7 @@ const aiSections: readonly LegalSection[] = [
     title: "4. Vos données",
     blocks: [
       p(
-        "L'assistant utilise un modèle d'Anthropic PBC (États-Unis). Vos questions et les informations nécessaires à la réponse lui sont transmises ; aucun justificatif de financement ni aucune pièce d'identité ne lui est transmis. Les conversations sont conservées dans votre espace et peuvent être relues par l'équipe Leenkey pour la qualité du service. Pour en savoir plus, consultez la ",
+        "L'assistant utilise un modèle d'Anthropic PBC (États-Unis). Vos questions et les informations nécessaires à la réponse lui sont transmises ; aucun justificatif de financement ni aucune pièce d'identité ne lui est transmis. Les conversations sont enregistrées ; la dernière reste affichée dans votre espace, et l'équipe Leenkey peut les relire pour la qualité du service. Pour en savoir plus, consultez la ",
         { link: "politique de confidentialité", href: "/confidentialite" },
         ".",
       ),

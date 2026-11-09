@@ -1833,6 +1833,11 @@ export const fr = {
         `Nous avons relu « ${title} » : elle ne peut pas encore être publiée.`,
       reason: "Ce qu'il faut corriger",
       next: "Corrigez-la depuis votre espace vendeur et renvoyez-la : nous la relisons sous 24\u00A0h.",
+      // The way to contest a decision of moderation (DSA, article 17; /signalement).
+      contest: {
+        before: "Si vous n'êtes pas d'accord avec cette décision, écrivez-nous à ",
+        after: " : nous vous répondons sous 48\u00A0h, 7\u00A0j/7.",
+      },
       action: "Corriger mon annonce",
     },
     listingSuspended: {
@@ -1892,7 +1897,7 @@ export const fr = {
       contactNow: "Votre conseiller Leenkey vous contacte sous 24\u00A0h.",
       contactLater: (date: string) =>
         `Votre conseiller Leenkey vous contacte à partir du ${date}, après le délai de rétractation de 14\u00A0jours.`,
-      receipt: "Stripe vous envoie le reçu de votre paiement par email.",
+      receipt: "Le reçu et la facture de votre paiement vous sont envoyés par email.",
       action: "Voir ma formule",
     },
     // L1-40: the acknowledgment of a withdrawal, to the seller.

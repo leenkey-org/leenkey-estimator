@@ -5,7 +5,12 @@ import { notFound, redirect } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { LEGAL_VERSIONS, missingLegalDocuments, type LegalDocument } from "@/lib/legal/versions";
+import {
+  LEGAL_VERSIONS,
+  missingLegalDocuments,
+  termsExempt,
+  type LegalDocument,
+} from "@/lib/legal/versions";
 import { loginPath } from "./next-path";
 
 /** Request header set by the middleware: path and query of the current page. */
@@ -71,13 +76,14 @@ const sessionAcceptances = cache(acceptanceStatus);
 
 /**
  * Signed-in area: a session, a profile and the current CGU and privacy
- * versions accepted (otherwise /conditions, then back here).
+ * versions accepted (otherwise /conditions, then back here), except on the
+ * pages of TERMS_EXEMPT_PATHS.
  */
 export async function requireProfile(): Promise<SessionProfile> {
   const path = await currentPath();
   const profile = await getProfile();
   if (!profile) redirect(loginPath(path));
-  if ((await sessionAcceptances(profile.id)).missing.length > 0) {
+  if (!termsExempt(path) && (await sessionAcceptances(profile.id)).missing.length > 0) {
     redirect(`/conditions?next=${encodeURIComponent(path)}`);
   }
   return profile;
