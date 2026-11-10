@@ -3,7 +3,6 @@ import {
   ArrowUpDown,
   BedDouble,
   Building2,
-  Cloud,
   Compass,
   DoorOpen,
   Factory,
@@ -21,7 +20,6 @@ import {
   SquareDashed,
   SquareParking,
   Trees,
-  Zap,
   type LucideIcon,
 } from "lucide-react";
 import type { PublicListing } from "./queries";
@@ -93,8 +91,6 @@ const PRESENTATION: Record<string, { icon: LucideIcon; section: string }> = {
   [t.procedures]: { icon: Scale, section: COSTS },
   [t.dpe]: { icon: Leaf, section: ENERGY },
   [t.ges]: { icon: Factory, section: ENERGY },
-  [t.energyUse]: { icon: Zap, section: ENERGY },
-  [t.gesEmissions]: { icon: Cloud, section: ENERGY },
   [t.heating]: { icon: Flame, section: ENERGY },
   [t.type]: { icon: House, section: PROPERTY },
   [t.surface]: { icon: Ruler, section: PROPERTY },
@@ -111,6 +107,10 @@ const PRESENTATION: Record<string, { icon: LucideIcon; section: string }> = {
   [t.parking]: { icon: SquareParking, section: PROPERTY },
   [t.cellar]: { icon: Archive, section: PROPERTY },
 };
+
+/** « D · 215 kWh/m²/an »: a class of the DPE with its figure; either alone when the other is unknown. */
+const withFigure = (letter: string | null, figure: string | null) =>
+  letter && figure ? t.classWithFigure(letter, figure) : (letter ?? figure);
 
 function fact(label: string, value: string | null | undefined): KeyFact {
   const presentation = PRESENTATION[label];
@@ -225,15 +225,29 @@ export function listingKeyFacts(
   const facts: Array<KeyFact | null> = [
     coOwnership ? fact(t.charges, money(listing.chargesMonthlyCents, t.chargesValue)) : null,
     taxes,
-    fact(t.dpe, listing.energy?.exempt ? t.notSubject : listing.dpe),
-    fact(t.ges, listing.energy?.exempt ? t.notSubject : listing.ges),
-    // Shown when the DPE gives them: an older listing is not marked incomplete for it.
-    listing.energy?.kwhM2Year != null
-      ? fact(t.energyUse, t.energyUseValue(formatInteger(listing.energy.kwhM2Year)))
-      : null,
-    listing.energy?.gesKgM2Year != null
-      ? fact(t.gesEmissions, t.gesEmissionsValue(formatInteger(listing.energy.gesKgM2Year)))
-      : null,
+    // As on the label of the DPE: the class, then its figure when the DPE gives it (L1-66).
+    fact(
+      t.dpe,
+      listing.energy?.exempt
+        ? t.notSubject
+        : withFigure(
+            listing.dpe,
+            listing.energy?.kwhM2Year != null
+              ? t.energyUseValue(formatInteger(listing.energy.kwhM2Year))
+              : null,
+          ),
+    ),
+    fact(
+      t.ges,
+      listing.energy?.exempt
+        ? t.notSubject
+        : withFigure(
+            listing.ges,
+            listing.energy?.gesKgM2Year != null
+              ? t.gesEmissionsValue(formatInteger(listing.energy.gesKgM2Year))
+              : null,
+          ),
+    ),
     fact(t.heating, listing.heating),
     fact(t.type, fr.search.types[listing.type]),
     fact(t.surface, formatSurface(listing.surfaceM2)),

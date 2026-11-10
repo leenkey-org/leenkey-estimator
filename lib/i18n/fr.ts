@@ -746,7 +746,7 @@ export const fr = {
         // L1-66: the DPE taken from the register of ADEME by its number.
         number: "Numéro du DPE",
         numberHelp:
-          "13 caractères, en haut de la première page de votre DPE (« N° ADEME »). Exemple : 2491E0000001A.",
+          "13 caractères, en haut de la première page de votre DPE («\u00A0N°\u00A0ADEME\u00A0»). Exemple\u00A0: 2491E0000001A.",
         retrieve: "Récupérer les informations de mon DPE",
         found: (energyClass: string | null, climateClass: string | null, date: string | null) =>
           `Repris du registre de l'ADEME : ${[
@@ -2970,10 +2970,9 @@ export const fr = {
       dpe: "Classe énergie (DPE)",
       ges: "Émissions (GES)",
       notSubject: "Non soumis au DPE",
-      // L1-66: the figures of the label.
-      energyUse: "Consommation d'énergie",
+      // L1-66: the figures of the label, beside its classes.
+      classWithFigure: (letter: string, figure: string) => `${letter} · ${figure}`,
       energyUseValue: (value: string) => `${value} kWh/m²/an`,
-      gesEmissions: "Émissions de gaz à effet de serre",
       gesEmissionsValue: (value: string) => `${value} kg CO₂/m²/an`,
       heating: "Chauffage",
       type: "Type de bien",

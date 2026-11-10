@@ -362,9 +362,9 @@ test("envoyer une annonce en validation en mobile : prix, description, aperçu",
       /^Montant estimé des dépenses annuelles d'énergie pour un usage standard : entre 1\s980\s€ et 2\s680\s€ par an\. Prix moyens des énergies indexés au 1er janvier 2023 \(abonnements compris\)\.$/,
     ),
   ).toBeVisible();
-  // Its figures among the characteristics; never the date nor the number of
+  // Its figures beside its classes; never the date nor the number of
   // the DPE, which give the address in the open data of ADEME.
-  await expect(page.getByText(/^148\skWh\/m²\/an$/).first()).toBeVisible();
+  await expect(page.getByText(/^F · 148\skWh\/m²\/an$/).first()).toBeVisible();
   await expect(page.getByText(/12 mars 2024/)).toHaveCount(0);
   await expect(page.getByText("2491E0000001A")).toHaveCount(0);
   await expect(page.getByRole("link", { name: "www.georisques.gouv.fr" })).toHaveAttribute(

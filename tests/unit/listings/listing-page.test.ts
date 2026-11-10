@@ -196,7 +196,12 @@ describe("facts before « Afficher les N caractéristiques »", () => {
     expect(labels).toHaveLength(10);
     expect(labels).not.toContain("Type de bien");
     // Without their group, and never « Non renseigné ».
-    const preview = factsPreview(bySection(listingKeyFacts({ ...flat, ges: null })), 10);
+    const preview = factsPreview(
+      bySection(
+        listingKeyFacts({ ...flat, ges: null, energy: { ...flat.energy, gesKgM2Year: null } }),
+      ),
+      10,
+    );
     expect(preview.every((fact) => fact.section === undefined && fact.tone !== "muted")).toBe(true);
     expect(preview.map((fact) => fact.label)).not.toContain("Émissions (GES)");
   });
@@ -259,11 +264,9 @@ describe("Ce que vous savez avant de visiter", () => {
     expect(facts(flat)).toEqual({
       "Charges de copropriété": "210 € / mois",
       "Taxe foncière": "1 150 € / an",
-      "Classe énergie (DPE)": "D",
-      "Émissions (GES)": "D",
-      // The figures of the label (L1-66), when the DPE gives them.
-      "Consommation d'énergie": "215 kWh/m²/an",
-      "Émissions de gaz à effet de serre": "40 kg CO₂/m²/an",
+      // With the figures of the label (L1-66), when the DPE gives them.
+      "Classe énergie (DPE)": "D · 215 kWh/m²/an",
+      "Émissions (GES)": "D · 40 kg CO₂/m²/an",
       Chauffage: "Collectif gaz",
       "Type de bien": "Appartement",
       "Surface habitable": "68 m²",
