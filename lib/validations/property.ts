@@ -249,6 +249,17 @@ export const characteristicsSchema = characteristicsFields
     ) {
       context.addIssue({ code: "custom", path: ["energyCostMaxEuros"], message: "costRange" });
     }
+    // The fifth character of the number of a DPE says its kind: T, business premises.
+    if (
+      value.dpeNumber !== null &&
+      (value.dpeNumber.charAt(4) === "T") !== (value.dpeKind === "tertiaire")
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["dpeNumber"],
+        message: value.dpeKind === "tertiaire" ? "dpeNumberHome" : "dpeNumberPremises",
+      });
+    }
     // A DPE is dated today at the latest (an outdated one is saved, then refused at the sending).
     if (value.dpeDate !== null && value.dpeDate > parisToday()) {
       context.addIssue({ code: "custom", path: ["dpeDate"], message: "dateFuture" });
@@ -278,6 +289,11 @@ export type DpeRule = {
   figuresRequired: boolean;
   /** Classes shown with « Logement à consommation énergétique excessive ». */
   excessiveClasses: readonly string[];
+  /**
+   * The figures on the page of a listing: with the postal code, they point at
+   * one DPE or a few in the open data of ADEME, so at the address (Q78).
+   */
+  figuresPublic: boolean;
 };
 export type DpeRules = Partial<Record<DpeKind, DpeRule>>;
 

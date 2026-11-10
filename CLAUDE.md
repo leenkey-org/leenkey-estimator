@@ -39,7 +39,7 @@ Trois lots contractuels. **Le périmètre à construire est celui de `docs/SPEC-
 | Paiement | Stripe Checkout + webhooks | Mode test en dev et preprod, live en prod uniquement |
 | IA | Anthropic API (SDK `@anthropic-ai/sdk`) | Tool use pour les actions, voir section 8 |
 | Emails | Resend + React Email | Templates dans `emails/` |
-| DPE | Registre de l'ADEME (données ouvertes, `leenkey/properties/dpe-registry.ts`, L1-66) | Sans clé, appelé côté serveur par le numéro du DPE ; jamais bloquant ; le numéro et la date d'un DPE ne sont jamais publics (ils donnent l'adresse) |
+| DPE | Registre de l'ADEME (données ouvertes, `leenkey/properties/dpe-registry.ts`, L1-66) | Sans clé, appelé côté serveur par le numéro du DPE ; jamais bloquant ; le numéro et la date d'un DPE ne sont jamais publics (ils donnent l'adresse), ses chiffres seulement si `dpe_rules.figures_public` |
 | Cartes et géocodage | Google Maps, Maps JavaScript API (cartes, `core/maps/`, sans paquet npm ; `docs/DECISIONS.md` 2026-10-26) ; adresses et géocodage : Base Adresse Nationale (Géoplateforme de l'IGN, `core/geo/`) | Clé Google Maps publique côté client restreinte par domaine ; la carte se charge sans clic, seulement quand elle est montrée (L1-63, `docs/DECISIONS.md` 2026-10-28). Géocodage sans clé, appelé côté serveur, résultats stockables (provisoire, `docs/DECISIONS.md` Q46) |
 | Images | `sharp` côté serveur | Redimensionnement à l'upload, jamais d'image brute servie |
 | Validation | Zod | Tout input utilisateur passe par un schéma Zod, côté serveur |
@@ -174,7 +174,7 @@ STRIPE_MOCK=                    # 1 en tests E2E : Stripe simulé (core/billing/
 GEOCODER=                       # facultatif : fixtures = adresses de démonstration (tests E2E, environnement sans accès à la Base Adresse Nationale)
 GEOCODER_URL=                   # facultatif, surcharge du service de géocodage (core/geo/address-search.ts)
 DPE_REGISTRY=                   # facultatif : fixtures = DPE de démonstration (tests E2E, environnement sans accès au registre de l'ADEME)
-DPE_REGISTRY_URL=               # facultatif, surcharge du registre des DPE (leenkey/properties/dpe-record.ts)
+DPE_REGISTRY_URL=               # facultatif, surcharge du registre des DPE (leenkey/properties/dpe-registry.ts)
 E2E_SEED=                       # 1 : tests E2E sur une base chargée par npm run db:seed (local, préprod)
 E2E_MUTATE=                     # 1 : aussi les tests E2E qui changent le seed pour de bon (pile locale seulement, jamais la préprod)
 SEED_PASSWORD=                  # mot de passe commun des comptes de seed (local et staging uniquement)

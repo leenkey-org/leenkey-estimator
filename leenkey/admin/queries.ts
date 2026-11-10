@@ -73,6 +73,9 @@ export type AdminListingDetail = {
     exemptionReason: string | null;
     number: string | null;
     date: string | null;
+    /** The figures the seller entered, whether the listing shows them or not. */
+    kwhM2Year: number | null;
+    gesKgM2Year: number | null;
   };
   sellerName: string | null;
   plan: PlanCode;
@@ -280,6 +283,8 @@ export const adminListing = cache(async function adminListing(
           exemptionReason: property.dpe_exempt ? property.dpe_exemption_reason : null,
           number: property.dpe_number,
           date: property.dpe_date,
+          kwhM2Year: property.energy_kwh_m2_year,
+          gesKgM2Year: property.ges_kg_m2_year,
         },
         sellerName,
         plan,

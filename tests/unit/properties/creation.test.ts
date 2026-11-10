@@ -248,6 +248,7 @@ describe("DPE (L1-65, L1-66)", () => {
       costsRequired: true,
       figuresRequired: true,
       excessiveClasses: ["F", "G"],
+      figuresPublic: false,
     },
     tertiaire: {
       validFrom: null,
@@ -255,6 +256,7 @@ describe("DPE (L1-65, L1-66)", () => {
       costsRequired: false,
       figuresRequired: false,
       excessiveClasses: [],
+      figuresPublic: false,
     },
   };
   const home = rules.logement!;
@@ -392,6 +394,13 @@ describe("DPE (L1-65, L1-66)", () => {
       ["dpeExemptionReason", "reasonLength"],
     ]);
     expect(issues({ energyCostMinEuros: 980.5 })).toEqual([["energyCostMinEuros", "wholeEuros"]]);
+    // Its fifth character says its kind: T, business premises.
+    expect(issues({ dpeNumber: "2091T0000003C" })).toEqual([["dpeNumber", "dpeNumberPremises"]]);
+    expect(
+      characteristicsSchema
+        .safeParse({ ...dpe, type: "autre", rooms: 0, dpeKind: "tertiaire" })
+        .error?.issues.map((issue) => [issue.path[0], issue.message]),
+    ).toEqual([["dpeNumber", "dpeNumberHome"]]);
     // The number of ADEME: 13 characters, read whatever its case.
     expect(issues({ dpeNumber: "2491E12345" })).toEqual([["dpeNumber", "dpeNumber"]]);
     expect(characteristicsSchema.parse({ ...dpe, dpeNumber: " 2491e0000001a " }).dpeNumber).toBe(

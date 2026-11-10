@@ -19,7 +19,7 @@ export const getDpeSettings = cache(async (): Promise<DpeSettings | null> => {
       supabase
         .from("dpe_rules")
         .select(
-          "kind, valid_from, validity_years, costs_required, figures_required, excessive_classes",
+          "kind, valid_from, validity_years, costs_required, figures_required, excessive_classes, figures_public",
         ),
       supabase
         .from("dpe_exemption_reasons")
@@ -41,6 +41,7 @@ export const getDpeSettings = cache(async (): Promise<DpeSettings | null> => {
         costsRequired: row.costs_required,
         figuresRequired: row.figures_required,
         excessiveClasses: row.excessive_classes,
+        figuresPublic: row.figures_public,
       };
     }
     return { rules: byKind, reasons: reasons.data.map((row) => row.label) };

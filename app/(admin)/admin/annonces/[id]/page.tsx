@@ -141,7 +141,9 @@ export default async function AdminListingPage({ params }: Props) {
           ) : null}
           {detail.dpe.exemptionReason ? (
             <div className="rounded-lk-md bg-lk-warning-bg px-4 py-3 text-lk-warning-fg">
-              <p className="text-lk-caption font-semibold">{t.detail.dpeExemption}</p>
+              <p className="text-lk-caption font-semibold">
+                {detail.status === "pending" ? t.detail.dpeExemptionToCheck : t.detail.dpeExemption}
+              </p>
               <p className="text-lk-secondary whitespace-pre-line">{detail.dpe.exemptionReason}</p>
             </div>
           ) : null}
@@ -151,6 +153,8 @@ export default async function AdminListingPage({ params }: Props) {
               <DpeRegistryCheck
                 number={detail.dpe.number}
                 date={detail.dpe.date}
+                kwhM2Year={detail.dpe.kwhM2Year}
+                gesKgM2Year={detail.dpe.gesKgM2Year}
                 listing={listing}
               />
             </Suspense>

@@ -3,6 +3,7 @@ import type { PublicListing } from "@/leenkey/listings/queries";
 import { lookupDpe } from "@/leenkey/properties/dpe-registry";
 import { formatDay } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
+import { parisToday } from "@/lib/validations/property";
 
 const t = fr.adminListings.dpe;
 
@@ -20,10 +21,15 @@ type Row = { label: string; entered: string | null; registered: string | null };
 export async function DpeRegistryCheck({
   number,
   date,
+  kwhM2Year,
+  gesKgM2Year,
   listing,
 }: {
   number: string;
   date: string | null;
+  /** The figures the seller entered: the listing shows them only when their rule says so. */
+  kwhM2Year: number | null;
+  gesKgM2Year: number | null;
   listing: Pick<PublicListing, "dpe" | "ges" | "postalCode" | "energy">;
 }) {
   const found = await lookupDpe(number);
@@ -64,20 +70,35 @@ export async function DpeRegistryCheck({
     },
     {
       label: t.energyUse,
-      entered: figure(listing.energy.kwhM2Year, t.kwh),
+      entered: figure(kwhM2Year, t.kwh),
       registered: figure(record.energyKwhM2Year, t.kwh),
     },
     {
       label: t.emissions,
-      entered: figure(listing.energy.gesKgM2Year, t.kg),
+      entered: figure(gesKgM2Year, t.kg),
       registered: figure(record.gesKgM2Year, t.kg),
     },
-    { label: t.postalCode, entered: listing.postalCode, registered: record.postalCode },
   ];
+  const place: Row = {
+    label: t.postalCode,
+    entered: listing.postalCode,
+    registered: record.postalCode,
+  };
   // Only what both sides give is compared: a figure the seller left empty is not a difference.
   const differs = (row: Row) =>
     row.entered !== null && row.registered !== null && row.entered !== row.registered;
-  const different = rows.some(differs) || record.kind !== listing.energy.kind;
+  const otherKind = record.kind !== listing.energy.kind;
+  // In this order: the DPE of another kind, of another property, no longer
+  // valid for ADEME, then a value that differs (a DPE updated since).
+  const warning = otherKind
+    ? t.kindDiffers[record.kind]
+    : differs(place)
+      ? t.otherProperty
+      : record.validUntil !== null && record.validUntil < parisToday()
+        ? t.expired(formatDay(record.validUntil))
+        : rows.some(differs)
+          ? t.different
+          : null;
   return (
     <div className="flex flex-col gap-3 rounded-lk-md border border-lk-line px-4 py-3">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -87,6 +108,7 @@ export async function DpeRegistryCheck({
         </p>
       </div>
       <table className="w-full text-lk-secondary">
+        <caption className="sr-only">{t.caption}</caption>
         <thead>
           <tr className="text-left text-lk-caption text-lk-ink-3">
             <th scope="col" className="py-1 pr-3 font-medium">
@@ -101,7 +123,7 @@ export async function DpeRegistryCheck({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
+          {[...rows, place].map((row) => (
             <tr key={row.label} className="border-t border-lk-line">
               <th scope="row" className="py-1.5 pr-3 text-left font-normal text-lk-ink-2">
                 {row.label}
@@ -119,9 +141,9 @@ export async function DpeRegistryCheck({
           ))}
         </tbody>
       </table>
-      {different ? (
+      {warning ? (
         <InlineAlert tone="warning" live={false}>
-          {record.kind !== listing.energy.kind ? t.kindDiffers[record.kind] : t.different}
+          {warning}
         </InlineAlert>
       ) : (
         <p className="text-lk-caption text-lk-success-fg">{t.same}</p>

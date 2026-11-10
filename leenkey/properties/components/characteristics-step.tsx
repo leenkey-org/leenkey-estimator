@@ -102,7 +102,7 @@ const FIGURE_FIELDS: readonly NumberField[] = ["energyKwhM2Year", "gesKgM2Year"]
 /** What the register of ADEME answered for the number typed. */
 type Lookup =
   | { status: "found"; record: DpeRecord; samePostalCode: boolean }
-  | { status: "unknown" | "unavailable" | "premises" };
+  | { status: "unknown" | "unavailable" | "premises" | "kindLocked" | "auth" | "not_found" };
 
 /** « 1er juillet 2021 », as a rule is written. */
 const ruleDay = (day: string) => formatDay(day).replace(/^1 /, "1er ");
@@ -224,14 +224,15 @@ export function CharacteristicsStep({
       }
       if (!result) return setLookup({ status: "unavailable" });
       if (!result.ok) {
-        if (result.error === "auth") return setError(common.signedOut);
-        if (result.error === "not_found") return setError(common.notFound);
         if (result.error === "invalid") return showErrors({ dpeNumber: errors.dpeNumber });
+        // Said under the button, where the seller is looking.
         return setLookup({ status: result.error });
       }
       const { record, samePostalCode } = result.data;
       // A flat or a house never has the DPE of business premises.
       if (record.kind === "tertiaire" && type !== "autre") return setLookup({ status: "premises" });
+      // Once sent, the kind of the DPE is declared by the team: a number of the other kind fills nothing.
+      if (edit && record.kind !== kind) return setLookup({ status: "kindLocked" });
       if (type === "autre") setDpeKind(record.kind);
       setDpeNumber(number);
       if (record.dpe) setDpe(record.dpe);
@@ -278,7 +279,9 @@ export function CharacteristicsStep({
         (premises && COST_FIELDS.includes(field));
       const value = shows(field) && !unread ? parseFrenchNumber(numbers[field]) : null;
       if (Number.isNaN(value)) invalid[field] = errors.number;
-      else typed[field] = value;
+      // The label of a DPE shows whole figures; some reports give a decimal (« 57,8 »).
+      else
+        typed[field] = value !== null && FIGURE_FIELDS.includes(field) ? Math.round(value) : value;
     }
     if (Object.keys(invalid).length > 0) {
       showErrors(invalid);
@@ -427,6 +430,8 @@ export function CharacteristicsStep({
         onChange={(event) => {
           setType(PROPERTY_TYPES.find((value) => value === event.target.value) ?? null);
           setFieldErrors((current) => ({ ...current, type: undefined }));
+          // What the register answered was for the type before.
+          setLookup(null);
         }}
       >
         {/* Once sent, a property becomes land through the team (properties_keep_dpe). */}
@@ -537,35 +542,58 @@ export function CharacteristicsStep({
                   setLookup(null);
                   clearError("dpeNumber");
                 }}
+                // Enter in the number asks the register, not the next step.
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter") return;
+                  event.preventDefault();
+                  retrieve();
+                }}
               />
               <Button type="button" variant="secondary" loading={looking} onClick={retrieve}>
                 {energy.retrieve}
               </Button>
-              {lookup?.status === "found" ? (
-                <>
-                  <InlineAlert tone="success">
-                    {energy.found(
-                      lookup.record.dpe,
-                      lookup.record.ges,
-                      lookup.record.date ? formatDay(lookup.record.date) : null,
-                    )}
-                    {lookup.record.kind === "logement" ? ` ${energy.foundCosts}` : null}
-                  </InlineAlert>
-                  {!lookup.samePostalCode && lookup.record.postalCode ? (
-                    <InlineAlert tone="warning">
-                      {energy.otherPostalCode(lookup.record.postalCode)}
+              {/* Always in the page: what the register answers is read out when it comes. */}
+              <div aria-live="polite" className="flex flex-col gap-4 empty:hidden">
+                {lookup?.status === "found" ? (
+                  <>
+                    <InlineAlert tone="success" live={false}>
+                      {energy.found(
+                        lookup.record.dpe,
+                        lookup.record.ges,
+                        lookup.record.date ? formatDay(lookup.record.date) : null,
+                      )}
+                      {lookup.record.kind === "logement" ? ` ${energy.foundCosts}` : null}
                     </InlineAlert>
-                  ) : null}
-                </>
-              ) : lookup ? (
-                <InlineAlert tone={lookup.status === "unavailable" ? "info" : "warning"}>
-                  {lookup.status === "unknown"
-                    ? energy.unknown
-                    : lookup.status === "premises"
-                      ? energy.premisesNumber
-                      : energy.unavailable}
-                </InlineAlert>
-              ) : null}
+                    {!lookup.samePostalCode && lookup.record.postalCode ? (
+                      <InlineAlert tone="warning" live={false}>
+                        {energy.otherPostalCode(lookup.record.postalCode)}
+                      </InlineAlert>
+                    ) : null}
+                  </>
+                ) : lookup ? (
+                  <InlineAlert
+                    tone={
+                      lookup.status === "unavailable"
+                        ? "info"
+                        : lookup.status === "auth" || lookup.status === "not_found"
+                          ? "danger"
+                          : "warning"
+                    }
+                    live={false}
+                  >
+                    {
+                      {
+                        unknown: energy.unknown,
+                        unavailable: energy.unavailable,
+                        premises: energy.premisesNumber,
+                        kindLocked: energy.kindLocked(fr.legal.contactEmail),
+                        auth: common.signedOut,
+                        not_found: common.notFound,
+                      }[lookup.status]
+                    }
+                  </InlineAlert>
+                ) : null}
+              </div>
               <SegmentedPicker
                 label={energy.energyClass}
                 value={dpe ?? ""}

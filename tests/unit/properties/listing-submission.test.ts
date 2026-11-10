@@ -42,6 +42,7 @@ const mocks = vi.hoisted(() => ({
         costsRequired: true,
         figuresRequired: true,
         excessiveClasses: ["F", "G"],
+        figuresPublic: false,
       },
       tertiaire: {
         validFrom: null,
@@ -49,6 +50,7 @@ const mocks = vi.hoisted(() => ({
         costsRequired: false,
         figuresRequired: false,
         excessiveClasses: [],
+        figuresPublic: false,
       },
     },
     reasons: ["Lieu de culte"],

@@ -764,6 +764,8 @@ export const fr = {
           "Ce numéro n'est pas dans le registre de l'ADEME. Vérifiez-le : un DPE récent y arrive sous quelques jours. Vous pouvez saisir les informations de votre DPE ci-dessous.",
         unavailable:
           "Le registre de l'ADEME ne répond pas pour l'instant. Saisissez les informations de votre DPE ci-dessous, ou réessayez plus tard.",
+        kindLocked: (email: string) =>
+          `Ce numéro est celui d'un autre type de DPE que celui de votre annonce (logement ou local professionnel). Une fois l'annonce envoyée, le type de DPE se change avec notre équipe : écrivez-nous à ${email}.`,
         premisesNumber:
           "Ce numéro est celui d'un DPE tertiaire, celui d'un local professionnel. Pour un appartement ou une maison, indiquez le DPE du logement ; pour un local, choisissez le type « Autre bien ».",
         kind: "Type de DPE",
@@ -816,6 +818,10 @@ export const fr = {
       reasonLength: "Le motif compte au moins 3 caractères.",
       dateFuture: "La date du DPE ne peut pas être dans le futur.",
       dpeNumber: "Le numéro d'un DPE compte 13 caractères, comme 2491E0000001A.",
+      dpeNumberPremises:
+        "Ce numéro est celui d'un DPE tertiaire (local professionnel) : indiquez le numéro du DPE du logement.",
+      dpeNumberHome:
+        "Ce numéro est celui d'un DPE de logement : choisissez « DPE d'un logement », ou indiquez le numéro du DPE tertiaire.",
       date: "Saisissez une date valide.",
     } as Record<string, string>,
     photos: {
@@ -1096,7 +1102,7 @@ export const fr = {
         // L1-65: properties_keep_dpe.
         dpe: "Le DPE de votre annonce reste nécessaire : son numéro, ses classes, une date valable, la consommation et les émissions, les dépenses d'énergie d'un logement, ou le motif de l'exemption.",
         dpeExemption: (email: string) =>
-          `Une fois l'annonce envoyée, l'exemption du DPE et le passage en terrain passent par notre équipe, qui les relit : écrivez-nous à ${email}.`,
+          `Une fois l'annonce envoyée, l'exemption du DPE, le type de DPE (logement ou local professionnel) et le passage en terrain passent par notre équipe, qui les relit : écrivez-nous à ${email}.`,
       },
     },
   },
@@ -1488,7 +1494,9 @@ export const fr = {
       rejection: "Motif du refus",
       suspension: "Motif de la suspension",
       // L1-65: to read before publishing.
-      dpeExemption: "Non soumis au DPE, selon le vendeur : motif à vérifier avant de publier",
+      dpeExemption: "Non soumis au DPE, selon le vendeur",
+      dpeExemptionToCheck:
+        "Non soumis au DPE, selon le vendeur : motif à vérifier avant de publier",
       dpeMissing:
         "Le DPE de cette annonce manque ou n'est plus valable : elle ne peut pas être publiée. Refusez-la avec le motif « Une information obligatoire manque ».",
       preview: "Aperçu de l'annonce",
@@ -1514,6 +1522,11 @@ export const fr = {
       kg: "kg CO₂/m²/an",
       none: "Non renseigné",
       differs: "(différent de la saisie)",
+      caption: "Saisie du vendeur et enregistrement du DPE à l'ADEME",
+      otherProperty:
+        "Ce DPE est enregistré à l'ADEME pour un autre code postal : c'est peut-être celui d'un autre bien. À vérifier avec le vendeur avant de publier.",
+      expired: (date: string) =>
+        `Pour l'ADEME, ce DPE n'est plus valable depuis le ${date} : demandez un DPE à jour au vendeur, ou refusez l'annonce.`,
       same: "La saisie du vendeur correspond au registre de l'ADEME.",
       different:
         "La saisie diffère du registre de l'ADEME. Un DPE actualisé en 2024 ou en 2026 a une nouvelle étiquette : demandez au vendeur son attestation avant de publier, ou refusez l'annonce.",

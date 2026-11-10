@@ -321,9 +321,16 @@ test("envoyer une annonce en validation en mobile : prix, description, aperçu",
       /^Ce DPE n'est plus valable : un DPE doit dater du 1er juillet 2021 au plus tôt et de moins de 10 ans\./,
     ),
   ).toBeVisible();
-  // Its own: the classes, the date and the figures are taken over.
-  await number.fill("2491e0000001a");
+  // The DPE of business premises is not the one of a flat.
+  await number.fill("2091T0000003C");
   await retrieve.click();
+  await expect(energy.getByText(/^Ce numéro est celui d'un DPE tertiaire/)).toBeVisible();
+  await expect(date).toHaveValue("2021-05-10");
+  // Its own: the classes, the date and the figures are taken over. Enter in
+  // the number asks the register, not the next step.
+  await number.fill("2491e0000001a");
+  await number.press("Enter");
+  await expect(page).toHaveURL(`/vendeur/biens/${id}/caracteristiques`);
   await expect(
     energy.getByText(
       /^Repris du registre de l'ADEME : classe énergie C, classe climat B, DPE du 12 mars 2024\. Vérifiez ces informations\. Il reste à indiquer les dépenses annuelles d'énergie/,
@@ -362,9 +369,9 @@ test("envoyer une annonce en validation en mobile : prix, description, aperçu",
       /^Montant estimé des dépenses annuelles d'énergie pour un usage standard : entre 1\s980\s€ et 2\s680\s€ par an\. Prix moyens des énergies indexés au 1er janvier 2023 \(abonnements compris\)\.$/,
     ),
   ).toBeVisible();
-  // Its figures beside its classes; never the date nor the number of
+  // Its figures stay with the team (Q78); never the date nor the number of
   // the DPE, which give the address in the open data of ADEME.
-  await expect(page.getByText(/^F · 148\skWh\/m²\/an$/).first()).toBeVisible();
+  await expect(page.getByText(/kWh\/m²\/an/)).toHaveCount(0);
   await expect(page.getByText(/12 mars 2024/)).toHaveCount(0);
   await expect(page.getByText("2491E0000001A")).toHaveCount(0);
   await expect(page.getByRole("link", { name: "www.georisques.gouv.fr" })).toHaveAttribute(

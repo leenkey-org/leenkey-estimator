@@ -80,6 +80,7 @@ export type ListingEnergy = {
   costMinCents: number | null;
   costMaxCents: number | null;
   priceYear: number | null;
+  /** The figures of the label, when their rule makes them public (dpe_rules.figures_public). */
   kwhM2Year: number | null;
   gesKgM2Year: number | null;
   /** Its class is one of « Logement à consommation énergétique excessive » (dpe_rules). */

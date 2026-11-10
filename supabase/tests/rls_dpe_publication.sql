@@ -6,7 +6,7 @@
 -- Fixtures in postal code 99994.
 begin;
 \ir _helpers.psql
-select plan(33);
+select plan(34);
 \ir _plan.psql
 
 -- ===========================================================================
@@ -141,15 +141,21 @@ select is(listing_reject(:'legacy_listing', 'Une information obligatoire manque 
 \set who anon
 \ir _as.psql
 select is((select d::text from public_listing_dpe(:'flat_slug') d),
-          '(logement,f,,90000,130000,2021,215,40,f)',
-          'anon: the mentions of a published listing, without the date nor the number of its DPE');
+          '(logement,f,,90000,130000,2021,,,f)',
+          'anon: the mentions of a published listing, without the date, the number nor the figures of its DPE');
 select is((select count(*)::int from public_listing_dpe('appartement-inconnu-lk9999')), 0,
           'anon: nothing for a listing that is not online');
 select is((select d::text from public_listing_dpe(:'cabin_slug') d),
           '(logement,t,"Bâtiment indépendant de moins de 50 m²",,,,,,f)',
           'anon: an exempt listing, with the motive the team has read (L1-66)');
-select throws_ok(format($$select * from public_listing_energy(%L)$$, :'flat_slug'), '42501', null,
-                 'anon: the date of a DPE is no longer read (it gives the address in the open data of ADEME)');
+select is((select row(dpe_exempt, dpe_date, energy_cost_min_cents)::text
+             from public_listing_energy(:'flat_slug')),
+          '(f,,90000)',
+          'anon: the function of L1-65 no longer gives the date of a DPE (it gives the address in the open data of ADEME)');
+\set who buyer_c
+\ir _as.psql
+select is((select dpe_date from public_listing_energy(:'flat_slug')), null,
+          'buyer_c: nor to an account');
 
 \set who seller_b
 \ir _as.psql

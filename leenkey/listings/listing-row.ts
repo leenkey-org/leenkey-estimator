@@ -86,6 +86,7 @@ export function listingForPage(
   rules: DpeRules | null,
 ): PublicListing {
   const kind = property.dpe_kind === "tertiaire" ? "tertiaire" : "logement";
+  const rule = rules?.[kind];
   return {
     id: listing.id,
     slug: listing.slug,
@@ -128,11 +129,12 @@ export function listingForPage(
       costMinCents: property.energy_cost_min_cents,
       costMaxCents: property.energy_cost_max_cents,
       priceYear: property.energy_price_year,
-      kwhM2Year: property.energy_kwh_m2_year,
-      gesKgM2Year: property.ges_kg_m2_year,
+      // As public_listing_dpe gives them: only when the rule makes them public.
+      kwhM2Year: rule?.figuresPublic ? property.energy_kwh_m2_year : null,
+      gesKgM2Year: rule?.figuresPublic ? property.ges_kg_m2_year : null,
       excessive:
         property.dpe_class !== null &&
-        (rules?.[kind]?.excessiveClasses.includes(property.dpe_class) ?? false),
+        (rule?.excessiveClasses.includes(property.dpe_class) ?? false),
     },
     accompanied,
     photos: [...property.photos]

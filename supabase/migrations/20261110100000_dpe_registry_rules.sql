@@ -18,7 +18,9 @@
 -- 6. public_listing_dpe(slug): the mentions of a published listing, with the
 --    motive of an exemption (« Non soumis au DPE (motif : …) »), without the
 --    date nor the number of the DPE: with them, the open data of ADEME gives
---    the address. public_listing_energy (L1-65) is no longer granted.
+--    the address. Its figures (kWh, kg CO₂) nearly do too: they are public
+--    only when the rule says so (figures_public, off: Q78).
+--    public_listing_energy (L1-65) no longer gives the date.
 -- The file only adds and replaces (applied to staging without a confirmation).
 
 -- 1. ---------------------------------------------------------------------------
@@ -33,6 +35,10 @@ create table public.dpe_rules (
   figures_required boolean not null,
   -- Classes shown with « Logement à consommation énergétique excessive ».
   excessive_classes text[] not null default '{}',
+  -- The figures on the page of a listing. With the postal code, they point
+  -- at one DPE or a few in the open data of ADEME, so at the address: off
+  -- until the client decides (Q78).
+  figures_public boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz
 );
@@ -62,8 +68,10 @@ create policy dpe_exemption_reasons_select_all on public.dpe_exemption_reasons
 create policy dpe_exemption_reasons_write_admin on public.dpe_exemption_reasons for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
+-- A rule or a motive is changed or switched off (active), never removed.
+revoke all on public.dpe_rules, public.dpe_exemption_reasons from anon, authenticated;
 grant select on public.dpe_rules, public.dpe_exemption_reasons to anon, authenticated;
-grant insert, update, delete on public.dpe_rules, public.dpe_exemption_reasons to authenticated;
+grant insert, update on public.dpe_rules, public.dpe_exemption_reasons to authenticated;
 
 -- The rules in force on 2026-11-10 (Q77). Homes: a DPE made from 1 July 2021,
 -- valid 10 years, with its costs and figures; F and G are « excessive ».
@@ -76,7 +84,7 @@ on conflict (kind) do nothing;
 
 insert into public.dpe_exemption_reasons (label, position)
 values ('Construction provisoire prévue pour 2 ans au plus', 1),
-       ('Bâtiment indépendant de moins de 50 m² (un bâtiment à part entière, pas un logement ou un local dans un immeuble)', 2),
+       ('Bâtiment indépendant de moins de 50 m², et non un appartement ou un local dans un immeuble', 2),
        ('Bâtiment ou partie de bâtiment non chauffé et non climatisé, ou chauffé seulement par une cheminée à foyer ouvert, sans système de refroidissement', 3),
        ('Bâtiment résidentiel destiné à être utilisé moins de 4 mois par an', 4),
        ('Lieu de culte', 5),
@@ -97,6 +105,9 @@ alter table public.properties
   -- A flat or a house has the DPE of a home; another property may be business premises.
   add constraint properties_dpe_kind_of_type
     check (dpe_kind = 'logement' or type = 'autre'),
+  -- The fifth character of a number says its kind: T, business premises.
+  add constraint properties_dpe_number_of_kind
+    check (dpe_number is null or (substr(dpe_number, 5, 1) = 'T') = (dpe_kind = 'tertiaire')),
   add constraint properties_dpe_figures
     check (energy_kwh_m2_year between 0 and 9999 and ges_kg_m2_year between 0 and 9999),
   add constraint properties_dpe_exempt_without_figures
@@ -218,7 +229,9 @@ returns table (
 )
 language sql stable security definer set search_path = '' as $$
   select p.dpe_kind, p.dpe_exempt, p.dpe_exemption_reason, p.energy_cost_min_cents,
-         p.energy_cost_max_cents, p.energy_price_year, p.energy_kwh_m2_year, p.ges_kg_m2_year,
+         p.energy_cost_max_cents, p.energy_price_year,
+         case when r.figures_public then p.energy_kwh_m2_year end,
+         case when r.figures_public then p.ges_kg_m2_year end,
          coalesce(p.dpe_class = any (r.excessive_classes), false)
     from public.listings l
     join public.properties p on p.id = l.property_id
@@ -229,6 +242,22 @@ $$;
 
 revoke execute on function public.public_listing_dpe(text) from public;
 grant execute on function public.public_listing_dpe(text) to anon, authenticated;
--- The date of the DPE left the page of a listing: its function of L1-65 stays
--- in the base, called by no one.
-revoke execute on function public.public_listing_energy(text) from anon, authenticated;
+
+-- The function of L1-65, still called by the pages deployed until this
+-- change is online: as before, without the date of the DPE.
+create or replace function public.public_listing_energy(p_slug text)
+returns table (
+  dpe_exempt boolean,
+  dpe_date date,
+  energy_cost_min_cents integer,
+  energy_cost_max_cents integer,
+  energy_price_year smallint
+)
+language sql stable security definer set search_path = '' as $$
+  select p.dpe_exempt, null::date, p.energy_cost_min_cents, p.energy_cost_max_cents,
+         p.energy_price_year
+    from public.listings l
+    join public.properties p on p.id = l.property_id
+   where l.slug = p_slug
+     and l.status = 'published' and l.deleted_at is null and p.deleted_at is null;
+$$;

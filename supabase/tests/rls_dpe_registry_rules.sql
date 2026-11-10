@@ -4,7 +4,7 @@
 -- publication. Fixtures in postal code 99993.
 begin;
 \ir _helpers.psql
-select plan(27);
+select plan(32);
 \ir _plan.psql
 
 -- ===========================================================================
@@ -31,7 +31,7 @@ select throws_ok($$insert into dpe_exemption_reasons (label, position) values ('
                  '42501', null, 'seller_a: adds no motive');
 \set who seller_b
 \ir _as.psql
-delete from dpe_rules;
+select throws_ok($$delete from dpe_rules$$, '42501', null, 'seller_b: removes no rule');
 \set who buyer_c
 \ir _as.psql
 update dpe_rules set valid_from = null;
@@ -66,6 +66,8 @@ select throws_ok(format($$update properties set dpe_kind = 'tertiaire' where id 
                  '23514', null, 'a flat never has the DPE of business premises');
 select throws_ok(format($$update properties set dpe_number = '2491E12345' where id = %L$$, :'home'),
                  '23514', null, 'the number of a DPE has 13 characters');
+select throws_ok(format($$update properties set dpe_number = '2091T0000003C' where id = %L$$, :'home'),
+                 '23514', null, 'a home never carries the number of a DPE of business premises');
 select throws_ok(format($$update properties set dpe_exempt = true, dpe_exemption_reason = 'Lieu de culte',
                             dpe_number = '2491E0000002B' where id = %L$$, :'home'),
                  '23514', null, 'an exempt property has no number of DPE');
@@ -133,8 +135,23 @@ select is((select meta from audit_log
 \set who anon
 \ir _as.psql
 select is((select d::text from public_listing_dpe(:'shop_slug') d),
+          '(tertiaire,f,,,,,,,f)',
+          'anon: business premises, class F without « excessive » nor a cost range, nor their figures');
+-- The figures point at the address in the open data of ADEME: public only
+-- when the team says so in the rule (Q78).
+\set who admin
+\ir _as.psql
+update dpe_rules set figures_public = true where kind = 'tertiaire';
+insert into dpe_exemption_reasons (label, position) values ('Motif ajouté par l''équipe', 8);
+select is((select count(*)::int from dpe_exemption_reasons where active), 8,
+          'admin: adds a motive of exemption');
+select throws_ok($$delete from dpe_exemption_reasons$$, '42501', null,
+                 'admin: switches a motive off, never removes it');
+\set who anon
+\ir _as.psql
+select is((select d::text from public_listing_dpe(:'shop_slug') d),
           '(tertiaire,f,,,,,310,46,f)',
-          'anon: business premises, class F without « excessive » nor a cost range');
+          'anon: the figures, once the team has made them public');
 select throws_ok(format($$select dpe_number from properties where id = %L$$, :'shop'), '42501', null,
                  'anon: never reads a property, nor the number of its DPE');
 \set who buyer_c

@@ -384,6 +384,7 @@ export type Database = {
           costs_required: boolean
           created_at: string
           excessive_classes: string[]
+          figures_public: boolean
           figures_required: boolean
           kind: string
           updated_at: string | null
@@ -394,6 +395,7 @@ export type Database = {
           costs_required: boolean
           created_at?: string
           excessive_classes?: string[]
+          figures_public?: boolean
           figures_required: boolean
           kind: string
           updated_at?: string | null
@@ -404,6 +406,7 @@ export type Database = {
           costs_required?: boolean
           created_at?: string
           excessive_classes?: string[]
+          figures_public?: boolean
           figures_required?: boolean
           kind?: string
           updated_at?: string | null
