@@ -10,7 +10,8 @@ import { devices, expect, test, type Browser, type Page } from "@playwright/test
 // on a local stack just made by `scripts/local-stack.sh up`, with
 // E2E_SEED=1, SEED_PASSWORD, E2E_MUTATE=1 and AI_MOCK=1 (project
 // « seed-mutations »). Seed used here only: the assistant of seller_b, about
-// LK-0009 (Autonomie) and LK-0008 (Sérénité).
+// LK-0012 (Autonomie, which no other spec turns into a paid plan) and LK-0008
+// (Sérénité).
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
@@ -26,7 +27,7 @@ test.skip(
 );
 
 const LK0008 = "5eed1000-0000-4000-8000-000000000008";
-const LK0009 = "5eed1000-0000-4000-8000-000000000009";
+const LK0012 = "5eed1000-0000-4000-8000-000000000012";
 
 // One conversation with the assistant per account: each test in turn.
 test.describe.configure({ mode: "serial" });
@@ -93,7 +94,7 @@ test("l'assistant transmet la demande à l'équipe après confirmation ; l'équi
   baseURL,
 }) => {
   test.skip(!baseURL, "baseURL requis");
-  await signIn(page, "seller_b", `/assistant?bien=${LK0009}`);
+  await signIn(page, "seller_b", `/assistant?bien=${LK0012}`);
   await newConversation(page);
   const card = chat(page).getByRole("region", { name: "Écrire à l'équipe Leenkey" });
 
@@ -128,21 +129,21 @@ test("l'assistant transmet la demande à l'équipe après confirmation ; l'équi
 
   // The team: told in the bell, the case in the list, its summary on its sheet.
   const team = await openBrowser(browser, baseURL ?? "", false);
-  await signIn(team, "admin", "/admin/dossiers?q=LK-0009");
+  await signIn(team, "admin", "/admin/dossiers?q=LK-0012");
   await team
     .getByRole("button", { name: /^Notifications/ })
     .locator("visible=true")
     .click();
   const bell = team.getByRole("dialog", { name: "Notifications" });
   await expect(bell.getByText("Nouvelle demande à traiter").first()).toBeVisible();
-  await expect(bell.getByText(/Demande d'un vendeur · LK-0009/).first()).toBeVisible();
+  await expect(bell.getByText(/Demande d'un vendeur · LK-0012/).first()).toBeVisible();
   await team.keyboard.press("Escape");
 
   const table = team.getByRole("table", { name: "Dossiers" });
   const row = table.locator("tbody tr").filter({ hasText: "Demande d'un vendeur" });
   await expect(row).toHaveCount(1);
   await expect(row).toContainText("Assistant");
-  await expect(row).toContainText("LK-0009");
+  await expect(row).toContainText("LK-0012");
   await row.getByRole("link", { name: /^Ouvrir le dossier « Demande d'un vendeur/ }).click();
   await expect(team).toHaveURL(/\/admin\/dossiers\/[0-9a-f-]{36}$/);
   const summary = team.getByRole("region", { name: "Résumé de l'assistant" });
@@ -172,7 +173,7 @@ test("à la limite du jour, sur téléphone : le vendeur écrit sa demande lui-m
 }) => {
   test.skip(!baseURL, "baseURL requis");
   const seller = await openBrowser(browser, baseURL ?? "", true);
-  await signIn(seller, "seller_b", `/assistant?bien=${LK0009}`);
+  await signIn(seller, "seller_b", `/assistant?bien=${LK0012}`);
   await newConversation(seller);
   // The limit of the day, as the route says it once reached.
   await seller.route("**/api/ai/chat", (route) =>
@@ -223,7 +224,7 @@ test("à la limite du jour, sur téléphone : le vendeur écrit sa demande lui-m
   await seller.context().close();
 
   const team = await openBrowser(browser, baseURL ?? "", false);
-  await signIn(team, "admin", "/admin/dossiers?q=LK-0009");
+  await signIn(team, "admin", "/admin/dossiers?q=LK-0012");
   const row = team
     .getByRole("table", { name: "Dossiers" })
     .locator("tbody tr")
