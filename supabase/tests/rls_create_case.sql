@@ -4,7 +4,7 @@
 -- every admin; ai_create_case writes the result of the tool with it.
 begin;
 \ir _helpers.psql
-select plan(48);
+select plan(49);
 \ir _plan.psql
 
 insert into plans (code, name, tagline, price_cents, description, features, position) values
@@ -173,7 +173,7 @@ select is((select row(link, group_key, email_after is not null, read_at is null)
             where profile_id = tests.uid('admin') and type = 'case.created' and data->>'case_id' = :'c1'),
           row('/admin/dossiers/' || :'c1', 'cases:requests', true, true)::text,
           'admin: told of a request in the app and by email, with the link to its sheet');
-select is((select data - 'case_id' from notifications
+select is((select data - 'case_id' - 'entity_id' from notifications
             where profile_id = tests.uid('admin') and type = 'case.created' and data->>'case_id' = :'c1'),
           jsonb_build_object('source', 'assistant_handoff', 'subject', 'Litige avec un acquéreur',
                              'reference', 'Athis-Mons', 'first_name', 'Alice', 'last_initial', 'D'),
@@ -181,6 +181,9 @@ select is((select data - 'case_id' from notifications
 select is((select data->>'reference' from notifications
             where profile_id = tests.uid('admin') and type = 'case.created' and data->>'case_id' = :'c3'),
           null, 'admin: a request about no property names none');
+select is((select data->>'entity_id' from notifications
+            where profile_id = tests.uid('admin') and type = 'case.created' and data->>'case_id' = :'c1'),
+          :'c1', 'admin: one event for the whole team, named once in its email');
 select is((select count(*)::int from notifications
             where profile_id = tests.uid('admin') and type = 'case.created'
               and data->>'source' in ('assistant_handoff', 'manual')), 8,

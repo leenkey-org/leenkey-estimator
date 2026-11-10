@@ -76,7 +76,9 @@ begin
   loop
     perform public.notification_add(
       v_admin, 'case.created',
-      jsonb_build_object('case_id', v_case, 'source', p_source, 'subject', v_subject,
+      -- entity_id: one event for the whole team (its email names it once, core/notifications).
+      jsonb_build_object('entity_id', v_case, 'case_id', v_case, 'source', p_source,
+                         'subject', v_subject,
                          'reference', coalesce(v_reference, v_place),
                          'first_name', v_first, 'last_initial', nullif(v_initial, '')),
       '/admin/dossiers/' || v_case, 'cases:requests', now());
