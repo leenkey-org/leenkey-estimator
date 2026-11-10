@@ -7,7 +7,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // by the person at the daily limit (sendCaseRequest), the subject made of
 // its first words, and the rule of CLAUDE.md section 8: the assistant never
 // holds the service role. The SQL is tested in
-// supabase/tests/rls_create_case.sql, the screens in tests/e2e/assistant*.
+// supabase/tests/rls_create_case.sql, the screens in
+// tests/e2e/case-request-live.spec.ts.
 
 const mocks = vi.hoisted(() => ({
   profile: null as { id: string; roles: string[] } | null,
@@ -20,6 +21,13 @@ const mocks = vi.hoisted(() => ({
     data: string | null;
     error: { code: string } | null;
   },
+  /** Answers given first, one per call, before rpcResult. */
+  rpcQueue: [] as { data: string | null; error: { code: string } | null }[],
+  /** The assistant conversation of the request: found, missing (null data) or unreadable. */
+  conversation: { ok: true, data: null } as
+    | { ok: true; data: { id: string; context: "seller"; entityId: string | null } | null }
+    | { ok: false },
+  conversations: [] as { id: string; kind: string; propertyId: string }[],
 }));
 
 vi.mock("server-only", () => ({}));
@@ -32,9 +40,17 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
     rpc: async (name: string, args: Record<string, unknown>) => {
       mocks.rpc.push({ name, args });
-      return mocks.rpcResult;
+      return mocks.rpcQueue.shift() ?? mocks.rpcResult;
     },
   }),
+}));
+vi.mock("@/core/ai/log", () => ({
+  findConversation: async () => mocks.conversation,
+  logResult: async () => "ok",
+  readLog: async () => ({ ok: true, data: [] }),
+}));
+vi.mock("@/leenkey/messaging/queries", () => ({
+  listConversations: async () => ({ ok: true, data: mocks.conversations }),
 }));
 vi.mock("@/leenkey/ai/seller-data", () => ({
   sellerPropertyById: async () =>
@@ -49,7 +65,7 @@ const { createCaseTool, TOO_MANY_REQUESTS } = await import("@/leenkey/ai/tools/c
 const { sendCaseRequest } = await import("@/leenkey/ai/actions");
 const { actionPreview } = await import("@/leenkey/ai/previews");
 const { isFailure } = await import("@/leenkey/ai/queries");
-const { CASE_SUBJECT_MAX, CASE_SUMMARY_MAX, caseRequestSchema } =
+const { ASSISTANT_MESSAGE_MAX, CASE_SUBJECT_MAX, CASE_SUMMARY_MAX, caseRequestSchema } =
   await import("@/lib/validations/assistant");
 
 const PROPERTY = "5eed1000-0000-4000-8000-000000000003";
@@ -74,6 +90,9 @@ beforeEach(() => {
   mocks.advisor = false;
   mocks.rpc = [];
   mocks.rpcResult = { data: "case-1", error: null };
+  mocks.rpcQueue = [];
+  mocks.conversation = { ok: true, data: null };
+  mocks.conversations = [];
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -83,8 +102,9 @@ describe("create_case, the tool", () => {
     expect(createCaseTool.requiresConfirmation).toBe(true);
     const { input } = createCaseTool;
     expect(input.safeParse(request).success).toBe(true);
-    expect(input.safeParse({ ...request, propertyId: null }).success).toBe(true);
+    expect(input.safeParse({ ...request, propertyId: "" }).success).toBe(true);
     expect(input.safeParse({ ...request, propertyId: "1" }).success).toBe(false);
+    expect(input.safeParse({ ...request, propertyId: null }).success).toBe(false);
     expect(input.safeParse({ ...request, subject: "x".repeat(CASE_SUBJECT_MAX) }).success).toBe(
       true,
     );
@@ -99,10 +119,8 @@ describe("create_case, the tool", () => {
       false,
     );
     expect(input.safeParse({ ...request, summary: "court" }).success).toBe(false);
-    // The model may say « no property »: null, in a strict schema.
-    expect(createCaseTool.inputSchema?.properties.propertyId).toMatchObject({
-      type: ["string", "null"],
-    });
+    // « No property » is an empty string: nothing a strict schema could refuse.
+    expect(createCaseTool.inputSchema?.properties.propertyId).toMatchObject({ type: "string" });
   });
 
   it("shows the request before it leaves: the property, the subject, the summary", async () => {
@@ -117,7 +135,7 @@ describe("create_case, the tool", () => {
       },
     });
     expect(actionPreview.safeParse(shown?.ok ? shown.data : null).success).toBe(true);
-    const general = await createCaseTool.preview?.({ ...request, propertyId: null }, ctx);
+    const general = await createCaseTool.preview?.({ ...request, propertyId: "" }, ctx);
     expect(general).toMatchObject({ ok: true, data: { propertyName: null } });
     expect(actionPreview.safeParse(general?.ok ? general.data : null).success).toBe(true);
   });
@@ -161,8 +179,22 @@ describe("create_case, the tool", () => {
         },
       },
     ]);
-    await createCaseTool.execute({ ...request, propertyId: null }, { ...ctx, call });
+    await createCaseTool.execute({ ...request, propertyId: "" }, { ...ctx, call });
     expect(mocks.rpc[1]?.args.p_property).toBeUndefined();
+  });
+
+  it("checked again when confirmed: a plan bought since has an adviser to write to", async () => {
+    mocks.advisor = true;
+    expect(await createCaseTool.execute(request, { ...ctx, call })).toEqual({
+      sent: false,
+      error: expect.stringContaining("contact_advisor"),
+    });
+    expect(mocks.rpc).toEqual([]);
+    // About no property, there is no adviser to send the seller to.
+    expect(await createCaseTool.execute({ ...request, propertyId: "" }, { ...ctx, call })).toEqual({
+      sent: true,
+      caseId: "case-1",
+    });
   });
 
   it("a call already answered, the limit of 5 requests, a failure: nothing sent, said", async () => {
@@ -198,12 +230,22 @@ describe("caseSubject", () => {
     expect(long.endsWith("…")).toBe(true);
     expect(long).not.toContain(" …");
   });
+
+  it("never cuts an emoji in two (the database would refuse the text)", () => {
+    const cut = caseSubject(`${"x".repeat(78)}😀😀 la suite de la demande`);
+    // A lone half of an emoji cannot be encoded.
+    expect(() => encodeURIComponent(cut)).not.toThrow();
+    expect(Array.from(cut)).toHaveLength(CASE_SUBJECT_FROM_TEXT_MAX);
+    expect(cut).toBe(`${"x".repeat(78)}😀…`);
+  });
 });
 
 describe("sendCaseRequest, the request written at the daily limit", () => {
   const message = "Je ne reçois plus les emails de Leenkey depuis hier.";
+  const CONVERSATION = "5eed4000-0000-4000-8000-000000000001";
+  const OTHER = "5eed1000-0000-4000-8000-000000000005";
 
-  it("a case of the person, written by them, about the property of the conversation", async () => {
+  it("before any conversation: a case of the person, about the property of the page", async () => {
     expect(await sendCaseRequest({ propertyId: PROPERTY, message })).toEqual({
       ok: true,
       data: { caseId: "case-1" },
@@ -223,12 +265,61 @@ describe("sendCaseRequest, the request written at the daily limit", () => {
     expect(mocks.rpc[1]?.args.p_property_id).toBeUndefined();
   });
 
-  it("signed in, the conditions accepted, a request of 10 to 1 500 characters", async () => {
-    expect(caseRequestSchema.safeParse({ message: "x".repeat(CASE_SUMMARY_MAX) }).success).toBe(
-      true,
-    );
+  it("in a conversation: about its property, whatever the page it is opened from", async () => {
+    mocks.conversation = {
+      ok: true,
+      data: { id: CONVERSATION, context: "seller", entityId: OTHER },
+    };
+    await sendCaseRequest({ conversationId: CONVERSATION, propertyId: PROPERTY, message });
+    expect(mocks.rpc[0]?.args.p_property_id).toBe(OTHER);
+    // A conversation about no property: none, even from the page of one.
+    mocks.conversation = {
+      ok: true,
+      data: { id: CONVERSATION, context: "seller", entityId: null },
+    };
+    await sendCaseRequest({ conversationId: CONVERSATION, propertyId: PROPERTY, message });
+    expect(mocks.rpc[1]?.args.p_property_id).toBeUndefined();
+    // Not theirs, or unknown: nothing is taken from the browser instead.
+    mocks.conversation = { ok: true, data: null };
+    await sendCaseRequest({ conversationId: CONVERSATION, propertyId: PROPERTY, message });
+    expect(mocks.rpc[2]?.args.p_property_id).toBeUndefined();
+    mocks.conversation = { ok: false };
+    expect(await sendCaseRequest({ conversationId: CONVERSATION, message })).toEqual({
+      ok: false,
+      error: "unavailable",
+    });
+    expect(mocks.rpc).toHaveLength(3);
+  });
+
+  it("a property whose plan has an adviser: sent to them, no case written", async () => {
+    mocks.advisor = true;
+    mocks.conversations = [
+      { id: "conv-listing", kind: "listing", propertyId: PROPERTY },
+      { id: "conv-advisor", kind: "advisor", propertyId: PROPERTY },
+    ];
+    expect(await sendCaseRequest({ propertyId: PROPERTY, message })).toEqual({
+      ok: false,
+      error: "advisor",
+      href: "/messages/conv-advisor",
+    });
+    mocks.conversations = [];
+    expect(await sendCaseRequest({ propertyId: PROPERTY, message })).toEqual({
+      ok: false,
+      error: "advisor",
+      href: "/messages",
+    });
+    expect(mocks.rpc).toEqual([]);
+    // About no property, the request goes to the team.
+    expect(await sendCaseRequest({ message })).toMatchObject({ ok: true });
+  });
+
+  it("signed in, the conditions accepted, a request of 10 to 2 000 characters", async () => {
+    expect(
+      caseRequestSchema.safeParse({ message: "x".repeat(ASSISTANT_MESSAGE_MAX) }).success,
+    ).toBe(true);
+    expect(CASE_SUMMARY_MAX).toBeLessThan(ASSISTANT_MESSAGE_MAX);
     expect(await sendCaseRequest({ message: "court" })).toEqual({ ok: false, error: "invalid" });
-    expect(await sendCaseRequest({ message: "x".repeat(CASE_SUMMARY_MAX + 1) })).toEqual({
+    expect(await sendCaseRequest({ message: "x".repeat(ASSISTANT_MESSAGE_MAX + 1) })).toEqual({
       ok: false,
       error: "invalid",
     });
@@ -243,11 +334,23 @@ describe("sendCaseRequest, the request written at the daily limit", () => {
     expect(mocks.rpc).toEqual([]);
   });
 
-  it("says the limit of 5 requests, a refusal of the base, a failure", async () => {
+  it("a property removed since: the request still leaves, about no property", async () => {
+    mocks.rpcQueue = [{ data: null, error: { code: "42501" } }];
+    expect(await sendCaseRequest({ propertyId: PROPERTY, message })).toEqual({
+      ok: true,
+      data: { caseId: "case-1" },
+    });
+    expect(mocks.rpc.map((call) => call.args.p_property_id)).toEqual([PROPERTY, undefined]);
+  });
+
+  it("says the limit of 5 requests, a text the base refuses, a failure", async () => {
     mocks.rpcResult = { data: null, error: { code: "54000" } };
     expect(await sendCaseRequest({ message })).toEqual({ ok: false, error: "limit" });
-    mocks.rpcResult = { data: null, error: { code: "42501" } };
+    mocks.rpcResult = { data: null, error: { code: "22023" } };
     expect(await sendCaseRequest({ message })).toEqual({ ok: false, error: "invalid" });
+    // An account suspended meanwhile: a failure, never « 10 caractères au moins ».
+    mocks.rpcResult = { data: null, error: { code: "42501" } };
+    expect(await sendCaseRequest({ message })).toEqual({ ok: false, error: "unavailable" });
     expect(console.error).not.toHaveBeenCalled();
     mocks.rpcResult = { data: null, error: { code: "XX000" } };
     expect(await sendCaseRequest({ message })).toEqual({ ok: false, error: "unavailable" });

@@ -10,6 +10,11 @@ export function caseSubject(message: string): string {
   const sentence = flat.split(/(?<=[.!?…])\s/)[0] ?? flat;
   // « Bonjour. » says nothing of the request: its first words then.
   const start = sentence.length >= 12 ? sentence : flat;
-  if (start.length <= CASE_SUBJECT_FROM_TEXT_MAX) return start;
-  return `${start.slice(0, CASE_SUBJECT_FROM_TEXT_MAX - 1).trimEnd()}…`;
+  // By characters, as the database counts them: an emoji is never cut in two.
+  const characters = Array.from(start);
+  if (characters.length <= CASE_SUBJECT_FROM_TEXT_MAX) return start;
+  return `${characters
+    .slice(0, CASE_SUBJECT_FROM_TEXT_MAX - 1)
+    .join("")
+    .trimEnd()}…`;
 }

@@ -29,8 +29,8 @@ const gapFormat = new Intl.NumberFormat("fr-FR", {
 });
 
 /** What a change proposed by the assistant will do: before and after. */
-function ActionContent({ preview }: { preview: ActionPreview | null }) {
-  if (!preview) return <p className="text-lk-compact text-lk-ink-2">{t.action.unknown}</p>;
+function ActionContent({ preview, unknown }: { preview: ActionPreview | null; unknown: string }) {
+  if (!preview) return <p className="text-lk-compact text-lk-ink-2">{unknown}</p>;
   if (preview.kind === "case_request") {
     return (
       <>
@@ -137,7 +137,7 @@ export function AssistantChat({
   const [answering, setAnswering] = useState<string | null>(null);
   /** « Écrire à un conseiller », at the daily limit: the request written by the person. */
   const [request, setRequest] = useState<"closed" | "open" | "sent">("closed");
-  const requesting = request === "open" && error === "quota";
+  const requesting = request === "open";
   const next = useRef(0);
   const writing = useRef<string | null>(null);
   const end = useRef<HTMLDivElement>(null);
@@ -293,6 +293,9 @@ export function AssistantChat({
     if (outcome === "rejected") {
       setItems(before);
       setDraft(message);
+    } else {
+      // The assistant answers again: what was said of a request sent has been read.
+      setRequest("closed");
     }
   }
 
@@ -399,7 +402,10 @@ export function AssistantChat({
                 className="max-w-[min(100%,40rem)]"
               >
                 {item.state === "pending" || (item.state === "confirmed" && item.preview) ? (
-                  <ActionContent preview={item.preview} />
+                  <ActionContent
+                    preview={item.preview}
+                    unknown={handoff ? handoff.unknown : t.action.unknown}
+                  />
                 ) : null}
               </ConfirmActionCard>
             );
@@ -433,6 +439,7 @@ export function AssistantChat({
           ) : null}
           {requesting ? (
             <CaseRequestForm
+              conversationId={conversationId}
               propertyId={propertyId}
               initialMessage={draft}
               onClose={() => setRequest("closed")}

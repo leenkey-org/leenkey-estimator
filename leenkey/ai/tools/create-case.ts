@@ -18,7 +18,9 @@ import { PROPERTY_NOT_FOUND, sellerPropertyById } from "../seller-data";
 // (CLAUDE.md section 8).
 
 const input = z.object({
-  propertyId: z.string().uuid().nullable(),
+  // "": about no property. A strict schema for the model has no optional
+  // field, and an empty string asks nothing more of it than the other tools.
+  propertyId: z.union([z.string().uuid(), z.literal("")]),
   subject: z.string().trim().min(3).max(CASE_SUBJECT_MAX),
   summary: z.string().trim().min(CASE_SUMMARY_MIN).max(CASE_SUMMARY_MAX),
 });
@@ -51,10 +53,11 @@ export const createCaseTool: AiTool<Input, Output, CasePreview> = {
     type: "object",
     properties: {
       propertyId: {
-        type: ["string", "null"],
+        type: "string",
         description:
           "Id of the property of the seller the request is about (from get_my_properties or " +
-          "the file of the seller); null when it is about no property (the account, the site).",
+          "the file of the seller); an empty string when it is about no property (the " +
+          "account, the site).",
       },
       subject: {
         type: "string",
@@ -71,7 +74,7 @@ export const createCaseTool: AiTool<Input, Output, CasePreview> = {
   requiresConfirmation: true,
   contexts: ["seller"],
   async preview({ propertyId, subject, summary }, ctx) {
-    if (propertyId === null) {
+    if (!propertyId) {
       return { ok: true, data: { kind: "case_request", propertyName: null, subject, summary } };
     }
     const found = await sellerPropertyById(ctx.profileId, propertyId);
@@ -85,6 +88,10 @@ export const createCaseTool: AiTool<Input, Output, CasePreview> = {
   },
   async execute({ propertyId, subject, summary }, ctx) {
     if (!ctx.call) return { sent: false, error: "Not confirmed by the seller: nothing was sent." };
+    // Checked again: a plan bought since the request was shown has an adviser to write to.
+    if (propertyId && (await hasEntitlement(propertyId, "advisor"))) {
+      return { sent: false, error: HAS_ADVISOR };
+    }
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("ai_create_case", {
       p_conversation_id: ctx.call.conversationId,
@@ -92,7 +99,7 @@ export const createCaseTool: AiTool<Input, Output, CasePreview> = {
       p_tool_name: ctx.call.name,
       p_subject: subject,
       p_summary: summary,
-      p_property: propertyId ?? undefined,
+      p_property: propertyId || undefined,
     });
     if (!error) return { sent: true, caseId: data };
     if (error.code === "23505") return { sent: false, answered: true };
@@ -100,7 +107,7 @@ export const createCaseTool: AiTool<Input, Output, CasePreview> = {
     if (error.code !== "42501" && error.code !== "22023") {
       console.error("[ai] case handoff failed", {
         user_id: ctx.profileId,
-        entity_id: propertyId ?? undefined,
+        entity_id: propertyId || undefined,
         code: error.code,
       });
     }

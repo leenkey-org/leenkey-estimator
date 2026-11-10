@@ -242,17 +242,27 @@ async function accountsCreated(email: PlannedEmail): Promise<RenderedEmail | nul
   );
 }
 
+/**
+ * The property of a request: the reference of its listing, or, without a
+ * listing, its town, which its owner typed (made safe for a mail client).
+ */
+function requestProperty(value: unknown): string | null {
+  const reference = text(value);
+  if (!reference) return null;
+  return /^LK-\d+$/.test(reference) ? reference : emailSafeText(reference);
+}
+
 /** Requests written to the team (L1-31): who asks, for which property, about what. */
 async function caseRequests(email: PlannedEmail): Promise<RenderedEmail | null> {
   const [first] = email.items;
   if (!first) return null;
   const count = email.items.length;
   return rendered(
-    caseRequestsSubject(count, text(first.data.reference)),
+    caseRequestsSubject(count, requestProperty(first.data.reference)),
     CaseRequestsEmail({
       items: email.items.map((item) => ({
         name: accountName(item),
-        reference: text(item.data.reference),
+        reference: requestProperty(item.data.reference),
         subject: emailSafeText(item.data.subject),
       })),
       url: absoluteUrl(count > 1 ? "/admin/dossiers" : (first.link ?? "/admin/dossiers")),

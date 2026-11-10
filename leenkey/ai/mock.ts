@@ -155,10 +155,10 @@ export const mockModel: ModelCall = async (request, { onText }) => {
     if (!result) return message([call("get_my_properties", {})], "tool_use");
     if (result.name === "get_my_properties") {
       const propertyId = /compte/i.test(asked)
-        ? null
+        ? ""
         : (conversationProperty(file) ??
           /"propertyId":"([0-9a-f-]{36})"/.exec(result.content)?.[1] ??
-          null);
+          "");
       const summary = `Demande transmise par l'assistant : ${asked.slice(0, 200)}`;
       onText("Voici votre demande pour l'équipe Leenkey. ");
       return message(

@@ -335,10 +335,25 @@ describe("« Nouvelle demande à traiter » (L1-31)", () => {
       ),
     );
     expect(email?.subject).toBe("2\u00A0demandes à traiter");
+    expect(email?.text).toContain("2\u00A0demandes ont été envoyées à l'équipe Leenkey.");
     expect(email?.text).toContain("Problème de compte");
     expect(email?.text).not.toContain("www.promo.example");
     expect(email?.text).toContain("Demande à lire dans le dossier.");
     expect(email?.html).toContain('https://leenkey-v2.vercel.app/admin/dossiers"');
+  });
+
+  it("a property without a listing is named by its town, typed by its owner: never a link", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const town = await renderNotificationEmail(
+      planned([request("c1", "Une question", "Athis-Mons")], { audience: "team" }),
+    );
+    expect(town?.subject).toBe("Nouvelle demande à traiter (Athis-Mons)");
+    const link = await renderNotificationEmail(
+      planned([request("c1", "Une question", "www.exemple-support.fr")], { audience: "team" }),
+    );
+    expect(link?.subject).toBe("Nouvelle demande à traiter");
+    expect(link?.text).not.toContain("exemple-support");
+    expect(link?.html).not.toContain("exemple-support");
   });
 });
 

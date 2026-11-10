@@ -5,6 +5,10 @@ import { describeError } from "@/core/ai/client";
 import { buildHistory, type StoredToolResult } from "@/core/ai/conversation";
 import { findConversation, logResult, readLog } from "@/core/ai/log";
 import { getProfile, missingAcceptances } from "@/core/auth/session";
+import { hasEntitlement } from "@/leenkey/billing/entitlements";
+import { listConversations } from "@/leenkey/messaging/queries";
+import { ROUTES } from "@/leenkey/navigation/spaces";
+import { advisorConversation } from "@/leenkey/properties/dashboard";
 import { createClient } from "@/lib/supabase/server";
 import {
   caseRequestSchema,
@@ -147,15 +151,20 @@ export async function declineToolCall(input: unknown): Promise<ToolCallResult> {
 
 export type CaseRequestResult =
   | { ok: true; data: { caseId: string } }
-  | { ok: false; error: "auth" | "conditions" | "invalid" | "limit" | "unavailable" };
+  | { ok: false; error: "auth" | "conditions" | "invalid" | "limit" | "unavailable" }
+  /** The plan of the property has an adviser: the request is theirs, in the messaging. */
+  | { ok: false; error: "advisor"; href: string };
 
 /**
  * « Écrire à un conseiller » (SPEC-V2 section 12, L1-31): the request the
  * person wrote themselves, where the assistant cannot sum it up (its daily
- * limit reached), becomes a case of the back office. The person cannot
- * write a case: the function SQL create_case (security definer) checks the
- * account, the property and the 5 open requests itself, and tells the team.
- * No revalidatePath: no page of the person shows their requests.
+ * limit reached), becomes a case of the back office. About the property of
+ * the conversation, read here (the page it is opened from may show another
+ * one); a property whose plan has an adviser sends the person to them, as
+ * the tool create_case does. The person cannot write a case: the function
+ * SQL create_case (security definer) checks the account, the property and
+ * the 5 open requests itself, and tells the team. No revalidatePath: no
+ * page of the person shows their requests.
  */
 export async function sendCaseRequest(input: unknown): Promise<CaseRequestResult> {
   const profile = await getProfile();
@@ -163,23 +172,44 @@ export async function sendCaseRequest(input: unknown): Promise<CaseRequestResult
   if ((await missingAcceptances(profile.id)).length > 0) return { ok: false, error: "conditions" };
   const parsed = caseRequestSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
-  const { message, propertyId } = parsed.data;
+  const { message, conversationId } = parsed.data;
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("create_case", {
-    p_subject: caseSubject(message),
-    p_summary: message,
-    p_source: "manual",
-    p_property_id: propertyId ?? undefined,
-  });
-  if (!error) return { ok: true, data: { caseId: data } };
-  if (error.code === "54000") return { ok: false, error: "limit" };
-  // 42501: a property that is not theirs, or an account suspended meanwhile.
-  if (error.code === "22023" || error.code === "42501") return { ok: false, error: "invalid" };
-  console.error("[ai] case request failed", {
-    user_id: profile.id,
-    entity_id: propertyId ?? undefined,
-    code: error.code,
-  });
+  let propertyId = parsed.data.propertyId ?? null;
+  if (conversationId) {
+    const conversation = await findConversation(supabase, profile.id, conversationId);
+    if (!conversation.ok) return { ok: false, error: "unavailable" };
+    propertyId = conversation.data?.entityId ?? null;
+  }
+  if (propertyId && (await hasEntitlement(propertyId, "advisor"))) {
+    const conversations = await listConversations();
+    const advisor = conversations.ok ? advisorConversation(conversations.data, propertyId) : null;
+    return {
+      ok: false,
+      error: "advisor",
+      href: advisor ? `${ROUTES.messages}/${advisor.id}` : ROUTES.messages,
+    };
+  }
+  const create = (property: string | null) =>
+    supabase.rpc("create_case", {
+      p_subject: caseSubject(message),
+      p_summary: message,
+      p_source: "manual",
+      p_property_id: property ?? undefined,
+    });
+  let { data, error } = await create(propertyId);
+  // A property removed since: the request still reaches the team, about no property.
+  if (error?.code === "42501" && propertyId) ({ data, error } = await create(null));
+  if (!error && data) return { ok: true, data: { caseId: data } };
+  if (error?.code === "54000") return { ok: false, error: "limit" };
+  if (error?.code === "22023") return { ok: false, error: "invalid" };
+  // 42501 here: an account suspended meanwhile. Said as a failure, not as a text to correct.
+  if (error?.code !== "42501") {
+    console.error("[ai] case request failed", {
+      user_id: profile.id,
+      entity_id: propertyId ?? undefined,
+      code: error?.code,
+    });
+  }
   return { ok: false, error: "unavailable" };
 }
 

@@ -2351,7 +2351,7 @@ export const fr = {
       title: (count: number) => (count > 1 ? "Des demandes à traiter" : "Une demande à traiter"),
       text: (count: number) =>
         count > 1
-          ? `${count}\u00A0utilisateurs ont écrit à l'équipe Leenkey.`
+          ? `${count}\u00A0demandes ont été envoyées à l'équipe Leenkey.`
           : "Un utilisateur a écrit à l'équipe Leenkey.",
       from: (name: string, reference: string | null) =>
         reference ? `${name} · ${reference}` : name,
@@ -3110,6 +3110,8 @@ export const fr = {
       // contact_advisor (L1-34): the question passed on to the adviser.
       handoff: {
         title: "Écrire à mon conseiller",
+        // The message cannot be read again (the conversation opened later).
+        unknown: "L'assistant propose d'écrire à votre conseiller Leenkey.",
         message: "Message à votre conseiller",
         confirm: "Envoyer",
         states: {
@@ -3123,6 +3125,7 @@ export const fr = {
       // create_case (L1-31): the request passed on to the team, without an adviser in the plan.
       request: {
         title: "Écrire à l'équipe Leenkey",
+        unknown: "L'assistant propose de transmettre votre demande à l'équipe Leenkey.",
         subject: "Objet",
         message: "Votre demande",
         confirm: "Envoyer",
@@ -3143,6 +3146,10 @@ export const fr = {
       send: "Envoyer ma demande",
       cancel: "Annuler",
       sent: "Votre demande est transmise à l'équipe Leenkey. Nous vous répondons par email sous 48\u00A0h, 7\u00A0j/7.",
+      // The plan of the property has an adviser: the request is theirs.
+      advisor:
+        "La formule de ce bien comprend un conseiller Leenkey : écrivez-lui directement dans la messagerie.",
+      advisorLink: "Écrire à mon conseiller",
       errors: {
         invalid: (min: number) =>
           `Décrivez votre demande en quelques mots (${min}\u00A0caractères au moins).`,

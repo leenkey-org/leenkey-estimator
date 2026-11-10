@@ -45,9 +45,10 @@ begin
   if char_length(v_summary) < 10 or char_length(v_summary) > 4000 then
     raise exception 'create_case: summary length' using errcode = '22023';
   end if;
-  -- One request at a time for an account: the count below holds.
+  -- One request at a time for an account: the count below holds. The lightest
+  -- lock that does it: rows that refer to the profile are still written.
   select pr.first_name, upper(left(btrim(pr.last_name), 1)) into v_first, v_initial
-    from public.profiles pr where pr.id = uid for update;
+    from public.profiles pr where pr.id = uid for no key update;
   if p_property_id is not null then
     select p.city into v_place from public.properties p
      where p.id = p_property_id and p.owner_id = uid and p.deleted_at is null;

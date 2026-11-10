@@ -153,7 +153,7 @@ test("l'assistant transmet la demande à l'équipe après confirmation ; l'équi
   await team.context().close();
 });
 
-test("un bien dont la formule comprend un conseiller : l'assistant renvoie vers lui, rien n'est proposé", async ({
+test("un bien dont la formule comprend un conseiller : l'assistant et la demande écrite renvoient vers lui", async ({
   page,
 }) => {
   await signIn(page, "seller_b", `/assistant?bien=${LK0008}`);
@@ -164,6 +164,27 @@ test("un bien dont la formule comprend un conseiller : l'assistant renvoie vers 
   ).toBeVisible();
   await expect(chat(page).getByRole("region", { name: "Écrire à l'équipe Leenkey" })).toHaveCount(
     0,
+  );
+
+  // At the daily limit too: the request written by the seller is for their adviser.
+  await page.route("**/api/ai/chat", (route) =>
+    route.fulfill({ status: 429, contentType: "application/json", body: '{"error":"quota"}' }),
+  );
+  await ask(page, "Faut-il accepter une offre à 5 % sous le prix ?");
+  await page.getByRole("button", { name: "Écrire à un conseiller" }).click();
+  await page.getByRole("button", { name: "Envoyer ma demande" }).click();
+  await expect(
+    page.getByText(
+      "La formule de ce bien comprend un conseiller Leenkey : écrivez-lui directement dans la messagerie.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Écrire à mon conseiller" })).toHaveAttribute(
+    "href",
+    /^\/messages\/[0-9a-f-]{36}$/,
+  );
+  // Their text is kept, and nothing was sent to the team.
+  await expect(page.getByLabel("Votre demande")).toHaveValue(
+    "Faut-il accepter une offre à 5 % sous le prix ?",
   );
 });
 
@@ -208,6 +229,8 @@ test("à la limite du jour, sur téléphone : le vendeur écrit sa demande lui-m
   await expect(
     seller.getByText(/Décrivez votre demande en quelques mots \(10\scaractères au moins\)\./),
   ).toBeVisible();
+  // The error is read: the focus is back in the field it describes.
+  await expect(field).toBeFocused();
 
   await field.fill(question);
   await seller.getByRole("button", { name: "Envoyer ma demande" }).click();
