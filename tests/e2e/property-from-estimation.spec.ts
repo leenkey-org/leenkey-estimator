@@ -151,7 +151,9 @@ test("une analyse de valeur devient une annonce en validation", async ({ page })
 
   // Step 4, then sent for review: the criterion of L1-13.
   await expect(page).toHaveURL(`/vendeur/biens/${id}/apercu`);
-  await expect(page.getByText("Bien non soumis au DPE.")).toBeVisible();
+  await expect(
+    page.getByText("Non soumis au DPE (motif : Bâtiment classé, exempté par le diagnostiqueur)."),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Envoyer en validation" }).click();
   await expect(page).toHaveURL(`/vendeur/biens/${id}/envoye`);
   await expect(page.getByRole("heading", { level: 1, name: "C'est envoyé." })).toBeVisible();

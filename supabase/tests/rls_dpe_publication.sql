@@ -6,7 +6,7 @@
 -- Fixtures in postal code 99994.
 begin;
 \ir _helpers.psql
-select plan(32);
+select plan(34);
 \ir _plan.psql
 
 -- ===========================================================================
@@ -39,6 +39,10 @@ select throws_ok(format($$select listing_submit(%L)$$, :'flat_listing'), '22023'
                  'seller_a: the classes alone are not enough (date, costs, year of the prices)');
 update properties set dpe_date = date '2021-06-30', energy_cost_min_cents = 90000,
                       energy_cost_max_cents = 130000, energy_price_year = 2021
+ where id = :'flat';
+select throws_ok(format($$select listing_submit(%L)$$, :'flat_listing'), '22023', 'dpe: dpe_missing',
+                 'seller_a: nor without its number, the energy used and the emissions (L1-66)');
+update properties set dpe_number = '2191E0000001A', energy_kwh_m2_year = 215, ges_kg_m2_year = 40
  where id = :'flat';
 select throws_ok(format($$select listing_submit(%L)$$, :'flat_listing'), '22023', 'dpe: dpe_outdated',
                  'seller_a: a DPE made before 1 July 2021 is no longer valid');
@@ -136,16 +140,22 @@ select is(listing_reject(:'legacy_listing', 'Une information obligatoire manque 
 
 \set who anon
 \ir _as.psql
-select is((select row(dpe_exempt, energy_cost_min_cents, energy_cost_max_cents, energy_price_year)::text
-             from public_listing_energy(:'flat_slug')),
-          '(f,90000,130000,2021)', 'anon: the mentions of a published listing');
-select is((select dpe_date from public_listing_energy(:'flat_slug')), current_date - 10,
-          'anon: with the date of its DPE');
-select is((select count(*)::int from public_listing_energy('appartement-inconnu-lk9999')), 0,
+select is((select d::text from public_listing_dpe(:'flat_slug') d),
+          '(logement,f,,90000,130000,2021,,,f)',
+          'anon: the mentions of a published listing, without the date, the number nor the figures of its DPE');
+select is((select count(*)::int from public_listing_dpe('appartement-inconnu-lk9999')), 0,
           'anon: nothing for a listing that is not online');
-select is((select row(dpe_exempt, dpe_date, energy_cost_min_cents, energy_cost_max_cents, energy_price_year)::text
-             from public_listing_energy(:'cabin_slug')),
-          '(t,,,,)', 'anon: an exempt listing, without its motive');
+select is((select d::text from public_listing_dpe(:'cabin_slug') d),
+          '(logement,t,"Bâtiment indépendant de moins de 50 m²",,,,,,f)',
+          'anon: an exempt listing, with the motive the team has read (L1-66)');
+select is((select row(dpe_exempt, dpe_date, energy_cost_min_cents)::text
+             from public_listing_energy(:'flat_slug')),
+          '(f,,90000)',
+          'anon: the function of L1-65 no longer gives the date of a DPE (it gives the address in the open data of ADEME)');
+\set who buyer_c
+\ir _as.psql
+select is((select dpe_date from public_listing_energy(:'flat_slug')), null,
+          'buyer_c: nor to an account');
 
 \set who seller_b
 \ir _as.psql

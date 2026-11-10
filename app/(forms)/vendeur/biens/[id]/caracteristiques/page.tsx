@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CharacteristicsStep } from "@/leenkey/properties/components/characteristics-step";
 import { CreationHeader } from "@/leenkey/properties/components/creation-header";
 import { CreationBody, CreationLoadError } from "@/leenkey/properties/components/creation-page";
+import { getDpeSettings } from "@/leenkey/properties/dpe-rules";
 import { propertyForCreation } from "@/leenkey/properties/load";
 import { sellerPhotos } from "@/leenkey/properties/queries";
 import { formatDate } from "@/lib/format";
@@ -18,8 +19,10 @@ type Props = { params: Promise<{ id: string }> };
 export default async function PropertyCharacteristicsPage({ params }: Props) {
   const { id } = await params;
   const property = await propertyForCreation(id);
-  const photos = property ? await sellerPhotos(property.id) : null;
-  if (!property || !photos?.ok) {
+  const [photos, dpe] = property
+    ? await Promise.all([sellerPhotos(property.id), getDpeSettings()])
+    : [null, null];
+  if (!property || !photos?.ok || !dpe) {
     return (
       <>
         <CreationHeader
@@ -39,6 +42,7 @@ export default async function PropertyCharacteristicsPage({ params }: Props) {
           propertyId={property.id}
           initial={property.characteristics}
           photos={photos.data}
+          dpe={dpe}
           note={
             property.fromEstimation
               ? fr.properties.fromEstimation(formatDate(property.fromEstimation))

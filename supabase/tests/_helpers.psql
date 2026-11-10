@@ -44,7 +44,9 @@ language sql security definer set search_path = '' as $$
   update public.properties p
      set dpe_class = coalesce(p.dpe_class, 'D'), ges_class = coalesce(p.ges_class, 'D'),
          dpe_date = current_date - 30, energy_cost_min_cents = 120000,
-         energy_cost_max_cents = 170000, energy_price_year = 2023
+         energy_cost_max_cents = 170000, energy_price_year = 2023,
+         dpe_number = coalesce(p.dpe_number, '2491E0000000A'),
+         energy_kwh_m2_year = 215, ges_kg_m2_year = 40
     from public.listings l
    where l.id = p_listing and p.id = l.property_id;
 $$;

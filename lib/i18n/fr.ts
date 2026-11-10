@@ -743,6 +743,43 @@ export const fr = {
         legend: "Diagnostic de performance énergétique (DPE)",
         note: "Vous pouvez enregistrer votre annonce sans le DPE. Il est demandé pour l'envoyer en validation : une annonce de vente doit l'afficher.",
         exempt: "Mon bien n'est pas soumis au DPE",
+        // L1-66: the DPE taken from the register of ADEME by its number.
+        number: "Numéro du DPE",
+        numberHelp:
+          "13 caractères, en haut de la première page de votre DPE («\u00A0N°\u00A0ADEME\u00A0»). Exemple\u00A0: 2491E0000001A.",
+        retrieve: "Récupérer les informations de mon DPE",
+        found: (energyClass: string | null, climateClass: string | null, date: string | null) =>
+          `Repris du registre de l'ADEME : ${[
+            energyClass ? `classe énergie ${energyClass}` : null,
+            climateClass ? `classe climat ${climateClass}` : null,
+            date ? `DPE du ${date}` : null,
+          ]
+            .filter(Boolean)
+            .join(", ")}. Vérifiez ces informations.`,
+        foundCosts:
+          "Il reste à indiquer les dépenses annuelles d'énergie : le registre ne les donne pas.",
+        otherPostalCode: (postalCode: string) =>
+          `Ce DPE est enregistré à l'ADEME pour le code postal ${postalCode}, qui n'est pas celui de votre bien. Vérifiez le numéro.`,
+        unknown:
+          "Ce numéro n'est pas dans le registre de l'ADEME. Vérifiez-le : un DPE récent y arrive sous quelques jours. Vous pouvez saisir les informations de votre DPE ci-dessous.",
+        unavailable:
+          "Le registre de l'ADEME ne répond pas pour l'instant. Saisissez les informations de votre DPE ci-dessous, ou réessayez plus tard.",
+        kindLocked: (email: string) =>
+          `Ce numéro est celui d'un autre type de DPE que celui de votre annonce (logement ou local professionnel). Une fois l'annonce envoyée, le type de DPE se change avec notre équipe : écrivez-nous à ${email}.`,
+        premisesNumber:
+          "Ce numéro est celui d'un DPE tertiaire, celui d'un local professionnel. Pour un appartement ou une maison, indiquez le DPE du logement ; pour un local, choisissez le type « Autre bien ».",
+        kind: "Type de DPE",
+        kinds: {
+          logement: "DPE d'un logement",
+          tertiaire: "DPE tertiaire (local professionnel)",
+        },
+        energyUse: "Consommation",
+        emissions: "Émissions",
+        kwh: "kWh/m²/an",
+        kg: "kg CO₂/m²/an",
+        figuresHelp:
+          "La consommation d'énergie et les émissions de gaz à effet de serre de l'étiquette.",
+        figuresOptional: "Recommandées pour un local professionnel.",
         energyClass: "Classe énergie (DPE)",
         climateClass: "Classe climat (GES)",
         date: "Date du DPE",
@@ -756,21 +793,15 @@ export const fr = {
         priceYearPlaceholder: "Choisir",
         reason: "Motif de l'exemption",
         reasonPlaceholder: "Choisir le motif",
-        // Provisional list, to validate by Cédric (DECISIONS Q77).
-        reasons: [
-          "Construction provisoire prévue pour 2 ans au plus",
-          "Bâtiment indépendant de moins de 50 m²",
-          "Lieu de culte",
-          "Bâtiment agricole, artisanal ou industriel peu consommateur d'énergie",
-          "Monument historique",
-        ],
+        // The motives proposed are read from the base (dpe_exemption_reasons, L1-66).
         otherReason: "Autre motif",
         otherReasonLabel: "Précisez le motif",
         reasonNote: "Nous relisons le motif avant de publier votre annonce.",
         reasonLocked: (email: string) =>
           `Le motif ne change plus une fois l'annonce envoyée. Pour le corriger, écrivez-nous à ${email}.`,
-        outdated:
-          "Ce DPE n'est plus valable : un DPE doit dater du 1er juillet 2021 au plus tôt et de moins de 10 ans. Un nouveau DPE sera demandé pour envoyer votre annonce.",
+        // The first day and the years of validity of the rule in force (dpe_rules).
+        outdated: (from: string | null, years: number) =>
+          `Ce DPE n'est plus valable : un DPE doit dater ${from ? `du ${from} au plus tôt et ` : ""}de moins de ${years} ans. Un nouveau DPE sera demandé pour envoyer votre annonce.`,
       },
     },
     errors: {
@@ -786,6 +817,11 @@ export const fr = {
       wholeEuros: "En euros, sans centimes.",
       reasonLength: "Le motif compte au moins 3 caractères.",
       dateFuture: "La date du DPE ne peut pas être dans le futur.",
+      dpeNumber: "Le numéro d'un DPE compte 13 caractères, comme 2491E0000001A.",
+      dpeNumberPremises:
+        "Ce numéro est celui d'un DPE tertiaire (local professionnel) : indiquez le numéro du DPE du logement.",
+      dpeNumberHome:
+        "Ce numéro est celui d'un DPE de logement : choisissez « DPE d'un logement », ou indiquez le numéro du DPE tertiaire.",
       date: "Saisissez une date valide.",
     } as Record<string, string>,
     photos: {
@@ -888,9 +924,9 @@ export const fr = {
         // L1-65: what listing_submit refuses (property_dpe_issue).
         dpe: {
           dpe_missing:
-            "Il manque le DPE de votre bien : classes énergie et climat, date, dépenses d'énergie et année des prix. Une annonce de vente doit l'afficher : complétez l'étape 2.",
+            "Il manque le DPE de votre bien, ou une partie : numéro, classes énergie et climat, date, consommation et émissions, dépenses d'énergie et année des prix. Une annonce de vente doit l'afficher : complétez l'étape 2.",
           dpe_outdated:
-            "Le DPE de votre bien n'est plus valable : réalisé avant le 1er juillet 2021 ou il y a plus de 10 ans. Un DPE à jour doit figurer sur votre annonce : complétez l'étape 2.",
+            "Le DPE de votre bien n'est plus valable. Un DPE à jour doit figurer sur votre annonce : complétez l'étape 2.",
           exemption_reason:
             "Indiquez pourquoi votre bien n'est pas soumis au DPE : complétez l'étape 2.",
         },
@@ -1064,9 +1100,9 @@ export const fr = {
         listing: "Le prix et la description restent nécessaires à votre annonce.",
         field: "À renseigner.",
         // L1-65: properties_keep_dpe.
-        dpe: "Le DPE de votre annonce reste nécessaire : classes, date de moins de 10 ans (1er juillet 2021 au plus tôt), dépenses d'énergie et année des prix, ou le motif de l'exemption.",
+        dpe: "Le DPE de votre annonce reste nécessaire : son numéro, ses classes, une date valable, la consommation et les émissions, les dépenses d'énergie d'un logement, ou le motif de l'exemption.",
         dpeExemption: (email: string) =>
-          `Une fois l'annonce envoyée, l'exemption du DPE et le passage en terrain passent par notre équipe, qui les relit : écrivez-nous à ${email}.`,
+          `Une fois l'annonce envoyée, l'exemption du DPE, le type de DPE (logement ou local professionnel) et le passage en terrain passent par notre équipe, qui les relit : écrivez-nous à ${email}.`,
       },
     },
   },
@@ -1459,12 +1495,52 @@ export const fr = {
       suspension: "Motif de la suspension",
       // L1-65: to read before publishing.
       dpeExemption: "Non soumis au DPE, selon le vendeur",
+      dpeExemptionToCheck:
+        "Non soumis au DPE, selon le vendeur : motif à vérifier avant de publier",
       dpeMissing:
         "Le DPE de cette annonce manque ou n'est plus valable : elle ne peut pas être publiée. Refusez-la avec le motif « Une information obligatoire manque ».",
       preview: "Aperçu de l'annonce",
       history: "Historique",
       historyEmpty: "Aucune décision pour l'instant.",
       publicPage: "Voir la page publique",
+    },
+    // L1-66: the DPE of a listing against the register of ADEME.
+    dpe: {
+      title: (number: string) => `DPE n° ${number} au registre de l'ADEME`,
+      register: "Ouvrir l'observatoire DPE de l'ADEME",
+      validUntil: (date: string) => `Valable jusqu'au ${date}.`,
+      field: "Information",
+      entered: "Saisi par le vendeur",
+      registered: "Registre de l'ADEME",
+      energyClass: "Classe énergie",
+      climateClass: "Classe climat",
+      date: "Date du DPE",
+      energyUse: "Consommation",
+      emissions: "Émissions",
+      postalCode: "Code postal",
+      kwh: "kWh/m²/an",
+      kg: "kg CO₂/m²/an",
+      none: "Non renseigné",
+      differs: "(différent de la saisie)",
+      caption: "Saisie du vendeur et enregistrement du DPE à l'ADEME",
+      otherProperty:
+        "Ce DPE est enregistré à l'ADEME pour un autre code postal : c'est peut-être celui d'un autre bien. À vérifier avec le vendeur avant de publier.",
+      expired: (date: string) =>
+        `Pour l'ADEME, ce DPE n'est plus valable depuis le ${date} : demandez un DPE à jour au vendeur, ou refusez l'annonce.`,
+      same: "La saisie du vendeur correspond au registre de l'ADEME.",
+      different:
+        "La saisie diffère du registre de l'ADEME. Un DPE actualisé en 2024 ou en 2026 a une nouvelle étiquette : demandez au vendeur son attestation avant de publier, ou refusez l'annonce.",
+      kindDiffers: {
+        logement:
+          "Ce numéro est celui d'un DPE de logement, l'annonce déclare un local professionnel (DPE tertiaire) : à corriger avant de publier.",
+        tertiaire:
+          "Ce numéro est celui d'un DPE tertiaire (local professionnel), l'annonce déclare un logement : à corriger avant de publier.",
+      },
+      unknown: (number: string) =>
+        `Le DPE n° ${number} n'est pas dans les données ouvertes de l'ADEME. Un DPE récent y arrive sous quelques jours : vérifiez le numéro sur l'observatoire, ou demandez le DPE au vendeur.`,
+      unavailable: (number: string) =>
+        `Le registre de l'ADEME ne répond pas : vérifiez le DPE n° ${number} sur l'observatoire.`,
+      pending: (number: string) => `Vérification du DPE n° ${number} au registre de l'ADEME…`,
     },
     history: {
       actions: {
@@ -1476,6 +1552,8 @@ export const fr = {
       other: "Modifiée",
       by: (name: string) => `par ${name}`,
       reason: (reason: string) => `Motif : ${reason}`,
+      // L1-66: the motive of an exemption of DPE read at the publication.
+      dpeExemption: (reason: string) => `Non soumis au DPE, motif vérifié : ${reason}`,
     },
     actions: {
       label: (reference: string) => `Décisions sur l'annonce ${reference}`,
@@ -2905,6 +2983,10 @@ export const fr = {
       dpe: "Classe énergie (DPE)",
       ges: "Émissions (GES)",
       notSubject: "Non soumis au DPE",
+      // L1-66: the figures of the label, beside its classes.
+      classWithFigure: (letter: string, figure: string) => `${letter} · ${figure}`,
+      energyUseValue: (value: string) => `${value} kWh/m²/an`,
+      gesEmissionsValue: (value: string) => `${value} kg CO₂/m²/an`,
       heating: "Chauffage",
       type: "Type de bien",
       surface: "Surface habitable",
@@ -2933,11 +3015,11 @@ export const fr = {
     // L126-33 ; Géorisques: Cédric, 2026-11-09). Wordings: DECISIONS Q77.
     energy: {
       label: "Informations réglementaires",
-      exempt: "Bien non soumis au DPE.",
+      exempt: "Non soumis au DPE.",
+      exemptFor: (reason: string) => `Non soumis au DPE (motif : ${reason}).`,
       excessive: "Logement à consommation énergétique excessive.",
       costs: (min: string, max: string, year: number) =>
         `Montant estimé des dépenses annuelles d'énergie pour un usage standard : entre ${min} et ${max} par an. Prix moyens des énergies indexés au 1er janvier ${year} (abonnements compris).`,
-      date: (date: string) => `DPE réalisé le ${date}.`,
       risks:
         "Les informations sur les risques auxquels ce bien est exposé sont disponibles sur le site Géorisques\u00A0:",
       risksLink: "www.georisques.gouv.fr",

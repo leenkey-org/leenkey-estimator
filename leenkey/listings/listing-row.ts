@@ -1,5 +1,6 @@
 import type { PublicListing } from "./queries";
 import type { DpeClass } from "@/components/shared/dpe-badge";
+import type { DpeRules } from "@/lib/validations/property";
 import { DPE_CLASSES } from "@/lib/validations/search";
 import type { Database } from "@/types/database";
 
@@ -12,7 +13,7 @@ type PlanCode = Database["public"]["Enums"]["plan_code"];
 
 /** The property embedded under its listing: what the listing page shows of it. */
 export const LISTING_PROPERTY_COLUMNS =
-  "owner_id, type, city, postal_code, district, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, has_elevator, has_balcony, has_terrace, has_garden, has_parking, has_cellar, orientation, build_year, is_new_build, dpe_class, ges_class, heating, charges_monthly_cents, property_tax_yearly_cents, copro_lots, dpe_exempt, dpe_date, energy_cost_min_cents, energy_cost_max_cents, energy_price_year, deleted_at, owner:profiles!properties_owner_id_fkey(first_name, last_name), progress:sale_progress(plan), photos(storage_path, width, height, caption, position)";
+  "owner_id, type, city, postal_code, district, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, has_elevator, has_balcony, has_terrace, has_garden, has_parking, has_cellar, orientation, build_year, is_new_build, dpe_class, ges_class, heating, charges_monthly_cents, property_tax_yearly_cents, copro_lots, dpe_exempt, dpe_exemption_reason, dpe_kind, energy_cost_min_cents, energy_cost_max_cents, energy_price_year, energy_kwh_m2_year, ges_kg_m2_year, deleted_at, owner:profiles!properties_owner_id_fkey(first_name, last_name), progress:sale_progress(plan), photos(storage_path, width, height, caption, position)";
 
 type ListingRow = Pick<
   Tables["listings"]["Row"],
@@ -47,10 +48,13 @@ type PropertyRow = Pick<
   | "property_tax_yearly_cents"
   | "copro_lots"
   | "dpe_exempt"
-  | "dpe_date"
+  | "dpe_exemption_reason"
+  | "dpe_kind"
   | "energy_cost_min_cents"
   | "energy_cost_max_cents"
   | "energy_price_year"
+  | "energy_kwh_m2_year"
+  | "ges_kg_m2_year"
 > & {
   owner: { first_name: string | null } | null;
   progress: { plan: PlanCode } | { plan: PlanCode }[] | null;
@@ -71,13 +75,18 @@ export function planOf(property: Pick<PropertyRow, "progress">): PlanCode {
 
 /**
  * The listing as its page shows it. `accompanied`: the plan includes an
- * adviser (plan_entitlements), never a comparison of plan names.
+ * adviser (plan_entitlements), never a comparison of plan names. `rules`:
+ * the rules of the DPE (dpe_rules), for « consommation excessive »; without
+ * them (the base did not answer), the mention is left out.
  */
 export function listingForPage(
   listing: ListingRow,
   property: PropertyRow,
   accompanied: boolean,
+  rules: DpeRules | null,
 ): PublicListing {
+  const kind = property.dpe_kind === "tertiaire" ? "tertiaire" : "logement";
+  const rule = rules?.[kind];
   return {
     id: listing.id,
     slug: listing.slug,
@@ -114,11 +123,18 @@ export function listingForPage(
     coproLots: property.copro_lots,
     sellerFirstName: property.owner?.first_name ?? null,
     energy: {
+      kind,
       exempt: property.dpe_exempt,
-      date: property.dpe_date,
+      exemptionReason: property.dpe_exempt ? property.dpe_exemption_reason : null,
       costMinCents: property.energy_cost_min_cents,
       costMaxCents: property.energy_cost_max_cents,
       priceYear: property.energy_price_year,
+      // As public_listing_dpe gives them: only when the rule makes them public.
+      kwhM2Year: rule?.figuresPublic ? property.energy_kwh_m2_year : null,
+      gesKgM2Year: rule?.figuresPublic ? property.ges_kg_m2_year : null,
+      excessive:
+        property.dpe_class !== null &&
+        (rule?.excessiveClasses.includes(property.dpe_class) ?? false),
     },
     accompanied,
     photos: [...property.photos]

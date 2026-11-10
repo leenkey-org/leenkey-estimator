@@ -189,7 +189,7 @@ export type SaveCharacteristicsResult =
       fieldErrors?: Partial<Record<CharacteristicsField, string>>;
     };
 
-const NOT_A_FIELD = new Set(["propertyId", "isNewBuild", "features", "dpeExempt"]);
+const NOT_A_FIELD = new Set(["propertyId", "isNewBuild", "features", "dpeExempt", "dpeKind"]);
 
 /**
  * Step 2, saved as a draft at any time (« Enregistrer », « Précédent »);

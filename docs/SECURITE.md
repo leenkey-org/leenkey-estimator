@@ -6,6 +6,7 @@
 - [ ] RLS activée sur toutes les tables du schéma `public` (requête de contrôle dans `supabase/tests/rls_enabled.sql`)
 - [ ] Tests RLS verts pour `seller_a`, `seller_b`, `buyer_c`, `buyer_d`, `admin`, anonyme
 - [ ] Vue `public_listings` : aucun champ privé (adresse exacte, téléphone, email)
+- [ ] DPE (L1-66) : ni le numéro ni la date du DPE ne sortent de `public_listing_dpe` ni d'une page publique (les données ouvertes de l'ADEME donnent l'adresse d'un numéro, et d'une date avec la commune et les classes) ; test `supabase/tests/rls_dpe_publication.sql`. La consommation et les émissions ne sont publiques que si `dpe_rules.figures_public` le dit (désactivé) : mesuré le 2026-11-10 sur les données de l'ADEME, code postal et ces deux chiffres désignent 1 à 16 DPE, contre plus de 10 000 avec les classes seules. Limite connue : la fourchette des dépenses, mention obligatoire, et la surface réduisent aussi l'anonymat de l'adresse (Q78).
 - [ ] Vue `offer_for_seller` : coordonnées de l'acquéreur masquées avant acceptation
 - [ ] Trigger `offers_freeze_after_submit` actif et testé
 - [ ] Clé service utilisée uniquement dans `lib/supabase/admin.ts`, importé seulement par les webhooks, les crons et `leenkey/admin/actions.ts` (jamais dans `core/ai/`)

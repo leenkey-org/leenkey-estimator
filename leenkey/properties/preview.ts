@@ -3,6 +3,7 @@ import { requireProfile } from "@/core/auth/session";
 import { LISTING_PROPERTY_COLUMNS, listingForPage, planOf } from "@/leenkey/listings/listing-row";
 import type { PublicListing } from "@/leenkey/listings/queries";
 import { createClient } from "@/lib/supabase/server";
+import { getDpeSettings } from "./dpe-rules";
 import type { QueryResult } from "./queries";
 
 const COLUMNS =
@@ -19,7 +20,7 @@ export async function sellerListingPreview(
   const profile = await requireProfile();
   try {
     const supabase = await createClient();
-    const [listing, advisorPlans] = await Promise.all([
+    const [listing, advisorPlans, dpe] = await Promise.all([
       supabase
         .from("listings")
         .select(COLUMNS)
@@ -28,6 +29,7 @@ export async function sellerListingPreview(
         .maybeSingle(),
       // « Vente accompagnée » is a right of the plan, never a plan name (CLAUDE.md 14).
       supabase.from("plan_entitlements").select("plan").eq("feature", "advisor"),
+      getDpeSettings(),
     ]);
     if (listing.error) throw new Error(`listings: ${listing.error.code} ${listing.error.message}`);
     if (advisorPlans.error) {
@@ -46,6 +48,7 @@ export async function sellerListingPreview(
         row,
         row.property,
         advisorPlans.data.some((entitlement) => entitlement.plan === plan),
+        dpe?.rules ?? null,
       ),
     };
   } catch (error) {

@@ -139,6 +139,10 @@ export function answersFromEstimation(input: unknown): EstimationAnswers {
     energyCostMinEuros: null,
     energyCostMaxEuros: null,
     energyPriceYear: null,
+    dpeNumber: null,
+    dpeKind: "logement",
+    energyKwhM2Year: null,
+    gesKgM2Year: null,
   };
   // What step 2 would refuse is left empty, a field at a time.
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -197,6 +201,10 @@ const EMPTY: Omit<Characteristics, "propertyId"> = {
   energyCostMinEuros: null,
   energyCostMaxEuros: null,
   energyPriceYear: null,
+  dpeNumber: null,
+  dpeKind: "logement",
+  energyKwhM2Year: null,
+  gesKgM2Year: null,
 };
 
 /** The label to search again at step 1: 5 to 200 characters, as addressChoiceSchema. */

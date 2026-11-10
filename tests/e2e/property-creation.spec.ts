@@ -173,7 +173,25 @@ test("créer un bien en mobile : adresse, caractéristiques, reprise depuis Ma v
   await page.goto(`/vendeur/biens/${id}/caracteristiques`);
   await expect(page.getByLabel("Type de bien")).toHaveValue("maison");
   await expect(page.getByLabel("Niveaux")).toHaveValue("2");
+  // Another property may be business premises: their DPE has no cost range (L1-66).
+  await page.getByLabel("Type de bien").selectOption("autre");
+  const costs = page.getByRole("group", { name: "Dépenses annuelles d'énergie" });
+  await expect(costs).toBeVisible();
+  await page.getByLabel("Type de DPE").selectOption("tertiaire");
+  await expect(costs).toHaveCount(0);
+  await expect(page.getByLabel("Année des prix")).toHaveCount(0);
+  await expect(page.getByText(/Recommandées pour un local professionnel\.$/)).toBeVisible();
+  // The number of a DPE of premises fills it, from the register of ADEME.
+  await page.getByLabel("Numéro du DPE").fill("2091t0000003c");
+  await page.getByRole("button", { name: "Récupérer les informations de mon DPE" }).click();
+  await expect(page.getByText(/^Repris du registre de l'ADEME : classe énergie F/)).toBeVisible();
+  await expect(page.getByLabel("Numéro du DPE")).toHaveValue("2091T0000003C");
+  await expect(page.getByLabel("Consommation")).toHaveValue("310");
+  await expectNoSeriousViolation(page);
+  // A flat has the DPE of a home: no kind to choose.
   await page.getByLabel("Type de bien").selectOption("appartement");
+  await expect(page.getByLabel("Type de DPE")).toHaveCount(0);
+  await expect(costs).toBeVisible();
   await expect(page.getByLabel("Étage", { exact: true })).toHaveValue("");
 
   // The address of a draft changes from step 1.
@@ -278,13 +296,56 @@ test("envoyer une annonce en validation en mobile : prix, description, aperçu",
   await expect(page).toHaveURL(`/vendeur/biens/${id}/caracteristiques`);
   const energy = page.getByRole("group", { name: "Diagnostic de performance énergétique (DPE)" });
   await expect(energy).toBeVisible();
-  await energy.getByRole("radio", { name: "DPE classe F" }).click();
-  await energy.getByRole("radio", { name: "GES classe E" }).click();
+
+  // The DPE comes from the register of ADEME, by its number (L1-66).
+  const number = energy.getByLabel("Numéro du DPE");
+  const retrieve = energy.getByRole("button", { name: "Récupérer les informations de mon DPE" });
+  await number.fill("2491E12");
+  await retrieve.click();
+  await expect(number).toBeFocused();
+  await expect(number).toHaveAccessibleDescription(/Le numéro d'un DPE compte 13 caractères/);
+  // A number the register does not know: the values are then typed.
+  await number.fill("2491E9999999Z");
+  await retrieve.click();
+  await expect(energy.getByText(/^Ce numéro n'est pas dans le registre de l'ADEME/)).toBeVisible();
+  // The DPE of another property, made before July 2021: both are said.
+  await number.fill("2175E0000002B");
+  await retrieve.click();
+  await expect(
+    energy.getByText(/^Ce DPE est enregistré à l'ADEME pour le code postal 75011/),
+  ).toBeVisible();
   const date = energy.getByLabel("Date du DPE");
-  await date.fill("2021-06-30");
-  await expect(energy.getByText(/^Ce DPE n'est plus valable/)).toBeVisible();
-  await date.fill("2024-03-12");
+  await expect(date).toHaveValue("2021-05-10");
+  await expect(
+    energy.getByText(
+      /^Ce DPE n'est plus valable : un DPE doit dater du 1er juillet 2021 au plus tôt et de moins de 10 ans\./,
+    ),
+  ).toBeVisible();
+  // The DPE of business premises is not the one of a flat.
+  await number.fill("2091T0000003C");
+  await retrieve.click();
+  await expect(energy.getByText(/^Ce numéro est celui d'un DPE tertiaire/)).toBeVisible();
+  await expect(date).toHaveValue("2021-05-10");
+  // Its own: the classes, the date and the figures are taken over. Enter in
+  // the number asks the register, not the next step.
+  await number.fill("2491e0000001a");
+  await number.press("Enter");
+  await expect(page).toHaveURL(`/vendeur/biens/${id}/caracteristiques`);
+  await expect(
+    energy.getByText(
+      /^Repris du registre de l'ADEME : classe énergie C, classe climat B, DPE du 12 mars 2024\. Vérifiez ces informations\. Il reste à indiquer les dépenses annuelles d'énergie/,
+    ),
+  ).toBeVisible();
+  await expect(energy.getByText(/code postal 75011/)).toHaveCount(0);
   await expect(energy.getByText(/^Ce DPE n'est plus valable/)).toHaveCount(0);
+  await expect(number).toHaveValue("2491E0000001A");
+  await expect(energy.getByRole("radio", { name: "DPE classe C" })).toBeChecked();
+  await expect(energy.getByRole("radio", { name: "GES classe B" })).toBeChecked();
+  await expect(date).toHaveValue("2024-03-12");
+  await expect(energy.getByLabel("Consommation")).toHaveValue("148");
+  await expect(energy.getByLabel("Émissions")).toHaveValue("21");
+  // The seller still corrects what was taken over (a DPE updated since).
+  await energy.getByRole("radio", { name: "DPE classe F" }).click();
   await energy.getByLabel("Année des prix").selectOption("2023");
   const costs = energy.getByRole("group", { name: "Dépenses annuelles d'énergie" });
   await costs.getByLabel("Minimum").fill("1980");
@@ -308,7 +369,11 @@ test("envoyer une annonce en validation en mobile : prix, description, aperçu",
       /^Montant estimé des dépenses annuelles d'énergie pour un usage standard : entre 1\s980\s€ et 2\s680\s€ par an\. Prix moyens des énergies indexés au 1er janvier 2023 \(abonnements compris\)\.$/,
     ),
   ).toBeVisible();
-  await expect(page.getByText("DPE réalisé le 12 mars 2024.")).toBeVisible();
+  // Its figures stay with the team (Q78); never the date nor the number of
+  // the DPE, which give the address in the open data of ADEME.
+  await expect(page.getByText(/kWh\/m²\/an/)).toHaveCount(0);
+  await expect(page.getByText(/12 mars 2024/)).toHaveCount(0);
+  await expect(page.getByText("2491E0000001A")).toHaveCount(0);
   await expect(page.getByRole("link", { name: "www.georisques.gouv.fr" })).toHaveAttribute(
     "href",
     "https://www.georisques.gouv.fr",

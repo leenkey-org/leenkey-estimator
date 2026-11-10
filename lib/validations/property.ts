@@ -89,6 +89,18 @@ const isoDate = z
     return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(text);
   }, "date");
 
+/** The DPE of a home, or of business premises (« tertiaire »): dpe_rules has a rule for each. */
+export const DPE_KINDS = ["logement", "tertiaire"] as const;
+export type DpeKind = (typeof DPE_KINDS)[number];
+
+/** The number of a DPE in the register of ADEME: « 2491E0000001A », 13 characters. */
+export const DPE_NUMBER = /^\d{4}[A-Z]\d{7}[A-Z]$/;
+const dpeNumber = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .refine((text) => DPE_NUMBER.test(text), "dpeNumber");
+
 const characteristicsFields = z.object({
   propertyId: z.string().uuid(),
   type: z.enum(PROPERTY_TYPES).nullable(),
@@ -121,6 +133,12 @@ const characteristicsFields = z.object({
   energyCostMinEuros: wholeEuros,
   energyCostMaxEuros: wholeEuros,
   energyPriceYear: whole(2015, 2100),
+  // L1-66: its number at ADEME (the values can be taken from its register),
+  // its kind, the energy used (kWh/m²/year) and the emissions (kg CO₂/m²/year).
+  dpeNumber: dpeNumber.nullable(),
+  dpeKind: z.enum(DPE_KINDS),
+  energyKwhM2Year: whole(0, 9999),
+  gesKgM2Year: whole(0, 9999),
 });
 
 export type Characteristics = z.infer<typeof characteristicsFields>;
@@ -128,7 +146,7 @@ export type Characteristics = z.infer<typeof characteristicsFields>;
 /** A field of step 2 that holds one value (the features are a list). */
 export type CharacteristicsField = Exclude<
   keyof Characteristics,
-  "propertyId" | "isNewBuild" | "features" | "dpeExempt"
+  "propertyId" | "isNewBuild" | "features" | "dpeExempt" | "dpeKind"
 >;
 
 type NotForType = {
@@ -165,6 +183,9 @@ export const NOT_FOR_TYPE: Partial<Record<PropertyType, NotForType>> = {
       "energyCostMinEuros",
       "energyCostMaxEuros",
       "energyPriceYear",
+      "dpeNumber",
+      "energyKwhM2Year",
+      "gesKgM2Year",
     ],
     features: PROPERTY_FEATURES,
   },
@@ -173,7 +194,8 @@ export const NOT_FOR_TYPE: Partial<Record<PropertyType, NotForType>> = {
 /**
  * The values that apply to the type, the others empty; land has 0 rooms and
  * no DPE. An exempt property keeps no DPE, a property with a DPE no motive
- * of exemption (L1-65).
+ * of exemption (L1-65). Only another property may be business premises,
+ * whose DPE has no cost range (L1-66).
  */
 export function forType(value: Characteristics): Characteristics {
   const hidden = value.type ? NOT_FOR_TYPE[value.type] : undefined;
@@ -188,15 +210,21 @@ export function forType(value: Characteristics): Characteristics {
     result.rooms = 0;
     result.dpeExempt = false;
   }
+  if (value.type !== "autre") result.dpeKind = "logement";
   if (result.dpeExempt) {
     result.dpe = null;
     result.ges = null;
     result.dpeDate = null;
+    result.dpeNumber = null;
+    result.energyKwhM2Year = null;
+    result.gesKgM2Year = null;
+  } else {
+    result.dpeExemptionReason = null;
+  }
+  if (result.dpeExempt || result.dpeKind === "tertiaire") {
     result.energyCostMinEuros = null;
     result.energyCostMaxEuros = null;
     result.energyPriceYear = null;
-  } else {
-    result.dpeExemptionReason = null;
   }
   return result;
 }
@@ -221,6 +249,17 @@ export const characteristicsSchema = characteristicsFields
     ) {
       context.addIssue({ code: "custom", path: ["energyCostMaxEuros"], message: "costRange" });
     }
+    // The fifth character of the number of a DPE says its kind: T, business premises.
+    if (
+      value.dpeNumber !== null &&
+      (value.dpeNumber.charAt(4) === "T") !== (value.dpeKind === "tertiaire")
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["dpeNumber"],
+        message: value.dpeKind === "tertiaire" ? "dpeNumberHome" : "dpeNumberPremises",
+      });
+    }
     // A DPE is dated today at the latest (an outdated one is saved, then refused at the sending).
     if (value.dpeDate !== null && value.dpeDate > parisToday()) {
       context.addIssue({ code: "custom", path: ["dpeDate"], message: "dateFuture" });
@@ -236,17 +275,34 @@ export function parisToday(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(now);
 }
 
-/** A DPE made before this day is no longer valid (DPE reform of 1 July 2021). */
-export const DPE_VALID_FROM = "2021-07-01";
-/** A DPE is valid for 10 years. */
-export const DPE_VALID_YEARS = 10;
+/**
+ * The rule of a kind of DPE, read from the base (dpe_rules, L1-66): the rules
+ * change with the regulation, not with the code.
+ */
+export type DpeRule = {
+  /** A DPE made before this day is refused; null: no such day. */
+  validFrom: string | null;
+  validityYears: number;
+  /** The range of the yearly energy costs and the year of their prices. */
+  costsRequired: boolean;
+  /** The energy used and the emissions. */
+  figuresRequired: boolean;
+  /** Classes shown with « Logement à consommation énergétique excessive ». */
+  excessiveClasses: readonly string[];
+  /**
+   * The figures on the page of a listing: with the postal code, they point at
+   * one DPE or a few in the open data of ADEME, so at the address (Q78).
+   */
+  figuresPublic: boolean;
+};
+export type DpeRules = Partial<Record<DpeKind, DpeRule>>;
 
 export type DpeIssue = "dpe_missing" | "dpe_outdated" | "exemption_reason";
 
 /**
  * What still stops the listing from being sent for review, as
  * property_dpe_issue (SQL) says it: null when nothing (land, a complete and
- * valid DPE, an exemption with its motive).
+ * valid DPE, an exemption with its motive). A kind without a rule is not sent.
  */
 export function dpeIssue(
   value: {
@@ -259,31 +315,48 @@ export function dpeIssue(
     energyCostMinEuros: number | null;
     energyCostMaxEuros: number | null;
     energyPriceYear: number | null;
+    dpeNumber: string | null;
+    dpeKind: string;
+    energyKwhM2Year: number | null;
+    gesKgM2Year: number | null;
   },
+  rules: DpeRules,
   today: string = parisToday(),
 ): DpeIssue | null {
   if (value.type === null || value.type === "terrain") return null;
   if (value.dpeExempt) return value.dpeExemptionReason ? null : "exemption_reason";
+  const rule = DPE_KINDS.includes(value.dpeKind as DpeKind)
+    ? rules[value.dpeKind as DpeKind]
+    : undefined;
+  if (!rule) return "dpe_missing";
   if (
     value.dpe === null ||
     value.ges === null ||
     value.dpeDate === null ||
-    value.energyCostMinEuros === null ||
-    value.energyCostMaxEuros === null ||
-    value.energyPriceYear === null
+    value.dpeNumber === null ||
+    (rule.costsRequired &&
+      (value.energyCostMinEuros === null ||
+        value.energyCostMaxEuros === null ||
+        value.energyPriceYear === null)) ||
+    (rule.figuresRequired && (value.energyKwhM2Year === null || value.gesKgM2Year === null))
   ) {
     return "dpe_missing";
   }
-  return dpeOutdated(value.dpeDate, today) ? "dpe_outdated" : null;
+  return dpeOutdated(value.dpeDate, rule, today) ? "dpe_outdated" : null;
 }
 
 /**
- * A DPE no longer valid, or not yet: dated before 1 July 2021, 10 years ago
- * or more, or after today (« 2026-11-09 », as property_dpe_issue).
+ * A DPE no longer valid, or not yet: dated before the first day of its rule,
+ * its years of validity ago or more, or after today (« 2026-11-09 », as
+ * property_dpe_issue).
  */
-export function dpeOutdated(date: string, today: string = parisToday()): boolean {
-  const expired = `${Number(today.slice(0, 4)) - DPE_VALID_YEARS}${today.slice(4)}`;
-  return date < DPE_VALID_FROM || date <= expired || date > today;
+export function dpeOutdated(
+  date: string,
+  rule: Pick<DpeRule, "validFrom" | "validityYears">,
+  today: string = parisToday(),
+): boolean {
+  const expired = `${Number(today.slice(0, 4)) - rule.validityYears}${today.slice(4)}`;
+  return (rule.validFrom !== null && date < rule.validFrom) || date <= expired || date > today;
 }
 
 /** Intent of a save of step 2: a draft as it is, or the step after. */

@@ -129,7 +129,8 @@ create temporary table seed_new_listings (listing_id uuid primary key, property_
 -- Properties (the trigger creates sale_progress: Autonomie, first step).
 -- Their DPE (L1-65), but land: made 2 to 22 months ago, the yearly energy
 -- costs of an average household from its class and surface, the prices of
--- the year before.
+-- the year before; its number (fictitious, unknown to ADEME), the energy
+-- used and the emissions of its classes (L1-66).
 with ins as (
   insert into public.properties (
     id, owner_id, type, address_line, postal_code, city, location, surface_m2, rooms, bedrooms,
@@ -137,7 +138,7 @@ with ins as (
     orientation, build_year, dpe_class, ges_class, heating, charges_monthly_cents,
     property_tax_yearly_cents, copro_lots, estimation_value_cents, estimation_low_cents,
     estimation_high_cents, dpe_date, energy_cost_min_cents, energy_cost_max_cents,
-    energy_price_year, created_at)
+    energy_price_year, dpe_number, energy_kwh_m2_year, ges_kg_m2_year, created_at)
   select i.property_id, i.owner_id, p.type, p.address_line, p.postal_code, p.city,
          extensions.st_setsrid(extensions.st_makepoint(p.lng, p.lat), 4326)::extensions.geography,
          p.surface_m2, p.rooms, p.bedrooms, p.floor, p.floors_total, p.has_elevator, p.has_balcony,
@@ -146,6 +147,12 @@ with ins as (
          p.copro_lots, p.estimation_value_cents, p.estimation_low_cents, p.estimation_high_cents,
          e.dpe_date, e.cost_cents, round(e.cost_cents * 1.35 / 1000) * 1000,
          case when e.dpe_date is not null then extract(year from e.dpe_date)::int - 1 end,
+         case when p.dpe_class is not null
+              then '26' || lpad(p.n::text, 2, '0') || 'E' || lpad((1000000 + p.n)::text, 7, '0') || 'A' end,
+         case p.dpe_class when 'A' then 60 when 'B' then 95 when 'C' then 150 when 'D' then 215
+                          when 'E' then 290 when 'F' then 380 when 'G' then 460 end,
+         case p.ges_class when 'A' then 4 when 'B' then 9 when 'C' then 22 when 'D' then 40
+                          when 'E' then 60 when 'F' then 85 when 'G' then 110 end,
          now() - make_interval(days => p.days_ago + 10)
   from seed_props p join seed_ids i using (n)
   cross join lateral (

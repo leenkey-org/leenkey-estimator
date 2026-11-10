@@ -24,6 +24,7 @@ import {
   parseFrenchNumber,
   storableAddress,
   type Characteristics,
+  type DpeRules,
 } from "@/lib/validations/property";
 
 // L1-11: creation of a property, steps 1 (address) and 2 (characteristics).
@@ -54,6 +55,10 @@ const empty: Characteristics = {
   energyCostMinEuros: null,
   energyCostMaxEuros: null,
   energyPriceYear: null,
+  dpeNumber: null,
+  dpeKind: "logement",
+  energyKwhM2Year: null,
+  gesKgM2Year: null,
 };
 
 describe("parseFrenchNumber", () => {
@@ -192,6 +197,10 @@ describe("fields of a type", () => {
     energyCostMinEuros: null,
     energyCostMaxEuros: null,
     energyPriceYear: null,
+    dpeNumber: null,
+    dpeKind: "logement",
+    energyKwhM2Year: null,
+    gesKgM2Year: null,
   };
 
   it("keeps the levels, lots, charges and Carrez surface of a house, not its floor nor lift", () => {
@@ -229,8 +238,28 @@ describe("fields of a type", () => {
   });
 });
 
-describe("DPE (L1-65)", () => {
+describe("DPE (L1-65, L1-66)", () => {
   const today = "2026-11-09";
+  // As dpe_rules holds them on 2026-11-10 (answers of Cédric to Q77).
+  const rules: DpeRules = {
+    logement: {
+      validFrom: "2021-07-01",
+      validityYears: 10,
+      costsRequired: true,
+      figuresRequired: true,
+      excessiveClasses: ["F", "G"],
+      figuresPublic: false,
+    },
+    tertiaire: {
+      validFrom: null,
+      validityYears: 10,
+      costsRequired: false,
+      figuresRequired: false,
+      excessiveClasses: [],
+      figuresPublic: false,
+    },
+  };
+  const home = rules.logement!;
   const dpe: Characteristics = {
     ...empty,
     type: "appartement",
@@ -242,39 +271,84 @@ describe("DPE (L1-65)", () => {
     energyCostMinEuros: 980,
     energyCostMaxEuros: 1330,
     energyPriceYear: 2023,
+    dpeNumber: "2491E0000001A",
+    energyKwhM2Year: 215,
+    gesKgM2Year: 40,
   };
 
-  it("asks for the classes, the date, the range of the costs and the year of the prices", () => {
-    expect(dpeIssue(dpe, today)).toBeNull();
+  it("asks a home for its number, classes, date, figures, cost range and year of the prices", () => {
+    expect(dpeIssue(dpe, rules, today)).toBeNull();
     for (const field of [
       "dpe",
       "ges",
       "dpeDate",
+      "dpeNumber",
+      "energyKwhM2Year",
+      "gesKgM2Year",
       "energyCostMinEuros",
       "energyCostMaxEuros",
       "energyPriceYear",
     ] as const) {
-      expect(dpeIssue({ ...dpe, [field]: null }, today), field).toBe("dpe_missing");
+      expect(dpeIssue({ ...dpe, [field]: null }, rules, today), field).toBe("dpe_missing");
     }
   });
 
   it("refuses a DPE made before 1 July 2021, 10 years ago or more, or after today", () => {
-    expect(dpeIssue({ ...dpe, dpeDate: "2021-06-30" }, today)).toBe("dpe_outdated");
-    expect(dpeIssue({ ...dpe, dpeDate: "2021-07-01" }, today)).toBeNull();
-    expect(dpeIssue({ ...dpe, dpeDate: "2026-11-10" }, today)).toBe("dpe_outdated");
-    expect(dpeOutdated("2026-11-09", today)).toBe(false);
-    // From 2031, 10 years: as current_date - interval '10 years' in SQL.
-    expect(dpeOutdated("2021-11-09", "2031-11-09")).toBe(true);
-    expect(dpeOutdated("2021-11-10", "2031-11-09")).toBe(false);
+    expect(dpeIssue({ ...dpe, dpeDate: "2021-06-30" }, rules, today)).toBe("dpe_outdated");
+    expect(dpeIssue({ ...dpe, dpeDate: "2021-07-01" }, rules, today)).toBeNull();
+    expect(dpeIssue({ ...dpe, dpeDate: "2026-11-10" }, rules, today)).toBe("dpe_outdated");
+    expect(dpeOutdated("2026-11-09", home, today)).toBe(false);
+    // From 2031, 10 years: as today - interval '10 years' in SQL.
+    expect(dpeOutdated("2021-11-09", home, "2031-11-09")).toBe(true);
+    expect(dpeOutdated("2021-11-10", home, "2031-11-09")).toBe(false);
+  });
+
+  it("asks business premises for less: no cost range, the figures recommended, no day of 2021", () => {
+    const premises: Characteristics = {
+      ...empty,
+      type: "autre",
+      surfaceM2: 120,
+      rooms: 0,
+      dpeKind: "tertiaire",
+      dpe: "F",
+      ges: "E",
+      dpeDate: "2020-03-02",
+      dpeNumber: "2091T0000003C",
+    };
+    expect(dpeIssue(premises, rules, today)).toBeNull();
+    expect(dpeIssue({ ...premises, dpeNumber: null }, rules, today)).toBe("dpe_missing");
+    expect(dpeIssue({ ...premises, dpeDate: "2016-11-09" }, rules, today)).toBe("dpe_outdated");
+    // Only another property may be business premises; their DPE has no cost range.
+    expect(forType({ ...dpe, dpeKind: "tertiaire" }).dpeKind).toBe("logement");
+    expect(
+      forType({
+        ...premises,
+        energyCostMinEuros: 900,
+        energyCostMaxEuros: 1200,
+        energyPriceYear: 2023,
+      }),
+    ).toEqual(premises);
+  });
+
+  it("follows the rules of the base: what they change applies without the code", () => {
+    const later: DpeRules = { ...rules, logement: { ...home, validFrom: "2027-01-01" } };
+    expect(dpeIssue(dpe, later, today)).toBe("dpe_outdated");
+    const lighter: DpeRules = { ...rules, logement: { ...home, figuresRequired: false } };
+    expect(dpeIssue({ ...dpe, energyKwhM2Year: null }, lighter, today)).toBeNull();
+    // A kind without a rule is never sent.
+    expect(dpeIssue(dpe, { tertiaire: rules.tertiaire }, today)).toBe("dpe_missing");
   });
 
   it("asks for nothing on land, a motive for an exemption", () => {
-    expect(dpeIssue({ ...empty, type: "terrain" }, today)).toBeNull();
-    expect(dpeIssue({ ...empty, type: null }, today)).toBeNull();
-    expect(dpeIssue({ ...empty, type: "maison", dpeExempt: true }, today)).toBe("exemption_reason");
+    expect(dpeIssue({ ...empty, type: "terrain" }, rules, today)).toBeNull();
+    expect(dpeIssue({ ...empty, type: null }, rules, today)).toBeNull();
+    expect(dpeIssue({ ...empty, type: "maison", dpeExempt: true }, rules, today)).toBe(
+      "exemption_reason",
+    );
     expect(
       dpeIssue(
         { ...empty, type: "maison", dpeExempt: true, dpeExemptionReason: "Lieu de culte" },
+        rules,
         today,
       ),
     ).toBeNull();
@@ -289,6 +363,10 @@ describe("DPE (L1-65)", () => {
       energyCostMinEuros: null,
       energyCostMaxEuros: null,
       energyPriceYear: null,
+      dpeNumber: null,
+      dpeKind: "logement",
+      energyKwhM2Year: null,
+      gesKgM2Year: null,
       dpeExempt: true,
       dpeExemptionReason: "Lieu de culte",
     });
@@ -316,6 +394,18 @@ describe("DPE (L1-65)", () => {
       ["dpeExemptionReason", "reasonLength"],
     ]);
     expect(issues({ energyCostMinEuros: 980.5 })).toEqual([["energyCostMinEuros", "wholeEuros"]]);
+    // Its fifth character says its kind: T, business premises.
+    expect(issues({ dpeNumber: "2091T0000003C" })).toEqual([["dpeNumber", "dpeNumberPremises"]]);
+    expect(
+      characteristicsSchema
+        .safeParse({ ...dpe, type: "autre", rooms: 0, dpeKind: "tertiaire" })
+        .error?.issues.map((issue) => [issue.path[0], issue.message]),
+    ).toEqual([["dpeNumber", "dpeNumberHome"]]);
+    // The number of ADEME: 13 characters, read whatever its case.
+    expect(issues({ dpeNumber: "2491E12345" })).toEqual([["dpeNumber", "dpeNumber"]]);
+    expect(characteristicsSchema.parse({ ...dpe, dpeNumber: " 2491e0000001a " }).dpeNumber).toBe(
+      "2491E0000001A",
+    );
     expect(issues({ energyPriceYear: 2014 })?.[0]?.[0]).toBe("energyPriceYear");
   });
 
