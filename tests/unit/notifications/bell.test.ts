@@ -173,6 +173,32 @@ describe("wording of the notifications (from type and data)", () => {
         }),
       ).title,
     ).toBe("Question d'Alice transmise par l'assistant");
+    // L1-31: a request to the team (create_case): who asks, about what, for which property.
+    expect(
+      describeNotification(
+        view({
+          type: "case.created",
+          link: "/admin/dossiers",
+          data: {
+            case_id: "5eed3000-0000-4000-8000-000000000001",
+            source: "assistant_handoff",
+            subject: "Litige avec un acquéreur",
+            reference: "LK-0003",
+            first_name: "Alice",
+            last_initial: "D",
+          },
+        }),
+      ),
+    ).toMatchObject({
+      title: "Nouvelle demande à traiter",
+      detail: "Alice D. · Litige avec un acquéreur · LK-0003",
+      link: "/admin/dossiers/5eed3000-0000-4000-8000-000000000001",
+    });
+    expect(
+      describeNotification(
+        view({ type: "case.created", data: { source: "manual", subject: "Problème de compte" } }),
+      ).detail,
+    ).toBe("Sans nom · Problème de compte");
     expect(
       describeNotification(
         view({

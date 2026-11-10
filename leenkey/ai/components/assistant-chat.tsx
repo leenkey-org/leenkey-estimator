@@ -16,6 +16,7 @@ import { ASSISTANT_MESSAGE_MAX, type AssistantContext } from "@/lib/validations/
 import { confirmToolCall, declineToolCall } from "../actions";
 import { actionPreview, type ActionPreview } from "../previews";
 import { readEvents, type StreamEvent } from "../stream-events";
+import { CaseRequestForm } from "./case-request-form";
 import type { ActionState, AssistantConversation, ChatItem } from "../types";
 
 const t = fr.assistant;
@@ -28,8 +29,23 @@ const gapFormat = new Intl.NumberFormat("fr-FR", {
 });
 
 /** What a change proposed by the assistant will do: before and after. */
-function ActionContent({ preview }: { preview: ActionPreview | null }) {
-  if (!preview) return <p className="text-lk-compact text-lk-ink-2">{t.action.unknown}</p>;
+function ActionContent({ preview, unknown }: { preview: ActionPreview | null; unknown: string }) {
+  if (!preview) return <p className="text-lk-compact text-lk-ink-2">{unknown}</p>;
+  if (preview.kind === "case_request") {
+    return (
+      <>
+        {preview.propertyName ? (
+          <p className="text-lk-caption text-lk-ink-3">{t.action.property(preview.propertyName)}</p>
+        ) : null}
+        <ChangeBlock label={t.action.request.subject} tone="before">
+          {preview.subject}
+        </ChangeBlock>
+        <ChangeBlock label={t.action.request.message} tone="after">
+          {preview.summary}
+        </ChangeBlock>
+      </>
+    );
+  }
   const property = (
     <p className="text-lk-caption text-lk-ink-3">{t.action.property(preview.propertyName)}</p>
   );
@@ -119,13 +135,16 @@ export function AssistantChat({
   const [reading, setReading] = useState(false);
   const [error, setError] = useState<ChatError | null>(null);
   const [answering, setAnswering] = useState<string | null>(null);
+  /** « Écrire à un conseiller », at the daily limit: the request written by the person. */
+  const [request, setRequest] = useState<"closed" | "open" | "sent">("closed");
+  const requesting = request === "open";
   const next = useRef(0);
   const writing = useRef<string | null>(null);
   const end = useRef<HTMLDivElement>(null);
   const field = useRef<HTMLTextAreaElement>(null);
   const errorId = `${useId()}-error`;
   /** The request of the stream, stopped when the conversation is closed (the turn goes on, logged). */
-  const request = useRef<AbortController | null>(null);
+  const pending = useRef<AbortController | null>(null);
   /** What the stream of this turn wrote, removed when the model declines. */
   const written = useRef<string[]>([]);
 
@@ -135,7 +154,14 @@ export function AssistantChat({
     end.current?.scrollIntoView({ block: "end" });
   }, [items, reading, error]);
 
-  useEffect(() => () => request.current?.abort(), []);
+  useEffect(() => () => pending.current?.abort(), []);
+
+  // The request sent or given up: the field of the conversation is back, with the focus.
+  const wasRequesting = useRef(false);
+  useEffect(() => {
+    if (wasRequesting.current && !requesting) field.current?.focus();
+    wasRequesting.current = requesting;
+  }, [requesting]);
 
   const setState = (toolCallId: string, state: ActionState) =>
     setItems((current) =>
@@ -201,7 +227,7 @@ export function AssistantChat({
     writing.current = null;
     written.current = [];
     const controller = new AbortController();
-    request.current = controller;
+    pending.current = controller;
     let ended = false;
     try {
       const response = await fetch("/api/ai/chat", {
@@ -267,6 +293,9 @@ export function AssistantChat({
     if (outcome === "rejected") {
       setItems(before);
       setDraft(message);
+    } else {
+      // The assistant answers again: what was said of a request sent has been read.
+      setRequest("closed");
     }
   }
 
@@ -346,13 +375,19 @@ export function AssistantChat({
                 </MessageBubble>
               );
             }
-            const handoff = item.name === "contact_advisor";
+            // Sent to a person, the adviser of the plan or the team: its own words.
+            const handoff =
+              item.name === "contact_advisor"
+                ? t.action.handoff
+                : item.name === "create_case"
+                  ? t.action.request
+                  : null;
             const title = handoff
-              ? t.action.handoff.title
+              ? handoff.title
               : item.name === "update_listing_price"
                 ? t.action.priceTitle
                 : t.action.descriptionTitle;
-            const states = handoff ? t.action.handoff.states : t.action.states;
+            const states = handoff ? handoff.states : t.action.states;
             return (
               <ConfirmActionCard
                 key={item.id}
@@ -360,14 +395,17 @@ export function AssistantChat({
                 state={item.state}
                 busy={answering === item.toolCallId}
                 stateText={item.state === "pending" ? undefined : states[item.state]}
-                confirmLabel={handoff ? t.action.handoff.confirm : t.action.confirm}
+                confirmLabel={handoff ? handoff.confirm : t.action.confirm}
                 cancelLabel={t.action.cancel}
                 onConfirm={() => void answer(item.toolCallId, true)}
                 onCancel={() => void answer(item.toolCallId, false)}
                 className="max-w-[min(100%,40rem)]"
               >
                 {item.state === "pending" || (item.state === "confirmed" && item.preview) ? (
-                  <ActionContent preview={item.preview} />
+                  <ActionContent
+                    preview={item.preview}
+                    unknown={handoff ? handoff.unknown : t.action.unknown}
+                  />
                 ) : null}
               </ConfirmActionCard>
             );
@@ -385,19 +423,33 @@ export function AssistantChat({
             <InlineAlert
               tone={error === "quota" || error === "cut" ? "warning" : "danger"}
               action={
-                error === "quota" ? (
-                  <Link
-                    href={ROUTES.contact}
-                    className="font-semibold underline underline-offset-2 hover:no-underline"
+                error === "quota" && request === "closed" ? (
+                  <button
+                    type="button"
+                    onClick={() => setRequest("open")}
+                    className="cursor-pointer font-semibold underline underline-offset-2 hover:no-underline"
                   >
                     {t.errors.quotaAction}
-                  </Link>
+                  </button>
                 ) : null
               }
             >
               <span id={errorId}>{errorText}</span>
             </InlineAlert>
           ) : null}
+          {requesting ? (
+            <CaseRequestForm
+              conversationId={conversationId}
+              propertyId={propertyId}
+              initialMessage={draft}
+              onClose={() => setRequest("closed")}
+              onSent={() => {
+                setDraft("");
+                setRequest("sent");
+              }}
+            />
+          ) : null}
+          {request === "sent" ? <InlineAlert tone="success">{t.request.sent}</InlineAlert> : null}
           <p className="text-lk-micro text-lk-ink-3">
             {t.disclaimer}{" "}
             <Link
@@ -408,18 +460,21 @@ export function AssistantChat({
             </Link>
           </p>
         </div>
-        <Composer
-          value={draft}
-          onValueChange={setDraft}
-          onSend={() => send(draft)}
-          sending={streaming}
-          label={t.field}
-          sendLabel={t.send}
-          maxLength={ASSISTANT_MESSAGE_MAX}
-          errorId={errorText ? errorId : undefined}
-          textareaRef={field}
-          className="border-t-0"
-        />
+        {/* The request is written in its own field: one field, one « Envoyer », at a time. */}
+        {requesting ? null : (
+          <Composer
+            value={draft}
+            onValueChange={setDraft}
+            onSend={() => send(draft)}
+            sending={streaming}
+            label={t.field}
+            sendLabel={t.send}
+            maxLength={ASSISTANT_MESSAGE_MAX}
+            errorId={errorText ? errorId : undefined}
+            textareaRef={field}
+            className="border-t-0"
+          />
+        )}
       </div>
     </div>
   );

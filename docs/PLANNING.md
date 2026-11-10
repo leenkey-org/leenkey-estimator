@@ -94,7 +94,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
   - [ ] **L1-30d** Pré-analyse des annonces, `/admin/assistant`, « Rédiger avec l'assistant » du motif de refus, export CSV des annonces · PR : · Testé en préprod : ☐
 - [x] **L1-65** DPE exigé pour l'envoi en validation (exemption et motif, date, dépenses, année des prix), mentions réglementaires et Géorisques sur l'annonce (réponse de Cédric du 9 novembre) · PR : #87 · Testé en préprod : ☐
 - [x] **L1-66** DPE repris du registre de l'ADEME par son numéro, consommation et émissions, DPE tertiaire, règles et motifs d'exemption en base, contrôle ADEME dans le back office (réponses de Cédric du 10 novembre) · PR : #88 · Testé en préprod : ☐
-- [ ] **L1-31** Passage à l’humain (`create_case`, fonction SQL `security definer`) côté vendeur · PR : · Testé en préprod : ☐
+- [x] **L1-31** Passage à l’humain (`create_case`, fonction SQL `security definer`) côté vendeur : outil de l'assistant après confirmation, demande écrite à la limite du jour, notification et email de l'équipe · PR : #89 · Testé en préprod : ☐
 - [x] **L1-34** Conversation conseiller : `kind = 'advisor'` sur la messagerie existante, créée au paiement, vue admin `/admin/messages`, outil `contact_advisor` · PR : #86 · Testé en préprod : ☐
 - [ ] **L1-32** Recette interne lot 1 : E2E 1, 2, 3, 7 verts, Lighthouse, axe, revue RLS · PR : · Testé en préprod : ☐
 

@@ -23,6 +23,10 @@ test.skip(
 );
 
 const LK0001 = "5eed1000-0000-4000-8000-000000000001";
+
+// One conversation, read by its last message: each test in turn (the question
+// passed on by the assistant must not land while the team reads the first one).
+test.describe.configure({ mode: "serial" });
 const ADVISOR = "/messages/5eed2000-0000-4000-8000-000000000001";
 const ADMIN_ADVISOR = "/admin/messages/5eed2000-0000-4000-8000-000000000001";
 const plain = (value: string) => value.replace(/\u00A0/g, " ");

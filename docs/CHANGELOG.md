@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-10 · L1-31 · PR #89 · Passage à l'humain (`create_case`)
+- Ajouté : l'assistant du vendeur transmet une demande à l'équipe Leenkey (outil `create_case`) quand le vendeur demande une personne ou que le sujet est conflictuel : objet et résumé relus et confirmés avant l'envoi ; pour un bien dont la formule comprend un conseiller, il renvoie vers le conseiller.
+- Modifié : à la limite du jour de la conversation avec l'assistant, « Écrire à un conseiller » n'ouvre plus la page Contact : le vendeur écrit sa demande sur place, elle devient un dossier du back office ; si la formule du bien comprend un conseiller, il est renvoyé vers sa conversation avec lui. Le même lien à la limite des suggestions (réponse suggérée, description) mène toujours à la page Contact.
+- Ajouté : l'équipe est prévenue de chaque demande (notification et email groupé « Nouvelle demande à traiter ») ; sur la fiche du dossier, « Résumé de l'assistant » ou « Demande de l'utilisateur ».
+- Migration : `20261110160000_create_case.sql` (`create_case`, `ai_create_case`, `security definer`, 5 demandes en cours au plus par compte, sans suppression).
+- Tests : RLS (`rls_create_case.sql`, 49), unitaires (outil, demande écrite, objet, notification, email, aucun client service role dans `core/ai` ni `leenkey/ai`), E2E (demande annulée puis confirmée et lue par l'équipe, bien avec conseiller, demande écrite à la limite du jour sur téléphone).
+
 ### 2026-11-10 · L1-66 · PR #88 · DPE repris du registre de l'ADEME
 - Ajouté : à l'étape 2, le numéro du DPE (13 caractères) et « Récupérer les informations de mon DPE » : les classes, la date, la consommation et les émissions viennent des données ouvertes de l'ADEME ; le vendeur vérifie et saisit les dépenses d'énergie. Numéro inconnu, registre injoignable ou DPE d'un autre code postal : dit, sans bloquer.
 - Ajouté : consommation (kWh/m²/an) et émissions (kg CO₂/m²/an), demandées et contrôlées, affichées sur l'annonce seulement si la règle en base le dit (désactivé : elles désignent presque l'adresse dans les données de l'ADEME, Q78) ; DPE tertiaire pour un « Autre bien » (ni dépenses ni « consommation excessive ») ; deux motifs d'exemption de plus.

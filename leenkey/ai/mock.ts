@@ -149,6 +149,36 @@ export const mockModel: ModelCall = async (request, { onText }) => {
   const wantsDescription = /description/i.test(asked);
   const wantsPrice = /prix/i.test(asked);
 
+  // create_case (L1-31): « Je voudrais écrire à l'équipe Leenkey » ; about the
+  // account, a request about no property.
+  if (/équipe/i.test(asked)) {
+    if (!result) return message([call("get_my_properties", {})], "tool_use");
+    if (result.name === "get_my_properties") {
+      const propertyId = /compte/i.test(asked)
+        ? ""
+        : (conversationProperty(file) ??
+          /"propertyId":"([0-9a-f-]{36})"/.exec(result.content)?.[1] ??
+          "");
+      const summary = `Demande transmise par l'assistant : ${asked.slice(0, 200)}`;
+      onText("Voici votre demande pour l'équipe Leenkey. ");
+      return message(
+        [
+          text("Voici votre demande pour l'équipe Leenkey. "),
+          call("create_case", { propertyId, subject: "Demande d'un vendeur", summary }),
+        ],
+        "tool_use",
+      );
+    }
+    if (result.name === "create_case") {
+      if (result.content.includes('"sent":true')) return say("C'est transmis à l'équipe Leenkey.");
+      if (result.content.includes("cancelled")) return say("Très bien, je n'envoie rien.");
+      if (result.content.includes("contact_advisor")) {
+        return say("Votre formule comprend un conseiller : écrivez-lui plutôt.");
+      }
+      return say("La demande n'a pas pu être envoyée.");
+    }
+  }
+
   // contact_advisor (L1-34): « Transmettez ma question à mon conseiller ».
   if (/conseiller/i.test(asked)) {
     if (!result) return message([call("get_my_properties", {})], "tool_use");

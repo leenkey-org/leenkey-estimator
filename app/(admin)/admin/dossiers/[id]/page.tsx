@@ -215,10 +215,14 @@ export default async function AdminCasePage({ params }: Props) {
         ) : null}
 
         {item.aiSummary ? (
-          <Section id="resume" title={d.aiSummary}>
+          <Section id="resume" title={item.source === "manual" ? d.requestText : d.aiSummary}>
             <p className={`p-5 text-lk-secondary whitespace-pre-line text-lk-ink-2 ${box}`}>
               {item.aiSummary}
             </p>
+            {/* L1-31: a request, without a conversation with an adviser, is answered by email. */}
+            {item.source !== "plan_purchase" && !conversation && !item.account.deleted ? (
+              <p className="text-lk-caption text-lk-ink-3">{d.requestAnswer}</p>
+            ) : null}
           </Section>
         ) : null}
 

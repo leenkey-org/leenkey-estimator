@@ -54,6 +54,19 @@ function caseLink(data: Record<string, unknown>): string | null {
     : null;
 }
 
+/** A case asked by a user (create_case), not the case of a plan paid. */
+function isRequest(data: Record<string, unknown>): boolean {
+  return data.source === "assistant_handoff" || data.source === "manual";
+}
+
+/** « Alice D. »: who asks, « Sans nom » without a first name. */
+function accountLabel(data: Record<string, unknown>): string {
+  const first = text(data.first_name);
+  if (!first) return fr.adminUsers.noName;
+  const initial = text(data.last_initial);
+  return initial ? `${first} ${initial}.` : first;
+}
+
 /** « Vendeur, Acquéreur »: the roles of an account, as the back office names them. */
 export function roleLabels(roles: unknown): string {
   const labels = fr.adminUsers.roles;
@@ -175,13 +188,19 @@ const CATALOG: Record<string, Entry> = {
     icon: Folder,
     tone: "blue",
     filters: [],
+    // A plan paid (L1-26), or a request of a user to the team (create_case, L1-31).
     title: (data) =>
-      data.check === true
-        ? t.caseCreated.checkTitle(data.held === true)
-        : t.caseCreated.title(text(data.plan_name), data.upgrade === true),
+      isRequest(data)
+        ? t.caseCreated.requestTitle
+        : data.check === true
+          ? t.caseCreated.checkTitle(data.held === true)
+          : t.caseCreated.title(text(data.plan_name), data.upgrade === true),
     // Written with the list (L1-26): the sheet of the case since L1-30c.
     link: caseLink,
-    detail: (data) => t.caseCreated.detail(text(data.reference)),
+    detail: (data) =>
+      isRequest(data)
+        ? t.caseCreated.requestDetail(text(data.subject), accountLabel(data), text(data.reference))
+        : t.caseCreated.detail(text(data.reference)),
   },
   "plan.refunded": {
     icon: CircleAlert,

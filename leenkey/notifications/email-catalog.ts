@@ -5,6 +5,7 @@ import type { EmailPolicy, PlannedEmail, QueuedNotification } from "@/core/notif
 import { emailSafeText } from "@/core/notifications/user-text";
 import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
 import { AccountsCreatedEmail, accountsCreatedSubject } from "@/emails/accounts-created";
+import { CaseRequestsEmail, caseRequestsSubject } from "@/emails/case-requests";
 import { ListingToReviewEmail, listingToReviewSubject } from "@/emails/listing-submitted";
 import { ListingsToReviewEmail, listingsToReviewSubject } from "@/emails/listings-to-review";
 import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
@@ -39,6 +40,9 @@ const POLICIES: Record<string, EmailPolicy> = {
   "report.created": { audience: "team", throttleMinutes: 20 },
   // A new account, its email confirmed (2026-11-08): the first at once, the next ones together.
   "account.created": { audience: "team", throttleMinutes: 20 },
+  // A request to the team (create_case, L1-31): the first at once, the next ones together. The
+  // case of a plan paid has no email here (its own leaves with the payment, L1-26).
+  "case.created": { audience: "team", throttleMinutes: 20 },
   // A withdrawal to refund (L1-40): the first at once, the next ones together.
   "plan.withdrawn": { audience: "team", throttleMinutes: 20 },
   // A plan ending within 30 days (L1-40): once per plan (its own group).
@@ -238,6 +242,35 @@ async function accountsCreated(email: PlannedEmail): Promise<RenderedEmail | nul
   );
 }
 
+/**
+ * The property of a request: the reference of its listing, or, without a
+ * listing, its town, which its owner typed (made safe for a mail client).
+ */
+function requestProperty(value: unknown): string | null {
+  const reference = text(value);
+  if (!reference) return null;
+  return /^LK-\d+$/.test(reference) ? reference : emailSafeText(reference);
+}
+
+/** Requests written to the team (L1-31): who asks, for which property, about what. */
+async function caseRequests(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const [first] = email.items;
+  if (!first) return null;
+  const count = email.items.length;
+  return rendered(
+    caseRequestsSubject(count, requestProperty(first.data.reference)),
+    CaseRequestsEmail({
+      items: email.items.map((item) => ({
+        name: accountName(item),
+        reference: requestProperty(item.data.reference),
+        subject: emailSafeText(item.data.subject),
+      })),
+      url: absoluteUrl(count > 1 ? "/admin/dossiers" : (first.link ?? "/admin/dossiers")),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
 /** Withdrawals to refund (L1-40), to the team: one line each. */
 async function withdrawalsToProcess(email: PlannedEmail): Promise<RenderedEmail | null> {
   if (email.items.length === 0) return null;
@@ -305,6 +338,8 @@ export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEm
       return planEnding(email);
     case "account.created":
       return accountsCreated(email);
+    case "case.created":
+      return caseRequests(email);
     default:
       return Promise.resolve(null);
   }
