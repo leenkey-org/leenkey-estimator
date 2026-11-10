@@ -377,6 +377,11 @@ create table properties (
   dpe_date date,                        -- valable du 1er juillet 2021, 10 ans
   energy_cost_min_cents int, energy_cost_max_cents int,   -- min <= max
   energy_price_year smallint,           -- « prix moyens des énergies indexés au 1er janvier [année] »
+  -- L1-66 : numéro du DPE à l'ADEME (jamais public : il donne l'adresse), type de DPE, chiffres de l'étiquette
+  dpe_number text check (dpe_number ~ '^[0-9]{4}[A-Z][0-9]{7}[A-Z]$'),
+  dpe_kind text not null default 'logement' check (dpe_kind in ('logement','tertiaire')),  -- tertiaire : type « autre » seulement
+  energy_kwh_m2_year int,               -- consommation d'énergie primaire, kWh/m²/an
+  ges_kg_m2_year int,                   -- émissions, kg CO₂/m²/an
   estimation_id uuid,                   -- lien vers estimations(id) (FK ajoutée avec la table estimations, L1-04)
   estimation_value_cents bigint,
   estimation_low_cents bigint, estimation_high_cents bigint,
@@ -475,6 +480,27 @@ create table plans (
   features text[] not null,             -- liste affichée sur la page formules
   position int not null,
   active boolean not null default true
+);
+
+-- Règles du DPE (L1-66) : lues par property_dpe_issue et par le formulaire, modifiées en base par l'équipe
+-- (les règles changent de nouveau le 1er janvier 2027) ; premières lignes posées par la migration.
+create table dpe_rules (
+  kind text primary key check (kind in ('logement','tertiaire')),
+  valid_from date,                      -- un DPE antérieur est refusé (null : pas de date plancher)
+  validity_years smallint not null,
+  costs_required boolean not null,      -- fourchette des dépenses et année des prix
+  figures_required boolean not null,    -- consommation et émissions
+  excessive_classes text[] not null default '{}',  -- « Logement à consommation énergétique excessive »
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
+);
+create table dpe_exemption_reasons (     -- motifs d'exemption proposés au vendeur (« Autre motif » reste libre)
+  id uuid primary key default gen_random_uuid(),
+  label text not null unique,
+  position int not null,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
 );
 
 create table plan_entitlements (         -- droits fonctionnels par formule (le code ne teste jamais un nom de formule)
@@ -1194,6 +1220,8 @@ Préremplissage depuis l'estimateur : `InfoNote` « Repris de votre analyse de v
 
 DPE (L1-65, réponse de Cédric du 2026-11-09, `DECISIONS.md`) : à l'étape 2, un bloc « Diagnostic de performance énergétique (DPE) » : classes énergie et climat, date du DPE, fourchette des dépenses annuelles d'énergie (€ / an) et année de référence des prix ; ou « Mon bien n'est pas soumis au DPE » et le motif (Q77). Facultatif dans un brouillon ; exigé pour « Envoyer en validation » pour tous les types sauf le terrain (DPE du 1er juillet 2021 au plus tôt et de moins de 10 ans). L'aperçu le signale avant l'envoi, avec « Compléter le DPE ». Une fois l'annonce envoyée, un DPE complet le reste, et seule l'équipe déclare une exemption ou le passage en terrain (le vendeur nous écrit).
 
+Reprise du DPE à l'ADEME (L1-66, réponses de Cédric du 2026-11-10) : le vendeur saisit le numéro du DPE (13 caractères, « N° ADEME ») ; « Récupérer les informations de mon DPE » interroge les données ouvertes de l'ADEME et remplit les classes, la date, la consommation (kWh/m²/an) et les émissions (kg CO₂/m²/an), qu'il vérifie ; il saisit la fourchette des dépenses et l'année des prix, que le registre ne donne pas. Numéro inconnu, registre injoignable, DPE enregistré pour un autre code postal : dit, sans bloquer la saisie. Pour un « Autre bien », le vendeur choisit le type de DPE : logement, ou tertiaire (local professionnel : ni dépenses ni année des prix, consommation et émissions recommandées). Ce qui est exigé pour l'envoi suit la règle du type de DPE (`dpe_rules`) : le numéro toujours ; pour un logement, la consommation, les émissions, les dépenses et l'année des prix. Les motifs d'exemption proposés viennent de `dpe_exemption_reasons`.
+
 Sauvegarde automatique à chaque étape (statut `draft`). Bouton « Enregistrer » explicite en haut.
 
 Fin : « Envoyer en validation » → statut `pending`, écran de fin sur `BrandPanel` : « C'est envoyé. Nous relisons votre annonce sous 24 h et vous prévenons par email. »
@@ -1226,7 +1254,7 @@ Ordre du contenu (mise en page mobile et desktop : `docs/DESIGN.md` 12.7 et 12.8
 5. Description (repliée à 6 lignes sur mobile).
 6. **« Ce que vous savez avant de visiter »** : une seule `KeyFactsTable` qui regroupe les caractéristiques complètes et les informations utiles avant visite : charges, taxe foncière, lots, travaux votés et procédures (issus de l'analyse des documents en L3 ; « Non renseigné » sinon), documents disponibles avec « Demander l'accès ». En desktop, la carte vient sous la `KeyFactsTable`, sur la largeur de la colonne (`docs/DESIGN.md` 12.8, L1-16).
 7. Carte avec la zone approximative (cercle de 400 m de rayon autour de `public_location`), jamais l'adresse, et « Voir la rue » (Street View le plus proche du point public), chargée quand le bloc approche de l'écran, sans clic (L1-16, L1-63).
-7 bis. **Informations réglementaires** (L1-65), sous les caractéristiques : « Bien non soumis au DPE. », ou « Logement à consommation énergétique excessive. » (classes F et G), la fourchette des dépenses annuelles d'énergie avec l'année des prix (« abonnements compris »), la date du DPE ; pour toutes les annonces, terrain compris : « Les informations sur les risques auxquels ce bien est exposé sont disponibles sur le site Géorisques : www.georisques.gouv.fr » (lien). Le motif d'une exemption n'est pas public.
+7 bis. **Informations réglementaires** (L1-65, L1-66), sous les caractéristiques : « Non soumis au DPE (motif : …). » (le motif relu par l'équipe), ou, pour un logement, « Logement à consommation énergétique excessive. » (classes de `dpe_rules` : F et G) et la fourchette des dépenses annuelles d'énergie avec l'année des prix (« abonnements compris ») ; un local professionnel (DPE tertiaire) n'a ni l'une ni l'autre ; pour toutes les annonces, terrain compris : « Les informations sur les risques auxquels ce bien est exposé sont disponibles sur le site Géorisques : www.georisques.gouv.fr » (lien). La consommation (kWh/m²/an) et les émissions (kg CO₂/m²/an) figurent parmi les caractéristiques, avec les classes. La date et le numéro du DPE ne sont jamais publics : avec la commune et les classes, les données ouvertes de l'ADEME donnent l'adresse du bien.
 8. Résumé de l'assistant (L2) : 2 phrases factuelles générées à la publication, stockées, régénérées à chaque modification. `AssistantNote` (encart `--lk-blue-tint`) ; en desktop, sous la `PriceColumn`.
 9. Barre d'action : mobile, `ActionBar` fixée en bas (« Contacter le vendeur » + bouton visite) ; desktop, `PriceColumn` collante à droite avec `PriceBlock`, `ContactCard` et les boutons « Contacter le vendeur », « Demander une visite », « Faire une offre » (L2).
 
@@ -1819,7 +1847,7 @@ Onglet « Documents » de la fiche du bien :
   - **Maison (11)** : DPE, amiante, plomb, électricité, gaz, ERP, termites, assainissement (non collectif ou contrôle de raccordement), titre de propriété, taxe foncière, factures des travaux de moins de 10 ans.
   - **Terrain (4)** : ERP, titre de propriété, taxe foncière, certificat d'urbanisme ou bornage si disponible.
   - Les diagnostics conditionnels (amiante, plomb, gaz, termites) sont marqués « non concerné » par le vendeur quand ils ne s'appliquent pas ; ils comptent alors comme présents. Le badge « Dossier complet » n'est affiché qu'à partir du lot 3.
-  - **Diagnostics personnalisés** (amendement de L3-04 proposé par Cédric le 2026-11-09, Q77 ; ajout de périmètre au lot 3, **à arbitrer par Younes** avant L3-04) : la liste des diagnostics se calcule à partir de six réponses du vendeur (type de bien, année de construction ou du permis, installation électrique et son âge, gaz et son âge, assainissement collectif ou non, adresse et classe énergie). Chaque diagnostic a l'un de trois statuts : « Document fourni », « À fournir », « Non concerné » (coché par le vendeur). Règles : DPE (sauf terrain) ; audit énergétique pour une maison ou un immeuble en monopropriété classé F ou G, et E depuis 2025 ; amiante (permis de construire avant le 1er juillet 1997) ; plomb (construction avant 1949) ; électricité et gaz (installation de plus de 15 ans) ; termites et mérule (zones arrêtées par la préfecture) ; ERP (tous) ; assainissement non collectif ; bruit (zone d'un plan d'exposition au bruit d'aérodrome). Autres pièces proposées selon le type : mesurage Carrez (lot de copropriété), surface Boutin (bien loué), étude de sol G1 (terrain constructible en zone d'aléa argile), DTA, DPE collectif, DTG, PPPT, carnet d'information du logement, rapport structurel. Libellé : « potentiellement obligatoire selon vos réponses, à confirmer par votre diagnostiqueur certifié » ; Leenkey n'affirme jamais qu'un diagnostic est ou n'est pas obligatoire. Contrôle Géorisques à partir de l'adresse : `BACKLOG-V3.md` (2026-11-09).
+  - **Diagnostics personnalisés** (amendement de L3-04 proposé par Cédric le 2026-11-09, Q77 ; ajout de périmètre au lot 3, **à arbitrer par Younes** avant L3-04) : la liste des diagnostics se calcule à partir de six réponses du vendeur (type de bien, année de construction ou du permis, installation électrique et son âge, gaz et son âge, assainissement collectif ou non, adresse et classe énergie). Chaque diagnostic a l'un de trois statuts : « Document fourni », « À fournir », « Non concerné » (coché par le vendeur). Règles : DPE (sauf terrain) ; audit énergétique pour une maison ou un immeuble en monopropriété classé F ou G, et E depuis 2025 ; amiante (permis de construire avant le 1er juillet 1997) ; plomb (construction avant 1949) ; électricité et gaz (installation de plus de 15 ans) ; termites et mérule (zones arrêtées par la préfecture) ; ERP (tous) ; assainissement non collectif ; bruit (zone d'un plan d'exposition au bruit d'aérodrome). Autres pièces proposées selon le type : mesurage Carrez (lot de copropriété), surface Boutin (bien loué), étude de sol G1 (terrain constructible en zone d'aléa argile), DTA, DPE collectif, DTG, PPPT, carnet d'information du logement, rapport structurel. Libellé : « potentiellement obligatoire selon vos réponses, à confirmer par votre diagnostiqueur certifié » ; Leenkey n'affirme jamais qu'un diagnostic est ou n'est pas obligatoire. Contrôle Géorisques à partir de l'adresse : `BACKLOG-V3.md` (2026-11-09). Précisions de Cédric du 2026-11-10 : « Non concerné » se donne avec une justification ; ces diagnostics s'ajoutent progressivement, sans jamais bloquer la publication (seul le DPE, ou son exemption vérifiée, la conditionne). Le DPE se dépose en PDF, ainsi que l'attestation de nouvelle étiquette énergétique d'un DPE actualisé (2024, 2026) : le back office les montre à côté du contrôle ADEME de L1-66.
 - Partage : par document ou par lot (« Partager les diagnostics »), à un acquéreur ayant une relation avec le bien. Demandes d'accès des acquéreurs listées en tête avec Accorder / Refuser.
 
 ### Analyse IA
@@ -1889,6 +1917,7 @@ Maquettes : `AdminAnnonces.dc.html`, `AdminDesktop.dc.html`. Conçu desktop d'ab
 - Filtres par statut avec compteurs, recherche (référence, ville, vendeur), export CSV.
 - Tableau : bien (vignette, titre, ville), vendeur, prix, formule, date de réception, pré-analyse (pastille verte ou orange + phrase).
 - Détail `/admin/annonces/[id]` (en desktop, panneau de détail à droite de 420 px, `docs/DESIGN.md` 13.1) : aperçu exact de l'annonce, pré-analyse complète, historique (`audit_log`), actions :
+- Contrôle du DPE (L1-65, L1-66) sur le détail : motif d'une exemption à vérifier avant de publier (inscrit dans l'historique à la publication) ; avertissement quand une annonce en attente n'a pas de DPE valable (la publication est refusée) ; comparaison de la saisie du vendeur avec l'enregistrement du DPE à l'ADEME (classes, date, consommation, émissions, code postal, fin de validité), différences signalées, lien vers l'observatoire de l'ADEME.
   - **Valider et publier** → `published`, email vendeur, `listing.published`.
   - **Refuser avec motif** → `rejected`, motif obligatoire (modèles de motifs + texte libre, bouton « Rédiger avec l'assistant »), email au vendeur. Le vendeur corrige et renvoie.
   - **Suspendre** (motif obligatoire, email au vendeur) → `suspended` ; **Remettre en ligne** → `published`. Le vendeur voit l'annonce en lecture seule avec le motif et un lien vers la messagerie conseiller ou le formulaire de contact ; il ne peut pas la remettre en ligne lui-même.
@@ -2136,6 +2165,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | L1-33 | `plan_entitlements`, `hasEntitlement`, contenu des formules dans `plans`, page formules avec tableau comparatif | L1-26 | Aucun test de droit ne compare un nom de formule ; un vendeur Autonomie va jusqu'à la publication sans blocage |
 | L1-34 | Conversation conseiller, version simple : `kind = 'advisor'` sur la messagerie existante (mêmes écrans, mêmes composants), créée au webhook de paiement, épinglée en tête de liste côté vendeur, vue admin `/admin/messages` (liste filtrée), outil IA `contact_advisor` | L1-21, L1-26 | Après paiement test, le vendeur et l'admin échangent en temps réel |
 | L1-65 | DPE exigé pour l'envoi en validation (Q47, Q67 tranchées par Cédric le 2026-11-09) : exemption et son motif, date, fourchette des dépenses et année des prix ; mentions réglementaires et lien Géorisques sur la page annonce | L1-13, L1-60 | Un brouillon s'enregistre sans DPE ; l'envoi et la publication sont refusés sans DPE valable (RLS : `rls_dpe_publication.sql`) ; la page annonce montre les mentions |
+| L1-66 | DPE repris du registre de l'ADEME par son numéro (réponses de Cédric du 2026-11-10 à Q77) : numéro, consommation, émissions ; DPE tertiaire ; règles et motifs d'exemption en base ; « Non soumis au DPE (motif : …) » ; contrôle ADEME dans le back office | L1-65 | Le numéro d'un DPE remplit l'étape 2 ; une règle modifiée en base s'applique sans déploiement (RLS : `rls_dpe_registry_rules.sql`) ; ni la date ni le numéro du DPE ne sont publics |
 | L1-32 | Recette interne lot 1 : E2E 1, 2, 3, 7 verts, Lighthouse, axe, revue RLS | tout L1 | Tag `v2.0.0-lot1`, déploiement staging, `docs/RECETTE.md` à jour avec comptes et scénarios |
 
 ### Semaines 6 et 7 : lot 2

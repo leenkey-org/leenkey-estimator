@@ -40,6 +40,10 @@ const characteristics: SellerProperty["characteristics"] = {
   energyCostMinEuros: null,
   energyCostMaxEuros: null,
   energyPriceYear: null,
+  dpeNumber: null,
+  dpeKind: "logement",
+  energyKwhM2Year: null,
+  gesKgM2Year: null,
 };
 
 const listing: NonNullable<SellerProperty["listing"]> = {

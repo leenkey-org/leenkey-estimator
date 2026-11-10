@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -14,6 +15,10 @@ import {
   ListingModeration,
   ModerationFeedback,
 } from "@/leenkey/admin/components/listing-moderation";
+import {
+  DpeRegistryCheck,
+  DpeRegistryPending,
+} from "@/leenkey/admin/components/dpe-registry-check";
 import { OutOfZoneFlag } from "@/leenkey/admin/components/listing-place";
 import { adminListing } from "@/leenkey/admin/queries";
 import { RegulatoryMentions } from "@/leenkey/listings/components/listing-body";
@@ -23,7 +28,6 @@ import { galleryPhotos, listingKeyFigures } from "@/leenkey/listings/presentatio
 import { capitalize, formatDateShort, formatDateTime, formatRelative } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { adminListingsHref } from "@/lib/validations/admin";
-import { dpeIssue } from "@/lib/validations/property";
 import { AdminPage } from "../../_components/admin-page";
 
 const t = fr.adminListings;
@@ -130,28 +134,26 @@ export default async function AdminListingPage({ params }: Props) {
               <p className="text-lk-secondary whitespace-pre-line">{reason.text}</p>
             </div>
           ) : null}
-          {detail.status === "pending" &&
-          dpeIssue({
-            type: listing.type,
-            dpe: listing.dpe,
-            ges: listing.ges,
-            dpeExempt: listing.energy.exempt,
-            dpeExemptionReason: detail.dpeExemptionReason,
-            dpeDate: listing.energy.date,
-            // Only whether they are known matters here, not the unit.
-            energyCostMinEuros: listing.energy.costMinCents,
-            energyCostMaxEuros: listing.energy.costMaxCents,
-            energyPriceYear: listing.energy.priceYear,
-          }) ? (
+          {detail.status === "pending" && detail.dpe.issue ? (
             <InlineAlert tone="warning" live={false}>
               {t.detail.dpeMissing}
             </InlineAlert>
           ) : null}
-          {detail.dpeExemptionReason ? (
+          {detail.dpe.exemptionReason ? (
             <div className="rounded-lk-md bg-lk-warning-bg px-4 py-3 text-lk-warning-fg">
               <p className="text-lk-caption font-semibold">{t.detail.dpeExemption}</p>
-              <p className="text-lk-secondary whitespace-pre-line">{detail.dpeExemptionReason}</p>
+              <p className="text-lk-secondary whitespace-pre-line">{detail.dpe.exemptionReason}</p>
             </div>
+          ) : null}
+          {/* Its DPE against the register of ADEME (L1-66), while the team decides. */}
+          {detail.dpe.number && (detail.status === "pending" || detail.status === "published") ? (
+            <Suspense fallback={<DpeRegistryPending number={detail.dpe.number} />}>
+              <DpeRegistryCheck
+                number={detail.dpe.number}
+                date={detail.dpe.date}
+                listing={listing}
+              />
+            </Suspense>
           ) : null}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <ListingModeration
@@ -205,6 +207,11 @@ export default async function AdminListingPage({ params }: Props) {
                   {entry.reason ? (
                     <p className="text-lk-secondary whitespace-pre-line text-lk-ink-2">
                       {t.history.reason(entry.reason)}
+                    </p>
+                  ) : null}
+                  {entry.dpeExemption ? (
+                    <p className="text-lk-secondary whitespace-pre-line text-lk-ink-2">
+                      {t.history.dpeExemption(entry.dpeExemption)}
                     </p>
                   ) : null}
                 </li>

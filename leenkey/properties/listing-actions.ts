@@ -15,6 +15,7 @@ import {
 import { dpeIssue, missingCharacteristics, type DpeIssue } from "@/lib/validations/property";
 import type { TablesInsert } from "@/types/database";
 import { inCreation } from "./creation";
+import { getDpeSettings } from "./dpe-rules";
 import { readDraft } from "./drafts";
 import { emailListingSubmitted } from "./listing-emails";
 
@@ -175,7 +176,7 @@ export async function submitListing(input: unknown): Promise<SubmitListingResult
   const { data: listing, error } = await supabase
     .from("listings")
     .select(
-      "id, reference, title, description, property:properties!inner(type, surface_m2, rooms, dpe_class, ges_class, dpe_exempt, dpe_exemption_reason, dpe_date, energy_cost_min_cents, energy_cost_max_cents, energy_price_year)",
+      "id, reference, title, description, property:properties!inner(type, surface_m2, rooms, dpe_class, ges_class, dpe_exempt, dpe_exemption_reason, dpe_date, energy_cost_min_cents, energy_cost_max_cents, energy_price_year, dpe_number, dpe_kind, energy_kwh_m2_year, ges_kg_m2_year)",
     )
     .eq("property_id", propertyId)
     .is("deleted_at", null)
@@ -198,18 +199,28 @@ export async function submitListing(input: unknown): Promise<SubmitListingResult
   if (missingCharacteristics(characteristics).length > 0) {
     return { ok: false, error: "characteristics" };
   }
-  const issue = dpeIssue({
-    type: property.type,
-    dpe: property.dpe_class,
-    ges: property.ges_class,
-    dpeExempt: property.dpe_exempt,
-    dpeExemptionReason: property.dpe_exemption_reason,
-    dpeDate: property.dpe_date,
-    // Only whether they are known matters here, not the unit.
-    energyCostMinEuros: property.energy_cost_min_cents,
-    energyCostMaxEuros: property.energy_cost_max_cents,
-    energyPriceYear: property.energy_price_year,
-  });
+  // The rules of the base (dpe_rules), as listing_submit applies them.
+  const dpe = await getDpeSettings();
+  if (!dpe) return { ok: false, error: "unavailable" };
+  const issue = dpeIssue(
+    {
+      type: property.type,
+      dpe: property.dpe_class,
+      ges: property.ges_class,
+      dpeExempt: property.dpe_exempt,
+      dpeExemptionReason: property.dpe_exemption_reason,
+      dpeDate: property.dpe_date,
+      // Only whether they are known matters here, not the unit.
+      energyCostMinEuros: property.energy_cost_min_cents,
+      energyCostMaxEuros: property.energy_cost_max_cents,
+      energyPriceYear: property.energy_price_year,
+      dpeNumber: property.dpe_number,
+      dpeKind: property.dpe_kind,
+      energyKwhM2Year: property.energy_kwh_m2_year,
+      gesKgM2Year: property.ges_kg_m2_year,
+    },
+    dpe.rules,
+  );
   if (issue) return { ok: false, error: "dpe", issue };
 
   const sent = await supabase.rpc("listing_submit", { p_listing_id: listing.id });

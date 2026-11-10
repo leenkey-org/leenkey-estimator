@@ -3,9 +3,11 @@ import { cache } from "react";
 import { requireAdmin } from "@/core/auth/session";
 import { LISTING_PROPERTY_COLUMNS, listingForPage, planOf } from "@/leenkey/listings/listing-row";
 import type { PublicListing } from "@/leenkey/listings/queries";
+import { getDpeSettings } from "@/leenkey/properties/dpe-rules";
 import { createClient } from "@/lib/supabase/server";
 import { chunk } from "@/lib/utils";
 import type { AdminListingsQuery } from "@/lib/validations/admin";
+import { dpeIssue, type DpeIssue } from "@/lib/validations/property";
 import type { Database } from "@/types/database";
 
 // Reads of the back office of the listings (L1-19), with the admin's session:
@@ -48,6 +50,8 @@ export type AdminHistoryEntry = {
   at: string;
   actorName: string | null;
   reason: string | null;
+  /** The motive of an exemption of DPE read at the publication (L1-66). */
+  dpeExemption: string | null;
 };
 
 export type AdminListingDetail = {
@@ -58,8 +62,18 @@ export type AdminListingDetail = {
   suspendedAt: string | null;
   rejectionReason: string | null;
   suspensionReason: string | null;
-  /** Not subject to the DPE: the motive given by the seller, read at the review (L1-65). */
-  dpeExemptionReason: string | null;
+  /**
+   * The DPE as the team checks it before publishing (L1-65, L1-66): what the
+   * rules still miss (null: nothing, or the rules could not be read), the
+   * motive of an exemption, the number to compare with the register of ADEME
+   * and what the seller entered.
+   */
+  dpe: {
+    issue: DpeIssue | null;
+    exemptionReason: string | null;
+    number: string | null;
+    date: string | null;
+  };
   sellerName: string | null;
   plan: PlanCode;
   history: AdminHistoryEntry[];
@@ -172,7 +186,7 @@ export async function adminListingCounts(): Promise<QueryResult<AdminListingCoun
 }
 
 const DETAIL_COLUMNS =
-  `id, reference, slug, title, description, price_cents, status, created_at, submitted_at, published_at, suspended_at, rejection_reason, suspension_reason, property:properties!inner(${LISTING_PROPERTY_COLUMNS}, dpe_exemption_reason)` as const;
+  `id, reference, slug, title, description, price_cents, status, created_at, submitted_at, published_at, suspended_at, rejection_reason, suspension_reason, property:properties!inner(${LISTING_PROPERTY_COLUMNS}, dpe_date, dpe_number)` as const;
 
 /**
  * One listing with its seller, plan and decisions; null when unknown or
@@ -193,7 +207,7 @@ export const adminListing = cache(async function adminListing(
     if (error) throw new Error(`listings: ${error.code} ${error.message}`);
     if (!row || row.property.deleted_at) return { ok: true, data: null };
 
-    const [audit, advisorPlans] = await Promise.all([
+    const [audit, advisorPlans, dpeSettings] = await Promise.all([
       supabase
         .from("audit_log")
         .select("id, action, actor_id, created_at, meta")
@@ -203,6 +217,7 @@ export const adminListing = cache(async function adminListing(
         .limit(50),
       // « Vente accompagnée » is a right of the plan, never a plan name (CLAUDE.md 14).
       supabase.from("plan_entitlements").select("plan").eq("feature", "advisor"),
+      getDpeSettings(),
     ]);
     if (audit.error) throw new Error(`audit_log: ${audit.error.code} ${audit.error.message}`);
     if (advisorPlans.error) {
@@ -233,24 +248,50 @@ export const adminListing = cache(async function adminListing(
     return {
       ok: true,
       data: {
-        listing: listingForPage(row, property, accompanied),
+        listing: listingForPage(row, property, accompanied, dpeSettings?.rules ?? null),
         status: row.status,
         createdAt: row.created_at,
         submittedAt: row.submitted_at,
         suspendedAt: row.suspended_at,
         rejectionReason: row.rejection_reason,
         suspensionReason: row.suspension_reason,
-        dpeExemptionReason: property.dpe_exempt ? property.dpe_exemption_reason : null,
+        dpe: {
+          issue: dpeSettings
+            ? dpeIssue(
+                {
+                  type: property.type,
+                  dpe: property.dpe_class,
+                  ges: property.ges_class,
+                  dpeExempt: property.dpe_exempt,
+                  dpeExemptionReason: property.dpe_exemption_reason,
+                  dpeDate: property.dpe_date,
+                  // Only whether they are known matters here, not the unit.
+                  energyCostMinEuros: property.energy_cost_min_cents,
+                  energyCostMaxEuros: property.energy_cost_max_cents,
+                  energyPriceYear: property.energy_price_year,
+                  dpeNumber: property.dpe_number,
+                  dpeKind: property.dpe_kind,
+                  energyKwhM2Year: property.energy_kwh_m2_year,
+                  gesKgM2Year: property.ges_kg_m2_year,
+                },
+                dpeSettings.rules,
+              )
+            : null,
+          exemptionReason: property.dpe_exempt ? property.dpe_exemption_reason : null,
+          number: property.dpe_number,
+          date: property.dpe_date,
+        },
         sellerName,
         plan,
         history: audit.data.map((entry) => {
-          const meta = entry.meta as { reason?: unknown } | null;
+          const meta = entry.meta as { reason?: unknown; dpe_exemption?: unknown } | null;
           return {
             id: entry.id,
             action: entry.action,
             at: entry.created_at,
             actorName: entry.actor_id ? (actors.get(entry.actor_id) ?? null) : null,
             reason: typeof meta?.reason === "string" ? meta.reason : null,
+            dpeExemption: typeof meta?.dpe_exemption === "string" ? meta.dpe_exemption : null,
           };
         }),
       },

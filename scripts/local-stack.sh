@@ -166,6 +166,8 @@ SQL
     echo "export NEXT_PUBLIC_SITE_URL=$APP_URL NEXT_PUBLIC_ENV=local"
     # Addresses from core/geo/address-fixtures.ts: the tests know them.
     echo "export GEOCODER=fixtures"
+    # DPE from leenkey/properties/dpe-record.ts, as the register of ADEME would answer.
+    echo "export DPE_REGISTRY=fixtures"
     echo "export SEED_PASSWORD=$(cat $DIR/seed_password) MAILPIT_URL=http://127.0.0.1:$MAIL_UI BASE_URL=$APP_URL"
     # The jobs of /api/cron/* (L1-22): their secret, and the service key of the stack.
     echo "export CRON_SECRET=$(cat $DIR/cron_secret 2>/dev/null) SUPABASE_SERVICE_ROLE_KEY=$(jwt service_role)"

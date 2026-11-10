@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CharacteristicsStep } from "@/leenkey/properties/components/characteristics-step";
 import { CreationBody, CreationLoadError } from "@/leenkey/properties/components/creation-page";
 import { EditHeader } from "@/leenkey/properties/components/edit-header";
+import { getDpeSettings } from "@/leenkey/properties/dpe-rules";
 import { propertyForEdit } from "@/leenkey/properties/load";
 import { savedHref, sheetHref } from "@/leenkey/properties/sheet";
 import { fr } from "@/lib/i18n/fr";
@@ -17,17 +18,21 @@ type Props = { params: Promise<{ id: string }> };
 // photos change in their tab, its address no longer changes.
 export default async function EditCharacteristicsPage({ params }: Props) {
   const { id } = await params;
-  const property = await propertyForEdit(id, "caracteristiques");
+  const [property, dpe] = await Promise.all([
+    propertyForEdit(id, "caracteristiques"),
+    getDpeSettings(),
+  ]);
   const back = sheetHref(id);
   return (
     <>
       <EditHeader backHref={back} />
-      {property ? (
+      {property && dpe ? (
         <CreationBody>
           <CharacteristicsStep
             propertyId={property.id}
             initial={property.characteristics}
             photos={[]}
+            dpe={dpe}
             note={t.note[property.listingStatus]}
             edit={{ cancelHref: back, doneHref: savedHref(id) }}
           />

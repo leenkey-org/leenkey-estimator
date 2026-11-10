@@ -3,6 +3,7 @@ import {
   ArrowUpDown,
   BedDouble,
   Building2,
+  Cloud,
   Compass,
   DoorOpen,
   Factory,
@@ -20,11 +21,12 @@ import {
   SquareDashed,
   SquareParking,
   Trees,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import type { PublicListing } from "./queries";
 import type { KeyFact } from "@/components/shared/key-facts-table";
-import { formatPrice, formatSurface } from "@/lib/format";
+import { formatInteger, formatPrice, formatSurface } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 
 // « Ce que vous savez avant de visiter » (SPEC-V2 8.5): one table with the
@@ -61,8 +63,12 @@ export type FactsInput = Pick<
   | "propertyTaxYearlyCents"
   | "coproLots"
 > & {
-  /** « Non soumis au DPE » in place of its classes (L1-65). */
-  energy?: Pick<PublicListing["energy"], "exempt">;
+  /**
+   * « Non soumis au DPE » in place of its classes (L1-65); the energy used
+   * and the emissions of its label, when the DPE gives them (L1-66).
+   */
+  energy?: Pick<PublicListing["energy"], "exempt"> &
+    Partial<Pick<PublicListing["energy"], "kwhM2Year" | "gesKgM2Year">>;
 };
 
 // Groups and pictograms of the grid of the listing page (KeyFactsGrid, L1-55);
@@ -87,6 +93,8 @@ const PRESENTATION: Record<string, { icon: LucideIcon; section: string }> = {
   [t.procedures]: { icon: Scale, section: COSTS },
   [t.dpe]: { icon: Leaf, section: ENERGY },
   [t.ges]: { icon: Factory, section: ENERGY },
+  [t.energyUse]: { icon: Zap, section: ENERGY },
+  [t.gesEmissions]: { icon: Cloud, section: ENERGY },
   [t.heating]: { icon: Flame, section: ENERGY },
   [t.type]: { icon: House, section: PROPERTY },
   [t.surface]: { icon: Ruler, section: PROPERTY },
@@ -219,6 +227,13 @@ export function listingKeyFacts(
     taxes,
     fact(t.dpe, listing.energy?.exempt ? t.notSubject : listing.dpe),
     fact(t.ges, listing.energy?.exempt ? t.notSubject : listing.ges),
+    // Shown when the DPE gives them: an older listing is not marked incomplete for it.
+    listing.energy?.kwhM2Year != null
+      ? fact(t.energyUse, t.energyUseValue(formatInteger(listing.energy.kwhM2Year)))
+      : null,
+    listing.energy?.gesKgM2Year != null
+      ? fact(t.gesEmissions, t.gesEmissionsValue(formatInteger(listing.energy.gesKgM2Year)))
+      : null,
     fact(t.heating, listing.heating),
     fact(t.type, fr.search.types[listing.type]),
     fact(t.surface, formatSurface(listing.surfaceM2)),

@@ -8,6 +8,7 @@ import { CreationHeader } from "@/leenkey/properties/components/creation-header"
 import { CreationLoadError } from "@/leenkey/properties/components/creation-page";
 import { SubmitListing } from "@/leenkey/properties/components/submit-listing";
 import { creationStep } from "@/leenkey/properties/creation";
+import { getDpeSettings } from "@/leenkey/properties/dpe-rules";
 import { propertyForCreation } from "@/leenkey/properties/load";
 import { sellerListingPreview } from "@/leenkey/properties/preview";
 import { fr } from "@/lib/i18n/fr";
@@ -37,8 +38,15 @@ export default async function PropertyPreviewPage({ params }: Props) {
       save={false}
     />
   );
-  const preview = property ? await sellerListingPreview(property.id) : null;
-  if (!property || !preview?.ok || (preview.data === null && property.listing !== null)) {
+  const [preview, settings] = property
+    ? await Promise.all([sellerListingPreview(property.id), getDpeSettings()])
+    : [null, null];
+  if (
+    !property ||
+    !preview?.ok ||
+    !settings ||
+    (preview.data === null && property.listing !== null)
+  ) {
     return (
       <>
         {header}
@@ -49,7 +57,7 @@ export default async function PropertyPreviewPage({ params }: Props) {
   const step = creationStep(property.characteristics, property.listing);
   if (step !== "apercu" || !preview.data) redirect(`/vendeur/biens/${id}/${step}`);
   const listing = preview.data;
-  const dpe = dpeIssue(property.characteristics);
+  const dpe = dpeIssue(property.characteristics, settings.rules);
   return (
     <>
       {header}

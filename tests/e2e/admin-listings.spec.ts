@@ -266,5 +266,13 @@ test.describe("téléphone", () => {
     await expect(page).toHaveURL(/\/admin\/annonces\/[0-9a-f-]{36}$/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("heading", { level: 1 })).not.toHaveText("Annonces");
+    // Its DPE is checked against the register of ADEME (L1-66): the number of
+    // the seed is unknown to it, which the sheet says.
+    await expect(
+      page.getByText(/^Le DPE n° 2606E1000006A n'est pas dans les données ouvertes de l'ADEME/),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Ouvrir l'observatoire DPE de l'ADEME" }),
+    ).toHaveAttribute("href", "https://observatoire-dpe-audit.ademe.fr");
   });
 });

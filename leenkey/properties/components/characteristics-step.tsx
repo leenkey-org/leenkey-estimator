@@ -14,9 +14,11 @@ import { Input } from "@/components/shared/input";
 import { SegmentedPicker } from "@/components/shared/segmented-picker";
 import { Select } from "@/components/shared/select";
 import { UnitInput } from "@/components/shared/unit-input";
+import { formatDay } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import {
-  DPE_VALID_FROM,
+  DPE_KINDS,
+  DPE_NUMBER,
   dpeOutdated,
   forType,
   HEATING_OPTIONS,
@@ -25,11 +27,15 @@ import {
   PROPERTY_FEATURES,
   type Characteristics,
   type CharacteristicsField,
+  type DpeKind,
   parisToday,
   type PropertyFeature,
 } from "@/lib/validations/property";
 import { DPE_CLASSES, PROPERTY_TYPES } from "@/lib/validations/search";
 import { saveCharacteristics, type SaveCharacteristicsResult } from "../actions";
+import { findDpe, type FindDpeResult } from "../dpe-actions";
+import type { DpeRecord } from "../dpe-record";
+import type { DpeSettings } from "../dpe-rules";
 import type { SellerPhoto } from "../photos";
 import { PhotoUploader } from "./photo-uploader";
 import { CREATION_FORM_ID, intentOf, submitWithEnter, type StepEdit } from "./creation-header";
@@ -49,11 +55,22 @@ const edits = fr.properties.edit;
 // tab), « Annuler » and « Enregistrer », always complete. The DPE (L1-65)
 // in one block where Bien.png shows it: the classes, its date, the range of
 // the costs and the year of the prices, or « non soumis » and its motive;
-// optional here, asked to send the listing for review.
+// optional here, asked to send the listing for review. Its number (L1-66)
+// takes the classes, the date and the figures from the register of ADEME;
+// they stay typed when the register has none or does not answer. What is
+// asked follows the rule of its kind (dpe_rules): business premises have no
+// cost range.
 
 type NumberField = Exclude<
   CharacteristicsField,
-  "type" | "dpe" | "ges" | "heating" | "dpeExemptionReason" | "dpeDate" | "energyPriceYear"
+  | "type"
+  | "dpe"
+  | "ges"
+  | "heating"
+  | "dpeExemptionReason"
+  | "dpeDate"
+  | "energyPriceYear"
+  | "dpeNumber"
 >;
 type PropertyType = (typeof PROPERTY_TYPES)[number];
 
@@ -70,6 +87,8 @@ const NUMBER_FIELDS: readonly NumberField[] = [
   "coproLots",
   "energyCostMinEuros",
   "energyCostMaxEuros",
+  "energyKwhM2Year",
+  "gesKgM2Year",
 ];
 
 const text = (value: number | null) => (value === null ? "" : String(value).replace(".", ","));
@@ -78,6 +97,15 @@ const amountText = (value: number | null) =>
   value === null || Number.isInteger(value) ? text(value) : value.toFixed(2).replace(".", ",");
 const AMOUNT_FIELDS: readonly NumberField[] = ["chargesMonthlyEuros", "propertyTaxYearlyEuros"];
 const COST_FIELDS: readonly NumberField[] = ["energyCostMinEuros", "energyCostMaxEuros"];
+const FIGURE_FIELDS: readonly NumberField[] = ["energyKwhM2Year", "gesKgM2Year"];
+
+/** What the register of ADEME answered for the number typed. */
+type Lookup =
+  | { status: "found"; record: DpeRecord; samePostalCode: boolean }
+  | { status: "unknown" | "unavailable" | "premises" };
+
+/** « 1er juillet 2021 », as a rule is written. */
+const ruleDay = (day: string) => formatDay(day).replace(/^1 /, "1er ");
 
 const energy = fr.properties.characteristics.energy;
 const OTHER_REASON = "other";
@@ -91,12 +119,15 @@ export function CharacteristicsStep({
   propertyId,
   initial,
   photos,
+  dpe: settings,
   note,
   edit,
 }: {
   propertyId: string;
   initial: Omit<Characteristics, "propertyId">;
   photos: SellerPhoto[];
+  /** The rules of the DPE and the motives of exemption, as the base holds them. */
+  dpe: DpeSettings;
   /**
    * « Repris de votre analyse de valeur du … » (L1-13b, docs/DESIGN.md 12.2);
    * once sent, what a change means for the listing (L1-14b).
@@ -121,9 +152,7 @@ export function CharacteristicsStep({
   const [ges, setGes] = useState(initial.ges);
   const [heating, setHeating] = useState(initial.heating);
   const [dpeExempt, setDpeExempt] = useState(initial.dpeExempt);
-  const listedReason = (energy.reasons as readonly string[]).includes(
-    initial.dpeExemptionReason ?? "",
-  );
+  const listedReason = settings.reasons.includes(initial.dpeExemptionReason ?? "");
   const [reason, setReason] = useState(
     initial.dpeExemptionReason === null
       ? ""
@@ -135,6 +164,10 @@ export function CharacteristicsStep({
     listedReason ? "" : (initial.dpeExemptionReason ?? ""),
   );
   const [dpeDate, setDpeDate] = useState(initial.dpeDate ?? "");
+  const [dpeNumber, setDpeNumber] = useState(initial.dpeNumber ?? "");
+  const [dpeKind, setDpeKind] = useState<DpeKind>(initial.dpeKind);
+  const [lookup, setLookup] = useState<Lookup | null>(null);
+  const [looking, startLooking] = useTransition();
   const [priceYear, setPriceYear] = useState(initial.energyPriceYear);
   const [features, setFeatures] = useState<PropertyFeature[]>(initial.features);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<CharacteristicsField, string>>>({});
@@ -150,8 +183,17 @@ export function CharacteristicsStep({
   const shownFeatures = PROPERTY_FEATURES.filter((feature) => !hidden.features.includes(feature));
   const today = parisToday();
   const years = priceYears(today);
+  // Only another property may be business premises (forType).
+  const kind: DpeKind = type === "autre" ? dpeKind : "logement";
+  const premises = kind === "tertiaire";
+  const rule = settings.rules[kind];
   // Said as soon as the date is typed (a date after today is an error of the field).
-  const outdated = !dpeExempt && dpeDate !== "" && dpeDate <= today && dpeOutdated(dpeDate, today);
+  const outdated =
+    !dpeExempt &&
+    rule !== undefined &&
+    dpeDate !== "" &&
+    dpeDate <= today &&
+    dpeOutdated(dpeDate, rule, today);
 
   function clearError(field: CharacteristicsField) {
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
@@ -160,6 +202,56 @@ export function CharacteristicsStep({
   function setNumber(field: NumberField, value: string) {
     setNumbers((current) => ({ ...current, [field]: value }));
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
+  }
+
+  /**
+   * The DPE of the number typed, from the register of ADEME: its classes, its
+   * date and its figures fill the form, which the seller checks and saves.
+   */
+  function retrieve() {
+    const number = dpeNumber.trim().toUpperCase();
+    if (!DPE_NUMBER.test(number)) {
+      showErrors({ dpeNumber: errors.dpeNumber });
+      return;
+    }
+    setError(null);
+    startLooking(async () => {
+      let result: FindDpeResult | null = null;
+      try {
+        result = await findDpe({ propertyId, number });
+      } catch (caught) {
+        console.error("[properties] DPE lookup failed", caught);
+      }
+      if (!result) return setLookup({ status: "unavailable" });
+      if (!result.ok) {
+        if (result.error === "auth") return setError(common.signedOut);
+        if (result.error === "not_found") return setError(common.notFound);
+        if (result.error === "invalid") return showErrors({ dpeNumber: errors.dpeNumber });
+        return setLookup({ status: result.error });
+      }
+      const { record, samePostalCode } = result.data;
+      // A flat or a house never has the DPE of business premises.
+      if (record.kind === "tertiaire" && type !== "autre") return setLookup({ status: "premises" });
+      if (type === "autre") setDpeKind(record.kind);
+      setDpeNumber(number);
+      if (record.dpe) setDpe(record.dpe);
+      if (record.ges) setGes(record.ges);
+      if (record.date) setDpeDate(record.date);
+      setNumbers((current) => ({
+        ...current,
+        energyKwhM2Year:
+          record.energyKwhM2Year === null ? current.energyKwhM2Year : text(record.energyKwhM2Year),
+        gesKgM2Year: record.gesKgM2Year === null ? current.gesKgM2Year : text(record.gesKgM2Year),
+      }));
+      setFieldErrors((current) => ({
+        ...current,
+        dpeNumber: undefined,
+        dpeDate: undefined,
+        energyKwhM2Year: undefined,
+        gesKgM2Year: undefined,
+      }));
+      setLookup({ status: "found", record, samePostalCode });
+    });
   }
 
   /** The errors in the page first, then the focus on the first field in error. */
@@ -179,11 +271,12 @@ export function CharacteristicsStep({
     const typed: Partial<Record<NumberField, number | null>> = {};
     const invalid: Partial<Record<CharacteristicsField, string>> = {};
     for (const field of NUMBER_FIELDS) {
-      // Exempt: the range of the DPE is hidden, so not read.
-      const value =
-        shows(field) && !(dpeExempt && COST_FIELDS.includes(field))
-          ? parseFrenchNumber(numbers[field])
-          : null;
+      // Exempt: its figures and its range are hidden, so not read; business
+      // premises have no range.
+      const unread =
+        (dpeExempt && (COST_FIELDS.includes(field) || FIGURE_FIELDS.includes(field))) ||
+        (premises && COST_FIELDS.includes(field));
+      const value = shows(field) && !unread ? parseFrenchNumber(numbers[field]) : null;
       if (Number.isNaN(value)) invalid[field] = errors.number;
       else typed[field] = value;
     }
@@ -217,6 +310,10 @@ export function CharacteristicsStep({
       energyCostMinEuros: typed.energyCostMinEuros ?? null,
       energyCostMaxEuros: typed.energyCostMaxEuros ?? null,
       energyPriceYear: priceYear,
+      dpeNumber: dpeNumber.trim() === "" ? null : dpeNumber.trim().toUpperCase(),
+      dpeKind: kind,
+      energyKwhM2Year: typed.energyKwhM2Year ?? null,
+      gesKgM2Year: typed.gesKgM2Year ?? null,
     });
     setError(null);
     submitting.current = true;
@@ -293,8 +390,10 @@ export function CharacteristicsStep({
     <UnitInput
       label={label}
       unit={unit}
-      // The range of a DPE in whole euros; the other amounts may have cents.
-      inputMode={COST_FIELDS.includes(field) ? "numeric" : "decimal"}
+      // The range and the figures of a DPE are whole; the other amounts may have cents.
+      inputMode={
+        COST_FIELDS.includes(field) || FIGURE_FIELDS.includes(field) ? "numeric" : "decimal"
+      }
       value={numbers[field]}
       error={fieldErrors[field]}
       onChange={(event) => setNumber(field, event.target.value)}
@@ -378,7 +477,7 @@ export function CharacteristicsStep({
                   clearError("dpeExemptionReason");
                 }}
               >
-                {energy.reasons.map((value) => (
+                {settings.reasons.map((value) => (
                   <option key={value} value={value}>
                     {value}
                   </option>
@@ -404,6 +503,69 @@ export function CharacteristicsStep({
             </>
           ) : (
             <>
+              {type === "autre" ? (
+                <Select
+                  label={energy.kind}
+                  value={dpeKind}
+                  // Once sent, the kind of the DPE is declared by the team (properties_keep_dpe).
+                  disabled={Boolean(edit)}
+                  onChange={(event) => {
+                    setDpeKind(
+                      DPE_KINDS.find((value) => value === event.target.value) ?? "logement",
+                    );
+                    setLookup(null);
+                  }}
+                >
+                  {DPE_KINDS.map((value) => (
+                    <option key={value} value={value}>
+                      {energy.kinds[value]}
+                    </option>
+                  ))}
+                </Select>
+              ) : null}
+              <Input
+                label={energy.number}
+                help={energy.numberHelp}
+                value={dpeNumber}
+                maxLength={13}
+                autoCapitalize="characters"
+                autoComplete="off"
+                spellCheck={false}
+                error={fieldErrors.dpeNumber}
+                onChange={(event) => {
+                  setDpeNumber(event.target.value);
+                  setLookup(null);
+                  clearError("dpeNumber");
+                }}
+              />
+              <Button type="button" variant="secondary" loading={looking} onClick={retrieve}>
+                {energy.retrieve}
+              </Button>
+              {lookup?.status === "found" ? (
+                <>
+                  <InlineAlert tone="success">
+                    {energy.found(
+                      lookup.record.dpe,
+                      lookup.record.ges,
+                      lookup.record.date ? formatDay(lookup.record.date) : null,
+                    )}
+                    {lookup.record.kind === "logement" ? ` ${energy.foundCosts}` : null}
+                  </InlineAlert>
+                  {!lookup.samePostalCode && lookup.record.postalCode ? (
+                    <InlineAlert tone="warning">
+                      {energy.otherPostalCode(lookup.record.postalCode)}
+                    </InlineAlert>
+                  ) : null}
+                </>
+              ) : lookup ? (
+                <InlineAlert tone={lookup.status === "unavailable" ? "info" : "warning"}>
+                  {lookup.status === "unknown"
+                    ? energy.unknown
+                    : lookup.status === "premises"
+                      ? energy.premisesNumber
+                      : energy.unavailable}
+                </InlineAlert>
+              ) : null}
               <SegmentedPicker
                 label={energy.energyClass}
                 value={dpe ?? ""}
@@ -433,7 +595,7 @@ export function CharacteristicsStep({
                   type="date"
                   label={energy.date}
                   help={energy.dateHelp}
-                  min={DPE_VALID_FROM}
+                  min={rule?.validFrom ?? undefined}
                   max={today}
                   value={dpeDate}
                   error={fieldErrors.dpeDate}
@@ -442,38 +604,59 @@ export function CharacteristicsStep({
                     clearError("dpeDate");
                   }}
                 />
-                <Select
-                  label={energy.priceYear}
-                  help={energy.priceYearHelp}
-                  placeholder={energy.priceYearPlaceholder}
-                  value={priceYear === null ? "" : String(priceYear)}
-                  error={fieldErrors.energyPriceYear}
-                  onChange={(event) => {
-                    setPriceYear(event.target.value === "" ? null : Number(event.target.value));
-                    clearError("energyPriceYear");
-                  }}
-                >
-                  {(priceYear !== null && !years.includes(priceYear)
-                    ? [priceYear, ...years]
-                    : years
-                  ).map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </Select>
+                {premises ? null : (
+                  <Select
+                    label={energy.priceYear}
+                    help={energy.priceYearHelp}
+                    placeholder={energy.priceYearPlaceholder}
+                    value={priceYear === null ? "" : String(priceYear)}
+                    error={fieldErrors.energyPriceYear}
+                    onChange={(event) => {
+                      setPriceYear(event.target.value === "" ? null : Number(event.target.value));
+                      clearError("energyPriceYear");
+                    }}
+                  >
+                    {(priceYear !== null && !years.includes(priceYear)
+                      ? [priceYear, ...years]
+                      : years
+                    ).map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </Select>
+                )}
               </div>
-              {outdated ? <InlineAlert tone="warning">{energy.outdated}</InlineAlert> : null}
-              <fieldset className="flex flex-col gap-2">
-                <legend className="mb-1.5 text-lk-label font-medium text-lk-ink">
-                  {energy.costs}
-                </legend>
+              {outdated && rule ? (
+                <InlineAlert tone="warning">
+                  {energy.outdated(
+                    rule.validFrom ? ruleDay(rule.validFrom) : null,
+                    rule.validityYears,
+                  )}
+                </InlineAlert>
+              ) : null}
+              <div className="flex flex-col gap-2">
                 <div className="grid grid-cols-2 gap-x-3 gap-y-4">
-                  {unitInput("energyCostMinEuros", energy.costMin, t.perYear)}
-                  {unitInput("energyCostMaxEuros", energy.costMax, t.perYear)}
+                  {unitInput("energyKwhM2Year", energy.energyUse, energy.kwh)}
+                  {unitInput("gesKgM2Year", energy.emissions, energy.kg)}
                 </div>
-                <p className="text-lk-caption text-lk-ink-3">{energy.costHelp}</p>
-              </fieldset>
+                <p className="text-lk-caption text-lk-ink-3">
+                  {energy.figuresHelp}
+                  {rule?.figuresRequired === false ? ` ${energy.figuresOptional}` : null}
+                </p>
+              </div>
+              {premises ? null : (
+                <fieldset className="flex flex-col gap-2">
+                  <legend className="mb-1.5 text-lk-label font-medium text-lk-ink">
+                    {energy.costs}
+                  </legend>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+                    {unitInput("energyCostMinEuros", energy.costMin, t.perYear)}
+                    {unitInput("energyCostMaxEuros", energy.costMax, t.perYear)}
+                  </div>
+                  <p className="text-lk-caption text-lk-ink-3">{energy.costHelp}</p>
+                </fieldset>
+              )}
             </>
           )}
         </fieldset>

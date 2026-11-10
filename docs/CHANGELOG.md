@@ -12,6 +12,15 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-10 · L1-66 · PR #88 · DPE repris du registre de l'ADEME
+- Ajouté : à l'étape 2, le numéro du DPE (13 caractères) et « Récupérer les informations de mon DPE » : les classes, la date, la consommation et les émissions viennent des données ouvertes de l'ADEME ; le vendeur vérifie et saisit les dépenses d'énergie. Numéro inconnu, registre injoignable ou DPE d'un autre code postal : dit, sans bloquer.
+- Ajouté : consommation (kWh/m²/an) et émissions (kg CO₂/m²/an), affichées parmi les caractéristiques de l'annonce ; DPE tertiaire pour un « Autre bien » (ni dépenses ni « consommation excessive ») ; deux motifs d'exemption de plus.
+- Modifié : les règles du DPE (date plancher, validité, informations exigées, classes « excessives ») et les motifs d'exemption sont en base (`dpe_rules`, `dpe_exemption_reasons`) ; le numéro du DPE est exigé pour l'envoi en validation, la consommation et les émissions aussi pour un logement.
+- Modifié : mention « Non soumis au DPE (motif : …) » ; la date du DPE n'est plus affichée sur l'annonce et son numéro ne l'est jamais (ils donnent l'adresse dans les données ouvertes de l'ADEME).
+- Ajouté : dans le back office, la saisie du vendeur comparée à l'enregistrement de l'ADEME ; le motif d'une exemption inscrit dans l'historique à la publication.
+- Migration : `20261110100000_dpe_registry_rules.sql` (tables, colonnes, `property_dpe_issue`, `listing_publish`, `properties_keep_dpe`, `public_listing_dpe`, sans suppression).
+- Tests : RLS (`rls_dpe_registry_rules.sql`, 27 ; `rls_dpe_publication.sql`, 33), unitaires (lecture du registre, règles, mentions, envoi), E2E (reprise par le numéro, numéro inconnu, autre code postal, DPE tertiaire, motif public, contrôle ADEME côté équipe).
+
 ### 2026-11-09 · L1-65 · PR #87 · DPE à l'envoi en validation
 - Ajouté : à l'étape 2, le bloc « Diagnostic de performance énergétique (DPE) » : classes énergie et climat, date, fourchette des dépenses annuelles d'énergie, année des prix ; ou « Mon bien n'est pas soumis au DPE » et son motif.
 - Modifié : « Envoyer en validation » demande un DPE valable (du 1er juillet 2021 au plus tôt, de moins de 10 ans), sauf exemption motivée ou terrain ; l'aperçu le signale avant l'envoi avec « Compléter le DPE ». Un brouillon s'enregistre toujours sans DPE ; une annonce envoyée garde son DPE complet.

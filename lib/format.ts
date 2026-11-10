@@ -138,6 +138,16 @@ export function formatDate(value: DateInput, now: DateInput = new Date()): strin
   }).format(date);
 }
 
+/** « 12 mars 2024 »: a day of the calendar (« 2024-03-12 »), the same in every time zone. */
+export function formatDay(day: string): string {
+  return new Intl.DateTimeFormat(LOCALE, {
+    timeZone: "UTC",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${day.slice(0, 10)}T00:00:00Z`));
+}
+
 /** « 18 sept. » (the year is added when it is not the current one). */
 export function formatDateShort(value: DateInput, now: DateInput = new Date()): string {
   const date = toDate(value);

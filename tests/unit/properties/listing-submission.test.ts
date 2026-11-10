@@ -1,6 +1,7 @@
 import { render } from "@react-email/components";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
+import type { DpeSettings } from "@/leenkey/properties/dpe-rules";
 import {
   ListingReceivedEmail,
   ListingToReviewEmail,
@@ -33,6 +34,25 @@ const mocks = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
   sendEmail: vi.fn(),
   emailListingSubmitted: vi.fn(),
+  dpeSettings: {
+    rules: {
+      logement: {
+        validFrom: "2021-07-01",
+        validityYears: 10,
+        costsRequired: true,
+        figuresRequired: true,
+        excessiveClasses: ["F", "G"],
+      },
+      tertiaire: {
+        validFrom: null,
+        validityYears: 10,
+        costsRequired: false,
+        figuresRequired: false,
+        excessiveClasses: [],
+      },
+    },
+    reasons: ["Lieu de culte"],
+  } as DpeSettings | null,
 }));
 
 vi.mock("server-only", () => ({}));
@@ -45,6 +65,10 @@ vi.mock("@/core/auth/session", () => ({
 vi.mock("@/core/notifications/email", () => ({ sendEmail: mocks.sendEmail }));
 vi.mock("@/leenkey/properties/listing-emails", () => ({
   emailListingSubmitted: mocks.emailListingSubmitted,
+}));
+// The rules of the DPE as the base holds them (dpe_rules, L1-66).
+vi.mock("@/leenkey/properties/dpe-rules", () => ({
+  getDpeSettings: async () => mocks.dpeSettings,
 }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
@@ -279,6 +303,10 @@ describe("submitListing (step 4)", () => {
         energy_cost_min_cents: 98_000,
         energy_cost_max_cents: 133_000,
         energy_price_year: 2023,
+        dpe_number: "2491E0000001A" as string | null,
+        dpe_kind: "logement",
+        energy_kwh_m2_year: 215,
+        ges_kg_m2_year: 40,
       },
     },
     error: null,
@@ -339,6 +367,20 @@ describe("submitListing (step 4)", () => {
       error: "dpe",
       issue: "exemption_reason",
     });
+    // Its number at ADEME is part of it (L1-66).
+    mocks.answers.push(draftRow, answer({ dpe_number: null }));
+    expect(await submitListing({ propertyId })).toEqual({
+      ok: false,
+      error: "dpe",
+      issue: "dpe_missing",
+    });
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    // Without the rules of the base, nothing is sent: the base decides.
+    const settings = mocks.dpeSettings;
+    mocks.dpeSettings = null;
+    mocks.answers.push(draftRow, listingRow);
+    expect(await submitListing({ propertyId })).toEqual({ ok: false, error: "unavailable" });
+    mocks.dpeSettings = settings;
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
 

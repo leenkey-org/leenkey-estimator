@@ -5,6 +5,7 @@ import type { DpeClass } from "@/components/shared/dpe-badge";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createPublicClient } from "@/lib/supabase/public";
 import { NO_ENERGY } from "./energy-mentions";
+import type { DpeKind } from "@/lib/validations/property";
 import { DPE_CLASSES } from "@/lib/validations/search";
 import type { Database } from "@/types/database";
 import type { SitemapListing } from "./sitemap";
@@ -63,17 +64,26 @@ export type PublicListing = {
 };
 
 /**
- * What a listing for sale says of its DPE (L1-65, code de la construction
- * L126-33): exempt, or the date of the DPE, the range of the yearly energy
- * costs and the reference year of their prices. Empty for land, or a listing
- * sent before L1-65 that its seller has not completed yet.
+ * What a listing for sale says of its DPE (L1-65, L1-66; code de la
+ * construction L126-33): exempt with its motive, or the energy used and the
+ * emissions, the range of the yearly energy costs and the reference year of
+ * their prices (a home), « consommation excessive » as its rule says. Empty
+ * for land, or a listing sent before L1-65 that its seller has not completed
+ * yet. Never the date nor the number of the DPE: with them, the open data of
+ * ADEME gives the address of the property.
  */
 export type ListingEnergy = {
+  kind: DpeKind;
   exempt: boolean;
-  date: string | null;
+  /** Read by the team before the publication. */
+  exemptionReason: string | null;
   costMinCents: number | null;
   costMaxCents: number | null;
   priceYear: number | null;
+  kwhM2Year: number | null;
+  gesKgM2Year: number | null;
+  /** Its class is one of « Logement à consommation énergétique excessive » (dpe_rules). */
+  excessive: boolean;
 };
 
 export type ListingPhoto = {
@@ -113,11 +123,11 @@ export const getPublicListing = cache(
         // « Vente accompagnée » is a right of the plan, never a plan name (CLAUDE.md 14).
         supabase.from("plan_entitlements").select("plan").eq("feature", "advisor"),
         // Mentions required on a listing for sale: no page without them.
-        supabase.rpc("public_listing_energy", { p_slug: slug }).maybeSingle(),
+        supabase.rpc("public_listing_dpe", { p_slug: slug }).maybeSingle(),
       ]);
       if (listing.error) throw new Error(`public_listings: ${listing.error.message}`);
       if (advisorPlans.error) throw new Error(`plan_entitlements: ${advisorPlans.error.message}`);
-      if (energy.error) throw new Error(`public_listing_energy: ${energy.error.message}`);
+      if (energy.error) throw new Error(`public_listing_dpe: ${energy.error.message}`);
       const row = listing.data;
       if (
         !row?.id ||
@@ -184,12 +194,16 @@ export const getPublicListing = cache(
           sellerFirstName: row.seller_first_name,
           energy: energy.data
             ? {
+                kind: energy.data.dpe_kind === "tertiaire" ? "tertiaire" : "logement",
                 exempt: energy.data.dpe_exempt,
                 // Generated types declare the columns of a function result as never null.
-                date: (energy.data.dpe_date as string | null) ?? null,
+                exemptionReason: (energy.data.dpe_exemption_reason as string | null) ?? null,
                 costMinCents: (energy.data.energy_cost_min_cents as number | null) ?? null,
                 costMaxCents: (energy.data.energy_cost_max_cents as number | null) ?? null,
                 priceYear: (energy.data.energy_price_year as number | null) ?? null,
+                kwhM2Year: (energy.data.energy_kwh_m2_year as number | null) ?? null,
+                gesKgM2Year: (energy.data.ges_kg_m2_year as number | null) ?? null,
+                excessive: energy.data.excessive === true,
               }
             : NO_ENERGY,
           accompanied: (advisorPlans.data ?? []).some((entry) => entry.plan === row.plan),
