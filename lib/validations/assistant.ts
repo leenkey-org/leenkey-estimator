@@ -55,3 +55,20 @@ export const replySuggestionSchema = z.object({ conversationId: z.string().uuid(
 export const descriptionDraftSchema = z
   .object({ propertyId: z.string().uuid(), notes: z.string().max(6_000) })
   .strict();
+
+/** A request to the Leenkey team (L1-31): its subject in a few words, its text (also in SQL). */
+export const CASE_SUBJECT_MAX = 120;
+export const CASE_SUMMARY_MIN = 10;
+export const CASE_SUMMARY_MAX = 1_500;
+
+/**
+ * A request written by the person themselves, where the assistant cannot
+ * sum it up (its daily limit reached): about the property of the
+ * conversation, or none.
+ */
+export const caseRequestSchema = z
+  .object({
+    propertyId: z.string().uuid().nullish(),
+    message: z.string().trim().min(CASE_SUMMARY_MIN).max(CASE_SUMMARY_MAX),
+  })
+  .strict();

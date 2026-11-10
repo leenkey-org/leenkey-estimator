@@ -291,6 +291,57 @@ describe("« Nouveau compte »", () => {
   });
 });
 
+describe("« Nouvelle demande à traiter » (L1-31)", () => {
+  const request = (id: string, subject: unknown, reference: string | null) =>
+    queued({
+      id: `case-${id}`,
+      type: "case.created",
+      profileId: "admin",
+      email: null,
+      firstName: null,
+      groupKey: "cases:requests",
+      link: `/admin/dossiers/${id}`,
+      data: {
+        case_id: id,
+        source: "assistant_handoff",
+        subject,
+        reference,
+        first_name: "Alice",
+        last_initial: "D",
+      },
+    });
+
+  it("one request: who asks, for which property, about what, a link to its sheet", async () => {
+    const { emailPolicy, renderNotificationEmail } =
+      await import("@/leenkey/notifications/email-catalog");
+    expect(emailPolicy("case.created")).toEqual({ audience: "team", throttleMinutes: 20 });
+    const email = await renderNotificationEmail(
+      planned([request("c1", "Litige avec un acquéreur", "LK-0003")], { audience: "team" }),
+    );
+    expect(email?.subject).toBe("Nouvelle demande à traiter (LK-0003)");
+    expect(email?.text).toContain("Alice D. · LK-0003");
+    expect(email?.text).toContain("Litige avec un acquéreur");
+    expect(email?.html).toContain("https://leenkey-v2.vercel.app/admin/dossiers/c1");
+  });
+
+  it("several: one email, the link to the cases; a subject like a link stays out", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const email = await renderNotificationEmail(
+      planned(
+        [request("c1", "Problème de compte", null), request("c2", "www.promo.example", null)],
+        {
+          audience: "team",
+        },
+      ),
+    );
+    expect(email?.subject).toBe("2\u00A0demandes à traiter");
+    expect(email?.text).toContain("Problème de compte");
+    expect(email?.text).not.toContain("www.promo.example");
+    expect(email?.text).toContain("Demande à lire dans le dossier.");
+    expect(email?.html).toContain('https://leenkey-v2.vercel.app/admin/dossiers"');
+  });
+});
+
 describe("« Rétractation à rembourser » and « Votre formule se termine » (L1-40)", () => {
   it("the team: the plans renounced, both of a passage, the amount to refund", async () => {
     const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");

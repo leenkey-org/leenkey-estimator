@@ -7,11 +7,13 @@ import { findConversation, logResult, readLog } from "@/core/ai/log";
 import { getProfile, missingAcceptances } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import {
+  caseRequestSchema,
   descriptionDraftSchema,
   replySuggestionSchema,
   toolCallSchema,
 } from "@/lib/validations/assistant";
 import { DECLINED } from "./assistant";
+import { caseSubject } from "./case-request";
 import { assistantConversation, isFailure } from "./queries";
 import {
   draftListingDescription,
@@ -141,6 +143,44 @@ export async function confirmToolCall(input: unknown): Promise<ToolCallResult> {
 /** « Annuler »: nothing runs; the assistant reads that nothing changed. */
 export async function declineToolCall(input: unknown): Promise<ToolCallResult> {
   return answer(input, false);
+}
+
+export type CaseRequestResult =
+  | { ok: true; data: { caseId: string } }
+  | { ok: false; error: "auth" | "conditions" | "invalid" | "limit" | "unavailable" };
+
+/**
+ * « Écrire à un conseiller » (SPEC-V2 section 12, L1-31): the request the
+ * person wrote themselves, where the assistant cannot sum it up (its daily
+ * limit reached), becomes a case of the back office. The person cannot
+ * write a case: the function SQL create_case (security definer) checks the
+ * account, the property and the 5 open requests itself, and tells the team.
+ * No revalidatePath: no page of the person shows their requests.
+ */
+export async function sendCaseRequest(input: unknown): Promise<CaseRequestResult> {
+  const profile = await getProfile();
+  if (!profile) return { ok: false, error: "auth" };
+  if ((await missingAcceptances(profile.id)).length > 0) return { ok: false, error: "conditions" };
+  const parsed = caseRequestSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const { message, propertyId } = parsed.data;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("create_case", {
+    p_subject: caseSubject(message),
+    p_summary: message,
+    p_source: "manual",
+    p_property_id: propertyId ?? undefined,
+  });
+  if (!error) return { ok: true, data: { caseId: data } };
+  if (error.code === "54000") return { ok: false, error: "limit" };
+  // 42501: a property that is not theirs, or an account suspended meanwhile.
+  if (error.code === "22023" || error.code === "42501") return { ok: false, error: "invalid" };
+  console.error("[ai] case request failed", {
+    user_id: profile.id,
+    entity_id: propertyId ?? undefined,
+    code: error.code,
+  });
+  return { ok: false, error: "unavailable" };
 }
 
 /** The last conversation of the seller with the assistant, to open it again (the panel). */

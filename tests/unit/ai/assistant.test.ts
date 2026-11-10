@@ -604,6 +604,7 @@ describe("the tools of the seller", () => {
     expect(new Set(names).size).toBe(names.length);
     expect(names.sort()).toEqual([
       "contact_advisor",
+      "create_case",
       "draft_listing_description",
       "get_listing_stats",
       "get_my_properties",
@@ -627,7 +628,10 @@ describe("the tools of the seller", () => {
 
   it("every tool that writes is confirmed first and shows its change (CLAUDE.md 8)", () => {
     for (const item of ALL_TOOLS) {
-      const writes = item.name.startsWith("update_") || item.name === "contact_advisor";
+      const writes =
+        item.name.startsWith("update_") ||
+        item.name === "contact_advisor" ||
+        item.name === "create_case";
       expect(item.requiresConfirmation, item.name).toBe(writes);
       if (writes) expect(item.preview, item.name).toBeTypeOf("function");
     }

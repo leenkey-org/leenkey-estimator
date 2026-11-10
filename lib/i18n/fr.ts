@@ -547,6 +547,10 @@ export const fr = {
         checkTitle: (held: boolean) => (held ? "Paiement à vérifier" : "Formule à vérifier"),
         detail: (reference: string | null) =>
           reference ? `Dossier à suivre pour ${reference}.` : "Un dossier à suivre.",
+        // L1-31: a request of a user to the team (create_case).
+        requestTitle: "Nouvelle demande à traiter",
+        requestDetail: (subject: string | null, name: string, reference: string | null) =>
+          [name, subject, reference].filter(Boolean).join(" · "),
       },
       // 2026-11-08: an account confirmed, to the team.
       accountCreated: {
@@ -1847,7 +1851,7 @@ export const fr = {
     sources: {
       plan_purchase: "Achat de formule",
       assistant_handoff: "Assistant",
-      manual: "Manuel",
+      manual: "Demande écrite",
     },
     status: {
       new: "Nouveau",
@@ -1884,6 +1888,10 @@ export const fr = {
       conversationLink: "Écrire au vendeur",
       deletedAccount: "Compte supprimé",
       aiSummary: "Résumé de l'assistant",
+      // L1-31: a request the person wrote themselves (source manual).
+      requestText: "Demande de l'utilisateur",
+      requestAnswer:
+        "Réponse attendue par email, sous 48\u00A0h : l'adresse est sur la fiche du compte.",
       toCheckTitle: "Paiement à vérifier",
       toCheckText:
         "Une note automatique signale un paiement à vérifier : lisez-la avant d'écrire au vendeur.",
@@ -2331,6 +2339,24 @@ export const fr = {
           : "Un utilisateur a signalé une conversation.",
       reason: "Motif",
       action: (count: number) => (count > 1 ? "Voir les signalements" : "Voir le signalement"),
+    },
+    // L1-31: the requests written to the team since the last email (cron of L1-22, grouped).
+    caseRequests: {
+      subject: (count: number, reference: string | null) =>
+        count > 1
+          ? `${count}\u00A0demandes à traiter`
+          : reference
+            ? `Nouvelle demande à traiter (${reference})`
+            : "Nouvelle demande à traiter",
+      title: (count: number) => (count > 1 ? "Des demandes à traiter" : "Une demande à traiter"),
+      text: (count: number) =>
+        count > 1
+          ? `${count}\u00A0utilisateurs ont écrit à l'équipe Leenkey.`
+          : "Un utilisateur a écrit à l'équipe Leenkey.",
+      from: (name: string, reference: string | null) =>
+        reference ? `${name} · ${reference}` : name,
+      noSubject: "Demande à lire dans le dossier.",
+      action: (count: number) => (count > 1 ? "Voir les dossiers" : "Ouvrir le dossier"),
     },
     // 2026-11-08: the accounts confirmed since the last email, to the team (cron of L1-22, grouped).
     accountsCreated: {
@@ -3093,6 +3119,36 @@ export const fr = {
           superseded: "Message non confirmé : rien n'a été envoyé.",
           error: "Le message n'a pas pu être envoyé.",
         },
+      },
+      // create_case (L1-31): the request passed on to the team, without an adviser in the plan.
+      request: {
+        title: "Écrire à l'équipe Leenkey",
+        subject: "Objet",
+        message: "Votre demande",
+        confirm: "Envoyer",
+        states: {
+          confirmed:
+            "Demande transmise à l'équipe Leenkey : nous vous répondons par email sous 48\u00A0h, 7\u00A0j/7.",
+          declined: "Demande annulée : rien n'a été envoyé.",
+          superseded: "Demande non confirmée : rien n'a été envoyé.",
+          error: "La demande n'a pas pu être envoyée.",
+        },
+      },
+    },
+    // The request written by the person (L1-31), where the assistant cannot sum it up: its
+    // daily limit reached.
+    request: {
+      label: "Votre demande",
+      help: "Décrivez votre question en quelques phrases. Un membre de l'équipe Leenkey vous répond par email sous 48\u00A0h, 7\u00A0j/7.",
+      send: "Envoyer ma demande",
+      cancel: "Annuler",
+      sent: "Votre demande est transmise à l'équipe Leenkey. Nous vous répondons par email sous 48\u00A0h, 7\u00A0j/7.",
+      errors: {
+        invalid: (min: number) =>
+          `Décrivez votre demande en quelques mots (${min}\u00A0caractères au moins).`,
+        limit:
+          "Vous avez déjà 5\u00A0demandes en cours de traitement. Nous y répondons au plus vite.",
+        unavailable: "Votre demande n'a pas pu être envoyée. Réessayez dans quelques instants.",
       },
     },
     errors: {

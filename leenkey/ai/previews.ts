@@ -29,15 +29,25 @@ export const handoffPreview = z.object({
   summary: z.string(),
 });
 
+/** create_case (L1-31): the request the team will read, about a property or none. */
+export const casePreview = z.object({
+  kind: z.literal("case_request"),
+  propertyName: z.string().nullable(),
+  subject: z.string(),
+  summary: z.string(),
+});
+
 export const actionPreview = z.discriminatedUnion("kind", [
   descriptionPreview,
   pricePreview,
   handoffPreview,
+  casePreview,
 ]);
 
 export type DescriptionPreview = z.infer<typeof descriptionPreview>;
 export type PricePreview = z.infer<typeof pricePreview>;
 export type HandoffPreview = z.infer<typeof handoffPreview>;
+export type CasePreview = z.infer<typeof casePreview>;
 export type ActionPreview = z.infer<typeof actionPreview>;
 
 /** The gap of a price to the analysis of value, in %, one decimal; null without one. */
