@@ -11,6 +11,7 @@ import { ROUTES } from "@/leenkey/navigation/spaces";
 import { advisorConversation } from "@/leenkey/properties/dashboard";
 import { createClient } from "@/lib/supabase/server";
 import {
+  assistantHelpSchema,
   caseRequestSchema,
   descriptionDraftSchema,
   replySuggestionSchema,
@@ -149,6 +150,51 @@ export async function declineToolCall(input: unknown): Promise<ToolCallResult> {
   return answer(input, false);
 }
 
+/** The adviser of a property, in the messaging; null: its plan has none. */
+async function advisorHref(propertyId: string): Promise<string | null> {
+  if (!(await hasEntitlement(propertyId, "advisor"))) return null;
+  const conversations = await listConversations();
+  const advisor = conversations.ok ? advisorConversation(conversations.data, propertyId) : null;
+  return advisor ? `${ROUTES.messages}/${advisor.id}` : ROUTES.messages;
+}
+
+export type AssistantHelp = {
+  /** The conversation with the adviser of the property; null: the plan has none. */
+  advisorHref: string | null;
+  /** The plans of the property (or of the seller, without a property). */
+  plansHref: string;
+};
+
+/**
+ * Who a seller can write to once the assistant has reached its daily limit
+ * (decision of 2026-11-11): the adviser of the property of the conversation
+ * when its plan has one, shown greyed with the way to the plans otherwise;
+ * the Leenkey team in every case (sendCaseRequest). Read by the server: the
+ * property is the one of the conversation, and a right is never a plan name.
+ */
+export async function assistantHelp(
+  input: unknown,
+): Promise<{ ok: true; data: AssistantHelp } | { ok: false; error: "auth" | "unavailable" }> {
+  const profile = await getProfile();
+  if (!profile) return { ok: false, error: "auth" };
+  const parsed = assistantHelpSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "unavailable" };
+  const supabase = await createClient();
+  let propertyId = parsed.data.propertyId ?? null;
+  if (parsed.data.conversationId) {
+    const conversation = await findConversation(supabase, profile.id, parsed.data.conversationId);
+    if (!conversation.ok) return { ok: false, error: "unavailable" };
+    propertyId = conversation.data?.entityId ?? null;
+  }
+  return {
+    ok: true,
+    data: {
+      advisorHref: propertyId ? await advisorHref(propertyId) : null,
+      plansHref: propertyId ? `${ROUTES.plan}?bien=${propertyId}` : ROUTES.plan,
+    },
+  };
+}
+
 export type CaseRequestResult =
   | { ok: true; data: { caseId: string } }
   | { ok: false; error: "auth" | "conditions" | "invalid" | "limit" | "unavailable" }
@@ -156,7 +202,7 @@ export type CaseRequestResult =
   | { ok: false; error: "advisor"; href: string };
 
 /**
- * « Écrire à un conseiller » (SPEC-V2 section 12, L1-31): the request the
+ * « Écrire à l'équipe Leenkey » (SPEC-V2 section 12, L1-31): the request the
  * person wrote themselves, where the assistant cannot sum it up (its daily
  * limit reached), becomes a case of the back office. About the property of
  * the conversation, read here (the page it is opened from may show another
@@ -180,15 +226,8 @@ export async function sendCaseRequest(input: unknown): Promise<CaseRequestResult
     if (!conversation.ok) return { ok: false, error: "unavailable" };
     propertyId = conversation.data?.entityId ?? null;
   }
-  if (propertyId && (await hasEntitlement(propertyId, "advisor"))) {
-    const conversations = await listConversations();
-    const advisor = conversations.ok ? advisorConversation(conversations.data, propertyId) : null;
-    return {
-      ok: false,
-      error: "advisor",
-      href: advisor ? `${ROUTES.messages}/${advisor.id}` : ROUTES.messages,
-    };
-  }
+  const advisor = propertyId ? await advisorHref(propertyId) : null;
+  if (advisor) return { ok: false, error: "advisor", href: advisor };
   const create = (property: string | null) =>
     supabase.rpc("create_case", {
       p_subject: caseSubject(message),

@@ -3162,9 +3162,13 @@ export const fr = {
       unavailable: "L'assistant ne répond pas pour le moment. Réessayez dans quelques instants.",
       refused:
         "L'assistant ne peut pas répondre à cette demande. Un conseiller Leenkey peut vous aider.",
+      // Decision of 2026-11-11: the team answers every seller (after-sales); the adviser
+      // belongs to the paid plans, shown greyed without one.
       quota:
-        "Vous avez atteint la limite de messages de l'assistant pour aujourd'hui. Elle se renouvelle à minuit. Besoin d'aide maintenant ? Écrivez à un conseiller.",
-      quotaAction: "Écrire à un conseiller",
+        "Vous avez atteint la limite de messages de l'assistant pour aujourd'hui. Elle se renouvelle à minuit. Besoin d'aide maintenant ? Écrivez à l'équipe Leenkey.",
+      quotaAction: "Écrire à l'équipe Leenkey",
+      quotaAdvisor: "Écrire à mon conseiller",
+      quotaAdvisorLocked: "Accessible avec la formule Accompagné",
       auth: "Votre session a expiré. Reconnectez-vous pour continuer.",
       conditions:
         "Acceptez les conditions d'utilisation mises à jour pour continuer : rechargez la page.",

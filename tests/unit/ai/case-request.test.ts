@@ -62,7 +62,7 @@ vi.mock("@/leenkey/properties/sheet", () => ({ propertyName: () => "Maison · At
 
 const { caseSubject, CASE_SUBJECT_FROM_TEXT_MAX } = await import("@/leenkey/ai/case-request");
 const { createCaseTool, TOO_MANY_REQUESTS } = await import("@/leenkey/ai/tools/create-case");
-const { sendCaseRequest } = await import("@/leenkey/ai/actions");
+const { assistantHelp, sendCaseRequest } = await import("@/leenkey/ai/actions");
 const { actionPreview } = await import("@/leenkey/ai/previews");
 const { isFailure } = await import("@/leenkey/ai/queries");
 const { ASSISTANT_MESSAGE_MAX, CASE_SUBJECT_MAX, CASE_SUMMARY_MAX, caseRequestSchema } =
@@ -355,6 +355,53 @@ describe("sendCaseRequest, the request written at the daily limit", () => {
     mocks.rpcResult = { data: null, error: { code: "XX000" } };
     expect(await sendCaseRequest({ message })).toEqual({ ok: false, error: "unavailable" });
     expect(console.error).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("assistantHelp, who a seller can write to at the daily limit (2026-11-11)", () => {
+  const CONVERSATION = "5eed4000-0000-4000-8000-000000000001";
+  const OTHER = "5eed1000-0000-4000-8000-000000000005";
+
+  it("no adviser in the plan: none to write to, the way to the plans of the property", async () => {
+    expect(await assistantHelp({ propertyId: PROPERTY })).toEqual({
+      ok: true,
+      data: { advisorHref: null, plansHref: `/vendeur/formule?bien=${PROPERTY}` },
+    });
+    expect(await assistantHelp({})).toEqual({
+      ok: true,
+      data: { advisorHref: null, plansHref: "/vendeur/formule" },
+    });
+  });
+
+  it("an adviser in the plan: their conversation, in the messaging", async () => {
+    mocks.advisor = true;
+    mocks.conversations = [{ id: "conv-advisor", kind: "advisor", propertyId: PROPERTY }];
+    expect(await assistantHelp({ propertyId: PROPERTY })).toMatchObject({
+      ok: true,
+      data: { advisorHref: "/messages/conv-advisor" },
+    });
+  });
+
+  it("the property is the one of the conversation, not of the page", async () => {
+    mocks.conversation = {
+      ok: true,
+      data: { id: CONVERSATION, context: "seller", entityId: OTHER },
+    };
+    expect(await assistantHelp({ conversationId: CONVERSATION, propertyId: PROPERTY })).toEqual({
+      ok: true,
+      data: { advisorHref: null, plansHref: `/vendeur/formule?bien=${OTHER}` },
+    });
+    mocks.conversation = { ok: false };
+    expect(await assistantHelp({ conversationId: CONVERSATION })).toEqual({
+      ok: false,
+      error: "unavailable",
+    });
+  });
+
+  it("signed in only, and nothing but the two ids", async () => {
+    expect(await assistantHelp({ propertyId: "1" })).toEqual({ ok: false, error: "unavailable" });
+    mocks.profile = null;
+    expect(await assistantHelp({})).toEqual({ ok: false, error: "auth" });
   });
 });
 

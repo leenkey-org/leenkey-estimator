@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { Lock } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/shared/button";
@@ -13,7 +14,7 @@ import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import { ASSISTANT_MESSAGE_MAX, type AssistantContext } from "@/lib/validations/assistant";
-import { confirmToolCall, declineToolCall } from "../actions";
+import { assistantHelp, confirmToolCall, declineToolCall, type AssistantHelp } from "../actions";
 import { actionPreview, type ActionPreview } from "../previews";
 import { readEvents, type StreamEvent } from "../stream-events";
 import { CaseRequestForm } from "./case-request-form";
@@ -135,9 +136,15 @@ export function AssistantChat({
   const [reading, setReading] = useState(false);
   const [error, setError] = useState<ChatError | null>(null);
   const [answering, setAnswering] = useState<string | null>(null);
-  /** « Écrire à un conseiller », at the daily limit: the request written by the person. */
+  /** « Écrire à l'équipe Leenkey », at the daily limit: the request written by the person. */
   const [request, setRequest] = useState<"closed" | "open" | "sent">("closed");
   const requesting = request === "open";
+  /**
+   * At the daily limit: the adviser of the property, or the way to the plans
+   * that have one. null while it is read; "unknown" when it cannot be: the
+   * team only.
+   */
+  const [help, setHelp] = useState<AssistantHelp | "unknown" | null>(null);
   const next = useRef(0);
   const writing = useRef<string | null>(null);
   const end = useRef<HTMLDivElement>(null);
@@ -155,6 +162,22 @@ export function AssistantChat({
   }, [items, reading, error]);
 
   useEffect(() => () => pending.current?.abort(), []);
+
+  const atLimit = error === "quota";
+  useEffect(() => {
+    if (!atLimit) return;
+    let current = true;
+    setHelp(null);
+    assistantHelp({ conversationId, propertyId })
+      .catch(() => null)
+      .then((result) => {
+        if (current) setHelp(result?.ok ? result.data : "unknown");
+      });
+    return () => {
+      current = false;
+    };
+  }, [atLimit, conversationId, propertyId]);
+  const advisor = atLimit && help && help !== "unknown" ? help : null;
 
   // The request sent or given up: the field of the conversation is back, with the focus.
   const wasRequesting = useRef(false);
@@ -423,7 +446,15 @@ export function AssistantChat({
             <InlineAlert
               tone={error === "quota" || error === "cut" ? "warning" : "danger"}
               action={
-                error === "quota" && request === "closed" ? (
+                // The adviser of the plan when it has one; the team otherwise (after-sales).
+                !atLimit || help === null || request !== "closed" ? null : advisor?.advisorHref ? (
+                  <Link
+                    href={advisor.advisorHref}
+                    className="font-semibold underline underline-offset-2 hover:no-underline"
+                  >
+                    {t.errors.quotaAdvisor}
+                  </Link>
+                ) : (
                   <button
                     type="button"
                     onClick={() => setRequest("open")}
@@ -431,11 +462,24 @@ export function AssistantChat({
                   >
                     {t.errors.quotaAction}
                   </button>
-                ) : null
+                )
               }
             >
               <span id={errorId}>{errorText}</span>
             </InlineAlert>
+          ) : null}
+          {/* Without an adviser in the plan: shown greyed, with the plans that have one. */}
+          {advisor && !advisor.advisorHref && request === "closed" ? (
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 px-1 text-lk-caption text-lk-ink-3">
+              <Lock aria-hidden="true" className="size-3.5 shrink-0" />
+              <span>{t.errors.quotaAdvisor}</span>
+              <Link
+                href={advisor.plansHref}
+                className="font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
+              >
+                {t.errors.quotaAdvisorLocked}
+              </Link>
+            </p>
           ) : null}
           {requesting ? (
             <CaseRequestForm

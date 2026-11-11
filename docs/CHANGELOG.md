@@ -12,9 +12,14 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-11 · Assistant · PR #90 · Conseiller grisé en Autonomie
+- Modifié : le message de limite de l'assistant ne promet plus un conseiller à un vendeur qui n'en a pas : « Écrivez à l'équipe Leenkey », bouton « Écrire à l'équipe Leenkey » (demande à l'équipe, service après-vente ouvert à tous).
+- Ajouté : avec ce message, le conseiller est montré grisé (« Écrire à mon conseiller », « Accessible avec la formule Accompagné », vers les formules du bien) quand la formule n'en comprend pas ; actif, vers la conversation, quand elle en comprend un.
+- Tests : unitaires (`assistantHelp`, texte du message), E2E (conseiller grisé en Autonomie, actif avec Sérénité).
+
 ### 2026-11-10 · L1-31 · PR #89 · Passage à l'humain (`create_case`)
 - Ajouté : l'assistant du vendeur transmet une demande à l'équipe Leenkey (outil `create_case`) quand le vendeur demande une personne ou que le sujet est conflictuel : objet et résumé relus et confirmés avant l'envoi ; pour un bien dont la formule comprend un conseiller, il renvoie vers le conseiller.
-- Modifié : à la limite du jour de la conversation avec l'assistant, « Écrire à un conseiller » n'ouvre plus la page Contact : le vendeur écrit sa demande sur place, elle devient un dossier du back office ; si la formule du bien comprend un conseiller, il est renvoyé vers sa conversation avec lui. Le même lien à la limite des suggestions (réponse suggérée, description) mène toujours à la page Contact.
+- Modifié : à la limite du jour de la conversation avec l'assistant, le lien du message de limite n'ouvre plus la page Contact : le vendeur écrit sa demande sur place, elle devient un dossier du back office ; si la formule du bien comprend un conseiller, il est renvoyé vers sa conversation avec lui. Le même lien à la limite des suggestions (réponse suggérée, description) mène toujours à la page Contact.
 - Ajouté : l'équipe est prévenue de chaque demande (notification et email groupé « Nouvelle demande à traiter ») ; sur la fiche du dossier, « Résumé de l'assistant » ou « Demande de l'utilisateur ».
 - Migration : `20261110160000_create_case.sql` (`create_case`, `ai_create_case`, `security definer`, 5 demandes en cours au plus par compte, sans suppression).
 - Tests : RLS (`rls_create_case.sql`, 49), unitaires (outil, demande écrite, objet, notification, email, aucun client service role dans `core/ai` ni `leenkey/ai`), E2E (demande annulée puis confirmée et lue par l'équipe, bien avec conseiller, demande écrite à la limite du jour sur téléphone).

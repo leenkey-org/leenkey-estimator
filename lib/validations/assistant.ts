@@ -79,3 +79,11 @@ export const caseRequestSchema = z
     message: z.string().trim().min(CASE_SUMMARY_MIN).max(ASSISTANT_MESSAGE_MAX),
   })
   .strict();
+
+/** Who the person can write to at the daily limit: the conversation, or the property of the page. */
+export const assistantHelpSchema = z
+  .object({
+    conversationId: z.string().uuid().nullish(),
+    propertyId: z.string().uuid().nullish(),
+  })
+  .strict();

@@ -153,7 +153,7 @@ test("l'assistant transmet la demande à l'équipe après confirmation ; l'équi
   await team.context().close();
 });
 
-test("un bien dont la formule comprend un conseiller : l'assistant et la demande écrite renvoient vers lui", async ({
+test("un bien dont la formule comprend un conseiller : l'assistant et le message de limite renvoient vers lui", async ({
   page,
 }) => {
   await signIn(page, "seller_b", `/assistant?bien=${LK0008}`);
@@ -166,26 +166,17 @@ test("un bien dont la formule comprend un conseiller : l'assistant et la demande
     0,
   );
 
-  // At the daily limit too: the request written by the seller is for their adviser.
+  // At the daily limit too: their adviser, in the messaging, not a request to the team.
   await page.route("**/api/ai/chat", (route) =>
     route.fulfill({ status: 429, contentType: "application/json", body: '{"error":"quota"}' }),
   );
   await ask(page, "Faut-il accepter une offre à 5 % sous le prix ?");
-  await page.getByRole("button", { name: "Écrire à un conseiller" }).click();
-  await page.getByRole("button", { name: "Envoyer ma demande" }).click();
-  await expect(
-    page.getByText(
-      "La formule de ce bien comprend un conseiller Leenkey : écrivez-lui directement dans la messagerie.",
-    ),
-  ).toBeVisible();
   await expect(page.getByRole("link", { name: "Écrire à mon conseiller" })).toHaveAttribute(
     "href",
     /^\/messages\/[0-9a-f-]{36}$/,
   );
-  // Their text is kept, and nothing was sent to the team.
-  await expect(page.getByLabel("Votre demande")).toHaveValue(
-    "Faut-il accepter une offre à 5 % sous le prix ?",
-  );
+  await expect(page.getByRole("button", { name: "Écrire à l'équipe Leenkey" })).toHaveCount(0);
+  await expect(page.getByText("Accessible avec la formule Accompagné")).toHaveCount(0);
 });
 
 test("à la limite du jour, sur téléphone : le vendeur écrit sa demande lui-même, l'équipe la reçoit", async ({
@@ -207,7 +198,13 @@ test("à la limite du jour, sur téléphone : le vendeur écrit sa demande lui-m
     seller.getByText(/Vous avez atteint la limite de messages de l'assistant pour aujourd'hui/),
   ).toBeVisible();
 
-  await seller.getByRole("button", { name: "Écrire à un conseiller" }).click();
+  // No adviser in this plan: shown greyed, with the way to the plans that have one.
+  await expect(seller.getByText("Écrire à mon conseiller", { exact: true })).toBeVisible();
+  await expect(seller.getByRole("link", { name: "Écrire à mon conseiller" })).toHaveCount(0);
+  await expect(
+    seller.getByRole("link", { name: "Accessible avec la formule Accompagné" }),
+  ).toHaveAttribute("href", `/vendeur/formule?bien=${LK0012}`);
+  await seller.getByRole("button", { name: "Écrire à l'équipe Leenkey" }).click();
   const field = seller.getByLabel("Votre demande");
   // The question the assistant could not take is already there.
   await expect(field).toHaveValue(question);
@@ -243,7 +240,7 @@ test("à la limite du jour, sur téléphone : le vendeur écrit sa demande lui-m
   // Sent once: the field of the conversation is back, empty, and no second request is offered.
   await expect(seller.getByLabel("Votre question")).toHaveValue("");
   await expect(seller.getByLabel("Votre question")).toBeFocused();
-  await expect(seller.getByRole("button", { name: "Écrire à un conseiller" })).toHaveCount(0);
+  await expect(seller.getByRole("button", { name: "Écrire à l'équipe Leenkey" })).toHaveCount(0);
   await seller.context().close();
 
   const team = await openBrowser(browser, baseURL ?? "", false);
