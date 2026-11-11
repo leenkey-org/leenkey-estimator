@@ -791,10 +791,14 @@ describe("the texts of the assistant (CLAUDE.md section 16)", () => {
     }
   });
 
-  it("the message at the limit of the day, word for word (SPEC-V2 12)", () => {
+  it("the message at the limit of the day, word for word (SPEC-V2 12, decision of 2026-11-11)", () => {
     expect(fr.assistant.errors.quota).toBe(
-      "Vous avez atteint la limite de messages de l'assistant pour aujourd'hui. Elle se renouvelle à minuit. Besoin d'aide maintenant ? Écrivez à un conseiller.",
+      "Vous avez atteint la limite de messages de l'assistant pour aujourd'hui. Elle se renouvelle à minuit. Besoin d'aide maintenant ? Écrivez à l'équipe Leenkey.",
     );
+    // The adviser belongs to the paid plans: never promised to every seller.
+    expect(fr.assistant.errors.quota).not.toMatch(/conseiller/i);
+    expect(fr.assistant.errors.quotaAction).toBe("Écrire à l'équipe Leenkey");
+    expect(fr.assistant.errors.quotaAdvisorLocked).toBe("Accessible avec la formule Accompagné");
   });
 });
 

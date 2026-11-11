@@ -13,7 +13,7 @@ import { sendCaseRequest } from "../actions";
 const t = fr.assistant;
 
 /**
- * « Écrire à un conseiller » (SPEC-V2 section 12, L1-31): once the daily
+ * « Écrire à l'équipe Leenkey » (SPEC-V2 section 12, L1-31): once the daily
  * limit of the assistant is reached, the person writes their request
  * themselves; it becomes a case of the back office, read by the team, who
  * answers by email. Nothing leaves before « Envoyer ma demande »; while it
