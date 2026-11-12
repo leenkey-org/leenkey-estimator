@@ -1957,6 +1957,8 @@ Version minimale retenue (décision du 2026-10-15, dossier juridique) : le motif
 
 Base de connaissances (liste, recherche test, import), journal des conversations de l'assistant (filtres par contexte, recherche), consommation de tokens par jour et par environnement.
 
+Mise en œuvre (L1-30d, `DECISIONS.md` 2026-11-12) : trois onglets (base de connaissances, journal, consommation) ; import d'un fichier Markdown au format de la FAQ par l'admin (`admin_knowledge_import`, tracé), embeddings calculés ensuite ; consommation sur 30 jours avec un coût indicatif, celle de l'environnement de l'écran. « Synthèse avant appel » d'un dossier : affichée à l'équipe, non enregistrée, journalisée sous le genre `case_summary`.
+
 ---
 
 ## 18. Emails transactionnels

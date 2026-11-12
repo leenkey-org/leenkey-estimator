@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-12 · L1-30d · PR #94 · Assistant du back office et synthèse avant appel
+- Ajouté : `/admin/assistant` : base de connaissances (fiches, recherche test, import d'un fichier de la FAQ avec calcul des embeddings), journal des conversations de l'assistant (filtres par contexte, recherche, lecture message par message avec les jetons), consommation sur 30 jours (par contexte et par jour, coût indicatif).
+- Ajouté : « Synthèse avant appel » sur la fiche d'un dossier.
+- Migration : `20261112140000_admin_assistant.sql` (`admin_ai_usage`, `admin_ai_conversations`, `admin_knowledge_import`, genre `case_summary`).
+- Tests : unitaires (fichier de la FAQ, consommation, prompt de la synthèse), permissions (`rls_admin_assistant.sql`), E2E (`admin-assistant-live.spec.ts`).
+
 ### 2026-11-12 · L1-30d · PR #93 · Pré-analyse des annonces, export CSV, motif rédigé par l'assistant
 - Ajouté : pré-analyse de chaque annonce dans le back office (pastille « Conforme » ou « À vérifier » et sa phrase dans la liste et les cartes mobiles, détail complet sur la fiche : complétude, photos, description, écart à l'analyse de valeur, DPE), calculée par des règles fixes.
 - Ajouté : « Exporter CSV » de la liste des annonces telle qu'elle est filtrée.
