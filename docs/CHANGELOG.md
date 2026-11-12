@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-12 · L1-30d · PR #93 · Pré-analyse des annonces, export CSV, motif rédigé par l'assistant
+- Ajouté : pré-analyse de chaque annonce dans le back office (pastille « Conforme » ou « À vérifier » et sa phrase dans la liste et les cartes mobiles, détail complet sur la fiche : complétude, photos, description, écart à l'analyse de valeur, DPE), calculée par des règles fixes.
+- Ajouté : « Exporter CSV » de la liste des annonces telle qu'elle est filtrée.
+- Ajouté : « Rédiger avec l'assistant » dans le dialogue de refus d'une annonce.
+- Migration : `20261112100000_ai_rejection_reason.sql` (journal de l'assistant : motif de refus, contexte admin seulement).
+- Tests : unitaires (règles de la pré-analyse, CSV), permissions (`rls_ai_rejection_reason.sql`), E2E (`admin-listings.spec.ts`).
+
 ### 2026-11-12 · L1-32 · PR #92 · Recette interne du lot 1
 - Ajouté : les parcours obligatoires de la SPEC (vendeur, acquéreur, paiement, permissions) enchaînés de bout en bout dans un test E2E.
 - Ajouté : `docs/RECETTE.md` complété (scénarios du lot 1, résultats de la recette interne : E2E, axe, Lighthouse, revue des permissions).

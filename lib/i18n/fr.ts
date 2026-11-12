@@ -1479,6 +1479,78 @@ export const fr = {
       status: "Statut",
     },
     notReceived: "Pas envoyée",
+    // L1-30d: the pre-analysis, computed by rules (not by the assistant).
+    review: {
+      column: "Pré-analyse",
+      title: "Pré-analyse",
+      ok: "Conforme",
+      check: "À vérifier",
+      unavailable: "Pré-analyse indisponible",
+      okSentence: (facts: string[]) => `Annonce complète : ${facts.join(", ")}.`,
+      checkSentence: (issues: string[]) => `À vérifier : ${issues.join(", ")}.`,
+      issues: {
+        dpe: "DPE manquant ou périmé",
+        dpeExemption: "exemption de DPE à vérifier",
+        photos: (count: number) =>
+          count === 0
+            ? "aucune photo"
+            : `${count}\u00A0photo${count > 1 ? "s" : ""} sur 6 conseillées`,
+        priceHigh: (gap: number) => `prix ${gap}\u00A0% au-dessus de l'analyse de valeur`,
+        priceLow: (gap: number) => `prix ${Math.abs(gap)}\u00A0% sous l'analyse de valeur`,
+        description: (length: number) =>
+          length === 0 ? "pas de description" : `description courte (${length}\u00A0caractères)`,
+      },
+      facts: {
+        price: (gap: number) =>
+          `prix cohérent avec l'analyse de valeur (${gap > 0 ? "+" : gap < 0 ? "−" : ""}${Math.abs(gap)}\u00A0%)`,
+        noValue: "sans analyse de valeur pour comparer le prix",
+        photos: (count: number) => `${count}\u00A0photos`,
+        dpe: "DPE renseigné",
+        noDpe: "sans DPE à fournir",
+      },
+      detail: {
+        completeness: "Complétude",
+        photos: "Photos",
+        photosValue: (count: number) => `${count} (6 conseillées)`,
+        description: "Description",
+        descriptionValue: (length: number) => `${length}\u00A0caractères (400 au moins conseillés)`,
+        price: "Prix et analyse de valeur",
+        priceValue: (gap: number, value: string) =>
+          `${gap > 0 ? "+" : gap < 0 ? "−" : ""}${Math.abs(gap)}\u00A0% par rapport à ${value}`,
+        noValue: "Pas d'analyse de valeur pour ce bien",
+        dpe: "DPE",
+        dpeValue: {
+          ok: "Renseigné et valable",
+          missing: "Manquant ou périmé : publication refusée",
+          exempt: "Non soumis selon le vendeur : motif à vérifier",
+          none: "Sans objet (terrain)",
+        },
+        note: "Calculée par des règles fixes (photos, description, DPE, écart de prix de plus de 10\u00A0%) : elle aide à décider, elle ne décide pas.",
+      },
+    },
+    export: "Exporter CSV",
+    exportLabel: "Exporter les annonces de cette liste au format CSV",
+    csv: {
+      fileName: (day: string) => `leenkey-annonces-${day}.csv`,
+      header: [
+        "Référence",
+        "Titre",
+        "Statut",
+        "Ville",
+        "Code postal",
+        "Vendeur",
+        "Formule",
+        "Prix (€)",
+        "Reçue le",
+        "Publiée le",
+        "Pré-analyse",
+        "Points à vérifier",
+        "Complétude (%)",
+        "Écart à l'analyse de valeur (%)",
+        "Photos",
+        "Lien",
+      ],
+    },
     empty: {
       title: "Aucune annonce",
       text: "Aucune annonce ne correspond à ce filtre.",

@@ -7,8 +7,14 @@ import { getDpeSettings } from "@/leenkey/properties/dpe-rules";
 import { createClient } from "@/lib/supabase/server";
 import { chunk } from "@/lib/utils";
 import type { AdminListingsQuery } from "@/lib/validations/admin";
-import { dpeIssue, type DpeIssue } from "@/lib/validations/property";
+import {
+  PROPERTY_DPE_COLUMNS,
+  propertyDpeIssue,
+  type DpeIssue,
+  type DpeRules,
+} from "@/lib/validations/property";
 import type { Database } from "@/types/database";
+import { listingReview, type ListingReview, type ReviewDpe } from "./review";
 
 // Reads of the back office of the listings (L1-19), with the admin's session:
 // the SQL functions and the RLS check is_admin() themselves, and each read
@@ -34,6 +40,8 @@ export type AdminListingRow = {
   plan: PlanCode;
   /** Base of the files of the main photo, null without photos (L1-12). */
   coverPath: string | null;
+  /** The pre-analysis (L1-30d); null when it could not be read. */
+  review: ListingReview | null;
 };
 
 /** The rows, and whether more listings match than the page shows. */
@@ -79,6 +87,10 @@ export type AdminListingDetail = {
   };
   sellerName: string | null;
   plan: PlanCode;
+  /** The pre-analysis (L1-30d); null when the rules of the DPE could not be read. */
+  review: ListingReview | null;
+  /** The value of the analysis of value of the property, to compare the price. */
+  valueCents: number | null;
   history: AdminHistoryEntry[];
 };
 
@@ -94,6 +106,13 @@ const EMPTY_COUNTS: AdminListingCounts = {
 
 const fullName = (first: string | null, last: string | null) =>
   [first, last].filter(Boolean).join(" ") || null;
+
+/** The DPE as the pre-analysis reads it: what the rules of publication say. */
+function reviewDpe(property: Parameters<typeof propertyDpeIssue>[0], rules: DpeRules): ReviewDpe {
+  if (propertyDpeIssue(property, rules)) return "missing";
+  if (property.type === null || property.type === "terrain") return "none";
+  return property.dpe_exempt ? "exempt" : "ok";
+}
 
 function logFailure(read: string, error: unknown, context: Record<string, unknown> = {}) {
   console.error(`[admin] ${read} failed`, {
@@ -133,33 +152,49 @@ export async function adminListings(
       sellerName: fullName(row.seller_first_name, row.seller_last_name),
       plan: row.plan,
       coverPath: null,
+      review: null,
     }));
-    // Main photos, 100 listings per read (length of the address): the admin
-    // reads every photo (RLS). Without them, the drawing.
-    const covers = await Promise.all(
-      chunk(
-        rows.map((row) => row.id),
-        100,
-      ).map((ids) =>
-        supabase
-          .from("listings")
-          .select("id, property:properties!inner(photos(storage_path))")
-          .eq("property.photos.is_cover", true)
-          .in("id", ids),
+    // Main photo and pre-analysis, 100 listings per read (length of the
+    // address): the admin reads every listing, property and photo (RLS).
+    // Without them, the drawing and « Pré-analyse indisponible ».
+    const [details, dpeSettings] = await Promise.all([
+      Promise.all(
+        chunk(
+          rows.map((row) => row.id),
+          100,
+        ).map((ids) =>
+          supabase
+            .from("listings")
+            .select(
+              `id, description, property:properties!inner(estimation_value_cents, ${PROPERTY_DPE_COLUMNS}, photos(storage_path, is_cover))`,
+            )
+            .in("id", ids),
+        ),
       ),
-    );
-    const byListing = new Map<string, string>();
-    for (const answer of covers) {
+      getDpeSettings(),
+    ]);
+    const byListing = new Map(rows.map((row) => [row.id, row]));
+    for (const answer of details) {
       if (answer.error) {
-        logFailure("covers", answer.error, { user_id: admin.id });
+        logFailure("details", answer.error, { user_id: admin.id });
         continue;
       }
       for (const entry of answer.data) {
-        const cover = entry.property.photos[0]?.storage_path;
-        if (cover) byListing.set(entry.id, cover);
+        const row = byListing.get(entry.id);
+        if (!row) continue;
+        const { photos } = entry.property;
+        row.coverPath = photos.find((photo) => photo.is_cover)?.storage_path ?? null;
+        row.review = dpeSettings
+          ? listingReview({
+              priceCents: row.priceCents,
+              valueCents: entry.property.estimation_value_cents,
+              photosCount: photos.length,
+              description: entry.description,
+              dpe: reviewDpe(entry.property, dpeSettings.rules),
+            })
+          : null;
       }
     }
-    for (const row of rows) row.coverPath = byListing.get(row.id) ?? null;
     return { ok: true, data: { rows, limited: data.length > ADMIN_LISTINGS_LIMIT } };
   } catch (error) {
     // Not the search itself: it may be the name of a person.
@@ -189,7 +224,7 @@ export async function adminListingCounts(): Promise<QueryResult<AdminListingCoun
 }
 
 const DETAIL_COLUMNS =
-  `id, reference, slug, title, description, price_cents, status, created_at, submitted_at, published_at, suspended_at, rejection_reason, suspension_reason, property:properties!inner(${LISTING_PROPERTY_COLUMNS}, dpe_date, dpe_number)` as const;
+  `id, reference, slug, title, description, price_cents, status, created_at, submitted_at, published_at, suspended_at, rejection_reason, suspension_reason, property:properties!inner(${LISTING_PROPERTY_COLUMNS}, dpe_date, dpe_number, estimation_value_cents)` as const;
 
 /**
  * One listing with its seller, plan and decisions; null when unknown or
@@ -259,27 +294,7 @@ export const adminListing = cache(async function adminListing(
         rejectionReason: row.rejection_reason,
         suspensionReason: row.suspension_reason,
         dpe: {
-          issue: dpeSettings
-            ? dpeIssue(
-                {
-                  type: property.type,
-                  dpe: property.dpe_class,
-                  ges: property.ges_class,
-                  dpeExempt: property.dpe_exempt,
-                  dpeExemptionReason: property.dpe_exemption_reason,
-                  dpeDate: property.dpe_date,
-                  // Only whether they are known matters here, not the unit.
-                  energyCostMinEuros: property.energy_cost_min_cents,
-                  energyCostMaxEuros: property.energy_cost_max_cents,
-                  energyPriceYear: property.energy_price_year,
-                  dpeNumber: property.dpe_number,
-                  dpeKind: property.dpe_kind,
-                  energyKwhM2Year: property.energy_kwh_m2_year,
-                  gesKgM2Year: property.ges_kg_m2_year,
-                },
-                dpeSettings.rules,
-              )
-            : null,
+          issue: dpeSettings ? propertyDpeIssue(property, dpeSettings.rules) : null,
           exemptionReason: property.dpe_exempt ? property.dpe_exemption_reason : null,
           number: property.dpe_number,
           date: property.dpe_date,
@@ -288,6 +303,16 @@ export const adminListing = cache(async function adminListing(
         },
         sellerName,
         plan,
+        review: dpeSettings
+          ? listingReview({
+              priceCents: row.price_cents,
+              valueCents: property.estimation_value_cents,
+              photosCount: property.photos.length,
+              description: row.description,
+              dpe: reviewDpe(property, dpeSettings.rules),
+            })
+          : null,
+        valueCents: property.estimation_value_cents,
         history: audit.data.map((entry) => {
           const meta = entry.meta as { reason?: unknown; dpe_exemption?: unknown } | null;
           return {

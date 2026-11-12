@@ -12,6 +12,11 @@ import type { TextCall } from "@/core/ai/generate";
 // less), anything else (one sentence). The suggestions (L1-29) give one
 // fixed text each.
 
+/** The motive of a refusal drafted for the team (L1-30d). */
+export const MOCK_REJECTION_REASON =
+  "Motif proposé par l'assistant de test : nous ne pouvons pas publier votre annonce en l'état. " +
+  "Ajoutez au moins six photos nettes de chaque pièce, puis renvoyez-la : nous la relisons à nouveau.";
+
 export const MOCK_DESCRIPTIONS = [
   "Bien au calme, proche des commerces et des transports. Description proposée par l'assistant " +
     "de test : séjour lumineux, cuisine équipée, chambres et rangements. Chauffage individuel.",
@@ -271,10 +276,13 @@ export const MOCK_LISTING_DESCRIPTION =
   "vendeur sont reprises sans rien ajouter : surface, nombre de pièces, étage, chauffage et classes du DPE.";
 
 /** The suggestions of the tests: the same text for the same kind, no call to the API. */
-export function mockText(kind: "reply_suggestion" | "listing_description"): TextCall {
-  return async () =>
-    message(
-      [text(kind === "reply_suggestion" ? MOCK_REPLY : MOCK_LISTING_DESCRIPTION)],
-      "end_turn",
-    );
+export function mockText(
+  kind: "reply_suggestion" | "listing_description" | "rejection_reason",
+): TextCall {
+  const answer = {
+    reply_suggestion: MOCK_REPLY,
+    listing_description: MOCK_LISTING_DESCRIPTION,
+    rejection_reason: MOCK_REJECTION_REASON,
+  }[kind];
+  return async () => message([text(answer)], "end_turn");
 }

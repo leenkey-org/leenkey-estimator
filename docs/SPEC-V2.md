@@ -1923,6 +1923,7 @@ Maquettes : `AdminAnnonces.dc.html`, `AdminDesktop.dc.html`. Conçu desktop d'ab
   - **Refuser avec motif** → `rejected`, motif obligatoire (modèles de motifs + texte libre, bouton « Rédiger avec l'assistant »), email au vendeur. Le vendeur corrige et renvoie.
   - **Suspendre** (motif obligatoire, email au vendeur) → `suspended` ; **Remettre en ligne** → `published`. Le vendeur voit l'annonce en lecture seule avec le motif et un lien vers la messagerie conseiller ou le formulaire de contact ; il ne peut pas la remettre en ligne lui-même.
   - **Modifier** (champs de l'annonce, traçé).
+- Mise en œuvre (L1-30d, `DECISIONS.md` 2026-11-12) : pré-analyse calculée en code à l'affichage (DPE, exemption, prix à plus de 10 % de l'analyse de valeur, moins de 6 photos, description de moins de 400 caractères ; « Conforme » ou « À vérifier », complétude sur 100), sans appel au modèle et sans stocker `review` ; colonne « Pré-analyse » ; export CSV de la liste filtrée ; « Rédiger avec l'assistant » du motif de refus journalisé sous le genre `rejection_reason`. « Modifier » arrive avec L1-35.
 
 ### Utilisateurs `/admin/utilisateurs`
 

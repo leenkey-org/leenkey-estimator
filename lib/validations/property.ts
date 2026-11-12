@@ -345,6 +345,50 @@ export function dpeIssue(
   return dpeOutdated(value.dpeDate, rule, today) ? "dpe_outdated" : null;
 }
 
+/** The columns of a property that dpeIssue reads, as the base names them. */
+export const PROPERTY_DPE_COLUMNS =
+  "type, dpe_class, ges_class, dpe_exempt, dpe_exemption_reason, dpe_date, energy_cost_min_cents, energy_cost_max_cents, energy_price_year, dpe_number, dpe_kind, energy_kwh_m2_year, ges_kg_m2_year" as const;
+
+/** dpeIssue of a row of properties (PROPERTY_DPE_COLUMNS). */
+export function propertyDpeIssue(
+  property: {
+    type: string | null;
+    dpe_class: string | null;
+    ges_class: string | null;
+    dpe_exempt: boolean;
+    dpe_exemption_reason: string | null;
+    dpe_date: string | null;
+    energy_cost_min_cents: number | null;
+    energy_cost_max_cents: number | null;
+    energy_price_year: number | null;
+    dpe_number: string | null;
+    dpe_kind: string;
+    energy_kwh_m2_year: number | null;
+    ges_kg_m2_year: number | null;
+  },
+  rules: DpeRules,
+): DpeIssue | null {
+  return dpeIssue(
+    {
+      type: property.type,
+      dpe: property.dpe_class,
+      ges: property.ges_class,
+      dpeExempt: property.dpe_exempt,
+      dpeExemptionReason: property.dpe_exemption_reason,
+      dpeDate: property.dpe_date,
+      // Only whether they are known matters here, not the unit.
+      energyCostMinEuros: property.energy_cost_min_cents,
+      energyCostMaxEuros: property.energy_cost_max_cents,
+      energyPriceYear: property.energy_price_year,
+      dpeNumber: property.dpe_number,
+      dpeKind: property.dpe_kind,
+      energyKwhM2Year: property.energy_kwh_m2_year,
+      gesKgM2Year: property.ges_kg_m2_year,
+    },
+    rules,
+  );
+}
+
 /**
  * A DPE no longer valid, or not yet: dated before the first day of its rule,
  * its years of validity ago or more, or after today (« 2026-11-09 », as
