@@ -48,7 +48,7 @@ Sur une pile locale fraîche (Supabase local, emails capturés, modèle de l'ass
 | Contrôle | Résultat |
 |---|---|
 | Parcours obligatoires de la SPEC (section 22) 1 vendeur, 2 acquéreur, 3 paiement, 7 permissions (`tests/e2e/journeys-live.spec.ts`) | 4 verts, nouveaux comptes et nouvelle annonce à chaque passage. Parcours 7 : bien, étapes et conversation refusés à un autre vendeur et à l'acquéreur ; documents, offres et visites avec les lots 2 et 3 |
-| Suite E2E complète (mobile, desktop, seed modifié) | 442 verts, 0 échec (dernier passage complet le 2026-11-10, avant L1-31 ; les specs modifiées depuis ont été rejouées seules) |
+| Suite E2E complète (mobile, desktop, seed modifié) | 444 verts, 1 échec, 65 ignorés (passage complet du 2026-11-12 sur une pile neuve, avec les parcours obligatoires). L'échec : le focus du message « Votre nouvelle adresse email est enregistrée. » après la confirmation du second lien (`account-live.spec.ts`), non retrouvé sous la charge de la suite entière ; le fichier rejoué seul deux fois est vert. À surveiller : si le focus se perd en préprod, le message reste affiché mais n'est pas annoncé. |
 | Accessibilité (axe, `npm run a11y`, mobile et desktop) | 63 écrans sans violation sérieuse ni critique |
 | Lighthouse mobile (4G simulée) | Accessibilité 100. Bonnes pratiques 96 et SEO 69 en local seulement (script de Vercel Analytics absent, `noindex` hors production) : 100 attendus en production. **Performance 61 à 81, LCP 3,4 à 4,9 s : objectif de la SPEC (moins de 2,5 s) non atteint**, voir ci-dessous |
 | Revue des permissions | Voir ci-dessous |
