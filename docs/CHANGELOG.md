@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+Rien depuis `v2.0.0-lot1`.
+
+## v2.0.0-lot1 · 2026-11-12
+
+Tag posé sur `a10fd4c` de `v2` (pré-release GitHub « Lot 1 : Leenkey V2 ») : le lot 1 entier, recette interne comprise (L1-32). Toutes les entrées qui suivent en font partie.
+
 ### 2026-11-12 · L1-30d · PR #94 · Assistant du back office et synthèse avant appel
 - Ajouté : `/admin/assistant` : base de connaissances (fiches, recherche test, import d'un fichier de la FAQ avec calcul des embeddings), journal des conversations de l'assistant (filtres par contexte, recherche, lecture message par message avec les jetons), consommation sur 30 jours (par contexte et par jour, coût indicatif).
 - Ajouté : « Synthèse avant appel » sur la fiche d'un dossier.
@@ -573,7 +579,6 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Ajouté : pack de démarrage V2 (CLAUDE.md fusionné avec le contexte V1, SPEC, DECISIONS, PLANNING, RECETTE, SECURITE, maquettes, FAQ de Cédric, commandes Claude Code).
 - Modifié : intégration du pack corrigé du 2026-10-07 (décisions Hoguet, libellé « validé », paiement des 20 % à la préprod validée) puis du pack « Façade » (nouvelle direction artistique et maquettes) et corrections de cadrage de la session 0 (branche `v2` comme staging, hiérarchie des documents, statut `suspended`, `financing_documents`, bucket `offers`, quotas IA, outils, règles éditoriales, planning rééquilibré).
 
-## v2.0.0-lot1 · à venir
 ## v2.0.0-lot2 · à venir
 ## v2.0.0-lot3 · à venir
 ## v2.0.0 · mise en production · à venir
