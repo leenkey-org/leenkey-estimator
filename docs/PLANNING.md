@@ -111,7 +111,7 @@ Recette du lot 1 par Cédric du 16 au 20 novembre ; mise en ligne de la V2 la se
 
 Mise en ligne :
 
-- [ ] **P-06** Performance mobile (recette interne du 12 novembre) : LCP sous 2,5 s sur la recherche et l'annonce (SPEC 21), JavaScript du premier chargement réduit (accueil), feuille de style critique, bandeau des cookies sans effet sur le LCP ; mesure Lighthouse sur la préprod · PR : · Testé en préprod : ☐
+- [x] **P-06** Performance mobile (recette interne du 12 novembre) : LCP sous 2,5 s sur la recherche et l'annonce (SPEC 21), JavaScript du premier chargement réduit, bandeau des cookies sans effet sur le LCP ; mesuré en local (bridage réel), à confirmer sur la production après la bascule · PR : #96 · Testé en préprod : ☐
 
 - [ ] **P-05b** Mise en ligne de la V2 (semaine du 23 nov., avant le 30 nov., sur go de Younes) : projet Supabase de production, migrations, seed `plans` et `sale_steps`, variables de production, Resend, vérification des modèles IA, Stripe live si CGV et médiateur prêts ; puis changement de la branche de production du projet Vercel de `leenkey.fr` (jamais de fusion dans `main`) ; retour arrière : remettre `main` · PR : · Testé en préprod : ☐
 

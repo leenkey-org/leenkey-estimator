@@ -12,7 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-Rien depuis `v2.0.0-lot1`.
+### 2026-11-12 · P-06 · PR #96 · Performance mobile
+- Modifié : le bandeau des cookies est dans la page dès le premier affichage (masqué tout de suite pour un visiteur qui a déjà choisi), sans décalage de mise en page ; son texte en trois courts paragraphes.
+- Modifié : les textes de l'interface découpés par partie (`lib/i18n/sections/`) : environ 200 Ko de JavaScript de moins sur chaque page.
+- Modifié : les photos sont servies par `/img` sans redirection ; la photo de l'accueil est prioritaire ; la galerie ne télécharge plus sur un téléphone la photo réservée au bureau ; une seule police préchargée.
+- Résultat (Lighthouse mobile, bridage réel) : LCP de la recherche 2,0 s, de l'annonce 2,0 s, de `/tarifs` et `/estimer` 1,8 s.
 
 ## v2.0.0-lot1 · 2026-11-12
 
