@@ -17,7 +17,7 @@ import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import type { ModerationAction, ModerationInput } from "@/lib/validations/admin";
 import type { Database } from "@/types/database";
-import { moderateListing, type ModerationResult } from "../actions";
+import { draftRejectionAction, moderateListing, type ModerationResult } from "../actions";
 import { withEmailNote, type Feedback } from "../feedback";
 import { ReasonDialog } from "./reason-dialog";
 
@@ -268,6 +268,9 @@ export function ListingModeration({
         onConfirm={(reason) => {
           if (dialog) decide({ action: dialog, listingId, reason });
         }}
+        draft={
+          dialog === "reject" ? (notes) => draftRejectionAction({ listingId, notes }) : undefined
+        }
         onCloseAutoFocus={(event) => {
           // After a decision, the outcome takes the focus (ModerationFeedback).
           event.preventDefault();

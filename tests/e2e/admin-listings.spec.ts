@@ -135,6 +135,15 @@ test.describe("bureau", () => {
     await dialog.getByRole("button", { name: "Refuser l'annonce" }).click();
     await expect(dialog.getByText("Le motif doit faire au moins 3 caractères.")).toBeVisible();
 
+    // L1-30d: « Rédiger avec l'assistant » proposes a motive (AI_MOCK), put in the field on « Utiliser ».
+    const draft = dialog.getByRole("button", { name: "Rédiger avec l'assistant" });
+    await draft.click();
+    const proposal = dialog.getByRole("region", { name: "Proposition de l'assistant" });
+    await expect(proposal).toContainText("Motif proposé par l'assistant de test");
+    await proposal.getByRole("button", { name: "Utiliser" }).click();
+    await expect(field).toHaveValue(/^Motif proposé par l'assistant de test/);
+    await expect(draft).toBeFocused();
+
     // Closed without a decision: the focus goes back to the button.
     await dialog.getByRole("button", { name: "Fermer" }).click();
     await expect(dialog).toBeHidden();
@@ -226,6 +235,64 @@ test.describe("bureau", () => {
 
     await expectNoSeriousViolation(page);
   });
+
+  test("pré-analyse dans la liste et sur la fiche, export CSV de la liste", async ({
+    page,
+    playwright,
+    browser,
+    baseURL,
+  }) => {
+    await signIn(page, "/admin/annonces?statut=a-valider");
+    await expect(page.getByRole("columnheader", { name: "Pré-analyse" })).toBeVisible();
+    const line = row(page, "LK-0006");
+    // Seed: LK-0006 has one photo and a description of 232 characters.
+    await expect(line).toContainText("À vérifier");
+    await expect(line).toContainText(
+      /À vérifier : 1[\s\u00A0]photo sur 6 conseillées, description courte \(232[\s\u00A0]caractères\)\./,
+    );
+
+    // L1-30d: the list as filtered, as a file; nothing for anyone else.
+    const download = page.getByRole("link", { name: "Exporter CSV" });
+    await expect(download).toHaveAttribute("href", "/admin/annonces/export?statut=a-valider");
+    const answer = await page.request.get("/admin/annonces/export?statut=a-valider");
+    expect(answer.status()).toBe(200);
+    expect(answer.headers()["content-type"]).toBe("text/csv; charset=utf-8");
+    expect(answer.headers()["content-disposition"]).toMatch(
+      /^attachment; filename="leenkey-annonces-\d{4}-\d{2}-\d{2}\.csv"$/,
+    );
+    const body = await answer.body();
+    // The byte order mark first: Excel reads the accents.
+    expect([...body.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
+    const csv = body.subarray(3).toString("utf8");
+    expect(csv.startsWith("Référence;Titre;Statut;Ville;")).toBe(true);
+    expect(csv).toContain("\r\nLK-0006;");
+    expect(csv).not.toContain("\r\nLK-0014;");
+    // Without a session: the sign-in page, as for every page of the back office.
+    const anonymous = await playwright.request.newContext({ baseURL });
+    const signedOut = await anonymous.get("/admin/annonces/export", { maxRedirects: 0 });
+    expect(signedOut.status()).toBe(307);
+    expect(signedOut.headers()["location"]).toMatch(/^\/connexion\?next=/);
+    await anonymous.dispose();
+    // A seller: nothing (404), as for the pages.
+    const context = await browser.newContext({ baseURL });
+    await context.addCookies([
+      { name: "lk_consent", value: consentValue(false), url: baseURL ?? "" },
+    ]);
+    const seller = await context.newPage();
+    await signIn(seller, "/vendeur", "seller_b");
+    const refused = await seller.request.get("/admin/annonces/export", { maxRedirects: 0 });
+    expect(refused.status()).toBe(404);
+    expect(await refused.text()).not.toContain("LK-0006");
+    await context.close();
+
+    // The page of the listing: the whole pre-analysis.
+    await line.getByRole("link", { name: "Aperçu de l'annonce LK-0006" }).click();
+    const review = page.getByRole("region", { name: "Pré-analyse" });
+    await expect(review.getByRole("progressbar", { name: "Complétude" })).toBeVisible();
+    await expect(review).toContainText("Photos");
+    await expect(review).toContainText("Prix et analyse de valeur");
+    await expectNoSeriousViolation(page);
+  });
 });
 
 test.describe("téléphone", () => {
@@ -244,6 +311,8 @@ test.describe("téléphone", () => {
     await expect(cards).toBeVisible();
     const card = cards.getByRole("listitem").filter({ hasText: "LK-0006" });
     await expect(card).toHaveCount(1);
+    // L1-30d: the pre-analysis in the card (AdminAnnonces).
+    await expect(card).toContainText(/Pré-analyse · À vérifier : 1[\s\u00A0]photo sur 6/);
     await expectNoSeriousViolation(page);
 
     const open = card.getByRole("button", { name: "Refuser", exact: true });

@@ -4,10 +4,16 @@ import { revalidatePath } from "next/cache";
 import type { EmailDelivery } from "@/core/notifications/email";
 import { getProfile } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { moderationSchema, type ModerationAction } from "@/lib/validations/admin";
+import type { SuggestionResult } from "@/leenkey/ai/types";
+import {
+  moderationSchema,
+  rejectionDraftSchema,
+  type ModerationAction,
+} from "@/lib/validations/admin";
 import type { Database } from "@/types/database";
 import { emailSellerAboutDecision } from "./listing-emails";
 import { moderationError, type ModerationError } from "./moderation";
+import { draftRejectionReason } from "./rejection-draft";
 
 // Server actions of the back office (L1-19). The status changes go through
 // the SQL functions of L1-04 (listing_publish, listing_reject,
@@ -76,4 +82,17 @@ export async function moderateListing(input: unknown): Promise<ModerationResult>
   revalidatePath("/admin/annonces");
   revalidatePath(`/admin/annonces/${command.listingId}`);
   return { ok: true, data: { status, email } };
+}
+
+/**
+ * « Rédiger avec l'assistant » in the refusal of a listing (L1-30d): a motive
+ * proposed to the team, never sent by itself. Nothing changes: no
+ * revalidatePath.
+ */
+export async function draftRejectionAction(input: unknown): Promise<SuggestionResult> {
+  const profile = await getProfile();
+  if (!profile?.roles.includes("admin")) return { ok: false, error: "auth" };
+  const parsed = rejectionDraftSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  return draftRejectionReason(profile, parsed.data.listingId, parsed.data.notes);
 }

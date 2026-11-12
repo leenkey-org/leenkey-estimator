@@ -3,12 +3,15 @@
 import { useRef, useState, type FormEvent } from "react";
 import { flushSync } from "react-dom";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { ChevronLeft, X } from "lucide-react";
+import { ChevronLeft, Sparkles, X } from "lucide-react";
+import { AssistantSuggestion } from "@/components/shared/assistant-suggestion";
 import { Button } from "@/components/shared/button";
 import { facadeScope } from "@/components/shared/facade-root";
 import { IconButton } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Textarea } from "@/components/shared/textarea";
+import { SuggestionErrorText, useSuggestion } from "@/leenkey/ai/components/use-suggestion";
+import type { SuggestionResult } from "@/leenkey/ai/types";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import { REASON_MIN, reasonLength } from "@/lib/validations/admin";
@@ -44,6 +47,7 @@ export function ReasonDialog({
   onClose,
   onConfirm,
   onCloseAutoFocus,
+  draft,
 }: {
   open: boolean;
   copy: ReasonDialogCopy;
@@ -52,10 +56,29 @@ export function ReasonDialog({
   onClose: () => void;
   onConfirm: (reason: string) => void;
   onCloseAutoFocus: (event: Event) => void;
+  /**
+   * « Rédiger avec l'assistant » (refusal of a listing, L1-30d): a motive
+   * proposed from what the field holds, in an AssistantSuggestion under it;
+   * « Utiliser » or « Modifier » put it in the field, nothing is sent.
+   */
+  draft?: (notes: string) => Promise<SuggestionResult>;
 }) {
   const [reason, setReason] = useState("");
   const [invalid, setInvalid] = useState(false);
   const field = useRef<HTMLTextAreaElement>(null);
+  const draftButton = useRef<HTMLButtonElement>(null);
+  const { suggestion, ask, reset } = useSuggestion();
+  const assistant = fr.assistant.suggestion;
+
+  /** The proposal closes; the focus goes back to the button that asked for it. */
+  const closeSuggestion = () => {
+    reset();
+    requestAnimationFrame(() => draftButton.current?.focus());
+  };
+  const fill = (text: string) => {
+    setReason(text);
+    setInvalid(false);
+  };
   const labels = t.reasonDialog;
   const { templates } = copy;
 
@@ -162,6 +185,54 @@ export function ReasonDialog({
                   if (invalid) setInvalid(false);
                 }}
               />
+              {draft && suggestion.state === "idle" ? (
+                <div>
+                  <Button
+                    ref={draftButton}
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={working}
+                    onClick={() => void ask(() => draft(reason))}
+                  >
+                    <Sparkles aria-hidden="true" />
+                    {assistant.draftDescription}
+                  </Button>
+                </div>
+              ) : null}
+              {draft && suggestion.state !== "idle" ? (
+                <AssistantSuggestion
+                  title={assistant.descriptionTitle}
+                  state={suggestion.state}
+                  text={suggestion.state === "ready" ? suggestion.text : undefined}
+                  error={
+                    suggestion.state === "error" ? (
+                      suggestion.error === "nothing" ? (
+                        // Decided meanwhile (another tab, another admin): a retry would not help.
+                        <p>{t.review.draftClosed}</p>
+                      ) : (
+                        <SuggestionErrorText error={suggestion.error} />
+                      )
+                    ) : null
+                  }
+                  loadingLabel={assistant.writing}
+                  useLabel={assistant.use}
+                  editLabel={assistant.edit}
+                  dismissLabel={assistant.dismiss}
+                  onUse={(text) => {
+                    fill(text);
+                    closeSuggestion();
+                  }}
+                  onEdit={(text) => {
+                    flushSync(() => {
+                      fill(text);
+                      reset();
+                    });
+                    field.current?.focus();
+                  }}
+                  onDismiss={closeSuggestion}
+                />
+              ) : null}
               {/* In the page from the opening, so that the error is read; out of the layout while empty. */}
               <div aria-live="polite" className={cn(!error && "sr-only")}>
                 {error ? (

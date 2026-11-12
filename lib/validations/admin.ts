@@ -46,6 +46,21 @@ export function adminListingsHref({ status, query }: AdminListingsQuery): string
   return search ? `/admin/annonces?${search}` : "/admin/annonces";
 }
 
+/** The motive drafted by the assistant, at most (the prompt asks 600; the field holds 1 000). */
+export const REJECTION_DRAFT_MAX = 800;
+
+/** « Rédiger avec l'assistant » in the refusal of a listing (L1-30d). */
+export const rejectionDraftSchema = z.object({
+  listingId: z.string().uuid(),
+  /** What the field holds when the team asks: the reason, in a few words. */
+  notes: z.string().max(1_000),
+});
+
+/** The CSV export of the same list (L1-30d). */
+export function adminListingsExportHref(filter: AdminListingsQuery): string {
+  return adminListingsHref(filter).replace("/admin/annonces", "/admin/annonces/export");
+}
+
 const listingId = z.string().uuid();
 
 /** Characters of a motive, at least: what listing_reject and listing_suspend require. */

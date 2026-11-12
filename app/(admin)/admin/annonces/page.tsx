@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Eye } from "lucide-react";
+import { Download, Eye } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import {
   DataTable,
@@ -24,6 +24,7 @@ import {
   ModerationFeedback,
 } from "@/leenkey/admin/components/listing-moderation";
 import { ListingPlace } from "@/leenkey/admin/components/listing-place";
+import { ReviewCell, ReviewNote } from "@/leenkey/admin/components/listing-review";
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import {
   ADMIN_LISTINGS_LIMIT,
@@ -36,6 +37,7 @@ import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import {
   ADMIN_LISTING_FILTERS,
+  adminListingsExportHref,
   adminListingsHref,
   parseAdminListingsQuery,
 } from "@/lib/validations/admin";
@@ -54,6 +56,7 @@ const COLUMNS = [
   t.table.plan,
   t.table.received,
   t.table.status,
+  t.review.column,
 ];
 
 function received(row: AdminListingRow, now: Date): string {
@@ -66,8 +69,8 @@ function detailHref(row: AdminListingRow): string {
 
 // L1-19: the listings to review, then all the others (SPEC-V2 section 17,
 // DESIGN.md 12.12 desktop table, 12.13 mobile cards). Filters and search in
-// the URL. Not yet here: the AI pre-analysis and the CSV export (L1-30). The
-// page checks the admin role itself, not only the layout.
+// the URL. The pre-analysis computed by rules and the CSV export of the list
+// (L1-30d). The page checks the admin role itself, not only the layout.
 export default async function AdminListingsPage({ searchParams }: Props) {
   await requireAdmin();
   const filter = parseAdminListingsQuery(await searchParams);
@@ -168,6 +171,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                   </p>
                 </div>
               </div>
+              <ReviewNote review={row.review} />
               <div className="mt-3 flex items-center justify-end gap-2">
                 <ListingModeration
                   listingId={row.id}
@@ -230,6 +234,9 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                 <DataTableCell>
                   <StatusBadge status={row.status} />
                 </DataTableCell>
+                <DataTableCell>
+                  <ReviewCell review={row.review} />
+                </DataTableCell>
               </DataTableRow>
               <DataTableActions columns={COLUMNS.length}>
                 <Button asChild variant="ghost" size="sm">
@@ -264,35 +271,47 @@ export default async function AdminListingsPage({ searchParams }: Props) {
         </p>
       ) : null}
       <div className="flex flex-col gap-3">
-        {/* A new form for each address: the field shows the search of the page. */}
-        <form
-          key={adminListingsHref(filter)}
-          role="search"
-          action="/admin/annonces"
-          className="flex items-end gap-2 md:max-w-md"
-        >
-          {filter.status ? (
-            <input
-              type="hidden"
-              name="statut"
-              value={ADMIN_LISTING_FILTERS.find(({ status }) => status === filter.status)?.param}
+        {/* The search, and the export of the list beside it from 768 px (DESIGN 12.12). */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-end">
+          {/* A new form for each address: the field shows the search of the page. */}
+          <form
+            key={adminListingsHref(filter)}
+            role="search"
+            action="/admin/annonces"
+            className="flex items-end gap-2 md:max-w-md"
+          >
+            {filter.status ? (
+              <input
+                type="hidden"
+                name="statut"
+                value={ADMIN_LISTING_FILTERS.find(({ status }) => status === filter.status)?.param}
+              />
+            ) : null}
+            <Input
+              type="search"
+              name="q"
+              label={t.search.label}
+              hideLabel
+              placeholder={t.search.placeholder}
+              defaultValue={filter.query}
+              maxLength={100}
+              compact
+              containerClassName="flex-1"
             />
+            <Button type="submit" variant="secondary" className="h-11">
+              {t.search.submit}
+            </Button>
+          </form>
+          {list.ok && list.data.rows.length > 0 ? (
+            <Button asChild variant="outline-ink" className="h-11 self-start md:self-auto">
+              {/* A file, not a page: the browser downloads it (route handler). */}
+              <a href={adminListingsExportHref(filter)} download>
+                <Download aria-hidden="true" />
+                {t.export}
+              </a>
+            </Button>
           ) : null}
-          <Input
-            type="search"
-            name="q"
-            label={t.search.label}
-            hideLabel
-            placeholder={t.search.placeholder}
-            defaultValue={filter.query}
-            maxLength={100}
-            compact
-            containerClassName="flex-1"
-          />
-          <Button type="submit" variant="secondary" className="h-11">
-            {t.search.submit}
-          </Button>
-        </form>
+        </div>
         <FilterPills label={t.filters.label} items={pills} />
       </div>
       {/* The outcome of a decision does not follow to another list. */}

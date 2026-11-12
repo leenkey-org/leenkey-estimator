@@ -12,7 +12,11 @@ import {
   submitListingSchema,
   type ListingDraftField,
 } from "@/lib/validations/listing";
-import { dpeIssue, missingCharacteristics, type DpeIssue } from "@/lib/validations/property";
+import {
+  missingCharacteristics,
+  propertyDpeIssue,
+  type DpeIssue,
+} from "@/lib/validations/property";
 import type { TablesInsert } from "@/types/database";
 import { inCreation } from "./creation";
 import { getDpeSettings } from "./dpe-rules";
@@ -202,25 +206,7 @@ export async function submitListing(input: unknown): Promise<SubmitListingResult
   // The rules of the base (dpe_rules), as listing_submit applies them.
   const dpe = await getDpeSettings();
   if (!dpe) return { ok: false, error: "unavailable" };
-  const issue = dpeIssue(
-    {
-      type: property.type,
-      dpe: property.dpe_class,
-      ges: property.ges_class,
-      dpeExempt: property.dpe_exempt,
-      dpeExemptionReason: property.dpe_exemption_reason,
-      dpeDate: property.dpe_date,
-      // Only whether they are known matters here, not the unit.
-      energyCostMinEuros: property.energy_cost_min_cents,
-      energyCostMaxEuros: property.energy_cost_max_cents,
-      energyPriceYear: property.energy_price_year,
-      dpeNumber: property.dpe_number,
-      dpeKind: property.dpe_kind,
-      energyKwhM2Year: property.energy_kwh_m2_year,
-      gesKgM2Year: property.ges_kg_m2_year,
-    },
-    dpe.rules,
-  );
+  const issue = propertyDpeIssue(property, dpe.rules);
   if (issue) return { ok: false, error: "dpe", issue };
 
   const sent = await supabase.rpc("listing_submit", { p_listing_id: listing.id });
