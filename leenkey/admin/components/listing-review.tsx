@@ -4,7 +4,12 @@ import { pillClassName } from "@/components/shared/status-badge";
 import { formatPrice } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
-import type { ListingReview } from "../review";
+import {
+  REVIEW_DESCRIPTION_MIN,
+  REVIEW_PHOTOS_MIN,
+  REVIEW_PRICE_GAP_MAX,
+  type ListingReview,
+} from "../review";
 import { reviewSentence } from "../review-text";
 
 const t = fr.adminListings.review;
@@ -80,8 +85,11 @@ export function ReviewPanel({
 }) {
   if (!review) return <p className="text-lk-secondary text-lk-ink-3">{t.unavailable}</p>;
   const rows = [
-    { label: t.detail.photos, value: t.detail.photosValue(review.photosCount) },
-    { label: t.detail.description, value: t.detail.descriptionValue(review.descriptionLength) },
+    { label: t.detail.photos, value: t.detail.photosValue(review.photosCount, REVIEW_PHOTOS_MIN) },
+    {
+      label: t.detail.description,
+      value: t.detail.descriptionValue(review.descriptionLength, REVIEW_DESCRIPTION_MIN),
+    },
     {
       label: t.detail.price,
       value:
@@ -106,7 +114,7 @@ export function ReviewPanel({
           </div>
         ))}
       </dl>
-      <p className="text-lk-caption text-lk-ink-3">{t.detail.note}</p>
+      <p className="text-lk-caption text-lk-ink-3">{t.detail.note(REVIEW_PRICE_GAP_MAX)}</p>
     </div>
   );
 }

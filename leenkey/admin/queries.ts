@@ -107,11 +107,16 @@ const EMPTY_COUNTS: AdminListingCounts = {
 const fullName = (first: string | null, last: string | null) =>
   [first, last].filter(Boolean).join(" ") || null;
 
-/** The DPE as the pre-analysis reads it: what the rules of publication say. */
+/**
+ * The DPE as the pre-analysis reads it, from the rules of publication: an
+ * exemption is to check, with its motive or without (then the publication
+ * is refused too, which the page of the listing says).
+ */
 function reviewDpe(property: Parameters<typeof propertyDpeIssue>[0], rules: DpeRules): ReviewDpe {
-  if (propertyDpeIssue(property, rules)) return "missing";
-  if (property.type === null || property.type === "terrain") return "none";
-  return property.dpe_exempt ? "exempt" : "ok";
+  const issue = propertyDpeIssue(property, rules);
+  if (issue === "exemption_reason" || (!issue && property.dpe_exempt)) return "exempt";
+  if (issue) return "missing";
+  return property.type === null || property.type === "terrain" ? "none" : "ok";
 }
 
 function logFailure(read: string, error: unknown, context: Record<string, unknown> = {}) {

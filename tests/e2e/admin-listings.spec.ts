@@ -239,13 +239,17 @@ test.describe("bureau", () => {
   test("pré-analyse dans la liste et sur la fiche, export CSV de la liste", async ({
     page,
     playwright,
+    browser,
     baseURL,
   }) => {
     await signIn(page, "/admin/annonces?statut=a-valider");
     await expect(page.getByRole("columnheader", { name: "Pré-analyse" })).toBeVisible();
     const line = row(page, "LK-0006");
-    await expect(line).toContainText(/Conforme|À vérifier/);
-    await expect(line).toContainText(/Annonce complète :|À vérifier :/);
+    // Seed: LK-0006 has one photo and a description of 232 characters.
+    await expect(line).toContainText("À vérifier");
+    await expect(line).toContainText(
+      /À vérifier : 1[\s\u00A0]photo sur 6 conseillées, description courte \(232[\s\u00A0]caractères\)\./,
+    );
 
     // L1-30d: the list as filtered, as a file; nothing for anyone else.
     const download = page.getByRole("link", { name: "Exporter CSV" });
@@ -263,9 +267,23 @@ test.describe("bureau", () => {
     expect(csv.startsWith("Référence;Titre;Statut;Ville;")).toBe(true);
     expect(csv).toContain("\r\nLK-0006;");
     expect(csv).not.toContain("\r\nLK-0014;");
+    // Without a session: the sign-in page, as for every page of the back office.
     const anonymous = await playwright.request.newContext({ baseURL });
-    expect((await anonymous.get("/admin/annonces/export")).status()).toBe(404);
+    const signedOut = await anonymous.get("/admin/annonces/export", { maxRedirects: 0 });
+    expect(signedOut.status()).toBe(307);
+    expect(signedOut.headers()["location"]).toMatch(/^\/connexion\?next=/);
     await anonymous.dispose();
+    // A seller: nothing (404), as for the pages.
+    const context = await browser.newContext({ baseURL });
+    await context.addCookies([
+      { name: "lk_consent", value: consentValue(false), url: baseURL ?? "" },
+    ]);
+    const seller = await context.newPage();
+    await signIn(seller, "/vendeur", "seller_b");
+    const refused = await seller.request.get("/admin/annonces/export", { maxRedirects: 0 });
+    expect(refused.status()).toBe(404);
+    expect(await refused.text()).not.toContain("LK-0006");
+    await context.close();
 
     // The page of the listing: the whole pre-analysis.
     await line.getByRole("link", { name: "Aperçu de l'annonce LK-0006" }).click();
@@ -294,7 +312,7 @@ test.describe("téléphone", () => {
     const card = cards.getByRole("listitem").filter({ hasText: "LK-0006" });
     await expect(card).toHaveCount(1);
     // L1-30d: the pre-analysis in the card (AdminAnnonces).
-    await expect(card).toContainText(/Pré-analyse · (Annonce complète|À vérifier) :/);
+    await expect(card).toContainText(/Pré-analyse · À vérifier : 1[\s\u00A0]photo sur 6/);
     await expectNoSeriousViolation(page);
 
     const open = card.getByRole("button", { name: "Refuser", exact: true });

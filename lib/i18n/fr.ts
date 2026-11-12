@@ -1486,15 +1486,15 @@ export const fr = {
       ok: "Conforme",
       check: "À vérifier",
       unavailable: "Pré-analyse indisponible",
-      okSentence: (facts: string[]) => `Annonce complète : ${facts.join(", ")}.`,
+      okSentence: (facts: string[]) => `Rien à signaler : ${facts.join(", ")}.`,
       checkSentence: (issues: string[]) => `À vérifier : ${issues.join(", ")}.`,
       issues: {
-        dpe: "DPE manquant ou périmé",
+        dpe: "DPE manquant ou plus valable",
         dpeExemption: "exemption de DPE à vérifier",
-        photos: (count: number) =>
+        photos: (count: number, min: number) =>
           count === 0
             ? "aucune photo"
-            : `${count}\u00A0photo${count > 1 ? "s" : ""} sur 6 conseillées`,
+            : `${count}\u00A0photo${count > 1 ? "s" : ""} sur ${min} conseillées`,
         priceHigh: (gap: number) => `prix ${gap}\u00A0% au-dessus de l'analyse de valeur`,
         priceLow: (gap: number) => `prix ${Math.abs(gap)}\u00A0% sous l'analyse de valeur`,
         description: (length: number) =>
@@ -1511,9 +1511,10 @@ export const fr = {
       detail: {
         completeness: "Complétude",
         photos: "Photos",
-        photosValue: (count: number) => `${count} (6 conseillées)`,
+        photosValue: (count: number, min: number) => `${count} (${min} conseillées)`,
         description: "Description",
-        descriptionValue: (length: number) => `${length}\u00A0caractères (400 au moins conseillés)`,
+        descriptionValue: (length: number, min: number) =>
+          `${length}\u00A0caractères (${min} au moins conseillés)`,
         price: "Prix et analyse de valeur",
         priceValue: (gap: number, value: string) =>
           `${gap > 0 ? "+" : gap < 0 ? "−" : ""}${Math.abs(gap)}\u00A0% par rapport à ${value}`,
@@ -1521,16 +1522,20 @@ export const fr = {
         dpe: "DPE",
         dpeValue: {
           ok: "Renseigné et valable",
-          missing: "Manquant ou périmé : publication refusée",
+          missing: "Manquant ou plus valable",
           exempt: "Non soumis selon le vendeur : motif à vérifier",
-          none: "Sans objet (terrain)",
+          none: "Sans DPE à fournir",
         },
-        note: "Calculée par des règles fixes (photos, description, DPE, écart de prix de plus de 10\u00A0%) : elle aide à décider, elle ne décide pas.",
+        note: (gap: number) =>
+          `Calculée par des règles fixes (photos, description, DPE, écart de prix de plus de ${gap}\u00A0%) : elle aide à décider, elle ne décide pas.`,
       },
+      draftClosed: "Cette annonce n'attend plus de décision : rechargez la page.",
     },
     export: "Exporter CSV",
     csv: {
       fileName: (day: string) => `leenkey-annonces-${day}.csv`,
+      limited: (count: number) =>
+        `Liste coupée aux ${count} premières annonces : précisez la recherche ou le filtre.`,
       header: [
         "Référence",
         "Titre",

@@ -23,7 +23,7 @@ describe("listingReview", () => {
       verdict: "ok",
     });
     expect(reviewSentence(review)).toBe(
-      "Annonce complète : prix cohérent avec l'analyse de valeur (+2\u00A0%), 12\u00A0photos, DPE renseigné.",
+      "Rien à signaler : prix cohérent avec l'analyse de valeur (+2\u00A0%), 12\u00A0photos, DPE renseigné.",
     );
   });
 
@@ -63,7 +63,7 @@ describe("listingReview", () => {
     // 35 × 3/6 + 30 × 16/800 + 0 + 15
     expect(review.completeness).toBe(33);
     expect(reviewSentence(review)).toBe(
-      "À vérifier : DPE manquant ou périmé, prix 43\u00A0% au-dessus de l'analyse de valeur, 3\u00A0photos sur 6 conseillées, description courte (16\u00A0caractères).",
+      "À vérifier : DPE manquant ou plus valable, prix 43\u00A0% au-dessus de l'analyse de valeur, 3\u00A0photos sur 6 conseillées, description courte (16\u00A0caractères).",
     );
   });
 

@@ -8,30 +8,29 @@ import { reviewIssueText } from "./review-text";
 
 const t = fr.adminListings.csv;
 
-export function listingsCsv(rows: AdminListingRow[], siteUrl: string): string {
-  return toCsv(
-    t.header,
-    rows.map((row) => [
-      row.reference,
-      row.title,
-      fr.listingStatus[row.status],
-      row.city,
-      row.postalCode,
-      row.sellerName,
-      fr.plan[row.plan],
-      row.priceCents / 100,
-      csvDateTime(row.submittedAt),
-      csvDateTime(row.publishedAt),
-      row.review
-        ? row.review.verdict === "ok"
-          ? fr.adminListings.review.ok
-          : fr.adminListings.review.check
-        : fr.adminListings.review.unavailable,
-      row.review ? row.review.issues.map(reviewIssueText).join(" ; ") : null,
-      row.review ? row.review.completeness : null,
-      row.review ? row.review.priceGapPct : null,
-      row.review ? row.review.photosCount : null,
-      `${siteUrl}/admin/annonces/${row.id}`,
-    ]),
-  );
+/** `limited`: more listings match than the list holds; a last line says so. */
+export function listingsCsv(rows: AdminListingRow[], siteUrl: string, limited = false): string {
+  const lines = rows.map((row) => [
+    row.reference,
+    row.title,
+    fr.listingStatus[row.status],
+    row.city,
+    row.postalCode,
+    row.sellerName,
+    fr.plan[row.plan],
+    row.priceCents / 100,
+    csvDateTime(row.submittedAt),
+    csvDateTime(row.publishedAt),
+    row.review
+      ? row.review.verdict === "ok"
+        ? fr.adminListings.review.ok
+        : fr.adminListings.review.check
+      : fr.adminListings.review.unavailable,
+    row.review ? row.review.issues.map(reviewIssueText).join(" ; ") : null,
+    row.review ? row.review.completeness : null,
+    row.review ? row.review.priceGapPct : null,
+    row.review ? row.review.photosCount : null,
+    `${siteUrl}/admin/annonces/${row.id}`,
+  ]);
+  return toCsv(t.header, limited ? [...lines, [t.limited(rows.length)]] : lines);
 }

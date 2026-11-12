@@ -207,7 +207,12 @@ export function ReasonDialog({
                   text={suggestion.state === "ready" ? suggestion.text : undefined}
                   error={
                     suggestion.state === "error" ? (
-                      <SuggestionErrorText error={suggestion.error} />
+                      suggestion.error === "nothing" ? (
+                        // Decided meanwhile (another tab, another admin): a retry would not help.
+                        <p>{t.review.draftClosed}</p>
+                      ) : (
+                        <SuggestionErrorText error={suggestion.error} />
+                      )
                     ) : null
                   }
                   loadingLabel={assistant.writing}

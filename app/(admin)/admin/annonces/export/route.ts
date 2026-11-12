@@ -8,8 +8,10 @@ import { parseAdminListingsQuery } from "@/lib/validations/admin";
 // « Exporter CSV » of /admin/annonces (L1-30d, SPEC-V2 17, DESIGN.md 12.12):
 // the listings of the list as filtered (same status and search, same limit),
 // as a file. A route handler: a server action cannot answer with a file.
-// For the team only: anyone else gets a 404, as for the pages of the back
-// office; the reads go through the admin's session (SQL functions and RLS).
+// For the team only: without a session, the middleware sends to the sign-in
+// page like every /admin page; a signed-in account without the admin role
+// gets a 404. The reads go through the admin's session (SQL functions, RLS).
+// Not written in audit_log: a read of what the list shows, like the list.
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +31,7 @@ export async function GET(request: Request) {
     });
   }
   const day = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Paris" }).format(new Date());
-  return new Response(listingsCsv(list.data.rows, siteUrl()), {
+  return new Response(listingsCsv(list.data.rows, siteUrl(), list.data.limited), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${fr.adminListings.csv.fileName(day)}"`,

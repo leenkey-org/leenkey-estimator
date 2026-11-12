@@ -87,8 +87,8 @@ export async function draftRejectionReason(
   if (!found.ok) return { ok: false, error: "unavailable" };
   if (!found.data) return { ok: false, error: "not_found" };
   const { listing, review, valueCents, status } = found.data;
-  // A refusal is for a listing waiting for the team (listing_reject).
-  if (status !== "pending") return { ok: false, error: "not_found" };
+  // A refusal is for a listing waiting for the team; « nothing »: reload the page.
+  if (status !== "pending") return { ok: false, error: "nothing" };
 
   let system: string;
   try {

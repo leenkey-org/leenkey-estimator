@@ -271,44 +271,47 @@ export default async function AdminListingsPage({ searchParams }: Props) {
         </p>
       ) : null}
       <div className="flex flex-col gap-3">
-        {/* A new form for each address: the field shows the search of the page. */}
-        <form
-          key={adminListingsHref(filter)}
-          role="search"
-          action="/admin/annonces"
-          className="flex items-end gap-2 md:max-w-md"
-        >
-          {filter.status ? (
-            <input
-              type="hidden"
-              name="statut"
-              value={ADMIN_LISTING_FILTERS.find(({ status }) => status === filter.status)?.param}
+        {/* The search, and the export of the list beside it from 768 px (DESIGN 12.12). */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-end">
+          {/* A new form for each address: the field shows the search of the page. */}
+          <form
+            key={adminListingsHref(filter)}
+            role="search"
+            action="/admin/annonces"
+            className="flex items-end gap-2 md:max-w-md"
+          >
+            {filter.status ? (
+              <input
+                type="hidden"
+                name="statut"
+                value={ADMIN_LISTING_FILTERS.find(({ status }) => status === filter.status)?.param}
+              />
+            ) : null}
+            <Input
+              type="search"
+              name="q"
+              label={t.search.label}
+              hideLabel
+              placeholder={t.search.placeholder}
+              defaultValue={filter.query}
+              maxLength={100}
+              compact
+              containerClassName="flex-1"
             />
+            <Button type="submit" variant="secondary" className="h-11">
+              {t.search.submit}
+            </Button>
+          </form>
+          {list.ok && list.data.rows.length > 0 ? (
+            <Button asChild variant="outline-ink" className="h-11 self-start md:self-auto">
+              {/* A file, not a page: the browser downloads it (route handler). */}
+              <a href={adminListingsExportHref(filter)} download>
+                <Download aria-hidden="true" />
+                {t.export}
+              </a>
+            </Button>
           ) : null}
-          <Input
-            type="search"
-            name="q"
-            label={t.search.label}
-            hideLabel
-            placeholder={t.search.placeholder}
-            defaultValue={filter.query}
-            maxLength={100}
-            compact
-            containerClassName="flex-1"
-          />
-          <Button type="submit" variant="secondary" className="h-11">
-            {t.search.submit}
-          </Button>
-        </form>
-        {list.ok && list.data.rows.length > 0 ? (
-          <Button asChild variant="outline-ink" className="h-11 self-start">
-            {/* A file, not a page: the browser downloads it (route handler). */}
-            <a href={adminListingsExportHref(filter)} download>
-              <Download aria-hidden="true" />
-              {t.export}
-            </a>
-          </Button>
-        ) : null}
+        </div>
         <FilterPills label={t.filters.label} items={pills} />
       </div>
       {/* The outcome of a decision does not follow to another list. */}

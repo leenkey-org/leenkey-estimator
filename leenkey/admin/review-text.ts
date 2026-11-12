@@ -1,10 +1,11 @@
 import { fr } from "@/lib/i18n/fr";
-import type { ListingReview, ReviewIssue } from "./review";
+import { REVIEW_PHOTOS_MIN, type ListingReview, type ReviewIssue } from "./review";
 
 // The sentence of a pre-analysis (L1-30d), as the mobile card of the mockup
 // writes it (AdminAnnonces: « Pré-analyse : annonce complète, prix cohérent
 // avec l'estimation (+2 %), 12 photos, DPE renseigné. ») with the words of
-// Leenkey (« analyse de valeur »).
+// Leenkey (« analyse de valeur ») and « Rien à signaler » rather than
+// « annonce complète » (the completeness may be below 100).
 
 const t = fr.adminListings.review;
 
@@ -15,7 +16,7 @@ export function reviewIssueText(issue: ReviewIssue): string {
     case "dpeExemption":
       return t.issues.dpeExemption;
     case "photos":
-      return t.issues.photos(issue.count);
+      return t.issues.photos(issue.count, REVIEW_PHOTOS_MIN);
     case "priceHigh":
       return t.issues.priceHigh(issue.gap);
     case "priceLow":
