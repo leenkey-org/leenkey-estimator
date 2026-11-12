@@ -161,7 +161,6 @@ async function JournalTab({ query }: { query: AssistantQuery }) {
             <li key={row.id}>
               <Link
                 href={`/admin/assistant/${row.id}`}
-                aria-label={t.journal.open(formatDateTime(row.lastAt, now))}
                 className="flex min-h-14 flex-col gap-0.5 px-4 py-3 transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-brand-blue focus-visible:outline-solid"
               >
                 <span className="text-lk-caption font-semibold text-lk-ink-2">

@@ -1557,7 +1557,6 @@ export const fr = {
       messages: (count: number) => `${count}\u00A0message${count > 1 ? "s" : ""}`,
       tokens: (input: string, output: string) => `${input} jetons lus · ${output} écrits`,
       noQuestion: "Sans question écrite",
-      open: (when: string) => `Ouvrir la conversation du ${when}`,
     },
     detail: {
       back: "Journal de l'assistant",

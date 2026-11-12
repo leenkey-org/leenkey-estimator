@@ -58,7 +58,7 @@ test("base de connaissances : fiches, recherche test, import d'un fichier", asyn
       name: "Base de connaissances",
     }),
   ).toHaveAttribute("aria-current", "page");
-  await expect(page.getByText(/^73 fiches, toutes cherchables par le sens\.$/)).toBeVisible();
+  await expect(page.getByText(/^73\u00A0fiches, toutes cherchables par le sens\.$/)).toBeVisible();
   await expectNoSeriousViolation(page);
 
   // The test search: the cards the assistant would read.
@@ -89,7 +89,7 @@ test("base de connaissances : fiches, recherche test, import d'un fichier", asyn
   await expect(upload.getByText(/^faq-tests-e2e\.md : 2 ajoutées, 0 modifiée/)).toBeVisible({
     timeout: 120_000,
   });
-  await expect(page.getByText(/^75 fiches/)).toBeVisible();
+  await expect(page.getByText(/^75\u00A0fiches/)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Tests E2E · 2" })).toBeVisible();
 
   // A file without the line of metadata: refused, nothing imported.
