@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Lock } from "lucide-react";
 import { AdvisorAvatar } from "@/components/shared/advisor-avatar";
 import { Button } from "@/components/shared/button";
 import { formatMessageTime } from "@/lib/format";
@@ -14,8 +15,10 @@ const cardClass = "flex flex-col gap-3 rounded-lk-xl border border-lk-line bg-lk
 /**
  * The adviser on the dashboard of a sale (SPEC-V2 8.7, L1-34): « LK », the
  * last message of the conversation and « Écrire à mon conseiller ». Without
- * the right (Autonomie, SPEC 8.6), an invitation to the plans instead: never
- * a step of the sale held back.
+ * the right (Autonomie, SPEC 8.6), the same card greyed (decision of
+ * 2026-11-11): the adviser is there, « Accessible avec la formule
+ * Accompagné », with the way to the plans; never a step of the sale held
+ * back, never a disabled button (the text stays readable).
  */
 export function AdvisorCard({
   conversation,
@@ -29,19 +32,29 @@ export function AdvisorCard({
 }) {
   if (!conversation) {
     return (
-      <section aria-labelledby="conseiller" className={cardClass}>
+      <section aria-labelledby="conseiller" className={cn(cardClass, "bg-lk-stone-2")}>
         <div className="flex items-start gap-3">
-          <AdvisorAvatar label={t.avatar} />
+          <AdvisorAvatar label={t.avatar} className="bg-lk-line text-lk-ink-3" />
           <div className="flex min-w-0 flex-col gap-0.5">
-            <h2 id="conseiller" className="text-lk-compact font-semibold text-lk-ink">
-              {t.invite.title}
+            <h2 id="conseiller" className="text-lk-compact font-semibold text-lk-ink-3">
+              {t.name}
             </h2>
-            <p className="text-lk-label text-lk-ink-2">{t.invite.text}</p>
+            <p className="flex items-center gap-1.5 text-lk-caption font-semibold text-lk-ink-3">
+              <Lock aria-hidden="true" className="size-3.5 shrink-0" />
+              {t.invite.locked}
+            </p>
+            <p className="text-lk-label text-lk-ink-3">{t.invite.text}</p>
           </div>
         </div>
-        <Button asChild variant="secondary" className="md:self-start">
-          <Link href={plansHref}>{t.invite.action}</Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <Button asChild variant="secondary">
+            <Link href={plansHref}>{t.invite.action}</Link>
+          </Button>
+          <span className="flex items-center gap-1.5 text-lk-label text-lk-ink-3">
+            <Lock aria-hidden="true" className="size-3.5 shrink-0" />
+            {t.write}
+          </span>
+        </div>
       </section>
     );
   }

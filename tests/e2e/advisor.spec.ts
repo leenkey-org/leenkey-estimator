@@ -80,14 +80,18 @@ test("le tableau de bord : le message du conseiller d'abord, sa carte ; l'invita
   );
   await expectNoSeriousViolation(page);
 
+  // Autonomie (2026-11-11): the adviser greyed, with the way to the plans; nothing to write to.
   await page.goto(`/vendeur?bien=${LK0003}`);
-  const invite = page.getByRole("region", { name: "Échanger avec un conseiller Leenkey" });
-  await expect(invite).toContainText("répond sous 24".replace(NBSP, " "));
-  await expect(invite.getByRole("link", { name: "Voir les formules" })).toHaveAttribute(
+  const locked = page.getByRole("region", { name: "Mon conseiller Leenkey" });
+  await expect(locked).toContainText("Accessible avec la formule Accompagné");
+  await expect(locked).toContainText("répond sous 24".replace(NBSP, " "));
+  await expect(locked.getByRole("link", { name: "Voir les formules" })).toHaveAttribute(
     "href",
     `/vendeur/formule?bien=${LK0003}`,
   );
-  await expect(page.getByRole("region", { name: "Mon conseiller Leenkey" })).toHaveCount(0);
+  await expect(locked.getByText("Écrire à mon conseiller")).toBeVisible();
+  await expect(locked.getByRole("link", { name: "Écrire à mon conseiller" })).toHaveCount(0);
+  await expectNoSeriousViolation(page);
 });
 
 test("la boîte partagée de l'équipe : les conversations, le filtre par formule @a11y", async ({

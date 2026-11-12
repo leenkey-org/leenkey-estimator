@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-12 · Ma vente · PR #91 · Carte du conseiller grisée en Autonomie
+- Modifié : sur « Ma vente », un bien sans conseiller dans sa formule montre la carte du conseiller grisée (« Accessible avec la formule Accompagné », « Voir les formules ») au lieu de l'invitation « Échanger avec un conseiller Leenkey ».
+- Tests : E2E (`advisor.spec.ts`, mobile et desktop, axe).
+
 ### 2026-11-11 · Assistant · PR #90 · Conseiller grisé en Autonomie
 - Modifié : le message de limite de l'assistant ne promet plus un conseiller à un vendeur qui n'en a pas : « Écrivez à l'équipe Leenkey », bouton « Écrire à l'équipe Leenkey » (demande à l'équipe, service après-vente ouvert à tous).
 - Ajouté : avec ce message, le conseiller est montré grisé (« Écrire à mon conseiller », « Accessible avec la formule Accompagné », vers les formules du bien) quand la formule n'en comprend pas ; actif, vers la conversation, quand elle en comprend un.
