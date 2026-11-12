@@ -96,7 +96,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-66** DPE repris du registre de l'ADEME par son numéro, consommation et émissions, DPE tertiaire, règles et motifs d'exemption en base, contrôle ADEME dans le back office (réponses de Cédric du 10 novembre) · PR : #88 · Testé en préprod : ☐
 - [x] **L1-31** Passage à l’humain (`create_case`, fonction SQL `security definer`) côté vendeur : outil de l'assistant après confirmation, demande écrite à la limite du jour, notification et email de l'équipe · PR : #89 · Testé en préprod : ☐
 - [x] **L1-34** Conversation conseiller : `kind = 'advisor'` sur la messagerie existante, créée au paiement, vue admin `/admin/messages`, outil `contact_advisor` · PR : #86 · Testé en préprod : ☐
-- [x] **L1-32** Recette interne lot 1 : E2E 1, 2, 3, 7 verts, Lighthouse, axe, revue RLS (`docs/RECETTE.md` ; tag `v2.0.0-lot1` posé après L1-30d) · PR : #92 · Testé en préprod : ☐
+- [x] **L1-32** Recette interne lot 1 : E2E 1, 2, 3, 7 verts, Lighthouse, axe, revue RLS (`docs/RECETTE.md` ; tag `v2.0.0-lot1` posé le 2026-11-12 sur `a10fd4c`, après L1-30d) · PR : #92 · Testé en préprod : ☐
 
 Toujours la semaine la plus risquée du projet. Ordre imposé : L1-26 et L1-33 (paiement) le lundi, L1-28 avant L1-29 et L1-31, L1-34 en dernier. Si L1-34 n'est pas prête jeudi soir, elle est livrée en S6 et la recette du lot 1 le dit explicitement.
 
