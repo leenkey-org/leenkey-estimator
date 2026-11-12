@@ -12,9 +12,13 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { Textarea } from "@/components/shared/textarea";
 import { SuggestionErrorText, useSuggestion } from "@/leenkey/ai/components/use-suggestion";
 import type { SuggestionResult } from "@/leenkey/ai/types";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminListings } from "@/lib/i18n/sections/adminListings";
+import { frAssistant } from "@/lib/i18n/sections/assistant";
 import { cn } from "@/lib/utils";
 import { REASON_MIN, reasonLength } from "@/lib/validations/admin";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminListings: frAdminListings, assistant: frAssistant } as const;
 
 const t = fr.adminListings;
 

@@ -8,8 +8,11 @@ import { Button } from "./button";
 import { EmptyState } from "./empty-state";
 import { facadeScope } from "./facade-root";
 import { IconButton, iconButtonVariants } from "./icon-button";
-import { fr } from "@/lib/i18n/fr";
+import { frNav } from "@/lib/i18n/sections/nav";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { nav: frNav } as const;
 
 const t = fr.nav.notifications;
 

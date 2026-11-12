@@ -1,6 +1,9 @@
 import { Text } from "@react-email/components";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
 import { EmailLayout, EmailQuote, emailText } from "./components/email-layout";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails } as const;
 
 // For the team (SPEC-V2 section 18, « dossier créé », L1-31): one or several
 // requests written to the team since the last email (create_case, from the

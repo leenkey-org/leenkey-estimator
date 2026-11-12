@@ -8,7 +8,11 @@ import { SavedNotice } from "@/components/shared/saved-notice";
 import { SheetSection } from "@/leenkey/properties/components/sheet-section";
 import { propertyForSheet } from "@/leenkey/properties/load";
 import { editHref, propertyName, sellerFacts } from "@/leenkey/properties/sheet";
-import { fr } from "@/lib/i18n/fr";
+import { frLegal } from "@/lib/i18n/sections/legal";
+import { frProperties } from "@/lib/i18n/sections/properties";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { legal: frLegal, properties: frProperties } as const;
 
 const t = fr.properties.sheet;
 const edits = fr.properties.edit;

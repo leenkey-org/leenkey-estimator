@@ -7,7 +7,6 @@ import { iconButtonVariants } from "./icon-button";
 import { Logo } from "./logo";
 import type { NavItem } from "./nav-items";
 import { TopNavLinks } from "./top-nav-links";
-import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 
 export type TopNavAccount =

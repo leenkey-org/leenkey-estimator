@@ -10,7 +10,10 @@ import { photoUrl } from "@/leenkey/properties/photo-files";
 import { sellerProperty } from "@/leenkey/properties/queries";
 import { sheetHref } from "@/leenkey/properties/sheet";
 import { formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties.sent;
 

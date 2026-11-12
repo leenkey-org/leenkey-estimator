@@ -11,8 +11,11 @@ import { creationStep } from "@/leenkey/properties/creation";
 import { getDpeSettings } from "@/leenkey/properties/dpe-rules";
 import { propertyForCreation } from "@/leenkey/properties/load";
 import { sellerListingPreview } from "@/leenkey/properties/preview";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import { dpeIssue } from "@/lib/validations/property";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties;
 

@@ -1,10 +1,13 @@
 import type { Progress, Step, StepTask } from "@/core/steps/types";
 import type { ConversationSummary } from "@/leenkey/messaging/types";
 import { formatRelative } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frSaleDashboard } from "@/lib/i18n/sections/saleDashboard";
 import type { NextAction } from "./next-action";
 import { sellerCanDo, taskHref, type SaleSituation } from "./next-action";
 import type { SellerProperty } from "./queries";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { saleDashboard: frSaleDashboard } as const;
 
 // What « Ma vente » shows of a sale (L1-24, SPEC-V2 8.7), as plain values
 // (unit-tested): the property shown, its step, the next action in words,

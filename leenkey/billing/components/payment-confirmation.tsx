@@ -4,9 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/shared/button";
 import { formatDate } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frBilling } from "@/lib/i18n/sections/billing";
 import { checkoutStatus } from "../actions";
 import { firstContactFrom } from "../orders";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { billing: frBilling } as const;
 
 // The return from Stripe (SPEC-V2 section 11, step 4): the page activates
 // nothing, it reads the state the webhook wrote. « Paiement en cours de

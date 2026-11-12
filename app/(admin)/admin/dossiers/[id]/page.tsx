@@ -15,11 +15,15 @@ import { ModerationFeedback } from "@/leenkey/admin/components/listing-moderatio
 import { adminAdvisorConversations } from "@/leenkey/admin/messages/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { formatDateTime } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminCases } from "@/lib/i18n/sections/adminCases";
+import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { cn } from "@/lib/utils";
 import { adminCasesHref } from "@/lib/validations/admin";
 import type { Database } from "@/types/database";
 import { AdminPage } from "../../_components/admin-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminCases: frAdminCases, adminUsers: frAdminUsers } as const;
 
 const t = fr.adminCases;
 const d = t.detail;

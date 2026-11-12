@@ -4,8 +4,11 @@ import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import type { AssistantSuggestionState } from "@/components/shared/assistant-suggestion";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frAssistant } from "@/lib/i18n/sections/assistant";
 import type { SuggestionError, SuggestionResult } from "../types";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { assistant: frAssistant } as const;
 
 const t = fr.assistant;
 

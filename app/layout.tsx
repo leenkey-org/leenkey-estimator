@@ -5,6 +5,7 @@ import { EnvBanner } from "@/components/shared/env-banner";
 import { GradientDefs } from "@/components/shared/gradient-defs";
 import { RouteHistory } from "@/leenkey/navigation/components/route-history";
 import { SpaceProvider } from "@/leenkey/navigation/components/space-context";
+import { consentHeadScript } from "@/lib/consent";
 import { isProduction } from "@/lib/env";
 import { sora } from "@/lib/fonts";
 import "./globals.css";
@@ -45,7 +46,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     // Sora, self-hosted by next/font (no request to Google before consent,
     // L1-37), for every page and the portals outside <FacadeRoot>.
-    <html lang="fr" className={sora.variable}>
+    // data-consent is set by the script of the <head>, before React (P-06).
+    <html lang="fr" className={sora.variable} suppressHydrationWarning>
+      <head>
+        {/* Before the first paint: the banner of the page hidden for a visitor who already chose. */}
+        <script dangerouslySetInnerHTML={{ __html: consentHeadScript() }} />
+        {/* Without JavaScript no tracker loads, and the buttons of the banner would do nothing. */}
+        <noscript>
+          <style>{"[data-consent-banner]{display:none}"}</style>
+        </noscript>
+      </head>
       <body>
         {/* The gradient of the icons of the charte, once for every page (L1-58). */}
         <GradientDefs />

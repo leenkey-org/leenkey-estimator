@@ -8,8 +8,11 @@ import { FacadeDrawing } from "./facade-drawing";
 import { Photo } from "./photo";
 import { facadeScope } from "./facade-root";
 import { IconButton } from "./icon-button";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing } as const;
 
 export type GalleryPhoto = { src: string; alt: string };
 
@@ -75,7 +78,13 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
                 // The ring inside the photo: the strip clips what is outside.
                 className="relative h-full w-full shrink-0 snap-center focus-visible:-outline-offset-3"
               >
-                <Photo src={photo.src} alt={photo.alt} sizes="100vw" priority={index === 0} />
+                <Photo
+                  src={photo.src}
+                  alt={photo.alt}
+                  sizes="100vw"
+                  // The phone layout: its first photo preloaded under 1 024 px only (P-06).
+                  preloadMedia={index === 0 ? "(max-width: 1023.98px)" : undefined}
+                />
               </button>
             ))}
           </div>
@@ -126,7 +135,8 @@ export function Gallery({ photos, topLeft, topRight, className }: GalleryProps) 
                       ? "(min-width: 1920px) 1200px, 66vw"
                       : "(min-width: 1920px) 900px, 50vw"
                 }
-                priority
+                // Hidden under 1 024 px: preloaded from 1 024 px only (P-06).
+                preloadMedia="(min-width: 1024px)"
               />
             </button>
           ))}

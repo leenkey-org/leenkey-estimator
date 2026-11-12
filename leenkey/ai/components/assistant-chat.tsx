@@ -11,7 +11,7 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { MessageBubble } from "@/components/shared/message-bubble";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAssistant } from "@/lib/i18n/sections/assistant";
 import { cn } from "@/lib/utils";
 import { ASSISTANT_MESSAGE_MAX, type AssistantContext } from "@/lib/validations/assistant";
 import { assistantHelp, confirmToolCall, declineToolCall, type AssistantHelp } from "../actions";
@@ -19,6 +19,9 @@ import { actionPreview, type ActionPreview } from "../previews";
 import { readEvents, type StreamEvent } from "../stream-events";
 import { CaseRequestForm } from "./case-request-form";
 import type { ActionState, AssistantConversation, ChatItem } from "../types";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { assistant: frAssistant } as const;
 
 const t = fr.assistant;
 

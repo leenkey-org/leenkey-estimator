@@ -4,11 +4,14 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
-import { fr } from "@/lib/i18n/fr";
+import { frMessaging } from "@/lib/i18n/sections/messaging";
 import { cn } from "@/lib/utils";
 import type { QueryResult } from "../queries";
 import type { ConversationSummary } from "../types";
 import { ConversationList } from "./conversation-list";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { messaging: frMessaging } as const;
 
 const t = fr.messaging;
 

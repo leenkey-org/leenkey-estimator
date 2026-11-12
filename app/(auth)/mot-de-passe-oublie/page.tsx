@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { fr } from "@/lib/i18n/fr";
+import { frAuth } from "@/lib/i18n/sections/auth";
 import { AuthShell } from "../_components/auth-shell";
 import { ForgotForm } from "./forgot-form";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { auth: frAuth } as const;
 
 export const metadata: Metadata = { title: fr.auth.forgot.metaTitle };
 

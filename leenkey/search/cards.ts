@@ -4,7 +4,12 @@ import type { ShowcaseCardProps } from "@/components/shared/showcase-card";
 import { isNewListing } from "@/leenkey/site/home-categories";
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import { NBSP, formatDateShort, parisDaysAgo } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
+import { frPropertyCard } from "@/lib/i18n/sections/propertyCard";
+import { frSearch } from "@/lib/i18n/sections/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing, propertyCard: frPropertyCard, search: frSearch } as const;
 
 // Search result → PropertyCard (docs/DESIGN.md 10.3): its main photo, or
 // facade.svg on stone without one.

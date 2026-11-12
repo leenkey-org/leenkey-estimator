@@ -6,8 +6,12 @@ import { requireProfile } from "@/core/auth/session";
 import { BuyerProfileForm } from "@/leenkey/buyers/components/buyer-profile-form";
 import { buyerProfile, type BuyerProfile } from "@/leenkey/buyers/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frBuyerSpace } from "@/lib/i18n/sections/buyerSpace";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import { SpacePage } from "../../_components/space-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { buyerSpace: frBuyerSpace, properties: frProperties } as const;
 
 const t = fr.buyerSpace.profile;
 

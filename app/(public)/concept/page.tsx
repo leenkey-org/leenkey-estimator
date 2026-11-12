@@ -7,7 +7,10 @@ import {
   ToolSection,
 } from "@/leenkey/site/components/concept-sections";
 import { PublicPage } from "@/leenkey/site/components/public-page";
-import { fr } from "@/lib/i18n/fr";
+import { frSiteConcept } from "@/lib/i18n/sections/site/concept";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { site: { concept: frSiteConcept } } as const;
 
 const t = fr.site.concept;
 

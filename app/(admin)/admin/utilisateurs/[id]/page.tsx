@@ -13,9 +13,22 @@ import { ModerationFeedback } from "@/leenkey/admin/components/listing-moderatio
 import { adminUser, fullName, type AdminUserDetail } from "@/leenkey/admin/users/queries";
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import { formatDateShort, formatDateTime, formatRelative } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
+import { frBuyerSpace } from "@/lib/i18n/sections/buyerSpace";
+import { frFinancingStatus } from "@/lib/i18n/sections/financingStatus";
+import { frListing } from "@/lib/i18n/sections/listing";
+import { frPropertyType } from "@/lib/i18n/sections/propertyType";
 import { adminUsersHref } from "@/lib/validations/admin";
 import { AdminPage } from "../../_components/admin-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = {
+  adminUsers: frAdminUsers,
+  buyerSpace: frBuyerSpace,
+  financingStatus: frFinancingStatus,
+  listing: frListing,
+  propertyType: frPropertyType,
+} as const;
 
 const t = fr.adminUsers;
 const d = t.detail;

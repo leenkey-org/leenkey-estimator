@@ -9,8 +9,13 @@ import { ROUTES } from "@/leenkey/navigation/spaces";
 import { PropertyList } from "@/leenkey/properties/components/property-list";
 import { sellerProperties } from "@/leenkey/properties/queries";
 import { sheetHref } from "@/leenkey/properties/sheet";
-import { fr } from "@/lib/i18n/fr";
+import { frPlaceholders } from "@/lib/i18n/sections/placeholders";
+import { frProperties } from "@/lib/i18n/sections/properties";
+import { frSpaces } from "@/lib/i18n/sections/spaces";
 import { SpacePage } from "../../_components/space-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { placeholders: frPlaceholders, properties: frProperties, spaces: frSpaces } as const;
 
 const t = fr.placeholders.sellerFile;
 

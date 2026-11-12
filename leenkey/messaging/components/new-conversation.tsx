@@ -10,10 +10,13 @@ import { iconButtonVariants } from "@/components/shared/icon-button";
 import { InfoNote } from "@/components/shared/info-note";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import type { SendError } from "@/core/messaging/types";
-import { fr } from "@/lib/i18n/fr";
+import { frMessaging } from "@/lib/i18n/sections/messaging";
 import { MESSAGE_MAX } from "@/lib/validations/messaging";
 import { cn } from "@/lib/utils";
 import { startConversation } from "../actions";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { messaging: frMessaging } as const;
 
 const t = fr.messaging;
 

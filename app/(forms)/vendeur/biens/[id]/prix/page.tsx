@@ -6,8 +6,11 @@ import { PriceStep } from "@/leenkey/properties/components/price-step";
 import { suggestedTitle } from "@/leenkey/properties/creation";
 import { propertyForCreation } from "@/leenkey/properties/load";
 import { valuationOf } from "@/leenkey/properties/valuation";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import { missingCharacteristics } from "@/lib/validations/property";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties;
 

@@ -1,6 +1,9 @@
 import { Link, Text } from "@react-email/components";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
 import { EmailLayout, EmailQuote, emailLink, emailText } from "./components/email-layout";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails } as const;
 
 // Emails of the moderation of a listing (SPEC-V2 sections 17 and 18):
 // published, to correct (rejected) and suspended, with the motive written

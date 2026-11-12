@@ -7,10 +7,13 @@ import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frAccount } from "@/lib/i18n/sections/account";
 import type { AddableRole } from "@/lib/validations/account";
 import { addRole } from "../actions";
 import { AccountRowText, accountListClass, accountRowClass } from "./account-list";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { account: frAccount } as const;
 
 const t = fr.account.roles;
 

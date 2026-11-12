@@ -24,9 +24,13 @@ import {
   type AdminUserRow,
 } from "@/leenkey/admin/users/queries";
 import { formatDateShort } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
+import { frFinancingStatus } from "@/lib/i18n/sections/financingStatus";
 import { ADMIN_USER_FILTERS, adminUsersHref, parseAdminUsersQuery } from "@/lib/validations/admin";
 import { AdminPage } from "../_components/admin-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminUsers: frAdminUsers, financingStatus: frFinancingStatus } as const;
 
 const t = fr.adminUsers;
 

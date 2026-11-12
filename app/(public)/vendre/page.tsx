@@ -8,7 +8,10 @@ import { getProfile } from "@/core/auth/session";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { sellerProperties } from "@/leenkey/properties/queries";
 import { PublicPage } from "@/leenkey/site/components/public-page";
-import { fr } from "@/lib/i18n/fr";
+import { frSellStart } from "@/lib/i18n/sections/sellStart";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { sellStart: frSellStart } as const;
 
 const t = fr.sellStart;
 

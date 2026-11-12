@@ -1,6 +1,9 @@
 import { Text } from "@react-email/components";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
 import { EmailLayout, EmailQuote, emailText } from "./components/email-layout";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails } as const;
 
 // For the team (SPEC-V2 section 18, « signalement », L1-30c): one or several
 // conversations reported since the last email, grouped by the cron of L1-22.

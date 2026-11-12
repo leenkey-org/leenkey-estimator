@@ -1,6 +1,9 @@
 import { pillClassName } from "./status-badge";
-import { fr } from "@/lib/i18n/fr";
+import { frDpe } from "@/lib/i18n/sections/dpe";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { dpe: frDpe } as const;
 
 /** Energy classes (properties.dpe_class, SPEC-V2 section 4). */
 export const DPE_CLASSES = ["A", "B", "C", "D", "E", "F", "G"] as const;

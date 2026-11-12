@@ -9,8 +9,11 @@ import { Photo } from "./photo";
 import { propertySummary, type PropertyCardData } from "./property-card";
 import { SHOWCASE_PHOTOS } from "./showcase-photos";
 import { formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frShowcaseCard } from "@/lib/i18n/sections/showcaseCard";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { showcaseCard: frShowcaseCard } as const;
 
 const t = fr.showcaseCard;
 

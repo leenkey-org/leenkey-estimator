@@ -3,8 +3,11 @@ import Link from "next/link";
 import { ChevronLeft, Sparkles } from "lucide-react";
 import { iconButtonVariants } from "@/components/shared/icon-button";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frAssistant } from "@/lib/i18n/sections/assistant";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { assistant: frAssistant } as const;
 
 /**
  * The header of the page /assistant (gabarit G6): back to « Ma vente », the

@@ -1,6 +1,9 @@
 import { Text } from "@react-email/components";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
 import { EmailLayout, emailText } from "./components/email-layout";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails } as const;
 
 // Emails of a listing sent for review (SPEC-V2 section 18, L1-13): « Annonce
 // reçue » to the seller (leenkey/properties/listing-emails.ts), « Annonce à

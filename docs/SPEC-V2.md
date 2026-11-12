@@ -2212,7 +2212,7 @@ Rééquilibrage du 2026-10-05 : L1-20 est réduite au sitemap et aux robots (pag
 | P-04 | Guide back office (`docs/GUIDE-BACK-OFFICE.md` + PDF) | Relu par Younes |
 | P-05 | Répétition complète de la mise en prod sur staging ; livraison de la préprod validée par Cédric (18 décembre) | Procédure jouée de bout en bout sur staging, retour arrière documenté |
 | P-05b | **Mise en ligne de la V2 avant le 30 novembre 2026** (décision du 2026-10-15), semaine du 23 novembre, sur go de Younes : projet Supabase de production (compte de Leenkey, région Paris), migrations, seed des `plans`, `sale_steps` et de la base de connaissances uniquement (ni comptes ni données de démonstration), variables de production, Resend vérifié, identifiants des modèles IA vérifiés (dépréciations), Stripe live seulement si les CGV définitives et le médiateur sont en place (sinon les formules payantes restent non commandables) ; puis, dans le projet Vercel `leenkey-estimator-main` qui porte `leenkey.fr`, la branche de production passe de `main` à la branche de production de la V2. **Jamais de fusion ni de push dans `main`.** La branche de production est créée depuis le commit de livraison du lot 1 validé ; les corrections de recette y sont reportées par cherry-pick ; les lots 2 et 3 n'y arrivent qu'après validation en préprod | Site en ligne, parcours 1 testé en prod (parcours 3 avec un vrai paiement remboursé si Stripe live) ; retour arrière vers la V1 en remettant `main` comme branche de production |
-| P-06 | Tag `v2.0.0`, `CHANGELOG.md` complet | — |
+| P-07 | Tag `v2.0.0`, `CHANGELOG.md` complet (P-06 jusqu'au 2026-11-12, voir `DECISIONS.md`) | — |
 
 ---
 

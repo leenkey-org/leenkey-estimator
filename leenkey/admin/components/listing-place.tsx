@@ -1,6 +1,9 @@
 import { isInLaunchZone } from "@/lib/config/launch-zone";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminListings } from "@/lib/i18n/sections/adminListings";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminListings: frAdminListings } as const;
 
 /** « · Hors zone » when the town is outside the launch zone (SPEC-V2 section 20). */
 export function OutOfZoneFlag({ postalCode, city }: { postalCode: string; city: string }) {

@@ -2,7 +2,7 @@ import { CircleAlert, CircleCheck } from "lucide-react";
 import { ProgressBar } from "@/components/shared/progress-bar";
 import { pillClassName } from "@/components/shared/status-badge";
 import { formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminListings } from "@/lib/i18n/sections/adminListings";
 import { cn } from "@/lib/utils";
 import {
   REVIEW_DESCRIPTION_MIN,
@@ -11,6 +11,9 @@ import {
   type ListingReview,
 } from "../review";
 import { reviewSentence } from "../review-text";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminListings: frAdminListings } as const;
 
 const t = fr.adminListings.review;
 

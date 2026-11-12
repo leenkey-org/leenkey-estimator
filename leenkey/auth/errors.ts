@@ -1,6 +1,9 @@
 import "server-only";
 import type { AuthError } from "@supabase/supabase-js";
-import { fr } from "@/lib/i18n/fr";
+import { frAuth } from "@/lib/i18n/sections/auth";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { auth: frAuth } as const;
 
 // The errors of Supabase Auth told to the person (sign-up, sign-in, reset,
 // account page): a message of fr.auth.errors, the code logged otherwise.

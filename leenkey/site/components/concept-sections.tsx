@@ -5,7 +5,7 @@ import { Button } from "@/components/shared/button";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { ShowcaseHero } from "@/components/shared/showcase-hero";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frSiteConcept } from "@/lib/i18n/sections/site/concept";
 import { cn } from "@/lib/utils";
 import { CtaPanel } from "./cta-panel";
 import { NumberBadge } from "./number-badge";
@@ -19,6 +19,9 @@ import {
   iconTile,
   statement,
 } from "./site-styles";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { site: { concept: frSiteConcept } } as const;
 
 // Sections of /concept (L1-42), in the order of the V1 page, in its
 // direction since L1-50 (DECISIONS 2026-10-23): its hero, its labels above

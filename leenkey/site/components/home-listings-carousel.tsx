@@ -16,10 +16,13 @@ import { IconButton } from "@/components/shared/icon-button";
 import { ShowcaseCard, type ShowcaseCardProps } from "@/components/shared/showcase-card";
 import { FavoriteButton } from "@/leenkey/favorites/components/favorite-button";
 import { formatInteger } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frSiteHome } from "@/lib/i18n/sections/site/home";
 import { cn } from "@/lib/utils";
 import { HOME_CATEGORIES, type HomeCategory } from "../home-categories";
 import { HOME_SECTION_TITLE } from "../home-styles";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { site: { home: frSiteHome } } as const;
 
 const t = fr.site.home.listings;
 

@@ -2,7 +2,10 @@ import { toShowcaseCard } from "../cards";
 import type { SearchListing } from "../queries";
 import { ResultItem } from "./map-sync";
 import { ShowcaseCard } from "@/components/shared/showcase-card";
-import { fr } from "@/lib/i18n/fr";
+import { frSearch } from "@/lib/i18n/sections/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { search: frSearch } as const;
 
 /**
  * Results in the cards of direction C (L1-55, « inspire-toi d'Airbnb »,

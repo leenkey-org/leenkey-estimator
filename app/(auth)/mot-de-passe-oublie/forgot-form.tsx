@@ -5,8 +5,11 @@ import { requestPasswordReset } from "@/leenkey/auth/actions";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
-import { fr } from "@/lib/i18n/fr";
+import { frAuth } from "@/lib/i18n/sections/auth";
 import { AuthLink } from "../_components/auth-shell";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { auth: frAuth } as const;
 
 const t = fr.auth.forgot;
 

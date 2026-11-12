@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import Image from "next/image";
+import { preload } from "react-dom";
+import Image, { getImageProps } from "next/image";
 import { FacadeDrawing } from "./facade-drawing";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,7 @@ export function Photo({
   alt,
   sizes,
   priority,
+  preloadMedia,
   fit = "cover",
   className,
 }: {
@@ -27,6 +29,12 @@ export function Photo({
   alt: string;
   sizes: string;
   priority?: boolean;
+  /**
+   * The largest paint of a layout shown on some screens only (P-06): preloaded
+   * urgently for the screens of this media query only, never downloaded
+   * elsewhere (lazy, in a layout hidden by CSS).
+   */
+  preloadMedia?: string;
   fit?: "cover" | "contain";
   className?: string;
 }) {
@@ -38,6 +46,17 @@ export function Photo({
   );
   const [fromServer] = useState(hydrating);
   const [state, setState] = useState<"loading" | "loaded" | "failed">("loading");
+  if (preloadMedia) {
+    // The same files as the <img> below (the loader of next.config.ts).
+    const { props } = getImageProps({ src, alt, fill: true, sizes });
+    preload(props.src, {
+      as: "image",
+      imageSrcSet: props.srcSet,
+      imageSizes: props.sizes,
+      media: preloadMedia,
+      fetchPriority: "high",
+    });
+  }
   if (state === "failed") {
     return (
       <span className="absolute inset-0 flex items-center justify-center bg-lk-stone-2">
@@ -54,7 +73,7 @@ export function Photo({
       sizes={sizes}
       priority={priority}
       // next/image 15 preloads a priority image without saying it is urgent.
-      fetchPriority={priority ? "high" : undefined}
+      fetchPriority={priority || preloadMedia ? "high" : undefined}
       onLoad={() => setState("loaded")}
       onError={() => setState("failed")}
       className={cn(

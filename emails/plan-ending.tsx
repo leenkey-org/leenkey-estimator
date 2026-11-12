@@ -1,6 +1,10 @@
 import { Text } from "@react-email/components";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
+import { frLegal } from "@/lib/i18n/sections/legal";
 import { EmailLayout, emailText } from "./components/email-layout";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails, legal: frLegal } as const;
 
 // A plan ending within 30 days (L1-40, SPEC-V2 sections 11 and 11 bis), to
 // its owner, once (subscriptions_daily, then the cron of the notifications).

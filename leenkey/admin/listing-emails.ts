@@ -8,9 +8,12 @@ import {
   type ListingDecision,
 } from "@/emails/listing-decision";
 import { createClient } from "@/lib/supabase/server";
-import { fr } from "@/lib/i18n/fr";
+import { frLegal } from "@/lib/i18n/sections/legal";
 import { sheetHref } from "@/leenkey/properties/sheet";
 import { absoluteUrl, siteUrl } from "@/lib/site";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { legal: frLegal } as const;
 
 // Email to the seller after a decision of the back office (SPEC-V2 sections
 // 17 and 18), with the admin's session: admin_listing_seller_contact checks

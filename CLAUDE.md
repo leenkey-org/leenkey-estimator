@@ -291,7 +291,7 @@ Chaque migration qui touche aux permissions est accompagnée d'un test dans `sup
 - Mutations via server actions dans `*/actions.ts`, chacune : vérification de session → validation Zod → requête → `revalidatePath` → retour typé `{ ok: true, data } | { ok: false, error }`. Pas de `throw` vers le client. Exception : une action dont le composant client garde l'état et reçoit la donnée à jour dans sa réponse (photos du bien, L1-12) n'appelle pas `revalidatePath`, qui rejouerait tout l'écran à chaque appel ; elle le dit en commentaire.
 - Lecture de données dans des fonctions `*/queries.ts`, appelées depuis les Server Components.
 - Nommage : fichiers `kebab-case.tsx`, composants `PascalCase`, fonctions et variables `camelCase`, tables et colonnes `snake_case`.
-- Libellés d'interface en français, code, commentaires et commits en anglais. Textes utilisateur centralisés dans `lib/i18n/fr.ts` (pas de multi-langue prévu, mais pas de chaîne en dur dans les composants).
+- Libellés d'interface en français, code, commentaires et commits en anglais. Textes utilisateur centralisés dans `lib/i18n/fr.ts` (pas de multi-langue prévu, mais pas de chaîne en dur dans les composants). Ils sont rangés par partie dans `lib/i18n/sections/` (P-06) : un composant client importe les parties qu'il affiche (`import { frSearch } from "@/lib/i18n/sections/search"`), jamais l'objet `fr` entier, qui ferait télécharger tous les textes du site à chaque page ; le serveur peut lire `fr`.
 - Dates stockées en `timestamptz` UTC, affichées en `Europe/Paris` avec `date-fns` et `date-fns-tz`.
 - Montants en centimes (`integer`), formatés à l'affichage. Jamais de `float` pour l'argent.
 - Aucune requête Supabase dans un composant client : passer par une server action ou une route.

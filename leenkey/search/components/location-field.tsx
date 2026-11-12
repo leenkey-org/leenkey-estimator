@@ -4,8 +4,11 @@ import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 
 import { Search, X } from "lucide-react";
 import { useSearch } from "./search-context";
 import { locationFromText, suggestCommunes, type CommuneOption } from "../location";
-import { fr } from "@/lib/i18n/fr";
+import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { search: frSearch } as const;
 
 const t = fr.search.location;
 

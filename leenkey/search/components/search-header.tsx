@@ -6,9 +6,12 @@ import { FilterBar } from "./filter-bar";
 import { LocationField } from "./location-field";
 import { SearchCategories } from "./search-categories";
 import { useSearch } from "./search-context";
-import { fr } from "@/lib/i18n/fr";
+import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
 import { countActiveFilters } from "@/lib/validations/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { search: frSearch } as const;
 
 const t = fr.search;
 

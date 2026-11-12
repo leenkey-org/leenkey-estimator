@@ -7,8 +7,11 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
 import { Select } from "@/components/shared/select";
 import type { KnowledgeCard } from "@/core/ai/knowledge";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminAssistant } from "@/lib/i18n/sections/adminAssistant";
 import { testKnowledgeSearch } from "../actions";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminAssistant: frAdminAssistant } as const;
 
 const t = fr.adminAssistant.faq;
 

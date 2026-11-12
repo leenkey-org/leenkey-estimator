@@ -25,7 +25,12 @@ import {
 import type { PublicListing } from "./queries";
 import type { KeyFact } from "@/components/shared/key-facts-table";
 import { formatInteger, formatPrice, formatSurface } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
+import { frPropertyType } from "@/lib/i18n/sections/propertyType";
+import { frSearch } from "@/lib/i18n/sections/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing, propertyType: frPropertyType, search: frSearch } as const;
 
 // « Ce que vous savez avant de visiter » (SPEC-V2 8.5): one table with the
 // complete characteristics and what helps before a visit. Votes of works and

@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/shared/button";
 import { Checkbox } from "@/components/shared/checkbox";
 import { Textarea } from "@/components/shared/textarea";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminCases } from "@/lib/i18n/sections/adminCases";
 import type { CaseCommand } from "@/lib/validations/admin";
 import type { Database } from "@/types/database";
 import { changeCase, type CaseCommandResult } from "../cases/actions";
 import { caseFeedback } from "../feedback";
 import { useModerationFeedback } from "./listing-moderation";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminCases: frAdminCases } as const;
 
 // The changes of a case from its sheet (L1-30c, SPEC-V2 section 17): its
 // status, the admin who follows it, an internal note, the tasks of Leenkey of

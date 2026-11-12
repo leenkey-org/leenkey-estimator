@@ -5,8 +5,11 @@ import { X } from "lucide-react";
 import type { MapListing } from "../map-listings";
 import { IconButton } from "@/components/shared/icon-button";
 import { ShowcaseCard } from "@/components/shared/showcase-card";
-import { fr } from "@/lib/i18n/fr";
+import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { search: frSearch } as const;
 
 const t = fr.search.map;
 

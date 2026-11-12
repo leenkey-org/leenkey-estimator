@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { fr } from "@/lib/i18n/fr";
+import { frEstimator } from "@/lib/i18n/sections/estimator";
 import { cn } from "@/lib/utils";
 import { computeEstimation, formatEUR, type EstimationResult } from "./estimation";
 import type { LeenkeyForm } from "./types";
@@ -12,6 +12,9 @@ import { facadeScope } from "@/components/shared/facade-root";
 import { IconButton } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { generateReportPDFBase64 } from "./generatePDF";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { estimator: frEstimator } as const;
 
 /** Mêmes libellés que l'étape Coordonnées, pour que le vendeur retrouve
  *  exactement ce qu'il a coché. */

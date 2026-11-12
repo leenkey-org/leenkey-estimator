@@ -9,11 +9,14 @@ import { IconButton } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Photo } from "@/components/shared/photo";
 import { Input } from "@/components/shared/input";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import { cn } from "@/lib/utils";
 import { photoCaptionMax } from "@/lib/validations/photos";
 import { photoUrl } from "../photo-files";
 import type { SellerPhoto } from "../photos";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties.photos.sheet;
 

@@ -11,7 +11,7 @@ import { SegmentedPicker } from "@/components/shared/segmented-picker";
 import { Textarea } from "@/components/shared/textarea";
 import { UnitInput } from "@/components/shared/unit-input";
 import { formatInteger } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frBuyerSpace } from "@/lib/i18n/sections/buyerSpace";
 import {
   BUYER_PROJECTS,
   BUYER_SITUATION_MAX,
@@ -22,6 +22,9 @@ import {
 import { parseFrenchNumber } from "@/lib/validations/property";
 import { saveBuyerProfile } from "../actions";
 import type { BuyerProfile } from "../queries";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { buyerSpace: frBuyerSpace } as const;
 
 const t = fr.buyerSpace.profile;
 

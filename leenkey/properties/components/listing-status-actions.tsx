@@ -7,7 +7,7 @@ import { Button } from "@/components/shared/button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { UnitInput } from "@/components/shared/unit-input";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import { LISTING_PRICE_MAX_EUROS } from "@/lib/validations/listing";
 import { parseFrenchNumber } from "@/lib/validations/property";
 import type { Database } from "@/types/database";
@@ -19,6 +19,9 @@ import {
   republishListing,
   type StatusError,
 } from "../status-actions";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties.sheet;
 

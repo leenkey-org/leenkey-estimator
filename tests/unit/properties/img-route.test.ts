@@ -1,22 +1,23 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// L1-12: the route /img, with the two Supabase clients simulated: the
-// visitor's (public photos) and the session's (owner, admin).
+// L1-12, P-06: the route /img, with the two Supabase clients simulated: the
+// visitor's (public photos) and the session's (owner, admin). It serves the
+// file itself (no redirect to another origin).
 
-type Signed = { data: { signedUrl: string } | null; error: { message: string } | null };
+type Download = { data: Blob | null; error: { message: string } | null };
 
-const signed = (url: string): Signed => ({ data: { signedUrl: url }, error: null });
-const refused: Signed = { data: null, error: { message: "Object not found" } };
+const file404: Download = { data: null, error: { message: "Object not found" } };
+const webp = (text: string): Download => ({ data: new Blob([text]), error: null });
 
-const visitorSign = vi.fn<(name: string, seconds: number) => Promise<Signed>>();
-const sessionSign = vi.fn<(name: string, seconds: number) => Promise<Signed>>();
+const visitorRead = vi.fn<(name: string) => Promise<Download>>();
+const sessionRead = vi.fn<(name: string) => Promise<Download>>();
 
 vi.mock("@/lib/supabase/public", () => ({
-  createPublicClient: () => ({ storage: { from: () => ({ createSignedUrl: visitorSign }) } }),
+  createPublicClient: () => ({ storage: { from: () => ({ download: visitorRead }) } }),
 }));
 vi.mock("@/lib/supabase/server", () => ({
-  createClient: async () => ({ storage: { from: () => ({ createSignedUrl: sessionSign }) } }),
+  createClient: async () => ({ storage: { from: () => ({ download: sessionRead }) } }),
 }));
 
 const { GET } = await import("@/app/img/[...path]/route");
@@ -35,8 +36,8 @@ function get(name: string, cookie?: string) {
 beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://localhost:54331");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
-  visitorSign.mockReset();
-  sessionSign.mockReset();
+  visitorRead.mockReset();
+  sessionRead.mockReset();
 });
 
 describe("route /img", () => {
@@ -46,7 +47,7 @@ describe("route /img", () => {
       expect(response.status, name).toBe(404);
       expect(response.headers.get("cache-control")).toBe("no-store");
     }
-    expect(visitorSign).not.toHaveBeenCalled();
+    expect(visitorRead).not.toHaveBeenCalled();
   });
 
   it("answers 404 without a database", async () => {
@@ -54,36 +55,39 @@ describe("route /img", () => {
     expect((await get(file)).status).toBe(404);
   });
 
-  it("signs a photo of a published listing for an hour, cached 50 minutes by the CDN", async () => {
-    visitorSign.mockResolvedValue(signed("https://storage.test/sign/photo?token=public"));
+  it("serves a photo of a published listing, a WebP cached 50 minutes by the CDN", async () => {
+    visitorRead.mockResolvedValue(webp("public photo"));
     const response = await get(file, "sb-test-auth-token=session");
-    expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe("https://storage.test/sign/photo?token=public");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("content-type")).toBe("image/webp");
+    expect(response.headers.get("content-length")).toBe("12");
     expect(response.headers.get("cache-control")).toBe("public, max-age=300, s-maxage=3000");
-    expect(visitorSign).toHaveBeenCalledWith(file, 3600);
-    expect(sessionSign).not.toHaveBeenCalled();
+    expect(await response.text()).toBe("public photo");
+    expect(visitorRead).toHaveBeenCalledWith(file);
+    expect(sessionRead).not.toHaveBeenCalled();
   });
 
   it("answers 404 to a visitor for a photo that is not public", async () => {
-    visitorSign.mockResolvedValue(refused);
+    visitorRead.mockResolvedValue(file404);
     const response = await get(file);
     expect(response.status).toBe(404);
     expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(sessionSign).not.toHaveBeenCalled();
+    expect(sessionRead).not.toHaveBeenCalled();
   });
 
-  it("signs the photo of a draft for its owner, never cached", async () => {
-    visitorSign.mockResolvedValue(refused);
-    sessionSign.mockResolvedValue(signed("https://storage.test/sign/photo?token=private"));
+  it("serves the photo of a draft to its owner, never in a shared cache", async () => {
+    visitorRead.mockResolvedValue(file404);
+    sessionRead.mockResolvedValue(webp("draft photo"));
     const response = await get(file, "sb-test-auth-token=session");
-    expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe("https://storage.test/sign/photo?token=private");
-    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("private, max-age=60");
+    expect(await response.text()).toBe("draft photo");
   });
 
   it("answers 404 to someone else, signed in", async () => {
-    visitorSign.mockResolvedValue(refused);
-    sessionSign.mockResolvedValue(refused);
+    visitorRead.mockResolvedValue(file404);
+    sessionRead.mockResolvedValue(file404);
     expect((await get(file, "sb-test-auth-token=session")).status).toBe(404);
   });
 });

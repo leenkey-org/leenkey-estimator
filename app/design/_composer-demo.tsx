@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { Composer } from "@/components/shared/composer";
-import { fr } from "@/lib/i18n/fr";
+import { frMessaging } from "@/lib/i18n/sections/messaging";
 import { MESSAGE_MAX } from "@/lib/validations/messaging";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { messaging: frMessaging } as const;
 
 /** The message field of a conversation (L1-21), in the /design catalogue: it sends nowhere. */
 export function ComposerDemo() {

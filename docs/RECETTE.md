@@ -50,20 +50,20 @@ Sur une pile locale fraîche (Supabase local, emails capturés, modèle de l'ass
 | Parcours obligatoires de la SPEC (section 22) 1 vendeur, 2 acquéreur, 3 paiement, 7 permissions (`tests/e2e/journeys-live.spec.ts`) | 4 verts, nouveaux comptes et nouvelle annonce à chaque passage. Parcours 7 : bien, étapes et conversation refusés à un autre vendeur et à l'acquéreur ; documents, offres et visites avec les lots 2 et 3 |
 | Suite E2E complète (mobile, desktop, seed modifié) | 444 verts, 1 échec, 65 ignorés (passage complet du 2026-11-12 sur une pile neuve, avec les parcours obligatoires). L'échec : le focus du message « Votre nouvelle adresse email est enregistrée. » après la confirmation du second lien (`account-live.spec.ts`), non retrouvé sous la charge de la suite entière ; le fichier rejoué seul deux fois est vert. À surveiller : si le focus se perd en préprod, le message reste affiché mais n'est pas annoncé. |
 | Accessibilité (axe, `npm run a11y`, mobile et desktop) | 63 écrans sans violation sérieuse ni critique |
-| Lighthouse mobile (4G simulée) | Accessibilité 100. Bonnes pratiques 96 et SEO 69 en local seulement (script de Vercel Analytics absent, `noindex` hors production) : 100 attendus en production. **Performance 61 à 81, LCP 3,4 à 4,9 s : objectif de la SPEC (moins de 2,5 s) non atteint**, voir ci-dessous |
+| Lighthouse mobile (4G simulée) | Accessibilité 100. Bonnes pratiques 96 et SEO 69 en local seulement (script de Vercel Analytics absent, `noindex` hors production) : 100 attendus en production. Performance : LCP de 1,8 à 2,1 s en bridage réel après P-06 (objectif de moins de 2,5 s atteint), voir ci-dessous |
 | Revue des permissions | Voir ci-dessous |
 
-Lighthouse, page par page :
+Lighthouse, page par page : mesure du 12 novembre, puis après P-06 (même jour, même pile locale, médiane de trois passages). Deux modes : **bridage réel** du navigateur (4G lente, 150 ms d'aller-retour, 1,6 Mbit/s, processeur ralenti quatre fois), le plus proche d'un téléphone ; **simulé** (mode par défaut de Lighthouse), qui ignore la priorité donnée à la photo principale et varie de 0,4 s d'un passage à l'autre.
 
-| Page | Performance | LCP | CLS | Blocage du fil (TBT) |
-|---|---|---|---|---|
-| Accueil | 61 | 3,7 s | 0 | 2 040 ms |
-| Recherche | 68 | 3,4 s | 0 | 1 130 ms |
-| Annonce | 67 | 4,1 s | 0 | 850 ms |
-| Valoriser mon bien | 73 | 4,9 s | 0 | 370 ms |
-| Tarifs | 81 | 4,0 s | 0 | — |
+| Page | LCP réel avant | LCP réel après P-06 | LCP simulé après | CLS | TBT réel après |
+|---|---|---|---|---|---|
+| Accueil | 2,1 s | 2,1 s | 3,5 s | 0 | 670 ms |
+| Recherche | 2,8 s | **2,0 s** | 3,5 s | 0 | 480 ms |
+| Annonce | 2,6 s | **2,0 s** | 3,5 s | 0 | 360 ms |
+| Valoriser mon bien | 6,2 s | **1,8 s** | 4,4 s | 0 | 430 ms |
+| Tarifs | 5,6 s | **1,8 s** | 0,8 s | 0 | 420 ms |
 
-Cause principale : le JavaScript exécuté au chargement (animations de l'accueil, composants interactifs), et la feuille de style qui bloque le premier affichage ; sur `/tarifs`, l'élément le plus grand est le texte du bandeau des cookies, affiché après le chargement. Mesure sur un conteneur sans réseau réel : à confirmer sur la préprod. À traiter avant la mise en ligne (tâche P-06, `docs/PLANNING.md`).
+Objectif de la SPEC 21 (LCP sous 2,5 s sur la recherche et l'annonce, CLS sous 0,1) atteint en bridage réel ; le mode simulé reste au-dessus (3,5 s) : il compte comme concurrent de la photo tout ce que la page demande dans ses 200 premières millisecondes (environ 250 Ko de JavaScript, dont 100 Ko de React et Next). Ce qu'a changé P-06 (`DECISIONS.md` 2026-11-12) : le bandeau des cookies dans la page envoyée par le serveur ; les textes de l'interface découpés (200 Ko de JavaScript de moins sur chaque page) ; la première photo de la galerie de bureau plus téléchargée sur un téléphone ; la photo de l'accueil prioritaire ; les photos servies par `/img` sans redirection ; une seule police préchargée. À confirmer sur la production après la bascule (PageSpeed Insights, qui ne passe pas la protection de la préprod).
 
 Revue des permissions (base locale et préprod, linter de sécurité de Supabase) :
 

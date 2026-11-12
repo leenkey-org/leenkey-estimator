@@ -17,10 +17,13 @@ import { planPage } from "@/leenkey/billing/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { paidPlansOrderable, SALES_TERMS } from "@/lib/config/sales";
 import { formatDate, formatDateShort } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frBilling } from "@/lib/i18n/sections/billing";
 import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 import { cn } from "@/lib/utils";
 import { planCode, sessionIdSchema } from "@/lib/validations/billing";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { billing: frBilling } as const;
 
 const t = fr.billing;
 

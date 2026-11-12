@@ -3,10 +3,13 @@ import { Lock } from "lucide-react";
 import { AdvisorAvatar } from "@/components/shared/advisor-avatar";
 import { Button } from "@/components/shared/button";
 import { formatMessageTime } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frMessaging } from "@/lib/i18n/sections/messaging";
 import { cn } from "@/lib/utils";
 import { messagePreview } from "../presentation";
 import type { ConversationSummary } from "../types";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { messaging: frMessaging } as const;
 
 const t = fr.messaging.advisor;
 

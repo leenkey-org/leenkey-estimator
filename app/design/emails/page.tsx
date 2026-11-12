@@ -27,9 +27,13 @@ import { AccountsCreatedEmail, accountsCreatedSubject } from "@/emails/accounts-
 import { UserWarnedEmail, userWarnedSubject } from "@/emails/user-warned";
 import { formatPrice } from "@/lib/format";
 import { isProduction } from "@/lib/env";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
+import { frLegal } from "@/lib/i18n/sections/legal";
 import { siteUrl } from "@/lib/site";
 import * as content from "../_content";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails, legal: frLegal } as const;
 
 // Every email of the V2 with example data (SPEC-V2 section 18, « Aperçu de
 // tous les emails », L1-22), as they leave: the same templates, the same

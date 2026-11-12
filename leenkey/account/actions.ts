@@ -7,7 +7,8 @@ import { getUser } from "@/core/auth/session";
 import type { FormResult } from "@/leenkey/auth/actions";
 import { authErrorMessage } from "@/leenkey/auth/errors";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frAccount } from "@/lib/i18n/sections/account";
+import { frAuth } from "@/lib/i18n/sections/auth";
 import { allowRequest } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { createStatelessClient } from "@/lib/supabase/public";
@@ -18,6 +19,9 @@ import {
   passwordChangeSchema,
 } from "@/lib/validations/account";
 import { fieldErrors } from "@/lib/validations/auth";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { account: frAccount, auth: frAuth } as const;
 
 // « Mon compte » (L1-39, SPEC-V2 8.14): each change with the session of the
 // person (RLS, column grants of profiles, Supabase Auth), never the service

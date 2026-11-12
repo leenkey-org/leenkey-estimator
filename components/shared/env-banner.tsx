@@ -1,5 +1,8 @@
 import { isStaging } from "@/lib/env";
-import { fr } from "@/lib/i18n/fr";
+import { frEnv } from "@/lib/i18n/sections/env";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { env: frEnv } as const;
 
 // Visible on every page of the preprod (CLAUDE.md section 4). Rendered on the
 // server: NEXT_PUBLIC_ENV is fixed at build time for each Vercel project.

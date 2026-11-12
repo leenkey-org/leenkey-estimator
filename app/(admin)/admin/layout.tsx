@@ -7,7 +7,11 @@ import { adminCounts } from "@/leenkey/admin/dashboard/queries";
 import { signOut } from "@/leenkey/auth/actions";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { accountMenu, ADMIN_NAV_ITEMS, bottomTabs, ROUTES } from "@/leenkey/navigation/config";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminDashboard } from "@/lib/i18n/sections/adminDashboard";
+import { frNav } from "@/lib/i18n/sections/nav";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminDashboard: frAdminDashboard, nav: frNav } as const;
 
 // Back office: admin role required (CLAUDE.md section 3). A signed-in user
 // without it gets a 404; a signed-out visitor is sent to the login page by the

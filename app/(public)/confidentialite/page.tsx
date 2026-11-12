@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { fr } from "@/lib/i18n/fr";
+import { frLegal } from "@/lib/i18n/sections/legal";
 import { LegalPage } from "../_components/legal-page";
 import { LegalSections } from "../_components/legal-sections";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { legal: frLegal } as const;
 
 const t = fr.legal.privacy;
 

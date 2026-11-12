@@ -1,7 +1,11 @@
 import { SiteMenu } from "@/components/shared/site-menu";
 import { currentPath, getProfile } from "@/core/auth/session";
-import { fr } from "@/lib/i18n/fr";
+import { frNav } from "@/lib/i18n/sections/nav";
+import { frSiteMenu } from "@/lib/i18n/sections/site/menu";
 import { accountMenu, MENU_LINKS, ROUTES, sellCta, signInLink } from "../config";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { nav: frNav, site: { menu: frSiteMenu } } as const;
 
 const t = fr.site.menu;
 

@@ -1,7 +1,10 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import { fr } from "@/lib/i18n/fr";
+import { frNotifications } from "@/lib/i18n/sections/notifications";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { notifications: frNotifications } as const;
 
 export type NotificationTone = "blue" | "success" | "warning" | "stone";
 

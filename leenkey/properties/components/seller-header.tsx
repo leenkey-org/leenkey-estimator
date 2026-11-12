@@ -3,10 +3,14 @@ import Link from "next/link";
 import { PropertyThumb } from "@/components/shared/property-thumb";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { StepProgress } from "@/components/shared/step-progress";
-import { fr } from "@/lib/i18n/fr";
+import { frBilling } from "@/lib/i18n/sections/billing";
+import { frSaleDashboard } from "@/lib/i18n/sections/saleDashboard";
 import { cn } from "@/lib/utils";
 import { PropertySwitcher, type PropertyChoice } from "./property-switcher";
 import type { Database } from "@/types/database";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { billing: frBilling, saleDashboard: frSaleDashboard } as const;
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
 

@@ -13,7 +13,7 @@ import { Textarea } from "@/components/shared/textarea";
 import { UnitInput } from "@/components/shared/unit-input";
 import { DescriptionSuggestion } from "@/leenkey/ai/components/description-suggestion";
 import { formatInteger } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import {
   LISTING_DESCRIPTION_MAX,
   LISTING_PRICE_MAX_EUROS,
@@ -26,6 +26,9 @@ import { parseFrenchNumber } from "@/lib/validations/property";
 import { priceGap } from "../creation";
 import { saveListingDraft, type SaveListingResult } from "../listing-actions";
 import { CREATION_FORM_ID, intentOf, submitWithEnter, type StepEdit } from "./creation-header";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties.price;
 const common = fr.properties.creation;

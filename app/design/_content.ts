@@ -5,7 +5,11 @@ import type { PropertyCardData } from "@/components/shared/property-card";
 import type { KeyFigure } from "@/components/shared/key-figures";
 import { bySection, listingKeyFacts, type FactsInput } from "@/leenkey/listings/key-facts";
 import { formatPrice, formatPriceShort, formatSurface } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
+import { frSearch } from "@/lib/i18n/sections/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing, search: frSearch } as const;
 
 // Texts and example data of the internal /design catalogue (docs/DESIGN.md
 // 12.14). Example data lives here only, never in the components.

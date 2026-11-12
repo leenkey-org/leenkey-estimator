@@ -5,9 +5,14 @@ import { DpeBadge, type DpeClass } from "./dpe-badge";
 import { FacadeDrawing } from "./facade-drawing";
 import { Photo as PhotoImage } from "./photo";
 import { NBSP, formatPrice, formatRooms, formatSurface } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frDpe } from "@/lib/i18n/sections/dpe";
+import { frPropertyCard } from "@/lib/i18n/sections/propertyCard";
+import { frPropertyType } from "@/lib/i18n/sections/propertyType";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/types/database";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { dpe: frDpe, propertyCard: frPropertyCard, propertyType: frPropertyType } as const;
 
 type PropertyType = Database["public"]["Enums"]["property_type"];
 

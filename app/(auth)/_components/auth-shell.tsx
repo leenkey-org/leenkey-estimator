@@ -3,8 +3,12 @@ import Link from "next/link";
 import { ChevronLeft, Lock } from "lucide-react";
 import { iconButtonVariants } from "@/components/shared/icon-button";
 import { Logo } from "@/components/shared/logo";
-import { fr } from "@/lib/i18n/fr";
+import { frAuth } from "@/lib/i18n/sections/auth";
+import { frSpaces } from "@/lib/i18n/sections/spaces";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { auth: frAuth, spaces: frSpaces } as const;
 
 /**
  * Header (back on stone, logo 28 px high, 44 px spacer), title block and

@@ -5,9 +5,12 @@ import { getProfile } from "@/core/auth/session";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { sitePhoto } from "@/leenkey/site/photos";
 import { formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frSiteHome } from "@/lib/i18n/sections/site/home";
 import { VALUATION_EXAMPLE, valuationExample } from "../valuation-example";
 import { HomeSearchCard } from "./home-search-card";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { site: { home: frSiteHome } } as const;
 
 const t = fr.site.home;
 
@@ -86,6 +89,8 @@ export async function HomeHero() {
               alt=""
               fill
               priority
+              // The largest paint of the home page (P-06): next/image 15 preloads it without urgency.
+              fetchPriority="high"
               sizes="(min-width: 1024px) 46vw, (min-width: 768px) 70vw, 90vw"
               className="object-cover object-[70%_60%] lg:object-[50%_62%]"
             />

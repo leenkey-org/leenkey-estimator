@@ -17,10 +17,14 @@ import {
   type AdminReportPerson,
 } from "@/leenkey/admin/reports/queries";
 import { formatDateTime } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminReports } from "@/lib/i18n/sections/adminReports";
+import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { cn } from "@/lib/utils";
 import { adminReportsHref } from "@/lib/validations/admin";
 import { AdminPage } from "../../_components/admin-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminReports: frAdminReports, adminUsers: frAdminUsers } as const;
 
 const t = fr.adminReports;
 const d = t.detail;

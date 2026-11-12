@@ -5,8 +5,11 @@ import { Button } from "@/components/shared/button";
 import { Checkbox } from "@/components/shared/checkbox";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import type { NotificationPreferences } from "@/lib/validations/notifications";
-import { fr } from "@/lib/i18n/fr";
+import { frNotifications } from "@/lib/i18n/sections/notifications";
 import { updateNotificationPreferences } from "../actions";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { notifications: frNotifications } as const;
 
 const t = fr.notifications.preferences;
 

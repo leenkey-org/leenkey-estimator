@@ -6,10 +6,13 @@ import { requireAdmin } from "@/core/auth/session";
 import { adminAiConversation } from "@/leenkey/admin/assistant/queries";
 import { adminMetadata } from "@/leenkey/admin/metadata";
 import { formatDateTime, formatInteger } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminAssistant } from "@/lib/i18n/sections/adminAssistant";
 import { cn } from "@/lib/utils";
 import { assistantHref } from "@/lib/validations/admin-assistant";
 import { AdminPage } from "../../_components/admin-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminAssistant: frAdminAssistant } as const;
 
 const t = fr.adminAssistant;
 

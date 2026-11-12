@@ -1,8 +1,12 @@
 import { formatSurface } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
+import { frPropertyType } from "@/lib/i18n/sections/propertyType";
 import { LISTING_TITLE_MAX } from "@/lib/validations/listing";
 import { missingCharacteristics, type Characteristics } from "@/lib/validations/property";
 import type { Database } from "@/types/database";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing, propertyType: frPropertyType } as const;
 
 // Rules of the creation of a property in steps (L1-11), shared by its pages,
 // its server actions and « Ma vente ». Pure: unit tested.

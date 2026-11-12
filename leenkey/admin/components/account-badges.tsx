@@ -1,7 +1,10 @@
 import { pillClassName } from "@/components/shared/status-badge";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/types/database";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminUsers: frAdminUsers } as const;
 
 // The roles of an account and its suspension (L1-30a), as the badges of
 // DESIGN.md 10.2: a pill whose label carries the meaning, not the colour alone.

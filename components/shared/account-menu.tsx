@@ -5,8 +5,11 @@ import Link from "next/link";
 import * as MenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Menu, User } from "lucide-react";
 import { facadeScope } from "./facade-root";
-import { fr } from "@/lib/i18n/fr";
+import { frNav } from "@/lib/i18n/sections/nav";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { nav: frNav } as const;
 
 const t = fr.nav.menu;
 

@@ -16,11 +16,14 @@ import { useThreadMessages } from "@/core/messaging/realtime";
 import { threadItems } from "@/core/messaging/thread";
 import { mergeMessages, type SendError, type ThreadMessage } from "@/core/messaging/types";
 import { NBSP, formatClock } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frMessaging } from "@/lib/i18n/sections/messaging";
 import { MESSAGE_MAX } from "@/lib/validations/messaging";
 import { cn } from "@/lib/utils";
 import { ReplySuggestion } from "@/leenkey/ai/components/reply-suggestion";
 import { ConversationMenu } from "./conversation-menu";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { messaging: frMessaging } as const;
 
 const t = fr.messaging;
 

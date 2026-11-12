@@ -25,8 +25,11 @@ import {
 } from "@/leenkey/listings/presentation";
 import { getPublicListing } from "@/leenkey/listings/queries";
 import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
 import { absoluteUrl } from "@/lib/site";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing } as const;
 
 // L1-17: public listing page (SPEC-V2 8.5, docs/DESIGN.md 12.7, 12.8), in
 // the way of Airbnb since L1-60 (ListingBody): « Partager » and

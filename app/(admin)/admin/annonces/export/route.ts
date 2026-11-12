@@ -1,9 +1,12 @@
 import { getProfile } from "@/core/auth/session";
 import { listingsCsv } from "@/leenkey/admin/listings-csv";
 import { adminListings } from "@/leenkey/admin/queries";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminListings } from "@/lib/i18n/sections/adminListings";
 import { siteUrl } from "@/lib/site";
 import { parseAdminListingsQuery } from "@/lib/validations/admin";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminListings: frAdminListings } as const;
 
 // « Exporter CSV » of /admin/annonces (L1-30d, SPEC-V2 17, DESIGN.md 12.12):
 // the listings of the list as filtered (same status and search, same limit),

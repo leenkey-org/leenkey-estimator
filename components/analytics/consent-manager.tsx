@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import {
   CONSENT_COOKIE,
   CONSENT_MAX_AGE,
@@ -15,8 +14,7 @@ import {
 } from "@/lib/consent";
 import { saveConsent } from "./actions";
 import { AnalyticsTags } from "./analytics-tags";
-
-const ConsentDialog = dynamic(() => import("./consent-dialog"), { ssr: false });
+import ConsentDialog from "./consent-dialog";
 
 type View = "hidden" | "banner" | "panel";
 
@@ -70,7 +68,11 @@ export function ConsentManager({
   gtmId: string;
 }) {
   const [consent, setConsent] = useState<Consent | null>(null);
-  const [view, setView] = useState<View>("hidden");
+  // The banner is in the page sent by the server (P-06): it shows with the
+  // first paint instead of after the JavaScript, and the script of the
+  // <head> hides it at once for a visitor who already chose
+  // (consentHeadScript); the cookie is read again once hydrated.
+  const [view, setView] = useState<View>("banner");
   // Button that opened the preferences: focus goes back to it afterwards.
   const opener = useRef<HTMLElement | null>(null);
   const tagsMounted = analyticsEnabled && consent?.analytics === true;
@@ -79,6 +81,9 @@ export function ConsentManager({
     const saved = readConsent();
     setConsent(saved);
     setView(saved ? "hidden" : "banner");
+    // The script of the <head> and this reading disagree (two cookies, the
+    // first malformed): the banner shows, as it would without the script.
+    if (!saved) document.documentElement.removeAttribute("data-consent");
     const open = () => {
       opener.current =
         document.activeElement instanceof HTMLElement ? document.activeElement : null;

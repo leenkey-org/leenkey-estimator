@@ -21,7 +21,10 @@ import {
   threadSenders,
 } from "@/leenkey/messaging/queries";
 import { capitalize } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frMessaging } from "@/lib/i18n/sections/messaging";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { messaging: frMessaging } as const;
 
 const t = fr.messaging;
 

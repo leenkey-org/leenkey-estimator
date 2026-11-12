@@ -3,9 +3,12 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/shared/button";
 import { getUser } from "@/core/auth/session";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frAccount } from "@/lib/i18n/sections/account";
 import { cn } from "@/lib/utils";
 import { AuthShell } from "../../_components/auth-shell";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { account: frAccount } as const;
 
 const t = fr.account.emailChange;
 

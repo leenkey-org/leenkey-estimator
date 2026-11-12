@@ -9,8 +9,11 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
 import { RoleCards } from "@/components/shared/role-cards";
 import { LEGAL_PATHS } from "@/lib/legal/versions";
-import { fr } from "@/lib/i18n/fr";
+import { frAuth } from "@/lib/i18n/sections/auth";
 import { AuthLink } from "../_components/auth-shell";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { auth: frAuth } as const;
 
 const t = fr.auth.signup;
 

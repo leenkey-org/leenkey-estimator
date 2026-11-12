@@ -1,7 +1,11 @@
 import { pillClassName } from "./status-badge";
-import { fr } from "@/lib/i18n/fr";
+import { frFinancingMention } from "@/lib/i18n/sections/financingMention";
+import { frFinancingStatus } from "@/lib/i18n/sections/financingStatus";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/types/database";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { financingMention: frFinancingMention, financingStatus: frFinancingStatus } as const;
 
 export type FinancingStatus = Database["public"]["Enums"]["financing_status"];
 

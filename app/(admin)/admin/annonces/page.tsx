@@ -33,7 +33,9 @@ import {
   type AdminListingRow,
 } from "@/leenkey/admin/queries";
 import { capitalize, formatPrice, formatRelative } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminListings } from "@/lib/i18n/sections/adminListings";
+import { frListingStatus } from "@/lib/i18n/sections/listingStatus";
+import { frPlan } from "@/lib/i18n/sections/plan";
 import { cn } from "@/lib/utils";
 import {
   ADMIN_LISTING_FILTERS,
@@ -42,6 +44,13 @@ import {
   parseAdminListingsQuery,
 } from "@/lib/validations/admin";
 import { AdminPage } from "../_components/admin-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = {
+  adminListings: frAdminListings,
+  listingStatus: frListingStatus,
+  plan: frPlan,
+} as const;
 
 const t = fr.adminListings;
 

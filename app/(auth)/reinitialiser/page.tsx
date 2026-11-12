@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { getUser } from "@/core/auth/session";
 import { InlineAlert } from "@/components/shared/inline-alert";
-import { fr } from "@/lib/i18n/fr";
+import { frAuth } from "@/lib/i18n/sections/auth";
 import { AuthLink, AuthShell } from "../_components/auth-shell";
 import { ResetForm } from "./reset-form";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { auth: frAuth } as const;
 
 export const metadata: Metadata = { title: fr.auth.reset.metaTitle };
 // Depends on the recovery session of the request, never prerendered.

@@ -3,11 +3,14 @@ import { ChevronRight } from "lucide-react";
 import { PropertyThumb } from "@/components/shared/property-thumb";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { listingSummary } from "@/leenkey/listings/presentation";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import { cn } from "@/lib/utils";
 import { photoUrl } from "../photo-files";
 import type { SellerProperty } from "../queries";
 import { sheetHref } from "../sheet";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 function summary(property: SellerProperty): string {
   const { type, rooms, surfaceM2 } = property.characteristics;

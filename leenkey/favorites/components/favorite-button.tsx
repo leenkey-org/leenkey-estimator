@@ -4,10 +4,13 @@ import { useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { iconButtonVariants } from "@/components/shared/icon-button";
-import { fr } from "@/lib/i18n/fr";
+import { frFavorites } from "@/lib/i18n/sections/favorites";
 import { cn } from "@/lib/utils";
 import { setFavorite, type FavoriteResult } from "../actions";
 import { rememberFavorite, useFavorite } from "./favorite-store";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { favorites: frFavorites } as const;
 
 const t = fr.favorites;
 

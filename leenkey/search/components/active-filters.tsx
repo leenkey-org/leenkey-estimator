@@ -4,8 +4,11 @@ import { X } from "lucide-react";
 import { activeChips } from "../filter-labels";
 import { useSearch } from "./search-context";
 import { chipClassName } from "@/components/shared/chip-toggle";
-import { fr } from "@/lib/i18n/fr";
+import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { search: frSearch } as const;
 
 const t = fr.search.chips;
 

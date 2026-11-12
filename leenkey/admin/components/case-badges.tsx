@@ -1,7 +1,11 @@
 import { pillClassName } from "@/components/shared/status-badge";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminCases } from "@/lib/i18n/sections/adminCases";
+import { frAdminReports } from "@/lib/i18n/sections/adminReports";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/types/database";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminCases: frAdminCases, adminReports: frAdminReports } as const;
 
 // The status of a case or of a report and a payment to check (L1-30c), as the
 // badges of DESIGN.md 10.2: a pill whose label carries the meaning, not the

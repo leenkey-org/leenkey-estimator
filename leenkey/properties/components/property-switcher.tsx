@@ -5,9 +5,12 @@ import * as MenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Check, ChevronDown } from "lucide-react";
 import { facadeScope } from "@/components/shared/facade-root";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { fr } from "@/lib/i18n/fr";
+import { frSaleDashboard } from "@/lib/i18n/sections/saleDashboard";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/types/database";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { saleDashboard: frSaleDashboard } as const;
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
 

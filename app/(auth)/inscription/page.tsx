@@ -3,9 +3,12 @@ import { redirect } from "next/navigation";
 import { getProfile } from "@/core/auth/session";
 import { safeNextPath } from "@/core/auth/next-path";
 import { homePathForRoles } from "@/leenkey/auth/routes";
-import { fr } from "@/lib/i18n/fr";
+import { frAuth } from "@/lib/i18n/sections/auth";
 import { AuthShell } from "../_components/auth-shell";
 import { SignupForm } from "./signup-form";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { auth: frAuth } as const;
 
 export const metadata: Metadata = { title: fr.auth.signup.metaTitle };
 

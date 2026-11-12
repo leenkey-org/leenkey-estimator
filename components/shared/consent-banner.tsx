@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { fr } from "@/lib/i18n/fr";
+import { frConsent } from "@/lib/i18n/sections/consent";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 import { Checkbox } from "./checkbox";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { consent: frConsent } as const;
 
 const t = fr.consent;
 
@@ -50,6 +53,8 @@ export function ConsentBanner({
     <section
       role="region"
       aria-labelledby={titleId}
+      // Hidden by CSS before the JavaScript when a choice is kept (lib/consent.ts).
+      data-consent-banner={view === "banner" && !inline ? "" : undefined}
       className={cn(
         "flex flex-col gap-3.5 bg-lk-surface p-5 text-lk-ink",
         inline
@@ -58,7 +63,9 @@ export function ConsentBanner({
               "fixed inset-x-0 bottom-0 z-50 rounded-t-lk-md border-t border-lk-line shadow-sheet",
               "pb-[calc(1.25rem+env(safe-area-inset-bottom))]",
               "md:inset-x-auto md:bottom-6 md:left-6 md:w-105 md:rounded-lk-md md:border md:pb-5 md:shadow-float",
-              "duration-220 ease-out-lk motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-4",
+              // The banner is there from the first paint; only the panel, opened later, slides in.
+              view === "panel" &&
+                "duration-220 ease-out-lk motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-4",
             ],
         className,
       )}
@@ -78,15 +85,21 @@ export function ConsentBanner({
 
       {view === "banner" ? (
         <>
-          <p className="text-lk-secondary text-lk-ink-2">
-            {t.text}{" "}
-            <a
-              href="/cookies"
-              className="font-semibold text-lk-blue! underline! underline-offset-2"
-            >
-              {t.policy}
-            </a>
-          </p>
+          {/* Short paragraphs, not one block: the text of the banner is never the
+              largest paint of a page, whose content shows first (P-06). */}
+          <div className="flex flex-col gap-1.5">
+            <p className="text-lk-secondary text-lk-ink-2">{t.text}</p>
+            <p className="text-lk-secondary text-lk-ink-2">{t.necessary}</p>
+            <p className="text-lk-secondary text-lk-ink-2">
+              {t.textMore}{" "}
+              <a
+                href="/cookies"
+                className="font-semibold text-lk-blue! underline! underline-offset-2"
+              >
+                {t.policy}
+              </a>
+            </p>
+          </div>
           <div className="grid grid-cols-2 gap-2.5">
             <Button variant="outline-ink" onClick={onRefuse}>
               {t.refuse}

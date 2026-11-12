@@ -1,7 +1,10 @@
 import { formatDate, formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import type { Valuation } from "./components/price-step";
 import type { SellerEstimation } from "./queries";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties.price;
 

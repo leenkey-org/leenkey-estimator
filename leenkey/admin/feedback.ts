@@ -1,10 +1,21 @@
 import type { EmailDelivery } from "@/core/notifications/email";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminCases } from "@/lib/i18n/sections/adminCases";
+import { frAdminListings } from "@/lib/i18n/sections/adminListings";
+import { frAdminReports } from "@/lib/i18n/sections/adminReports";
+import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import type { AccountDecisionInput, CaseCommand, ReportCommand } from "@/lib/validations/admin";
 import type { Database } from "@/types/database";
 import type { CaseCommandResult } from "./cases/actions";
 import type { ReportCommandResult } from "./reports/actions";
 import type { AccountDecisionResult } from "./users/actions";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = {
+  adminCases: frAdminCases,
+  adminListings: frAdminListings,
+  adminReports: frAdminReports,
+  adminUsers: frAdminUsers,
+} as const;
 
 // What the back office says after a decision (listings L1-19, accounts
 // L1-30a, cases and reports L1-30c), as plain values (unit-tested): the

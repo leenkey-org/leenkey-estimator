@@ -9,8 +9,11 @@ import { SegmentedPicker } from "@/components/shared/segmented-picker";
 import type { PlanView } from "@/core/billing/plan-text";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frSitePricing } from "@/lib/i18n/sections/site/pricing";
 import { planOrderHref, savingCents } from "../pricing";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { site: { pricing: frSitePricing } } as const;
 
 const t = fr.site.pricing;
 type View = "price" | "savings";

@@ -27,9 +27,13 @@ import { ListingDescription } from "@/leenkey/listings/components/listing-descri
 import { listingKeyFacts } from "@/leenkey/listings/key-facts";
 import { galleryPhotos, listingKeyFigures } from "@/leenkey/listings/presentation";
 import { capitalize, formatDateShort, formatDateTime, formatRelative } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminListings } from "@/lib/i18n/sections/adminListings";
+import { frPlan } from "@/lib/i18n/sections/plan";
 import { adminListingsHref } from "@/lib/validations/admin";
 import { AdminPage } from "../../_components/admin-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminListings: frAdminListings, plan: frPlan } as const;
 
 const t = fr.adminListings;
 
