@@ -1184,10 +1184,11 @@ export const fr = {
       closedTeam:
         "La formule de ce bien ne comprend plus de conseiller : la conversation est fermée.",
       write: "Écrire à mon conseiller",
-      // Autonomie (SPEC 8.6): in place of the conversation, the way to the plans.
+      // Autonomie (SPEC 8.6, decision of 2026-11-11): the adviser shown greyed, with the way
+      // to the plans that have one.
       invite: {
-        title: "Échanger avec un conseiller Leenkey",
-        text: "Les formules Accompagné et Sérénité comprennent un conseiller qui vous répond sous 24\u00A0h.",
+        locked: "Accessible avec la formule Accompagné",
+        text: "Un conseiller Leenkey vous répond sous 24\u00A0h, avec les formules Accompagné et Sérénité.",
         action: "Voir les formules",
       },
       // Its link in the header: the plan of the property.

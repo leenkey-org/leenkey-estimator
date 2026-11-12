@@ -1285,7 +1285,7 @@ Maquette : `Messagerie.dc.html`.
 - Côté vendeur : épinglée en tête de `/messages` avec `ConversationHeader` (variante conseiller, avatar « LK »), et accessible depuis le dashboard (bouton « Écrire à mon conseiller »).
 - Côté Leenkey : `/admin/messages` (boîte partagée, non-lus en tête) et onglet « Messages » du dossier client. Tout admin peut répondre ; le message affiche le prénom de l'admin.
 - L'assistant IA du vendeur dispose de l'outil `contact_advisor` : il poste dans cette conversation un résumé de la question (type `assistant_handoff`) après confirmation du vendeur.
-- En Autonomie, pas de conversation conseiller : à la place, un `UpgradePrompt` « Échanger avec un conseiller Leenkey » vers la page formules.
+- En Autonomie, pas de conversation conseiller : à la place, la carte du conseiller grisée, « Accessible avec la formule Accompagné », avec « Voir les formules » (décision du 2026-11-12).
 - Mise en œuvre (L1-34, `DECISIONS.md` 2026-11-09) : ouverte par la base dès que la formule en vigueur comprend le droit `advisor` (déclencheur différé sur `subscriptions`, `advisor_conversation_ensure`), fermée en écriture sans ce droit ; accueil selon le démarrage immédiat (Q76) ; carte « Mon conseiller Leenkey » ou invitation « Échanger avec un conseiller Leenkey » sur le tableau de bord ; `/admin/messages` et `/admin/messages/[id]` (cadre de la messagerie), lien « Écrire au vendeur » depuis le dossier à la place d'un onglet ; `contact_advisor` passe par `ai_advisor_handoff`.
 
 ### 8.7 Dashboard vendeur `/vendeur`
