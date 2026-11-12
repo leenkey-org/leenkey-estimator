@@ -4,7 +4,9 @@ import { Sora } from "next/font/google";
 // 800, the only font of the site since L1-58 (Archivo before). Self-hosted by
 // next/font at build time: no request to Google before consent (L1-37).
 export const sora = Sora({
-  subsets: ["latin", "latin-ext"],
+  // French is in « latin » (accents, « œ », « »): the only one preloaded (P-06);
+  // « latin-ext » stays declared, loaded only by a rarer character.
+  subsets: ["latin"],
   display: "swap",
   variable: "--font-sora",
 });

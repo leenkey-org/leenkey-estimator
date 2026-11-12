@@ -7,7 +7,6 @@ import { RouteHistory } from "@/leenkey/navigation/components/route-history";
 import { SpaceProvider } from "@/leenkey/navigation/components/space-context";
 import { consentHeadScript } from "@/lib/consent";
 import { isProduction } from "@/lib/env";
-import { isSupabaseConfigured, supabaseUrl } from "@/lib/supabase/config";
 import { sora } from "@/lib/fonts";
 import "./globals.css";
 
@@ -44,9 +43,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // GA4 and GTM only count real visitors (off on the preprod and in local),
   // and only after they accept audience measurement (L1-37).
   const analytics = isProduction();
-  // The photos are served by Supabase Storage (/img redirects there, L1-12):
-  // its connection opens with the page, not after the redirect (P-06).
-  const storage = isSupabaseConfigured() ? new URL(supabaseUrl()).origin : null;
   return (
     // Sora, self-hosted by next/font (no request to Google before consent,
     // L1-37), for every page and the portals outside <FacadeRoot>.
@@ -55,7 +51,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Before the first paint: the banner of the page hidden for a visitor who already chose. */}
         <script dangerouslySetInnerHTML={{ __html: consentHeadScript() }} />
-        {storage ? <link rel="preconnect" href={storage} /> : null}
       </head>
       <body>
         {/* The gradient of the icons of the charte, once for every page (L1-58). */}
