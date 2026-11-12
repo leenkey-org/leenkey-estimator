@@ -150,7 +150,7 @@ Lot 2 :
 
 ## Fin du projet
 
-- [ ] **P-06** Tag `v2.0.0`, `CHANGELOG.md` complet · PR : · Testé en préprod : ☐
+- [ ] **P-07** Tag `v2.0.0`, `CHANGELOG.md` complet · PR : · Testé en préprod : ☐
 
 ## Livraisons et paiements
 
