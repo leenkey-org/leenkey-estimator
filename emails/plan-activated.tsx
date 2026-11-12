@@ -1,6 +1,10 @@
 import { Heading, Link, Text } from "@react-email/components";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
+import { frLegal } from "@/lib/i18n/sections/legal";
 import { EmailLayout, emailLink, emailText } from "./components/email-layout";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails, legal: frLegal } as const;
 
 // A plan paid (SPEC-V2 sections 10, 11 and 18, plan.activated): the summary
 // of the order on a durable medium (L1-40, decision of 2026-10-15, model of

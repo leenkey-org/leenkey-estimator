@@ -4,9 +4,12 @@ import { useRef, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminAssistant } from "@/lib/i18n/sections/adminAssistant";
 import { KNOWLEDGE_FILE_MAX } from "@/lib/validations/admin-assistant";
 import { embedKnowledge, importKnowledgeFile, type KnowledgeImportResult } from "../actions";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminAssistant: frAdminAssistant } as const;
 
 const t = fr.adminAssistant.faq;
 

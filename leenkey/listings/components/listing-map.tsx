@@ -12,8 +12,12 @@ import type {
   MapsRequestError,
 } from "@/core/maps/google-maps";
 import { useGoogleMaps } from "@/core/maps/use-google-maps";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
+import { frMaps } from "@/lib/i18n/sections/maps";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing, maps: frMaps } as const;
 
 // « Localisation » of a listing (L1-16, docs/DESIGN.md 8, SPEC-V2 8.5): a
 // circle of 400 m around the public location of the property (itself moved

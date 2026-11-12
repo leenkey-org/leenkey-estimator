@@ -6,8 +6,11 @@ import { Button } from "@/components/shared/button";
 import { IconButton } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Skeleton } from "@/components/shared/skeleton";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminCases } from "@/lib/i18n/sections/adminCases";
 import { caseSummaryAction } from "../cases/actions";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminCases: frAdminCases } as const;
 
 const t = fr.adminCases.caseSummary;
 

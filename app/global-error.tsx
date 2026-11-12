@@ -6,8 +6,11 @@ import { Button } from "@/components/shared/button";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { sora } from "@/lib/fonts";
-import { fr } from "@/lib/i18n/fr";
+import { frErrors } from "@/lib/i18n/sections/errors";
 import "./globals.css";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { errors: frErrors } as const;
 
 const t = fr.errors.failed;
 

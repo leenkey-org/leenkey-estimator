@@ -1,6 +1,9 @@
 import { formatPrice, formatPricePerSquareMetre } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing } as const;
 
 export type PriceBlockProps = {
   /** Price in cents (CLAUDE.md section 9). */

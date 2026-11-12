@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { SquarePen } from "lucide-react";
-import { fr } from "@/lib/i18n/fr";
+import { frAssistant } from "@/lib/i18n/sections/assistant";
 import type { AssistantConversation } from "../types";
 import { AssistantChat } from "./assistant-chat";
 import { AssistantPageHeader } from "./assistant-page-header";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { assistant: frAssistant } as const;
 
 const t = fr.assistant;
 

@@ -10,11 +10,14 @@ import { consumeQuota } from "@/leenkey/ai/assistant";
 import { mockText } from "@/leenkey/ai/mock";
 import { asData, breaksRules, cleanSuggestion } from "@/leenkey/ai/suggestions";
 import type { SuggestionResult } from "@/leenkey/ai/types";
-import { fr } from "@/lib/i18n/fr";
+import { frPropertyType } from "@/lib/i18n/sections/propertyType";
 import { createClient } from "@/lib/supabase/server";
 import { REJECTION_DRAFT_MAX } from "@/lib/validations/admin";
 import { adminListing } from "./queries";
 import { reviewIssueText } from "./review-text";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { propertyType: frPropertyType } as const;
 
 // « Rédiger avec l'assistant » in the refusal of a listing (SPEC-V2 17,
 // L1-30d): the assistant writes the motive the seller will read, from the

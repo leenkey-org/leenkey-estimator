@@ -227,6 +227,18 @@ html {
   scroll-padding-top: calc(var(--lk-sticky-header, 0rem) + var(--lk-sticky-subheader, 0rem));
 }
 
+/* The cookie banner sent by the server (P-06), hidden before the JavaScript
+   for a visitor who already chose (consentHeadScript, lib/consent.ts). */
+html[data-consent="set"] [data-consent-banner] {
+  display: none;
+}
+
+/* Until Sora is loaded (2.5 s at most): the banner would grow by a line when
+   the font swaps, a layout shift (P-06). */
+html[data-fonts="pending"] [data-consent-banner] {
+  visibility: hidden;
+}
+
 html:has([data-sticky-header="site-menu"]) {
   --lk-sticky-header: --spacing(15);
 }

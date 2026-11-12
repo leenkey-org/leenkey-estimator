@@ -3,9 +3,12 @@
 import { useId, useState, type ReactNode } from "react";
 import { CountUp } from "@/components/shared/count-up";
 import { formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { site } from "@/lib/i18n/site";
 import { cn } from "@/lib/utils";
 import { DEFAULT_SAVINGS_PRICE_EUROS, SAVINGS_PRICES_EUROS, savings } from "../savings";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { site } as const;
 
 const t = fr.site.home.savings;
 

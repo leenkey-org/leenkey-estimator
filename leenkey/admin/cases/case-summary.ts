@@ -10,10 +10,15 @@ import { consumeQuota } from "@/leenkey/ai/assistant";
 import { mockText } from "@/leenkey/ai/mock";
 import { asData, cleanSuggestion } from "@/leenkey/ai/suggestions";
 import type { SuggestionResult } from "@/leenkey/ai/types";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminCases } from "@/lib/i18n/sections/adminCases";
+import { frListingStatus } from "@/lib/i18n/sections/listingStatus";
+import { frPlan } from "@/lib/i18n/sections/plan";
 import { createClient } from "@/lib/supabase/server";
 import { adminAdvisorConversations } from "../messages/queries";
 import { adminCase, type AdminCaseDetail } from "./queries";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminCases: frAdminCases, listingStatus: frListingStatus, plan: frPlan } as const;
 
 // « Synthèse avant appel » of a case (SPEC-V2 17, outil admin_case_summary
 // de la section 12, L1-30d): the assistant sums a case up for the team

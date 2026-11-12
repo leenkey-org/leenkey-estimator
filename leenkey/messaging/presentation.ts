@@ -2,8 +2,19 @@ import { photoUrl } from "@/leenkey/properties/photo-files";
 import { sheetHref } from "@/leenkey/properties/sheet";
 import { firstContactFrom } from "@/leenkey/billing/orders";
 import { NBSP, formatDateShort, formatRooms } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frFinancingStatus } from "@/lib/i18n/sections/financingStatus";
+import { frMessaging } from "@/lib/i18n/sections/messaging";
+import { frPlan } from "@/lib/i18n/sections/plan";
+import { frPropertyType } from "@/lib/i18n/sections/propertyType";
 import type { ConversationSummary } from "./types";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = {
+  financingStatus: frFinancingStatus,
+  messaging: frMessaging,
+  plan: frPlan,
+  propertyType: frPropertyType,
+} as const;
 
 // What the messaging shows of a conversation, as plain values (unit-tested):
 // title, other party, subtitle, preview, links, groups of the list.

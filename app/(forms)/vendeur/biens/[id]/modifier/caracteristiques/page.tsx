@@ -5,7 +5,10 @@ import { EditHeader } from "@/leenkey/properties/components/edit-header";
 import { getDpeSettings } from "@/leenkey/properties/dpe-rules";
 import { propertyForEdit } from "@/leenkey/properties/load";
 import { savedHref, sheetHref } from "@/leenkey/properties/sheet";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties.edit;
 

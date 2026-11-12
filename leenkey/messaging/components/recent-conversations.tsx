@@ -3,8 +3,11 @@ import { FinancingBadge } from "@/components/shared/financing-badge";
 import { conversationTitle, counterpartName, messagePreview } from "../presentation";
 import type { ConversationSummary } from "../types";
 import { capitalize, formatMessageTime } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frMessaging } from "@/lib/i18n/sections/messaging";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { messaging: frMessaging } as const;
 
 const unread = fr.messaging.list;
 

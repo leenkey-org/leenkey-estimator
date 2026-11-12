@@ -6,9 +6,12 @@ import Link from "next/link";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Textarea } from "@/components/shared/textarea";
-import { fr } from "@/lib/i18n/fr";
+import { frAssistant } from "@/lib/i18n/sections/assistant";
 import { ASSISTANT_MESSAGE_MAX, CASE_SUMMARY_MIN } from "@/lib/validations/assistant";
 import { sendCaseRequest } from "../actions";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { assistant: frAssistant } as const;
 
 const t = fr.assistant;
 

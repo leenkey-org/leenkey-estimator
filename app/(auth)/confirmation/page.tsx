@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { CONFIRM_COOKIE, decodeConfirmLink, EXPIRED_LINK_PATH } from "@/leenkey/auth/landing";
-import { fr } from "@/lib/i18n/fr";
+import { frAccount } from "@/lib/i18n/sections/account";
+import { frAuth } from "@/lib/i18n/sections/auth";
 import { AuthShell } from "../_components/auth-shell";
 import { ConfirmForm } from "./confirm-form";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { account: frAccount, auth: frAuth } as const;
 
 export const metadata: Metadata = { title: fr.auth.confirm.metaTitle };
 

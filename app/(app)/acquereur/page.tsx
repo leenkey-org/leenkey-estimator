@@ -19,7 +19,18 @@ import { listConversations } from "@/leenkey/messaging/queries";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { toPropertyCard } from "@/leenkey/search/cards";
-import { fr } from "@/lib/i18n/fr";
+import { frBuyerSpace } from "@/lib/i18n/sections/buyerSpace";
+import { frFavorites } from "@/lib/i18n/sections/favorites";
+import { frProperties } from "@/lib/i18n/sections/properties";
+import { frSpaces } from "@/lib/i18n/sections/spaces";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = {
+  buyerSpace: frBuyerSpace,
+  favorites: frFavorites,
+  properties: frProperties,
+  spaces: frSpaces,
+} as const;
 
 export const metadata: Metadata = { title: fr.spaces.buyer.metaTitle };
 

@@ -4,9 +4,12 @@ import { requireProfile } from "@/core/auth/session";
 import { NotificationPreferencesForm } from "@/leenkey/notifications/components/notification-preferences-form";
 import { notificationPreferences } from "@/leenkey/notifications/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frNotifications } from "@/lib/i18n/sections/notifications";
 import { createClient } from "@/lib/supabase/server";
 import { SpacePage } from "../../_components/space-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { notifications: frNotifications } as const;
 
 const t = fr.notifications.preferences;
 

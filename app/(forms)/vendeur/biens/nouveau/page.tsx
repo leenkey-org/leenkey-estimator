@@ -7,7 +7,10 @@ import { CreationBody } from "@/leenkey/properties/components/creation-page";
 import { EstimationClaim } from "@/leenkey/properties/components/estimation-claim";
 import { estimationStart } from "@/leenkey/properties/estimation";
 import { formatDate } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties.creation;
 

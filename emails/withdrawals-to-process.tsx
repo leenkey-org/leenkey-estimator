@@ -1,6 +1,9 @@
 import { Text } from "@react-email/components";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
 import { EmailLayout, emailText } from "./components/email-layout";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails } as const;
 
 // Withdrawals to refund (L1-40, SPEC-V2 section 11), to the team: every admin
 // (2026-11-08), through the cron of the notifications (plan.withdrawn),

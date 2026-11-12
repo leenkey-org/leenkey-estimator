@@ -1,8 +1,11 @@
 import "server-only";
 import type { AiTool } from "@/core/ai/tools/types";
-import { fr } from "@/lib/i18n/fr";
+import { frListingStatus } from "@/lib/i18n/sections/listingStatus";
 import { PROPERTY_NOT_FOUND, sellerPropertyById } from "../seller-data";
 import { parisDay, propertyInput, propertyInputSchema, type PropertyInput } from "./shared";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listingStatus: frListingStatus } as const;
 
 // get_property_details (SPEC-V2 section 12): a property of the seller, its
 // characteristics, its listing and its analysis of value.

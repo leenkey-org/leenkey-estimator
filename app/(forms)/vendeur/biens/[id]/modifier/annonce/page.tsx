@@ -5,7 +5,10 @@ import { PriceStep } from "@/leenkey/properties/components/price-step";
 import { propertyForEdit } from "@/leenkey/properties/load";
 import { savedHref, sheetHref } from "@/leenkey/properties/sheet";
 import { valuationOf } from "@/leenkey/properties/valuation";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties.edit;
 

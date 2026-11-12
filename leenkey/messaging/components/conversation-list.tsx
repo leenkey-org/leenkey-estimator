@@ -3,7 +3,7 @@ import { AdvisorAvatar } from "@/components/shared/advisor-avatar";
 import { PropertyThumb } from "@/components/shared/property-thumb";
 import { SectionTitle } from "@/components/shared/section-title";
 import { capitalize, formatMessageTime } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frMessaging } from "@/lib/i18n/sections/messaging";
 import { cn } from "@/lib/utils";
 import {
   conversationTitle,
@@ -13,6 +13,9 @@ import {
   messagePreview,
 } from "../presentation";
 import type { ConversationSummary } from "../types";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { messaging: frMessaging } as const;
 
 const t = fr.messaging.list;
 

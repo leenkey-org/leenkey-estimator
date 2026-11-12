@@ -15,9 +15,14 @@ import { newConversationPath } from "@/leenkey/messaging/presentation";
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import { floorLabel, placeLabel } from "@/leenkey/search/cards";
 import { NBSP, formatPrice, formatSurface } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
+import { frPropertyType } from "@/lib/i18n/sections/propertyType";
+import { frSearch } from "@/lib/i18n/sections/search";
 import { slugify } from "@/lib/slug";
 import { searchHref } from "@/lib/validations/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing, propertyType: frPropertyType, search: frSearch } as const;
 
 // What the listing page shows of a listing, as plain values (unit-tested):
 // summary, key figures, place, SEO title, structured data, action links.

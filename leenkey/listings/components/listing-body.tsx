@@ -4,7 +4,7 @@ import { DpeBadge } from "@/components/shared/dpe-badge";
 import { Gallery } from "@/components/shared/gallery";
 import { KeyFactsGrid } from "@/components/shared/key-facts-table";
 import { PriceBlock } from "@/components/shared/price-block";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
 import { cn } from "@/lib/utils";
 import { energyMentions } from "../energy-mentions";
 import { bySection, factsPreview, listingKeyFacts } from "../key-facts";
@@ -17,6 +17,9 @@ import {
 import type { PublicListing } from "../queries";
 import { FactsDialog } from "./facts-dialog";
 import { ListingDescription } from "./listing-description";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing } as const;
 
 const t = fr.listing;
 

@@ -10,8 +10,12 @@ import { centreBelow } from "@/core/maps/geometry";
 import type { GoogleMap, LatLngLiteral, Padding } from "@/core/maps/google-maps";
 import { createLabelLayer, type LabelLayer } from "@/core/maps/label-layer";
 import { useGoogleMaps } from "@/core/maps/use-google-maps";
-import { fr } from "@/lib/i18n/fr";
+import { frMaps } from "@/lib/i18n/sections/maps";
+import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { maps: frMaps, search: frSearch } as const;
 
 // Map of the results (L1-16, docs/DESIGN.md 8): Google Maps in the style of
 // Leenkey, a price pill per listing, framed on the results; in the way of

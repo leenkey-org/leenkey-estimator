@@ -4,7 +4,10 @@ import { SiteFooter } from "@/components/shared/site-footer";
 import { LeenkeyWizard } from "@/leenkey/estimator/Wizard";
 import { SiteMobileHeader } from "@/leenkey/navigation/components/site-mobile-header";
 import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
-import { fr } from "@/lib/i18n/fr";
+import { site } from "@/lib/i18n/site";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { site } as const;
 
 export const metadata: Metadata = {
   title: fr.site.valuation.metaTitle,

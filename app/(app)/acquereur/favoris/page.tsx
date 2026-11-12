@@ -11,8 +11,11 @@ import { listFavorites } from "@/leenkey/favorites/queries";
 import { buyerSignUpHref, listingSummary } from "@/leenkey/listings/presentation";
 import { ROUTES } from "@/leenkey/navigation/config";
 import { toPropertyCard } from "@/leenkey/search/cards";
-import { fr } from "@/lib/i18n/fr";
+import { frFavorites } from "@/lib/i18n/sections/favorites";
 import { SpacePage } from "../../_components/space-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { favorites: frFavorites } as const;
 
 const t = fr.favorites.page;
 

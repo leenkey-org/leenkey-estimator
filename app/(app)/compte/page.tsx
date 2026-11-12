@@ -14,9 +14,15 @@ import { RoleRows } from "@/leenkey/account/components/role-rows";
 import { accountOverview } from "@/leenkey/account/queries";
 import { signOut } from "@/leenkey/auth/actions";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frAccount } from "@/lib/i18n/sections/account";
+import { frAuth } from "@/lib/i18n/sections/auth";
+import { frLegal } from "@/lib/i18n/sections/legal";
+import { frSpaces } from "@/lib/i18n/sections/spaces";
 import { createClient } from "@/lib/supabase/server";
 import { SpacePage } from "../_components/space-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { account: frAccount, auth: frAuth, legal: frLegal, spaces: frSpaces } as const;
 
 const t = fr.account;
 

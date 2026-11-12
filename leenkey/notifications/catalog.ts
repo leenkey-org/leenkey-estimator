@@ -15,7 +15,11 @@ import type { NotificationView } from "@/core/notifications/types";
 import type { Space } from "@/leenkey/navigation/spaces";
 import { legalDate } from "@/leenkey/billing/withdrawal";
 import { formatAmount } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
+import { frNotifications } from "@/lib/i18n/sections/notifications";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminUsers: frAdminUsers, notifications: frNotifications } as const;
 
 // The types of notifications of Leenkey (SPEC-V2 section 10) and their
 // wording, from the facts written by the database (supabase/migrations,

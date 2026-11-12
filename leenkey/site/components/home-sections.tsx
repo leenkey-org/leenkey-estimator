@@ -12,12 +12,15 @@ import { activePlans } from "@/core/billing/plans";
 import { getProfile } from "@/core/auth/session";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { site } from "@/lib/i18n/site";
 import { HOME_SECTION_TITLE } from "../home-styles";
 import { ContactForm } from "./contact-form";
 import { directListingHref } from "./home-hero";
 import { RichText } from "./rich-text";
 import { SavingsSimulator } from "./savings-simulator";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { site } as const;
 
 // Sections of the home page after the hero, in the charte of the redesign D
 // (docs/design-handoff-d/SPECS.md 3, items 4 to 10), and the contact section

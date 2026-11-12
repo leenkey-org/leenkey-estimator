@@ -2,9 +2,12 @@ import "server-only";
 import type { AiTool } from "@/core/ai/tools/types";
 import { listConversations } from "@/leenkey/messaging/queries";
 import { propertyConversations } from "@/leenkey/properties/dashboard";
-import { fr } from "@/lib/i18n/fr";
+import { frFinancingStatus } from "@/lib/i18n/sections/financingStatus";
 import { PROPERTY_NOT_FOUND, sellerPropertyById } from "../seller-data";
 import { parisDay, propertyInput, propertyInputSchema, type PropertyInput } from "./shared";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { financingStatus: frFinancingStatus } as const;
 
 // summarize_contacts (SPEC-V2 section 12): the buyers who contacted the
 // seller about a property: their first name, the status of their financing

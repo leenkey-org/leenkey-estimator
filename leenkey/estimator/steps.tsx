@@ -15,7 +15,7 @@ import { FileText, Paperclip } from "lucide-react";
 import { buttonVariants } from "@/components/shared/button";
 import { Checkbox } from "@/components/shared/checkbox";
 import { InfoNote } from "@/components/shared/info-note";
-import { fr } from "@/lib/i18n/fr";
+import { frEstimator } from "@/lib/i18n/sections/estimator";
 import { cn } from "@/lib/utils";
 import { chercherParcelle, type Parcelle } from "./cadastre";
 import {
@@ -37,6 +37,9 @@ import {
   VENTILATION_OPTS,
 } from "./energie";
 import { ProfilEnergetiquePanel } from "./ProfilEnergetiquePanel";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { estimator: frEstimator } as const;
 
 type SetForm = (patch: Partial<LeenkeyForm>) => void;
 export type StepErrors = Partial<Record<keyof LeenkeyForm, string>>;

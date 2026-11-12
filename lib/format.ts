@@ -1,4 +1,7 @@
-import { fr } from "@/lib/i18n/fr";
+import { frFormat } from "@/lib/i18n/sections/format";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { format: frFormat } as const;
 
 // Number and date formatting for the interface (docs/DESIGN.md section 3.3).
 // Amounts arrive in cents (CLAUDE.md section 9); dates are stored in UTC and

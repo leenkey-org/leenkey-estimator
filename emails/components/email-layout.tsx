@@ -12,7 +12,11 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
+import { frLegal } from "@/lib/i18n/sections/legal";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails, legal: frLegal } as const;
 
 // Common template of the emails (docs/DESIGN.md 14, SPEC-V2 section 18):
 // stone background, white card of 560 px, 8 px blue band (a top border,

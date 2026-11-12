@@ -7,8 +7,12 @@ import { TaskDoneButton } from "@/leenkey/properties/components/task-done-button
 import { saleEditable, stepTickable, taskLines } from "@/leenkey/properties/dashboard";
 import { propertyForSheet } from "@/leenkey/properties/load";
 import { saleProgress } from "@/leenkey/properties/sale";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
+import { frSaleDashboard } from "@/lib/i18n/sections/saleDashboard";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties, saleDashboard: frSaleDashboard } as const;
 
 const t = fr.saleDashboard;
 

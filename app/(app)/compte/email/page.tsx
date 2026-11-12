@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import { getUser, requireProfile } from "@/core/auth/session";
 import { EmailForm } from "@/leenkey/account/components/email-form";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frAccount } from "@/lib/i18n/sections/account";
 import { SpacePage } from "../../_components/space-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { account: frAccount } as const;
 
 const t = fr.account.email;
 

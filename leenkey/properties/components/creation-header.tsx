@@ -4,8 +4,11 @@ import { AppHeader } from "@/components/shared/app-header";
 import { Button } from "@/components/shared/button";
 import { iconButtonVariants } from "@/components/shared/icon-button";
 import { ProgressBar } from "@/components/shared/progress-bar";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties.creation;
 

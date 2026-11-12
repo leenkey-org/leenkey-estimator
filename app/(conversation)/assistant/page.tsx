@@ -5,7 +5,10 @@ import { requireProfile } from "@/core/auth/session";
 import { AssistantPageChat } from "@/leenkey/ai/components/assistant-page-chat";
 import { AssistantPageHeader } from "@/leenkey/ai/components/assistant-page-header";
 import { assistantConversation } from "@/leenkey/ai/queries";
-import { fr } from "@/lib/i18n/fr";
+import { frAssistant } from "@/lib/i18n/sections/assistant";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { assistant: frAssistant } as const;
 
 export const metadata: Metadata = { title: fr.assistant.metaTitle };
 

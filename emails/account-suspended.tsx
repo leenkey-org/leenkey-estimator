@@ -1,6 +1,9 @@
 import { Link, Text } from "@react-email/components";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
 import { EmailLayout, EmailQuote, emailLink, emailText } from "./components/email-layout";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails } as const;
 
 // An account suspended by the back office (SPEC-V2 section 17, L1-30a): what
 // the account may no longer do, the motive written by Leenkey, and where to

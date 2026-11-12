@@ -3,9 +3,12 @@ import { render } from "@react-email/components";
 import { sendEmail, type EmailDelivery } from "@/core/notifications/email";
 import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
 import { ListingReceivedEmail, listingReceivedSubject } from "@/emails/listing-submitted";
-import { fr } from "@/lib/i18n/fr";
+import { frLegal } from "@/lib/i18n/sections/legal";
 import { absoluteUrl, siteUrl } from "@/lib/site";
 import { sheetHref } from "./sheet";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { legal: frLegal } as const;
 
 // Email of a listing sent for review (SPEC-V2 section 18, L1-13), after the
 // sending: « Annonce reçue » to the seller. Leenkey hears of it through the

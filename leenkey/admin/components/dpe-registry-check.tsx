@@ -2,8 +2,11 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import type { PublicListing } from "@/leenkey/listings/queries";
 import { lookupDpe } from "@/leenkey/properties/dpe-registry";
 import { formatDay } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminListings } from "@/lib/i18n/sections/adminListings";
 import { parisToday } from "@/lib/validations/property";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminListings: frAdminListings } as const;
 
 const t = fr.adminListings.dpe;
 

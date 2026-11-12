@@ -1,6 +1,9 @@
 import Image from "next/image";
-import { fr } from "@/lib/i18n/fr";
+import { frNav } from "@/lib/i18n/sections/nav";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { nav: frNav } as const;
 
 /** Size of public/brand/logo.svg: the logo of leenkey.fr cut to its drawing. */
 const WIDTH = 309;

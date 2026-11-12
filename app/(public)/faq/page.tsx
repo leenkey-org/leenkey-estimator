@@ -3,7 +3,10 @@ import { FaqList } from "@/components/shared/faq-list";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { PublicPage } from "@/leenkey/site/components/public-page";
 import { RichText } from "@/leenkey/site/components/rich-text";
-import { fr } from "@/lib/i18n/fr";
+import { site } from "@/lib/i18n/site";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { site } as const;
 
 const t = fr.site.faqPage;
 

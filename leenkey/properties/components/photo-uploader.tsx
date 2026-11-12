@@ -15,7 +15,7 @@ import { InfoNote } from "@/components/shared/info-note";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Photo } from "@/components/shared/photo";
 import { NBSP } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import { cn } from "@/lib/utils";
 import {
   addPhoto,
@@ -30,6 +30,9 @@ import { MAX_PHOTOS, PHOTO_MAX_BYTES, PHOTO_MINIMUM, PHOTO_TYPES, photoUrl } fro
 import type { SellerPhoto } from "../photos";
 import { PhotoSheet } from "./photo-sheet";
 import { reducePhoto } from "./reduce-photo";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties.photos;
 const common = fr.properties.creation;

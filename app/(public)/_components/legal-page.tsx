@@ -4,7 +4,10 @@ import { FacadeRoot } from "@/components/shared/facade-root";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Logo } from "@/components/shared/logo";
 import { SiteFooter } from "@/components/shared/site-footer";
-import { fr } from "@/lib/i18n/fr";
+import { frLegal } from "@/lib/i18n/sections/legal";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { legal: frLegal } as const;
 
 /**
  * Legal page (G10, docs/DESIGN.md 11): 640 px column, 15 px text. Until the

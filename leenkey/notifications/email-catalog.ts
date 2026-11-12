@@ -17,10 +17,15 @@ import {
   withdrawalsToProcessSubject,
 } from "@/emails/withdrawals-to-process";
 import { legalDate, legalDateTime } from "@/leenkey/billing/withdrawal";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
+import { frEmails } from "@/lib/i18n/sections/emails";
+import { frLegal } from "@/lib/i18n/sections/legal";
 import { roleLabels } from "./catalog";
 import { absoluteUrl, siteUrl } from "@/lib/site";
 import { adminListingsHref } from "@/lib/validations/admin";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminUsers: frAdminUsers, emails: frEmails, legal: frLegal } as const;
 
 // The notification emails of Leenkey that the cron sends grouped (SPEC-V2
 // sections 10 and 18, L1-22): who gets them, how often, and their content

@@ -24,9 +24,12 @@ import {
 import { CaseStatusBadge, CheckBadge } from "@/leenkey/admin/components/case-badges";
 import { adminMetadata } from "@/leenkey/admin/metadata";
 import { formatWaiting } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminCases } from "@/lib/i18n/sections/adminCases";
 import { ADMIN_CASE_FILTERS, adminCasesHref, parseAdminCasesQuery } from "@/lib/validations/admin";
 import { AdminPage } from "../_components/admin-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminCases: frAdminCases } as const;
 
 const t = fr.adminCases;
 

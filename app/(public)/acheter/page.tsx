@@ -23,7 +23,8 @@ import { resolveLocation, type ResolvedLocation } from "@/leenkey/search/locatio
 import { mapCentre, toMapListings } from "@/leenkey/search/map-listings";
 import { searchListings } from "@/leenkey/search/queries";
 import { formatInteger } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frNav } from "@/lib/i18n/sections/nav";
+import { frSearch } from "@/lib/i18n/sections/search";
 import { absoluteUrl } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import {
@@ -32,6 +33,9 @@ import {
   searchHref,
   SEARCH_PATH,
 } from "@/lib/validations/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { nav: frNav, search: frSearch } as const;
 
 // L1-15: search of the published listings (SPEC-V2 8.4, docs/DESIGN.md 12.5,
 // 12.6). Server-rendered from the URL; the controls change the URL.

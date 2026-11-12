@@ -1,6 +1,9 @@
 import { Link, Text } from "@react-email/components";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
 import { EmailLayout, EmailQuote, emailLink, emailText } from "./components/email-layout";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails } as const;
 
 // A warning of the back office after a report (SPEC-V2 section 17, « avertir »,
 // L1-30c): the message of the team, what a new breach may bring, and where to

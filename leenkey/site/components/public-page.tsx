@@ -10,8 +10,11 @@ import { SiteMobileHeader } from "@/leenkey/navigation/components/site-mobile-he
 import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
 import { SpaceBottomNav } from "@/leenkey/navigation/components/space";
 import { bottomTabs } from "@/leenkey/navigation/config";
-import { fr } from "@/lib/i18n/fr";
+import { frNav } from "@/lib/i18n/sections/nav";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { nav: frNav } as const;
 
 /**
  * Shell of a public page of the site (G1, docs/DESIGN.md 11), in the charte D

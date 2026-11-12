@@ -7,9 +7,12 @@ import { ChevronLeft } from "lucide-react";
 import { iconButtonVariants } from "@/components/shared/icon-button";
 import { previousRoute } from "@/leenkey/navigation/route-history";
 import { lastSearch } from "@/leenkey/search/last-search";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
 import { cn } from "@/lib/utils";
 import { SEARCH_PATH } from "@/lib/validations/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing } as const;
 
 /**
  * « Retour aux annonces »: back to the results the visitor came from, filters

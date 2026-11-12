@@ -6,8 +6,11 @@ import { requireProfile } from "@/core/auth/session";
 import { AssistantPanel } from "@/leenkey/ai/components/assistant-panel";
 import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
 import { SpaceBottomNav } from "@/leenkey/navigation/components/space";
-import { fr } from "@/lib/i18n/fr";
+import { frNav } from "@/lib/i18n/sections/nav";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { nav: frNav } as const;
 
 // Signed-in seller and buyer areas: session, profile and accepted terms
 // (the middleware already sends signed-out visitors to /connexion). TopNav

@@ -1,8 +1,11 @@
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { requireAdmin } from "@/core/auth/session";
 import { adminMetadata } from "@/leenkey/admin/metadata";
-import { fr } from "@/lib/i18n/fr";
+import { frPlaceholders } from "@/lib/i18n/sections/placeholders";
 import { AdminPage } from "../_components/admin-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { placeholders: frPlaceholders } as const;
 
 const t = fr.placeholders.admin.offers;
 

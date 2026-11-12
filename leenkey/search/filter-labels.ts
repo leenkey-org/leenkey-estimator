@@ -1,7 +1,10 @@
 import { formatPriceShort, formatSurface } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frSearch } from "@/lib/i18n/sections/search";
 import { OUTDOOR_SPACES, type SearchFilters } from "@/lib/validations/search";
 import { categoryOn } from "./categories";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { search: frSearch } as const;
 
 // Short labels of the active filters: the « Budget » part of the search bar,
 // and the chips of the active filters under the categories on a phone:

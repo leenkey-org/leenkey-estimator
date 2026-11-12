@@ -1,7 +1,10 @@
 "use client";
 
 import { AssistantSuggestion } from "@/components/shared/assistant-suggestion";
-import { fr } from "@/lib/i18n/fr";
+import { frAssistant } from "@/lib/i18n/sections/assistant";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { assistant: frAssistant } as const;
 
 const t = fr.assistant.suggestion;
 const nothing = () => {};

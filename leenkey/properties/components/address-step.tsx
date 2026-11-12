@@ -17,10 +17,13 @@ import { FormActionBar } from "@/components/shared/form-action-bar";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { InfoNote } from "@/components/shared/info-note";
 import { Input } from "@/components/shared/input";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import { cn } from "@/lib/utils";
 import { saveAddress, suggestAddresses, type AddressSuggestion } from "../actions";
 import { CREATION_FORM_ID, intentOf, submitWithEnter } from "./creation-header";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties.address;
 const common = fr.properties.creation;

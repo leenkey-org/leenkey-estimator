@@ -12,10 +12,13 @@ import { IconButton } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { MessageBubble } from "@/components/shared/message-bubble";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frVisitorAssistant } from "@/lib/i18n/sections/visitorAssistant";
 import { cn } from "@/lib/utils";
 import { VISITOR_MESSAGE_MAX } from "@/lib/validations/assistant";
 import { readEvents, type StreamEvent } from "../stream-events";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { visitorAssistant: frVisitorAssistant } as const;
 
 const t = fr.visitorAssistant;
 

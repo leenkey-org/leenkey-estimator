@@ -32,7 +32,7 @@ import {
 import { usageSummary } from "@/leenkey/admin/assistant/usage";
 import { adminMetadata } from "@/leenkey/admin/metadata";
 import { formatDateShort, formatDateTime, formatInteger } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminAssistant } from "@/lib/i18n/sections/adminAssistant";
 import {
   AI_LOG_CONTEXT_PARAMS,
   AI_LOG_CONTEXTS,
@@ -41,6 +41,9 @@ import {
   type AssistantQuery,
 } from "@/lib/validations/admin-assistant";
 import { AdminPage } from "../_components/admin-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminAssistant: frAdminAssistant } as const;
 
 const t = fr.adminAssistant;
 

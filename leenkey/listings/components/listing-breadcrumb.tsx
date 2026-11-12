@@ -1,7 +1,10 @@
 import Link from "next/link";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
 import { cn } from "@/lib/utils";
 import { SEARCH_PATH } from "@/lib/validations/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing } as const;
 
 /** « Acheter › Savigny-sur-Orge › Appartement 3 pièces, centre » (docs/DESIGN.md 12.8). */
 export function ListingBreadcrumb({

@@ -11,8 +11,12 @@ import type { Notifications } from "@/core/notifications/store";
 import { internalLink, type NotificationView } from "@/core/notifications/types";
 import { ROUTES, type Space } from "@/leenkey/navigation/spaces";
 import { formatNotificationTime, parisDaysAgo } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAssistant } from "@/lib/i18n/sections/assistant";
+import { frNotifications } from "@/lib/i18n/sections/notifications";
 import { describeNotification, FILTERS, inFilter, type NotificationFilter } from "../catalog";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { assistant: frAssistant, notifications: frNotifications } as const;
 
 const t = fr.notifications;
 

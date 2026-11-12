@@ -7,7 +7,10 @@ import { SheetSection } from "@/leenkey/properties/components/sheet-section";
 import { propertyForSheet } from "@/leenkey/properties/load";
 import { editHref, pricePerM2Cents, propertyName } from "@/leenkey/properties/sheet";
 import { formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties.sheet;
 

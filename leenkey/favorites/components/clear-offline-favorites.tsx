@@ -2,9 +2,12 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/shared/button";
-import { fr } from "@/lib/i18n/fr";
+import { frFavorites } from "@/lib/i18n/sections/favorites";
 import { cn } from "@/lib/utils";
 import { clearOfflineFavorites } from "../actions";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { favorites: frFavorites } as const;
 
 const t = fr.favorites.page;
 

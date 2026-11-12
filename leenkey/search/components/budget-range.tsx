@@ -3,7 +3,7 @@
 import * as Slider from "@radix-ui/react-slider";
 import { UnitInput } from "@/components/shared/unit-input";
 import { formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frSearch } from "@/lib/i18n/sections/search";
 import {
   BUDGET_CAP_EUROS,
   BUDGET_STEP_EUROS,
@@ -11,6 +11,9 @@ import {
   budgetThumbs,
   wholeNumberInput,
 } from "../filters-form";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { search: frSearch } as const;
 
 const t = fr.search.dialog;
 

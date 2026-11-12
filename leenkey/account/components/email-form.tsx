@@ -5,9 +5,13 @@ import { Button } from "@/components/shared/button";
 import { InfoNote } from "@/components/shared/info-note";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
-import { fr } from "@/lib/i18n/fr";
+import { frAccount } from "@/lib/i18n/sections/account";
+import { frAuth } from "@/lib/i18n/sections/auth";
 import { changeEmail } from "../actions";
 import { focusFirstInvalid } from "./focus";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { account: frAccount, auth: frAuth } as const;
 
 const t = fr.account.email;
 

@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing } as const;
 
 const t = fr.listing.description;
 

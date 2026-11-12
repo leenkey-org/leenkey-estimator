@@ -21,7 +21,8 @@ import { Button } from "@/components/shared/button";
 import { FaqList } from "@/components/shared/faq-list";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { ShowcaseHero } from "@/components/shared/showcase-hero";
-import { fr } from "@/lib/i18n/fr";
+import { frLegal } from "@/lib/i18n/sections/legal";
+import { site } from "@/lib/i18n/site";
 import type { ContactMotif } from "@/lib/validations/contact";
 import { cn } from "@/lib/utils";
 import { VISION_ANCHOR } from "../anchors";
@@ -32,6 +33,9 @@ import { RichText } from "./rich-text";
 import { card, cardText, cardTitle, iconTile } from "./site-styles";
 import { StagePill, type Stage } from "./stage-pill";
 import { CountUpText } from "@/components/shared/count-up";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { legal: frLegal, site } as const;
 
 // Sections of /investir (L1-43), in the order of the V1 page, in its
 // direction since L1-50 (DECISIONS 2026-10-23): its hero, its labels above

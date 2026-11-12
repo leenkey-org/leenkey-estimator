@@ -1,7 +1,7 @@
 import { TopNav, type TopNavAccount } from "@/components/shared/top-nav";
 import { currentPath, getProfile } from "@/core/auth/session";
 import { signOut } from "@/leenkey/auth/actions";
-import { fr } from "@/lib/i18n/fr";
+import { frNav } from "@/lib/i18n/sections/nav";
 import {
   accountMenu,
   FAVOURITES_LINK,
@@ -11,6 +11,9 @@ import {
   TOP_NAV_LINKS,
 } from "../config";
 import { SpaceNotificationBell } from "./space";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { nav: frNav } as const;
 
 /**
  * TopNav of the public pages and the signed-in areas (docs/DESIGN.md 10.6),

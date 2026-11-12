@@ -7,10 +7,14 @@ import { LinkTabs } from "@/components/shared/link-tabs";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { formatDate, formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frLegal } from "@/lib/i18n/sections/legal";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import type { SellerProperty } from "../queries";
 import { creationHref, propertyName, sheetFigures, sheetTabs } from "../sheet";
 import { ListingStatusActions } from "./listing-status-actions";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { legal: frLegal, properties: frProperties } as const;
 
 const t = fr.properties.sheet;
 

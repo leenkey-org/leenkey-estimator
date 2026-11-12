@@ -10,10 +10,13 @@ import { teamAddresses } from "@/leenkey/notifications/send-emails";
 import type { Database } from "@/types/database";
 import { formatAmount, formatDate } from "@/lib/format";
 import { SALES_TERMS } from "@/lib/config/sales";
-import { fr } from "@/lib/i18n/fr";
+import { frLegal } from "@/lib/i18n/sections/legal";
 import { absoluteUrl, siteUrl } from "@/lib/site";
 import { firstContactFrom } from "./orders";
 import { legalDate, legalDateTime, withdrawalLastDay } from "./withdrawal";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { legal: frLegal } as const;
 
 // The emails of a plan paid (SPEC-V2 sections 10 and 18, L1-26), sent by the
 // webhook once the payment is recorded: plan.activated to the seller,

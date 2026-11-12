@@ -1,7 +1,11 @@
 import { badgeVariants } from "@/components/ui/badge";
-import { fr } from "@/lib/i18n/fr";
+import { frListingStatus } from "@/lib/i18n/sections/listingStatus";
+import { frPlan } from "@/lib/i18n/sections/plan";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/types/database";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listingStatus: frListingStatus, plan: frPlan } as const;
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
 type PlanCode = Database["public"]["Enums"]["plan_code"];

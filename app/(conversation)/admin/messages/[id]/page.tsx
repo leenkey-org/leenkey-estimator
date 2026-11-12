@@ -10,7 +10,12 @@ import { MessagesLayout } from "@/leenkey/messaging/components/messages-layout";
 import { coverSrc } from "@/leenkey/messaging/presentation";
 import { isUuid, threadSenders } from "@/leenkey/messaging/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminMessages } from "@/lib/i18n/sections/adminMessages";
+import { frMessaging } from "@/lib/i18n/sections/messaging";
+import { frPlan } from "@/lib/i18n/sections/plan";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminMessages: frAdminMessages, messaging: frMessaging, plan: frPlan } as const;
 
 const t = fr.adminMessages;
 const advisor = fr.messaging.advisor;

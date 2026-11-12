@@ -9,8 +9,12 @@ import { SearchMap } from "./search-map";
 import { facadeScope } from "@/components/shared/facade-root";
 import { MapBackdrop, MapNotice } from "@/components/shared/map-notice";
 import type { LatLngLiteral, Padding } from "@/core/maps/google-maps";
-import { fr } from "@/lib/i18n/fr";
+import { frMaps } from "@/lib/i18n/sections/maps";
+import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { maps: frMaps, search: frSearch } as const;
 
 // The map of the results (L1-16, docs/DESIGN.md 8, 12.5, 12.6): beside the
 // list from 1024 px, loaded with the page (L1-63, DECISIONS 2026-10-28); on a

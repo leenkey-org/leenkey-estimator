@@ -7,9 +7,13 @@ import { Building2, Check, House, LandPlot, LayoutGrid, Search } from "lucide-re
 import { facadeScope } from "@/components/shared/facade-root";
 import { suggestCommunes, locationFromText } from "@/leenkey/search/location";
 import { formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frPropertyType } from "@/lib/i18n/sections/propertyType";
+import { site } from "@/lib/i18n/site";
 import { cn } from "@/lib/utils";
 import { searchHref, type SearchFilters } from "@/lib/validations/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { propertyType: frPropertyType, site } as const;
 
 const t = fr.site.home.search.buy;
 

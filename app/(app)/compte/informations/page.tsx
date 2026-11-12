@@ -4,9 +4,13 @@ import { getUser, requireProfile } from "@/core/auth/session";
 import { IdentityForm } from "@/leenkey/account/components/identity-form";
 import { accountOverview } from "@/leenkey/account/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frAccount } from "@/lib/i18n/sections/account";
+import { frAuth } from "@/lib/i18n/sections/auth";
 import { createClient } from "@/lib/supabase/server";
 import { SpacePage } from "../../_components/space-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { account: frAccount, auth: frAuth } as const;
 
 const t = fr.account.identity;
 

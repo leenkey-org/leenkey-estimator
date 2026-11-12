@@ -20,6 +20,7 @@ export function Photo({
   alt,
   sizes,
   priority,
+  urgentWhenShown,
   fit = "cover",
   className,
 }: {
@@ -27,6 +28,12 @@ export function Photo({
   alt: string;
   sizes: string;
   priority?: boolean;
+  /**
+   * The largest paint of a layout hidden on other screens (P-06): urgent,
+   * but loaded only when shown (lazy), never preloaded. A priority image
+   * hidden by CSS is downloaded all the same and slows the visible one.
+   */
+  urgentWhenShown?: boolean;
   fit?: "cover" | "contain";
   className?: string;
 }) {
@@ -54,7 +61,7 @@ export function Photo({
       sizes={sizes}
       priority={priority}
       // next/image 15 preloads a priority image without saying it is urgent.
-      fetchPriority={priority ? "high" : undefined}
+      fetchPriority={priority || urgentWhenShown ? "high" : undefined}
       onLoad={() => setState("loaded")}
       onError={() => setState("failed")}
       className={cn(

@@ -3,7 +3,7 @@ import { buyerSignUpHref } from "@/leenkey/listings/presentation";
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import { listingHref } from "@/leenkey/search/cards";
 import { HOME_LISTINGS_FILTERS, homeListings } from "@/leenkey/search/queries";
-import { fr } from "@/lib/i18n/fr";
+import { site } from "@/lib/i18n/site";
 import { searchHref } from "@/lib/validations/search";
 import {
   categoryFilters,
@@ -13,6 +13,9 @@ import {
   type HomeCategory,
 } from "../home-categories";
 import { HomeListingsCarousel, type CarouselListing } from "./home-listings-carousel";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { site } as const;
 
 const t = fr.site.home.listings;
 

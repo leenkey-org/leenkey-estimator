@@ -113,8 +113,23 @@ import {
   formatRooms,
   formatSurface,
 } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frMessaging } from "@/lib/i18n/sections/messaging";
+import { frNav } from "@/lib/i18n/sections/nav";
+import { frPlaceholders } from "@/lib/i18n/sections/placeholders";
+import { frProperties } from "@/lib/i18n/sections/properties";
+import { frSellStart } from "@/lib/i18n/sections/sellStart";
+import { site } from "@/lib/i18n/site";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = {
+  messaging: frMessaging,
+  nav: frNav,
+  placeholders: frPlaceholders,
+  properties: frProperties,
+  sellStart: frSellStart,
+  site,
+} as const;
 
 // Living catalogue of the Façade design system (docs/DESIGN.md 12.14): the
 // board of Main.png with the real components, then every component of

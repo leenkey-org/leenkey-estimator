@@ -8,10 +8,14 @@ import { AdvisorInbox } from "@/leenkey/admin/components/advisor-inbox";
 import { InboxRefresh } from "@/leenkey/messaging/components/inbox-refresh";
 import { adminMetadata } from "@/leenkey/admin/metadata";
 import { adminAdvisorConversations, awaitingAnswer } from "@/leenkey/admin/messages/queries";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminMessages } from "@/lib/i18n/sections/adminMessages";
+import { frPlan } from "@/lib/i18n/sections/plan";
 import { adminMessagesHref, parseAdminMessagesQuery } from "@/lib/validations/admin";
 import { planCode } from "@/lib/validations/billing";
 import { AdminPage } from "../_components/admin-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminMessages: frAdminMessages, plan: frPlan } as const;
 
 const t = fr.adminMessages;
 

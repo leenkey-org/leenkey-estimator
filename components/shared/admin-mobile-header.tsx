@@ -7,8 +7,11 @@ import { Globe } from "lucide-react";
 import { AccountMenu, type AccountMenuProps } from "./account-menu";
 import { iconButtonVariants } from "./icon-button";
 import { currentHref, type NavItem } from "./nav-items";
-import { fr } from "@/lib/i18n/fr";
+import { frNav } from "@/lib/i18n/sections/nav";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { nav: frNav } as const;
 
 /** A counter of the header: what waits, and where it is dealt with. */
 export type AdminHeaderTile = { label: string; value: number; href: string };

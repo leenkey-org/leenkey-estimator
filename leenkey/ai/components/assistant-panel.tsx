@@ -12,11 +12,14 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { Skeleton } from "@/components/shared/skeleton";
 import { useSpace } from "@/leenkey/navigation/components/space-context";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frAssistant } from "@/lib/i18n/sections/assistant";
 import { cn } from "@/lib/utils";
 import { loadAssistantConversation } from "../actions";
 import type { AssistantConversation } from "../types";
 import { AssistantChat } from "./assistant-chat";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { assistant: frAssistant } as const;
 
 const t = fr.assistant;
 

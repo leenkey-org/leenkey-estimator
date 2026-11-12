@@ -1,6 +1,9 @@
 import { Link, Text } from "@react-email/components";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
 import { EmailLayout, emailLink, emailText } from "./components/email-layout";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails } as const;
 
 // Several listings sent for review at once (SPEC-V2 section 10, L1-22): one
 // email to Leenkey instead of one each (an internal notification,

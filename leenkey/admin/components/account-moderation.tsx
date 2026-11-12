@@ -3,12 +3,15 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/shared/button";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import type { AccountDecisionInput } from "@/lib/validations/admin";
 import { decideAccount, type AccountDecisionResult } from "../users/actions";
 import { accountFeedback } from "../feedback";
 import { useModerationFeedback } from "./listing-moderation";
 import { ReasonDialog } from "./reason-dialog";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminUsers: frAdminUsers } as const;
 
 // Suspension of an account from its sheet (SPEC-V2 section 17, L1-30a):
 // « Suspendre le compte » asks for a motive, sent to its owner by email;

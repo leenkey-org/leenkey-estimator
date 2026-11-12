@@ -16,9 +16,14 @@ import {
 } from "@/leenkey/admin/dashboard/queries";
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import { formatInteger, formatPrice, formatWaiting } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminDashboard } from "@/lib/i18n/sections/adminDashboard";
+import { frNav } from "@/lib/i18n/sections/nav";
+import { frSpaces } from "@/lib/i18n/sections/spaces";
 import { cn } from "@/lib/utils";
 import { AdminPage } from "./_components/admin-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminDashboard: frAdminDashboard, nav: frNav, spaces: frSpaces } as const;
 
 export const generateMetadata = adminMetadata({ title: fr.spaces.admin.metaTitle });
 

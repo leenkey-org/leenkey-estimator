@@ -6,8 +6,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/shared/button";
 import { FormActionBar } from "@/components/shared/form-action-bar";
 import { InlineAlert } from "@/components/shared/inline-alert";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import { submitListing, type SubmitListingResult } from "../listing-actions";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 const t = fr.properties.preview;
 const common = fr.properties.creation;

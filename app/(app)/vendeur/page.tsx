@@ -37,8 +37,21 @@ import { sellerProperties } from "@/leenkey/properties/queries";
 import { listingHref } from "@/leenkey/search/cards";
 import { creationHref, propertyName, sheetHref } from "@/leenkey/properties/sheet";
 import { formatDateShort, formatInteger, formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frPlan } from "@/lib/i18n/sections/plan";
+import { frProperties } from "@/lib/i18n/sections/properties";
+import { frSaleDashboard } from "@/lib/i18n/sections/saleDashboard";
+import { frSellStart } from "@/lib/i18n/sections/sellStart";
+import { frSpaces } from "@/lib/i18n/sections/spaces";
 import { SpacePage } from "../_components/space-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = {
+  plan: frPlan,
+  properties: frProperties,
+  saleDashboard: frSaleDashboard,
+  sellStart: frSellStart,
+  spaces: frSpaces,
+} as const;
 
 export const metadata: Metadata = { title: fr.spaces.seller.metaTitle };
 

@@ -3,9 +3,12 @@
 import * as RadioGroup from "@radix-ui/react-radio-group";
 import * as ToggleGroup from "@radix-ui/react-toggle-group";
 import { Building2, House, LandPlot, LayoutGrid, Warehouse, type LucideIcon } from "lucide-react";
-import { fr } from "@/lib/i18n/fr";
+import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
 import { PROPERTY_TYPES } from "@/lib/validations/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { search: frSearch } as const;
 
 const ICONS: Record<(typeof PROPERTY_TYPES)[number], LucideIcon> = {
   appartement: Building2,

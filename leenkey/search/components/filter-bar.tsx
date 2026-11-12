@@ -10,9 +10,12 @@ import { budgetError, budgetPreset, wholeNumberInput, type BudgetDraft } from ".
 import { Button } from "@/components/shared/button";
 import { FilterPopover } from "@/components/shared/filter-popover";
 import { formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
 import { PROPERTY_TYPES, type SearchFilters } from "@/lib/validations/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { search: frSearch } as const;
 
 const t = fr.search.bar;
 const d = fr.search.dialog;

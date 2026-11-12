@@ -8,9 +8,12 @@ import { BudgetRange } from "@/leenkey/search/components/budget-range";
 import { SearchCategories } from "@/leenkey/search/components/search-categories";
 import { TypeTiles } from "@/leenkey/search/components/type-tiles";
 import { activeChips } from "@/leenkey/search/filter-labels";
-import { fr } from "@/lib/i18n/fr";
+import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
 import { PROPERTY_TYPES, type SearchFilters } from "@/lib/validations/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { search: frSearch } as const;
 
 const t = fr.search.bar;
 

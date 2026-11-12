@@ -15,7 +15,10 @@ import {
   VisionSection,
 } from "@/leenkey/site/components/invest-sections";
 import { PublicPage } from "@/leenkey/site/components/public-page";
-import { fr } from "@/lib/i18n/fr";
+import { site } from "@/lib/i18n/site";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { site } as const;
 
 const t = fr.site.invest;
 

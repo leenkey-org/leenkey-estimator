@@ -1,8 +1,11 @@
 import { recordEstimation } from "@/leenkey/estimator/record";
 import { toRouteHandler } from "@/lib/legacy-api/adapter";
 import handler from "@/lib/legacy-api/estimate";
-import { fr } from "@/lib/i18n/fr";
+import { frAuth } from "@/lib/i18n/sections/auth";
 import { allowRequest, tooManyRequestsResponse } from "@/lib/rate-limit";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { auth: frAuth } as const;
 
 // V1 endpoint kept at the same path, request and answer (L1-01). L1-13b: the
 // analysis is also kept (estimations), and the answer gains two fields, its

@@ -6,7 +6,10 @@ import { Button } from "@/components/shared/button";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { useRetry } from "@/components/shared/use-retry";
-import { fr } from "@/lib/i18n/fr";
+import { frErrors } from "@/lib/i18n/sections/errors";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { errors: frErrors } as const;
 
 const t = fr.errors.failed;
 

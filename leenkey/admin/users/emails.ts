@@ -3,9 +3,12 @@ import { render } from "@react-email/components";
 import { sendEmail, type EmailDelivery } from "@/core/notifications/email";
 import { AccountSuspendedEmail, accountSuspendedSubject } from "@/emails/account-suspended";
 import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
-import { fr } from "@/lib/i18n/fr";
+import { frLegal } from "@/lib/i18n/sections/legal";
 import { siteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { legal: frLegal } as const;
 
 // Email to the owner of an account the back office suspended (SPEC-V2
 // section 17, « suspension du compte (motif, email) »), with the admin's

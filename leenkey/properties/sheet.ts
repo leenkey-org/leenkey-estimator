@@ -3,11 +3,15 @@ import type { KeyFigure } from "@/components/shared/key-figures";
 import { listingKeyFacts } from "@/leenkey/listings/key-facts";
 import { listingSummary } from "@/leenkey/listings/presentation";
 import { formatPrice, formatSurface } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import { missingCharacteristics } from "@/lib/validations/property";
 import type { Database } from "@/types/database";
 import { creationStep, editableOnceSent, inCreation } from "./creation";
 import type { SellerProperty } from "./queries";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing, properties: frProperties } as const;
 
 // Rules of the page of a property (L1-14, SPEC-V2 8.3): its tabs, its key
 // figures and the actions its status allows. Pure: unit tested.

@@ -1,7 +1,16 @@
 import { csvDateTime, toCsv } from "@/lib/csv";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminListings } from "@/lib/i18n/sections/adminListings";
+import { frListingStatus } from "@/lib/i18n/sections/listingStatus";
+import { frPlan } from "@/lib/i18n/sections/plan";
 import type { AdminListingRow } from "./queries";
 import { reviewIssueText } from "./review-text";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = {
+  adminListings: frAdminListings,
+  listingStatus: frListingStatus,
+  plan: frPlan,
+} as const;
 
 // The export of /admin/annonces (L1-30d, SPEC-V2 17): the listings of the
 // list as it is filtered, one line each, with their pre-analysis.

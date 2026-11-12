@@ -1,6 +1,10 @@
 import { Text } from "@react-email/components";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
+import { frLegal } from "@/lib/i18n/sections/legal";
 import { EmailLayout, emailText } from "./components/email-layout";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails, legal: frLegal } as const;
 
 // The acknowledgment of a withdrawal (L1-40, SPEC-V2 section 11, code de la
 // consommation L221-21): sent at once, by the action of « Renoncer au

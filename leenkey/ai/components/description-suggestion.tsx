@@ -4,10 +4,13 @@ import { useRef } from "react";
 import { Sparkles } from "lucide-react";
 import { AssistantSuggestion } from "@/components/shared/assistant-suggestion";
 import { Button } from "@/components/shared/button";
-import { fr } from "@/lib/i18n/fr";
+import { frAssistant } from "@/lib/i18n/sections/assistant";
 import { LISTING_DESCRIPTION_MAX } from "@/lib/validations/listing";
 import { draftDescriptionAction } from "../actions";
 import { SuggestionErrorText, useSuggestion } from "./use-suggestion";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { assistant: frAssistant } as const;
 
 const t = fr.assistant.suggestion;
 

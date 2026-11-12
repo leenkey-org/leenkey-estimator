@@ -14,7 +14,7 @@ import { facadeScope } from "@/components/shared/facade-root";
 import { IconButton } from "@/components/shared/icon-button";
 import { SegmentedPicker } from "@/components/shared/segmented-picker";
 import { UnitInput } from "@/components/shared/unit-input";
-import { fr } from "@/lib/i18n/fr";
+import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
 import {
   DPE_CLASSES,
@@ -23,6 +23,9 @@ import {
   SEARCH_RADII_KM,
   type SearchFilters,
 } from "@/lib/validations/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { search: frSearch } as const;
 
 const t = fr.search.dialog;
 const COUNTS = [1, 2, 3, 4, 5];

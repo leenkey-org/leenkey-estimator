@@ -6,7 +6,10 @@ import { Button } from "@/components/shared/button";
 import { Checkbox } from "@/components/shared/checkbox";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { LEGAL_PATHS } from "@/lib/legal/versions";
-import { fr } from "@/lib/i18n/fr";
+import { frAuth } from "@/lib/i18n/sections/auth";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { auth: frAuth } as const;
 
 const t = fr.auth.signup;
 

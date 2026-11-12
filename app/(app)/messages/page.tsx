@@ -5,8 +5,11 @@ import { InboxEmpty, InboxPane } from "@/leenkey/messaging/components/inbox-pane
 import { InboxRefresh } from "@/leenkey/messaging/components/inbox-refresh";
 import { MessagesLayout } from "@/leenkey/messaging/components/messages-layout";
 import { listConversations } from "@/leenkey/messaging/queries";
-import { fr } from "@/lib/i18n/fr";
+import { frMessaging } from "@/lib/i18n/sections/messaging";
 import { SpacePage } from "../_components/space-page";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { messaging: frMessaging } as const;
 
 const t = fr.messaging;
 

@@ -4,7 +4,10 @@ import type { PublicListing } from "../queries";
 import type { ContactLinks } from "../presentation";
 import { Button } from "@/components/shared/button";
 import { PriceBlock } from "@/components/shared/price-block";
-import { fr } from "@/lib/i18n/fr";
+import { frListing } from "@/lib/i18n/sections/listing";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listing: frListing } as const;
 
 const t = fr.listing.actions;
 

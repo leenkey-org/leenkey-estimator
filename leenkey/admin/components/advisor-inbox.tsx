@@ -4,9 +4,12 @@ import { PropertyThumb } from "@/components/shared/property-thumb";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { conversationTitle, coverSrc } from "@/leenkey/messaging/presentation";
 import { formatMessageTime, formatWaiting } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminMessages } from "@/lib/i18n/sections/adminMessages";
 import { cn } from "@/lib/utils";
 import { awaitingAnswer, type AdminAdvisorConversation } from "../messages/queries";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminMessages: frAdminMessages } as const;
 
 const t = fr.adminMessages;
 

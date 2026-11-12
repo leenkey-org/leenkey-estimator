@@ -9,10 +9,13 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { PlanCard } from "@/components/shared/plan-card";
 import type { PlanView } from "@/core/billing/plan-text";
 import { formatPrice } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frBilling } from "@/lib/i18n/sections/billing";
 import type { Database } from "@/types/database";
 import { startCheckout, type StartCheckoutError } from "../actions";
 import { planChoice } from "../orders";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { billing: frBilling } as const;
 
 // The plans of a property and their order (SPEC-V2 8.8 and 11, DESIGN.md
 // 12.4): the three cards, the plan in force ticked, a lower one not

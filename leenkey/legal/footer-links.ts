@@ -1,4 +1,8 @@
-import { fr } from "@/lib/i18n/fr";
+import { frFooter } from "@/lib/i18n/sections/footer";
+import { frLegal } from "@/lib/i18n/sections/legal";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { footer: frFooter, legal: frLegal } as const;
 
 const t = fr.footer.links;
 

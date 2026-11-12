@@ -1,6 +1,10 @@
 import { z } from "zod";
-import { fr } from "@/lib/i18n/fr";
+import { frAccount } from "@/lib/i18n/sections/account";
+import { frAuth } from "@/lib/i18n/sections/auth";
 import { emailField, newPasswordField, phoneField } from "./auth";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { account: frAccount, auth: frAuth } as const;
 
 // « Mon compte » (L1-39, SPEC-V2 8.14): the forms of its pages.
 

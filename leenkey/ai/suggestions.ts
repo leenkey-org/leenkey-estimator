@@ -9,13 +9,17 @@ import { promptFile } from "@/core/ai/prompts";
 import type { SessionProfile } from "@/core/auth/session";
 import { getConversation } from "@/leenkey/messaging/queries";
 import type { SellerProperty } from "@/leenkey/properties/queries";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
+import { frPropertyType } from "@/lib/i18n/sections/propertyType";
 import { LISTING_DESCRIPTION_MAX, textLength } from "@/lib/validations/listing";
 import { createClient } from "@/lib/supabase/server";
 import { consumeQuota } from "./assistant";
 import { mockText } from "./mock";
 import { sellerHasPaidPlan, sellerPropertyById } from "./seller-data";
 import type { SuggestionError, SuggestionResult } from "./types";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties, propertyType: frPropertyType } as const;
 
 // The suggestions of the assistant (L1-29, SPEC-V2 sections 8.3, 8.6 and 12):
 // a reply to a buyer in the messaging, a description of a listing at the

@@ -1,6 +1,9 @@
 import { Text } from "@react-email/components";
-import { fr } from "@/lib/i18n/fr";
+import { frEmails } from "@/lib/i18n/sections/emails";
 import { EmailLayout, emailText } from "./components/email-layout";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { emails: frEmails } as const;
 
 // For the team (SPEC-V2 section 18, case.created, L1-26): a plan was paid,
 // its case waits in the back office, with what is to check; a payment held

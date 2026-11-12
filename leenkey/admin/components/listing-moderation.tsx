@@ -13,13 +13,16 @@ import {
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminListings } from "@/lib/i18n/sections/adminListings";
 import { cn } from "@/lib/utils";
 import type { ModerationAction, ModerationInput } from "@/lib/validations/admin";
 import type { Database } from "@/types/database";
 import { draftRejectionAction, moderateListing, type ModerationResult } from "../actions";
 import { withEmailNote, type Feedback } from "../feedback";
 import { ReasonDialog } from "./reason-dialog";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminListings: frAdminListings } as const;
 
 // Decisions of the back office on a listing (SPEC-V2 section 17): validate
 // and publish, refuse with a motive, suspend with a motive, put back online.

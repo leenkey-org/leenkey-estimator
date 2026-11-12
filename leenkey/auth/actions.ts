@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createStatelessClient } from "@/lib/supabase/public";
 import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 import { allowRequest } from "@/lib/rate-limit";
-import { fr } from "@/lib/i18n/fr";
+import { frAuth } from "@/lib/i18n/sections/auth";
 import {
   acceptTermsSchema,
   fieldErrors,
@@ -29,6 +29,9 @@ import {
 import { authErrorMessage, isAddressEmailLimit } from "./errors";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { homePathForRoles } from "./routes";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { auth: frAuth } as const;
 
 const t = fr.auth.errors;
 

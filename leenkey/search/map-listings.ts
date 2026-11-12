@@ -4,7 +4,10 @@ import { propertySummary } from "@/components/shared/property-card";
 import type { LatLngLiteral } from "@/core/maps/google-maps";
 import { LAUNCH_ZONE_CENTRE } from "@/lib/config/launch-zone";
 import { formatPriceShort } from "@/lib/format";
-import { fr } from "@/lib/i18n/fr";
+import { frSearch } from "@/lib/i18n/sections/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { search: frSearch } as const;
 
 // The results on the map (L1-16): one price pill per listing at its public
 // location (snapped to about 200 m, never the address). A listing without

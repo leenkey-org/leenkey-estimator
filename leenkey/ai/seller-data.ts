@@ -5,8 +5,11 @@ import { stepHeading } from "@/leenkey/properties/dashboard";
 import { sellerProperties, type SellerProperty } from "@/leenkey/properties/queries";
 import { saleProgress } from "@/leenkey/properties/sale";
 import { propertyName } from "@/leenkey/properties/sheet";
-import { fr } from "@/lib/i18n/fr";
+import { frListingStatus } from "@/lib/i18n/sections/listingStatus";
 import { createClient } from "@/lib/supabase/server";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { listingStatus: frListingStatus } as const;
 
 // What the assistant reads of the file of a seller (L1-28), with their
 // session (RLS: their own properties only): the properties, their listing,

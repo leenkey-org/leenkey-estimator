@@ -1,7 +1,10 @@
 import { Check, ChevronDown, Minus } from "lucide-react";
 import type { PlanCode, PlanFeature } from "@/core/billing/plans";
-import { fr } from "@/lib/i18n/fr";
+import { frBilling } from "@/lib/i18n/sections/billing";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { billing: frBilling } as const;
 
 const t = fr.billing.comparison;
 

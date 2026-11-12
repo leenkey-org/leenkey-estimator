@@ -3,9 +3,12 @@ import { render } from "@react-email/components";
 import { sendEmail, type EmailDelivery } from "@/core/notifications/email";
 import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
 import { UserWarnedEmail, userWarnedSubject } from "@/emails/user-warned";
-import { fr } from "@/lib/i18n/fr";
+import { frLegal } from "@/lib/i18n/sections/legal";
 import { siteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { legal: frLegal } as const;
 
 // Email to the account warned after a report (SPEC-V2 section 17, L1-30c),
 // with the admin's session: admin_user_contact checks is_admin() and gives

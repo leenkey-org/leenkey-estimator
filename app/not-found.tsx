@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { NotFoundScreen } from "@/components/shared/not-found-screen";
-import { fr } from "@/lib/i18n/fr";
+import { frErrors } from "@/lib/i18n/sections/errors";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { errors: frErrors } as const;
 
 const t = fr.errors.notFound;
 

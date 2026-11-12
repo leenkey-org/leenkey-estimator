@@ -7,9 +7,12 @@ import { Button } from "@/components/shared/button";
 import { Skeleton } from "@/components/shared/skeleton";
 import { lastSearchDigest } from "@/leenkey/search/actions";
 import { storedSearch } from "@/leenkey/search/last-search";
-import { fr } from "@/lib/i18n/fr";
+import { frBuyerSpace } from "@/lib/i18n/sections/buyerSpace";
 import { SEARCH_PATH } from "@/lib/validations/search";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { buyerSpace: frBuyerSpace } as const;
 
 const t = fr.buyerSpace.home;
 

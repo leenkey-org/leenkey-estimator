@@ -1,5 +1,8 @@
-import { fr } from "@/lib/i18n/fr";
+import { frAdminListings } from "@/lib/i18n/sections/adminListings";
 import { REVIEW_PHOTOS_MIN, type ListingReview, type ReviewIssue } from "./review";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminListings: frAdminListings } as const;
 
 // The sentence of a pre-analysis (L1-30d), as the mobile card of the mockup
 // writes it (AdminAnnonces: « Pré-analyse : annonce complète, prix cohérent

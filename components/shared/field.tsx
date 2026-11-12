@@ -1,8 +1,11 @@
 import type { ReactNode } from "react";
 import { AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { fr } from "@/lib/i18n/fr";
+import { frField } from "@/lib/i18n/sections/field";
 import { cn } from "@/lib/utils";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { field: frField } as const;
 
 // Label, help and error around a form control (docs/DESIGN.md 10.1, 15).
 // Used by Input, UnitInput and Select.

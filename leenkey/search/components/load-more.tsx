@@ -4,7 +4,10 @@ import { useEffect, useRef } from "react";
 import { useSearch } from "./search-context";
 import { Button } from "@/components/shared/button";
 import { Skeleton } from "@/components/shared/skeleton";
-import { fr } from "@/lib/i18n/fr";
+import { frSearch } from "@/lib/i18n/sections/search";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { search: frSearch } as const;
 
 /**
  * « Voir plus » (SPEC 8.4, pages of 20): the next page is added under the

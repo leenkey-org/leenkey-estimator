@@ -5,8 +5,11 @@ import { useRouter } from "next/navigation";
 import { InfoNote } from "@/components/shared/info-note";
 import { claimFor, forgetClaim } from "@/leenkey/estimator/listing-link";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { fr } from "@/lib/i18n/fr";
+import { frProperties } from "@/lib/i18n/sections/properties";
 import { claimEstimation } from "../estimation-actions";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { properties: frProperties } as const;
 
 /**
  * An analysis of value made before the account (L1-13b): attached with the

@@ -3,12 +3,15 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/shared/button";
-import { fr } from "@/lib/i18n/fr";
+import { frAdminReports } from "@/lib/i18n/sections/adminReports";
 import type { ReportCommand } from "@/lib/validations/admin";
 import { decideReport, type ReportCommandResult } from "../reports/actions";
 import { reportFeedback } from "../feedback";
 import { useModerationFeedback } from "./listing-moderation";
 import { ReasonDialog, type ReasonDialogCopy } from "./reason-dialog";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminReports: frAdminReports } as const;
 
 // The decisions on a report from its sheet (L1-30c, SPEC-V2 section 17):
 // « Avertir » the other party (a message sent by email, nothing changes on
