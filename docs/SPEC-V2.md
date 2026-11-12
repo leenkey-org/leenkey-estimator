@@ -869,7 +869,8 @@ create table ai_conversations (
   context text not null check (context in ('seller','buyer','admin')),
   property_id uuid references properties(id),
   -- L1-29 (DECISIONS 2026-11-02) : la conversation avec l'assistant, ou une suggestion journalisée
-  kind text not null default 'chat' check (kind in ('chat','reply_suggestion','listing_description')),
+  -- L1-30d (DECISIONS 2026-11-12) : le motif de refus et la synthèse avant appel, contexte admin seulement
+  kind text not null default 'chat' check (kind in ('chat','reply_suggestion','listing_description','rejection_reason','case_summary')),
   created_at timestamptz not null default now()
 );
 
@@ -1956,6 +1957,8 @@ Version minimale retenue (décision du 2026-10-15, dossier juridique) : le motif
 ### Assistant `/admin/assistant`
 
 Base de connaissances (liste, recherche test, import), journal des conversations de l'assistant (filtres par contexte, recherche), consommation de tokens par jour et par environnement.
+
+Mise en œuvre (L1-30d, `DECISIONS.md` 2026-11-12) : trois onglets (base de connaissances, journal, consommation) ; import d'un fichier Markdown au format de la FAQ par l'admin (`admin_knowledge_import`, tracé), embeddings calculés ensuite ; consommation sur 30 jours avec un coût indicatif, celle de l'environnement de l'écran. « Synthèse avant appel » d'un dossier : affichée à l'équipe, non enregistrée, journalisée sous le genre `case_summary`.
 
 ---
 

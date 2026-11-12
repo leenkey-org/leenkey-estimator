@@ -9,6 +9,7 @@ import { pillClassName, StatusBadge } from "@/components/shared/status-badge";
 import { requireAdmin } from "@/core/auth/session";
 import { adminCase, isCheckNote, type AdminCaseDetail } from "@/leenkey/admin/cases/queries";
 import { CaseStatusBadge, CheckBadge } from "@/leenkey/admin/components/case-badges";
+import { CaseSummary } from "@/leenkey/admin/components/case-summary";
 import { CaseDecisions, CaseNoteForm, CaseTasks } from "@/leenkey/admin/components/case-decisions";
 import { ModerationFeedback } from "@/leenkey/admin/components/listing-moderation";
 import { adminAdvisorConversations } from "@/leenkey/admin/messages/queries";
@@ -103,8 +104,11 @@ const STEP_TONE = {
 // follows it; the summary of the assistant when there is one; the internal
 // notes (those Leenkey writes itself, a payment to check, L1-26, among
 // them); the tasks of Leenkey of the current step to tick; the steps of the
-// sale; the history. « Synthèse avant appel » comes with the assistant of
-// the back office (L1-30d). The page checks the admin role itself.
+// sale; the history; « Synthèse avant appel » by the assistant (L1-30d).
+// The page checks the admin role itself.
+
+/** « Synthèse avant appel »: a call of the model, 30 s and one retry at most. */
+export const maxDuration = 60;
 export default async function AdminCasePage({ params }: Props) {
   const admin = await requireAdmin();
   const { id } = await params;
@@ -205,6 +209,8 @@ export default async function AdminCasePage({ params }: Props) {
             status={item.status}
             followed={item.followedBy?.id === admin.id}
           />
+          {/* L1-30d: the summary of the assistant before a call, for the team. */}
+          <CaseSummary caseId={item.id} />
         </section>
 
         {item.toCheck ? (

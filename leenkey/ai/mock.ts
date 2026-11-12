@@ -17,6 +17,12 @@ export const MOCK_REJECTION_REASON =
   "Motif proposé par l'assistant de test : nous ne pouvons pas publier votre annonce en l'état. " +
   "Ajoutez au moins six photos nettes de chaque pièce, puis renvoyez-la : nous la relisons à nouveau.";
 
+/** The summary of a case before a call (L1-30d). */
+export const MOCK_CASE_SUMMARY =
+  "Situation : synthèse de l'assistant de test, d'après le dossier et ses notes.\n" +
+  "Points à aborder : les tâches de Leenkey de l'étape en cours.\n" +
+  "À éviter : rien de particulier.";
+
 export const MOCK_DESCRIPTIONS = [
   "Bien au calme, proche des commerces et des transports. Description proposée par l'assistant " +
     "de test : séjour lumineux, cuisine équipée, chambres et rangements. Chauffage individuel.",
@@ -277,12 +283,13 @@ export const MOCK_LISTING_DESCRIPTION =
 
 /** The suggestions of the tests: the same text for the same kind, no call to the API. */
 export function mockText(
-  kind: "reply_suggestion" | "listing_description" | "rejection_reason",
+  kind: "reply_suggestion" | "listing_description" | "rejection_reason" | "case_summary",
 ): TextCall {
   const answer = {
     reply_suggestion: MOCK_REPLY,
     listing_description: MOCK_LISTING_DESCRIPTION,
     rejection_reason: MOCK_REJECTION_REASON,
+    case_summary: MOCK_CASE_SUMMARY,
   }[kind];
   return async () => message([text(answer)], "end_turn");
 }

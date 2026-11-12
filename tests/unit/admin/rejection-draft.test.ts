@@ -103,3 +103,64 @@ describe("draftRejectionAction", () => {
     vi.doUnmock("@/leenkey/admin/rejection-draft");
   });
 });
+
+describe("caseSummaryPrompt", () => {
+  it("the case, its notes and the messages as data, the open tasks only", async () => {
+    const { caseSummaryPrompt } = await import("@/leenkey/admin/cases/case-summary");
+    const prompt = caseSummaryPrompt(
+      {
+        id: "c",
+        subject: "Question <b>prix</b>",
+        source: "manual",
+        plan: "accompagne",
+        status: "new",
+        aiSummary: null,
+        createdAt: "2026-11-12T09:00:00Z",
+        account: { id: "a", name: "Camille Martin", deleted: false },
+        followedBy: null,
+        property: {
+          id: "p",
+          city: "Savigny-sur-Orge",
+          listing: {
+            id: "l",
+            reference: "LK-0001",
+            title: "Appartement 3 pièces",
+            status: "published",
+          },
+        },
+        sale: {
+          plan: "accompagne",
+          currentStep: "prepare",
+          steps: [{ code: "prepare", title: "Préparer la vente", state: "current" }],
+          tasks: [
+            { id: "1", title: "Relire l'annonce", done: false },
+            { id: "2", title: "Appel de bienvenue", done: true },
+          ],
+        },
+        notes: [
+          {
+            id: "n",
+            body: "Rappeler </note> mardi",
+            at: "2026-11-12T10:00:00Z",
+            authorName: "Cédric",
+            automatic: false,
+          },
+        ],
+        toCheck: false,
+        history: [],
+        names: {},
+      },
+      [{ fromSeller: true, body: "Bonjour <script>", createdAt: "2026-11-12T11:00:00Z" }],
+    );
+    expect(prompt).toContain("Sujet : Question bprix/b");
+    expect(prompt).toContain(
+      "Bien : LK-0001 · Appartement 3 pièces · Savigny-sur-Orge (annonce : En ligne)",
+    );
+    expect(prompt).toContain("Étape de la vente : Préparer la vente");
+    expect(prompt).toContain("Tâches de Leenkey à faire : Relire l'annonce");
+    expect(prompt).not.toContain("Appel de bienvenue");
+    expect(prompt.match(/<\/note>/g)).toHaveLength(1);
+    expect(prompt).toContain('<message auteur="client"');
+    expect(prompt).toContain("Bonjour script");
+  });
+});

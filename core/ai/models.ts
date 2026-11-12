@@ -45,3 +45,15 @@ export const SUGGESTION_SETTINGS = {
   timeoutMs: 30_000,
   maxRetries: 1,
 } as const;
+
+/**
+ * Prices of the models in dollars per million tokens (input, output), as
+ * verified on 2026-10-15 (SPEC-V2 section 3, DECISIONS.md): the cost of the
+ * back office (/admin/assistant, L1-30d) is shown from them, an indication
+ * only (tokens read from the cache cost less, written to it a little more).
+ * A model not listed shows its tokens without a cost.
+ */
+export const MODEL_PRICES_USD: Record<string, { input: number; output: number }> = {
+  "claude-sonnet-5-5": { input: 2, output: 10 },
+  "claude-opus-5-5": { input: 4, output: 20 },
+};
