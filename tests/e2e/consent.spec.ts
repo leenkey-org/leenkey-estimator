@@ -123,7 +123,12 @@ async function watchConsent(page: Page) {
           region.getAttribute("aria-label") ?? "",
           ...labels.map((id) => (id ? (document.getElementById(id)?.textContent ?? "") : "")),
         ].join(" ");
-        if (/cookies/i.test(name)) state.banner = true;
+        // The banner is in the page sent by the server (P-06): for a visitor
+        // who chose, the script of the <head> marks <html> and CSS hides it.
+        const hidden =
+          region.hasAttribute("data-consent-banner") &&
+          document.documentElement.getAttribute("data-consent") === "set";
+        if (/cookies/i.test(name) && !hidden) state.banner = true;
       }
     }).observe(document, { childList: true, subtree: true, characterData: true });
   }, "lk:cookies");
