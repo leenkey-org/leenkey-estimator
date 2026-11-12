@@ -22,7 +22,7 @@ import { FaqList } from "@/components/shared/faq-list";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { ShowcaseHero } from "@/components/shared/showcase-hero";
 import { frLegal } from "@/lib/i18n/sections/legal";
-import { site } from "@/lib/i18n/site";
+import { frSiteInvest } from "@/lib/i18n/sections/site/invest";
 import type { ContactMotif } from "@/lib/validations/contact";
 import { cn } from "@/lib/utils";
 import { VISION_ANCHOR } from "../anchors";
@@ -35,7 +35,7 @@ import { StagePill, type Stage } from "./stage-pill";
 import { CountUpText } from "@/components/shared/count-up";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { legal: frLegal, site } as const;
+const fr = { legal: frLegal, site: { invest: frSiteInvest } } as const;
 
 // Sections of /investir (L1-43), in the order of the V1 page, in its
 // direction since L1-50 (DECISIONS 2026-10-23): its hero, its labels above

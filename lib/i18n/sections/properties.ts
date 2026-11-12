@@ -1,8 +1,6 @@
 // Texts of the interface, part « properties » (CLAUDE.md section 9; lib/i18n/fr.ts gathers them).
 // L1-11: creation of a property in steps (SPEC-V2 section 8.3, DESIGN.md 12.2).
 
-import { of } from "./helpers";
-
 export const frProperties = {
   creation: {
     metaTitle: (step: string) => `${step} · Mon bien · Leenkey`,

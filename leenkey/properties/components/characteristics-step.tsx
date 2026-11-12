@@ -15,7 +15,7 @@ import { SegmentedPicker } from "@/components/shared/segmented-picker";
 import { Select } from "@/components/shared/select";
 import { UnitInput } from "@/components/shared/unit-input";
 import { formatDay } from "@/lib/format";
-import { frLegal } from "@/lib/i18n/sections/legal";
+import { CONTACT_EMAIL } from "@/lib/i18n/sections/contact-email";
 import { frProperties } from "@/lib/i18n/sections/properties";
 import { frSearch } from "@/lib/i18n/sections/search";
 import {
@@ -43,7 +43,11 @@ import { PhotoUploader } from "./photo-uploader";
 import { CREATION_FORM_ID, intentOf, submitWithEnter, type StepEdit } from "./creation-header";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { legal: frLegal, properties: frProperties, search: frSearch } as const;
+const fr = {
+  legal: { contactEmail: CONTACT_EMAIL },
+  properties: frProperties,
+  search: frSearch,
+} as const;
 
 const t = fr.properties.characteristics;
 const common = fr.properties.creation;

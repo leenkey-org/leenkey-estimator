@@ -1,9 +1,9 @@
 import { pillClassName } from "@/components/shared/status-badge";
-import { site } from "@/lib/i18n/site";
+import { frSiteInvest } from "@/lib/i18n/sections/site/invest";
 import { cn } from "@/lib/utils";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { site } as const;
+const fr = { site: { invest: frSiteInvest } } as const;
 
 export type Stage = keyof typeof fr.site.invest.status;
 

@@ -3,13 +3,13 @@ import { FOOTER_LINKS } from "@/leenkey/legal/footer-links";
 import { SITE_LINKS } from "@/leenkey/navigation/config";
 import { frFooter } from "@/lib/i18n/sections/footer";
 import { frLegal } from "@/lib/i18n/sections/legal";
-import { site } from "@/lib/i18n/site";
+import { frSiteLinks } from "@/lib/i18n/sections/site/links";
 import { cn } from "@/lib/utils";
 import { CookieSettingsButton } from "./cookie-settings-button";
 import { Logo } from "./logo";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { footer: frFooter, legal: frLegal, site } as const;
+const fr = { footer: frFooter, legal: frLegal, site: { links: frSiteLinks } } as const;
 
 const t = fr.footer;
 

@@ -1,8 +1,6 @@
 // Texts of the interface, part « estimator » (CLAUDE.md section 9; lib/i18n/fr.ts gathers them).
 // L1-13b: from the result of the wizard to the creation of the listing.
 
-import { of } from "./helpers";
-
 export const frEstimator = {
   listing: {
     title: "Mettre votre bien en vente",

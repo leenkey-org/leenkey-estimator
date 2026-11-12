@@ -1,8 +1,6 @@
 // Texts of the interface, part « consent » (CLAUDE.md section 9; lib/i18n/fr.ts gathers them).
 // Cookie consent banner (L1-37, Q23).
 
-import { of } from "./helpers";
-
 export const frConsent = {
   title: "Cookies",
   // Short paragraphs (P-06): the banner is never the largest paint of a page.

@@ -6,10 +6,10 @@ import { PlanComparisonTable } from "@/leenkey/billing/components/plan-compariso
 import { PricingPlans } from "@/leenkey/site/components/pricing-plans";
 import { PublicPage } from "@/leenkey/site/components/public-page";
 import { frBilling } from "@/lib/i18n/sections/billing";
-import { site } from "@/lib/i18n/site";
+import { frSitePricing } from "@/lib/i18n/sections/site/pricing";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { billing: frBilling, site } as const;
+const fr = { billing: frBilling, site: { pricing: frSitePricing } } as const;
 
 const t = fr.site.pricing;
 

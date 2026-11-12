@@ -1,8 +1,6 @@
 // Texts of the interface, part « messaging » (CLAUDE.md section 9; lib/i18n/fr.ts gathers them).
 // L1-21: messaging (SPEC-V2 8.6, DESIGN.md 10.5 and 12.9).
 
-import { of } from "./helpers";
-
 export const frMessaging = {
   metaTitle: "Messages · Leenkey",
   title: "Messages",

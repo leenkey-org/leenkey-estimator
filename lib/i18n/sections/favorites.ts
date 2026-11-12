@@ -1,8 +1,6 @@
 // Texts of the interface, part « favorites » (CLAUDE.md section 9; lib/i18n/fr.ts gathers them).
 // L1-18: favourites.
 
-import { of } from "./helpers";
-
 export const frFavorites = {
   add: "Ajouter aux favoris",
   // Beside the title of a listing (L1-60, the « Enregistrer » of Airbnb).

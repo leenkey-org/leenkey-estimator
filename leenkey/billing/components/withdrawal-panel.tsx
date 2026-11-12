@@ -5,12 +5,12 @@ import { Button } from "@/components/shared/button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { frBilling } from "@/lib/i18n/sections/billing";
-import { frLegal } from "@/lib/i18n/sections/legal";
+import { CONTACT_EMAIL } from "@/lib/i18n/sections/contact-email";
 import { withdrawPlan, type WithdrawError } from "../actions";
 import { legalDateTime } from "../withdrawal";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { billing: frBilling, legal: frLegal } as const;
+const fr = { billing: frBilling, legal: { contactEmail: CONTACT_EMAIL } } as const;
 
 const t = fr.billing.withdrawal;
 

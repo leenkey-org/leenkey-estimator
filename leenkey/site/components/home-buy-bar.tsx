@@ -8,12 +8,12 @@ import { facadeScope } from "@/components/shared/facade-root";
 import { suggestCommunes, locationFromText } from "@/leenkey/search/location";
 import { formatPrice } from "@/lib/format";
 import { frPropertyType } from "@/lib/i18n/sections/propertyType";
-import { site } from "@/lib/i18n/site";
+import { frSiteHome } from "@/lib/i18n/sections/site/home";
 import { cn } from "@/lib/utils";
 import { searchHref, type SearchFilters } from "@/lib/validations/search";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { propertyType: frPropertyType, site } as const;
+const fr = { propertyType: frPropertyType, site: { home: frSiteHome } } as const;
 
 const t = fr.site.home.search.buy;
 

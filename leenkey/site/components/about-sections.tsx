@@ -5,7 +5,7 @@ import { Button } from "@/components/shared/button";
 import { MarketingSection } from "@/components/shared/marketing-section";
 import { ShowcaseHero } from "@/components/shared/showcase-hero";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { site } from "@/lib/i18n/site";
+import { frSiteAbout } from "@/lib/i18n/sections/site/about";
 import { cn } from "@/lib/utils";
 import { VISION_ANCHOR } from "../anchors";
 import { CtaPanel } from "./cta-panel";
@@ -14,7 +14,7 @@ import { cardDark, cardTextDark, cardTitleDark } from "./site-styles";
 import { CountUpText } from "@/components/shared/count-up";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { site } as const;
+const fr = { site: { about: frSiteAbout } } as const;
 
 // Sections of /qui-sommes-nous (L1-43), in the order of the V1 page, in its
 // direction since L1-50 (DECISIONS 2026-10-23): Cédric's photo in the hero

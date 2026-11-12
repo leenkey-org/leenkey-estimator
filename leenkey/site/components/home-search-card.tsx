@@ -7,14 +7,14 @@ import * as Tabs from "@radix-ui/react-tabs";
 import { ArrowRight, ChartLine, House, MapPin, Search, Tag } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { ROUTES } from "@/leenkey/navigation/spaces";
-import { site } from "@/lib/i18n/site";
+import { frSiteHome } from "@/lib/i18n/sections/site/home";
 import { cn } from "@/lib/utils";
 import { SEARCH_PATH } from "@/lib/validations/search";
 import { BuySearchBar } from "./home-buy-bar";
 import { valuationHref, type ValuationAddress } from "../valuation-entry";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { site } as const;
+const fr = { site: { home: frSiteHome } } as const;
 
 const t = fr.site.home.search;
 

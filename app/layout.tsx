@@ -51,6 +51,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Before the first paint: the banner of the page hidden for a visitor who already chose. */}
         <script dangerouslySetInnerHTML={{ __html: consentHeadScript() }} />
+        {/* Without JavaScript no tracker loads, and the buttons of the banner would do nothing. */}
+        <noscript>
+          <style>{"[data-consent-banner]{display:none}"}</style>
+        </noscript>
       </head>
       <body>
         {/* The gradient of the icons of the charte, once for every page (L1-58). */}

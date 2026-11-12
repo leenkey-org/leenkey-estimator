@@ -118,7 +118,7 @@ import { frNav } from "@/lib/i18n/sections/nav";
 import { frPlaceholders } from "@/lib/i18n/sections/placeholders";
 import { frProperties } from "@/lib/i18n/sections/properties";
 import { frSellStart } from "@/lib/i18n/sections/sellStart";
-import { site } from "@/lib/i18n/site";
+import { frSiteMenu } from "@/lib/i18n/sections/site/menu";
 import { cn } from "@/lib/utils";
 
 // The texts this module shows (lib/i18n/sections, P-06).
@@ -128,7 +128,7 @@ const fr = {
   placeholders: frPlaceholders,
   properties: frProperties,
   sellStart: frSellStart,
-  site,
+  site: { menu: frSiteMenu },
 } as const;
 
 // Living catalogue of the Façade design system (docs/DESIGN.md 12.14): the

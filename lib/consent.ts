@@ -52,7 +52,8 @@ export function cookieValue(cookies: string, name: string): string | undefined {
  * - marks it data-fonts="pending" until Sora is loaded (2.5 s at most): the
  *   banner, anchored at the bottom, grows by a line when Sora replaces the
  *   fallback font, which counts as a layout shift; it shows once the font
- *   is there. Without JavaScript, nothing is marked: the banner shows.
+ *   is there. Without JavaScript, a <noscript> style of the layout hides it:
+ *   no tracker loads, and its buttons would do nothing.
  */
 export function consentHeadScript(): string {
   const maxMs = CONSENT_MAX_AGE * 1000 + DAY_MS;

@@ -9,7 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 // from Supabase Storage, when the storage policies allow it (L1-12):
 // - a photo of a published listing, for anyone: cached 50 minutes by the CDN
 //   (5 by the browser), as the signed redirect it replaces was;
-// - else, with the session: the owner's photos, the admin's; never cached.
+// - else, with the session: the owner's photos, the admin's; in their browser
+//   only, a minute (never by the CDN).
 // Anything else: 404.
 // Served from here rather than redirected to a signed URL (P-06): the
 // largest paint of a listing and of the search is a photo, and on a phone
@@ -56,7 +57,8 @@ export async function GET(
   // Signed in: the photos of the owner (a draft) and of the admin.
   if (request.cookies.getAll().some((cookie) => cookie.name.startsWith("sb-"))) {
     const own = await read((await createClient()).storage, name);
-    if (own) return serve(own, "private, no-store");
+    // Its own browser only, for a minute: a file never changes under its name.
+    if (own) return serve(own, "private, max-age=60");
   }
   return notFound();
 }

@@ -76,12 +76,12 @@ describe("route /img", () => {
     expect(sessionRead).not.toHaveBeenCalled();
   });
 
-  it("serves the photo of a draft to its owner, never cached", async () => {
+  it("serves the photo of a draft to its owner, never in a shared cache", async () => {
     visitorRead.mockResolvedValue(file404);
     sessionRead.mockResolvedValue(webp("draft photo"));
     const response = await get(file, "sb-test-auth-token=session");
     expect(response.status).toBe(200);
-    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("cache-control")).toBe("private, max-age=60");
     expect(await response.text()).toBe("draft photo");
   });
 

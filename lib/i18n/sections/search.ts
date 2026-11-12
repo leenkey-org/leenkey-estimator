@@ -1,7 +1,5 @@
 // Texts of the interface, part « search » (CLAUDE.md section 9; lib/i18n/fr.ts gathers them).
 
-import { of } from "./helpers";
-
 export const frSearch = {
   metaTitle: "Biens à vendre · Leenkey",
   metaTitleIn: (place: string) => `Biens à vendre ${place} · Leenkey`,

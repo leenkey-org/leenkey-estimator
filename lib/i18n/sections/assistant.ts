@@ -1,8 +1,6 @@
 // Texts of the interface, part « assistant » (CLAUDE.md section 9; lib/i18n/fr.ts gathers them).
 // The assistant (L1-28, SPEC-V2 section 12, DESIGN.md 10.5 and 12).
 
-import { of } from "./helpers";
-
 export const frAssistant = {
   name: "Assistant Leenkey",
   metaTitle: "Assistant · Leenkey",

@@ -3,7 +3,6 @@
 // DESIGN.md 12.4). The texts of the plans come from the plans table.
 
 import type { Database } from "@/types/database";
-import { of } from "./helpers";
 
 export const frBilling = {
   metaTitle: "Choisir ma formule · Leenkey",

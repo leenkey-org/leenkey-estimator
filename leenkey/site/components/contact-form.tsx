@@ -9,8 +9,8 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
 import { Select } from "@/components/shared/select";
 import { Textarea } from "@/components/shared/textarea";
-import { frLegal } from "@/lib/i18n/sections/legal";
-import { site } from "@/lib/i18n/site";
+import { CONTACT_EMAIL } from "@/lib/i18n/sections/contact-email";
+import { frSiteContact } from "@/lib/i18n/sections/site/contact";
 import { cn } from "@/lib/utils";
 import {
   CONTACT_MESSAGE_MAX,
@@ -24,7 +24,7 @@ import {
 } from "@/lib/validations/contact";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { legal: frLegal, site } as const;
+const fr = { legal: { contactEmail: CONTACT_EMAIL }, site: { contact: frSiteContact } } as const;
 
 const t = fr.site.contact;
 

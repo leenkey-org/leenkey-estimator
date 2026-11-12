@@ -2,12 +2,13 @@
 
 import { aiText, privacyText, reportingText, salesTermsText, termsV2 } from "../legal-policies";
 import { legalNotice } from "../legal-texts";
+import { CONTACT_EMAIL } from "./contact-email";
 
 export const frLegal = {
   // Legal pages (L1-36, G10). Final texts from Cédric's lawyer (Q34);
   // identity and address from the V1 legal notice (Q10, Q35).
   draft: "Cette page est en cours de rédaction.",
-  contactEmail: "contact.leenkey@gmail.com",
+  contactEmail: CONTACT_EMAIL,
   company: "SAS LEENKEY, RCS Évry 107 616 211",
   address: "36 rue Pierre Brossolette, 91360 Épinay-sur-Orge",
   privacy: {

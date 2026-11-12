@@ -1,8 +1,6 @@
 // Texts of the interface, part « nav » (CLAUDE.md section 9; lib/i18n/fr.ts gathers them).
 // L1-10: navigation shells (docs/DESIGN.md 10.6 to 10.8).
 
-import { of } from "./helpers";
-
 export const frNav = {
   label: "Navigation principale",
   adminLabel: "Navigation du back office",

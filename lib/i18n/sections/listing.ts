@@ -1,8 +1,6 @@
 // Texts of the interface, part « listing » (CLAUDE.md section 9; lib/i18n/fr.ts gathers them).
 // L1-17: listing page /annonce/[slug] (SPEC-V2 8.5, docs/DESIGN.md 10.2, 10.3, 12.7, 12.8).
 
-import { of } from "./helpers";
-
 export const frListing = {
   photoAlt: (index: number, total: number, subject: string) =>
     `Photo ${index} sur ${total}, ${subject}`,

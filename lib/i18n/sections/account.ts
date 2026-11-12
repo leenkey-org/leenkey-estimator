@@ -2,8 +2,6 @@
 // « Mon compte » (L1-39, SPEC-V2 8.14, DESIGN.md 13.1 G9): the overview in
 // rows, then one page per change.
 
-import { of } from "./helpers";
-
 export const frAccount = {
   metaTitle: "Mon compte · Leenkey",
   title: "Mon compte",

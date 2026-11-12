@@ -80,9 +80,8 @@ type Watched = Window & {
 /**
  * Records whether the banner (not the preferences) was ever in the page, and
  * since when ConsentManager has read the consent cookie with no script
- * loading. Once the cookie is read, the banner comes in its own chunk, which
- * React may reveal up to 300 ms after (FALLBACK_THROTTLE_MS of React 19): a
- * click before would hide it from the test.
+ * loading. The banner is in the page sent by the server (P-06); for a visitor
+ * who already chose, CSS hides it until React removes it.
  */
 async function watchConsent(page: Page) {
   // CONSENT_OPEN_EVENT of lib/consent.ts.

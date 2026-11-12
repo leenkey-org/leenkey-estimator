@@ -6,11 +6,11 @@ import { loginPath } from "@/core/auth/next-path";
 import type { NavItem } from "@/components/shared/nav-items";
 import { homePathForRoles } from "@/leenkey/auth/routes";
 import { frNav } from "@/lib/i18n/sections/nav";
-import { site } from "@/lib/i18n/site";
+import { frSiteLinks } from "@/lib/i18n/sections/site/links";
 import { ROUTES, type Space } from "./spaces";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { nav: frNav, site } as const;
+const fr = { nav: frNav, site: { links: frSiteLinks } } as const;
 
 export {
   allowedSpace,

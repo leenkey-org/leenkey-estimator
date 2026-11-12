@@ -1,8 +1,6 @@
 // Texts of the interface, part « adminDashboard » (CLAUDE.md section 9; lib/i18n/fr.ts gathers them).
 // L1-30a: the dashboard of the back office (SPEC-V2 section 17).
 
-import { of } from "./helpers";
-
 export const frAdminDashboard = {
   greeting: (firstName: string | null) =>
     firstName ? `Bonjour ${firstName}, voici ce qui vous attend.` : "Voici ce qui vous attend.",

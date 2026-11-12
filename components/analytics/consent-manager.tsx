@@ -81,6 +81,9 @@ export function ConsentManager({
     const saved = readConsent();
     setConsent(saved);
     setView(saved ? "hidden" : "banner");
+    // The script of the <head> and this reading disagree (two cookies, the
+    // first malformed): the banner shows, as it would without the script.
+    if (!saved) document.documentElement.removeAttribute("data-consent");
     const open = () => {
       opener.current =
         document.activeElement instanceof HTMLElement ? document.activeElement : null;

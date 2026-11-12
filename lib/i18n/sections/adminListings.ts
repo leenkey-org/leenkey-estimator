@@ -1,8 +1,6 @@
 // Texts of the interface, part « adminListings » (CLAUDE.md section 9; lib/i18n/fr.ts gathers them).
 // L1-19: back office v0 of the listings (SPEC-V2 section 17, DESIGN.md 12.12, 12.13).
 
-import { of } from "./helpers";
-
 export const frAdminListings = {
   metaTitle: "Annonces · Back office · Leenkey",
   detailMetaTitle: (reference: string) => `${reference} · Annonces · Back office · Leenkey`,

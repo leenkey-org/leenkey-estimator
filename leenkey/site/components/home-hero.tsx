@@ -5,12 +5,12 @@ import { getProfile } from "@/core/auth/session";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { sitePhoto } from "@/leenkey/site/photos";
 import { formatPrice } from "@/lib/format";
-import { site } from "@/lib/i18n/site";
+import { frSiteHome } from "@/lib/i18n/sections/site/home";
 import { VALUATION_EXAMPLE, valuationExample } from "../valuation-example";
 import { HomeSearchCard } from "./home-search-card";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { site } as const;
+const fr = { site: { home: frSiteHome } } as const;
 
 const t = fr.site.home;
 

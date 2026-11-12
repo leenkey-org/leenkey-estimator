@@ -120,7 +120,7 @@ test("photos de l'étape 2 : envoi, refus propres, ordre, légende, suppression,
   // Served by the route itself (P-06), never redirected to another origin.
   const own = await page.request.get(src, { maxRedirects: 0 });
   expect(own.status()).toBe(200);
-  expect(own.headers()["cache-control"]).toBe("private, no-store");
+  expect(own.headers()["cache-control"]).toBe("private, max-age=60");
   expect(own.headers()["content-type"]).toBe("image/webp");
   expect((await own.body()).subarray(8, 12).toString("ascii")).toBe("WEBP");
   const visitor = await browser.newContext();
