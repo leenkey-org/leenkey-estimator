@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-12 · L1-32 · PR #92 · Recette interne du lot 1
+- Ajouté : les parcours obligatoires de la SPEC (vendeur, acquéreur, paiement, permissions) enchaînés de bout en bout dans un test E2E.
+- Ajouté : `docs/RECETTE.md` complété (scénarios du lot 1, résultats de la recette interne : E2E, axe, Lighthouse, revue des permissions).
+- Noté : objectif de performance mobile non atteint (tâche P-06 avant la mise en ligne) ; deux fonctions publiques hors des limites de débit (`docs/SECURITE.md`).
+
 ### 2026-11-12 · Ma vente · PR #91 · Carte du conseiller grisée en Autonomie
 - Modifié : sur « Ma vente », un bien sans conseiller dans sa formule montre la carte du conseiller grisée (« Accessible avec la formule Accompagné », « Voir les formules ») au lieu de l'invitation « Échanger avec un conseiller Leenkey ».
 - Tests : E2E (`advisor.spec.ts`, mobile et desktop, axe).
