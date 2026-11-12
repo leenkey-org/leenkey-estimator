@@ -303,7 +303,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
         {list.ok && list.data.rows.length > 0 ? (
           <Button asChild variant="outline-ink" className="h-11 self-start">
             {/* A file, not a page: the browser downloads it (route handler). */}
-            <a href={adminListingsExportHref(filter)} download aria-label={t.exportLabel}>
+            <a href={adminListingsExportHref(filter)} download>
               <Download aria-hidden="true" />
               {t.export}
             </a>

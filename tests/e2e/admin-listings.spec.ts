@@ -235,48 +235,46 @@ test.describe("bureau", () => {
 
     await expectNoSeriousViolation(page);
   });
-});
 
-test("pré-analyse dans la liste et sur la fiche, export CSV de la liste", async ({
-  page,
-  playwright,
-  baseURL,
-}) => {
-  await signIn(page, "/admin/annonces?statut=a-valider");
-  await expect(page.getByRole("columnheader", { name: "Pré-analyse" })).toBeVisible();
-  const line = row(page, "LK-0006");
-  await expect(line).toContainText(/Conforme|À vérifier/);
-  await expect(line).toContainText(/Annonce complète :|À vérifier :/);
+  test("pré-analyse dans la liste et sur la fiche, export CSV de la liste", async ({
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    await signIn(page, "/admin/annonces?statut=a-valider");
+    await expect(page.getByRole("columnheader", { name: "Pré-analyse" })).toBeVisible();
+    const line = row(page, "LK-0006");
+    await expect(line).toContainText(/Conforme|À vérifier/);
+    await expect(line).toContainText(/Annonce complète :|À vérifier :/);
 
-  // L1-30d: the list as filtered, as a file; nothing for anyone else.
-  const download = page.getByRole("link", {
-    name: "Exporter les annonces de cette liste au format CSV",
+    // L1-30d: the list as filtered, as a file; nothing for anyone else.
+    const download = page.getByRole("link", { name: "Exporter CSV" });
+    await expect(download).toHaveAttribute("href", "/admin/annonces/export?statut=a-valider");
+    const answer = await page.request.get("/admin/annonces/export?statut=a-valider");
+    expect(answer.status()).toBe(200);
+    expect(answer.headers()["content-type"]).toBe("text/csv; charset=utf-8");
+    expect(answer.headers()["content-disposition"]).toMatch(
+      /^attachment; filename="leenkey-annonces-\d{4}-\d{2}-\d{2}\.csv"$/,
+    );
+    const body = await answer.body();
+    // The byte order mark first: Excel reads the accents.
+    expect([...body.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
+    const csv = body.subarray(3).toString("utf8");
+    expect(csv.startsWith("Référence;Titre;Statut;Ville;")).toBe(true);
+    expect(csv).toContain("\r\nLK-0006;");
+    expect(csv).not.toContain("\r\nLK-0014;");
+    const anonymous = await playwright.request.newContext({ baseURL });
+    expect((await anonymous.get("/admin/annonces/export")).status()).toBe(404);
+    await anonymous.dispose();
+
+    // The page of the listing: the whole pre-analysis.
+    await line.getByRole("link", { name: "Aperçu de l'annonce LK-0006" }).click();
+    const review = page.getByRole("region", { name: "Pré-analyse" });
+    await expect(review.getByRole("progressbar", { name: "Complétude" })).toBeVisible();
+    await expect(review).toContainText("Photos");
+    await expect(review).toContainText("Prix et analyse de valeur");
+    await expectNoSeriousViolation(page);
   });
-  await expect(download).toHaveAttribute("href", "/admin/annonces/export?statut=a-valider");
-  const answer = await page.request.get("/admin/annonces/export?statut=a-valider");
-  expect(answer.status()).toBe(200);
-  expect(answer.headers()["content-type"]).toBe("text/csv; charset=utf-8");
-  expect(answer.headers()["content-disposition"]).toMatch(
-    /^attachment; filename="leenkey-annonces-\d{4}-\d{2}-\d{2}\.csv"$/,
-  );
-  const body = await answer.body();
-  // The byte order mark first: Excel reads the accents.
-  expect([...body.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
-  const csv = body.subarray(3).toString("utf8");
-  expect(csv.startsWith("Référence;Titre;Statut;Ville;")).toBe(true);
-  expect(csv).toContain("\r\nLK-0006;");
-  expect(csv).not.toContain("\r\nLK-0014;");
-  const anonymous = await playwright.request.newContext({ baseURL });
-  expect((await anonymous.get("/admin/annonces/export")).status()).toBe(404);
-  await anonymous.dispose();
-
-  // The page of the listing: the whole pre-analysis.
-  await line.getByRole("link", { name: "Aperçu de l'annonce LK-0006" }).click();
-  const review = page.getByRole("region", { name: "Pré-analyse" });
-  await expect(review.getByRole("progressbar", { name: "Complétude" })).toBeVisible();
-  await expect(review).toContainText("Photos");
-  await expect(review).toContainText("Prix et analyse de valeur");
-  await expectNoSeriousViolation(page);
 });
 
 test.describe("téléphone", () => {

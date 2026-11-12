@@ -1529,7 +1529,6 @@ export const fr = {
       },
     },
     export: "Exporter CSV",
-    exportLabel: "Exporter les annonces de cette liste au format CSV",
     csv: {
       fileName: (day: string) => `leenkey-annonces-${day}.csv`,
       header: [
