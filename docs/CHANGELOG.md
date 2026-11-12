@@ -16,7 +16,7 @@ Rien depuis `v2.0.0-lot1`.
 
 ## v2.0.0-lot1 · 2026-11-12
 
-Tag posé sur `a10fd4c` de `v2` (pré-release GitHub « Lot 1 : Leenkey V2 ») : le lot 1 entier, recette interne comprise (L1-32). Les entrées ci-dessous, jusqu'au début du fichier, en font partie.
+Tag posé sur `a10fd4c` de `v2` (pré-release GitHub « Lot 1 : Leenkey V2 ») : le lot 1 entier, recette interne comprise (L1-32). Toutes les entrées qui suivent en font partie.
 
 ### 2026-11-12 · L1-30d · PR #94 · Assistant du back office et synthèse avant appel
 - Ajouté : `/admin/assistant` : base de connaissances (fiches, recherche test, import d'un fichier de la FAQ avec calcul des embeddings), journal des conversations de l'assistant (filtres par contexte, recherche, lecture message par message avec les jetons), consommation sur 30 jours (par contexte et par jour, coût indicatif).
