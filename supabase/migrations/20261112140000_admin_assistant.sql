@@ -34,7 +34,9 @@ returns table (
   model text,
   answers bigint,
   input_tokens bigint,
-  output_tokens bigint
+  output_tokens bigint,
+  cache_read_tokens bigint,
+  cache_write_tokens bigint
 )
 language plpgsql stable security invoker set search_path = '' as $$
 begin
@@ -47,7 +49,11 @@ begin
            coalesce(m.model, ''),
            count(*),
            coalesce(sum(m.input_tokens), 0)::bigint,
-           coalesce(sum(m.output_tokens), 0)::bigint
+           coalesce(sum(m.output_tokens), 0)::bigint,
+           -- Read from the prompt cache, written to it: kept beside the
+           -- answer (core/ai/log.ts), billed apart from input_tokens.
+           coalesce(sum((m.content -> 'usage' ->> 'cacheReadInputTokens')::bigint), 0)::bigint,
+           coalesce(sum((m.content -> 'usage' ->> 'cacheCreationInputTokens')::bigint), 0)::bigint
       from public.ai_messages m
       join public.ai_conversations c on c.id = m.conversation_id
      where m.role = 'assistant'
@@ -58,6 +64,11 @@ begin
      order by 1 desc, 2, 3;
 end;
 $$;
+
+-- The answers of a period: read by date, not by conversation. The log of
+-- the team: its conversations by date.
+create index ai_conversations_created_idx on public.ai_conversations (created_at desc);
+create index ai_messages_created_idx on public.ai_messages (created_at) where role = 'assistant';
 
 revoke execute on function public.admin_ai_usage(integer) from public, anon;
 grant execute on function public.admin_ai_usage(integer) to authenticated;
@@ -95,31 +106,43 @@ begin
     raise exception 'admin_ai_conversations: unknown context' using errcode = '22023';
   end if;
   v_pattern := '%' || replace(replace(replace(v_query, '\', '\\'), '%', '\%'), '_', '\_') || '%';
+  -- The conversations first, the most recent first (index of L1-05 on
+  -- profile and date, the date alone for the team), then their messages
+  -- summed: the cost follows the page, not the size of the log.
   return query
-    select c.id, c.context, c.kind, c.created_at,
-           coalesce(max(m.created_at), c.created_at),
+    with picked as (
+      select c.id, c.context, c.kind, c.created_at, c.profile_id, c.property_id
+        from public.ai_conversations c
+        left join public.profiles p on p.id = c.profile_id
+        left join public.listings l on l.property_id = c.property_id and l.deleted_at is null
+       where (p_context is null or c.context = p_context)
+         and (v_query is null
+              or exists (select 1 from public.ai_messages s
+                          where s.conversation_id = c.id
+                            and ((s.content ->> 'text') ilike v_pattern
+                                 or (s.content -> 'blocks')::text ilike v_pattern))
+              or l.reference ilike v_pattern
+              or concat_ws(' ', p.first_name, p.last_name) ilike v_pattern)
+       order by c.created_at desc
+       limit least(greatest(coalesce(p_limit, 100), 1), 201))
+    select k.id, k.context, k.kind, k.created_at,
+           coalesce(max(m.created_at), k.created_at),
            count(m.id),
            coalesce(sum(m.input_tokens), 0)::bigint,
            coalesce(sum(m.output_tokens), 0)::bigint,
            p.first_name, p.last_name, l.reference,
+           -- What a person wrote first; never the data given to the model.
            (select left(coalesce(f.content ->> 'text', ''), 200)
               from public.ai_messages f
-             where f.conversation_id = c.id and f.role = 'user'
+             where f.conversation_id = k.id and f.role = 'user'
+               and f.content ->> 'type' = 'user'
              order by f.created_at limit 1)
-      from public.ai_conversations c
-      left join public.ai_messages m on m.conversation_id = c.id
-      left join public.profiles p on p.id = c.profile_id
-      left join public.listings l on l.property_id = c.property_id and l.deleted_at is null
-     where (p_context is null or c.context = p_context)
-       and (v_query is null
-            or exists (select 1 from public.ai_messages s
-                        where s.conversation_id = c.id
-                          and (s.content ->> 'text') ilike v_pattern)
-            or l.reference ilike v_pattern
-            or concat_ws(' ', p.first_name, p.last_name) ilike v_pattern)
-     group by c.id, p.first_name, p.last_name, l.reference
-     order by 5 desc
-     limit least(greatest(coalesce(p_limit, 100), 1), 201);
+      from picked k
+      left join public.ai_messages m on m.conversation_id = k.id
+      left join public.profiles p on p.id = k.profile_id
+      left join public.listings l on l.property_id = k.property_id and l.deleted_at is null
+     group by k.id, k.context, k.kind, k.created_at, p.first_name, p.last_name, l.reference
+     order by k.created_at desc;
 end;
 $$;
 
@@ -153,7 +176,8 @@ begin
   if p_source_file is null or p_source_file !~ '^[a-z0-9][a-z0-9._-]{0,80}\.md$' then
     raise exception 'admin_knowledge_import: file name' using errcode = '22023';
   end if;
-  if jsonb_typeof(p_cards) <> 'array' or jsonb_array_length(p_cards) not between 1 and 300 then
+  if p_cards is null or jsonb_typeof(p_cards) is distinct from 'array'
+     or jsonb_array_length(p_cards) not between 1 and 300 then
     raise exception 'admin_knowledge_import: 1 to 300 cards' using errcode = '22023';
   end if;
 

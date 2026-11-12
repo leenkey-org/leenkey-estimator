@@ -11,6 +11,8 @@ describe("usageSummary", () => {
       answers: 4,
       inputTokens: 1_000_000,
       outputTokens: 100_000,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
     },
     {
       day: "2026-11-12",
@@ -19,6 +21,8 @@ describe("usageSummary", () => {
       answers: 2,
       inputTokens: 500_000,
       outputTokens: 0,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
     },
     {
       day: "2026-11-12",
@@ -27,6 +31,8 @@ describe("usageSummary", () => {
       answers: 1,
       inputTokens: 0,
       outputTokens: 50_000,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
     },
   ];
 
@@ -58,6 +64,34 @@ describe("usageSummary", () => {
       outputTokens: 0,
       cost: 0,
     });
+  });
+});
+
+describe("rowCost", () => {
+  it("the prompt cache: read at a tenth of the price, written at 1.25 times, counted as read", () => {
+    expect(
+      rowCost({
+        model: "claude-sonnet-5-5",
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReadTokens: 1_000_000,
+        cacheWriteTokens: 1_000_000,
+      }),
+    ).toBeCloseTo(0.2 + 2.5);
+    expect(
+      usageSummary([
+        {
+          day: "2026-11-12",
+          context: "seller",
+          model: "claude-sonnet-5-5",
+          answers: 1,
+          inputTokens: 100,
+          outputTokens: 10,
+          cacheReadTokens: 9_000,
+          cacheWriteTokens: 0,
+        },
+      ]).total.inputTokens,
+    ).toBe(9_100);
   });
 });
 

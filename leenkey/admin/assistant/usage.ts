@@ -11,10 +11,14 @@ export type UsageInput = {
   answers: number;
   inputTokens: number;
   outputTokens: number;
+  /** Read from the prompt cache (a tenth of the price) and written to it (1.25 times). */
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
 };
 
 export type UsageTotal = {
   answers: number;
+  /** Every token the model read: without cache, read from it, written to it. */
   inputTokens: number;
   outputTokens: number;
   /** Dollars; null when a model of the total has no known price. */
@@ -29,18 +33,28 @@ function priceOf(model: string) {
   return key ? MODEL_PRICES_USD[key] : null;
 }
 
-export function rowCost(row: Pick<UsageInput, "model" | "inputTokens" | "outputTokens">) {
+/** Prices of the prompt cache, against the price of an input token (Anthropic). */
+const CACHE_READ = 0.1;
+const CACHE_WRITE = 1.25;
+
+export function rowCost(
+  row: Pick<UsageInput, "model" | "inputTokens" | "outputTokens"> &
+    Partial<Pick<UsageInput, "cacheReadTokens" | "cacheWriteTokens">>,
+) {
   const price = priceOf(row.model);
-  return price
-    ? (row.inputTokens * price.input + row.outputTokens * price.output) / 1_000_000
-    : null;
+  if (!price) return null;
+  const input =
+    row.inputTokens +
+    (row.cacheReadTokens ?? 0) * CACHE_READ +
+    (row.cacheWriteTokens ?? 0) * CACHE_WRITE;
+  return (input * price.input + row.outputTokens * price.output) / 1_000_000;
 }
 
 function add(total: UsageTotal, row: UsageInput): UsageTotal {
   const cost = rowCost(row);
   return {
     answers: total.answers + row.answers,
-    inputTokens: total.inputTokens + row.inputTokens,
+    inputTokens: total.inputTokens + row.inputTokens + row.cacheReadTokens + row.cacheWriteTokens,
     outputTokens: total.outputTokens + row.outputTokens,
     cost: total.cost === null || cost === null ? null : total.cost + cost,
   };

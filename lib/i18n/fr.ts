@@ -1439,7 +1439,6 @@ export const fr = {
     analyticsText: "Statistiques de visite avec Google Analytics, par Google Tag Manager.",
     save: "Enregistrer mes choix",
   },
-  // L1-19: back office v0 of the listings (SPEC-V2 section 17, DESIGN.md 12.12, 12.13).
   // L1-30d: the assistant in the back office (SPEC-V2 17).
   adminAssistant: {
     metaTitle: "Assistant · Back office · Leenkey",
@@ -1571,8 +1570,9 @@ export const fr = {
         assistant: "Réponse de l'assistant",
         tool: "Outil",
       },
-      tokens: (model: string, input: number, output: number) =>
+      tokens: (model: string, input: string, output: string) =>
         `${model} · ${input} jetons lus · ${output} écrits`,
+      limited: "Les 300 derniers messages sont affichés.",
       empty: "Aucun message.",
       list: "Messages de la conversation",
     },
@@ -1585,7 +1585,7 @@ export const fr = {
       costValue: (dollars: number) =>
         `${dollars.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\u00A0$`,
       costUnknown: "—",
-      note: "Coût calculé sur les tarifs publics des modèles (en dollars), sans la remise du cache : une indication, pas une facture. Chaque environnement a sa base : ces chiffres sont ceux de cet environnement.",
+      note: "Jetons lus : ceux de la question, plus ceux relus ou mis en cache (prompt et FAQ). Coût calculé sur les tarifs publics des modèles, en dollars, cache compris : une indication, pas une facture. Chaque environnement a sa base : ces chiffres sont ceux de cet environnement.",
       byDay: "Par jour",
       byContext: "Par contexte",
       day: "Jour",
@@ -1597,6 +1597,7 @@ export const fr = {
       contextTable: "Consommation de l'assistant par contexte",
     },
   },
+  // L1-19: back office v0 of the listings (SPEC-V2 section 17, DESIGN.md 12.12, 12.13).
   adminListings: {
     metaTitle: "Annonces · Back office · Leenkey",
     detailMetaTitle: (reference: string) => `${reference} · Annonces · Back office · Leenkey`,

@@ -31,6 +31,8 @@ export type UsageRow = {
   answers: number;
   inputTokens: number;
   outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
 };
 
 export type AiLogRow = {
@@ -108,6 +110,8 @@ export async function adminAiUsage(days = AI_USAGE_DAYS): Promise<QueryResult<Us
       answers: Number(row.answers),
       inputTokens: Number(row.input_tokens),
       outputTokens: Number(row.output_tokens),
+      cacheReadTokens: Number(row.cache_read_tokens),
+      cacheWriteTokens: Number(row.cache_write_tokens),
     })),
   };
 }
@@ -172,6 +176,8 @@ export type AiLogDetail = {
   name: string | null;
   profileId: string | null;
   reference: string | null;
+  /** Only the latest MESSAGES_MAX messages are shown. */
+  limited: boolean;
   entries: AiLogEntry[];
 };
 
@@ -197,7 +203,7 @@ export async function adminAiConversation(id: string): Promise<QueryResult<AiLog
       .from("ai_messages")
       .select("id, role, content, model, input_tokens, output_tokens, created_at")
       .eq("conversation_id", id)
-      .order("created_at")
+      .order("created_at", { ascending: false })
       .limit(MESSAGES_MAX),
     conversation.property_id
       ? supabase
@@ -225,7 +231,9 @@ export async function adminAiConversation(id: string): Promise<QueryResult<AiLog
       profileId: conversation.profile_id,
       name: profile ? fullName(profile.first_name, profile.last_name) : null,
       reference: listing.data?.reference ?? null,
-      entries: messages.data.map((row) => ({
+      // The latest messages of a long conversation, in their order.
+      limited: messages.data.length === MESSAGES_MAX,
+      entries: messages.data.reverse().map((row) => ({
         id: row.id,
         role: row.role as AiLogEntry["role"],
         ...entryText(row.role, row.content),

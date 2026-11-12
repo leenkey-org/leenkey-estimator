@@ -99,43 +99,53 @@ export function KnowledgeImport() {
   );
 }
 
-/** « Calculer les fiches manquantes »: what an import or the seed left to compute. */
-export function EmbedButton() {
+/**
+ * « Calculer les fiches manquantes »: what an import or the seed left to
+ * compute. Always in the page: once nothing is missing, the button goes but
+ * its outcome stays, and takes the focus the button had.
+ */
+export function EmbedButton({ missing }: { missing: number }) {
   const router = useRouter();
   const [outcome, setOutcome] = useState<Outcome>(null);
   const [working, start] = useTransition();
+  const message = useRef<HTMLDivElement>(null);
   return (
     <div className="flex flex-col items-start gap-2">
-      <Button
-        type="button"
-        variant="secondary"
-        size="sm"
-        loading={working}
-        onClick={() =>
-          start(async () => {
-            let result: Awaited<ReturnType<typeof embedKnowledge>> | null = null;
-            try {
-              result = await embedKnowledge();
-            } catch {
-              // The message below.
-            }
-            setOutcome(
-              result?.ok
-                ? result.data.remaining
-                  ? { tone: "warning", text: t.embedMore(result.data.embedded) }
-                  : { tone: "success", text: t.embedDone(result.data.embedded) }
-                : {
-                    tone: "danger",
-                    text: result?.error === "auth" ? t.errors.auth : t.errors.unavailable,
-                  },
-            );
-            if (result?.ok) router.refresh();
-          })
-        }
-      >
-        {working ? t.embedding : t.embed}
-      </Button>
-      <div aria-live="polite">
+      {missing > 0 ? (
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          loading={working}
+          onClick={() =>
+            start(async () => {
+              let result: Awaited<ReturnType<typeof embedKnowledge>> | null = null;
+              try {
+                result = await embedKnowledge();
+              } catch {
+                // The message below.
+              }
+              setOutcome(
+                result?.ok
+                  ? result.data.remaining
+                    ? { tone: "warning", text: t.embedMore(result.data.embedded) }
+                    : { tone: "success", text: t.embedDone(result.data.embedded) }
+                  : {
+                      tone: "danger",
+                      text: result?.error === "auth" ? t.errors.auth : t.errors.unavailable,
+                    },
+              );
+              if (result?.ok) {
+                router.refresh();
+                if (!result.data.remaining) requestAnimationFrame(() => message.current?.focus());
+              }
+            })
+          }
+        >
+          {working ? t.embedding : t.embed}
+        </Button>
+      ) : null}
+      <div ref={message} tabIndex={-1} aria-live="polite" className="outline-none">
         {outcome ? (
           <InlineAlert tone={outcome.tone} live={false}>
             {outcome.text}

@@ -42,3 +42,4 @@
 - [ ] Export et suppression de compte fonctionnels depuis `/compte`
 - [ ] Emails hors prod redirigés vers `EMAIL_TEST_INBOX`
 - [ ] Sauvegarde quotidienne et restauration testée (P-03)
+- [ ] Journal de l'assistant (`ai_messages`) : les suggestions et brouillons de l'équipe (motif de refus, synthèse avant appel, L1-30d) gardent les données envoyées au modèle (nom du client, notes, messages avec le conseiller) dans des lignes de l'admin, qui ne disparaissent pas avec le compte du client ; seules les conversations des visiteurs sont purgées (30 jours). Durée de conservation du journal à fixer avant la mise en ligne, avec la suppression de compte (L2-10).

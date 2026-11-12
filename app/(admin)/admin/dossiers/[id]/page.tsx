@@ -106,6 +106,9 @@ const STEP_TONE = {
 // them); the tasks of Leenkey of the current step to tick; the steps of the
 // sale; the history; « Synthèse avant appel » by the assistant (L1-30d).
 // The page checks the admin role itself.
+
+/** « Synthèse avant appel »: a call of the model, 30 s and one retry at most. */
+export const maxDuration = 60;
 export default async function AdminCasePage({ params }: Props) {
   const admin = await requireAdmin();
   const { id } = await params;

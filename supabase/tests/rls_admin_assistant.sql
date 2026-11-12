@@ -5,7 +5,7 @@
 -- case is logged in the context of the team only.
 begin;
 \ir _helpers.psql
-select plan(19);
+select plan(30);
 \ir _plan.psql
 
 \set who seller_a
@@ -27,9 +27,31 @@ select throws_ok($$insert into ai_conversations (profile_id, context, kind)
 select throws_ok('select * from knowledge_import_cards(''[]'')', '42501', null,
                  'seller_a: never the helper of the import');
 
+\set who seller_b
+\ir _as.psql
+select throws_ok('select * from admin_ai_usage()', '42501', null, 'seller_b: never the tokens');
+select throws_ok('select * from admin_ai_conversations()', '42501', null, 'seller_b: never the log');
+select is((select count(*)::int from ai_messages), 0, 'seller_b: never the messages of seller_a');
+
+\set who buyer_c
+\ir _as.psql
+select throws_ok('select * from admin_ai_conversations()', '42501', null, 'buyer_c: never the log');
+select throws_ok($$select * from admin_knowledge_import('faq-test.md',
+                   '[{"audience":"buyer","category":"Visites","question":"Q ?","answer":"R."}]')$$,
+                 '42501', null, 'buyer_c: never imports the FAQ');
+
+\set who buyer_d
+\ir _as.psql
+select throws_ok('select * from admin_ai_usage()', '42501', null, 'buyer_d: never the tokens');
+select is((select count(*)::int from knowledge_base), 0, 'buyer_d: never the table of the FAQ');
+
 \set who anon
 \ir _as.psql
 select throws_ok('select * from admin_ai_usage()', '42501', null, 'anon: never the tokens');
+select throws_ok('select * from admin_ai_conversations()', '42501', null, 'anon: never the log');
+select throws_ok($$select * from admin_knowledge_import('faq-test.md',
+                   '[{"audience":"seller","category":"Prix","question":"Q ?","answer":"R."}]')$$,
+                 '42501', null, 'anon: never imports the FAQ');
 
 \set who admin
 \ir _as.psql
@@ -66,6 +88,10 @@ select is((select count(*)::int from knowledge_base where source_file = 'faq-tes
 select throws_ok($$select * from admin_knowledge_import('../faq.md',
                    '[{"audience":"seller","category":"Prix","question":"Q ?","answer":"R."}]')$$,
                  '22023', null, 'admin: a file name with a path is refused');
+select throws_ok($$select * from admin_knowledge_import('faq-test.md', null)$$,
+                 '22023', null, 'admin: no list of cards is refused, the file is kept');
+select is((select count(*)::int from knowledge_base where source_file = 'faq-test.md'), 2,
+          'admin: the cards of the file are still there');
 select is((select count(*)::int from audit_log where action = 'knowledge.import'
            and meta ->> 'file' = 'faq-test.md'), 2, 'admin: each import written in audit_log');
 

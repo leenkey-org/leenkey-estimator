@@ -58,7 +58,11 @@ test("base de connaissances : fiches, recherche test, import d'un fichier", asyn
       name: "Base de connaissances",
     }),
   ).toHaveAttribute("aria-current", "page");
-  await expect(page.getByText(/^73\u00A0fiches, toutes cherchables par le sens\.$/)).toBeVisible();
+  // The seed: 73 cards, all embedded by scripts/local-stack.sh (more after a first run).
+  const summary = page.getByText(/^\d+\u00A0fiches, toutes cherchables par le sens\.$/);
+  await expect(summary).toBeVisible();
+  const before = Number((await summary.textContent())?.match(/^\d+/)?.[0]);
+  expect(before).toBeGreaterThanOrEqual(73);
   await expectNoSeriousViolation(page);
 
   // The test search: the cards the assistant would read.
@@ -69,28 +73,31 @@ test("base de connaissances : fiches, recherche test, import d'un fichier", asyn
   await expect(results.getByRole("listitem")).toHaveCount(5, { timeout: 60_000 });
   await expect(results.getByRole("listitem").first()).toContainText(/Proximité 0,\d\d/);
 
-  // An import: two cards of a new file, searchable once embedded.
+  // An import: two cards of a new file (new at each run), searchable once embedded.
+  const run = Date.now().toString(36);
   const file = [
-    "## Question de test E2E sur les visites ?",
-    "<!-- audience: buyer | category: Tests E2E | step_code: -->",
+    `## Question de test E2E ${run} sur les visites ?`,
+    `<!-- audience: buyer | category: Tests E2E ${run} | step_code: -->`,
     "Réponse de test : les visites se réservent sur invitation.",
     "",
-    "## Seconde question de test E2E ?",
-    "<!-- audience: seller | category: Tests E2E -->",
+    `## Seconde question de test E2E ${run} ?`,
+    `<!-- audience: seller | category: Tests E2E ${run} -->`,
     "Seconde réponse de test.",
   ].join("\n");
   const upload = page.getByRole("region", { name: "Importer un fichier" });
   await upload.getByLabel("Fichier .md").setInputFiles({
-    name: "FAQ Tests E2E.md",
+    name: `FAQ Tests E2E ${run}.md`,
     mimeType: "text/markdown",
     buffer: Buffer.from(file, "utf8"),
   });
   await upload.getByRole("button", { name: "Importer" }).click();
-  await expect(upload.getByText(/^faq-tests-e2e\.md : 2 ajoutées, 0 modifiée/)).toBeVisible({
+  await expect(
+    upload.getByText(`faq-tests-e2e-${run}.md : 2 ajoutées, 0 modifiée`, { exact: false }),
+  ).toBeVisible({
     timeout: 120_000,
   });
-  await expect(page.getByText(/^75\u00A0fiches/)).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Tests E2E · 2" })).toBeVisible();
+  await expect(page.getByText(new RegExp(`^${before + 2}\u00A0fiches`))).toBeVisible();
+  await expect(page.getByRole("heading", { name: `Tests E2E ${run} · 2` })).toBeVisible();
 
   // A file without the line of metadata: refused, nothing imported.
   await upload.getByLabel("Fichier .md").setInputFiles({

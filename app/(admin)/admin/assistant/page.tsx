@@ -46,6 +46,10 @@ const t = fr.adminAssistant;
 
 export const generateMetadata = adminMetadata({ title: t.metaTitle });
 
+// The import and the embeddings of the FAQ (40 s or so when the function of
+// the embeddings is cold).
+export const maxDuration = 60;
+
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 const box = "rounded-lk-md border border-lk-line bg-lk-surface p-5";
@@ -77,7 +81,7 @@ async function FaqTab() {
     <>
       <div className="flex flex-col gap-3">
         <p className="text-lk-secondary text-lk-ink-2">{t.faq.summary(cards.length, missing)}</p>
-        {missing > 0 ? <EmbedButton /> : null}
+        <EmbedButton missing={missing} />
       </div>
       <section aria-labelledby="recherche-test" className={`flex flex-col gap-3 ${box}`}>
         <SectionTitle id="recherche-test">{t.faq.search.title}</SectionTitle>

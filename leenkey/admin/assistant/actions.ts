@@ -34,27 +34,34 @@ export async function testKnowledgeSearch(input: unknown): Promise<KnowledgeSear
 /** The embeddings computed and those still missing (a later call goes on). */
 export type EmbedProgress = { embedded: number; remaining: boolean };
 
+/** The time an action of the page may take (maxDuration of the page is 60 s). */
+const EMBED_BUDGET_MS = 45_000;
+
 /**
  * One call of `embed` computes 8 cards; the model loads on the first one (up
- * to a minute when the function is cold). Calls follow each other for 40 s at
- * most: the page says what remains, the team asks again.
+ * to a minute when the function is cold). Calls follow each other within
+ * EMBED_BUDGET_MS, each cut at what remains of it: the page says what is
+ * left, the team asks again (a cut call loses nothing, the cards stay
+ * without an embedding).
  */
 async function embedMissing(): Promise<EmbedProgress | null> {
   const supabase = await createClient();
   const started = Date.now();
   let embedded = 0;
   for (;;) {
+    const left = EMBED_BUDGET_MS - (Date.now() - started);
+    if (left < 5_000) return { embedded, remaining: true };
     const { data, error } = await supabase.functions.invoke<{
       updated?: number;
       remaining?: boolean;
-    }>("embed", { body: { reindex: true }, timeout: 90_000 });
+    }>("embed", { body: { reindex: true }, timeout: left });
     if (error || typeof data?.updated !== "number") {
       console.error("[admin] knowledge embedding failed", { error: error?.name ?? "response" });
       return embedded > 0 ? { embedded, remaining: true } : null;
     }
     embedded += data.updated;
     if (!data.remaining) return { embedded, remaining: false };
-    if (data.updated === 0 || Date.now() - started > 40_000) return { embedded, remaining: true };
+    if (data.updated === 0) return { embedded, remaining: true };
   }
 }
 
@@ -97,7 +104,9 @@ export async function importKnowledgeFile(input: unknown): Promise<KnowledgeImpo
     return { ok: false, error: error?.code === "22023" ? "invalid" : "unavailable" };
   }
   const counts = data[0];
-  const embedding = await embedMissing();
+  // Nothing new nor changed: nothing to compute.
+  const embedding =
+    counts.inserted + counts.updated > 0 ? await embedMissing() : { embedded: 0, remaining: false };
   revalidatePath("/admin/assistant");
   return {
     ok: true,

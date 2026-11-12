@@ -5,7 +5,7 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { requireAdmin } from "@/core/auth/session";
 import { adminAiConversation } from "@/leenkey/admin/assistant/queries";
 import { adminMetadata } from "@/leenkey/admin/metadata";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatInteger } from "@/lib/format";
 import { fr } from "@/lib/i18n/fr";
 import { cn } from "@/lib/utils";
 import { assistantHref } from "@/lib/validations/admin-assistant";
@@ -89,6 +89,7 @@ export default async function AdminAssistantConversationPage({ params }: Props) 
           ))}
         </dl>
       </section>
+      {conversation.limited ? <InlineAlert tone="info">{t.detail.limited}</InlineAlert> : null}
       {conversation.entries.length === 0 ? (
         <p className="text-lk-secondary text-lk-ink-3">{t.detail.empty}</p>
       ) : (
@@ -109,8 +110,10 @@ export default async function AdminAssistantConversationPage({ params }: Props) 
               </p>
               {entry.text ? (
                 <p
-                  // A long request scrolls in its box: reachable by the keyboard.
+                  // A long request scrolls in its box: reachable by the keyboard, named.
                   tabIndex={entry.request ? 0 : undefined}
+                  role={entry.request ? "region" : undefined}
+                  aria-label={entry.request ? t.detail.roles.request : undefined}
                   className={cn(
                     "text-lk-secondary whitespace-pre-line break-words text-lk-ink",
                     entry.request && "max-h-64 overflow-y-auto text-lk-caption text-lk-ink-2",
@@ -121,7 +124,11 @@ export default async function AdminAssistantConversationPage({ params }: Props) 
               ) : null}
               {entry.model ? (
                 <p className="text-lk-caption text-lk-ink-3">
-                  {t.detail.tokens(entry.model, entry.inputTokens ?? 0, entry.outputTokens ?? 0)}
+                  {t.detail.tokens(
+                    entry.model,
+                    formatInteger(entry.inputTokens ?? 0),
+                    formatInteger(entry.outputTokens ?? 0),
+                  )}
                 </p>
               ) : null}
             </li>
