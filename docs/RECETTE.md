@@ -21,19 +21,57 @@ Recette de Cédric sur la préprod (`leenkey-v2.vercel.app`) à chaque fin de lo
 
 ## Lot 1 · livraison prévue ven. 13 nov.
 
+Recette de Cédric du 16 au 20 novembre. La pré-analyse des annonces, `/admin/assistant` et l'export CSV (L1-30d) arrivent avant cette semaine ; la carte avancée (L1-16b), l'historique des modifications d'une annonce (L1-35) et le résumé du jour (L1-30b) sont reportés au lot 2 (`docs/PLANNING.md`).
+
 | # | Scénario | Compte | Attendu | OK |
 |---|---|---|---|---|
-| 1.1 | S'inscrire comme vendeur, créer un bien complet depuis le mobile, l'envoyer en validation | nouveau compte | Annonce « en attente », email reçu | ☐ |
+| 1.1 | S'inscrire comme vendeur, créer un bien complet depuis le mobile (adresse, caractéristiques, DPE repris par son numéro, prix, description, photos), l'envoyer en validation | nouveau compte | Annonce « en attente », email reçu | ☐ |
 | 1.2 | Valider l'annonce depuis le back office | admin | Annonce visible dans la recherche, email au vendeur | ☐ |
-| 1.3 | Refuser une annonce avec un motif | admin | Motif visible par le vendeur | ☐ |
-| 1.4 | Chercher un appartement à Savigny-sur-Orge, filtrer, ouvrir l'annonce | visiteur | Filtres et carte cohérents | ☐ |
+| 1.3 | Refuser une annonce avec un motif | admin | Motif visible par le vendeur, email reçu | ☐ |
+| 1.4 | Chercher un appartement à Savigny-sur-Orge, filtrer, ouvrir l'annonce | visiteur | Filtres et carte cohérents ; mentions du DPE, sans adresse ni numéro du DPE | ☐ |
 | 1.5 | Contacter le vendeur, échanger quelques messages | buyer_c / seller_a | Messages en temps réel, notification et email | ☐ |
 | 1.6 | Répondre avec la suggestion de l'assistant | seller_a | Suggestion modifiable avant envoi | ☐ |
 | 1.7 | Renseigner son projet et son financement | buyer_c | Le vendeur voit « Informations déclarées », jamais les montants | ☐ |
-| 1.8 | Acheter Sérénité, puis vérifier le dossier et la conversation conseiller | seller_a / admin | Formule active, dossier créé, échange conseiller possible | ☐ |
-| 1.9 | Rester en Autonomie jusqu'à la publication | seller_b | Aucune étape bloquée | ☐ |
-| 1.10 | Modifier le prix d'une annonce publiée | seller_a / admin | Annonce toujours en ligne, historique visible côté admin | ☐ |
+| 1.8 | Acheter Sérénité (carte de test), puis vérifier le dossier et la conversation conseiller | seller_a / admin | Formule active, email récapitulatif, dossier créé, échange conseiller possible | ☐ |
+| 1.9 | Rester en Autonomie jusqu'à la publication | seller_b | Aucune étape bloquée ; conseiller grisé « Accessible avec la formule Accompagné » | ☐ |
+| 1.10 | Modifier le prix d'une annonce publiée | seller_a / admin | Annonce toujours en ligne | ☐ |
 | 1.11 | Essayer d'ouvrir le bien de seller_a avec seller_b | seller_b | Accès refusé | ☐ |
+| 1.12 | Demander à l'assistant de modifier la description, puis d'écrire à l'équipe Leenkey | seller_b | Modification après confirmation ; demande reçue dans « Dossiers » et par email | ☐ |
+| 1.13 | Renoncer à la formule pendant les 14 jours | seller_a | Accusé de réception, dossier « Rétractation » côté équipe | ☐ |
+| 1.14 | Signaler une conversation, puis la traiter | buyer_c / admin | Signalement dans le back office, avertissement possible | ☐ |
+| 1.15 | Suspendre puis rétablir un compte | admin | Email au compte, accès bloqué puis rendu | ☐ |
+
+### Recette interne (Claude Code, L1-32, 2026-11-12)
+
+Sur une pile locale fraîche (Supabase local, emails capturés, modèle de l'assistant et Stripe simulés), avec les comptes de seed.
+
+| Contrôle | Résultat |
+|---|---|
+| Parcours obligatoires de la SPEC (section 22) 1 vendeur, 2 acquéreur, 3 paiement, 7 permissions (`tests/e2e/journeys-live.spec.ts`) | 4 verts, nouveaux comptes et nouvelle annonce à chaque passage. Parcours 7 : bien, étapes et conversation refusés à un autre vendeur et à l'acquéreur ; documents, offres et visites avec les lots 2 et 3 |
+| Suite E2E complète (mobile, desktop, seed modifié) | 442 verts, 0 échec (dernier passage complet le 2026-11-10, avant L1-31 ; les specs modifiées depuis ont été rejouées seules) |
+| Accessibilité (axe, `npm run a11y`, mobile et desktop) | 63 écrans sans violation sérieuse ni critique |
+| Lighthouse mobile (4G simulée) | Accessibilité 100. Bonnes pratiques 96 et SEO 69 en local seulement (script de Vercel Analytics absent, `noindex` hors production) : 100 attendus en production. **Performance 61 à 81, LCP 3,4 à 4,9 s : objectif de la SPEC (moins de 2,5 s) non atteint**, voir ci-dessous |
+| Revue des permissions | Voir ci-dessous |
+
+Lighthouse, page par page :
+
+| Page | Performance | LCP | CLS | Blocage du fil (TBT) |
+|---|---|---|---|---|
+| Accueil | 61 | 3,7 s | 0 | 2 040 ms |
+| Recherche | 68 | 3,4 s | 0 | 1 130 ms |
+| Annonce | 67 | 4,1 s | 0 | 850 ms |
+| Valoriser mon bien | 73 | 4,9 s | 0 | 370 ms |
+| Tarifs | 81 | 4,0 s | 0 | — |
+
+Cause principale : le JavaScript exécuté au chargement (animations de l'accueil, composants interactifs), et la feuille de style qui bloque le premier affichage ; sur `/tarifs`, l'élément le plus grand est le texte du bandeau des cookies, affiché après le chargement. Mesure sur un conteneur sans réseau réel : à confirmer sur la préprod. À traiter avant la mise en ligne (tâche P-06, `docs/PLANNING.md`).
+
+Revue des permissions (base locale et préprod, linter de sécurité de Supabase) :
+
+- toutes les tables ont la RLS ; `rate_limits` et `stripe_events` n'ont aucune politique, à dessein (écrites seulement par des fonctions ou le webhook) ;
+- aucune politique d'écriture ouverte (`using (true)` ou `with check (true)`), aucun droit d'écriture du rôle `anon` sur une table ;
+- toutes les fonctions `security definer` ont un `search_path` fixé ; celles qu'un visiteur peut appeler sont les lectures publiques des annonces, la recherche, l'assistant du site (clé du serveur exigée), la limite de débit (clé du serveur), le compteur de vues et l'enregistrement d'une analyse de valeur ;
+- **à noter** : ces deux dernières fonctions peuvent être appelées directement avec la clé publique, sans passer par les limites de débit du site : le nombre de vues d'une annonce peut être gonflé, et des analyses de valeur ajoutées en nombre (bornées en taille, purgées) ; risque faible, noté dans `docs/SECURITE.md` ;
+- **à activer en production** : la protection contre les mots de passe divulgués de Supabase Auth (désactivée en préprod).
 
 ### Retours lot 1
 

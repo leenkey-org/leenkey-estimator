@@ -96,7 +96,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-66** DPE repris du registre de l'ADEME par son numéro, consommation et émissions, DPE tertiaire, règles et motifs d'exemption en base, contrôle ADEME dans le back office (réponses de Cédric du 10 novembre) · PR : #88 · Testé en préprod : ☐
 - [x] **L1-31** Passage à l’humain (`create_case`, fonction SQL `security definer`) côté vendeur : outil de l'assistant après confirmation, demande écrite à la limite du jour, notification et email de l'équipe · PR : #89 · Testé en préprod : ☐
 - [x] **L1-34** Conversation conseiller : `kind = 'advisor'` sur la messagerie existante, créée au paiement, vue admin `/admin/messages`, outil `contact_advisor` · PR : #86 · Testé en préprod : ☐
-- [ ] **L1-32** Recette interne lot 1 : E2E 1, 2, 3, 7 verts, Lighthouse, axe, revue RLS · PR : · Testé en préprod : ☐
+- [x] **L1-32** Recette interne lot 1 : E2E 1, 2, 3, 7 verts, Lighthouse, axe, revue RLS (`docs/RECETTE.md` ; tag `v2.0.0-lot1` posé après L1-30d) · PR : #92 · Testé en préprod : ☐
 
 Toujours la semaine la plus risquée du projet. Ordre imposé : L1-26 et L1-33 (paiement) le lundi, L1-28 avant L1-29 et L1-31, L1-34 en dernier. Si L1-34 n'est pas prête jeudi soir, elle est livrée en S6 et la recette du lot 1 le dit explicitement.
 
@@ -110,6 +110,8 @@ Recette du lot 1 par Cédric du 16 au 20 novembre ; mise en ligne de la V2 la se
 - [ ] **L1-30b** Résumé du jour par l'assistant dans le back office · PR : · Testé en préprod : ☐
 
 Mise en ligne :
+
+- [ ] **P-06** Performance mobile (recette interne du 12 novembre) : LCP sous 2,5 s sur la recherche et l'annonce (SPEC 21), JavaScript du premier chargement réduit (accueil), feuille de style critique, bandeau des cookies sans effet sur le LCP ; mesure Lighthouse sur la préprod · PR : · Testé en préprod : ☐
 
 - [ ] **P-05b** Mise en ligne de la V2 (semaine du 23 nov., avant le 30 nov., sur go de Younes) : projet Supabase de production, migrations, seed `plans` et `sale_steps`, variables de production, Resend, vérification des modèles IA, Stripe live si CGV et médiateur prêts ; puis changement de la branche de production du projet Vercel de `leenkey.fr` (jamais de fusion dans `main`) ; retour arrière : remettre `main` · PR : · Testé en préprod : ☐
 
