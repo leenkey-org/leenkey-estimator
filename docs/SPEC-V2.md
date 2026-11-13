@@ -956,7 +956,7 @@ where l.status = 'published' and l.deleted_at is null and p.deleted_at is null;
 |---|---|---|---|
 | `photos` | privé, lecture via URL signée 1 h | photos redimensionnées : `{property_id}/{uuid}-{size}.webp`, tailles 400, 800, 1600 | signée |
 | `documents` | privé | documents du dossier de vente (`{property_id}/…`), justificatifs de financement (`{buyer_id}/financing/…`) | signée 10 min |
-| `offers` | privé | PDF des offres d'achat : `{offer_id}/v{version}.pdf`, jamais réécrit | signée 10 min |
+| `offers` | privé | Réservé. Depuis L2-03, le PDF d'une offre est dessiné à la demande depuis l'offre figée (`DECISIONS.md` 2026-11-13) : rien n'y est déposé | — |
 | `avatars` | privé | photos de profil | signée 1 h |
 
 Les photos des annonces publiées sont servies via une route Next.js `/img/[...path]` qui vérifie que l'annonce est publiée puis redirige vers une URL signée, avec cache CDN de 50 minutes. Aucune URL permanente.
@@ -1739,7 +1739,7 @@ Envoi (fonction `offer_submit`, transaction unique) → statut `submitted`, `sub
 
 ### PDF de l'offre
 
-`@react-pdf/renderer`, charte Leenkey, titre « OFFRE D'ACHAT LEENKEY ». Contient : référence, version, date et heure d'émission ; sections 1 à 7 ci-dessus (acquéreur et co-acquéreurs, acquisition envisagée, bien, prix en chiffres et en lettres, financement **déclaré**, situation du financement, conditions et précisions, validité, déclarations cochées avec horodatage) ; l'encadré « Avant d'envoyer votre offre ». Ne contient pas : l'écart au prix affiché, le statut de qualification, la synthèse, le message au vendeur. Stocké dans le bucket privé `offers`, URL signée de courte durée.
+`@react-pdf/renderer`, charte Leenkey, titre « OFFRE D'ACHAT LEENKEY ». Contient : référence, version, date et heure d'émission ; sections 1 à 7 ci-dessus (acquéreur et co-acquéreurs, acquisition envisagée, bien, prix en chiffres et en lettres, financement **déclaré**, situation du financement, conditions et précisions, validité, déclarations cochées avec horodatage) ; l'encadré « Avant d'envoyer votre offre ». Ne contient pas : l'écart au prix affiché, le statut de qualification, la synthèse, le message au vendeur. Depuis L2-03 (`DECISIONS.md` 2026-11-13) : dessiné à la demande depuis l'offre figée par `/offres/[id]/pdf`, pour son acquéreur ou l'équipe (le vendeur après acceptation, L2-04), sans cache ; aucun fichier n'est stocké (archivage : Q84). Avant : « Stocké dans le bucket privé `offers`, URL signée de courte durée. »
 
 ### Synthèse pour le vendeur
 

@@ -58,7 +58,11 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/og/**": ["./public/brand/logo-white.svg"],
     "/**": ["./core/ai/prompts/**/*.md"],
+    // The font of the PDF of an offer (L2-03), read from the disk by its route.
+    "/offres/[id]/pdf": ["./leenkey/offers/fonts/*.ttf"],
   },
+  // Its renderer loads its own fonts and layout engine: not bundled.
+  serverExternalPackages: ["@react-pdf/renderer"],
   async headers() {
     return [{ source: "/:path*", headers: [...SECURITY_HEADERS] }];
   },
