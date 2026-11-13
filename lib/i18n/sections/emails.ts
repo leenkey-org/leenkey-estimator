@@ -169,6 +169,45 @@ export const frEmails = {
     early: "démarrage immédiat demandé : un montant proportionnel peut être retenu",
     action: "Voir les dossiers",
   },
+  // L2-04a: an offer received, to its seller (SPEC-V2 18: amount, gap,
+  // financing status, a link; never the PDF).
+  offerReceived: {
+    subject: (reference: string, price: string) => `Offre d'achat reçue : ${price} · ${reference}`,
+    title: "Vous avez reçu une offre d'achat",
+    text: (buyer: string | null, property: string) =>
+      buyer
+        ? `${buyer} vous a fait une offre d'achat pour votre bien «\u00A0${property}\u00A0».`
+        : `Vous avez reçu une offre d'achat pour votre bien «\u00A0${property}\u00A0».`,
+    asking: "Prix demandé",
+    offer: "Offre reçue",
+    gap: "Écart",
+    noGap: "Aucun",
+    financing: "Financement",
+    validity: (date: string) =>
+      `Cette offre est valable jusqu'au ${date}. Passé ce délai, elle expire.`,
+    read: "Lisez l'offre complète et son analyse avant de répondre : vous pouvez l'accepter, la refuser ou en discuter avec l'acquéreur.",
+    action: "Voir l'offre",
+  },
+  // L2-04a: the answer of the seller, to the buyer of the offer.
+  offerAnswered: {
+    subject: (accepted: boolean, reference: string) =>
+      accepted
+        ? `Votre offre d'achat a été acceptée · ${reference}`
+        : `Votre offre d'achat a été refusée · ${reference}`,
+    title: (accepted: boolean) =>
+      accepted ? "Votre offre d'achat a été acceptée" : "Votre offre d'achat a été refusée",
+    text: (accepted: boolean, price: string, property: string) =>
+      accepted
+        ? `Le vendeur a accepté votre offre de ${price} pour le bien «\u00A0${property}\u00A0».`
+        : `Le vendeur a refusé votre offre de ${price} pour le bien «\u00A0${property}\u00A0».`,
+    message: "Message du vendeur",
+    acceptedNext:
+      "Les conditions définitives de la vente seront déterminées avec le ou les notaires lors de la préparation de l'avant-contrat. Prenez contact avec le vendeur pour organiser la suite.",
+    declinedNext:
+      "Vous pouvez échanger avec le vendeur dans la messagerie, ou lui faire une nouvelle offre.",
+    action: "Voir mon offre",
+    why: "Vous recevez cet email parce que vous avez fait une offre d'achat sur Leenkey.",
+  },
   // L1-40: a plan ending within 30 days, to its owner.
   planEnding: {
     subject: (plan: string, date: string) => `Votre formule ${plan} se termine le ${date}`,

@@ -29,3 +29,5 @@ export function readOfferFormStep(value: string | undefined): OfferFormStep | nu
 
 export const offerPath = (offerId: string) => `/offres/${offerId}`;
 export const offerPdfPath = (offerId: string) => `/offres/${offerId}/pdf`;
+/** The acceptance screen of a seller: never an acceptance in one click. */
+export const offerAcceptPath = (offerId: string) => `/offres/${offerId}/accepter`;

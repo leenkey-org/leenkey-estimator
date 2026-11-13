@@ -16,6 +16,9 @@ import { ROUTES } from "@/leenkey/navigation/spaces";
 import { hasEntitlement } from "@/leenkey/billing/entitlements";
 import { AdvisorCard } from "@/leenkey/messaging/components/advisor-card";
 import { RecentConversations } from "@/leenkey/messaging/components/recent-conversations";
+import { OfferReceivedCard } from "@/leenkey/offers/components/offer-received-card";
+import { OfferSellerActions } from "@/leenkey/offers/components/offer-seller-actions";
+import { awaitingAnswer, buyerConversationHref, propertyOffers } from "@/leenkey/offers/seller";
 import { PropertyList } from "@/leenkey/properties/components/property-list";
 import { SellerHeader } from "@/leenkey/properties/components/seller-header";
 import { AssistantHeaderLink } from "@/leenkey/ai/components/assistant-header-link";
@@ -37,6 +40,7 @@ import { sellerProperties } from "@/leenkey/properties/queries";
 import { listingHref } from "@/leenkey/search/cards";
 import { creationHref, propertyName, sheetHref } from "@/leenkey/properties/sheet";
 import { formatDateShort, formatInteger, formatPrice } from "@/lib/format";
+import { frOffer } from "@/lib/i18n/sections/offer";
 import { frPlan } from "@/lib/i18n/sections/plan";
 import { frProperties } from "@/lib/i18n/sections/properties";
 import { frSaleDashboard } from "@/lib/i18n/sections/saleDashboard";
@@ -274,6 +278,12 @@ export default async function SellerHomePage({ searchParams }: Props) {
     // The adviser (L1-34): the open conversation; without the right, the invitation.
     const advisor = data.data.advisor && !data.data.advisor.closed ? data.data.advisor : null;
     const advisorRight = advisor !== null || (await hasEntitlement(property.id, "advisor"));
+    // The offers that wait for an answer (L2-04a), each with its conversation.
+    const offers = await propertyOffers(property.id);
+    const awaiting = offers.ok ? awaitingAnswer(offers.data) : [];
+    const discussHrefs = await Promise.all(
+      awaiting.map((item) => buyerConversationHref(item.offer.listingId, item.buyerId)),
+    );
     content = (
       <>
         {view ? (
@@ -308,6 +318,29 @@ export default async function SellerHomePage({ searchParams }: Props) {
               </>
             }
           />
+        ) : null}
+
+        {awaiting.length > 0 ? (
+          <section aria-labelledby="offres-recues" className="flex flex-col gap-3">
+            <h2 id="offres-recues" className="sr-only">
+              {frOffer.seller.dashboard.title}
+            </h2>
+            {awaiting.map((item, index) => (
+              <OfferReceivedCard
+                key={item.offer.id}
+                item={item}
+                now={now}
+                title={frOffer.seller.received}
+                actions={
+                  <OfferSellerActions
+                    offerId={item.offer.id}
+                    discussHref={discussHrefs[index]}
+                    full
+                  />
+                }
+              />
+            ))}
+          </section>
         ) : null}
 
         {advisor || !advisorRight ? (

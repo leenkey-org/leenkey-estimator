@@ -9,6 +9,8 @@ import { CaseRequestsEmail, caseRequestsSubject } from "@/emails/case-requests";
 import { ListingToReviewEmail, listingToReviewSubject } from "@/emails/listing-submitted";
 import { ListingsToReviewEmail, listingsToReviewSubject } from "@/emails/listings-to-review";
 import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
+import { OfferAnsweredEmail, offerAnsweredSubject } from "@/emails/offer-answered";
+import { OfferReceivedEmail, offerReceivedSubject } from "@/emails/offer-received";
 import { ReportsToReviewEmail, reportsToReviewSubject } from "@/emails/reports-to-review";
 import { formatAmount, formatPrice } from "@/lib/format";
 import { PlanEndingEmail, planEndingSubject } from "@/emails/plan-ending";
@@ -17,8 +19,11 @@ import {
   withdrawalsToProcessSubject,
 } from "@/emails/withdrawals-to-process";
 import { legalDate, legalDateTime } from "@/leenkey/billing/withdrawal";
+import { formatNumericDateTime } from "@/leenkey/offers/document";
+import { gapLabel, offerGap } from "@/leenkey/offers/figures";
 import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { frEmails } from "@/lib/i18n/sections/emails";
+import { frFinancingStatus } from "@/lib/i18n/sections/financingStatus";
 import { frLegal } from "@/lib/i18n/sections/legal";
 import { roleLabels } from "./catalog";
 import { absoluteUrl, siteUrl } from "@/lib/site";
@@ -52,6 +57,10 @@ const POLICIES: Record<string, EmailPolicy> = {
   "plan.withdrawn": { audience: "team", throttleMinutes: 20 },
   // A plan ending within 30 days (L1-40): once per plan (its own group).
   "plan.ending": { audience: "recipient", throttleMinutes: 60 },
+  // L2-04a: an offer received (the seller), its answer (the buyer): at once,
+  // unless the account turned the emails of the offers off.
+  "offer.received": { audience: "recipient", preference: "email_offers", throttleMinutes: 0 },
+  "offer.answered": { audience: "recipient", preference: "email_offers", throttleMinutes: 0 },
 };
 
 export function emailPolicy(type: string): EmailPolicy | null {
@@ -325,6 +334,60 @@ async function planEnding(email: PlannedEmail): Promise<RenderedEmail | null> {
   );
 }
 
+const cents = (value: unknown): number | null =>
+  typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+
+const isFinancingStatus = (value: unknown): value is keyof typeof frFinancingStatus =>
+  typeof value === "string" && value in frFinancingStatus;
+
+/** An offer received (L2-04a), to its seller: amount, gap, financing status, a link; no PDF. */
+async function offerReceived(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  const price = cents(last?.data.price_cents);
+  const reference = text(last?.data.reference);
+  if (!last || !price || !reference) return null;
+  const asking = cents(last.data.asking_price_cents);
+  const gap = asking ? offerGap(price, asking) : null;
+  const status = last.data.financing_status;
+  const validUntil = text(last.data.validity_until);
+  return rendered(
+    offerReceivedSubject(reference, formatPrice(price)),
+    OfferReceivedEmail({
+      firstName: email.firstName,
+      buyerFirstName: emailSafeText(last.data.buyer_first_name),
+      property: emailSafeText(last.data.title) ?? reference,
+      price: formatPrice(price),
+      asking: asking ? formatPrice(asking) : null,
+      gap: gap ? gapLabel(gap) : null,
+      financing: frFinancingStatus[isFinancingStatus(status) ? status : "not_provided"],
+      validUntil: validUntil ? formatNumericDateTime(validUntil) : null,
+      offerUrl: absoluteUrl(last.link ?? "/vendeur"),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
+/** The answer of the seller (L2-04a), to the buyer of the offer, with its message. */
+async function offerAnswered(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  const price = cents(last?.data.price_cents);
+  const reference = text(last?.data.reference);
+  if (!last || !price || !reference) return null;
+  const accepted = last.data.accepted === true;
+  return rendered(
+    offerAnsweredSubject(accepted, reference),
+    OfferAnsweredEmail({
+      firstName: email.firstName,
+      accepted,
+      property: emailSafeText(last.data.title) ?? reference,
+      price: formatPrice(price),
+      message: emailSafeText(last.data.message),
+      offerUrl: absoluteUrl(last.link ?? "/acquereur"),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
 /** The email of a group, ready to leave; null when its type has none. */
 export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEmail | null> {
   switch (email.type) {
@@ -345,6 +408,10 @@ export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEm
       return accountsCreated(email);
     case "case.created":
       return caseRequests(email);
+    case "offer.received":
+      return offerReceived(email);
+    case "offer.answered":
+      return offerAnswered(email);
     default:
       return Promise.resolve(null);
   }

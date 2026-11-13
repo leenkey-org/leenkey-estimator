@@ -1,15 +1,17 @@
 import {
+  Bell,
   CalendarClock,
   CircleAlert,
   CircleCheck,
   ClipboardList,
+  Eye,
+  FileSignature,
   Flag,
   Folder,
+  type LucideIcon,
   MessageCircle,
   PencilLine,
-  Bell,
   UserPlus,
-  type LucideIcon,
 } from "lucide-react";
 import type { NotificationTone } from "@/components/shared/notification-item";
 import type { NotificationView } from "@/core/notifications/types";
@@ -89,6 +91,10 @@ function text(value: unknown): string | null {
 
 function position(value: unknown): number | null {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
+}
+
+function amount(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
 }
 
 const CATALOG: Record<string, Entry> = {
@@ -275,6 +281,37 @@ const CATALOG: Record<string, Entry> = {
     },
   },
   // In the app only (SPEC-V2 section 10): « Étape 3 sur 6 · Maison 5 pièces ».
+  // L2-04a: an offer received by its seller; read, then answered, for its buyer.
+  "offer.received": {
+    icon: FileSignature,
+    tone: "blue",
+    filters: ["offersVisits"],
+    title: (data) => t.offerReceived.title(text(data.buyer_first_name)),
+    detail: (data) => {
+      const price = amount(data.price_cents);
+      return t.offerReceived.detail(price ? formatPrice(price) : null, text(data.title));
+    },
+  },
+  "offer.viewed": {
+    icon: Eye,
+    tone: "stone",
+    filters: ["visitsOffers"],
+    title: () => t.offerViewed.title,
+    detail: (data) => {
+      const title = text(data.title);
+      return title ? t.offerViewed.detail(title) : null;
+    },
+  },
+  "offer.answered": {
+    icon: FileSignature,
+    tone: "blue",
+    filters: ["visitsOffers"],
+    title: (data) => (data.accepted === true ? t.offerAnswered.accepted : t.offerAnswered.declined),
+    detail: (data) => {
+      const title = text(data.title);
+      return title ? t.offerAnswered.detail(title) : null;
+    },
+  },
   "step.advanced": {
     icon: Flag,
     tone: "stone",
