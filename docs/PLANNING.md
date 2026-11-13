@@ -122,7 +122,7 @@ Lot 2 :
 - [x] **L2-02** Table `financing_documents` + RLS, justificatif de financement (type, date, fichier), contrôle admin « Marquer comme vérifié »,… · PR : #99 · Testé en préprod : ☐
 - [x] **L2-03** Formulaire d'offre en 7 étapes (acquéreur et co-acquéreurs, bien prérempli, prix en lettres, financement,… · PR : #100 · Testé en préprod : ☐
 - [ ] **L2-04** Synthèse et « Analyse Leenkey » par gabarits (sans IA), carte vendeur, écran d'acceptation intermédiaire,… · en deux PR (`DECISIONS.md` 2026-11-13) :
-  - [ ] **L2-04a** Côté vendeur : synthèse et « Analyse Leenkey » par gabarits, carte « Nouvelle offre reçue », page de l'offre (données personnelles masquées avant acceptation), écran d'acceptation, refus, onglet « Offres » et journal, notifications et emails `offer.received`, `offer.viewed`, `offer.answered` · PR : #PRNUM · Testé en préprod : ☐
+  - [x] **L2-04a** Côté vendeur : synthèse et « Analyse Leenkey » par gabarits, carte « Nouvelle offre reçue », page de l'offre (données personnelles masquées avant acceptation), écran d'acceptation, refus, onglet « Offres » et journal, notifications et emails `offer.received`, `offer.viewed`, `offer.answered` · PR : #101 · Testé en préprod : ☐
   - [ ] **L2-04b** Suivi de l'acquéreur : retrait en trois états, offre de remplacement, saisie de l'avant-contrat et délai, expiration (cron) et notifications `offer.expired`, `offer.withdrawn`, liste des offres de l'acquéreur, offres de seed, E2E 4 · PR : · Testé en préprod : ☐
 - [ ] **L2-05** Résumé de l'annonce par l'assistant (page annonce) · PR : · Testé en préprod : ☐
 - [ ] **L2-06** Assistant acquéreur : `search_listings`, `get_listing_public`, `prefill_offer`, `create_case` · PR : · Testé en préprod : ☐

@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-11-13 · L2-04a · PR #PRNUM · Offre d'achat : côté vendeur
+### 2026-11-13 · L2-04a · PR #101 · Offre d'achat : côté vendeur
 - Ajouté : carte « Nouvelle offre reçue » sur « Ma vente » (prix demandé, offre, écart, financement déclaré, justificatif, « Analyse Leenkey » par gabarits, temps restant) ; page de l'offre pour le vendeur, coordonnées des acquéreurs masquées avant acceptation ; « Consultée » à la première ouverture.
 - Ajouté : écran d'acceptation `/offres/[id]/accepter` (jamais en un clic), refus avec message facultatif, « Discuter avec l'acquéreur » ; PDF pour le vendeur une fois l'offre acceptée.
 - Ajouté : onglet « Offres » de la fiche du bien, avec l'historique et le journal de chaque offre.
