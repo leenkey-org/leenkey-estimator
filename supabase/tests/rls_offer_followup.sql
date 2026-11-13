@@ -76,7 +76,8 @@ select is((select (data->>'withdrawn_at')::timestamptz = (select withdrawn_at fr
 select is((select count(*)::int from notifications
             where data->>'offer_id' = :'offer1' and data::text ~ :'hidden'),
           0, 'no contact detail, address or birth date in it');
-select is((select array_agg(m.body order by m.id)
+-- By type: the two are written in the same transaction here, at the same moment.
+select is((select array_agg(m.body order by m.meta->>'type')
              from messages m join conversations c on c.id = m.conversation_id
             where c.listing_id = :'listing' and c.buyer_id = tests.uid('buyer_c')
               and m.kind = 'offer_notice' and m.sender_id = tests.uid('buyer_c')),
