@@ -12,6 +12,14 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-13 · L2-04a · PR #101 · Offre d'achat : côté vendeur
+- Ajouté : carte « Nouvelle offre reçue » sur « Ma vente » (prix demandé, offre, écart, financement déclaré, justificatif, « Analyse Leenkey » par gabarits, temps restant) ; page de l'offre pour le vendeur, coordonnées des acquéreurs masquées avant acceptation ; « Consultée » à la première ouverture.
+- Ajouté : écran d'acceptation `/offres/[id]/accepter` (jamais en un clic), refus avec message facultatif, « Discuter avec l'acquéreur » ; PDF pour le vendeur une fois l'offre acceptée.
+- Ajouté : onglet « Offres » de la fiche du bien, avec l'historique et le journal de chaque offre.
+- Ajouté : notifications `offer.received`, `offer.viewed`, `offer.answered`, emails « Offre reçue » et « Réponse à votre offre », préférence d'email « Offres d'achat » ; avis dans la conversation de l'annonce ; tâches « Offre reçue » et « Offre acceptée » cochées.
+- Migration : `20261113180000_offer_reception.sql` (vue `offer_for_seller` complétée, `has_buyer_relation` étendue aux offres, déclencheur sur `offer_events`).
+- Tests : permissions (`rls_offer_reception.sql`, 34 tests), unitaires (synthèse, compte à rebours, emails), E2E (`offer-live.spec.ts` étendu au vendeur).
+
 ### 2026-11-13 · L2-03 · PR #100 · Offre d'achat : formulaire, envoi, PDF
 - Ajouté : « Faire une offre » sur une annonce ; formulaire en 7 étapes (acquéreur et co-acquéreurs, bien repris de l'annonce, prix et montant en lettres, financement et budget estimé, conditions, validité, déclarations), brouillon enregistré à chaque étape, relecture du document, « Envoyer mon offre au vendeur ».
 - Ajouté : page de l'offre pour son acquéreur (statut, document tel qu'envoyé) et PDF « OFFRE D'ACHAT LEENKEY » dessiné à la demande depuis l'offre figée.

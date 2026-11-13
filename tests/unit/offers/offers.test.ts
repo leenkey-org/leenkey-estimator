@@ -19,6 +19,7 @@ import {
 } from "@/leenkey/offers/document";
 import { formatRate, gapLabel, offerBudget, offerGap } from "@/leenkey/offers/figures";
 import { offerFormPath, readOfferFormStep } from "@/leenkey/offers/paths";
+import { buildOfferSynthesis, remainingLabel } from "@/leenkey/offers/synthesis";
 import { numberInWordsFr, priceInWordsFr } from "@/leenkey/offers/words";
 import { fr } from "@/lib/i18n/fr";
 import {
@@ -26,6 +27,7 @@ import {
   isValidityInRange,
   issueKinds,
   issuePaths,
+  offerAnswerSchema,
   offerBuyerSchema,
   offerConditionsSchema,
   offerDeclarationsSchema,
@@ -555,6 +557,141 @@ describe("offer document", () => {
     for (const character of "éèêëàâçîïôöùûüÿœæÉÈÀÇŒ«»€’–—…ŁłčšžřńśźćęąőűşţğıČŠŽ") {
       expect(fonts[0].hasGlyphForCodePoint(character.codePointAt(0) ?? 0)).toBe(true);
     }
+  });
+});
+
+describe("summary for the seller (templates, no model)", () => {
+  const offer = readOffer(ROW);
+  const input = {
+    offer,
+    property: PROPERTY,
+    financingStatus: "document_checked" as const,
+    financingCheckedAt: "2026-09-30T10:00:00Z",
+  };
+
+  it("gives the figures of the model of Cédric, in its words", () => {
+    expect(buildOfferSynthesis(input)).toEqual({
+      askingPriceLabel: `350${NNBSP}000${NNBSP}€`,
+      offerPriceLabel: `338${NNBSP}000${NNBSP}€`,
+      priceGapLabel: `${MINUS}12${NNBSP}000${NNBSP}€ · ${MINUS}3,4${NNBSP}%`,
+      financingDeclared: [
+        `Apport : 90${NNBSP}000${NNBSP}€`,
+        `Prêt envisagé : 275${NNBSP}000${NNBSP}€`,
+      ],
+      financingStatus: "document_checked",
+      financingLines: ["Document fourni", "Contrôlé par Leenkey le 30/09/2026"],
+      conditions: ["Vente préalable d'un autre bien"],
+      validityUntil: "2026-11-18T13:00:00Z",
+      analysis: [
+        `L'offre est inférieure de 3,4${NNBSP}% au prix demandé.`,
+        `L'acquéreur déclare financer l'acquisition avec 90${NNBSP}000${NNBSP}€ d'apport et un prêt. Un justificatif de financement a été fourni et contrôlé par Leenkey.`,
+        "L'offre mentionne également une vente préalable d'un autre bien.",
+        "Avant de prendre votre décision, vérifiez notamment le prix proposé, les modalités de financement et les conditions indiquées.",
+      ],
+    });
+  });
+
+  it("follows the gap, the financing and its proof, the conditions", () => {
+    const above = buildOfferSynthesis({
+      ...input,
+      offer: {
+        ...offer,
+        priceCents: 35_500_000,
+        financingMode: "no_loan",
+        conditionPriorSale: false,
+      },
+      financingStatus: "declared",
+      financingCheckedAt: null,
+    });
+    expect(above.analysis).toEqual([
+      `L'offre est supérieure de 1,4${NNBSP}% au prix demandé.`,
+      "L'acquéreur déclare financer l'acquisition sans recours à un prêt immobilier. Aucun justificatif de financement n'a été fourni.",
+      "Avant de prendre votre décision, vérifiez notamment le prix proposé, les modalités de financement et les conditions indiquées.",
+    ]);
+    expect(above.financingDeclared).toEqual(["Sans recours à un prêt immobilier"]);
+    expect(above.financingLines).toEqual(["Aucun document fourni"]);
+    expect(above.conditions).toEqual([]);
+
+    const equal = buildOfferSynthesis({
+      ...input,
+      offer: {
+        ...offer,
+        priceCents: 35_000_000,
+        downPaymentCents: 0,
+        conditionAuthorization: true,
+        conditionOther: true,
+      },
+      financingStatus: "document_provided",
+      financingCheckedAt: null,
+    });
+    expect(equal.priceGapLabel).toBeNull();
+    expect(equal.analysis.slice(0, 3)).toEqual([
+      "L'offre est égale au prix demandé.",
+      "L'acquéreur déclare financer l'acquisition avec un prêt, sans apport. Un justificatif de financement a été fourni ; Leenkey ne l'a pas encore contrôlé.",
+      "L'offre mentionne également une vente préalable d'un autre bien, l'obtention d'une autorisation particulière et une autre situation à préciser.",
+    ]);
+    expect(equal.financingLines).toEqual(["Document fourni"]);
+  });
+
+  it("reads a proof checked since the sending as checked, a tiny gap in euros", () => {
+    // Sent with « Justificatif fourni », checked by the team an hour later.
+    const later = buildOfferSynthesis({
+      ...input,
+      financingStatus: "document_provided",
+      financingCheckedAt: "2026-11-13T15:00:00Z",
+    });
+    expect(later.financingStatus).toBe("document_checked");
+    expect(later.financingLines).toEqual(["Document fourni", "Contrôlé par Leenkey le 13/11/2026"]);
+    expect(later.analysis[1]).toContain("fourni et contrôlé par Leenkey");
+    expect(JSON.stringify(later)).not.toContain("pas encore contrôlé");
+
+    const close = buildOfferSynthesis({
+      ...input,
+      offer: { ...offer, priceCents: 34_990_000 },
+    });
+    expect(close.analysis[0]).toBe(`L'offre est inférieure de 100${NNBSP}€ au prix demandé.`);
+  });
+
+  it("never advises to accept or to decline, never says « validé »", () => {
+    for (const status of [
+      "not_provided",
+      "declared",
+      "document_provided",
+      "document_checked",
+    ] as const) {
+      const words = JSON.stringify(buildOfferSynthesis({ ...input, financingStatus: status }));
+      expect(words).not.toMatch(
+        /validé|solvable|peut financer|nous vous conseillons|acceptez|refusez/i,
+      );
+    }
+  });
+
+  it("counts the time left to answer", () => {
+    const until = "2026-11-18T13:00:00Z";
+    expect(remainingLabel(until, new Date("2026-11-14T06:00:00Z"))).toBe(
+      "4 jours et 7 heures restantes",
+    );
+    expect(remainingLabel(until, new Date("2026-11-17T13:00:00Z"))).toBe("1 jour restant");
+    expect(remainingLabel(until, new Date("2026-11-16T13:00:00Z"))).toBe("2 jours restants");
+    expect(remainingLabel(until, new Date("2026-11-18T11:30:00Z"))).toBe("1 heure restante");
+    expect(remainingLabel(until, new Date("2026-11-18T08:10:00Z"))).toBe("4 heures restantes");
+    expect(remainingLabel(until, new Date("2026-11-18T12:40:00Z"))).toBe(
+      "Moins d'une heure restante",
+    );
+    expect(remainingLabel(until, new Date("2026-11-18T13:00:00Z"))).toBeNull();
+  });
+
+  it("takes an answer only with the box of the acceptance ticked", () => {
+    const answer = { offerId: ROW.id, accept: true, confirmedRead: true, message: "" };
+    expect(offerAnswerSchema.safeParse(answer).success).toBe(true);
+    expect(offerAnswerSchema.safeParse({ ...answer, confirmedRead: false }).success).toBe(false);
+    expect(
+      offerAnswerSchema.safeParse({ ...answer, accept: false, confirmedRead: false }).success,
+    ).toBe(true);
+    expect(offerAnswerSchema.safeParse({ ...answer, message: "a".repeat(1001) }).success).toBe(
+      false,
+    );
+    expect(offerAnswerSchema.safeParse({ ...answer, offerId: "x" }).success).toBe(false);
   });
 });
 

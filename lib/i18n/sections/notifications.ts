@@ -122,6 +122,24 @@ export const frNotifications = {
       detail: (title: string) =>
         `Nous avons relu «\u00A0${title}\u00A0» : voyez ce qu'il faut corriger.`,
     },
+    // L2-04a: an offer received by its seller, read and answered for its buyer.
+    offerReceived: {
+      title: (firstName: string | null) =>
+        firstName
+          ? `${firstName} vous a fait une offre d'achat`
+          : "Vous avez reçu une offre d'achat",
+      detail: (price: string | null, title: string | null) =>
+        [price, title ? `«\u00A0${title}\u00A0»` : null].filter(Boolean).join(" · ") || null,
+    },
+    offerViewed: {
+      title: "Le vendeur a consulté votre offre",
+      detail: (title: string) => `«\u00A0${title}\u00A0»`,
+    },
+    offerAnswered: {
+      accepted: "Votre offre d'achat a été acceptée",
+      declined: "Votre offre d'achat a été refusée",
+      detail: (title: string) => `«\u00A0${title}\u00A0»`,
+    },
     // L1-23: the sale reaches a step (SPEC-V2 section 9).
     stepAdvanced: {
       title: (step: string | null) =>
@@ -136,10 +154,14 @@ export const frNotifications = {
     title: "Notifications",
     lead: "Choisissez les emails que vous recevez. Dans l'application, la cloche vous prévient de tout.",
     legend: "Emails",
-    // The offers (L2) and the alerts (L3) add theirs with their emails.
+    // The alerts (L3) add theirs with their emails.
     messages: {
       label: "Nouveaux messages",
       hint: "Quand un acquéreur ou un vendeur vous écrit : au plus un email toutes les 15\u00A0minutes par conversation, aucun si vous l'avez déjà lue.",
+    },
+    offers: {
+      label: "Offres d'achat",
+      hint: "Quand vous recevez une offre sur votre bien, ou quand le vendeur répond à la vôtre.",
     },
     always:
       "Les emails sur votre annonce (relecture, mise en ligne, corrections) partent toujours.",

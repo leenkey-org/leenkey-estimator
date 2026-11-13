@@ -220,8 +220,11 @@ update buyer_profiles set project = 'residence_principale', budget_max_cents = 3
 select is((select count(*) from buyer_summary_for_seller(:'prop_a'))::int, 1, 'seller_a: one buyer in contact');
 select is((select financing_status from buyer_summary_for_seller(:'prop_a')), 'declared'::financing_status,
           'seller_a: sees the financing status');
-select ok(has_buyer_relation(:'prop_a', tests.uid('buyer_c')), 'buyer_c has a relation with prop_a');
-select ok(not has_buyer_relation(:'prop_a', tests.uid('buyer_d')), 'buyer_d has no relation with prop_a');
+-- has_buyer_relation is no longer asked directly (L2-04a): the summary reads it.
+select ok(exists (select 1 from buyer_summary_for_seller(:'prop_a') where buyer_id = tests.uid('buyer_c')),
+          'buyer_c has a relation with prop_a');
+select ok(not exists (select 1 from buyer_summary_for_seller(:'prop_a') where buyer_id = tests.uid('buyer_d')),
+          'buyer_d has no relation with prop_a');
 select is((select count(*) from buyer_profiles where profile_id = tests.uid('buyer_c'))::int, 0,
           'seller_a: never reads the buyer profile itself (amounts)');
 

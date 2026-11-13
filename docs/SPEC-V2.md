@@ -1449,6 +1449,7 @@ Fonction unique `notify(profileId, type, payload)` dans `core/notifications/`. E
 | `advisor.message` | oui | oui | Même regroupement que `message.new` |
 | `advisor.message_from_client` (admin) | oui | oui | — |
 | `offer.withdrawn` | oui | oui | — |
+| `offer.viewed` | oui | non | Ajouté en L2-04a : à l'acquéreur, à la première ouverture de son offre par le vendeur (SPEC 13) |
 | `listing.revised` (admin) | oui | non | — |
 | `account.created` (admin) | oui | oui | À la confirmation de l'adresse email ; emails regroupés sur 20 minutes (`DECISIONS.md` 2026-11-08) |
 | `plan.activated` | oui | oui | — |
@@ -1743,7 +1744,7 @@ Envoi (fonction `offer_submit`, transaction unique) → statut `submitted`, `sub
 
 ### Synthèse pour le vendeur
 
-Stockée dans `offers.synthesis`. **Tout est calculé en code à partir de gabarits**, y compris le paragraphe « Analyse Leenkey » : pas d'appel au modèle pour la synthèse vendeur en V2 (plus fiable, sans risque d'invention, sans coût). En V2, le vendeur peut poser des questions sur l'offre à l'assistant (outil `summarize_offer`, `MODELS.fast`), qui répond à partir des seules données de l'offre, sans recommander d'accepter ou de refuser, en reprenant le libellé exact du statut de financement. Le bouton dédié « Expliquer cette offre » est reporté en V3 (`BACKLOG-V3.md`).
+Depuis L2-04a (`DECISIONS.md` 2026-11-13) : calculée à chaque lecture depuis l'offre figée (`leenkey/offers/synthesis.ts`), `offers.synthesis` reste vide (avant : « Stockée dans `offers.synthesis` »). **Tout est calculé en code à partir de gabarits**, y compris le paragraphe « Analyse Leenkey » : pas d'appel au modèle pour la synthèse vendeur en V2 (plus fiable, sans risque d'invention, sans coût). En V2, le vendeur peut poser des questions sur l'offre à l'assistant (outil `summarize_offer`, `MODELS.fast`), qui répond à partir des seules données de l'offre, sans recommander d'accepter ou de refuser, en reprenant le libellé exact du statut de financement. Le bouton dédié « Expliquer cette offre » est reporté en V3 (`BACKLOG-V3.md`).
 
 ```json
 {

@@ -18,7 +18,7 @@ const fr = { listing: frListing, properties: frProperties } as const;
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
 
-export type SheetTab = "infos" | "photos" | "annonce" | "etapes";
+export type SheetTab = "infos" | "photos" | "annonce" | "etapes" | "offres";
 
 /** Address of a tab of the page of a property; Infos is the page itself. */
 export function sheetHref(propertyId: string, tab: SheetTab = "infos"): string {
@@ -34,6 +34,8 @@ export function sheetTabs(propertyId: string): { href: string; label: string }[]
     { href: sheetHref(propertyId, "annonce"), label: t.listing },
     // All the steps of the sale (L1-24, « Toutes les étapes » of « Ma vente »).
     { href: sheetHref(propertyId, "etapes"), label: t.steps },
+    // The offers received on the property, with their history (L2-04a).
+    { href: sheetHref(propertyId, "offres"), label: t.offers },
   ];
 }
 

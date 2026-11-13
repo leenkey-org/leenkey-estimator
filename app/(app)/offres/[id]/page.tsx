@@ -4,20 +4,36 @@ import { notFound, redirect } from "next/navigation";
 import { Download } from "lucide-react";
 import { SpacePage } from "../../_components/space-page";
 import { Button } from "@/components/shared/button";
+import { InfoNote } from "@/components/shared/info-note";
 import { InlineAlert } from "@/components/shared/inline-alert";
-import { requireProfile } from "@/core/auth/session";
+import { requireProfile, type SessionProfile } from "@/core/auth/session";
 import { isUuid } from "@/leenkey/messaging/queries";
 import { OfferDocumentView } from "@/leenkey/offers/components/offer-document-view";
+import { OfferHistory } from "@/leenkey/offers/components/offer-history";
+import { OfferReceivedCard } from "@/leenkey/offers/components/offer-received-card";
+import {
+  MarkOfferViewed,
+  OfferSellerActions,
+} from "@/leenkey/offers/components/offer-seller-actions";
 import { OfferStatusBadge } from "@/leenkey/offers/components/offer-status-badge";
 import { buildOfferDocument, formatNumericDateTime } from "@/leenkey/offers/document";
 import { offerFormPath, offerPath, offerPdfPath } from "@/leenkey/offers/paths";
-import { buyerOffer } from "@/leenkey/offers/queries";
+import { buyerOffer, type BuyerOffer } from "@/leenkey/offers/queries";
+import {
+  buyerConversationHref,
+  offerEvents,
+  sellerOffer,
+  type OfferEvent,
+  type SellerOffer,
+} from "@/leenkey/offers/seller";
+import { sheetHref } from "@/leenkey/properties/sheet";
 import { frOffer } from "@/lib/i18n/sections/offer";
 
 // The texts this module shows (lib/i18n/sections, P-06).
 const fr = { offer: frOffer } as const;
 
 const t = fr.offer.page;
+const s = fr.offer.seller;
 
 export const metadata: Metadata = { title: t.metaTitle };
 
@@ -26,38 +42,56 @@ type Props = {
   searchParams: Promise<{ envoyee?: string | string[] }>;
 };
 
-// L2-03: the page of an offer for its buyer (SPEC-V2 13): its status, its
-// document as it was sent, its PDF. A draft goes back to the form. The
-// follow-up (withdrawal, new offer) and the page of the seller come with
-// L2-04; a seller gets a 404 here until then (RLS of `offers`).
+// The page of an offer (SPEC-V2 13). For its buyer (L2-03): its status, its
+// document as it was sent, its PDF; a draft goes back to the form. For the
+// seller of its listing (L2-04a): the summary and the « Analyse Leenkey »,
+// the three answers while it waits, the document with the personal data of
+// the buyers hidden until acceptance, its journal. The first opening by the
+// seller marks it « Consultée ». Anyone else: a 404.
 export default async function OfferPage({ params, searchParams }: Props) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   if (!isUuid(id)) notFound();
   const profile = await requireProfile();
-  const found = await buyerOffer(profile.id, id);
-  if (found.ok && (!found.data || !found.data.isBuyer)) notFound();
-  if (!found.ok || !found.data) {
-    return (
-      <SpacePage title={t.title} roles={profile.roles} profileId={profile.id}>
-        <InlineAlert
-          tone="danger"
-          className="mt-6"
-          action={
-            <Link
-              href={offerPath(id)}
-              className="font-semibold underline underline-offset-2 hover:no-underline"
-            >
-              {fr.offer.blocked.unavailable.action}
-            </Link>
-          }
-        >
-          {t.loadError}
-        </InlineAlert>
-      </SpacePage>
-    );
+  const [asBuyer, asSeller] = await Promise.all([buyerOffer(profile.id, id), sellerOffer(id)]);
+  if (asBuyer.ok && asBuyer.data?.isBuyer) {
+    return <BuyerView profile={profile} found={asBuyer.data} sent={query.envoyee === "1"} />;
   }
-  const { offer, snapshot } = found.data;
+  if (asSeller.ok && asSeller.data) {
+    return <SellerView profile={profile} item={asSeller.data} />;
+  }
+  if (asBuyer.ok && asSeller.ok) notFound();
+  return (
+    <SpacePage title={t.title} roles={profile.roles} profileId={profile.id}>
+      <InlineAlert
+        tone="danger"
+        className="mt-6"
+        action={
+          <Link
+            href={offerPath(id)}
+            className="font-semibold underline underline-offset-2 hover:no-underline"
+          >
+            {fr.offer.blocked.unavailable.action}
+          </Link>
+        }
+      >
+        {t.loadError}
+      </InlineAlert>
+    </SpacePage>
+  );
+}
+
+async function BuyerView({
+  profile,
+  found,
+  sent,
+}: {
+  profile: SessionProfile;
+  found: BuyerOffer;
+  sent: boolean;
+}) {
+  const { offer, snapshot } = found;
   if (offer.status === "draft" || !snapshot) redirect(offerFormPath(offer.listingId));
+  const events = await offerEvents([offer.id]);
 
   // Past its validity an offer is expired, even before the cron writes it.
   const expired =
@@ -69,9 +103,7 @@ export default async function OfferPage({ params, searchParams }: Props) {
   return (
     <SpacePage title={t.title} roles={profile.roles} profileId={profile.id}>
       <div className="mt-4 flex flex-col gap-5">
-        {query.envoyee === "1" && !expired ? (
-          <InlineAlert tone="success">{t.sent}</InlineAlert>
-        ) : null}
+        {sent && !expired ? <InlineAlert tone="success">{t.sent}</InlineAlert> : null}
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2.5">
             <p className="text-lk-body font-semibold text-lk-ink tabular">
@@ -111,17 +143,104 @@ export default async function OfferPage({ params, searchParams }: Props) {
             {t.superseded}
           </InlineAlert>
         ) : null}
-        <div className="flex flex-wrap gap-2.5">
-          <Button asChild variant="secondary">
-            {/* A file, not a page: no prefetch, a new tab. */}
-            <a href={offerPdfPath(offer.id)} target="_blank" rel="noopener">
-              <Download aria-hidden="true" />
-              {t.pdf}
-            </a>
-          </Button>
-        </div>
+        <PdfButton offerId={offer.id} label={t.pdf} />
         <OfferDocumentView document={buildOfferDocument(offer, snapshot)} />
+        {/* Its journal: what the seller did with it, and their message. */}
+        {events.ok && events.data[offer.id] ? <History events={events.data[offer.id]} /> : null}
       </div>
     </SpacePage>
+  );
+}
+
+async function SellerView({ profile, item }: { profile: SessionProfile; item: SellerOffer }) {
+  const { offer, property } = item;
+  const waiting = offer.status === "submitted" || offer.status === "viewed";
+  const [events, discussHref] = await Promise.all([
+    offerEvents([offer.id]),
+    buyerConversationHref(offer.listingId, item.buyerId),
+  ]);
+  const at = (value: string | null) => (value ? formatNumericDateTime(value) : "");
+  const state =
+    offer.status === "accepted"
+      ? { tone: "success" as const, text: s.state.accepted(at(item.answeredAt)) }
+      : offer.status === "declined"
+        ? { tone: "info" as const, text: s.state.declined(at(item.answeredAt)) }
+        : offer.status === "withdrawn"
+          ? { tone: "info" as const, text: s.state.withdrawn(at(item.withdrawnAt)) }
+          : offer.status === "expired"
+            ? {
+                tone: "warning" as const,
+                text: s.state.expired(at(offer.expiredAt ?? offer.validityUntil)),
+              }
+            : offer.status === "superseded"
+              ? { tone: "info" as const, text: s.state.superseded }
+              : null;
+  return (
+    <SpacePage
+      title={s.title}
+      roles={profile.roles}
+      profileId={profile.id}
+      back={{ href: sheetHref(item.propertyId, "offres"), label: s.tab.title }}
+    >
+      {/* Sent and never opened: this opening is the first one. */}
+      {offer.status === "submitted" ? <MarkOfferViewed offerId={offer.id} /> : null}
+      <div className="mt-4 flex flex-col gap-5">
+        {state ? (
+          <InlineAlert tone={state.tone} live={false}>
+            {state.text}
+          </InlineAlert>
+        ) : null}
+        <OfferReceivedCard
+          item={item}
+          now={new Date()}
+          title={`${fr.offer.reference(offer.reference)} · ${t.version(offer.version)}`}
+          headingAs="h2"
+          actions={
+            waiting ? (
+              <OfferSellerActions
+                offerId={offer.id}
+                reference={offer.reference}
+                discussHref={discussHref}
+              />
+            ) : null
+          }
+        />
+        {offer.status === "accepted" ? (
+          // The PDF carries the contact details of the buyers: once accepted only.
+          <PdfButton offerId={offer.id} label={s.pdf} />
+        ) : waiting ? (
+          <InfoNote>
+            <p>{s.masked}</p>
+          </InfoNote>
+        ) : null}
+        <OfferDocumentView document={buildOfferDocument(offer, property)} />
+        {events.ok && events.data[offer.id] ? <History events={events.data[offer.id]} /> : null}
+      </div>
+    </SpacePage>
+  );
+}
+
+function History({ events }: { events: readonly OfferEvent[] }) {
+  return (
+    <section aria-labelledby="historique" className="flex flex-col gap-3">
+      <h2 id="historique" className="text-lk-h3 font-bold text-wide text-lk-ink">
+        {s.history.title}
+      </h2>
+      <OfferHistory events={events} />
+    </section>
+  );
+}
+
+function PdfButton({ offerId, label }: { offerId: string; label: string }) {
+  return (
+    <div className="flex flex-wrap gap-2.5">
+      <Button asChild variant="secondary">
+        {/* A file, not a page: no prefetch, a new tab. */}
+        <a href={offerPdfPath(offerId)} target="_blank" rel="noopener">
+          <Download aria-hidden="true" />
+          {label}
+        </a>
+      </Button>
+    </div>
   );
 }

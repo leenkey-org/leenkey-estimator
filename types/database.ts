@@ -1832,6 +1832,10 @@ export type Database = {
           declarations: Json | null
           down_payment_cents: number | null
           expired_at: string | null
+          financing_checked_at: string | null
+          financing_document_type:
+            | Database["public"]["Enums"]["financing_document_type"]
+            | null
           financing_mode: Database["public"]["Enums"]["financing_mode"] | null
           financing_progress:
             | Database["public"]["Enums"]["financing_progress"]
@@ -1851,6 +1855,7 @@ export type Database = {
           precontract_signed_at: string | null
           price_cents: number | null
           price_in_words: string | null
+          property_id: string | null
           property_snapshot: Json | null
           reference: string | null
           sci_details: Json | null
@@ -1884,6 +1889,8 @@ export type Database = {
           declarations?: Json | null
           down_payment_cents?: number | null
           expired_at?: never
+          financing_checked_at?: never
+          financing_document_type?: never
           financing_mode?: Database["public"]["Enums"]["financing_mode"] | null
           financing_progress?:
             | Database["public"]["Enums"]["financing_progress"]
@@ -1903,6 +1910,7 @@ export type Database = {
           precontract_signed_at?: string | null
           price_cents?: number | null
           price_in_words?: string | null
+          property_id?: never
           property_snapshot?: Json | null
           reference?: string | null
           sci_details?: never
@@ -1936,6 +1944,8 @@ export type Database = {
           declarations?: Json | null
           down_payment_cents?: number | null
           expired_at?: never
+          financing_checked_at?: never
+          financing_document_type?: never
           financing_mode?: Database["public"]["Enums"]["financing_mode"] | null
           financing_progress?:
             | Database["public"]["Enums"]["financing_progress"]
@@ -1955,6 +1965,7 @@ export type Database = {
           precontract_signed_at?: string | null
           price_cents?: number | null
           price_in_words?: string | null
+          property_id?: never
           property_snapshot?: Json | null
           reference?: string | null
           sci_details?: never
@@ -2824,6 +2835,10 @@ export type Database = {
         Args: { p_n: number }
         Returns: string
       }
+      offer_amount_label: {
+        Args: { p_cents: number }
+        Returns: string
+      }
       offer_answer: {
         Args: {
           p_accept: boolean
@@ -2919,6 +2934,15 @@ export type Database = {
       offer_mark_viewed: {
         Args: { p_offer_id: string }
         Returns: Database["public"]["Enums"]["offer_status"]
+      }
+      offer_notice: {
+        Args: {
+          p_type: string
+          p_offer: Database["public"]["Tables"]["offers"]["Row"]
+          p_body: string
+          p_sender: string
+        }
+        Returns: undefined
       }
       offer_record_precontract: {
         Args: {

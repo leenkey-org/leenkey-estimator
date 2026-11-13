@@ -14,8 +14,8 @@ const fr = { notifications: frNotifications } as const;
 const t = fr.notifications.preferences;
 
 /**
- * The email preferences of the account (L1-22): the new messages for now,
- * the offers and the alerts with their emails. The emails of the listing
+ * The email preferences of the account (L1-22): the new messages, the offers
+ * (L2-04a); the alerts come with their emails. The emails of the listing
  * always leave (a line says so to a seller).
  */
 export function NotificationPreferencesForm({
@@ -27,6 +27,7 @@ export function NotificationPreferencesForm({
   seller: boolean;
 }) {
   const [messages, setMessages] = useState(initial.email_messages);
+  const [offers, setOffers] = useState(initial.email_offers);
   const [result, setResult] = useState<"saved" | "error" | null>(null);
   const [saving, startSaving] = useTransition();
 
@@ -37,9 +38,10 @@ export function NotificationPreferencesForm({
         event.preventDefault();
         setResult(null);
         startSaving(async () => {
-          const saved = await updateNotificationPreferences({ email_messages: messages }).catch(
-            () => null,
-          );
+          const saved = await updateNotificationPreferences({
+            email_messages: messages,
+            email_offers: offers,
+          }).catch(() => null);
           setResult(saved?.ok ? "saved" : "error");
         });
       }}
@@ -58,6 +60,20 @@ export function NotificationPreferencesForm({
               <span className="flex flex-col gap-0.5">
                 <span className="font-semibold text-lk-ink">{t.messages.label}</span>
                 <span>{t.messages.hint}</span>
+              </span>
+            }
+          />
+          <Checkbox
+            name="email_offers"
+            checked={offers}
+            onChange={(event) => {
+              setOffers(event.target.checked);
+              setResult(null);
+            }}
+            label={
+              <span className="flex flex-col gap-0.5">
+                <span className="font-semibold text-lk-ink">{t.offers.label}</span>
+                <span>{t.offers.hint}</span>
               </span>
             }
           />

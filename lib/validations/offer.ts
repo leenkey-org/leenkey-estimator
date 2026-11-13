@@ -255,6 +255,21 @@ export const offerDeclarationsSchema = z.object({
 });
 export type OfferDeclarationsInput = z.infer<typeof offerDeclarationsSchema>;
 
+export const OFFER_ANSWER_MESSAGE_MAX = 1000;
+
+/**
+ * The answer of a seller to an offer (L2-04a): accepted only with the box of
+ * the acceptance screen ticked; a message is optional.
+ */
+export const offerAnswerSchema = z
+  .object({
+    offerId: z.string().uuid(),
+    accept: z.boolean(),
+    confirmedRead: z.boolean(),
+    message: z.string().trim().max(OFFER_ANSWER_MESSAGE_MAX),
+  })
+  .refine((value) => !value.accept || value.confirmedRead, { path: ["confirmedRead"] });
+
 /**
  * An amount in whole euros as typed: « 338 000 », « 338000 », and « 338.000 »
  * or « 338,000 » read as thousands (never as 338 euros). Null when empty, NaN

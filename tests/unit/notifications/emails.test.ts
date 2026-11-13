@@ -418,6 +418,97 @@ describe("« Rétractation à rembourser » and « Votre formule se termine » (
   });
 });
 
+describe("emails of an offer (L2-04a)", () => {
+  const offer = {
+    entity_id: "o1",
+    offer_id: "o1",
+    reference: "LK-2026-00012",
+    title: "Maison familiale 5 pièces",
+    price_cents: 33_800_000,
+  };
+
+  it("tells the seller the amount, the gap and the financing status, never a contact detail", async () => {
+    const { renderNotificationEmail, emailPolicy } =
+      await import("@/leenkey/notifications/email-catalog");
+    expect(emailPolicy("offer.received")).toEqual({
+      audience: "recipient",
+      preference: "email_offers",
+      throttleMinutes: 0,
+    });
+    const email = await renderNotificationEmail(
+      planned([
+        queued({
+          type: "offer.received",
+          groupKey: "offer:o1",
+          link: "/offres/o1",
+          data: {
+            ...offer,
+            asking_price_cents: 35_000_000,
+            financing_status: "document_checked",
+            buyer_first_name: "Chloé",
+            validity_until: "2026-11-18T13:00:00Z",
+          },
+        }),
+      ]),
+    );
+    const text = (email?.text ?? "").replace(/[\u00A0\u202F]/g, " ");
+    expect(email?.subject.replace(/[\u00A0\u202F]/g, " ")).toBe(
+      "Offre d'achat reçue : 338 000 € · LK-2026-00012",
+    );
+    expect(text).toContain("Chloé vous a fait une offre d'achat pour votre bien");
+    expect(text).toContain("Prix demandé : 350 000 €");
+    expect(text).toContain("338 000 €");
+    expect(text).toContain("\u221212 000 € · \u22123,4 %");
+    expect(text).toContain("Financement : Justificatif vérifié");
+    expect(text).toContain("valable jusqu'au 18/11/2026 à 14:00");
+    expect(text).toContain("/offres/o1");
+    expect(text).not.toMatch(/validé|\bon\b|@example|\.pdf/i);
+  });
+
+  it("tells the buyer the answer of the seller, with its message", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const declined = await renderNotificationEmail(
+      planned([
+        queued({
+          type: "offer.answered",
+          groupKey: "offer:o1",
+          link: "/offres/o1",
+          data: { ...offer, accepted: false, message: "Trop éloigné du prix demandé." },
+        }),
+      ]),
+    );
+    expect(declined?.subject).toBe("Votre offre d'achat a été refusée · LK-2026-00012");
+    expect(declined?.text).toContain("Le vendeur a refusé votre offre");
+    expect(declined?.text).toContain("Trop éloigné du prix demandé.");
+    expect(declined?.text).toContain("vous avez fait une offre d'achat sur Leenkey");
+
+    const accepted = await renderNotificationEmail(
+      planned([
+        queued({
+          type: "offer.answered",
+          groupKey: "offer:o1",
+          link: "/offres/o1",
+          data: { ...offer, accepted: true },
+        }),
+      ]),
+    );
+    expect(accepted?.subject).toBe("Votre offre d'achat a été acceptée · LK-2026-00012");
+    expect(accepted?.text).toContain("Le vendeur a accepté votre offre");
+    expect(accepted?.text).toContain("le ou les notaires");
+    expect(accepted?.text).not.toMatch(/Message du vendeur|\bon\b/i);
+  });
+
+  it("sends nothing without the facts of the offer", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    expect(
+      await renderNotificationEmail(planned([queued({ type: "offer.received", data: {} })])),
+    ).toBeNull();
+    expect(
+      await renderNotificationEmail(planned([queued({ type: "offer.viewed", data: offer })])),
+    ).toBeNull();
+  });
+});
+
 describe("sendNotificationEmails", () => {
   type Update = { values: Record<string, unknown>; ids: string[]; filters: string[] };
 

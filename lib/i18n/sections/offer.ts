@@ -285,6 +285,156 @@ export const frOffer = {
 
   listing: { action: "Faire une offre" },
 
+  // The summary of an offer for its seller (SPEC-V2 13, « Synthèse pour le
+  // vendeur »): built from templates, never by a model; never an advice to
+  // accept or to decline. On the screen only, never in the document.
+  synthesis: {
+    asking: "Prix demandé",
+    offer: "Offre reçue",
+    gap: "Écart",
+    noGap: "Aucun",
+    financing: "Financement déclaré",
+    downPayment: (amount: string) => `Apport : ${amount}`,
+    loan: (amount: string) => `Prêt envisagé : ${amount}`,
+    noLoan: "Sans recours à un prêt immobilier",
+    proof: "Justificatif financement",
+    proofProvided: "Document fourni",
+    proofChecked: (date: string) => `Contrôlé par Leenkey le ${date}`,
+    proofNone: "Aucun document fourni",
+    analysis: "Analyse Leenkey",
+    // The gap in percent, or in euros when it is under 0,1 %.
+    below: (gap: string) => `L'offre est inférieure de ${gap} au prix demandé.`,
+    above: (gap: string) => `L'offre est supérieure de ${gap} au prix demandé.`,
+    equal: "L'offre est égale au prix demandé.",
+    withLoan: (downPayment: string) =>
+      `L'acquéreur déclare financer l'acquisition avec ${downPayment} d'apport et un prêt.`,
+    withLoanOnly: "L'acquéreur déclare financer l'acquisition avec un prêt, sans apport.",
+    withoutLoan: "L'acquéreur déclare financer l'acquisition sans recours à un prêt immobilier.",
+    proofCheckedSentence: "Un justificatif de financement a été fourni et contrôlé par Leenkey.",
+    proofProvidedSentence:
+      "Un justificatif de financement a été fourni ; Leenkey ne l'a pas encore contrôlé.",
+    proofNoneSentence: "Aucun justificatif de financement n'a été fourni.",
+    conditions: (list: string) => `L'offre mentionne également ${list}.`,
+    conditionNames: {
+      priorSale: "une vente préalable d'un autre bien",
+      authorization: "l'obtention d'une autorisation particulière",
+      other: "une autre situation à préciser",
+    },
+    and: "et",
+    last: "Avant de prendre votre décision, vérifiez notamment le prix proposé, les modalités de financement et les conditions indiquées.",
+  },
+
+  // The offer as its seller reads it and answers it (SPEC-V2 13, « Côté
+  // vendeur », « Acceptation par le vendeur »).
+  seller: {
+    metaTitle: "Offre reçue",
+    title: "Offre reçue",
+    received: "Nouvelle offre reçue",
+    from: (name: string, city: string) => (city ? `${name}, ${city}` : name),
+    remaining: {
+      days: (days: number) => (days > 1 ? `${days} jours` : "1 jour"),
+      hours: (hours: number) => (hours > 1 ? `${hours} heures` : "1 heure"),
+      // « 2 jours restants », « 1 heure restante », « 4 jours et 7 heures restantes ».
+      daysLeft: (duration: string, plural: boolean) =>
+        `${duration} ${plural ? "restants" : "restant"}`,
+      hoursLeft: (duration: string, plural: boolean) =>
+        `${duration} ${plural ? "restantes" : "restante"}`,
+      and: "et",
+      lessThanAnHour: "Moins d'une heure restante",
+    },
+    expiredOn: (date: string) => `Offre expirée le ${date}`,
+    masked:
+      "Avant acceptation, vous voyez le nom, le prénom et la ville de l'acquéreur. Ses coordonnées complètes vous sont communiquées une fois l'offre acceptée.",
+    accept: "Accepter l'offre",
+    decline: "Refuser l'offre",
+    discuss: "Discuter avec l'acquéreur",
+    full: "Voir l'offre complète",
+    pdf: "Télécharger le PDF",
+    state: {
+      accepted: (date: string) => `Vous avez accepté cette offre le ${date}.`,
+      declined: (date: string) => `Vous avez refusé cette offre le ${date}.`,
+      withdrawn: (date: string) => `L'acquéreur a retiré cette offre le ${date}.`,
+      expired: (date: string) =>
+        `Cette offre a expiré le ${date} : vous ne pouvez plus l'accepter.`,
+      superseded: "L'acquéreur a remplacé cette offre par une nouvelle.",
+    },
+    declineDialog: {
+      title: "Refuser cette offre ?",
+      description: "L'acquéreur sera informé de votre refus. Vous pouvez lui laisser un message.",
+      message: "Message à l'acquéreur",
+      count: (count: string, max: string) => `${count} / ${max}`,
+      confirm: "Refuser l'offre",
+      back: "Retour",
+      close: "Fermer",
+      cancel: "Annuler",
+    },
+    acceptScreen: {
+      metaTitle: "Accepter l'offre",
+      header: "Accepter l'offre",
+      title: "Vous êtes sur le point d'accepter cette offre",
+      price: "Prix proposé",
+      buyer: "Acquéreur",
+      financing: "Financement",
+      financingLabels: {
+        loanAndDownPayment: "prêt + apport",
+        loan: "prêt",
+        noLoan: "sans prêt",
+      },
+      validity: "Validité",
+      until: (date: string) => `jusqu'au ${date}`,
+      warning: [
+        "L'acceptation d'une offre d'achat peut produire des conséquences juridiques. Prenez connaissance de l'intégralité de l'offre avant de confirmer.",
+        "En cas de doute, contactez votre notaire ou un conseiller Leenkey avant de poursuivre.",
+      ],
+      advisor: "Écrire à mon conseiller Leenkey",
+      plans: "Voir les formules avec un conseiller Leenkey",
+      confirmRead: "J'ai lu l'intégralité de l'offre et souhaite confirmer mon acceptation.",
+      confirm: "Confirmer mon acceptation",
+      back: "Revenir à l'offre",
+    },
+    errors: {
+      generic: "Votre réponse n'a pas pu être enregistrée. Réessayez.",
+      signedOut: "Votre session a expiré. Reconnectez-vous pour continuer.",
+      expired: "Cette offre a expiré : elle ne peut plus être acceptée ni refusée.",
+      answered:
+        "Cette offre n'attend plus de réponse : elle a été retirée, remplacée ou a déjà reçu la vôtre.",
+      offSale: "Votre annonce n'est plus en vente : cette offre ne peut pas être acceptée.",
+      tooLong: "Votre message dépasse 1 000 caractères.",
+    },
+    history: {
+      title: "Historique",
+      events: {
+        created: "Brouillon créé",
+        submitted: "Offre envoyée",
+        viewed: "Offre consultée par le vendeur",
+        accepted: "Offre acceptée par le vendeur",
+        declined: "Offre refusée par le vendeur",
+        withdrawn: "Offre retirée par l'acquéreur",
+        expired: "Offre expirée",
+        superseded: "Offre remplacée par une nouvelle",
+        pdf_generated: "Document généré",
+        precontract_recorded: "Avant-contrat enregistré",
+      },
+      message: (text: string) => `Message du vendeur : « ${text} »`,
+    },
+    tab: {
+      metaTitle: "Offres",
+      title: "Offres reçues",
+      empty:
+        "Aucune offre reçue pour ce bien. Dès qu'un acquéreur en envoie une, elle apparaît ici.",
+      version: (version: number) => `Version ${version}`,
+      receivedOn: (date: string) => `Reçue le ${date}`,
+      open: "Voir l'offre",
+      loadError: "Les offres de ce bien n'ont pas pu être chargées. Rechargez la page.",
+    },
+    dashboard: {
+      title: "Offres en attente de votre réponse",
+      loadError: "Vos offres reçues n'ont pas pu être chargées. Rechargez la page.",
+    },
+    /** The offer an action is about, for a screen reader (several cards on a page). */
+    about: (reference: string) => `offre ${reference}`,
+  },
+
   // The document of the offer, on the screen and in the PDF.
   document: {
     title: "OFFRE D'ACHAT LEENKEY",
