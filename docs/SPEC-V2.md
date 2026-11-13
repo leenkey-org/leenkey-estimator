@@ -448,12 +448,12 @@ create table listing_revisions (         -- historique simplifié : quels champs
   id uuid primary key default gen_random_uuid(),
   listing_id uuid not null references listings(id) on delete cascade,
   changed_by uuid not null references profiles(id),
-  field text not null check (field in ('price','description','title')),
+  field text not null check (field in ('price','description','title','photo')),  -- 'photo' : {id, caption} avant / après (L1-35)
   old_value jsonb,                      -- ancienne valeur brute (le prix en centimes, le texte tel quel)
   new_value jsonb,
   created_at timestamptz not null default now()
 );
--- Alimentée par trigger sur listings, uniquement quand status = 'published'. Pas de diff visuel : une liste chronologique « champ · ancienne → nouvelle valeur ».
+-- Alimentée par trigger sur listings et photos quand l'annonce est en ligne ou en pause (une annonce en pause revient en ligne sans relecture), pour une modification faite avec une session (le seed et les scripts ne sont pas suivis ; L1-35, DECISIONS.md 2026-11-13). Pas de diff visuel : une liste chronologique « champ · ancienne → nouvelle valeur ».
 create index on listing_revisions (listing_id, created_at desc);
 
 create table favorites (

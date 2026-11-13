@@ -130,6 +130,7 @@ describe("wording of the notifications (from type and data)", () => {
         "listing.pending",
         "listing.published",
         "listing.rejected",
+        "listing.revised",
         "message.new",
         "plan.activated",
         "plan.ending",
@@ -223,6 +224,30 @@ describe("wording of the notifications (from type and data)", () => {
         }),
       ).detail,
     ).toBe("Appartement 3 pièces · Épinay-sur-Orge · LK-0018");
+    // L1-35: a listing online changed by its seller, the fields and the price.
+    expect(
+      describeNotification(
+        view({
+          type: "listing.revised",
+          data: {
+            title: "Maison 5 pièces",
+            reference: "LK-0042",
+            fields: ["price", "photo", "unknown"],
+            old_price_cents: 42000000,
+            price_cents: 40500000,
+          },
+        }),
+      ),
+    ).toMatchObject({
+      title: t.listingRevised.title,
+      detail:
+        "Maison 5 pièces · LK-0042 · Modifié : prix, photos · Prix : 420\u202F000\u202F€ → 405\u202F000\u202F€",
+    });
+    expect(
+      describeNotification(
+        view({ type: "listing.revised", data: { reference: "LK-0042", fields: ["description"] } }),
+      ).detail,
+    ).toBe("LK-0042 · Modifié : description");
     expect(
       describeNotification(view({ type: "listing.published", data: { title: "Maison" } })),
     ).toMatchObject({ title: t.listingPublished.title, tone: "success" });

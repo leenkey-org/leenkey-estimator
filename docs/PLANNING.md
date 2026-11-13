@@ -92,6 +92,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
   - [x] **L1-30a** Tableau de bord (tuiles, « À traiter », compteurs de la barre latérale et de l'en-tête mobile), utilisateurs (liste, fiche, suspension du compte avec email) · PR : #70 · Testé en préprod : ☐
   - [x] **L1-30c** Dossiers (liste, fiche, statut, suivi, notes, tâches de Leenkey), signalements (liste, fiche, lecture tracée, avertir, clore, notification de l'équipe) · PR : #73 · Testé en préprod : ☐
   - [x] **L1-30d** Pré-analyse des annonces, `/admin/assistant`, « Rédiger avec l'assistant » du motif de refus, export CSV des annonces, « Synthèse avant appel » · PR : #93, #94 · Testé en préprod : ☐
+  - [ ] **L1-30e** « Modifier » une annonce depuis le back office (SPEC 17 : champs de l'annonce, tracé dans l'historique de L1-35) · PR : · Testé en préprod : ☐
 - [x] **L1-65** DPE exigé pour l'envoi en validation (exemption et motif, date, dépenses, année des prix), mentions réglementaires et Géorisques sur l'annonce (réponse de Cédric du 9 novembre) · PR : #87 · Testé en préprod : ☐
 - [x] **L1-66** DPE repris du registre de l'ADEME par son numéro, consommation et émissions, DPE tertiaire, règles et motifs d'exemption en base, contrôle ADEME dans le back office (réponses de Cédric du 10 novembre) · PR : #88 · Testé en préprod : ☐
 - [x] **L1-31** Passage à l’humain (`create_case`, fonction SQL `security definer`) côté vendeur : outil de l'assistant après confirmation, demande écrite à la limite du jour, notification et email de l'équipe · PR : #89 · Testé en préprod : ☐
@@ -106,7 +107,7 @@ Recette du lot 1 par Cédric du 16 au 20 novembre ; mise en ligne de la V2 la se
 
 - [ ] **L1-16b** Carte avancée : regroupement, recherche dans la zone (synchronisation liste/carte livrée avec L1-16) · PR : · Testé en préprod : ☐
 - [x] **L1-29** Suggestion de réponse en messagerie + rédaction de description · PR : #69 · Testé en préprod : ☐
-- [ ] **L1-35** `listing_revisions` simplifié : historique des champs prix, titre, description d’une annonce publiée, vendeur et admin · PR : · Testé en préprod : ☐
+- [x] **L1-35** `listing_revisions` simplifié : historique des champs prix, titre, description d’une annonce publiée, et des photos, vendeur et admin, notification `listing.revised` à l'équipe · PR : #98 · Testé en préprod : ☐
 - [ ] **L1-30b** Résumé du jour par l'assistant dans le back office · PR : · Testé en préprod : ☐
 
 Mise en ligne :

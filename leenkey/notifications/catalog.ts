@@ -6,6 +6,7 @@ import {
   Flag,
   Folder,
   MessageCircle,
+  PencilLine,
   Bell,
   UserPlus,
   type LucideIcon,
@@ -14,7 +15,7 @@ import type { NotificationTone } from "@/components/shared/notification-item";
 import type { NotificationView } from "@/core/notifications/types";
 import type { Space } from "@/leenkey/navigation/spaces";
 import { legalDate } from "@/leenkey/billing/withdrawal";
-import { formatAmount } from "@/lib/format";
+import { formatAmount, formatPrice } from "@/lib/format";
 import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { frNotifications } from "@/lib/i18n/sections/notifications";
 
@@ -139,6 +140,33 @@ const CATALOG: Record<string, Entry> = {
       const place =
         city && !title?.toLocaleLowerCase("fr-FR").includes(city.toLocaleLowerCase("fr-FR"));
       return t.listingPending.detail([title, text(data.reference), place ? city : null]);
+    },
+  },
+  // L1-35: a listing online changed by its seller (in the app only, SPEC 10).
+  "listing.revised": {
+    icon: PencilLine,
+    tone: "stone",
+    filters: [],
+    title: () => t.listingRevised.title,
+    detail: (data) => {
+      const fields = (Array.isArray(data.fields) ? (data.fields as unknown[]) : []).flatMap(
+        (field) =>
+          typeof field === "string" && t.listingRevised.fields[field]
+            ? [t.listingRevised.fields[field]]
+            : [],
+      );
+      const before = typeof data.old_price_cents === "number" ? data.old_price_cents : null;
+      const after = typeof data.price_cents === "number" ? data.price_cents : null;
+      return (
+        t.listingRevised.detail([
+          text(data.title),
+          text(data.reference),
+          t.listingRevised.changed(fields),
+          before !== null && after !== null && before !== after
+            ? t.listingRevised.price(formatPrice(before), formatPrice(after))
+            : null,
+        ]) || null
+      );
     },
   },
   "listing.published": {
