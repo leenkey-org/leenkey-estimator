@@ -1,12 +1,11 @@
 import type { BuyerProfile } from "./queries";
 
 // The file of a buyer on their home (L1-25, SPEC-V2 8.9, DESIGN.md 12.10):
-// what makes a seller answer them. Lot 1: their project and their financing
-// declared; the proof of financing comes with L2-02, its line with it, and
-// a file declared without its proof is then no longer complete: the block
-// goes back to the top of the home (SPEC-V2 8.9).
+// what makes a seller answer them: their project, their financing declared,
+// then its proof (L2-02): a file declared without its proof is not complete,
+// the block stays at the top of the home (SPEC-V2 8.9).
 
-export type FileStep = { key: "project" | "financing"; done: boolean };
+export type FileStep = { key: "project" | "financing" | "proof"; done: boolean };
 
 export type BuyerFile = {
   steps: FileStep[];
@@ -23,6 +22,12 @@ export function buyerFile(profile: BuyerProfile | null): BuyerFile {
       done: Boolean(profile?.project) && (profile?.targetCities.length ?? 0) > 0,
     },
     { key: "financing", done: profile !== null && profile.financingStatus !== "not_provided" },
+    {
+      key: "proof",
+      done:
+        profile?.financingStatus === "document_provided" ||
+        profile?.financingStatus === "document_checked",
+    },
   ];
   const done = steps.filter((step) => step.done).length;
   return { steps, done, total: steps.length, complete: done === steps.length };

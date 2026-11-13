@@ -1,7 +1,11 @@
 import "server-only";
 import { cache } from "react";
 import { requireAdmin } from "@/core/auth/session";
+import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { createClient } from "@/lib/supabase/server";
+
+// The texts this module shows (lib/i18n/sections, P-06).
+const fr = { adminUsers: frAdminUsers } as const;
 
 // Reads of the dashboard of the back office (L1-30a, SPEC-V2 section 17),
 // with the admin's session: the SQL functions check is_admin() themselves
@@ -33,7 +37,7 @@ export type AdminActivity = {
 
 /** Something that waits for the admin, the oldest first. */
 export type AdminTodoItem = {
-  kind: "listing" | "case" | "report";
+  kind: "listing" | "case" | "report" | "financing";
   id: string;
   /** The listing (« Maison 5 pièces · LK-0006 »), the subject of a case, the motive of a report. */
   label: string;
@@ -141,14 +145,14 @@ export function mergeTodo(groups: readonly AdminTodoItem[][], limit: number = TO
 }
 
 /**
- * « À traiter » (SPEC 17): the listings to review, the open cases and the
- * open reports, the oldest first.
+ * « À traiter » (SPEC 17): the listings to review, the open cases, the open
+ * reports and the proofs of financing to check (L2-02), the oldest first.
  */
 export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult<AdminTodoItem[]>> {
   await requireAdmin();
   try {
     const supabase = await createClient();
-    const [listings, cases, reports] = await Promise.all([
+    const [listings, cases, reports, proofs] = await Promise.all([
       supabase
         .from("listings")
         .select(
@@ -170,10 +174,20 @@ export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult
         .is("resolved_at", null)
         .order("created_at", { ascending: true })
         .limit(limit),
+      // L2-02: the proofs of financing in force that wait for their check.
+      supabase
+        .from("buyer_profiles")
+        .select(
+          "profile_id, profile:profiles!buyer_profiles_profile_id_fkey(first_name, last_name), document:financing_documents!buyer_profiles_current_doc_fk(created_at)",
+        )
+        .eq("financing_status", "document_provided")
+        .not("current_financing_document_id", "is", null)
+        .limit(limit),
     ]);
     if (listings.error) throw new Error(`listings: ${listings.error.code}`);
     if (cases.error) throw new Error(`cases: ${cases.error.code}`);
     if (reports.error) throw new Error(`reports: ${reports.error.code}`);
+    if (proofs.error) throw new Error(`financing: ${proofs.error.code}`);
     return {
       ok: true,
       data: mergeTodo(
@@ -199,6 +213,23 @@ export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult
             since: row.created_at,
             coverPath: null,
           })),
+          proofs.data.flatMap((row) =>
+            row.document
+              ? [
+                  {
+                    kind: "financing" as const,
+                    // The sheet of the buyer: where the document is checked.
+                    id: row.profile_id,
+                    label: shortLabel(
+                      [row.profile?.first_name, row.profile?.last_name].filter(Boolean).join(" ") ||
+                        fr.adminUsers.noName,
+                    ),
+                    since: row.document.created_at,
+                    coverPath: null,
+                  },
+                ]
+              : [],
+          ),
         ],
         limit,
       ),

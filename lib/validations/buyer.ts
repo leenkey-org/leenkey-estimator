@@ -55,3 +55,56 @@ export function parseCities(text: string): string[] {
   }
   return cities;
 }
+
+// The proof of financing (L2-02, SPEC-V2 4 and 8.9): its type among those
+// Leenkey accepts, the date written on it, a PDF or an image.
+
+export const FINANCING_DOCUMENT_TYPES = [
+  "accord_principe",
+  "attestation_courtier",
+  "simulation_bancaire",
+  "preuve_fonds_propres",
+  "autre",
+] as const;
+export type FinancingDocumentType = (typeof FINANCING_DOCUMENT_TYPES)[number];
+
+/** Kept at most (SPEC 8.9: 5 Mo), as the database checks it. */
+export const FINANCING_FILE_MAX_BYTES = 5 * 1024 * 1024;
+/**
+ * Sent at most in one request: the host takes 4.5 MB, the server action 4 MB
+ * (next.config.ts). A heavier image is reduced in the browser first; a
+ * heavier PDF is refused (DECISIONS.md 2026-11-13).
+ */
+export const FINANCING_UPLOAD_MAX_BYTES = 3_800_000;
+/** Beyond, the document is said old (SPEC 4: « de moins de 3 mois environ »), never refused. */
+export const FINANCING_DOCUMENT_OLD_DAYS = 92;
+const TEN_YEARS_DAYS = 3650;
+const DAY = 86_400_000;
+
+/** Today in Paris, YYYY-MM-DD. */
+export function todayInParis(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(now);
+}
+
+const isoDay = (value: string) => Date.parse(`${value}T00:00:00Z`);
+
+export function financingDocumentSchema(now: Date = new Date()) {
+  return z.object({
+    type: z.enum(FINANCING_DOCUMENT_TYPES),
+    documentDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .refine((value) => {
+        const day = isoDay(value);
+        const today = isoDay(todayInParis(now));
+        return Number.isFinite(day) && day <= today && day >= today - TEN_YEARS_DAYS * DAY;
+      }),
+  });
+}
+
+export type FinancingDocumentField = "type" | "documentDate" | "file";
+
+/** A document dated more than about three months ago: an alert, never a refusal. */
+export function isFinancingDocumentOld(documentDate: string, now: Date = new Date()): boolean {
+  return isoDay(todayInParis(now)) - isoDay(documentDate) > FINANCING_DOCUMENT_OLD_DAYS * DAY;
+}

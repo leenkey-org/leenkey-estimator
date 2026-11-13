@@ -4,7 +4,13 @@ import type { BuyerProfile } from "@/leenkey/buyers/queries";
 import { searchSummary } from "@/leenkey/search/filter-labels";
 import { hasCriteria, parseStoredSearch } from "@/leenkey/search/last-search";
 import { fr } from "@/lib/i18n/fr";
-import { buyerProfileSchema, parseCities } from "@/lib/validations/buyer";
+import {
+  buyerProfileSchema,
+  financingDocumentSchema,
+  isFinancingDocumentOld,
+  parseCities,
+  todayInParis,
+} from "@/lib/validations/buyer";
 import { parseSearchParams } from "@/lib/validations/search";
 
 const PROFILE: BuyerProfile = {
@@ -16,6 +22,8 @@ const PROFILE: BuyerProfile = {
   loanAmountEuros: null,
   situationNote: "",
   financingStatus: "not_provided",
+  financingDocument: null,
+  financingCheckedAt: null,
 };
 
 describe("parseCities", () => {
@@ -76,9 +84,10 @@ describe("buyerFile", () => {
       steps: [
         { key: "project", done: false },
         { key: "financing", done: false },
+        { key: "proof", done: false },
       ],
       done: 0,
-      total: 2,
+      total: 3,
       complete: false,
     });
   });
@@ -91,15 +100,59 @@ describe("buyerFile", () => {
     ).toBe(1);
   });
 
-  it("is complete once the financing is declared", () => {
-    const file = buyerFile({
+  it("is complete once the proof of the financing is filed (L2-02)", () => {
+    const declared = buyerFile({
       ...PROFILE,
       project: "investissement",
       targetCities: ["Juvisy-sur-Orge"],
       financingStatus: "declared",
     });
-    expect(file.complete).toBe(true);
-    expect(file.done).toBe(2);
+    expect(declared.complete).toBe(false);
+    expect(declared.done).toBe(2);
+    for (const financingStatus of ["document_provided", "document_checked"] as const) {
+      const file = buyerFile({
+        ...PROFILE,
+        project: "investissement",
+        targetCities: ["Juvisy-sur-Orge"],
+        financingStatus,
+      });
+      expect(file.complete).toBe(true);
+      expect(file.done).toBe(3);
+    }
+  });
+});
+
+describe("the proof of financing (L2-02)", () => {
+  const now = new Date("2026-11-13T10:00:00Z");
+
+  it("takes a type among those accepted and a date that is not in the future", () => {
+    const schema = financingDocumentSchema(now);
+    expect(schema.safeParse({ type: "accord_principe", documentDate: "2026-11-13" }).success).toBe(
+      true,
+    );
+    expect(schema.safeParse({ type: "accord_principe", documentDate: "2026-11-14" }).success).toBe(
+      false,
+    );
+    expect(schema.safeParse({ type: "releve", documentDate: "2026-11-01" }).success).toBe(false);
+    expect(schema.safeParse({ type: "autre", documentDate: "13/11/2026" }).success).toBe(false);
+    expect(schema.safeParse({ type: "autre", documentDate: "2010-01-01" }).success).toBe(false);
+  });
+
+  it("reads today in Paris, not in UTC", () => {
+    expect(todayInParis(new Date("2026-11-13T23:30:00Z"))).toBe("2026-11-14");
+  });
+
+  it("says a document older than about three months, never refuses it", () => {
+    expect(isFinancingDocumentOld("2026-08-20", now)).toBe(false);
+    expect(isFinancingDocumentOld("2026-08-01", now)).toBe(true);
+  });
+
+  it("never says « validé » nor « solvable » in the words of the interface (SPEC-V2 13)", () => {
+    const words = JSON.stringify(fr, (_key, value: unknown) =>
+      typeof value === "function" ? "" : value,
+    );
+    expect(words).not.toMatch(/financement validé|financement est validé|acquéreur solvable/i);
+    expect(JSON.stringify(fr.financingDocument)).not.toMatch(/valid/i);
   });
 });
 

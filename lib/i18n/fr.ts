@@ -25,6 +25,7 @@ import { frConsent } from "./sections/consent";
 import { frAdminAssistant } from "./sections/adminAssistant";
 import { frAdminListings } from "./sections/adminListings";
 import { frListingRevisions } from "./sections/listingRevisions";
+import { frFinancingDocument } from "./sections/financingDocument";
 import { frAdminDashboard } from "./sections/adminDashboard";
 import { frAdminUsers } from "./sections/adminUsers";
 import { frAdminCases } from "./sections/adminCases";
@@ -70,6 +71,7 @@ export const fr = {
   adminAssistant: frAdminAssistant,
   adminListings: frAdminListings,
   listingRevisions: frListingRevisions,
+  financingDocument: frFinancingDocument,
   adminDashboard: frAdminDashboard,
   adminUsers: frAdminUsers,
   adminCases: frAdminCases,

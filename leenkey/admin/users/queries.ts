@@ -346,3 +346,51 @@ export const adminUser = cache(async (id: string): Promise<QueryResult<AdminUser
     return { ok: false, error: "unavailable" };
   }
 });
+
+/** A proof of financing as the team reads it (L2-02): with its note and who checked. */
+export type AdminFinancingDocument = {
+  id: string;
+  type: Database["public"]["Enums"]["financing_document_type"];
+  documentDate: string;
+  isPdf: boolean;
+  createdAt: string;
+  removedAt: string | null;
+  checkedAt: string | null;
+  checkedByName: string | null;
+  note: string | null;
+  /** The one in force for the buyer: the only one to check. */
+  current: boolean;
+};
+
+/** The proofs of financing of a buyer, the most recent first (admin_financing_documents). */
+export async function adminFinancingDocuments(
+  buyerId: string,
+): Promise<QueryResult<AdminFinancingDocument[]>> {
+  await requireAdmin();
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("admin_financing_documents", {
+      p_buyer_id: buyerId,
+    });
+    if (error) throw new Error(`admin_financing_documents: ${error.code} ${error.message}`);
+    return {
+      ok: true,
+      data: data.map((row) => ({
+        id: row.id,
+        type: row.type,
+        documentDate: row.document_date,
+        isPdf: row.mime_type === "application/pdf",
+        createdAt: row.created_at,
+        // Generated types declare the columns of a function result as never null.
+        removedAt: (row.deleted_at as string | null) ?? null,
+        checkedAt: (row.checked_at as string | null) ?? null,
+        checkedByName: (row.checked_by_name as string | null) ?? null,
+        note: (row.check_note as string | null) ?? null,
+        current: row.is_current,
+      })),
+    };
+  } catch (error) {
+    logFailure("financing documents", error, { entity_id: buyerId });
+    return { ok: false, error: "unavailable" };
+  }
+}

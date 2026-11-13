@@ -138,6 +138,7 @@ export type Database = {
           created_at: string
           current_financing_document_id: string | null
           down_payment_cents: number | null
+          financing_checked_at: string | null
           financing_status: Database["public"]["Enums"]["financing_status"]
           loan_amount_cents: number | null
           loan_needed: boolean | null
@@ -152,6 +153,7 @@ export type Database = {
           created_at?: string
           current_financing_document_id?: string | null
           down_payment_cents?: number | null
+          financing_checked_at?: string | null
           financing_status?: Database["public"]["Enums"]["financing_status"]
           loan_amount_cents?: number | null
           loan_needed?: boolean | null
@@ -166,6 +168,7 @@ export type Database = {
           created_at?: string
           current_financing_document_id?: string | null
           down_payment_cents?: number | null
+          financing_checked_at?: string | null
           financing_status?: Database["public"]["Enums"]["financing_status"]
           loan_amount_cents?: number | null
           loan_needed?: boolean | null
@@ -176,6 +179,12 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "buyer_profiles_current_doc_fk"
+            columns: ["current_financing_document_id"]
+            referencedRelation: "financing_documents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "buyer_profiles_profile_id_fkey"
             columns: ["profile_id"]
@@ -488,6 +497,64 @@ export type Database = {
             foreignKeyName: "favorites_listing_id_fkey"
             columns: ["listing_id"]
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financing_documents: {
+        Row: {
+          buyer_id: string
+          check_note: string | null
+          checked_at: string | null
+          checked_by: string | null
+          created_at: string
+          deleted_at: string | null
+          document_date: string
+          id: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+          type: Database["public"]["Enums"]["financing_document_type"]
+        }
+        Insert: {
+          buyer_id: string
+          check_note?: string | null
+          checked_at?: string | null
+          checked_by?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          document_date: string
+          id?: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+          type: Database["public"]["Enums"]["financing_document_type"]
+        }
+        Update: {
+          buyer_id?: string
+          check_note?: string | null
+          checked_at?: string | null
+          checked_by?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          document_date?: string
+          id?: string
+          mime_type?: string
+          size_bytes?: number
+          storage_path?: string
+          type?: Database["public"]["Enums"]["financing_document_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financing_documents_buyer_id_fkey"
+            columns: ["buyer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financing_documents_checked_by_fkey"
+            columns: ["checked_by"]
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1033,6 +1100,12 @@ export type Database = {
             foreignKeyName: "offers_buyer_id_fkey"
             columns: ["buyer_id"]
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_financing_document_fk"
+            columns: ["financing_document_id"]
+            referencedRelation: "financing_documents"
             referencedColumns: ["id"]
           },
           {
@@ -2119,6 +2192,22 @@ export type Database = {
           advisor_unread: number
         }[]
       }
+      admin_financing_documents: {
+        Args: { p_buyer_id: string }
+        Returns: {
+          checked_by_name: string
+          type: Database["public"]["Enums"]["financing_document_type"]
+          document_date: string
+          mime_type: string
+          deleted_at: string
+          created_at: string
+          id: string
+          check_note: string
+          is_current: boolean
+          checked_at: string
+          size_bytes: number
+        }[]
+      }
       admin_knowledge_import: {
         Args: { p_source_file: string; p_cards: Json }
         Returns: {
@@ -2389,12 +2478,12 @@ export type Database = {
       buyer_summary_for_seller: {
         Args: { p_property_id: string }
         Returns: {
+          financing_checked_at: string
+          buyer_id: string
+          first_name: string
           project: Database["public"]["Enums"]["buyer_project"]
           financing_status: Database["public"]["Enums"]["financing_status"]
           financing_document_type: Database["public"]["Enums"]["financing_document_type"]
-          financing_checked_at: string
-          first_name: string
-          buyer_id: string
         }[]
       }
       can_write_conversation: {
@@ -2488,6 +2577,32 @@ export type Database = {
       euros: {
         Args: { p_cents: number }
         Returns: string
+      }
+      financing_document_add: {
+        Args: {
+          p_size_bytes: number
+          p_mime_type: string
+          p_storage_path: string
+          p_document_date: string
+          p_type: Database["public"]["Enums"]["financing_document_type"]
+        }
+        Returns: string
+      }
+      financing_document_check: {
+        Args: { p_document_id: string; p_note?: string }
+        Returns: undefined
+      }
+      financing_document_remove: {
+        Args: { p_document_id: string }
+        Returns: undefined
+      }
+      financing_file_buyer: {
+        Args: { p_name: string }
+        Returns: string
+      }
+      financing_file_in_use: {
+        Args: { p_name: string }
+        Returns: boolean
       }
       has_buyer_relation: {
         Args: { b: string; p: string }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition, type FormEvent } from "react";
+import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { flushSync } from "react-dom";
 import { Button } from "@/components/shared/button";
 import { FinancingBadge, type FinancingStatus } from "@/components/shared/financing-badge";
@@ -59,6 +59,8 @@ export function BuyerProfileForm({ initial }: { initial: BuyerProfile }) {
   const [loanAmount, setLoanAmount] = useState(amountText(initial.loanAmountEuros));
   const [situation, setSituation] = useState(initial.situationNote);
   const [status, setStatus] = useState<FinancingStatus>(initial.financingStatus);
+  // The page read again: a proof filed or removed below changes the status.
+  useEffect(() => setStatus(initial.financingStatus), [initial.financingStatus]);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<BuyerProfileField, string>>>({});
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
