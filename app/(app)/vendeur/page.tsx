@@ -320,6 +320,12 @@ export default async function SellerHomePage({ searchParams }: Props) {
           />
         ) : null}
 
+        {/* An offer may wait for an answer: its absence is never said by silence. */}
+        {offers.ok ? null : (
+          <InlineAlert tone="danger" live={false}>
+            {frOffer.seller.dashboard.loadError}
+          </InlineAlert>
+        )}
         {awaiting.length > 0 ? (
           <section aria-labelledby="offres-recues" className="flex flex-col gap-3">
             <h2 id="offres-recues" className="sr-only">
@@ -334,6 +340,7 @@ export default async function SellerHomePage({ searchParams }: Props) {
                 actions={
                   <OfferSellerActions
                     offerId={item.offer.id}
+                    reference={item.offer.reference}
                     discussHref={discussHrefs[index]}
                     full
                   />

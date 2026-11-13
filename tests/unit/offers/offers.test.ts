@@ -633,6 +633,25 @@ describe("summary for the seller (templates, no model)", () => {
     expect(equal.financingLines).toEqual(["Document fourni"]);
   });
 
+  it("reads a proof checked since the sending as checked, a tiny gap in euros", () => {
+    // Sent with « Justificatif fourni », checked by the team an hour later.
+    const later = buildOfferSynthesis({
+      ...input,
+      financingStatus: "document_provided",
+      financingCheckedAt: "2026-11-13T15:00:00Z",
+    });
+    expect(later.financingStatus).toBe("document_checked");
+    expect(later.financingLines).toEqual(["Document fourni", "Contrôlé par Leenkey le 13/11/2026"]);
+    expect(later.analysis[1]).toContain("fourni et contrôlé par Leenkey");
+    expect(JSON.stringify(later)).not.toContain("pas encore contrôlé");
+
+    const close = buildOfferSynthesis({
+      ...input,
+      offer: { ...offer, priceCents: 34_990_000 },
+    });
+    expect(close.analysis[0]).toBe(`L'offre est inférieure de 100${NNBSP}€ au prix demandé.`);
+  });
+
   it("never advises to accept or to decline, never says « validé »", () => {
     for (const status of [
       "not_provided",

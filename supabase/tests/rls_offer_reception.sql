@@ -8,7 +8,7 @@
 -- 99992: the file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(34);
+select plan(42);
 \ir _plan.psql
 
 -- seller_a: a listing online.
@@ -49,8 +49,10 @@ update buyer_profiles set current_financing_document_id = :'doc' where profile_i
 
 \set who seller_a
 \ir _as.psql
-select is(has_buyer_relation(:'prop', tests.uid('buyer_c')), false,
+select is((select count(*)::int from buyer_summary_for_seller(:'prop')), 0,
           'seller_a: buyer_c is not in relation before an offer');
+select throws_ok(format($$select has_buyer_relation(%L, %L)$$, :'prop', tests.uid('buyer_c')),
+                 '42501', null, 'has_buyer_relation is not asked directly: it would say who offered on any property');
 
 -- ===========================================================================
 -- An offer sent
@@ -63,6 +65,10 @@ update offers
    set buyer_identity = '{"last_name":"Martin","first_name":"Chloé","birth_date":"1990-04-12",
                           "address":{"line":"3 rue Verte","postal_code":"75011","city":"Paris"},
                           "email":"chloe@example.test","phone":"0600000000"}',
+       co_buyers = '[{"last_name":"Martin","first_name":"Paul","birth_date":"1989-01-02",
+                      "address":{"line":"5 impasse Bleue","postal_code":"69003","city":"Lyon"},
+                      "email":"paul@example.test","phone":"0611111111"}]',
+       acquisition_mode = 'joint',
        price_cents = 33800000,
        financing_mode = 'loan', down_payment_cents = 9000000, loan_amount_cents = 27500000,
        loan_duration_years = 25, loan_rate_max_pct = 4.20, financing_progress = 'simulation_done',
@@ -70,9 +76,19 @@ update offers
        declarations = '{"accuracy":true,"price_and_financing_checked":true,
                         "legal_effects_understood":true,"info_read":true}'
  where id = :'offer1';
-select is((select count(*)::int from notifications where data->>'offer_id' = :'offer1'), 0,
-          'buyer_c: a draft tells no one');
+reset role;
+select is((select count(*)::int from notifications where data->>'offer_id' = :'offer1')
+          + (select count(*)::int from conversations where listing_id = :'listing'), 0,
+          'a draft tells no one and opens no conversation');
+\set who seller_a
+\ir _as.psql
+select is((select count(*)::int from buyer_summary_for_seller(:'prop')), 0,
+          'seller_a: a draft is not a relation');
+\set who buyer_c
+\ir _as.psql
 select is((select offer_submit(:'offer1')), 'submitted'::offer_status, 'buyer_c: sends its offer');
+select is(coalesce(current_setting('leenkey.offer_notice', true), ''), 'off',
+          'the flag of the notices is down once the conversation is created');
 select throws_ok($$select offer_amount_label(100)$$, '42501', null,
                  'buyer_c: not the functions of the notices');
 select throws_ok(format($$insert into notifications (profile_id, type) values (%L, 'offer.answered')$$,
@@ -99,18 +115,28 @@ select is((select (data->>'price_cents')::bigint = 33800000
                   and data->>'buyer_first_name' = 'Chloé'
                   and data->>'title' = 'Maison à vendre'
                   and data ? 'validity_until'
-                  and not data ? 'email' and not data ? 'phone'
              from notifications where type = 'offer.received' and data->>'offer_id' = :'offer1'),
-          true, 'with the amount, the asking price, the first name; no contact detail');
+          true, 'with the amount, the asking price, the first name');
+-- Nothing of what is hidden before acceptance, of the buyer nor of the co-buyer,
+-- anywhere the seller reads: the notification, the notice, the view.
+\set hidden '(example\.test|0600000000|0611111111|rue Verte|impasse Bleue|1990-04-12|1989-01-02|75011|69003)'
+select is((select count(*)::int from notifications
+            where data->>'offer_id' = :'offer1' and data::text ~ :'hidden'),
+          0, 'seller_a: no contact detail, address or birth date in the notification');
+select is((select count(*)::int from messages m join conversations c on c.id = m.conversation_id
+            where c.listing_id = :'listing' and (m.body ~ :'hidden' or m.meta::text ~ :'hidden')),
+          0, 'nor in the notice of the conversation');
+select is((select (buyer_identity::text || co_buyers::text) ~ :'hidden'
+                  or not (co_buyers::text ~ 'Paul' and co_buyers::text ~ 'Lyon')
+             from offer_for_seller where id = :'offer1'),
+          false, 'nor in the view: names and town of the buyer and of the co-buyer only');
 select is((select count(*)::int from notifications
             where profile_id = tests.uid('seller_a') and type = 'message.new'
               and created_at >= now()),
           0, 'the notice of the conversation is not a new message');
-select is(has_buyer_relation(:'prop', tests.uid('buyer_c')), true,
-          'seller_a: buyer_c is in relation once the offer is sent');
 select is((select count(*)::int from buyer_summary_for_seller(:'prop')
             where buyer_id = tests.uid('buyer_c')),
-          1, 'and reads the financing status of buyer_c');
+          1, 'seller_a: buyer_c is in relation once the offer is sent: its financing status is read');
 select is((select financing_document_type::text || ':' || (financing_checked_at is not null)::text
                   || ':' || (property_id = :'prop')::text
              from offer_for_seller where id = :'offer1'),
@@ -131,8 +157,6 @@ select is((select count(*)::int from offer_for_seller where id = :'offer1'), 0,
           'seller_b: nothing of the offer in the view');
 select is((select count(*)::int from notifications where data->>'offer_id' = :'offer1'), 0,
           'nor its notifications');
-select is(has_buyer_relation(:'prop', tests.uid('buyer_c')), true,
-          'has_buyer_relation says a fact, the summary checks the owner');
 select is((select count(*)::int from buyer_summary_for_seller(:'prop')), 0,
           'seller_b: no summary of the buyers of another seller');
 
@@ -144,6 +168,9 @@ select is((select count(*)::int from buyer_summary_for_seller(:'prop')), 0,
 select is((select offer_mark_viewed(:'offer1')), 'viewed'::offer_status, 'seller_a: opens the offer');
 select is((select offer_answer(:'offer1', false, false, 'Trop éloigné du prix demandé.')),
           'declined'::offer_status, 'seller_a: declines it, with a message');
+-- The words the server action reads to say why an answer is refused.
+select throws_ok(format($$select offer_answer(%L, true, true)$$, :'offer1'), '22023',
+                 'cannot accept an offer declined', 'an offer answered takes no other answer');
 
 \set who buyer_c
 \ir _as.psql
@@ -185,8 +212,27 @@ select offer_submit(:'offer2');
 \o
 \set who seller_a
 \ir _as.psql
+-- The buyer starts a third offer while the second one waits.
+\set who buyer_c
+\ir _as.psql
+insert into offers (listing_id, buyer_id) values (:'listing', tests.uid('buyer_c'))
+returning id as offer_late \gset
+\set who seller_a
+\ir _as.psql
 select is((select offer_answer(:'offer2', true, true)), 'accepted'::offer_status,
           'seller_a: accepts the second offer');
+\set who buyer_c
+\ir _as.psql
+select throws_ok(format($$select offer_submit(%L)$$, :'offer_late'), '42501', null,
+                 'buyer_c: no new offer sent once one is accepted');
+reset role;
+-- Even when the sending crosses the acceptance (past the checks of offer_submit).
+select throws_ok(format($$update offers set status = 'submitted', submitted_at = now(),
+                                 price_cents = 34000000, price_in_words = 'x', financing_mode = 'no_loan',
+                                 validity_until = now() + interval '5 days', visited = true
+                           where id = %L$$, :'offer_late'),
+                 '42501', 'an offer of this buyer is already accepted on this listing',
+                 'the sending itself is refused');
 \set who buyer_c
 \ir _as.psql
 select is((select (data->>'accepted')::boolean and not data ? 'message'
@@ -241,13 +287,13 @@ select listing_submit(:'listing_b');
 \o /dev/null
 select listing_publish(:'listing_b');
 \o
--- buyer_c wrote twenty messages within the hour (two notices, « Bonjour » and
--- seventeen more): the messaging takes no more.
+-- buyer_c wrote twenty messages within the hour (« Bonjour » and nineteen
+-- more; the notices do not count): the messaging takes no more.
 \set who buyer_c
 \ir _as.psql
 select conversation_open(:'listing_b', 'Bonjour') as conv_b \gset
 insert into messages (conversation_id, sender_id, body)
-select :'conv_b', tests.uid('buyer_c'), 'Message ' || n from generate_series(1, 17) n;
+select :'conv_b', tests.uid('buyer_c'), 'Message ' || n from generate_series(1, 19) n;
 select throws_ok(format($$insert into messages (conversation_id, sender_id, body) values (%L, %L, 'De trop')$$,
                         :'conv_b', tests.uid('buyer_c')),
                  '54000', null, 'buyer_c: the hourly limit of the messaging is reached');
@@ -265,7 +311,10 @@ update offers
 select is((select offer_submit(:'offer3')), 'submitted'::offer_status,
           'buyer_c: the offer is sent all the same');
 select is((select count(*)::int from messages where conversation_id = :'conv_b' and kind = 'offer_notice'),
-          0, 'its notice is skipped');
+          1, 'with its notice: the limit does not count for it');
+select throws_ok(format($$insert into messages (conversation_id, sender_id, body) values (%L, %L, 'Encore')$$,
+                        :'conv_b', tests.uid('buyer_c')),
+                 '54000', null, 'the limit still holds for a message');
 \set who seller_b
 \ir _as.psql
 select is((select count(*)::int from notifications

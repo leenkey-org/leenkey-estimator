@@ -22,6 +22,9 @@ test.skip(
   "pile locale de seed requise (E2E_SEED=1, SEED_PASSWORD, E2E_MUTATE=1) : la spec envoie une offre",
 );
 
+// One buyer, one seller: the tests of this file run one after the other.
+test.describe.configure({ mode: "default" });
+
 const LISTING = "/annonce/appartement-2-pieces-morsang-sur-orge-lk0003";
 /** Its property, in the seed. */
 const PROPERTY = "5eed1000-0000-4000-8000-000000000003";
@@ -439,6 +442,83 @@ test("un acquéreur fait une offre en sept étapes et l'envoie ; son vendeur la 
       await context.close();
     }
   });
+});
+
+test("le vendeur refuse une offre avec un message ; l'acquéreur le lit", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  test.setTimeout(120_000);
+  const url = baseURL ?? "http://localhost:3100";
+  // Another listing of seller_a, so that this offer does not meet the one above.
+  await signIn(page, "buyer_c", "/annonce/maison-5-pieces-epinay-sur-orge-lk0002");
+  await page.getByRole("link", { name: "Faire une offre" }).click();
+  await page.waitForURL((address) => address.pathname === "/offres/nouvelle");
+  const listingId = new URL(page.url()).searchParams.get("listing") ?? "";
+  await page.getByLabel("Date de naissance").fill("1990-06-15");
+  await page.getByLabel("Adresse").fill("8 rue des Écoles");
+  await page.getByLabel("Code postal").fill("91600");
+  await page.getByLabel("Ville").fill("Savigny-sur-Orge");
+  await page.getByLabel("Téléphone").fill("06 12 34 56 78");
+  await next(page).click();
+  await expect(step(page, "Étape 2 sur 7 · Le bien concerné")).toBeVisible();
+  await page.getByRole("link", { name: "Continuer" }).click();
+  await page.getByLabel("Prix proposé").fill("380 000");
+  await next(page).click();
+  await expect(step(page, "Étape 4 sur 7 · Financement")).toBeVisible();
+  await page.locator("label").filter({ hasText: "Sans prêt" }).click();
+  await next(page).click();
+  await expect(step(page, "Étape 5 sur 7 · Conditions de l'offre")).toBeVisible();
+  await next(page).click();
+  await expect(step(page, "Étape 6 sur 7 · Durée de validité")).toBeVisible();
+  await next(page).click();
+  await page.locator("label").filter({ hasText: "Sans visite" }).click();
+  for (const box of await page.getByRole("checkbox").all()) await box.check();
+  await page.getByRole("button", { name: "Relire mon offre" }).click();
+  await page.getByRole("button", { name: "Envoyer mon offre au vendeur" }).click();
+  await page.waitForURL((address) => /^\/offres\/[0-9a-f-]{36}$/.test(address.pathname));
+  const offerPath = new URL(page.url()).pathname;
+
+  const sellerContext = await browser.newContext({ baseURL: url });
+  const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
+  await sellerContext.addCookies([{ name: "lk_consent", value: `v1.0.${day}`, url }]);
+  const seller = await sellerContext.newPage();
+  await signIn(seller, "seller_a", offerPath);
+  // Sans prêt, sans justificatif : dit tel quel, sans verdict.
+  const card = seller.getByRole("article").filter({ hasText: "Analyse Leenkey" });
+  await expect(card).toContainText("Sans recours à un prêt immobilier");
+  await expect(card).toContainText(
+    "L'acquéreur déclare financer l'acquisition sans recours à un prêt immobilier.",
+  );
+  await seller.getByRole("button", { name: "Refuser l'offre" }).click();
+  const dialog = seller.getByRole("dialog");
+  await dialog
+    .getByLabel(/^Message à l'acquéreur/)
+    .fill("Merci, le prix est trop éloigné du nôtre.");
+  await dialog.getByRole("button", { name: "Refuser l'offre" }).click();
+  await expect(
+    seller.getByText(/^Vous avez refusé cette offre le \d{2}\/\d{2}\/\d{4}/),
+  ).toBeVisible();
+  await expect(seller.getByRole("link", { name: "Accepter l'offre" })).toHaveCount(0);
+  // Declined: the contact details stay hidden, and no PDF.
+  await expect(
+    seller.getByRole("article").filter({ hasText: "OFFRE D'ACHAT LEENKEY" }),
+  ).not.toContainText(/buyer_c@test\.leenkey\.fr|06 12 34 56 78/);
+  expect((await seller.request.get(`${offerPath}/pdf`)).status()).toBe(404);
+  await sellerContext.close();
+
+  await page.goto(offerPath);
+  await expect(page.getByText("Refusée", { exact: true })).toBeVisible();
+  const history = page.getByRole("region", { name: "Historique" });
+  await expect(history).toContainText("Offre refusée par le vendeur");
+  await expect(history).toContainText(
+    "Message du vendeur : « Merci, le prix est trop éloigné du nôtre. »",
+  );
+  // A refusal leaves the way to a new offer, and nothing to replace.
+  await page.goto(`/offres/nouvelle?listing=${listingId}`);
+  await expect(step(page, "Étape 1 sur 7 · L'acquéreur")).toBeVisible();
+  await expect(page.getByText("Vous avez déjà une offre en cours sur ce bien.")).toHaveCount(0);
 });
 
 test("sans projet d'achat déclaré, le formulaire renvoie au profil acquéreur", async ({ page }) => {

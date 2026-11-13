@@ -60,14 +60,18 @@ export function MarkOfferViewed({ offerId }: { offerId: string }) {
  */
 export function OfferSellerActions({
   offerId,
+  reference,
   discussHref,
   full = false,
 }: {
   offerId: string;
+  /** Said to a screen reader after each action: a page may show several offers. */
+  reference: string;
   discussHref: string;
   /** On the dashboard: the link to the whole offer. */
   full?: boolean;
 }) {
+  const about = <span className="sr-only"> ({t.about(reference)})</span>;
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -105,13 +109,20 @@ export function OfferSellerActions({
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-2.5">
         <Button asChild>
-          <Link href={offerAcceptPath(offerId)}>{t.accept}</Link>
+          <Link href={offerAcceptPath(offerId)}>
+            {t.accept}
+            {about}
+          </Link>
         </Button>
         <Button type="button" variant="secondary" onClick={() => setOpen(true)}>
           {t.decline}
+          {about}
         </Button>
         <Button asChild variant="ghost">
-          <Link href={discussHref}>{t.discuss}</Link>
+          <Link href={discussHref}>
+            {t.discuss}
+            {about}
+          </Link>
         </Button>
       </div>
       {full ? (
@@ -120,6 +131,7 @@ export function OfferSellerActions({
           className="self-start text-lk-secondary font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
         >
           {t.full}
+          {about}
         </Link>
       ) : null}
       <ConfirmDialog

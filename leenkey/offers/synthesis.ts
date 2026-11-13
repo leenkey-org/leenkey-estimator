@@ -63,12 +63,15 @@ export function buildOfferSynthesis({
   const priceCents = offer.priceCents ?? 0;
   const gap = offerGap(priceCents, property.askingPriceCents);
   const loan = offer.financingMode === "loan";
+  // The proof the offer carries, as it is now: checked since the sending, it
+  // reads as checked (« pas encore contrôlé » would no longer be true).
   const proof =
-    financingStatus === "document_checked"
+    financingStatus === "document_checked" || financingCheckedAt
       ? "checked"
       : financingStatus === "document_provided"
         ? "provided"
         : "none";
+  const status: FinancingStatus = proof === "checked" ? "document_checked" : financingStatus;
 
   const conditionNames = [
     offer.conditionPriorSale ? "priorSale" : null,
@@ -79,9 +82,13 @@ export function buildOfferSynthesis({
 
   const analysis: string[] = [];
   if (gap) {
-    const percent = `${percentFormat.format(Math.abs(gap.percent))}${NNBSP}%`;
+    // A gap under 0,1 % is said in euros: « inférieure de 0 % » would say nothing.
+    const size =
+      Math.abs(gap.percent) >= 0.1
+        ? `${percentFormat.format(Math.abs(gap.percent))}${NNBSP}%`
+        : formatPrice(Math.abs(gap.amountCents));
     analysis.push(
-      gap.amountCents === 0 ? t.equal : gap.amountCents < 0 ? t.below(percent) : t.above(percent),
+      gap.amountCents === 0 ? t.equal : gap.amountCents < 0 ? t.below(size) : t.above(size),
     );
   }
   const declared = loan
@@ -111,7 +118,7 @@ export function buildOfferSynthesis({
           t.loan(formatPrice(offer.loanAmountCents)),
         ]
       : [t.noLoan],
-    financingStatus,
+    financingStatus: status,
     financingLines:
       proof === "none"
         ? [t.proofNone]

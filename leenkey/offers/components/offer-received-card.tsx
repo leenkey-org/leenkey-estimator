@@ -24,6 +24,7 @@ export function OfferReceivedCard({
   item,
   now,
   title,
+  headingAs: Heading = "h3",
   actions,
   className,
 }: {
@@ -31,11 +32,14 @@ export function OfferReceivedCard({
   now: Date;
   /** « Nouvelle offre reçue » on the dashboard, the reference on its own page. */
   title: string;
+  /** The level of its title in the page; « Analyse Leenkey » is one below. */
+  headingAs?: "h2" | "h3";
   actions?: ReactNode;
   className?: string;
 }) {
   const { offer } = item;
   const synthesis = buildOfferSynthesis(item);
+  const SubHeading = Heading === "h2" ? "h3" : "h4";
   const waiting = offer.status === "submitted" || offer.status === "viewed";
   const remaining =
     waiting && offer.validityUntil ? remainingLabel(offer.validityUntil, now) : null;
@@ -68,7 +72,7 @@ export function OfferReceivedCard({
     >
       <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <h3 className="text-lk-body font-bold text-wide text-lk-ink">{title}</h3>
+          <Heading className="text-lk-body font-bold text-wide text-lk-ink">{title}</Heading>
           <p className="text-lk-secondary text-lk-ink-2">
             {t.from(fullName(offer.buyer), offer.buyer.city)}
           </p>
@@ -103,7 +107,7 @@ export function OfferReceivedCard({
         ))}
       </dl>
       <div className="flex flex-col gap-2 rounded-lk-md bg-lk-stone-2 p-3.5 text-lk-secondary leading-relaxed text-lk-ink-2">
-        <h4 className="font-semibold text-lk-ink">{s.analysis}</h4>
+        <SubHeading className="font-semibold text-lk-ink">{s.analysis}</SubHeading>
         {synthesis.analysis.map((paragraph) => (
           <p key={paragraph} className="text-pretty">
             {paragraph}

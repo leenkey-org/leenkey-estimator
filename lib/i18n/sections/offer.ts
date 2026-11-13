@@ -302,8 +302,9 @@ export const frOffer = {
     proofChecked: (date: string) => `Contrôlé par Leenkey le ${date}`,
     proofNone: "Aucun document fourni",
     analysis: "Analyse Leenkey",
-    below: (percent: string) => `L'offre est inférieure de ${percent} au prix demandé.`,
-    above: (percent: string) => `L'offre est supérieure de ${percent} au prix demandé.`,
+    // The gap in percent, or in euros when it is under 0,1 %.
+    below: (gap: string) => `L'offre est inférieure de ${gap} au prix demandé.`,
+    above: (gap: string) => `L'offre est supérieure de ${gap} au prix demandé.`,
     equal: "L'offre est égale au prix demandé.",
     withLoan: (downPayment: string) =>
       `L'acquéreur déclare financer l'acquisition avec ${downPayment} d'apport et un prêt.`,
@@ -426,7 +427,12 @@ export const frOffer = {
       open: "Voir l'offre",
       loadError: "Les offres de ce bien n'ont pas pu être chargées. Rechargez la page.",
     },
-    dashboard: { title: "Offres en attente de votre réponse" },
+    dashboard: {
+      title: "Offres en attente de votre réponse",
+      loadError: "Vos offres reçues n'ont pas pu être chargées. Rechargez la page.",
+    },
+    /** The offer an action is about, for a screen reader (several cards on a page). */
+    about: (reference: string) => `offre ${reference}`,
   },
 
   // The document of the offer, on the screen and in the PDF.

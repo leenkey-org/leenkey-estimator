@@ -23,6 +23,7 @@ import {
   buyerConversationHref,
   offerEvents,
   sellerOffer,
+  type OfferEvent,
   type SellerOffer,
 } from "@/leenkey/offers/seller";
 import { sheetHref } from "@/leenkey/properties/sheet";
@@ -79,7 +80,7 @@ export default async function OfferPage({ params, searchParams }: Props) {
   );
 }
 
-function BuyerView({
+async function BuyerView({
   profile,
   found,
   sent,
@@ -90,6 +91,7 @@ function BuyerView({
 }) {
   const { offer, snapshot } = found;
   if (offer.status === "draft" || !snapshot) redirect(offerFormPath(offer.listingId));
+  const events = await offerEvents([offer.id]);
 
   // Past its validity an offer is expired, even before the cron writes it.
   const expired =
@@ -143,6 +145,8 @@ function BuyerView({
         ) : null}
         <PdfButton offerId={offer.id} label={t.pdf} />
         <OfferDocumentView document={buildOfferDocument(offer, snapshot)} />
+        {/* Its journal: what the seller did with it, and their message. */}
+        {events.ok && events.data[offer.id] ? <History events={events.data[offer.id]} /> : null}
       </div>
     </SpacePage>
   );
@@ -190,29 +194,40 @@ async function SellerView({ profile, item }: { profile: SessionProfile; item: Se
           item={item}
           now={new Date()}
           title={`${fr.offer.reference(offer.reference)} · ${t.version(offer.version)}`}
+          headingAs="h2"
           actions={
-            waiting ? <OfferSellerActions offerId={offer.id} discussHref={discussHref} /> : null
+            waiting ? (
+              <OfferSellerActions
+                offerId={offer.id}
+                reference={offer.reference}
+                discussHref={discussHref}
+              />
+            ) : null
           }
         />
         {offer.status === "accepted" ? (
           // The PDF carries the contact details of the buyers: once accepted only.
           <PdfButton offerId={offer.id} label={s.pdf} />
-        ) : (
+        ) : waiting ? (
           <InfoNote>
             <p>{s.masked}</p>
           </InfoNote>
-        )}
-        <OfferDocumentView document={buildOfferDocument(offer, property)} />
-        {events.ok && events.data[offer.id] ? (
-          <section aria-labelledby="historique" className="flex flex-col gap-3">
-            <h2 id="historique" className="text-lk-h3 font-bold text-wide text-lk-ink">
-              {s.history.title}
-            </h2>
-            <OfferHistory events={events.data[offer.id]} />
-          </section>
         ) : null}
+        <OfferDocumentView document={buildOfferDocument(offer, property)} />
+        {events.ok && events.data[offer.id] ? <History events={events.data[offer.id]} /> : null}
       </div>
     </SpacePage>
+  );
+}
+
+function History({ events }: { events: readonly OfferEvent[] }) {
+  return (
+    <section aria-labelledby="historique" className="flex flex-col gap-3">
+      <h2 id="historique" className="text-lk-h3 font-bold text-wide text-lk-ink">
+        {s.history.title}
+      </h2>
+      <OfferHistory events={events} />
+    </section>
   );
 }
 

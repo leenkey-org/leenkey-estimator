@@ -12,8 +12,14 @@
 -- Choices (DECISIONS.md 2026-11-13, L2-04a):
 -- - the events are read from the journal (`offer_events`): it holds the
 --   message of the seller, written after the status;
--- - the notices never stop an offer: a limit of the messaging (a buyer who
---   wrote a lot) skips the notice, not the offer;
+-- - the notices never stop an offer, and the limits of the messaging (20
+--   messages an hour, 5 new conversations a day) do not count for them: a
+--   seller must always find the conversation of an offer (« Discuter avec
+--   l'acquéreur »); an offer is not a way to write without limit, its notice
+--   is written by the database, one per event;
+-- - no new offer of a buyer on a listing once one of theirs is accepted, even
+--   when the acceptance and the sending cross (checked again when the offer
+--   is sent, after the lock);
 -- - a buyer who sent an offer is a buyer « in relation » with the seller
 --   (has_buyer_relation), as one who wrote: the seller reads their
 --   financing status (SPEC 5, « contacté ou fait une offre »).
@@ -70,6 +76,72 @@ language sql stable security definer set search_path = '' as $$
                    join public.listings l on l.id = o.listing_id
                   where l.property_id = p and o.buyer_id = b and o.status <> 'draft');
 $$;
+-- Read by buyer_summary_for_seller only, which checks the owner: no account
+-- needs to ask it directly (it would say who wrote or made an offer on any
+-- property).
+revoke execute on function public.has_buyer_relation(uuid, uuid) from authenticated;
+
+-- ---------------------------------------------------------------------------
+-- No new offer of a buyer on a listing once one of theirs is accepted
+-- (offer_can_draft), even when the two cross: offer_submit waits for the
+-- answer of the seller on the offer in progress, then sends; checked here,
+-- at the sending itself.
+-- ---------------------------------------------------------------------------
+create function public.offers_no_offer_after_acceptance() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if old.status = 'draft' and new.status = 'submitted'
+     and exists (select 1 from public.offers
+                  where listing_id = new.listing_id and buyer_id = new.buyer_id
+                    and status = 'accepted') then
+    raise exception 'an offer of this buyer is already accepted on this listing'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger offers_no_offer_after_acceptance before update of status on public.offers
+  for each row execute function public.offers_no_offer_after_acceptance();
+
+-- ---------------------------------------------------------------------------
+-- The limits of the messaging do not count for the notices of an offer: a
+-- notice is written by the database (a client cannot write its kind), one per
+-- event of an offer; its conversation is created under a flag only
+-- offer_notice sets, for the time of its insert.
+-- ---------------------------------------------------------------------------
+create or replace function public.messages_rate_limit() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null or public.is_admin() or new.kind = 'offer_notice' then
+    return new;
+  end if;
+  perform pg_advisory_xact_lock(hashtextextended('messages_rate_limit:' || new.sender_id::text, 0));
+  if (select count(*) from public.messages
+       where sender_id = new.sender_id and kind <> 'offer_notice'
+         and created_at > now() - interval '1 hour') >= 20 then
+    raise exception 'messages_per_hour' using errcode = '54000';
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function public.conversations_rate_limit() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if new.kind <> 'listing' or auth.uid() is null or public.is_admin()
+     or coalesce(current_setting('leenkey.offer_notice', true), '') = 'on' then
+    return new;
+  end if;
+  perform pg_advisory_xact_lock(hashtextextended('conversations_rate_limit:' || new.buyer_id::text, 0));
+  if (select count(*) from public.conversations
+       where kind = 'listing' and buyer_id = new.buyer_id
+         and created_at > now() - interval '24 hours') >= 5 then
+    raise exception 'conversations_per_day' using errcode = '54000';
+  end if;
+  return new;
+end;
+$$;
 
 -- ---------------------------------------------------------------------------
 -- « 338 000 € », for the notices of the conversation.
@@ -82,7 +154,8 @@ $$;
 -- ---------------------------------------------------------------------------
 -- A notice of the offer in the listing conversation of its seller and its
 -- buyer, created when they never wrote to each other. Never stops the offer:
--- a limit of the messaging, a conversation closed, and the notice is skipped.
+-- should the messaging refuse it for any reason, the notice is skipped (and
+-- said in the log of the database), the offer goes on.
 -- ---------------------------------------------------------------------------
 create function public.offer_notice(p_offer public.offers, p_sender uuid, p_body text, p_type text)
 returns void
@@ -93,10 +166,13 @@ begin
   select id into conv from public.conversations
    where kind = 'listing' and listing_id = p_offer.listing_id and buyer_id = p_offer.buyer_id;
   if conv is null then
+    -- Not one of the five conversations a buyer may open in a day.
+    perform set_config('leenkey.offer_notice', 'on', true);
     insert into public.conversations (kind, property_id, listing_id, seller_id, buyer_id)
     select 'listing', l.property_id, l.id, p_offer.seller_id, p_offer.buyer_id
       from public.listings l where l.id = p_offer.listing_id
     returning id into conv;
+    perform set_config('leenkey.offer_notice', 'off', true);
   end if;
   if conv is null then
     return;
@@ -105,6 +181,7 @@ begin
   values (conv, p_sender, p_body, 'offer_notice',
           jsonb_build_object('type', p_type, 'offer_id', p_offer.id));
 exception when others then
+  perform set_config('leenkey.offer_notice', 'off', true);
   raise warning 'offer notice skipped for offer %: %', p_offer.id, sqlerrm;
 end;
 $$;
@@ -186,3 +263,4 @@ create trigger offer_events_notify after insert on public.offer_events
 revoke execute on function public.offer_amount_label(bigint) from public, anon, authenticated;
 revoke execute on function public.offer_notice(public.offers, uuid, text, text) from public, anon, authenticated;
 revoke execute on function public.offer_events_notify() from public, anon, authenticated;
+revoke execute on function public.offers_no_offer_after_acceptance() from public, anon, authenticated;
