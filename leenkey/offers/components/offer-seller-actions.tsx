@@ -202,17 +202,12 @@ export function OfferAcceptForm({ offerId }: { offerId: string }) {
         onChange={(event) => setRead(event.target.checked)}
       />
       {error ? <InlineAlert tone="danger">{error}</InlineAlert> : null}
-      <FormActionBar className="md:mt-3 [&>*]:flex-none [&>*:last-child]:flex-1">
+      {/* One under the other on a phone: the two labels do not fit side by side at 390 px. */}
+      <FormActionBar className="flex-col-reverse md:mt-3 md:flex-row [&>*]:flex-none [&>*:last-child]:flex-none md:[&>*:last-child]:flex-1">
         <Button asChild variant="ghost">
           <Link href={offerPath(offerId)}>{labels.back}</Link>
         </Button>
-        <Button
-          type="button"
-          loading={working}
-          disabled={!read}
-          onClick={accept}
-          className="px-4 whitespace-nowrap"
-        >
+        <Button type="button" loading={working} disabled={!read} onClick={accept}>
           {labels.confirm}
         </Button>
       </FormActionBar>
