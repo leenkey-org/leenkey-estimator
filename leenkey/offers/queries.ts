@@ -1,5 +1,6 @@
 import "server-only";
 import { getUser, type SessionProfile } from "@/core/auth/session";
+import { ownedPropertyId } from "@/leenkey/messaging/queries";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -104,7 +105,7 @@ export async function offerAccess(
   listingId: string,
 ): Promise<QueryResult<OfferAccess>> {
   const supabase = await createClient();
-  const [allowed, offers, buyer] = await Promise.all([
+  const [allowed, offers, buyer, own] = await Promise.all([
     supabase.rpc("offer_can_draft", { p_listing: listingId }),
     supabase
       .from("offers")
@@ -117,6 +118,8 @@ export async function offerAccess(
       .select("financing_status")
       .eq("profile_id", profile.id)
       .maybeSingle(),
+    // Their own listing: closed, whatever their buying project says.
+    ownedPropertyId(profile.id, listingId),
   ]);
   if (allowed.error || offers.error || buyer.error) {
     console.error("[offers] access check failed", {
@@ -132,6 +135,7 @@ export async function offerAccess(
   }
   const accepted = offers.data.find((offer) => offer.status === "accepted");
   if (accepted) return { ok: true, data: { state: "accepted", offerId: accepted.id } };
+  if (own !== null) return { ok: true, data: { state: "closed" } };
   const declared =
     profile.roles.includes("buyer") &&
     buyer.data !== null &&

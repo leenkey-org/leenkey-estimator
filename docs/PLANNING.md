@@ -120,7 +120,7 @@ Lot 2 :
 
 - [x] **L2-01** Migration `offers` (enums `acquisition_mode`, `financing_mode`, `financing_progress`, référence, version,… · PR : #99 · Testé en préprod : ☐
 - [x] **L2-02** Table `financing_documents` + RLS, justificatif de financement (type, date, fichier), contrôle admin « Marquer comme vérifié »,… · PR : #99 · Testé en préprod : ☐
-- [ ] **L2-03** Formulaire d'offre en 7 étapes (acquéreur et co-acquéreurs, bien prérempli, prix en lettres, financement,… · PR : · Testé en préprod : ☐
+- [x] **L2-03** Formulaire d'offre en 7 étapes (acquéreur et co-acquéreurs, bien prérempli, prix en lettres, financement,… · PR : #100 · Testé en préprod : ☐
 - [ ] **L2-04** Synthèse et « Analyse Leenkey » par gabarits (sans IA), carte vendeur, écran d'acceptation intermédiaire,… · PR : · Testé en préprod : ☐
 - [ ] **L2-05** Résumé de l'annonce par l'assistant (page annonce) · PR : · Testé en préprod : ☐
 - [ ] **L2-06** Assistant acquéreur : `search_listings`, `get_listing_public`, `prefill_offer`, `create_case` · PR : · Testé en préprod : ☐

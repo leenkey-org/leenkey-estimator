@@ -150,7 +150,8 @@ test("un acquéreur fait une offre en sept étapes, la relit, l'envoie ; elle es
     await next(page).click();
     await expect(step(page, "Étape 5 sur 7 · Conditions de l'offre")).toBeVisible();
     await expect(page.getByText("Offre formulée sans recours à un prêt immobilier.")).toBeVisible();
-    await page.getByRole("link", { name: "Précédent" }).click();
+    // Exact: the arrow of the header is « Étape précédente ».
+    await page.getByRole("link", { name: "Précédent", exact: true }).click();
     await expect(page.getByRole("radio", { name: /Sans prêt/ })).toBeChecked();
     await page.locator("label").filter({ hasText: "Avec prêt" }).click();
     await page.getByLabel("Apport personnel").fill("60 000");

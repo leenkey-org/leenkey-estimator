@@ -429,8 +429,14 @@ test.describe("page annonce (base de seed)", () => {
       "href",
       signUp(true),
     );
-    // Offer (L2) and favourite (L1-18) come later; never « Prix ferme ».
-    await expect(page.getByText(/faire une offre/i)).toHaveCount(0);
+    // The sign-up, then the offer form (L2-03).
+    await expect(page.getByRole("link", { name: "Faire une offre" })).toHaveAttribute(
+      "href",
+      new RegExp(
+        `^/inscription\\?role=buyer&next=${encodeURIComponent("/offres/nouvelle?listing=")}[0-9a-f-]{36}$`,
+      ),
+    );
+    // Never « Prix ferme ».
     await expect(page.getByText(/prix ferme/i)).toHaveCount(0);
   });
 

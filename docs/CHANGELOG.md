@@ -12,11 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-11-13 · L2-03 · PR #PRNUM · Offre d'achat : formulaire, envoi, PDF
+### 2026-11-13 · L2-03 · PR #100 · Offre d'achat : formulaire, envoi, PDF
 - Ajouté : « Faire une offre » sur une annonce ; formulaire en 7 étapes (acquéreur et co-acquéreurs, bien repris de l'annonce, prix et montant en lettres, financement et budget estimé, conditions, validité, déclarations), brouillon enregistré à chaque étape, relecture du document, « Envoyer mon offre au vendeur ».
 - Ajouté : page de l'offre pour son acquéreur (statut, document tel qu'envoyé) et PDF « OFFRE D'ACHAT LEENKEY » dessiné à la demande depuis l'offre figée.
 - Modifié : dépendance `@react-pdf/renderer` (pré-approuvée) ; police Sora embarquée pour le PDF.
-- Tests : unitaires (montant en lettres identique à la base, schémas, document, PDF), E2E (`offer-live.spec.ts` : parcours complet, PDF, accès refusé au vendeur et au visiteur).
+- Ajouté : les textes de l'offre acceptent l'alphabet latin et ses accents ; le PDF embarque Sora et Noto Sans pour dessiner chaque lettre acceptée.
+- Tests : unitaires (montant en lettres identique à la base, schémas, validité, lecture des montants, document, PDF, couverture des polices), E2E (`offer-live.spec.ts` : parcours complet, PDF, accès refusé au vendeur, à un autre acquéreur et au visiteur).
 
 ### 2026-11-13 · L2-02 · PR #99 (avec L2-01) · Justificatif de financement
 - Ajouté : dépôt d'un justificatif de financement par l'acquéreur (type, date, PDF ou image) sur « Mon projet d'achat » : « Justificatif fourni » ; remplacement et retrait ; troisième étape du dossier acquéreur.
