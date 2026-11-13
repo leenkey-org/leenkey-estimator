@@ -6,7 +6,7 @@
 -- database.
 begin;
 \ir _helpers.psql
-select plan(28);
+select plan(33);
 \ir _plan.psql
 
 \set who seller_a
@@ -33,6 +33,8 @@ select tests.dpe(:'listing');
 select listing_submit(:'listing') \gset
 update listings set description = 'Description revue.' where id = :'listing';
 reset role;
+select is((select array[description, status::text] from listings where id = :'listing'),
+          array['Description revue.', 'pending'], 'the change in review is saved');
 select is((select count(*) from listing_revisions where listing_id = :'listing')::int, 0,
           'a draft or a listing in review: no history (it is reviewed anyway)');
 
@@ -153,6 +155,50 @@ select is((select data->'fields' from notifications
             where profile_id = tests.uid('admin') and type = 'listing.revised'
               and data->>'listing_id' = :'listing' and read_at is null),
           '["title"]'::jsonb, 'with only what changed since');
+
+-- A change of the description first, then of the price: the price before and after.
+update notifications set read_at = now()
+ where profile_id = tests.uid('admin') and type = 'listing.revised' and data->>'listing_id' = :'listing';
+\set who seller_a
+\ir _as.psql
+update listings set description = 'Description, encore.' where id = :'listing';
+update listings set price_cents = 23500000 where id = :'listing';
+reset role;
+select is((select array[data->>'old_price_cents', data->>'price_cents'] from notifications
+            where profile_id = tests.uid('admin') and type = 'listing.revised'
+              and data->>'listing_id' = :'listing' and read_at is null),
+          array['23900000', '23500000'],
+          'the price changed after another field: its value before the first price change');
+
+-- A change made by the team: written, no one told (every admin of the
+-- database, two in the seed).
+update notifications set read_at = now()
+ where type = 'listing.revised' and data->>'listing_id' = :'listing';
+\set who admin
+\ir _as.psql
+update listings set title = 'Titre corrigé par l''équipe' where id = :'listing';
+reset role;
+select is((select changed_by from listing_revisions
+            where listing_id = :'listing' and field = 'title' order by created_at desc limit 1),
+          tests.uid('admin'), 'a change by the team: written, by the admin');
+select is((select count(*) from notifications
+            where type = 'listing.revised' and data->>'listing_id' = :'listing' and read_at is null)::int, 0,
+          'and no one is told');
+
+-- Suspended by the team: no longer followed.
+\set who admin
+\ir _as.psql
+\o /dev/null
+select listing_suspend(:'listing', 'Contrôle d''une modification (test).');
+\o
+reset role;
+select count(*)::int as before_suspended from listing_revisions where listing_id = :'listing' \gset
+\set who admin
+\ir _as.psql
+update listings set title = 'Titre pendant la suspension' where id = :'listing';
+reset role;
+select is((select count(*) from listing_revisions where listing_id = :'listing')::int, :before_suspended,
+          'a suspended listing: not followed');
 
 -- ===========================================================================
 -- Who reads it

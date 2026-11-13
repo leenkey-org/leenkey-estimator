@@ -9,7 +9,7 @@ export const frListingRevisions = {
   sellerIntro:
     "Chaque modification faite depuis la mise en ligne est notée ici, et nous en sommes informés.",
   adminTitle: "Modifications depuis la mise en ligne",
-  adminIntro: "Faites par le vendeur sans nouvelle relecture : à contrôler.",
+  adminIntro: "Faites sans nouvelle relecture : à contrôler.",
   empty: "Aucune modification depuis la mise en ligne.",
   unavailable: "L'historique ne peut pas être affiché pour le moment.",
   limited: (count: number) => `Les ${count} dernières modifications.`,

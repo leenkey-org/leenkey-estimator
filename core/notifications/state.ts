@@ -53,6 +53,8 @@ export function applyNotificationChange(
   const before = state.items[index];
   const items = state.items.slice();
   items[index] = view;
+  // A notification brought back to the top (a new date) takes its place.
+  items.sort(newestFirst);
   const change = (before.readAt && !view.readAt ? 1 : 0) - (!before.readAt && view.readAt ? 1 : 0);
   return { ...state, items, unread: Math.max(0, state.unread + change) };
 }

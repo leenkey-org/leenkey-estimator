@@ -19,7 +19,8 @@ create table public.listing_revisions (
   field text not null check (field in ('price', 'description', 'title', 'photo')),
   old_value jsonb,
   new_value jsonb,
-  created_at timestamptz not null default now(),
+  -- clock_timestamp: the lines of one save keep their order (price, title, description).
+  created_at timestamptz not null default clock_timestamp(),
   constraint listing_revisions_some_value check (old_value is not null or new_value is not null)
 );
 create index listing_revisions_listing_idx on public.listing_revisions (listing_id, created_at desc);
@@ -37,8 +38,7 @@ create policy listing_revisions_select_owner_or_admin on public.listing_revision
                 where l.id = listing_id and public.owns_property(l.property_id))
   );
 
-revoke all on public.listing_revisions from anon;
-revoke insert, update, delete, truncate on public.listing_revisions from authenticated;
+revoke all on public.listing_revisions from anon, authenticated;
 grant select on public.listing_revisions to authenticated;
 
 -- ---------------------------------------------------------------------------
@@ -158,9 +158,11 @@ begin
     if existing is null then
       perform public.notification_add(
         admin_id, 'listing.revised',
-        info || jsonb_build_object('fields', jsonb_build_array(new.field),
-                                   'old_price_cents', case when new.field = 'price' then new.old_value end,
-                                   'price_cents', l.price_cents),
+        -- No key for a price not changed yet (a JSON null would stay for good).
+        jsonb_strip_nulls(info || jsonb_build_object(
+          'fields', jsonb_build_array(new.field),
+          'old_price_cents', case when new.field = 'price' then new.old_value end,
+          'price_cents', l.price_cents)),
         '/admin/annonces/' || l.id || '#modifications', 'listings:revised');
     else
       update public.notifications n
@@ -168,8 +170,9 @@ begin
                'fields', (select jsonb_agg(distinct f) from (
                             select jsonb_array_elements_text(coalesce(n.data->'fields', '[]'::jsonb)) as f
                             union select new.field) fields),
-               'old_price_cents', coalesce(n.data->'old_price_cents',
-                                           case when new.field = 'price' then new.old_value end),
+               'old_price_cents', coalesce(nullif(n.data->'old_price_cents', 'null'::jsonb),
+                                           case when new.field = 'price' then new.old_value end,
+                                           'null'::jsonb),
                'price_cents', l.price_cents),
              created_at = now()
        where n.id = existing;

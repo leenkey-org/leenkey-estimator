@@ -82,6 +82,22 @@ describe("the list of the bell", () => {
     expect(next?.items[0].readAt).toBe("2026-10-24T09:05:00.000Z");
   });
 
+  it("brought back to the top by the database (a new date): first in the list", () => {
+    const state = ready(
+      [
+        row({ id: "recent", created_at: "2026-10-24T09:00:00.000Z" }),
+        row({ id: "bumped", created_at: "2026-10-24T08:00:00.000Z" }),
+      ],
+      2,
+    );
+    const next = applyNotificationChange(state, {
+      event: "UPDATE",
+      row: row({ id: "bumped", created_at: "2026-10-24T09:30:00.000Z" }),
+    });
+    expect(next?.items.map((item) => item.id)).toEqual(["bumped", "recent"]);
+    expect(next?.unread).toBe(2);
+  });
+
   it("a change beyond the list is read again; another account is ignored", () => {
     const state = ready([row()], 3);
     expect(applyNotificationChange(state, { event: "UPDATE", row: row({ id: "far" }) })).toBeNull();

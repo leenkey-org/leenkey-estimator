@@ -2215,6 +2215,15 @@ export type Database = {
         Args: { p_listing_id: string }
         Returns: Database["public"]["Enums"]["listing_status"]
       }
+      listing_revision_add: {
+        Args: {
+          p_field: string
+          p_old: Json
+          p_listing: Database["public"]["Tables"]["listings"]["Row"]
+          p_new: Json
+        }
+        Returns: undefined
+      }
       listing_submit: {
         Args: { p_listing_id: string; p_review?: Json }
         Returns: Database["public"]["Enums"]["listing_status"]
