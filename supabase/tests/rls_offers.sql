@@ -279,21 +279,22 @@ select throws_ok(format($$insert into offers (listing_id, buyer_id) values (%L, 
                  '42501', null, 'nor a new offer on the listing');
 \set who buyer_d
 \ir _as.psql
-select throws_ok(format($$select offer_record_precontract(%L, current_date)$$, :'offer2'), '42501', null,
+-- The day in Paris, as the function reads it (not current_date: UTC is a day behind for an hour or two).
+select throws_ok(format($$select offer_record_precontract(%L, (now() at time zone 'Europe/Paris')::date)$$, :'offer2'), '42501', null,
                  'buyer_d: not the avant-contrat of another');
 \set who seller_a
 \ir _as.psql
-select throws_ok(format($$select offer_record_precontract(%L, current_date + 3)$$, :'offer2'),
+select throws_ok(format($$select offer_record_precontract(%L, (now() at time zone 'Europe/Paris')::date + 3)$$, :'offer2'),
                  '22023', null, 'seller_a: no avant-contrat in the future');
-select throws_ok(format($$select offer_record_precontract(%L, current_date - 30)$$, :'offer2'),
+select throws_ok(format($$select offer_record_precontract(%L, (now() at time zone 'Europe/Paris')::date - 30)$$, :'offer2'),
                  '22023', null, 'nor before the acceptance');
-select lives_ok(format($$select offer_record_precontract(%L, current_date, current_date)$$, :'offer2'),
+select lives_ok(format($$select offer_record_precontract(%L, (now() at time zone 'Europe/Paris')::date, (now() at time zone 'Europe/Paris')::date)$$, :'offer2'),
                 'seller_a: records its avant-contrat');
-select ok((select precontract_signed_at = current_date from offer_for_seller where id = :'offer2'),
+select ok((select precontract_signed_at = (now() at time zone 'Europe/Paris')::date from offer_for_seller where id = :'offer2'),
           'its date recorded');
 \set who admin
 \ir _as.psql
-select lives_ok(format($$select offer_record_precontract(%L, current_date, null)$$, :'offer2'),
+select lives_ok(format($$select offer_record_precontract(%L, (now() at time zone 'Europe/Paris')::date, null)$$, :'offer2'),
                 'admin: corrects it (Sérénité, Q7)');
 select ok(exists (select 1 from audit_log where action = 'offer.precontract' and entity_id = :'offer2'
                      and actor_id = tests.uid('admin')),

@@ -140,6 +140,20 @@ export const frNotifications = {
       declined: "Votre offre d'achat a été refusée",
       detail: (title: string) => `«\u00A0${title}\u00A0»`,
     },
+    // L2-04b: an offer withdrawn by its buyer (the seller), an offer past its
+    // validity (its buyer and its seller).
+    offerWithdrawn: {
+      title: (firstName: string | null) =>
+        firstName ? `${firstName} a retiré son offre d'achat` : "Une offre d'achat a été retirée",
+      detail: (price: string | null, title: string | null) =>
+        [price, title ? `«\u00A0${title}\u00A0»` : null].filter(Boolean).join(" · ") || null,
+    },
+    offerExpired: {
+      buyer: "Votre offre d'achat a expiré",
+      seller: "Une offre d'achat reçue a expiré",
+      detail: (price: string | null, title: string | null) =>
+        [price, title ? `«\u00A0${title}\u00A0»` : null].filter(Boolean).join(" · ") || null,
+    },
     // L1-23: the sale reaches a step (SPEC-V2 section 9).
     stepAdvanced: {
       title: (step: string | null) =>

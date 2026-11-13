@@ -8,17 +8,23 @@ import { InfoNote } from "@/components/shared/info-note";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { requireProfile, type SessionProfile } from "@/core/auth/session";
 import { isUuid } from "@/leenkey/messaging/queries";
+import { OfferBuyerActions } from "@/leenkey/offers/components/offer-buyer-actions";
 import { OfferDocumentView } from "@/leenkey/offers/components/offer-document-view";
 import { OfferHistory } from "@/leenkey/offers/components/offer-history";
+import { OfferPrecontractForm } from "@/leenkey/offers/components/offer-precontract-form";
 import { OfferReceivedCard } from "@/leenkey/offers/components/offer-received-card";
 import {
   MarkOfferViewed,
   OfferSellerActions,
 } from "@/leenkey/offers/components/offer-seller-actions";
 import { OfferStatusBadge } from "@/leenkey/offers/components/offer-status-badge";
-import { buildOfferDocument, formatNumericDateTime } from "@/leenkey/offers/document";
+import {
+  buildOfferDocument,
+  formatNumericDateTime,
+  formatNumericDay,
+} from "@/leenkey/offers/document";
 import { offerFormPath, offerPath, offerPdfPath } from "@/leenkey/offers/paths";
-import { buyerOffer, type BuyerOffer } from "@/leenkey/offers/queries";
+import { buyerOffer, offerAccess, type BuyerOffer } from "@/leenkey/offers/queries";
 import {
   buyerConversationHref,
   offerEvents,
@@ -26,6 +32,7 @@ import {
   type OfferEvent,
   type SellerOffer,
 } from "@/leenkey/offers/seller";
+import { withdrawalPeriodEnd } from "@/leenkey/offers/withdrawal";
 import { sheetHref } from "@/leenkey/properties/sheet";
 import { frOffer } from "@/lib/i18n/sections/offer";
 
@@ -34,6 +41,11 @@ const fr = { offer: frOffer } as const;
 
 const t = fr.offer.page;
 const s = fr.offer.seller;
+const f = fr.offer.followUp;
+
+/** A moment as its day in Paris, « YYYY-MM-DD ». */
+const parisDay = (value: string | Date) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date(value));
 
 export const metadata: Metadata = { title: t.metaTitle };
 
@@ -43,11 +55,14 @@ type Props = {
 };
 
 // The page of an offer (SPEC-V2 13). For its buyer (L2-03): its status, its
-// document as it was sent, its PDF; a draft goes back to the form. For the
+// document as it was sent, its PDF; a draft goes back to the form; what
+// follows it (L2-04b): its withdrawal while it waits, a new offer from its
+// content, what an acceptance and an avant-contrat mean for a buyer. For the
 // seller of its listing (L2-04a): the summary and the « Analyse Leenkey »,
 // the three answers while it waits, the document with the personal data of
-// the buyers hidden until acceptance, its journal. The first opening by the
-// seller marks it « Consultée ». Anyone else: a 404.
+// the buyers hidden until acceptance, its journal, and the avant-contrat to
+// record once accepted (L2-04b). The first opening by the seller marks it
+// « Consultée ». Anyone else: a 404.
 export default async function OfferPage({ params, searchParams }: Props) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   if (!isUuid(id)) notFound();
@@ -89,9 +104,12 @@ async function BuyerView({
   found: BuyerOffer;
   sent: boolean;
 }) {
-  const { offer, snapshot } = found;
+  const { offer, snapshot, followUp } = found;
   if (offer.status === "draft" || !snapshot) redirect(offerFormPath(offer.listingId));
-  const events = await offerEvents([offer.id]);
+  const [events, access] = await Promise.all([
+    offerEvents([offer.id]),
+    offerAccess(profile, offer.listingId),
+  ]);
 
   // Past its validity an offer is expired, even before the cron writes it.
   const expired =
@@ -100,10 +118,35 @@ async function BuyerView({
       offer.validityUntil !== null &&
       Date.parse(offer.validityUntil) <= Date.now());
   const status = expired ? "expired" : offer.status;
+  const waiting = status === "submitted" || status === "viewed";
+  // A new offer from this one: while it waits (it will replace it) or once it
+  // is over, as long as the listing takes an offer of this buyer.
+  const canRenew =
+    (waiting || status === "declined" || status === "expired" || status === "withdrawn") &&
+    access.ok &&
+    access.data.state === "open";
+  const state =
+    status === "withdrawn"
+      ? {
+          tone: "info" as const,
+          text: f.withdrawnOn(
+            followUp.withdrawnAt ? formatNumericDateTime(followUp.withdrawnAt) : "",
+          ),
+        }
+      : status === "declined"
+        ? { tone: "info" as const, text: f.declined }
+        : status === "expired"
+          ? { tone: "warning" as const, text: f.expired }
+          : null;
   return (
     <SpacePage title={t.title} roles={profile.roles} profileId={profile.id}>
       <div className="mt-4 flex flex-col gap-5">
-        {sent && !expired ? <InlineAlert tone="success">{t.sent}</InlineAlert> : null}
+        {sent && waiting ? <InlineAlert tone="success">{t.sent}</InlineAlert> : null}
+        {state ? (
+          <InlineAlert tone={state.tone} live={false}>
+            {state.text}
+          </InlineAlert>
+        ) : null}
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2.5">
             <p className="text-lk-body font-semibold text-lk-ink tabular">
@@ -143,6 +186,20 @@ async function BuyerView({
             {t.superseded}
           </InlineAlert>
         ) : null}
+        {status === "accepted" ? (
+          followUp.precontractSignedAt ? (
+            <BuyerPrecontract
+              signedAt={followUp.precontractSignedAt}
+              notifiedAt={followUp.withdrawalPeriodStart}
+            />
+          ) : (
+            // Accepted: no button to withdraw, no legal conclusion (SPEC 13).
+            <InfoNote title={f.accepted.title}>
+              <p>{f.accepted.text}</p>
+            </InfoNote>
+          )
+        ) : null}
+        <OfferBuyerActions offerId={offer.id} canWithdraw={waiting} canRenew={canRenew} />
         <PdfButton offerId={offer.id} label={t.pdf} />
         <OfferDocumentView document={buildOfferDocument(offer, snapshot)} />
         {/* Its journal: what the seller did with it, and their message. */}
@@ -213,10 +270,84 @@ async function SellerView({ profile, item }: { profile: SessionProfile; item: Se
             <p>{s.masked}</p>
           </InfoNote>
         ) : null}
+        {offer.status === "accepted" && item.answeredAt ? (
+          <SellerPrecontract item={item} answeredAt={item.answeredAt} />
+        ) : null}
         <OfferDocumentView document={buildOfferDocument(offer, property)} />
         {events.ok && events.data[offer.id] ? <History events={events.data[offer.id]} /> : null}
       </div>
     </SpacePage>
+  );
+}
+
+/**
+ * The avant-contrat as its buyer reads it (SPEC-V2 13, « Avant-contrat
+ * signé »): its date; the end of the legal withdrawal period only when the
+ * seller recorded the day it was notified or handed, never counted from the
+ * signature; always « Votre notaire fait foi ».
+ */
+function BuyerPrecontract({
+  signedAt,
+  notifiedAt,
+}: {
+  signedAt: string;
+  notifiedAt: string | null;
+}) {
+  const end = notifiedAt ? withdrawalPeriodEnd(notifiedAt) : null;
+  return (
+    <section aria-labelledby="avant-contrat" className="flex flex-col gap-3">
+      <h2 id="avant-contrat" className="text-lk-h3 font-bold text-wide text-lk-ink">
+        {f.precontract.title}
+      </h2>
+      <InfoNote>
+        <p className="font-semibold">{f.precontract.signedOn(formatNumericDay(signedAt))}</p>
+        {end ? (
+          <>
+            <p>{f.precontract.periodEnd(formatNumericDay(end))}</p>
+            <p>{f.precontract.indicative}</p>
+          </>
+        ) : (
+          <p>{f.precontract.unknownStart}</p>
+        )}
+      </InfoNote>
+    </section>
+  );
+}
+
+/** The avant-contrat of an accepted offer, recorded and corrected by its seller. */
+function SellerPrecontract({ item, answeredAt }: { item: SellerOffer; answeredAt: string }) {
+  const labels = s.precontract;
+  const end = item.withdrawalPeriodStart ? withdrawalPeriodEnd(item.withdrawalPeriodStart) : null;
+  return (
+    <section aria-labelledby="avant-contrat" className="flex flex-col gap-3">
+      <h2 id="avant-contrat" className="text-lk-h3 font-bold text-wide text-lk-ink">
+        {labels.title}
+      </h2>
+      {item.precontractSignedAt ? (
+        <div className="flex flex-col gap-1 text-lk-secondary text-lk-ink-2">
+          <p className="font-semibold text-lk-ink">
+            {labels.signedOn(formatNumericDay(item.precontractSignedAt))}
+          </p>
+          {item.withdrawalPeriodStart ? (
+            <p>{labels.notifiedOn(formatNumericDay(item.withdrawalPeriodStart))}</p>
+          ) : null}
+          {end ? (
+            <p>
+              {labels.periodEnd(formatNumericDay(end))} {labels.indicative}
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <p className="text-lk-secondary text-lk-ink-2">{labels.intro}</p>
+      )}
+      <OfferPrecontractForm
+        offerId={item.offer.id}
+        signedAt={item.precontractSignedAt}
+        notifiedAt={item.withdrawalPeriodStart}
+        minDay={parisDay(answeredAt)}
+        maxDay={parisDay(new Date())}
+      />
+    </section>
   );
 }
 

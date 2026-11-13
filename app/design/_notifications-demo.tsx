@@ -25,7 +25,9 @@ function samples(sample: Sample, now: number): NotificationView[] {
       body: null,
       data: { sender_first_name: sample.sender, excerpt: sample.excerpt, truncated: false },
       link: "/design#notifications",
-      createdAt: at(0.2),
+      // Now, not minutes ago: the example always has a notification of the day,
+      // even opened right after midnight.
+      createdAt: at(0),
       readAt: null,
     },
     {

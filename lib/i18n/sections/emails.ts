@@ -208,6 +208,33 @@ export const frEmails = {
     action: "Voir mon offre",
     why: "Vous recevez cet email parce que vous avez fait une offre d'achat sur Leenkey.",
   },
+  // L2-04b: an offer withdrawn by its buyer, to the seller (SPEC-V2 18: the
+  // date and the time of the withdrawal).
+  offerWithdrawn: {
+    subject: (reference: string) => `Offre d'achat retirée · ${reference}`,
+    title: "Une offre d'achat a été retirée",
+    text: (buyer: string | null, price: string, property: string, date: string | null) =>
+      `${buyer ?? "L'acquéreur"} a retiré son offre de ${price} pour votre bien «\u00A0${property}\u00A0»${date ? ` le ${date}` : ""}.`,
+    next: "Cette offre n'attend plus de réponse de votre part. Vos autres offres en cours restent visibles dans votre espace.",
+    action: "Voir l'offre",
+    why: "Vous recevez cet email parce que vous avez reçu une offre d'achat sur Leenkey.",
+  },
+  // L2-04b: an offer past its validity, to its buyer and to its seller.
+  offerExpired: {
+    subject: (reference: string) => `Offre d'achat expirée · ${reference}`,
+    title: "Offre d'achat expirée",
+    buyerText: (price: string, property: string, date: string | null) =>
+      `Votre offre de ${price} pour le bien «\u00A0${property}\u00A0» a expiré${date ? ` le ${date}` : ""} : le vendeur ne peut plus l'accepter.`,
+    buyerNext:
+      "Tant que l'annonce est en ligne, vous pouvez faire une nouvelle offre sur ce bien : elle reprend le contenu de celle-ci.",
+    sellerText: (price: string, property: string, date: string | null) =>
+      `L'offre de ${price} reçue pour votre bien «\u00A0${property}\u00A0» a expiré${date ? ` le ${date}` : ""} : elle ne peut plus être acceptée.`,
+    sellerNext: "Vous pouvez échanger avec l'acquéreur dans la messagerie.",
+    buyerAction: "Voir mon offre",
+    sellerAction: "Voir l'offre",
+    buyerWhy: "Vous recevez cet email parce que vous avez fait une offre d'achat sur Leenkey.",
+    sellerWhy: "Vous recevez cet email parce que vous avez reçu une offre d'achat sur Leenkey.",
+  },
   // L1-40: a plan ending within 30 days, to its owner.
   planEnding: {
     subject: (plan: string, date: string) => `Votre formule ${plan} se termine le ${date}`,
