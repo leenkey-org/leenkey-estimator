@@ -168,8 +168,9 @@ export const frListing = {
     // The mobile bar, beside the price (L1-60).
     contactShort: "Contacter",
     visit: "Demander une visite",
+    offer: "Faire une offre",
     accountRequired:
-      "Un compte acquéreur est nécessaire pour contacter le vendeur ou demander une visite.",
+      "Un compte acquéreur est nécessaire pour contacter le vendeur, demander une visite ou faire une offre.",
     // The preview of the seller before sending (L1-13).
     inactive: "Dans l'aperçu, ces boutons sont inactifs.",
   },

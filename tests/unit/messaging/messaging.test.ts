@@ -207,17 +207,24 @@ describe("contact from a listing", () => {
     expect(contactLinks(listing, true)).toEqual({
       contact: `/messages/nouveau?annonce=${LISTING}`,
       visit: `/messages/nouveau?annonce=${LISTING}&visite=1`,
+      // « Faire une offre » (L2-03).
+      offer: `/offres/nouvelle?listing=${LISTING}`,
       signedIn: true,
     });
   });
 
   it("goes through the sign-up of a buyer without a session, then to the message", () => {
-    const { contact, visit } = contactLinks({ id: LISTING, slug: "appartement-lk0005" }, false);
+    const { contact, visit, offer } = contactLinks(
+      { id: LISTING, slug: "appartement-lk0005" },
+      false,
+    );
     const next = (href: string) => new URL(href, "https://leenkey.fr").searchParams;
     expect(contact.startsWith("/inscription?")).toBe(true);
     expect(next(contact).get("role")).toBe("buyer");
     expect(next(contact).get("next")).toBe(`/messages/nouveau?annonce=${LISTING}`);
     expect(next(visit).get("next")).toBe(`/messages/nouveau?annonce=${LISTING}&visite=1`);
+    expect(next(offer).get("role")).toBe("buyer");
+    expect(next(offer).get("next")).toBe(`/offres/nouvelle?listing=${LISTING}`);
   });
 });
 

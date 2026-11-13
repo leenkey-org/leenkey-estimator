@@ -243,7 +243,7 @@ Conventions :
 - Tables en `snake_case` pluriel (`properties`, `listings`, `offers`). Colonnes en `snake_case`.
 - Toute table a `id uuid default gen_random_uuid()`, `created_at timestamptz default now()`, `updated_at timestamptz` (trigger), et `owner_id` ou équivalent quand une ligne appartient à quelqu'un.
 - Suppression logique (`deleted_at`) pour `properties`, `listings`, `documents`, `profiles`. Suppression physique uniquement pour les tables techniques.
-- Les fichiers sont dans Supabase Storage, buckets `photos` (lecture des annonces publiées via URL signée courte), `documents` (privé : dossier de vente et justificatifs de financement, URL signée 10 minutes) et `offers` (privé : PDF des offres d'achat, URL signée 10 minutes). Jamais d'URL permanente pour un fichier privé.
+- Les fichiers sont dans Supabase Storage, buckets `photos` (lecture des annonces publiées via URL signée courte), `documents` (privé : dossier de vente et justificatifs de financement, URL signée 10 minutes) et `offers` (réservé : depuis L2-03 le PDF d'une offre est dessiné à la demande depuis l'offre figée, rien n'y est déposé, `docs/DECISIONS.md` 2026-11-13). Jamais d'URL permanente pour un fichier privé.
 - Toute écriture passe par une server action ou un route handler qui valide avec Zod puis écrit via le client Supabase serveur avec la session de l'utilisateur. Le client `admin` (service role) n'est utilisé que là où la RLS ne peut pas s'appliquer (webhooks, crons).
 
 Le schéma complet des tables est dans `docs/SPEC-V2.md`, section 4 (référence à jour). `docs/plan-de-mise-en-oeuvre.md` est un document contractuel antérieur : ne pas s'en servir pour le schéma.

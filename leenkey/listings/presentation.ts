@@ -12,6 +12,7 @@ import type { PublicListing } from "./queries";
 import type { GalleryPhoto } from "@/components/shared/gallery";
 import type { KeyFigure } from "@/components/shared/key-figures";
 import { newConversationPath } from "@/leenkey/messaging/presentation";
+import { offerFormPath } from "@/leenkey/offers/paths";
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import { floorLabel, placeLabel } from "@/leenkey/search/cards";
 import { NBSP, formatPrice, formatSurface } from "@/lib/format";
@@ -231,12 +232,13 @@ export function buyerSignUpHref(slug: string, next = `/annonce/${slug}`): string
   return `/inscription?${params.toString()}`;
 }
 
-export type ContactLinks = { contact: string; visit: string; signedIn: boolean };
+export type ContactLinks = { contact: string; visit: string; offer: string; signedIn: boolean };
 
 /**
  * « Contacter le vendeur » and « Demander une visite » (SPEC 8.5, 8.6): the
  * first message to the seller, about a visit for the second (until the
- * visits of L3); without a session, the sign-up first, then that message.
+ * visits of L3); « Faire une offre » (L2-03): the offer form. Without a
+ * session, the sign-up first, then that page.
  */
 export function contactLinks(
   listing: Pick<PublicListing, "id" | "slug">,
@@ -244,11 +246,14 @@ export function contactLinks(
 ): ContactLinks {
   const contact = newConversationPath(listing.id);
   const visit = newConversationPath(listing.id, { visit: true });
+  // « Faire une offre » (L2-03, SPEC 13): the form in seven steps.
+  const offer = offerFormPath(listing.id);
   return signedIn
-    ? { contact, visit, signedIn }
+    ? { contact, visit, offer, signedIn }
     : {
         contact: buyerSignUpHref(listing.slug, contact),
         visit: buyerSignUpHref(listing.slug, visit),
+        offer: buyerSignUpHref(listing.slug, offer),
         signedIn,
       };
 }
