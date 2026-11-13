@@ -2701,19 +2701,24 @@ export type Database = {
           group_last_sent_at: string
         }[]
       }
+      number_in_words_fr: {
+        Args: { p_n: number }
+        Returns: string
+      }
       offer_answer: {
         Args: {
-          p_offer_id: string
           p_accept: boolean
-          p_message?: string
           p_confirmed_read?: boolean
+          p_message?: string
+          p_ip_hash?: string
+          p_offer_id: string
         }
         Returns: Database["public"]["Enums"]["offer_status"]
       }
       offer_bad_transition: {
         Args: {
-          p_status: Database["public"]["Enums"]["offer_status"]
           p_action: string
+          p_status: Database["public"]["Enums"]["offer_status"]
         }
         Returns: undefined
       }
@@ -2722,7 +2727,7 @@ export type Database = {
         Returns: boolean
       }
       offer_event: {
-        Args: { p_event: string; p_offer: string; p_meta?: Json }
+        Args: { p_offer: string; p_event: string; p_meta?: Json }
         Returns: undefined
       }
       offer_expire_if_due: {
@@ -2780,6 +2785,10 @@ export type Database = {
           withdrawn_at: string | null
         }
       }
+      offer_identity_complete: {
+        Args: { p: Json }
+        Returns: boolean
+      }
       offer_identity_for_seller: {
         Args: { p_full: boolean; p_identity: Json }
         Returns: Json
@@ -2794,9 +2803,9 @@ export type Database = {
       }
       offer_record_precontract: {
         Args: {
-          p_signed_at: string
-          p_offer_id: string
           p_withdrawal_start?: string
+          p_offer_id: string
+          p_signed_at: string
         }
         Returns: undefined
       }
@@ -2839,6 +2848,10 @@ export type Database = {
       photos_reorder: {
         Args: { p_property_id: string; p_photo_ids: string[] }
         Returns: undefined
+      }
+      price_in_words_fr: {
+        Args: { p_cents: number }
+        Returns: string
       }
       profile_add_role: {
         Args: { p_role: Database["public"]["Enums"]["user_role"] }
@@ -3107,6 +3120,10 @@ export type Database = {
       team_email_addresses: {
         Args: Record<PropertyKey, never>
         Returns: string[]
+      }
+      words_below_1000_fr: {
+        Args: { p_final: boolean; p_n: number }
+        Returns: string
       }
     }
     Enums: {

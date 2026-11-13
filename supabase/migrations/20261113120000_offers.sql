@@ -39,19 +39,22 @@ create table public.offers (
   seller_id uuid not null references public.profiles(id),
 
   -- 1. The buyer (frozen once sent, never read again from the profile)
-  buyer_identity jsonb not null default '{}' check (jsonb_typeof(buyer_identity) = 'object'),
+  buyer_identity jsonb not null default '{}'
+    check (jsonb_typeof(buyer_identity) = 'object' and pg_column_size(buyer_identity) <= 8192),
   co_buyers jsonb not null default '[]'
-    check (jsonb_typeof(co_buyers) = 'array' and jsonb_array_length(co_buyers) <= 3),
+    check (jsonb_typeof(co_buyers) = 'array' and jsonb_array_length(co_buyers) <= 3
+           and pg_column_size(co_buyers) <= 24576),
   acquisition_mode public.acquisition_mode not null default 'own_name',
   acquisition_mode_other text check (char_length(acquisition_mode_other) <= 200),
-  sci_details jsonb check (sci_details is null or jsonb_typeof(sci_details) = 'object'),
+  sci_details jsonb check (sci_details is null
+                           or (jsonb_typeof(sci_details) = 'object' and pg_column_size(sci_details) <= 4096)),
 
   -- 2. The property (photographed from the listing when sent)
   property_snapshot jsonb not null default '{}' check (jsonb_typeof(property_snapshot) = 'object'),
 
   -- 3. The price
-  price_cents bigint check (price_cents > 0),
-  price_in_words text check (char_length(price_in_words) <= 300),
+  price_cents bigint check (price_cents > 0 and price_cents % 100 = 0),   -- whole euros
+  price_in_words text check (char_length(price_in_words) <= 300),        -- written at sending (price_in_words_fr)
 
   -- 4. The financing declared
   financing_mode public.financing_mode,
@@ -76,7 +79,8 @@ create table public.offers (
 
   -- 7. Declarations
   visited boolean,
-  declarations jsonb not null default '{}' check (jsonb_typeof(declarations) = 'object'),
+  declarations jsonb not null default '{}'
+    check (jsonb_typeof(declarations) = 'object' and pg_column_size(declarations) <= 2048),
 
   message text check (char_length(message) <= 1000),
   status public.offer_status not null default 'draft',
@@ -112,6 +116,7 @@ create index offers_superseded_by_idx on public.offers (superseded_by) where sup
 create unique index offers_one_draft_idx on public.offers (buyer_id, listing_id) where status = 'draft';
 create unique index offers_one_in_progress_idx on public.offers (buyer_id, listing_id)
   where status in ('submitted', 'viewed');
+create unique index offers_version_idx on public.offers (buyer_id, listing_id, version);
 
 create table public.offer_events (
   id bigint generated always as identity primary key,
@@ -126,6 +131,119 @@ create table public.offer_events (
 create index offer_events_offer_idx on public.offer_events (offer_id, id);
 create index offer_events_actor_idx on public.offer_events (actor_id);
 
+-- The journal is never changed; it goes only with a draft deleted.
+create function public.offer_events_immutable() returns trigger
+language plpgsql set search_path = '' as $$
+begin
+  if tg_op = 'UPDATE'
+     or exists (select 1 from public.offers where id = old.offer_id and submitted_at is not null) then
+    raise exception 'the journal of an offer is never changed' using errcode = '42501';
+  end if;
+  return old;
+end;
+$$;
+
+create trigger offer_events_immutable before update or delete on public.offer_events
+  for each row execute function public.offer_events_immutable();
+
+-- ---------------------------------------------------------------------------
+-- The price in words (SPEC 4: generated, never typed): written by the database
+-- when the offer is sent, from the price, so that the two never differ (on a
+-- legal document the amount in words prevails). French in its traditional
+-- spelling, as the acts write it: « trois cent trente-huit mille euros »,
+-- « quatre-vingts », « deux cents millions », « mille » invariable. The same
+-- rule in code for the form (L2-03), checked against this one.
+-- ---------------------------------------------------------------------------
+create function public.words_below_1000_fr(p_n int, p_final boolean) returns text
+language plpgsql immutable set search_path = '' as $$
+declare
+  units text[] := array['un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix',
+                        'onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit',
+                        'dix-neuf'];
+  tens text[] := array['dix','vingt','trente','quarante','cinquante','soixante'];
+  h int := p_n / 100;
+  r int := p_n % 100;
+  t int;
+  u int;
+  head text := '';
+  tail text := '';
+begin
+  if p_n = 0 then
+    return '';
+  end if;
+  if h = 1 then
+    head := 'cent';
+  elsif h > 1 then
+    head := units[h] || ' cent' || case when r = 0 and p_final then 's' else '' end;
+  end if;
+  if r > 0 then
+    if r < 20 then
+      tail := units[r];
+    else
+      t := r / 10;
+      u := r % 10;
+      if t <= 6 then
+        tail := tens[t] || case when u = 1 then ' et un' when u > 0 then '-' || units[u] else '' end;
+      elsif t = 7 then
+        tail := 'soixante' || case when u = 1 then ' et onze' else '-' || units[10 + u] end;
+      elsif t = 8 then
+        tail := 'quatre-vingt' || case when u = 0 then case when p_final then 's' else '' end
+                                       else '-' || units[u] end;
+      else
+        tail := 'quatre-vingt-' || units[10 + u];
+      end if;
+    end if;
+  end if;
+  return btrim(head || ' ' || tail);
+end;
+$$;
+
+create function public.number_in_words_fr(p_n bigint) returns text
+language plpgsql immutable set search_path = '' as $$
+declare
+  billions int := (p_n / 1000000000)::int;
+  millions int := ((p_n / 1000000) % 1000)::int;
+  thousands int := ((p_n / 1000) % 1000)::int;
+  rest int := (p_n % 1000)::int;
+  parts text[] := '{}';
+begin
+  if p_n is null or p_n < 0 or p_n >= 1000000000000 then
+    return null;
+  end if;
+  if p_n = 0 then
+    return 'zéro';
+  end if;
+  if billions > 0 then
+    parts := parts || (public.words_below_1000_fr(billions, true) || ' milliard'
+                       || case when billions > 1 then 's' else '' end);
+  end if;
+  if millions > 0 then
+    parts := parts || (public.words_below_1000_fr(millions, true) || ' million'
+                       || case when millions > 1 then 's' else '' end);
+  end if;
+  if thousands > 0 then
+    parts := parts || case when thousands = 1 then 'mille'
+                           else public.words_below_1000_fr(thousands, false) || ' mille' end;
+  end if;
+  if rest > 0 then
+    parts := parts || public.words_below_1000_fr(rest, true);
+  end if;
+  return array_to_string(parts, ' ');
+end;
+$$;
+
+/** « trois cent trente-huit mille euros », « un euro » ; whole euros only. */
+create function public.price_in_words_fr(p_cents bigint) returns text
+language sql immutable set search_path = '' as $$
+  select case when p_cents is null or p_cents <= 0 or p_cents % 100 <> 0 then null
+              else public.number_in_words_fr(p_cents / 100)
+                   || case when p_cents = 100 then ' euro'
+                           -- « un million d'euros », « deux millions d'euros »
+                           when (p_cents / 100) % 1000000 = 0 then ' d''euros'
+                           else ' euros' end
+         end;
+$$;
+
 -- ---------------------------------------------------------------------------
 -- Helpers
 -- ---------------------------------------------------------------------------
@@ -138,8 +256,9 @@ $$;
 
 -- Can the session draft an offer on this listing (SPEC 13, prerequisites)?
 -- A buyer account, active, its financing at least declared, a listing online
--- that is not its own. One offer in progress does not prevent a draft: that is
--- « Faire une nouvelle offre », which supersedes it when sent.
+-- that is not its own, no offer of its own already accepted on it. One offer
+-- in progress does not prevent a draft: that is « Faire une nouvelle offre »,
+-- which supersedes it when sent.
 create function public.offer_can_draft(p_listing uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select public.is_active_user()
@@ -148,7 +267,9 @@ language sql stable security definer set search_path = '' as $$
                   where profile_id = auth.uid() and financing_status <> 'not_provided')
      and exists (select 1 from public.listings l join public.properties p on p.id = l.property_id
                   where l.id = p_listing and l.status = 'published' and l.deleted_at is null
-                    and p.owner_id <> auth.uid());
+                    and p.deleted_at is null and p.owner_id <> auth.uid())
+     and not exists (select 1 from public.offers
+                      where listing_id = p_listing and buyer_id = auth.uid() and status = 'accepted');
 $$;
 
 -- A new draft: its reference, its version, its seller (never chosen by the
@@ -224,9 +345,30 @@ begin
       old.created_at)
      or (old.pdf_path is not null and new.pdf_path is distinct from old.pdf_path)
      or (old.synthesis is not null and new.synthesis is distinct from old.synthesis)
-     or new.status = 'draft'
   then
     raise exception 'an offer sent cannot be changed: make a new offer' using errcode = '42501';
+  end if;
+  -- Its history neither (SPEC 13, « Ce que Leenkey conserve »): the statuses
+  -- follow their graph, each date and the acceptance are written once.
+  if new.status is distinct from old.status and not (
+       (old.status = 'submitted' and new.status in ('viewed', 'accepted', 'declined', 'withdrawn',
+                                                    'expired', 'superseded'))
+    or (old.status = 'viewed' and new.status in ('accepted', 'declined', 'withdrawn', 'expired',
+                                                 'superseded')))
+  then
+    raise exception 'an offer cannot go from % to %', old.status, new.status using errcode = '42501';
+  end if;
+  if (old.viewed_at is not null and new.viewed_at is distinct from old.viewed_at)
+     or (old.answered_at is not null and new.answered_at is distinct from old.answered_at)
+     or (old.withdrawn_at is not null and new.withdrawn_at is distinct from old.withdrawn_at)
+     or (old.expired_at is not null and new.expired_at is distinct from old.expired_at)
+     or (old.superseded_by is not null and new.superseded_by is distinct from old.superseded_by)
+     or (old.seller_acceptance is not null and new.seller_acceptance is distinct from old.seller_acceptance)
+     or (new.status <> 'accepted'
+         and (new.precontract_signed_at, new.withdrawal_period_start)
+             is distinct from (old.precontract_signed_at, old.withdrawal_period_start))
+  then
+    raise exception 'the history of an offer is never rewritten' using errcode = '42501';
   end if;
   return new;
 end;
@@ -262,6 +404,21 @@ begin
 end;
 $$;
 
+-- A complete identity (decision of L2-01): names, birth date (a past date),
+-- address, email, phone.
+create function public.offer_identity_complete(p jsonb) returns boolean
+language sql immutable set search_path = '' as $$
+  select jsonb_typeof(p) = 'object'
+     and coalesce(btrim(p->>'last_name'), '') <> ''
+     and coalesce(btrim(p->>'first_name'), '') <> ''
+     and coalesce(p->>'birth_date', '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+     and coalesce(btrim(p#>>'{address,line}'), '') <> ''
+     and coalesce(btrim(p#>>'{address,postal_code}'), '') <> ''
+     and coalesce(btrim(p#>>'{address,city}'), '') <> ''
+     and coalesce(p->>'email', '') ~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'
+     and coalesce(btrim(p->>'phone'), '') <> '';
+$$;
+
 -- Send (SPEC 13, step 7): one transaction; the photographs of the property
 -- and of the financing status, the declarations dated, the offer in progress
 -- of the same buyer on the listing superseded. The PDF, the synthesis and the
@@ -273,6 +430,7 @@ declare
   l public.listings;
   p public.properties;
   previous uuid;
+  prev public.offers;
   identity_ok boolean;
 begin
   select * into o from public.offers where id = p_offer_id and buyer_id = auth.uid() for update;
@@ -286,17 +444,15 @@ begin
     raise exception 'this offer can no longer be sent' using errcode = '42501';
   end if;
 
-  -- What the form must have filled (the server action checks it first).
-  identity_ok := coalesce(btrim(o.buyer_identity->>'last_name'), '') <> ''
-             and coalesce(btrim(o.buyer_identity->>'first_name'), '') <> ''
-             and coalesce(btrim(o.buyer_identity->>'birth_date'), '') <> ''
-             and coalesce(btrim(o.buyer_identity#>>'{address,line}'), '') <> ''
-             and coalesce(btrim(o.buyer_identity#>>'{address,postal_code}'), '') <> ''
-             and coalesce(btrim(o.buyer_identity#>>'{address,city}'), '') <> ''
-             and coalesce(btrim(o.buyer_identity->>'email'), '') <> ''
-             and coalesce(btrim(o.buyer_identity->>'phone'), '') <> '';
+  -- What the form must have filled (the server action checks it first): the
+  -- buyer and each co-buyer complete, « À deux / indivision » with one at
+  -- least.
+  identity_ok := public.offer_identity_complete(o.buyer_identity)
+             and not exists (select 1 from jsonb_array_elements(o.co_buyers) c
+                              where not public.offer_identity_complete(c))
+             and (o.acquisition_mode <> 'joint' or jsonb_array_length(o.co_buyers) >= 1);
   if not identity_ok
-     or o.price_cents is null or coalesce(btrim(o.price_in_words), '') = ''
+     or o.price_cents is null
      or o.financing_mode is null or o.visited is null or o.validity_until is null
      or (o.acquisition_mode = 'other' and coalesce(btrim(o.acquisition_mode_other), '') = '')
      or (o.acquisition_mode = 'sci' and (
@@ -304,7 +460,10 @@ begin
            or coalesce(o.sci_details->>'status', '') not in ('registered', 'in_formation')
            or (o.sci_details->>'status' = 'registered'
                and coalesce(o.sci_details->>'siren', '') !~ '^[0-9]{9}$')))
-     or (o.financing_mode = 'loan' and o.loan_amount_cents <= 0)
+     or (o.financing_mode = 'loan' and (o.loan_amount_cents <= 0 or o.loan_duration_years is null
+                                        or o.loan_rate_max_pct is null))
+     or (o.financing_mode = 'no_loan' and (o.loan_amount_cents <> 0 or o.loan_duration_years is not null
+                                           or o.loan_rate_max_pct is not null))
      or (o.financing_progress = 'other' and coalesce(btrim(o.financing_progress_other), '') = '')
      or not coalesce((o.declarations->>'accuracy')::boolean, false)
      or not coalesce((o.declarations->>'price_and_financing_checked')::boolean, false)
@@ -323,10 +482,17 @@ begin
   select * into l from public.listings where id = o.listing_id;
   select * into p from public.properties where id = l.property_id;
 
-  -- The offer in progress of the same buyer on the listing gives way to this one.
-  select id into previous from public.offers
+  -- The offer in progress of the same buyer on the listing gives way to this
+  -- one; past its validity, it is expired, not superseded.
+  select * into prev from public.offers
    where buyer_id = o.buyer_id and listing_id = o.listing_id and status in ('submitted', 'viewed')
    for update;
+  if found then
+    prev := public.offer_expire_if_due(prev);
+    if prev.status in ('submitted', 'viewed') then
+      previous := prev.id;
+    end if;
+  end if;
   if previous is not null then
     update public.offers set status = 'superseded', superseded_by = o.id where id = previous;
     perform public.offer_event(previous, 'superseded', jsonb_build_object('by', o.id));
@@ -335,11 +501,13 @@ begin
   update public.offers
      set status = 'submitted',
          submitted_at = now(),
+         price_in_words = public.price_in_words_fr(o.price_cents),
          property_snapshot = jsonb_build_object(
            'listing_reference', l.reference,
            'title', l.title,
-           'address', jsonb_build_object('line', p.address_line, 'postal_code', p.postal_code,
-                                         'city', p.city),
+           -- The town only (SPEC 14: the exact address goes to a buyer whose visit
+           -- is confirmed, never elsewhere; DECISIONS 2026-11-13, Q82).
+           'address', jsonb_build_object('postal_code', p.postal_code, 'city', p.city),
            'type', p.type,
            'surface_m2', p.surface_m2,
            'rooms', p.rooms,
@@ -385,7 +553,7 @@ $$;
 -- withdrawn or superseded at the moment of the click.
 create function public.offer_answer(
   p_offer_id uuid, p_accept boolean, p_confirmed_read boolean default false,
-  p_message text default null
+  p_message text default null, p_ip_hash text default null
 ) returns public.offer_status
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -397,8 +565,18 @@ begin
     raise exception 'offer not found' using errcode = '42501';
   end if;
   o := public.offer_expire_if_due(o);
+  -- Expired at the moment of the click: it stays expired (written), no answer.
+  if o.status = 'expired' then
+    return 'expired';
+  end if;
   if o.status not in ('submitted', 'viewed') then
     perform public.offer_bad_transition(o.status, case when p_accept then 'accept' else 'decline' end);
+  end if;
+  -- Not accepted on a listing suspended by the team, sold or withdrawn.
+  if p_accept and not exists (select 1 from public.listings
+                               where id = o.listing_id and status in ('published', 'paused')
+                                 and deleted_at is null) then
+    raise exception 'the listing of this offer is not on sale' using errcode = '22023';
   end if;
   if p_accept and not coalesce(p_confirmed_read, false) then
     raise exception 'the seller must confirm having read the whole offer' using errcode = '22023';
@@ -411,7 +589,8 @@ begin
          answered_at = now(),
          viewed_at = coalesce(viewed_at, now()),
          seller_acceptance = case when p_accept
-           then jsonb_build_object('confirmed_read', true, 'confirmed_at', now()) end
+           then jsonb_strip_nulls(jsonb_build_object('confirmed_read', true, 'confirmed_at', now(),
+                                                     'ip_hash', left(p_ip_hash, 128))) end
    where id = o.id;
   perform public.offer_event(o.id, next_status::text,
     case when nullif(btrim(p_message), '') is not null
@@ -426,11 +605,15 @@ language plpgsql security definer set search_path = '' as $$
 declare
   o public.offers;
 begin
+  -- A suspended buyer may still withdraw (it only lifts a commitment).
   select * into o from public.offers where id = p_offer_id and buyer_id = auth.uid() for update;
-  if not found or not public.is_active_user() then
+  if not found or exists (select 1 from public.profiles where id = auth.uid() and deleted_at is not null) then
     raise exception 'offer not found' using errcode = '42501';
   end if;
   o := public.offer_expire_if_due(o);
+  if o.status = 'expired' then
+    return 'expired';
+  end if;
   if o.status not in ('submitted', 'viewed') then
     perform public.offer_bad_transition(o.status, 'withdraw');
   end if;
@@ -538,14 +721,14 @@ revoke all on public.offer_events from anon, authenticated;
 revoke all on sequence public.offer_reference_seq from anon, authenticated;
 grant select, delete on public.offers to authenticated;
 grant insert (listing_id, buyer_id, buyer_identity, co_buyers, acquisition_mode, acquisition_mode_other,
-              sci_details, price_cents, price_in_words, financing_mode, down_payment_cents,
+              sci_details, price_cents, financing_mode, down_payment_cents,
               loan_amount_cents, loan_duration_years, loan_rate_max_pct, lender_name,
               financing_progress, financing_progress_other, condition_prior_sale,
               condition_authorization, condition_other, conditions_details, validity_until,
               visited, declarations, message)
   on public.offers to authenticated;
 grant update (buyer_identity, co_buyers, acquisition_mode, acquisition_mode_other,
-              sci_details, price_cents, price_in_words, financing_mode, down_payment_cents,
+              sci_details, price_cents, financing_mode, down_payment_cents,
               loan_amount_cents, loan_duration_years, loan_rate_max_pct, lender_name,
               financing_progress, financing_progress_other, condition_prior_sale,
               condition_authorization, condition_other, conditions_details, validity_until,
@@ -616,16 +799,25 @@ revoke execute on function public.offer_expire_if_due(public.offers) from public
 revoke execute on function public.offer_bad_transition(public.offer_status, text) from public, anon, authenticated;
 revoke execute on function public.offer_submit(uuid) from public, anon;
 revoke execute on function public.offer_mark_viewed(uuid) from public, anon;
-revoke execute on function public.offer_answer(uuid, boolean, boolean, text) from public, anon;
+revoke execute on function public.offer_answer(uuid, boolean, boolean, text, text) from public, anon;
 revoke execute on function public.offer_withdraw(uuid) from public, anon;
 revoke execute on function public.offer_record_precontract(uuid, date, date) from public, anon;
 revoke execute on function public.offers_expire_due() from public, anon, authenticated;
+revoke execute on function public.offer_events_immutable() from public, anon, authenticated;
+revoke execute on function public.offer_identity_complete(jsonb) from public, anon;
+revoke execute on function public.words_below_1000_fr(int, boolean) from public, anon;
+revoke execute on function public.number_in_words_fr(bigint) from public, anon;
+revoke execute on function public.price_in_words_fr(bigint) from public, anon;
+grant execute on function public.offer_identity_complete(jsonb) to authenticated;
+grant execute on function public.words_below_1000_fr(int, boolean) to authenticated;
+grant execute on function public.number_in_words_fr(bigint) to authenticated;
+grant execute on function public.price_in_words_fr(bigint) to authenticated;
 revoke execute on function public.offer_identity_for_seller(jsonb, boolean) from public, anon;
 grant execute on function public.offer_can_draft(uuid) to authenticated;
 grant execute on function public.offer_is_party(uuid) to authenticated;
 grant execute on function public.offer_submit(uuid) to authenticated;
 grant execute on function public.offer_mark_viewed(uuid) to authenticated;
-grant execute on function public.offer_answer(uuid, boolean, boolean, text) to authenticated;
+grant execute on function public.offer_answer(uuid, boolean, boolean, text, text) to authenticated;
 grant execute on function public.offer_withdraw(uuid) to authenticated;
 grant execute on function public.offer_record_precontract(uuid, date, date) to authenticated;
 grant execute on function public.offer_identity_for_seller(jsonb, boolean) to authenticated;

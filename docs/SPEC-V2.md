@@ -730,6 +730,9 @@ create table offers (
 -- validité et visite peuvent être vides dans un brouillon (enregistré à chaque étape), exigés à
 -- l'envoi (contrainte offers_complete_when_sent et offer_submit) ; updated_at ajouté ;
 -- buyer_identity.address = { line, postal_code, city } ; financing_document_id sans FK avant L2-02.
+-- price_in_words est écrit par la base à l'envoi (price_in_words_fr), jamais par le client ;
+-- property_snapshot.address = { postal_code, city } (Q82) ; le gel couvre aussi l'historique
+-- (graphe des statuts, dates écrites une fois, journal jamais modifié).
 -- Fonctions : offer_can_draft, offer_submit, offer_mark_viewed, offer_answer, offer_withdraw,
 -- offer_record_precontract, offers_expire_due (cron) ; vue offer_for_seller.
 

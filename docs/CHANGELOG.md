@@ -15,7 +15,8 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 ### 2026-11-13 · L2-01 · PR #99 · Offre d'achat : base de données
 - Ajouté : tables `offers` et `offer_events`, référence `LK-AAAA-NNNNN` et version, fonctions d'envoi, de consultation, de réponse, de retrait, d'avant-contrat et d'expiration, gel d'une offre envoyée, vue `offer_for_seller` (données personnelles masquées avant acceptation).
 - Migration : `20261113120000_offers.sql`.
-- Tests : permissions (`rls_offers.sql`, 52 tests : les cinq comptes et un visiteur).
+- Ajouté : prix en toutes lettres écrit par la base à l'envoi (jamais saisi) ; historique d'une offre figé comme son contenu.
+- Tests : permissions (`rls_offers.sql`, 81 tests : les cinq comptes et un visiteur).
 
 ### 2026-11-13 · L1-35 · PR #98 · Historique d'une annonce en ligne
 - Ajouté : historique des modifications d'une annonce en ligne ou en pause (prix, titre, description, photos ajoutées ou retirées, légendes), chez le vendeur (onglet Annonce) et dans le back office ; notification « Une annonce en ligne a été modifiée » à l'équipe, dans l'application.
