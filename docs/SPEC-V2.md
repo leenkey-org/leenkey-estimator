@@ -726,6 +726,13 @@ create table offers (
   created_at timestamptz not null default now()
 );
 
+-- Mise en œuvre (L2-01, DECISIONS.md 2026-11-13) : prix, prix en lettres, mode de financement,
+-- validité et visite peuvent être vides dans un brouillon (enregistré à chaque étape), exigés à
+-- l'envoi (contrainte offers_complete_when_sent et offer_submit) ; updated_at ajouté ;
+-- buyer_identity.address = { line, postal_code, city } ; financing_document_id sans FK avant L2-02.
+-- Fonctions : offer_can_draft, offer_submit, offer_mark_viewed, offer_answer, offer_withdraw,
+-- offer_record_precontract, offers_expire_due (cron) ; vue offer_for_seller.
+
 create table offer_events (               -- journal horodaté, jamais modifié
   id bigint generated always as identity primary key,
   offer_id uuid not null references offers(id) on delete cascade,
