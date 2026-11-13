@@ -9,10 +9,11 @@
 -- Choices (DECISIONS.md 2026-11-13, L2-02):
 -- - files in the private bucket `documents`, `{buyer_id}/financing/{uuid}.pdf`
 --   or `.jpg` (an image is converted by the server), 5 MB at most;
--- - a buyer keeps several documents over time; the one in force is
---   `buyer_profiles.current_financing_document_id`; filing a new one replaces
---   it there, removing the one in force brings the status back to what is
---   declared;
+-- - a buyer files several documents over time; the one in force is
+--   `buyer_profiles.current_financing_document_id`; filing a new one retires
+--   the previous one (kept, marked removed), removing the one in force brings
+--   the status back to what is declared; the project is declared first (the
+--   team compares the document with it);
 -- - an offer takes, when it is sent, the document in force (L2-01 left the
 --   column empty).
 
@@ -111,6 +112,14 @@ language sql stable security definer set search_path = '' as $$
                         where o.financing_document_id = d.id and o.submitted_at is not null)));
 $$;
 
+-- Twenty files at most in the folder of a buyer (a document kept by an offer
+-- sent stays): no account fills the bucket.
+create function public.financing_files_room() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select (select count(*) from storage.objects
+           where bucket_id = 'documents' and name like auth.uid()::text || '/financing/%') < 20;
+$$;
+
 create policy documents_financing_select on storage.objects
   for select to authenticated
   using (bucket_id = 'documents'
@@ -120,12 +129,12 @@ create policy documents_financing_select on storage.objects
 create policy documents_financing_insert on storage.objects
   for insert to authenticated
   with check (bucket_id = 'documents' and public.financing_file_buyer(name) = auth.uid()
-              and public.is_active_user());
+              and public.is_active_user() and public.financing_files_room());
 
 create policy documents_financing_delete on storage.objects
   for delete to authenticated
   using (bucket_id = 'documents' and public.financing_file_buyer(name) = auth.uid()
-         and not public.financing_file_in_use(name));
+         and public.is_active_user() and not public.financing_file_in_use(name));
 
 -- ---------------------------------------------------------------------------
 -- Filing a document: its file is already in the bucket (sent with the session
@@ -138,29 +147,51 @@ create function public.financing_document_add(
 language plpgsql security definer set search_path = '' as $$
 declare
   v_today date := (now() at time zone 'Europe/Paris')::date;
+  v_mime text := case when p_storage_path like '%.pdf' then 'application/pdf' else 'image/jpeg' end;
+  bp public.buyer_profiles;
+  file_meta jsonb;
+  v_size int := p_size_bytes;
   new_id uuid;
 begin
-  if auth.uid() is null or not public.is_active_user()
-     or not exists (select 1 from public.buyer_profiles where profile_id = auth.uid()) then
+  if auth.uid() is null or not public.is_active_user() then
+    raise exception 'not a buyer' using errcode = '42501';
+  end if;
+  -- The row of the buyer locked: two filings, or a filing and a check, never cross.
+  select * into bp from public.buyer_profiles where profile_id = auth.uid() for update;
+  if not found then
     raise exception 'not a buyer' using errcode = '42501';
   end if;
   if public.financing_file_buyer(p_storage_path) is distinct from auth.uid() then
     raise exception 'not a file of this buyer' using errcode = '42501';
   end if;
+  -- The team compares the document with what is declared: declared first.
+  if bp.financing_status = 'not_provided' then
+    raise exception 'the project is not declared' using errcode = '22023';
+  end if;
   if p_type is null or p_document_date is null or p_document_date > v_today
      or p_document_date < v_today - 3650 then
     raise exception 'the type and the date of the document are required' using errcode = '22023';
   end if;
-  if not exists (select 1 from storage.objects where bucket_id = 'documents' and name = p_storage_path) then
+  select metadata into file_meta from storage.objects
+   where bucket_id = 'documents' and name = p_storage_path;
+  if not found then
     raise exception 'the file of the document is missing' using errcode = '22023';
   end if;
-  -- Ten documents kept at most: the oldest ones are removed first by the buyer.
-  if (select count(*) from public.financing_documents
-       where buyer_id = auth.uid() and deleted_at is null) >= 10 then
-    raise exception 'too many documents' using errcode = '22023';
+  -- What the storage service knows of the file wins over what is declared: a
+  -- file sent directly, heavier or of another type than its name, is refused.
+  if p_mime_type is distinct from v_mime
+     or (file_meta ? 'mimetype' and file_meta->>'mimetype' <> v_mime)
+     or (file_meta ? 'size' and (file_meta->>'size')::bigint > 5242880) then
+    raise exception 'the file of the document is not accepted' using errcode = '22023';
   end if;
+  if file_meta ? 'size' then
+    v_size := (file_meta->>'size')::int;
+  end if;
+  -- The document in force gives way: kept (an offer sent may carry it), marked removed.
+  update public.financing_documents set deleted_at = now()
+   where id = bp.current_financing_document_id and deleted_at is null;
   insert into public.financing_documents (buyer_id, type, document_date, storage_path, mime_type, size_bytes)
-  values (auth.uid(), p_type, p_document_date, p_storage_path, p_mime_type, p_size_bytes)
+  values (auth.uid(), p_type, p_document_date, p_storage_path, v_mime, v_size)
   returning id into new_id;
   update public.buyer_profiles
      set current_financing_document_id = new_id,
@@ -178,6 +209,11 @@ language plpgsql security definer set search_path = '' as $$
 declare
   d public.financing_documents;
 begin
+  -- A suspended account no longer writes (Q71): its documents stay as they are.
+  if not public.is_active_user() then
+    raise exception 'document not found' using errcode = '42501';
+  end if;
+  perform 1 from public.buyer_profiles where profile_id = auth.uid() for update;
   select * into d from public.financing_documents
    where id = p_document_id and buyer_id = auth.uid() and deleted_at is null for update;
   if not found then
@@ -205,10 +241,14 @@ begin
   if not public.is_admin() then
     raise exception 'admin only' using errcode = '42501';
   end if;
-  select * into d from public.financing_documents where id = p_document_id for update;
+  select * into d from public.financing_documents where id = p_document_id;
   if not found then
     raise exception 'document not found' using errcode = '42501';
   end if;
+  -- The row of the buyer locked first, as in a filing: the document checked is
+  -- still the one in force when the status is written.
+  perform 1 from public.buyer_profiles where profile_id = d.buyer_id for update;
+  select * into d from public.financing_documents where id = p_document_id for update;
   if d.deleted_at is not null or d.checked_at is not null
      or not exists (select 1 from public.buyer_profiles
                      where profile_id = d.buyer_id and current_financing_document_id = d.id) then
@@ -222,7 +262,10 @@ begin
    where id = d.id;
   update public.buyer_profiles
      set financing_status = 'document_checked', financing_checked_at = now()
-   where profile_id = d.buyer_id;
+   where profile_id = d.buyer_id and current_financing_document_id = d.id;
+  if not found then
+    raise exception 'this document is no longer to check' using errcode = '22023';
+  end if;
   perform public.audit('financing.check', 'financing_document', d.id,
                        jsonb_build_object('buyer_id', d.buyer_id, 'type', d.type));
 end;
@@ -292,6 +335,7 @@ create trigger offers_attach_financing_document before update of status on publi
 
 revoke execute on function public.financing_file_buyer(text) from public, anon;
 revoke execute on function public.financing_file_in_use(text) from public, anon;
+revoke execute on function public.financing_files_room() from public, anon;
 revoke execute on function public.financing_document_add(public.financing_document_type, date, text, text, int) from public, anon;
 revoke execute on function public.financing_document_remove(uuid) from public, anon;
 revoke execute on function public.financing_document_check(uuid, text) from public, anon;
@@ -299,6 +343,7 @@ revoke execute on function public.admin_financing_documents(uuid) from public, a
 revoke execute on function public.offers_attach_financing_document() from public, anon, authenticated;
 grant execute on function public.financing_file_buyer(text) to authenticated;
 grant execute on function public.financing_file_in_use(text) to authenticated;
+grant execute on function public.financing_files_room() to authenticated;
 grant execute on function public.financing_document_add(public.financing_document_type, date, text, text, int) to authenticated;
 grant execute on function public.financing_document_remove(uuid) to authenticated;
 grant execute on function public.financing_document_check(uuid, text) to authenticated;

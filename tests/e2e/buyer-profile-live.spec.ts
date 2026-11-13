@@ -84,6 +84,11 @@ test("un acquéreur déclare son projet ; son vendeur voit le statut, pas les mo
 
   await test.step("il déclare son projet et son financement", async () => {
     await expect(buyer.getByRole("status").getByText("Financement non renseigné")).toBeVisible();
+    // No proof before the project is declared: the team compares the two.
+    await expect(
+      buyer.getByText(/^Renseignez d'abord votre projet, votre budget, votre apport/),
+    ).toBeVisible();
+    await expect(buyer.getByRole("button", { name: "Déposer le justificatif" })).toHaveCount(0);
     // A typing error first: said on the field, the focus on it.
     await buyer.getByLabel("Budget maximum").fill("300 000,50");
     await buyer.getByRole("button", { name: "Enregistrer" }).click();

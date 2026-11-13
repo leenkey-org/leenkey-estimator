@@ -337,14 +337,16 @@ export default async function AdminUserPage({ params }: Props) {
                           </p>
                         ) : null}
                       </div>
-                      <a
-                        href={`/documents/financement/${document.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-h-11 items-center self-start text-lk-secondary font-semibold text-lk-blue underline-offset-2 hover:underline"
-                      >
-                        {f.open}
-                      </a>
+                      {document.removedAt ? null : (
+                        <a
+                          href={`/documents/financement/${document.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-11 items-center self-start text-lk-secondary font-semibold text-lk-blue underline-offset-2 hover:underline"
+                        >
+                          {f.open}
+                        </a>
+                      )}
                       {toCheck ? (
                         <FinancingCheck documentId={document.id} profileId={user.id} />
                       ) : null}

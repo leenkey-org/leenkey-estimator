@@ -50,6 +50,7 @@ export default async function BuyerProfilePage() {
           <FinancingDocumentCard
             initial={result.data?.financingDocument ?? null}
             checkedAt={result.data?.financingCheckedAt ?? null}
+            declared={(result.data?.financingStatus ?? "not_provided") !== "not_provided"}
           />
         </>
       ) : (

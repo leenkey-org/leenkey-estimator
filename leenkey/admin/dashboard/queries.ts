@@ -174,14 +174,16 @@ export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult
         .is("resolved_at", null)
         .order("created_at", { ascending: true })
         .limit(limit),
-      // L2-02: the proofs of financing in force that wait for their check.
+      // L2-02: the proofs of financing that wait for their check (one in
+      // force per buyer: a replaced or removed one is marked removed).
       supabase
-        .from("buyer_profiles")
+        .from("financing_documents")
         .select(
-          "profile_id, profile:profiles!buyer_profiles_profile_id_fkey(first_name, last_name), document:financing_documents!buyer_profiles_current_doc_fk(created_at)",
+          "id, buyer_id, created_at, buyer:profiles!financing_documents_buyer_id_fkey(first_name, last_name)",
         )
-        .eq("financing_status", "document_provided")
-        .not("current_financing_document_id", "is", null)
+        .is("checked_at", null)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: true })
         .limit(limit),
     ]);
     if (listings.error) throw new Error(`listings: ${listings.error.code}`);
@@ -213,23 +215,17 @@ export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult
             since: row.created_at,
             coverPath: null,
           })),
-          proofs.data.flatMap((row) =>
-            row.document
-              ? [
-                  {
-                    kind: "financing" as const,
-                    // The sheet of the buyer: where the document is checked.
-                    id: row.profile_id,
-                    label: shortLabel(
-                      [row.profile?.first_name, row.profile?.last_name].filter(Boolean).join(" ") ||
-                        fr.adminUsers.noName,
-                    ),
-                    since: row.document.created_at,
-                    coverPath: null,
-                  },
-                ]
-              : [],
-          ),
+          proofs.data.map((row) => ({
+            kind: "financing" as const,
+            // The sheet of the buyer: where the document is checked.
+            id: row.buyer_id,
+            label: shortLabel(
+              [row.buyer?.first_name, row.buyer?.last_name].filter(Boolean).join(" ") ||
+                fr.adminUsers.noName,
+            ),
+            since: row.created_at,
+            coverPath: null,
+          })),
         ],
         limit,
       ),

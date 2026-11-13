@@ -5,8 +5,11 @@
 -- the team is read by the team only. Fixtures in postal code 99990.
 begin;
 \ir _helpers.psql
-select plan(43);
+select plan(53);
 \ir _plan.psql
+-- The storage service deletes a file this way (storage.protect_delete): as
+-- the user, under the RLS.
+select set_config('storage.allow_delete_query', 'true', false) \gset
 
 select tests.uid('buyer_c')::text || '/financing/' || gen_random_uuid()::text || '.pdf' as path1 \gset
 select tests.uid('buyer_c')::text || '/financing/' || gen_random_uuid()::text || '.jpg' as path2 \gset
@@ -48,7 +51,7 @@ select throws_ok(format($$insert into storage.objects (bucket_id, name, owner) v
                         :'path_d', tests.uid('buyer_c')),
                  '42501', null, 'buyer_c: no file in the folder of another buyer');
 select throws_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('documents', %L, %L)$$,
-                        tests.uid('buyer_c')::text || '/financing/x.exe', tests.uid('buyer_c')),
+                        tests.uid('buyer_c')::text || '/financing/' || gen_random_uuid()::text || '.exe', tests.uid('buyer_c')),
                  '42501', null, 'nor a file that is not a PDF or a JPEG of a document');
 select lives_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('documents', %L, %L)$$,
                        :'path1', tests.uid('buyer_c')),
@@ -82,6 +85,11 @@ select throws_ok($$update buyer_profiles set financing_status = 'document_checke
                  '42501', null, 'nor its status');
 select throws_ok(format($$select check_note from financing_documents where id = %L$$, :'doc1'),
                  '42501', null, 'the note of the team is not readable by a buyer');
+select throws_ok(format($$select checked_by from financing_documents where id = %L$$, :'doc1'),
+                 '42501', null, 'nor who checked');
+update storage.objects set name = :'path2' where bucket_id = 'documents' and name = :'path1';
+select is((select count(*) from storage.objects where bucket_id = 'documents' and name = :'path1')::int, 1,
+          'a file is never replaced nor renamed');
 select is((select count(*) from financing_documents where id = :'doc1')::int, 1, 'buyer_c: reads its document');
 delete from storage.objects where bucket_id = 'documents' and name = :'path1';
 select is((select count(*) from storage.objects where bucket_id = 'documents' and name = :'path1')::int, 1,
@@ -91,11 +99,25 @@ update buyer_profiles set budget_max_cents = 36000000 where profile_id = tests.u
 select is((select financing_status from buyer_profiles where profile_id = tests.uid('buyer_c')),
           'document_provided'::financing_status, 'saving the project keeps « Justificatif fourni »');
 
+-- A file whose type, as the storage knows it, is not the one of its name.
+select tests.uid('buyer_c')::text || '/financing/' || gen_random_uuid()::text || '.jpg' as path_png \gset
+insert into storage.objects (bucket_id, name, owner, metadata)
+values ('documents', :'path_png', tests.uid('buyer_c'), '{"mimetype":"image/png","size":1200}');
+select throws_ok(format($$select financing_document_add('autre', current_date, %L, 'image/jpeg', 1200)$$, :'path_png'),
+                 '22023', 'the file of the document is not accepted',
+                 'a file sent directly under another type than its name is refused');
+delete from storage.objects where bucket_id = 'documents' and name = :'path_png';
+
 -- ===========================================================================
 -- Who reads it
 -- ===========================================================================
 \set who buyer_d
 \ir _as.psql
+-- Nothing declared yet: the team would have nothing to compare the document with.
+insert into storage.objects (bucket_id, name, owner) values ('documents', :'path_d', tests.uid('buyer_d'));
+select throws_ok(format($$select financing_document_add('accord_principe', current_date, %L, 'application/pdf', 1000)$$, :'path_d'),
+                 '22023', 'the project is not declared', 'buyer_d: no document before its project is declared');
+delete from storage.objects where bucket_id = 'documents' and name = :'path_d';
 select is((select count(*) from financing_documents where id = :'doc1')::int, 0,
           'buyer_d: not the document of another buyer');
 select is((select count(*) from storage.objects where bucket_id = 'documents' and name = :'path1')::int, 0,
@@ -121,6 +143,7 @@ select is((select count(*) from buyer_summary_for_seller(:'prop'))::int, 0,
 \set who anon
 \ir _as.psql
 select throws_ok('select count(*) from financing_documents', '42501', null, 'a visitor: no documents');
+select throws_ok(format($$select financing_document_remove(%L)$$, :'doc1'), '42501', null, 'nor their functions');
 select is((select count(*) from storage.objects where bucket_id = 'documents')::int, 0, 'nor their files');
 
 -- ===========================================================================
@@ -172,26 +195,53 @@ select is((select array[financing_document_id::text, financing_status_at_submit:
           array[:'doc1', 'document_checked'],
           'the offer sent carries the document in force and its status');
 
+\set who seller_a
+\ir _as.psql
+select throws_ok('select financing_document_id from offer_for_seller', '42703', null,
+                 'seller_a: the offer does not name the document');
+select is((select count(*) from financing_documents)::int
+          + (select count(*) from storage.objects where bucket_id = 'documents')::int, 0,
+          'seller_a: still neither the document nor its file once the offer is received');
+
 -- ===========================================================================
 -- A new document, then removed
 -- ===========================================================================
+\set who buyer_c
+\ir _as.psql
 insert into storage.objects (bucket_id, name, owner) values ('documents', :'path2', tests.uid('buyer_c'));
 select financing_document_add('accord_principe', current_date - 5, :'path2', 'image/jpeg', 900000) as doc2 \gset
 select is((select array[financing_status::text, current_financing_document_id::text, financing_checked_at::text]
              from buyer_profiles where profile_id = tests.uid('buyer_c')),
           array['document_provided', :'doc2', null],
           'a new document replaces the one in force: to check again');
-select lives_ok(format($$select financing_document_remove(%L)$$, :'doc2'), 'buyer_c: removes it');
+select ok((select deleted_at is not null from financing_documents where id = :'doc1'),
+          'the previous document is retired');
+delete from storage.objects where bucket_id = 'documents' and name = :'path1';
+select is((select count(*) from storage.objects where bucket_id = 'documents' and name = :'path1')::int, 1,
+          'but its file, carried by an offer sent, is kept');
+select throws_ok(format($$select financing_document_remove(%L)$$, :'doc1'), '42501', null,
+                 'a document already retired is not removed again');
+-- Suspended: its documents stay as they are.
+reset role;
+update profiles set suspended_at = now() where id = tests.uid('buyer_c');
+\set who buyer_c
+\ir _as.psql
+select throws_ok(format($$select financing_document_remove(%L)$$, :'doc2'), '42501', null,
+                 'buyer_c suspended: no longer removes a document');
+select throws_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('documents', %L, %L)$$,
+                        tests.uid('buyer_c')::text || '/financing/' || gen_random_uuid()::text || '.pdf', tests.uid('buyer_c')),
+                 '42501', null, 'nor sends a file');
+reset role;
+update profiles set suspended_at = null where id = tests.uid('buyer_c');
+\set who buyer_c
+\ir _as.psql
+select lives_ok(format($$select financing_document_remove(%L)$$, :'doc2'), 'buyer_c: removes its document');
 select is((select array[financing_status::text, current_financing_document_id::text]
              from buyer_profiles where profile_id = tests.uid('buyer_c')),
           array['declared', null], 'back to « Informations déclarées », no document in force');
 delete from storage.objects where bucket_id = 'documents' and name = :'path2';
 select is((select count(*) from storage.objects where bucket_id = 'documents' and name = :'path2')::int, 0,
           'the file of a document removed goes with it');
-select lives_ok(format($$select financing_document_remove(%L)$$, :'doc1'), 'buyer_c: removes the first one too');
-delete from storage.objects where bucket_id = 'documents' and name = :'path1';
-select is((select count(*) from storage.objects where bucket_id = 'documents' and name = :'path1')::int, 1,
-          'but the file of a document carried by an offer sent is kept');
 \set who admin
 \ir _as.psql
 select throws_ok(format($$select financing_document_check(%L)$$, :'doc2'), '22023', null,

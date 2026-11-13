@@ -97,7 +97,13 @@ export function financingDocumentSchema(now: Date = new Date()) {
       .refine((value) => {
         const day = isoDay(value);
         const today = isoDay(todayInParis(now));
-        return Number.isFinite(day) && day <= today && day >= today - TEN_YEARS_DAYS * DAY;
+        return (
+          Number.isFinite(day) &&
+          // « 2026-02-31 » is read as the 3rd of March: refused.
+          new Date(day).toISOString().slice(0, 10) === value &&
+          day <= today &&
+          day >= today - TEN_YEARS_DAYS * DAY
+        );
       }),
   });
 }

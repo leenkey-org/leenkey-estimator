@@ -8,7 +8,9 @@ export const frFinancingDocument = {
   accepted:
     "Justificatifs acceptés : accord de principe bancaire, attestation d'un courtier, simulation ou offre bancaire nominative de moins de 3 mois environ, preuve de fonds propres (attestation bancaire) en cas d'achat comptant total ou partiel.",
   privacy:
-    "Seule l'équipe Leenkey lit votre justificatif. Le vendeur n'en voit que le statut, jamais le document.",
+    "Seule l'équipe Leenkey lit votre justificatif. Le vendeur voit son statut, son type et la date de notre contrôle, jamais le document.",
+  undeclared:
+    "Renseignez d'abord votre projet, votre budget, votre apport et votre besoin de prêt ci-dessus : nous comparons votre justificatif à ces informations.",
   types: {
     accord_principe: "Accord de principe bancaire",
     attestation_courtier: "Attestation d'un courtier",
@@ -21,7 +23,7 @@ export const frFinancingDocument = {
   date: "Date du document",
   dateHelp: "La date qui figure sur le document.",
   file: "Fichier",
-  fileHelp: "PDF ou image (JPEG, PNG, WebP), 5 Mo au plus.",
+  fileHelp: "PDF de 3,8 Mo au plus, ou image (JPEG, PNG, WebP).",
   submit: "Déposer le justificatif",
   replace: "Remplacer",
   cancel: "Annuler",
@@ -32,6 +34,8 @@ export const frFinancingDocument = {
   // No delay promised: none is decided (DECISIONS.md Q83).
   provided: "Justificatif fourni. Nous le contrôlons : le résultat s'affichera ici.",
   checked: (date: string) => `Contrôlé par Leenkey le ${date}`,
+  replaceChecked:
+    "Votre justificatif actuel a été contrôlé. Un nouveau justificatif le remplace et sera contrôlé à son tour.",
   old: "Ce document a plus de 3 mois. Vous pouvez le déposer ; un document plus récent rassure davantage un vendeur.",
   added: "Votre justificatif est déposé. Votre dossier passe à « Justificatif fourni ».",
   removed: "Votre justificatif est retiré.",
@@ -51,7 +55,8 @@ export const frFinancingDocument = {
     unsupported: "Ce fichier n'est pas lisible : envoyez un PDF ou une image JPEG, PNG ou WebP.",
     tooHeavy:
       "Ce fichier est trop lourd. Envoyez un PDF de moins de 3,8 Mo ou une photo du document.",
-    tooMany: "Vous avez déjà 10 justificatifs : retirez-en un avant d'en déposer un autre.",
+    undeclared:
+      "Renseignez d'abord votre projet et votre financement, puis déposez votre justificatif.",
     signedOut: "Votre session a pris fin : reconnectez-vous, puis réessayez.",
     generic: "Votre justificatif n'a pas pu être enregistré. Réessayez dans un instant.",
     removeFailed: "Votre justificatif n'a pas pu être retiré. Réessayez dans un instant.",
@@ -80,6 +85,5 @@ export const frFinancingDocument = {
     done: "Justificatif marqué comme vérifié.",
     stale: "Ce justificatif n'est plus à contrôler. La fiche est à jour.",
     failed: "Le contrôle n'a pas pu être enregistré. Réessayez dans un instant.",
-    todo: (name: string) => `Justificatif de financement à contrôler · ${name}`,
   },
 } as const;

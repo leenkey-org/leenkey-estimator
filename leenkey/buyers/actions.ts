@@ -88,8 +88,17 @@ export type FinancingDocumentError =
   | "invalid"
   | "unsupported"
   | "too_heavy"
-  | "too_many"
+  | "undeclared"
   | "unavailable";
+
+type Client = Awaited<ReturnType<typeof createClient>>;
+
+/** Removes a file of the buyer; a failure is logged, never shown (the document is already dealt with). */
+async function removeFile(supabase: Client, path: string, userId: string) {
+  const { error } = await supabase.storage.from(BUCKET).remove([path]);
+  if (error)
+    console.error("[buyers] financing file not removed", { user_id: userId, error: error.name });
+}
 
 export type AddFinancingDocumentResult =
   | { ok: true; data: { document: FinancingDocumentView; financingStatus: FinancingStatus } }
@@ -123,6 +132,12 @@ export async function addFinancingDocument(form: FormData): Promise<AddFinancing
       return { ok: false, error: "unavailable" };
     }
   }
+  // The document in force gives way to the new one: its file goes with it.
+  const previous = await supabase
+    .from("buyer_profiles")
+    .select("document:financing_documents!buyer_profiles_current_doc_fk(storage_path)")
+    .eq("profile_id", profile.id)
+    .maybeSingle();
   // Never the name of the file chosen: a new one (CLAUDE.md section 11).
   const path = `${profile.id}/financing/${randomUUID()}.${read.data.extension}`;
   const upload = await supabase.storage
@@ -144,15 +159,19 @@ export async function addFinancingDocument(form: FormData): Promise<AddFinancing
   });
   if (added.error) {
     // The file is not declared: taken back (the storage policy allows it).
-    await supabase.storage.from(BUCKET).remove([path]);
+    await removeFile(supabase, path, profile.id);
     console.error("[buyers] financing document failed", {
       user_id: profile.id,
       code: added.error.code,
     });
     return {
       ok: false,
-      error: added.error.message.includes("too many documents") ? "too_many" : "unavailable",
+      error: added.error.message.includes("project is not declared") ? "undeclared" : "unavailable",
     };
+  }
+  // Kept by the storage policy when an offer sent carries the document.
+  if (previous.data?.document) {
+    await removeFile(supabase, previous.data.document.storage_path, profile.id);
   }
   revalidatePath("/acquereur", "layout");
   return {
@@ -189,18 +208,27 @@ export async function removeFinancingDocument(
     .select("storage_path")
     .eq("id", documentId)
     .eq("buyer_id", profile.id)
+    .is("deleted_at", null)
     .maybeSingle();
+  if (found.error || !found.data) {
+    console.error("[buyers] financing document not found", {
+      user_id: profile.id,
+      entity_id: documentId,
+      code: found.error?.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
   const removed = await supabase.rpc("financing_document_remove", { p_document_id: documentId });
-  if (found.error || removed.error) {
+  if (removed.error) {
     console.error("[buyers] financing document removal failed", {
       user_id: profile.id,
       entity_id: documentId,
-      code: removed.error?.code ?? found.error?.code,
+      code: removed.error.code,
     });
     return { ok: false, error: "unavailable" };
   }
   // Its file too, unless an offer sent carries the document (the policy keeps it then).
-  if (found.data) await supabase.storage.from(BUCKET).remove([found.data.storage_path]);
+  await removeFile(supabase, found.data.storage_path, profile.id);
   const status = await supabase
     .from("buyer_profiles")
     .select("financing_status")

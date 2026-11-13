@@ -2604,6 +2604,10 @@ export type Database = {
         Args: { p_name: string }
         Returns: boolean
       }
+      financing_files_room: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       has_buyer_relation: {
         Args: { b: string; p: string }
         Returns: boolean

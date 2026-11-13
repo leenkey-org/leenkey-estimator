@@ -10,7 +10,7 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
 import { Select } from "@/components/shared/select";
 import { reducePhoto } from "@/leenkey/properties/components/reduce-photo";
-import { formatDate } from "@/lib/format";
+import { formatDay } from "@/lib/format";
 import { frFinancingDocument } from "@/lib/i18n/sections/financingDocument";
 import {
   FINANCING_DOCUMENT_TYPES,
@@ -46,9 +46,12 @@ const failure: Record<FinancingDocumentError, string> = {
   invalid: t.errors.generic,
   unsupported: t.errors.unsupported,
   too_heavy: t.errors.tooHeavy,
-  too_many: t.errors.tooMany,
+  undeclared: t.errors.undeclared,
   unavailable: t.errors.generic,
 };
+
+/** The day in Paris of an instant, YYYY-MM-DD. */
+const parisDay = (instant: string) => todayInParis(new Date(instant));
 
 /** The file to send: a heavy image is redrawn lighter; a PDF goes as it is. */
 async function fileToSend(file: File): Promise<Blob | "unsupported" | "too_heavy"> {
@@ -63,10 +66,13 @@ async function fileToSend(file: File): Promise<Blob | "unsupported" | "too_heavy
 export function FinancingDocumentCard({
   initial,
   checkedAt,
+  declared,
 }: {
   initial: FinancingDocumentView | null;
   /** When Leenkey checked the document in force, null before. */
   checkedAt: string | null;
+  /** The project and the financing are declared: a proof is compared with them. */
+  declared: boolean;
 }) {
   const router = useRouter();
   const [document, setDocument] = useState(initial);
@@ -81,6 +87,7 @@ export function FinancingDocumentCard({
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [working, startTransition] = useTransition();
   const fileInput = useRef<HTMLInputElement | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
   const noticeRef = useRef<HTMLParagraphElement | null>(null);
 
   // The page read again (a check by the team, another tab).
@@ -91,8 +98,14 @@ export function FinancingDocumentCard({
   useEffect(() => {
     if (notice) noticeRef.current?.focus();
   }, [notice]);
+  // An error on a field: the first one takes the focus, its message is read with it.
+  useEffect(() => {
+    if (Object.values(errors).some(Boolean)) {
+      formRef.current?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus();
+    }
+  }, [errors]);
 
-  const showForm = !document || replacing;
+  const showForm = declared && (!document || replacing);
   const now = new Date();
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -196,10 +209,10 @@ export function FinancingDocumentCard({
             <div className="flex min-w-0 flex-col gap-0.5">
               <p className="text-lk-label font-semibold text-lk-ink">{t.types[document.type]}</p>
               <p className="text-lk-caption text-lk-ink-3">
-                {t.documentDate(formatDate(`${document.documentDate}T12:00:00Z`, now))}
+                {t.documentDate(formatDay(document.documentDate))}
               </p>
               <p className="text-lk-secondary text-lk-ink-2">
-                {checked ? t.checked(formatDate(checked, now)) : t.provided}
+                {checked ? t.checked(formatDay(parisDay(checked))) : t.provided}
               </p>
             </div>
           </div>
@@ -243,9 +256,12 @@ export function FinancingDocumentCard({
         </div>
       ) : null}
 
+      {!declared && !document ? <InlineAlert tone="info">{t.undeclared}</InlineAlert> : null}
+
       {showForm ? (
-        <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+        <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-4">
           {error ? <InlineAlert tone="danger">{error}</InlineAlert> : null}
+          {document && checked ? <InlineAlert tone="info">{t.replaceChecked}</InlineAlert> : null}
           <Select
             label={t.type}
             placeholder={t.typePlaceholder}
