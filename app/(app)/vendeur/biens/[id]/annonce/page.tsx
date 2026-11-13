@@ -3,14 +3,17 @@ import Link from "next/link";
 import { Button } from "@/components/shared/button";
 import { editableOnceSent } from "@/leenkey/properties/creation";
 import { SavedNotice } from "@/components/shared/saved-notice";
+import { RevisionHistory } from "@/leenkey/listings/components/revision-history";
+import { listingRevisions } from "@/leenkey/listings/revisions";
 import { SheetSection } from "@/leenkey/properties/components/sheet-section";
 import { propertyForSheet } from "@/leenkey/properties/load";
 import { editHref, pricePerM2Cents, propertyName } from "@/leenkey/properties/sheet";
 import { formatPrice } from "@/lib/format";
+import { frListingRevisions } from "@/lib/i18n/sections/listingRevisions";
 import { frProperties } from "@/lib/i18n/sections/properties";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { properties: frProperties } as const;
+const fr = { listingRevisions: frListingRevisions, properties: frProperties } as const;
 
 const t = fr.properties.sheet;
 
@@ -27,7 +30,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 // L1-14, tab Annonce: price, title, description and reference, as the
 // buyers read them. A draft or a rejected listing changes them at step 3;
-// once sent, from here (L1-14b), and it stays online.
+// once sent, from here (L1-14b), and it stays online. Once it has been
+// online, the history of its changes (L1-35).
+
+/** The statuses of a listing that has been online: its history is kept. */
+const ONCE_ONLINE = new Set(["published", "paused", "suspended", "sold"]);
 export default async function PropertyListingPage({ params, searchParams }: Props) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const property = await propertyForSheet(id);
@@ -52,6 +59,8 @@ export default async function PropertyListingPage({ params, searchParams }: Prop
   }
 
   const perM2 = pricePerM2Cents(listing.priceCents, property.characteristics.surfaceM2);
+  const revisions =
+    status !== null && ONCE_ONLINE.has(status) ? await listingRevisions(listing.id) : null;
   return (
     <div className="flex flex-col gap-8">
       {query.modifie === "1" && editableOnceSent(status) ? (
@@ -98,6 +107,12 @@ export default async function PropertyListingPage({ params, searchParams }: Prop
           </div>
         </dl>
       </SheetSection>
+      {revisions ? (
+        <SheetSection id="historique" title={fr.listingRevisions.sellerTitle}>
+          <p className="text-lk-secondary text-lk-ink-3">{fr.listingRevisions.sellerIntro}</p>
+          <RevisionHistory result={revisions} />
+        </SheetSection>
+      ) : null}
     </div>
   );
 }

@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-13 · L1-35 · PR #98 · Historique d'une annonce en ligne
+- Ajouté : historique des modifications d'une annonce en ligne ou en pause (prix, titre, description, photos ajoutées ou retirées, légendes), chez le vendeur (onglet Annonce) et dans le back office ; notification « Une annonce en ligne a été modifiée » à l'équipe, dans l'application.
+- Migration : `20261113100000_listing_revisions.sql` (`listing_revisions`, déclencheurs sur `listings` et `photos`, notification `listing.revised`).
+- Tests : permissions (`rls_listing_revisions.sql`), unitaires (lignes de l'historique, texte de la notification), E2E (`property-edit.spec.ts`).
+
 ### 2026-11-13 · Documentation · PR #97 · Applications mobiles dans les livrables
 - Modifié : l'application mobile iOS et Android entre dans les livrables (décision de Younes) ; cadrage en APP-01 (Q81), inscription Apple relancée après la bascule de leenkey.fr.
 

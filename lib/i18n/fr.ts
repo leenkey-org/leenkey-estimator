@@ -24,6 +24,7 @@ import { frFooter } from "./sections/footer";
 import { frConsent } from "./sections/consent";
 import { frAdminAssistant } from "./sections/adminAssistant";
 import { frAdminListings } from "./sections/adminListings";
+import { frListingRevisions } from "./sections/listingRevisions";
 import { frAdminDashboard } from "./sections/adminDashboard";
 import { frAdminUsers } from "./sections/adminUsers";
 import { frAdminCases } from "./sections/adminCases";
@@ -68,6 +69,7 @@ export const fr = {
   consent: frConsent,
   adminAssistant: frAdminAssistant,
   adminListings: frAdminListings,
+  listingRevisions: frListingRevisions,
   adminDashboard: frAdminDashboard,
   adminUsers: frAdminUsers,
   adminCases: frAdminCases,

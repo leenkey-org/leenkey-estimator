@@ -99,6 +99,20 @@ export const frNotifications = {
       title: "Une annonce attend votre relecture",
       detail: (parts: readonly (string | null)[]) => parts.filter(Boolean).join(" · "),
     },
+    // L1-35: a listing online changed by its seller, to check afterwards.
+    listingRevised: {
+      title: "Une annonce en ligne a été modifiée",
+      fields: {
+        price: "prix",
+        title: "titre",
+        description: "description",
+        photo: "photos",
+      } as Record<string, string>,
+      changed: (fields: readonly string[]) =>
+        fields.length > 0 ? `Modifié : ${fields.join(", ")}` : null,
+      price: (before: string, after: string) => `Prix : ${before} → ${after}`,
+      detail: (parts: readonly (string | null)[]) => parts.filter(Boolean).join(" · "),
+    },
     listingPublished: {
       title: "Votre annonce est en ligne",
       detail: (title: string) => `«\u00A0${title}\u00A0» est visible des acquéreurs.`,

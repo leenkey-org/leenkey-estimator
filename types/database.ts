@@ -574,6 +574,49 @@ export type Database = {
           },
         ]
       }
+      listing_revisions: {
+        Row: {
+          changed_by: string
+          created_at: string
+          field: string
+          id: string
+          listing_id: string
+          new_value: Json | null
+          old_value: Json | null
+        }
+        Insert: {
+          changed_by: string
+          created_at?: string
+          field: string
+          id?: string
+          listing_id: string
+          new_value?: Json | null
+          old_value?: Json | null
+        }
+        Update: {
+          changed_by?: string
+          created_at?: string
+          field?: string
+          id?: string
+          listing_id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_revisions_changed_by_fkey"
+            columns: ["changed_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_revisions_listing_id_fkey"
+            columns: ["listing_id"]
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_views: {
         Row: {
           count: number
@@ -2171,6 +2214,15 @@ export type Database = {
       listing_resume: {
         Args: { p_listing_id: string }
         Returns: Database["public"]["Enums"]["listing_status"]
+      }
+      listing_revision_add: {
+        Args: {
+          p_field: string
+          p_old: Json
+          p_listing: Database["public"]["Tables"]["listings"]["Row"]
+          p_new: Json
+        }
+        Returns: undefined
       }
       listing_submit: {
         Args: { p_listing_id: string; p_review?: Json }

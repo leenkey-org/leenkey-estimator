@@ -24,16 +24,23 @@ import { ReviewPanel } from "@/leenkey/admin/components/listing-review";
 import { adminListing } from "@/leenkey/admin/queries";
 import { RegulatoryMentions } from "@/leenkey/listings/components/listing-body";
 import { ListingDescription } from "@/leenkey/listings/components/listing-description";
+import { RevisionHistory } from "@/leenkey/listings/components/revision-history";
+import { listingRevisions } from "@/leenkey/listings/revisions";
 import { listingKeyFacts } from "@/leenkey/listings/key-facts";
 import { galleryPhotos, listingKeyFigures } from "@/leenkey/listings/presentation";
 import { capitalize, formatDateShort, formatDateTime, formatRelative } from "@/lib/format";
 import { frAdminListings } from "@/lib/i18n/sections/adminListings";
+import { frListingRevisions } from "@/lib/i18n/sections/listingRevisions";
 import { frPlan } from "@/lib/i18n/sections/plan";
 import { adminListingsHref } from "@/lib/validations/admin";
 import { AdminPage } from "../../_components/admin-page";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { adminListings: frAdminListings, plan: frPlan } as const;
+const fr = {
+  adminListings: frAdminListings,
+  listingRevisions: frListingRevisions,
+  plan: frPlan,
+} as const;
 
 const t = fr.adminListings;
 
@@ -61,9 +68,10 @@ function historyLabel(action: string): string {
 
 // L1-19: a listing as the back office sees it (SPEC-V2 section 17): status,
 // seller, plan, the motive of a refusal or a suspension, the decisions, the
-// pre-analysis (L1-30d), the preview of the listing and its history
-// (audit_log). Not yet here: « Modifier » (L1-35) and the detail panel of
-// the desktop list (later, DECISIONS 2026-10-17).
+// pre-analysis (L1-30d), the preview of the listing, the changes made by
+// its seller once online (L1-35) and its history (audit_log). Not yet here:
+// « Modifier » (L1-30e) and the detail panel of the desktop list (later,
+// DECISIONS 2026-10-17).
 export default async function AdminListingPage({ params }: Props) {
   await requireAdmin();
   const result = await load((await params).id);
@@ -78,6 +86,10 @@ export default async function AdminListingPage({ params }: Props) {
   if (!result.data) notFound();
   const detail = result.data;
   const { listing } = detail;
+  // Once online (published, paused, then suspended or sold): its changes (L1-35).
+  const revisions = ["published", "paused", "suspended", "sold"].includes(detail.status)
+    ? await listingRevisions(listing.id)
+    : null;
   const now = new Date();
   const reason =
     detail.status === "rejected"
@@ -203,6 +215,14 @@ export default async function AdminListingPage({ params }: Props) {
             <RegulatoryMentions listing={listing} className="mt-0" />
           </div>
         </section>
+
+        {revisions ? (
+          <section aria-labelledby="modifications" className="flex flex-col gap-3">
+            <SectionTitle id="modifications">{fr.listingRevisions.adminTitle}</SectionTitle>
+            <p className="text-lk-secondary text-lk-ink-3">{fr.listingRevisions.adminIntro}</p>
+            <RevisionHistory result={revisions} />
+          </section>
+        ) : null}
 
         <section aria-labelledby="historique" className="flex flex-col gap-3">
           <SectionTitle id="historique">{t.detail.history}</SectionTitle>

@@ -8,7 +8,8 @@ import sharp from "sharp";
 // only on a local stack just made by `scripts/local-stack.sh up`, with
 // E2E_SEED=1, SEED_PASSWORD and E2E_MUTATE=1, never on the preprod (project
 // « seed-mutations »). Seed listing used here only: LK-0002 of seller_a.
-// Suspended and sold listings, read only: property-status.spec.ts.
+// Suspended and sold listings, read only: property-status.spec.ts. The
+// history of these changes (L1-35): last test.
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
@@ -27,9 +28,9 @@ test.describe.configure({ mode: "serial" });
 const sheet = "/vendeur/biens/5eed1000-0000-4000-8000-000000000002";
 const saved = "Vos modifications sont enregistrées et visibles sur votre annonce.";
 
-async function signIn(page: Page, path: string) {
+async function signIn(page: Page, path: string, account: "seller_a" | "admin" = "seller_a") {
   await page.goto(`/connexion?next=${encodeURIComponent(path)}`);
-  await page.getByLabel("Email").fill("seller_a@test.leenkey.fr");
+  await page.getByLabel("Email").fill(`${account}@test.leenkey.fr`);
   await page.getByLabel("Mot de passe").fill(SEED_PASSWORD ?? "");
   await page.getByRole("button", { name: "Se connecter" }).click();
   await page.waitForURL((url) => url.pathname !== "/connexion");
@@ -220,4 +221,48 @@ test("une photo ajoutée depuis l'onglet Photos est en ligne aussitôt", async (
     .poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0))
     .toBe(true);
   await visitor.close();
+});
+
+test("l'historique des modifications : chez le vendeur, puis dans le back office (L1-35)", async ({
+  page,
+  browser,
+}) => {
+  await signIn(page, `${sheet}/annonce`);
+  const history = page
+    .getByRole("main")
+    .getByRole("region", { name: "Historique des modifications" });
+  await expect(
+    history.getByText(/^Chaque modification faite depuis la mise en ligne/),
+  ).toBeVisible();
+  const lines = history.getByRole("listitem");
+  // The most recent first: the photo of the test before, then the changes of the listing.
+  await expect(lines.first()).toContainText("Photo ajoutée");
+  await expect(history).toContainText(/Prix · 429\s000\s€ → 419\s000\s€ \(−2\s%\)/);
+  await expect(history).toContainText("Titre · «");
+  await expect(history).toContainText("Maison familiale avec grand jardin");
+  const texts = history.getByText("Voir l'ancienne et la nouvelle description");
+  await texts.click();
+  // Before: the text of the seed; after: the one written by the test.
+  await expect(
+    history.getByText(
+      "Maison de 1985 sur deux niveaux, au calme, avec un grand jardin et un garage.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expectNoSeriousViolation(page);
+
+  // The team: told in the bell, the changes on the page of the listing.
+  const context = await browser.newContext();
+  const admin = await context.newPage();
+  await signIn(admin, "/admin/annonces?statut=en-ligne&q=LK-0002", "admin");
+  await admin.getByRole("link", { name: "Aperçu de l'annonce LK-0002" }).click();
+  await expect(admin).toHaveURL(/\/admin\/annonces\/[0-9a-f-]{36}$/);
+  const changes = admin
+    .getByRole("main")
+    .getByRole("region", { name: "Modifications depuis la mise en ligne" });
+  await expect(changes).toContainText(/Prix · 429\s000\s€ → 419\s000\s€/);
+  await expect(changes).toContainText("Photo ajoutée");
+  await expect(changes).toContainText("Description modifiée");
+  await expectNoSeriousViolation(admin);
+  await context.close();
 });

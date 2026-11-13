@@ -82,6 +82,22 @@ describe("the list of the bell", () => {
     expect(next?.items[0].readAt).toBe("2026-10-24T09:05:00.000Z");
   });
 
+  it("brought back to the top by the database (a new date): first in the list", () => {
+    const state = ready(
+      [
+        row({ id: "recent", created_at: "2026-10-24T09:00:00.000Z" }),
+        row({ id: "bumped", created_at: "2026-10-24T08:00:00.000Z" }),
+      ],
+      2,
+    );
+    const next = applyNotificationChange(state, {
+      event: "UPDATE",
+      row: row({ id: "bumped", created_at: "2026-10-24T09:30:00.000Z" }),
+    });
+    expect(next?.items.map((item) => item.id)).toEqual(["bumped", "recent"]);
+    expect(next?.unread).toBe(2);
+  });
+
   it("a change beyond the list is read again; another account is ignored", () => {
     const state = ready([row()], 3);
     expect(applyNotificationChange(state, { event: "UPDATE", row: row({ id: "far" }) })).toBeNull();
@@ -130,6 +146,7 @@ describe("wording of the notifications (from type and data)", () => {
         "listing.pending",
         "listing.published",
         "listing.rejected",
+        "listing.revised",
         "message.new",
         "plan.activated",
         "plan.ending",
@@ -223,6 +240,30 @@ describe("wording of the notifications (from type and data)", () => {
         }),
       ).detail,
     ).toBe("Appartement 3 pièces · Épinay-sur-Orge · LK-0018");
+    // L1-35: a listing online changed by its seller, the fields and the price.
+    expect(
+      describeNotification(
+        view({
+          type: "listing.revised",
+          data: {
+            title: "Maison 5 pièces",
+            reference: "LK-0042",
+            fields: ["price", "photo", "unknown"],
+            old_price_cents: 42000000,
+            price_cents: 40500000,
+          },
+        }),
+      ),
+    ).toMatchObject({
+      title: t.listingRevised.title,
+      detail:
+        "Maison 5 pièces · LK-0042 · Modifié : prix, photos · Prix : 420\u202F000\u202F€ → 405\u202F000\u202F€",
+    });
+    expect(
+      describeNotification(
+        view({ type: "listing.revised", data: { reference: "LK-0042", fields: ["description"] } }),
+      ).detail,
+    ).toBe("LK-0042 · Modifié : description");
     expect(
       describeNotification(view({ type: "listing.published", data: { title: "Maison" } })),
     ).toMatchObject({ title: t.listingPublished.title, tone: "success" });
