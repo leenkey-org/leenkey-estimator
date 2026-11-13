@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-13 · L2-02 · PR #100 · Justificatif de financement
+- Ajouté : dépôt d'un justificatif de financement par l'acquéreur (type, date, PDF ou image) sur « Mon projet d'achat » : « Justificatif fourni » ; remplacement et retrait ; troisième étape du dossier acquéreur.
+- Ajouté : contrôle par l'équipe sur la fiche de l'utilisateur (« Marquer le justificatif comme vérifié », note interne) : « Justificatif vérifié » ; ligne « Justificatif de financement à contrôler » dans « À traiter ».
+- Ajouté : une offre envoyée porte le justificatif en vigueur de son acquéreur.
+- Migration : `20261113150000_financing_documents.sql` (table `financing_documents`, bucket `documents` et ses politiques, fonctions de dépôt, de retrait et de contrôle).
+- Tests : permissions (`rls_financing_documents.sql`, 43 tests), unitaires (lecture du fichier, validation), E2E (`buyer-profile-live.spec.ts`).
+
 ### 2026-11-13 · L2-01 · PR #99 · Offre d'achat : base de données
 - Ajouté : tables `offers` et `offer_events`, référence `LK-AAAA-NNNNN` et version, fonctions d'envoi, de consultation, de réponse, de retrait, d'avant-contrat et d'expiration, gel d'une offre envoyée, vue `offer_for_seller` (données personnelles masquées avant acceptation).
 - Migration : `20261113120000_offers.sql`.
