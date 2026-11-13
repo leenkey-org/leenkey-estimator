@@ -270,7 +270,14 @@ export const offerAnswerSchema = z
   })
   .refine((value) => !value.accept || value.confirmedRead, { path: ["confirmedRead"] });
 
-const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+/** « YYYY-MM-DD », a day of the calendar (never « 2026-02-31 »). */
+const day = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((value) => {
+    const time = Date.parse(`${value}T00:00:00Z`);
+    return !Number.isNaN(time) && new Date(time).toISOString().slice(0, 10) === value;
+  });
 
 /**
  * The avant-contrat of an accepted offer (L2-04b): the day it was signed and,

@@ -44,9 +44,13 @@ export async function withdrawOffer(offerId: string): Promise<WithdrawOfferResul
   return { ok: true, data: { status: "withdrawn" } };
 }
 
-/** What a new offer takes from the previous one: its content, never its validity nor its declarations. */
+/**
+ * What a new offer takes from the previous one: its content. Never its
+ * validity, its declarations nor the visit, said again with them (the buyer
+ * may have visited since).
+ */
 const COPIED =
-  "listing_id, buyer_identity, co_buyers, acquisition_mode, acquisition_mode_other, sci_details, price_cents, financing_mode, down_payment_cents, loan_amount_cents, loan_duration_years, loan_rate_max_pct, lender_name, financing_progress, financing_progress_other, condition_prior_sale, condition_authorization, condition_other, conditions_details, visited" as const;
+  "listing_id, buyer_identity, co_buyers, acquisition_mode, acquisition_mode_other, sci_details, price_cents, financing_mode, down_payment_cents, loan_amount_cents, loan_duration_years, loan_rate_max_pct, lender_name, financing_progress, financing_progress_other, condition_prior_sale, condition_authorization, condition_other, conditions_details" as const;
 
 export type StartNewOfferResult =
   | { ok: true; data: { listingId: string } }

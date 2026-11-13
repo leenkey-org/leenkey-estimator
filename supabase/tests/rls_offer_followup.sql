@@ -8,7 +8,7 @@
 -- 99993: the file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(30);
+select plan(34);
 \ir _plan.psql
 
 -- seller_a: a listing online.
@@ -68,6 +68,11 @@ select is((select count(*)::int from notifications
               and data->>'offer_id' = :'offer1' and link = '/offres/' || :'offer1'
               and 'email' = any(channels) and email_after is not null),
           1, 'seller_a: told of the withdrawal, in the bell and by email');
+-- Withdrawn within minutes of its sending: two emails, never one « offer received ».
+select is((select count(distinct group_key)::int from notifications
+            where profile_id = tests.uid('seller_a') and data->>'offer_id' = :'offer1'
+              and type in ('offer.received', 'offer.withdrawn')),
+          2, 'the withdrawal has its own group of emails, apart from « offer received »');
 select is((select (data->>'withdrawn_at')::timestamptz = (select withdrawn_at from offer_for_seller where id = :'offer1')
                   and data->>'buyer_first_name' = 'Chloé' and data->>'title' = 'Maison à suivre'
              from notifications where type = 'offer.withdrawn' and data->>'offer_id' = :'offer1'),
@@ -108,26 +113,27 @@ select lives_ok(format($$
                       down_payment_cents, loan_amount_cents, loan_duration_years, loan_rate_max_pct,
                       lender_name, financing_progress, financing_progress_other,
                       condition_prior_sale, condition_authorization, condition_other,
-                      conditions_details, visited)
+                      conditions_details)
   select listing_id, buyer_id, buyer_identity, co_buyers, acquisition_mode,
          acquisition_mode_other, sci_details, price_cents, financing_mode,
          down_payment_cents, loan_amount_cents, loan_duration_years, loan_rate_max_pct,
          lender_name, financing_progress, financing_progress_other,
          condition_prior_sale, condition_authorization, condition_other,
-         conditions_details, visited
+         conditions_details
     from offers where id = %L$$, :'offer1'),
   'buyer_c: a new draft with the content of its previous offer');
 select id as offer2 from offers
  where listing_id = :'listing' and buyer_id = tests.uid('buyer_c') and status = 'draft' \gset
 select is((select version || ':' || status || ':' || price_cents || ':' || (reference <> (select reference from offers where id = :'offer1'))::text
                   || ':' || (validity_until is null)::text || ':' || (declarations = '{}'::jsonb)::text
+                  || ':' || (visited is null)::text
              from offers where id = :'offer2'),
-          '2:draft:28000000:true:true:true',
-          'version 2, its own reference, a draft: neither the validity nor the declarations are copied');
+          '2:draft:28000000:true:true:true:true',
+          'version 2, its own reference, a draft: validity, visit and declarations are not copied');
 select throws_ok(format($$select offer_submit(%L)$$, :'offer2'), '22023', null,
                  'not sent before its validity and its declarations are given again');
 update offers
-   set price_cents = 29000000, validity_until = now() + interval '2 days',
+   set price_cents = 29000000, validity_until = now() + interval '2 days', visited = true,
        declarations = '{"accuracy":true,"price_and_financing_checked":true,
                         "legal_effects_understood":true,"info_read":true}'
  where id = :'offer2';
@@ -151,6 +157,10 @@ select is((select array_agg(data->>'role' order by data->>'role')
               and profile_id = case data->>'role' when 'buyer' then tests.uid('buyer_c')
                                                   else tests.uid('seller_a') end),
           array['buyer', 'seller'], 'the buyer and the seller are told of the expiry, in the bell and by email');
+select is((select count(*)::int from notifications
+            where data->>'offer_id' = :'offer2' and type = 'offer.expired'
+              and group_key = 'offer:' || :'offer2' || ':expired'),
+          2, 'in a group of emails of its own');
 select is((select count(*)::int from notifications
             where data->>'offer_id' = :'offer2' and data::text ~ :'hidden'),
           0, 'no contact detail in them');
@@ -221,14 +231,21 @@ select offer_answer(:'offer4', true, true);
 \ir _as.psql
 select throws_ok(format($$select offer_withdraw(%L)$$, :'offer4'), '22023', null,
                  'buyer_c: an accepted offer is not withdrawn');
-select throws_ok(format($$select offer_record_precontract(%L, current_date)$$, :'offer4'), '42501', null,
+select throws_ok(format($$select offer_record_precontract(%L, (now() at time zone 'Europe/Paris')::date)$$, :'offer4'), '42501', null,
                  'buyer_c: does not record the avant-contrat');
 select is((select precontract_signed_at is null and withdrawal_period_start is null
              from offers where id = :'offer4'),
           true, 'no avant-contrat yet');
+\set who seller_b
+\ir _as.psql
+select throws_ok(format($$select offer_record_precontract(%L, (now() at time zone 'Europe/Paris')::date)$$, :'offer4'), '42501', null,
+                 'seller_b: not the avant-contrat of the offer of another seller');
 \set who seller_a
 \ir _as.psql
-select lives_ok(format($$select offer_record_precontract(%L, current_date, current_date)$$, :'offer4'),
+select throws_ok(format($$select offer_record_precontract(%L, (now() at time zone 'Europe/Paris')::date, (now() at time zone 'Europe/Paris')::date + 1)$$, :'offer4'),
+                 '22023', 'the withdrawal period starts from the avant-contrat to today',
+                 'seller_a: a day of notification is never after today');
+select lives_ok(format($$select offer_record_precontract(%L, (now() at time zone 'Europe/Paris')::date, (now() at time zone 'Europe/Paris')::date)$$, :'offer4'),
                 'seller_a: records the avant-contrat and the start of the withdrawal period');
 select is((select count(*)::int from sale_step_tasks t
              join sale_steps s on s.id = t.step_id
@@ -238,11 +255,11 @@ select is((select count(*)::int from sale_step_tasks t
                                where st.property_id = :'prop' and st.task_id = t.id
                                  and st.done_at is not null)),
           0, 'the task « Avant-contrat signé » of the sale is ticked (when the steps are loaded)');
-select lives_ok(format($$select offer_record_precontract(%L, current_date, null)$$, :'offer4'),
+select lives_ok(format($$select offer_record_precontract(%L, (now() at time zone 'Europe/Paris')::date, null)$$, :'offer4'),
                 'seller_a: corrects it (the start of the period unknown after all)');
 \set who buyer_c
 \ir _as.psql
-select is((select precontract_signed_at = current_date and withdrawal_period_start is null
+select is((select precontract_signed_at = (now() at time zone 'Europe/Paris')::date and withdrawal_period_start is null
              from offers where id = :'offer4'),
           true, 'buyer_c: reads the avant-contrat of its offer, as last recorded');
 select is((select count(*)::int from offer_events

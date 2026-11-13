@@ -509,7 +509,7 @@ export const frOffer = {
         "Date indicative calculée à partir de la date que vous avez renseignée. Votre notaire fait foi.",
       errors: {
         signedAt: "Indiquez une date entre le jour de l'acceptation de l'offre et aujourd'hui.",
-        notifiedAt: "Cette date ne peut pas précéder la signature de l'avant-contrat.",
+        notifiedAt: "Indiquez une date entre la signature de l'avant-contrat et aujourd'hui.",
         generic: "L'avant-contrat n'a pas pu être enregistré. Réessayez.",
         signedOut: "Votre session a expiré. Reconnectez-vous pour continuer.",
         closed: "Cette offre n'est plus acceptée : l'avant-contrat ne peut pas être enregistré.",

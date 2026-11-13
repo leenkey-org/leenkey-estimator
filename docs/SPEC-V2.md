@@ -1819,7 +1819,7 @@ Trois états, textes à reprendre exactement :
 
 Expiration automatique à `validity_until` (cron) → `expired`, `expired_at`, notifications, statut clairement affiché « Offre expirée ».
 
-Mise en œuvre (L2-04b, `DECISIONS.md` 2026-11-13) : retrait et nouvelle offre sur la page de l'offre (`leenkey/offers/buyer-actions.ts`) ; « Faire une nouvelle offre » reprend le contenu sauf la durée de validité et les déclarations ; le champ saisi par le vendeur pour `withdrawal_period_start` est la « date de notification ou de remise de l'avant-contrat à l'acquéreur », et la fin indicative du délai est cette date + 10 jours, reportée au premier jour ouvrable (`leenkey/offers/withdrawal.ts`, Q86) ; `offer.expired` va à l'acquéreur et au vendeur, `offer.withdrawn` au vendeur ; section « Vos offres » sur l'accueil acquéreur.
+Mise en œuvre (L2-04b, `DECISIONS.md` 2026-11-13) : retrait et nouvelle offre sur la page de l'offre (`leenkey/offers/buyer-actions.ts`) ; « Faire une nouvelle offre » reprend le contenu sauf la durée de validité, la visite et les déclarations ; le champ saisi par le vendeur pour `withdrawal_period_start` est la « date de notification ou de remise de l'avant-contrat à l'acquéreur », et la fin indicative du délai est cette date + 10 jours, reportée au premier jour ouvrable (`leenkey/offers/withdrawal.ts`, Q86) ; `offer.expired` va à l'acquéreur et au vendeur, `offer.withdrawn` au vendeur ; section « Vos offres » sur l'accueil acquéreur.
 
 ### Confidentialité des données de l'offre
 

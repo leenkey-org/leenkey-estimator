@@ -14,7 +14,14 @@
 --   minutes after it (a validity ends on a full hour). SPEC 19 said once a
 --   day at 5:00 UTC: an offer would read « expired » on the screens (computed
 --   at read) up to a day before its buyer and its seller are told
---   (DECISIONS.md 2026-11-13, L2-04b).
+--   (DECISIONS.md 2026-11-13, L2-04b);
+-- - the day an avant-contrat was notified or handed to the buyer is never
+--   after today: an indicative end of the withdrawal period is read from it.
+--
+-- A withdrawal and an expiry have their own group of emails: in the group of
+-- « offer received », an offer withdrawn within minutes would leave as one
+-- email « offer received » (the emails of a group leave together, under the
+-- type of the first one).
 --
 -- No table, no policy: the journal of an offer is the only source.
 
@@ -89,7 +96,7 @@ begin
       info || jsonb_build_object(
         'buyer_first_name', o.buyer_identity->>'first_name',
         'withdrawn_at', o.withdrawn_at),
-      link, thread, now());
+      link, thread || ':withdrawn', now());
     perform public.offer_notice(
       o, o.buyer_id,
       format('Offre d''achat %s retirée par l''acquéreur.', o.reference),
@@ -99,12 +106,12 @@ begin
     perform public.notification_add(
       o.buyer_id, 'offer.expired',
       info || jsonb_build_object('role', 'buyer', 'expired_at', o.expired_at),
-      link, thread, now());
+      link, thread || ':expired', now());
     perform public.notification_add(
       o.seller_id, 'offer.expired',
       info || jsonb_build_object('role', 'seller', 'expired_at', o.expired_at,
                                  'buyer_first_name', o.buyer_identity->>'first_name'),
-      link, thread, now());
+      link, thread || ':expired', now());
   else
     -- Accepted or declined: the buyer, bell and email, with the message of the seller.
     perform public.notification_add(
@@ -127,6 +134,48 @@ end;
 $$;
 
 revoke execute on function public.offer_events_notify() from public, anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- The avant-contrat of an offer accepted (L2-01), with one more check: the
+-- day it was notified or handed to the buyer is not in the future (a typing
+-- slip on the year would show the buyer a withdrawal period a year long).
+-- ---------------------------------------------------------------------------
+create or replace function public.offer_record_precontract(
+  p_offer_id uuid, p_signed_at date, p_withdrawal_start date default null
+) returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  o public.offers;
+begin
+  select * into o from public.offers where id = p_offer_id
+     and (seller_id = auth.uid() or public.is_admin()) for update;
+  if not found or not public.is_active_user() then
+    raise exception 'offer not found' using errcode = '42501';
+  end if;
+  if o.status <> 'accepted' then
+    perform public.offer_bad_transition(o.status, 'record the avant-contrat of');
+  end if;
+  if p_signed_at is null or p_signed_at > (now() at time zone 'Europe/Paris')::date
+     or p_signed_at < (o.answered_at at time zone 'Europe/Paris')::date then
+    raise exception 'the date of the avant-contrat is not valid' using errcode = '22023';
+  end if;
+  if p_withdrawal_start is not null
+     and (p_withdrawal_start < p_signed_at
+          or p_withdrawal_start > (now() at time zone 'Europe/Paris')::date) then
+    raise exception 'the withdrawal period starts from the avant-contrat to today'
+      using errcode = '22023';
+  end if;
+  update public.offers
+     set precontract_signed_at = p_signed_at, withdrawal_period_start = p_withdrawal_start
+   where id = o.id;
+  perform public.offer_event(o.id, 'precontract_recorded',
+    jsonb_build_object('signed_at', p_signed_at, 'withdrawal_start', p_withdrawal_start));
+  if public.is_admin() and o.seller_id <> auth.uid() then
+    perform public.audit('offer.precontract', 'offer', o.id,
+      jsonb_build_object('signed_at', p_signed_at, 'withdrawal_start', p_withdrawal_start));
+  end if;
+end;
+$$;
 
 -- ---------------------------------------------------------------------------
 -- The cron (SPEC 19, DECISIONS.md 2026-10-08: pg_cron, not Vercel Cron): in

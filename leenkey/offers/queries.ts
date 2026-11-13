@@ -3,6 +3,7 @@ import { getUser, type SessionProfile } from "@/core/auth/session";
 import { ownedPropertyId } from "@/leenkey/messaging/queries";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createClient } from "@/lib/supabase/server";
+import { buyerOfferLines, type BuyerOfferLine } from "./lines";
 import {
   OFFER_ANNEXES,
   OFFER_COLUMNS,
@@ -221,19 +222,6 @@ export async function buyerOffer(
   };
 }
 
-/** An offer of the buyer, as a line of their home. */
-export type BuyerOfferLine = {
-  id: string;
-  listingId: string;
-  /** Read expired as soon as its validity is past, before the cron writes it. */
-  status: OfferContent["status"];
-  priceCents: number | null;
-  submittedAt: string | null;
-  /** The listing as the offer photographed it; of the listing itself for a draft. */
-  title: string;
-  city: string;
-};
-
 /**
  * The offers of a buyer, the most recent first: the last one of each listing
  * (a replaced offer is its history, read from the new one), with the draft
@@ -272,28 +260,7 @@ export async function buyerOffers(profileId: string): Promise<QueryResult<BuyerO
       }
     }
   }
-  const now = Date.now();
-  const seen = new Set<string>();
-  const lines: BuyerOfferLine[] = [];
-  for (const row of data) {
-    // One line per listing and kind: the draft in progress, the last offer sent.
-    const key = `${row.listing_id}:${row.status === "draft" ? "draft" : "sent"}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const snapshot = readPropertySnapshot(row.property_snapshot);
-    const waiting = row.status === "submitted" || row.status === "viewed";
-    const due = row.validity_until !== null && Date.parse(row.validity_until) <= now;
-    lines.push({
-      id: row.id,
-      listingId: row.listing_id,
-      status: waiting && due ? "expired" : row.status,
-      priceCents: row.price_cents,
-      submittedAt: row.submitted_at,
-      title: snapshot?.title ?? online.get(row.listing_id)?.title ?? "",
-      city: snapshot?.city ?? online.get(row.listing_id)?.city ?? "",
-    });
-  }
-  return { ok: true, data: lines };
+  return { ok: true, data: buyerOfferLines(data, online, Date.now()) };
 }
 
 /** What a first draft starts with: the account of the buyer and its declared project. */

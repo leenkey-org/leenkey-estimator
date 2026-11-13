@@ -49,7 +49,9 @@ export function OfferPrecontractForm({
     setError(null);
     const found: typeof errors = {};
     if (signed === "" || signed < minDay || signed > maxDay) found.signedAt = t.errors.signedAt;
-    else if (notified !== "" && notified < signed) found.notifiedAt = t.errors.notifiedAt;
+    else if (notified !== "" && (notified < signed || notified > maxDay)) {
+      found.notifiedAt = t.errors.notifiedAt;
+    }
     setErrors(found);
     if (found.signedAt || found.notifiedAt) {
       window.document
@@ -67,6 +69,11 @@ export function OfferPrecontractForm({
       if (!result?.ok) {
         if (result?.error === "invalid" && result.field) {
           setErrors({ [result.field]: t.errors[result.field] });
+          window.document
+            .getElementById(
+              result.field === "signedAt" ? "precontract-signed" : "precontract-notified",
+            )
+            ?.focus();
           return;
         }
         setError(
@@ -88,7 +95,18 @@ export function OfferPrecontractForm({
     return (
       <div className="flex flex-col items-start gap-3">
         {saved ? <InlineAlert tone="success">{t.saved}</InlineAlert> : null}
-        <Button type="button" variant="secondary" size="sm" onClick={() => setEditing(true)}>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => {
+            // From what the page now shows: it may have been corrected elsewhere.
+            setSigned(signedAt ?? "");
+            setNotified(notifiedAt ?? "");
+            setSaved(false);
+            setEditing(true);
+          }}
+        >
           {t.edit}
         </Button>
       </div>
@@ -117,6 +135,7 @@ export function OfferPrecontractForm({
         help={t.notifiedAtHelp}
         value={notified}
         min={signed || minDay}
+        max={maxDay}
         error={errors.notifiedAt}
         onChange={(event) => {
           setNotified(event.target.value);

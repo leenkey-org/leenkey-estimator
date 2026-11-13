@@ -4,7 +4,7 @@ import { formatPrice } from "@/lib/format";
 import { frOffer } from "@/lib/i18n/sections/offer";
 import { formatNumericDay } from "../document";
 import { offerFormPath, offerPath } from "../paths";
-import type { BuyerOfferLine } from "../queries";
+import type { BuyerOfferLine } from "../lines";
 import { OfferStatusBadge } from "./offer-status-badge";
 
 // The texts this module shows (lib/i18n/sections, P-06).

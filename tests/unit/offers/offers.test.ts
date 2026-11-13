@@ -18,6 +18,7 @@ import {
   formatNumericDay,
 } from "@/leenkey/offers/document";
 import { formatRate, gapLabel, offerBudget, offerGap } from "@/leenkey/offers/figures";
+import { buyerOfferLines, type BuyerOfferRow } from "@/leenkey/offers/lines";
 import { offerFormPath, readOfferFormStep } from "@/leenkey/offers/paths";
 import { buildOfferSynthesis, remainingLabel } from "@/leenkey/offers/synthesis";
 import { frenchPublicHolidays, withdrawalPeriodEnd } from "@/leenkey/offers/withdrawal";
@@ -758,6 +759,12 @@ describe("withdrawal period after an avant-contrat (indicative, L2-04b)", () => 
       notifiedAt: "2026-11-19",
     });
     expect(before.success ? [] : issuePaths(before.error)).toEqual(["notifiedAt"]);
+    const unreal = offerPrecontractSchema.safeParse({
+      offerId,
+      signedAt: "2026-02-31",
+      notifiedAt: "",
+    });
+    expect(unreal.success ? [] : issuePaths(unreal.error)).toEqual(["signedAt"]);
     const empty = offerPrecontractSchema.safeParse({ offerId, signedAt: "", notifiedAt: "" });
     expect(empty.success ? [] : issuePaths(empty.error)).toEqual(["signedAt"]);
     expect(
@@ -785,6 +792,84 @@ describe("withdrawal period after an avant-contrat (indicative, L2-04b)", () => 
     expect(JSON.stringify({ ...t, periodEnd: t.precontract.periodEnd("24/11/2026") })).not.toMatch(
       /après la signature|devez signer|vous rétracter en/i,
     );
+  });
+});
+
+describe("offers of a buyer on their home (L2-04b)", () => {
+  const snapshot = (title: string) => ({
+    listing_reference: "LK-0003",
+    title,
+    address: { postal_code: "91390", city: "Morsang-sur-Orge" },
+  });
+  const row = (overrides: Partial<BuyerOfferRow>): BuyerOfferRow => ({
+    id: "o",
+    listing_id: "l1",
+    status: "submitted",
+    price_cents: 15_000_000,
+    submitted_at: "2026-11-13T10:00:00Z",
+    validity_until: "2026-11-18T10:00:00Z",
+    property_snapshot: snapshot("2 pièces proche du centre"),
+    ...overrides,
+  });
+  const now = Date.parse("2026-11-14T08:00:00Z");
+
+  it("one line per listing for the last offer sent, one more for its draft", () => {
+    const lines = buyerOfferLines(
+      [
+        row({
+          id: "draft",
+          status: "draft",
+          submitted_at: null,
+          validity_until: null,
+          property_snapshot: {},
+        }),
+        row({ id: "v2" }),
+        row({ id: "v1", status: "superseded" }),
+        row({ id: "old", status: "declined" }),
+        row({ id: "other", listing_id: "l2", status: "withdrawn" }),
+      ],
+      new Map([["l1", { title: "2 pièces proche du centre", city: "Morsang-sur-Orge" }]]),
+      now,
+    );
+    expect(lines.map((line) => [line.id, line.status])).toEqual([
+      ["draft", "draft"],
+      ["v2", "submitted"],
+      ["other", "withdrawn"],
+    ]);
+    // A draft is named by its listing as the public reads it; nothing when it is offline.
+    expect(lines[0]).toMatchObject({
+      title: "2 pièces proche du centre",
+      city: "Morsang-sur-Orge",
+    });
+    expect(
+      buyerOfferLines([row({ status: "draft", property_snapshot: {} })], new Map(), now)[0],
+    ).toMatchObject({ title: "", city: "" });
+  });
+
+  it("reads an offer past its validity expired before the cron writes it", () => {
+    const due = row({ status: "viewed", validity_until: "2026-11-14T07:00:00Z" });
+    expect(buyerOfferLines([due], new Map(), now)[0].status).toBe("expired");
+    expect(buyerOfferLines([row({ status: "viewed" })], new Map(), now)[0].status).toBe("viewed");
+    // An answer stays what it is, whatever the validity.
+    expect(
+      buyerOfferLines(
+        [row({ status: "accepted", validity_until: "2026-11-14T07:00:00Z" })],
+        new Map(),
+        now,
+      )[0].status,
+    ).toBe("accepted");
+  });
+
+  it("hides a draft that can no longer be sent: an offer is accepted on its listing", () => {
+    const lines = buyerOfferLines(
+      [
+        row({ id: "draft", status: "draft", property_snapshot: {} }),
+        row({ id: "accepted", status: "accepted" }),
+      ],
+      new Map(),
+      now,
+    );
+    expect(lines.map((line) => line.id)).toEqual(["accepted"]);
   });
 });
 

@@ -40,7 +40,8 @@ export function OfferBuyerActions({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [renewError, setRenewError] = useState<string | null>(null);
+  /** Said on the page: a new offer refused, or an offer that changed under the dialog. */
+  const [notice, setNotice] = useState<string | null>(null);
   const [withdrawing, startWithdraw] = useTransition();
   const [renewing, startRenew] = useTransition();
   const busy = useRef(false);
@@ -55,17 +56,15 @@ export function OfferBuyerActions({
         console.error("[offers] withdrawal failed", caught);
       }
       if (!result?.ok) {
-        setError(
-          result?.error === "auth"
-            ? t.errors.signedOut
-            : result?.error === "expired"
-              ? t.errors.expired
-              : result?.error === "answered"
-                ? t.errors.answered
-                : t.errors.generic,
-        );
-        // Answered or expired meanwhile: the page says what the offer is now.
-        if (result?.error === "expired" || result?.error === "answered") router.refresh();
+        // Answered or expired meanwhile: nothing left to confirm. The dialog
+        // closes, the page says why and what the offer is now.
+        if (result?.error === "expired" || result?.error === "answered") {
+          setOpen(false);
+          setNotice(result.error === "expired" ? t.errors.expired : t.errors.answered);
+          router.refresh();
+          return;
+        }
+        setError(result?.error === "auth" ? t.errors.signedOut : t.errors.generic);
         return;
       }
       setOpen(false);
@@ -76,7 +75,7 @@ export function OfferBuyerActions({
   function renew() {
     if (busy.current) return;
     busy.current = true;
-    setRenewError(null);
+    setNotice(null);
     startRenew(async () => {
       let result: StartNewOfferResult | null = null;
       try {
@@ -86,7 +85,7 @@ export function OfferBuyerActions({
       }
       if (!result?.ok) {
         busy.current = false;
-        setRenewError(
+        setNotice(
           result?.error === "auth"
             ? t.errors.signedOut
             : result?.error === "closed"
@@ -100,7 +99,7 @@ export function OfferBuyerActions({
     });
   }
 
-  if (!canWithdraw && !canRenew) return null;
+  if (!canWithdraw && !canRenew && !notice) return null;
   return (
     <div className="flex flex-col gap-3">
       {canRenew ? (
@@ -108,19 +107,27 @@ export function OfferBuyerActions({
           {canWithdraw ? t.newOfferToChange : t.newOfferAgain}
         </p>
       ) : null}
-      <div className="flex flex-wrap gap-2.5">
+      <div className="flex flex-wrap gap-2.5 empty:hidden">
         {canRenew ? (
           <Button type="button" variant="secondary" loading={renewing} onClick={renew}>
             {t.newOffer}
           </Button>
         ) : null}
         {canWithdraw ? (
-          <Button type="button" variant="danger" onClick={() => setOpen(true)}>
+          <Button
+            type="button"
+            variant="danger"
+            onClick={() => {
+              setError(null);
+              setNotice(null);
+              setOpen(true);
+            }}
+          >
             {t.withdraw}
           </Button>
         ) : null}
       </div>
-      {renewError ? <InlineAlert tone="danger">{renewError}</InlineAlert> : null}
+      {notice ? <InlineAlert tone="danger">{notice}</InlineAlert> : null}
       <ConfirmDialog
         open={open}
         title={t.withdrawDialog.title}

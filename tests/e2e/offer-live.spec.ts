@@ -631,11 +631,14 @@ test("le vendeur refuse une offre avec un message ; l'acquéreur le lit", async 
   await next(page).click();
   await expect(step(page, "Étape 5 sur 7 · Conditions de l'offre")).toBeVisible();
   await next(page).click();
-  // Neither the validity nor the declarations are copied: given again.
+  // Neither the validity, the visit nor the declarations are copied: given again.
   await expect(step(page, "Étape 6 sur 7 · Durée de validité")).toBeVisible();
   await expect(page.getByLabel("Votre offre est valable")).toHaveValue("5");
   await next(page).click();
-  await expect(page.getByRole("radio", { name: /Sans visite/ })).toBeChecked();
+  // The visit is said again with the declarations: the buyer may have visited since.
+  await expect(page.getByRole("radio", { name: /Sans visite/ })).not.toBeChecked();
+  await expect(page.getByRole("button", { name: "Relire mon offre" })).toBeDisabled();
+  await page.locator("label").filter({ hasText: "Bien visité" }).click();
   for (const box of await page.getByRole("checkbox").all()) {
     await expect(box).not.toBeChecked();
     await box.check();
