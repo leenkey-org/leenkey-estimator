@@ -9,22 +9,31 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { requireAdmin } from "@/core/auth/session";
 import { AccountModeration } from "@/leenkey/admin/components/account-moderation";
 import { AccountStatusBadge, RoleBadges } from "@/leenkey/admin/components/account-badges";
+import { FinancingCheck } from "@/leenkey/admin/components/financing-check";
 import { ModerationFeedback } from "@/leenkey/admin/components/listing-moderation";
-import { adminUser, fullName, type AdminUserDetail } from "@/leenkey/admin/users/queries";
+import {
+  adminFinancingDocuments,
+  adminUser,
+  fullName,
+  type AdminUserDetail,
+} from "@/leenkey/admin/users/queries";
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import { formatDateShort, formatDateTime, formatRelative } from "@/lib/format";
 import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { frBuyerSpace } from "@/lib/i18n/sections/buyerSpace";
+import { frFinancingDocument } from "@/lib/i18n/sections/financingDocument";
 import { frFinancingStatus } from "@/lib/i18n/sections/financingStatus";
 import { frListing } from "@/lib/i18n/sections/listing";
 import { frPropertyType } from "@/lib/i18n/sections/propertyType";
 import { adminUsersHref } from "@/lib/validations/admin";
+import { isFinancingDocumentOld } from "@/lib/validations/buyer";
 import { AdminPage } from "../../_components/admin-page";
 
 // The texts this module shows (lib/i18n/sections, P-06).
 const fr = {
   adminUsers: frAdminUsers,
   buyerSpace: frBuyerSpace,
+  financingDocument: frFinancingDocument,
   financingStatus: frFinancingStatus,
   listing: frListing,
   propertyType: frPropertyType,
@@ -32,6 +41,7 @@ const fr = {
 
 const t = fr.adminUsers;
 const d = t.detail;
+const f = fr.financingDocument.admin;
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -116,8 +126,9 @@ const empty = "text-lk-secondary text-lk-ink-3";
 // information, its properties, its buying project, its conversations (their
 // metadata only, never their messages), its cases and its history
 // (audit_log); « Suspendre le compte » with a motive sent by email, or
-// « Réactiver le compte ». Not yet here, with lot 2: its offers and its proof
-// of financing (L2-02). The page checks the admin role itself.
+// « Réactiver le compte »; for a buyer, its proofs of financing with
+// « Marquer le justificatif comme vérifié » (L2-02). Not yet here: its offers
+// (L2-07). The page checks the admin role itself.
 export default async function AdminUserPage({ params }: Props) {
   const admin = await requireAdmin();
   const { id } = await params;
@@ -143,6 +154,7 @@ export default async function AdminUserPage({ params }: Props) {
   }
   if (!result.data) notFound();
   const user = result.data;
+  const documents = user.buyer ? await adminFinancingDocuments(user.id) : null;
   const name = nameOf(user);
   const now = new Date();
   const suspended = user.suspendedAt !== null;
@@ -267,6 +279,82 @@ export default async function AdminUserPage({ params }: Props) {
                 </dd>
               </div>
             </dl>
+          </Section>
+        ) : null}
+
+        {documents ? (
+          <Section id="justificatif" title={f.title}>
+            {!documents.ok ? (
+              <p className={empty}>{d.error}</p>
+            ) : documents.data.length === 0 ? (
+              <p className={empty}>{f.empty}</p>
+            ) : (
+              <ul className={`flex flex-col divide-y divide-lk-line ${box}`}>
+                {documents.data.map((document) => {
+                  const toCheck = document.current && !document.checkedAt && !document.removedAt;
+                  return (
+                    <li key={document.id} className="flex flex-col gap-3 p-4">
+                      <div className="flex flex-col gap-0.5">
+                        <p className="text-lk-label font-semibold text-lk-ink">
+                          {fr.financingDocument.types[document.type]}
+                          <span className="font-normal text-lk-ink-3">
+                            {" · "}
+                            {document.removedAt
+                              ? f.removed(formatDateShort(document.removedAt, now))
+                              : document.current
+                                ? f.current
+                                : f.replaced}
+                          </span>
+                        </p>
+                        <p className="text-lk-caption text-lk-ink-3">
+                          {[
+                            f.documentDate(
+                              formatDateShort(`${document.documentDate}T12:00:00Z`, now),
+                            ),
+                            f.filed(formatDateShort(document.createdAt, now)),
+                          ].join(" · ")}
+                        </p>
+                        {!document.checkedAt &&
+                        isFinancingDocumentOld(document.documentDate, now) ? (
+                          <p className="self-start rounded-lk-sm bg-lk-warning-bg px-2 py-0.5 text-lk-caption font-semibold text-lk-warning-fg">
+                            {f.old}
+                          </p>
+                        ) : null}
+                        <p className="text-lk-secondary text-lk-ink-2">
+                          {document.checkedAt
+                            ? f.checked(
+                                formatDateShort(document.checkedAt, now),
+                                document.checkedByName,
+                              )
+                            : toCheck
+                              ? f.notChecked
+                              : null}
+                        </p>
+                        {document.note ? (
+                          <p className="text-lk-secondary whitespace-pre-line text-lk-ink-2">
+                            <span className="font-semibold">{f.note} : </span>
+                            {document.note}
+                          </p>
+                        ) : null}
+                      </div>
+                      {document.removedAt ? null : (
+                        <a
+                          href={`/documents/financement/${document.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-11 items-center self-start text-lk-secondary font-semibold text-lk-blue underline-offset-2 hover:underline"
+                        >
+                          {f.open}
+                        </a>
+                      )}
+                      {toCheck ? (
+                        <FinancingCheck documentId={document.id} profileId={user.id} />
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </Section>
         ) : null}
 

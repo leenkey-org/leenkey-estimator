@@ -12,6 +12,19 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-13 · L2-02 · PR #99 (avec L2-01) · Justificatif de financement
+- Ajouté : dépôt d'un justificatif de financement par l'acquéreur (type, date, PDF ou image) sur « Mon projet d'achat » : « Justificatif fourni » ; remplacement et retrait ; troisième étape du dossier acquéreur.
+- Ajouté : contrôle par l'équipe sur la fiche de l'utilisateur (« Marquer le justificatif comme vérifié », note interne) : « Justificatif vérifié » ; ligne « Justificatif de financement à contrôler » dans « À traiter ».
+- Ajouté : une offre envoyée porte le justificatif en vigueur de son acquéreur.
+- Migration : `20261113150000_financing_documents.sql` (table `financing_documents`, bucket `documents` et ses politiques, fonctions de dépôt, de retrait et de contrôle).
+- Tests : permissions (`rls_financing_documents.sql`, 53 tests), unitaires (lecture du fichier, validation), E2E (`buyer-profile-live.spec.ts`).
+
+### 2026-11-13 · L2-01 · PR #99 · Offre d'achat : base de données
+- Ajouté : tables `offers` et `offer_events`, référence `LK-AAAA-NNNNN` et version, fonctions d'envoi, de consultation, de réponse, de retrait, d'avant-contrat et d'expiration, gel d'une offre envoyée, vue `offer_for_seller` (données personnelles masquées avant acceptation).
+- Migration : `20261113120000_offers.sql`.
+- Ajouté : prix en toutes lettres écrit par la base à l'envoi (jamais saisi) ; historique d'une offre figé comme son contenu.
+- Tests : permissions (`rls_offers.sql`, 81 tests : les cinq comptes et un visiteur).
+
 ### 2026-11-13 · L1-35 · PR #98 · Historique d'une annonce en ligne
 - Ajouté : historique des modifications d'une annonce en ligne ou en pause (prix, titre, description, photos ajoutées ou retirées, légendes), chez le vendeur (onglet Annonce) et dans le back office ; notification « Une annonce en ligne a été modifiée » à l'équipe, dans l'application.
 - Migration : `20261113100000_listing_revisions.sql` (`listing_revisions`, déclencheurs sur `listings` et `photos`, notification `listing.revised`).

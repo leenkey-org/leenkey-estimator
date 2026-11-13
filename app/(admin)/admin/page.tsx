@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList, Flag, Folder, type LucideIcon } from "lucide-react";
+import { ClipboardList, FileCheck, Flag, Folder, type LucideIcon } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { PropertyThumb } from "@/components/shared/property-thumb";
@@ -36,11 +36,13 @@ const KIND: Record<AdminTodoItem["kind"], { icon: LucideIcon; label: string }> =
   listing: { icon: ClipboardList, label: t.todo.kinds.listing },
   case: { icon: Folder, label: t.todo.kinds.case },
   report: { icon: Flag, label: t.todo.kinds.report },
+  financing: { icon: FileCheck, label: t.todo.kinds.financing },
 };
 
 /** Where an item is dealt with: its own page (cases and reports since L1-30c). */
 function todoHref(item: AdminTodoItem): string {
   if (item.kind === "listing") return `/admin/annonces/${item.id}`;
+  if (item.kind === "financing") return `/admin/utilisateurs/${item.id}#justificatif`;
   return item.kind === "case"
     ? `${ROUTES.adminCases}/${item.id}`
     : `${ROUTES.adminReports}/${item.id}`;

@@ -323,7 +323,7 @@ create table financing_documents (
   id uuid primary key default gen_random_uuid(),
   buyer_id uuid not null references profiles(id) on delete cascade,
   type financing_document_type not null,
-  document_date date,                  -- date figurant sur le justificatif (alerte au-delà de 3 mois)
+  document_date date,                  -- date figurant sur le justificatif (alerte au-delà de 3 mois) ; not null en base (L2-02)
   storage_path text not null,          -- bucket 'documents', privé : {buyer_id}/financing/{uuid}.pdf
   mime_type text not null,
   size_bytes int not null,
@@ -725,6 +725,16 @@ create table offers (
   withdrawal_period_start date,                  -- point de départ du délai légal, saisi, jamais calculé par défaut
   created_at timestamptz not null default now()
 );
+
+-- Mise en œuvre (L2-01, DECISIONS.md 2026-11-13) : prix, prix en lettres, mode de financement,
+-- validité et visite peuvent être vides dans un brouillon (enregistré à chaque étape), exigés à
+-- l'envoi (contrainte offers_complete_when_sent et offer_submit) ; updated_at ajouté ;
+-- buyer_identity.address = { line, postal_code, city } ; financing_document_id sans FK avant L2-02.
+-- price_in_words est écrit par la base à l'envoi (price_in_words_fr), jamais par le client ;
+-- property_snapshot.address = { postal_code, city } (Q82) ; le gel couvre aussi l'historique
+-- (graphe des statuts, dates écrites une fois, journal jamais modifié).
+-- Fonctions : offer_can_draft, offer_submit, offer_mark_viewed, offer_answer, offer_withdraw,
+-- offer_record_precontract, offers_expire_due (cron) ; vue offer_for_seller.
 
 create table offer_events (               -- journal horodaté, jamais modifié
   id bigint generated always as identity primary key,
@@ -1324,6 +1334,7 @@ Maquette : `Formule.dc.html` (contenu à mettre à jour selon la section 11 bis)
 - Accueil (maquette `AccueilDesktop.dc.html`, mise en page `docs/DESIGN.md` 12.10) : `BrandPanel` avec salutation, carte « Reprendre votre dernière recherche » avec le nombre de nouveaux biens, complétude du dossier acquéreur (si financement non renseigné ou sans justificatif, bloc en tête ; pas de ligne « Identité vérifiée », aucune vérification d'identité n'étant prévue : `DECISIONS.md` Q25), favoris, conversations, visites à venir (L3), offres envoyées avec leur statut et leur historique (L2), alertes (L3). Le carrousel « Nouveaux biens dans votre alerte » n'apparaît qu'à partir du lot 3. « Nos services » : premier bouton « Valoriser mon bien » (→ `/estimer`) ; « Calculer mon budget » et « Prix au m² de la zone » en attente de `DECISIONS.md` Q25.
 - Profil : projet (`SegmentedPicker`), villes ciblées, budget max, apport, besoin de prêt et montant, situation (texte court). Passe le statut à `declared` dès que projet, budget, apport et besoin de prêt sont renseignés.
 - Justificatif (L2) : type (liste des justificatifs acceptés), date du document, fichier PDF ou image (5 Mo). Statut `document_provided`. Avertissement non bloquant si le document a plus de 3 mois.
+- Mise en œuvre (L2-02, `DECISIONS.md` 2026-11-13) : section « Justificatif de financement » sous le formulaire du projet ; une image de plus de 3,5 Mo est réduite dans le navigateur, un PDF de plus de 3,8 Mo refusé (limite de 4,5 Mo par requête de l'hébergeur) ; fichier ouvert par `/documents/financement/{id}` (URL signée de 10 minutes, acquéreur et équipe seulement) ; « Remplacer » et « Retirer » ; troisième étape du dossier acquéreur.
 - Encart explicatif permanent : « Le vendeur voit le statut de votre dossier de financement (déclaré, justificatif fourni, justificatif vérifié). Il ne voit ni votre justificatif ni les montants de votre profil. Les montants figurent uniquement dans les offres que vous choisissez d'envoyer. » (à ajuster selon la réponse de Cédric sur l'accès au justificatif, voir `DECISIONS.md`.)
 
 ### 8.10 Offre d'achat `/offres/nouvelle`, `/offres/[id]` (lot 2)
@@ -1931,6 +1942,8 @@ Maquettes : `AdminAnnonces.dc.html`, `AdminDesktop.dc.html`. Conçu desktop d'ab
 Liste avec rôles, date d'inscription, biens, formule, statut de financement. Fiche : informations, biens, conversations (métadonnées, pas le contenu sauf signalement), offres, dossiers, justificatif de financement (type, date avec alerte au-delà de 3 mois, aperçu du fichier) avec **Marquer le justificatif comme vérifié** et une note interne, suspension du compte (motif, email).
 
 Mise en œuvre (L1-30a, `DECISIONS.md` 2026-11-03) : recherche (prénom, nom, email) et filtres (vendeurs, acquéreurs, équipe, suspendus) ; fiche sans les offres ni le justificatif de financement, qui arrivent avec le lot 2 (L2-02) ; un compte suspendu se connecte encore mais n'écrit plus, ses annonces restent en ligne (Q71).
+
+Mise en œuvre (L2-02, `DECISIONS.md` 2026-11-13) : section « Justificatif de financement » de la fiche d'un acquéreur (historique des documents, celui en vigueur, alerte au-delà de 3 mois, « Ouvrir le fichier », note interne, « Marquer le justificatif comme vérifié ») ; ligne « Justificatif de financement à contrôler » dans « À traiter » du tableau de bord.
 
 ### Dossiers `/admin/dossiers`
 

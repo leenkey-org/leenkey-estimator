@@ -4,6 +4,7 @@ import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { requireProfile } from "@/core/auth/session";
 import { BuyerProfileForm } from "@/leenkey/buyers/components/buyer-profile-form";
+import { FinancingDocumentCard } from "@/leenkey/buyers/components/financing-document-card";
 import { buyerProfile, type BuyerProfile } from "@/leenkey/buyers/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { frBuyerSpace } from "@/lib/i18n/sections/buyerSpace";
@@ -27,10 +28,12 @@ const EMPTY: BuyerProfile = {
   loanAmountEuros: null,
   situationNote: "",
   financingStatus: "not_provided",
+  financingDocument: null,
+  financingCheckedAt: null,
 };
 
 // The buying project of the buyer (L1-25, SPEC-V2 8.9): its status, what the
-// seller sees of it, and the form. The proof of financing comes with L2-02.
+// seller sees of it, the form, then the proof of financing (L2-02).
 export default async function BuyerProfilePage() {
   const profile = await requireProfile();
   const result = await buyerProfile(profile.id);
@@ -42,7 +45,14 @@ export default async function BuyerProfilePage() {
       back={{ href: ROUTES.buyer, label: t.back }}
     >
       {result.ok ? (
-        <BuyerProfileForm initial={result.data ?? EMPTY} />
+        <>
+          <BuyerProfileForm initial={result.data ?? EMPTY} />
+          <FinancingDocumentCard
+            initial={result.data?.financingDocument ?? null}
+            checkedAt={result.data?.financingCheckedAt ?? null}
+            declared={(result.data?.financingStatus ?? "not_provided") !== "not_provided"}
+          />
+        </>
       ) : (
         <InlineAlert
           tone="danger"

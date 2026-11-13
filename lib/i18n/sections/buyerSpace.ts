@@ -33,6 +33,7 @@ export const frBuyerSpace = {
       items: {
         project: "Votre projet et vos villes",
         financing: "Votre financement déclaré",
+        proof: "Votre justificatif de financement",
       },
       states: { done: "Fait", current: "À faire maintenant", todo: "À faire" },
       text: "Un vendeur répond plus volontiers à un acquéreur dont le projet est clair. Il voit le statut de votre dossier ; vos montants n'apparaissent que dans les offres que vous envoyez.",

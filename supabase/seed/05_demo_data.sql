@@ -5,7 +5,7 @@
 -- Rows are created once: a property that already exists is left as the
 -- recette made it, so running the seed again never undoes testing work.
 -- Photos: loaded after this file by scripts/seed-photos.mjs (L1-46, files in
--- Storage). Not seeded yet: the two offers (L2-01, offers table).
+-- Storage). Not seeded yet: the two offers (with L2-03, which makes their PDF; DECISIONS.md 2026-11-13).
 
 create temporary table seed_props (
   n int, owner text, type public.property_type, address_line text, postal_code text, city text,

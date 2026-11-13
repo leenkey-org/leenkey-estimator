@@ -35,6 +35,7 @@ export const frAdminDashboard = {
       listing: "Annonce à valider",
       case: "Dossier",
       report: "Signalement",
+      financing: "Justificatif de financement à contrôler",
     },
     since: (wait: string) => `En attente depuis ${wait}`,
     emptyTitle: "Rien à traiter",

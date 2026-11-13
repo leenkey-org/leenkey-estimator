@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getProfile } from "@/core/auth/session";
 import type { EmailDelivery } from "@/core/notifications/email";
 import { createClient } from "@/lib/supabase/server";
-import { accountDecisionSchema } from "@/lib/validations/admin";
+import { accountDecisionSchema, financingCheckSchema } from "@/lib/validations/admin";
 import { moderationError, type ModerationError } from "../moderation";
 import { emailAccountSuspended } from "./emails";
 
@@ -53,4 +53,39 @@ export async function decideAccount(input: unknown): Promise<AccountDecisionResu
   revalidatePath(`/admin/utilisateurs/${command.profileId}`);
   revalidatePath("/admin");
   return { ok: true, data: { suspended: command.action === "suspend", email } };
+}
+
+// The check of a proof of financing (L2-02, SPEC-V2 13): the team has looked
+// at the document (its presence, its type, its date, its apparent consistency
+// with what is declared) and marks it as checked. financing_document_check
+// verifies is_admin(), sets « Justificatif vérifié » with its date and writes
+// audit_log. Never « validé ». No service role.
+
+export type FinancingCheckResult =
+  | { ok: true; data: { checked: true } }
+  | { ok: false; error: ModerationError };
+
+export async function checkFinancingDocument(input: unknown): Promise<FinancingCheckResult> {
+  const profile = await getProfile();
+  if (!profile?.roles.includes("admin")) return { ok: false, error: "forbidden" };
+  const parsed = financingCheckSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const command = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("financing_document_check", {
+    p_document_id: command.documentId,
+    p_note: command.note,
+  });
+  if (error) {
+    console.error("[admin] financing check failed", {
+      user_id: profile.id,
+      entity_id: command.documentId,
+      code: error.code,
+    });
+    return { ok: false, error: moderationError(error.code) };
+  }
+  revalidatePath(`/admin/utilisateurs/${command.profileId}`);
+  revalidatePath("/admin/utilisateurs");
+  revalidatePath("/admin");
+  return { ok: true, data: { checked: true } };
 }

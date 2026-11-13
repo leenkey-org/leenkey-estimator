@@ -141,6 +141,18 @@ export const accountDecisionSchema = z.discriminatedUnion("action", [
 
 export type AccountDecisionInput = z.infer<typeof accountDecisionSchema>;
 
+/** The note of the team on a proof of financing (financing_documents.check_note). */
+export const FINANCING_NOTE_MAX = 1000;
+
+/** « Marquer le justificatif comme vérifié » (L2-02, SPEC-V2 13 and 17). */
+export const financingCheckSchema = z.object({
+  documentId: z.string().uuid(),
+  profileId,
+  note: z.string().trim().max(FINANCING_NOTE_MAX),
+});
+
+export type FinancingCheckInput = z.infer<typeof financingCheckSchema>;
+
 // L1-30c: the cases and the reports of the back office (SPEC-V2 section 17).
 
 type CaseStatus = Database["public"]["Enums"]["case_status"];

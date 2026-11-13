@@ -138,6 +138,7 @@ export type Database = {
           created_at: string
           current_financing_document_id: string | null
           down_payment_cents: number | null
+          financing_checked_at: string | null
           financing_status: Database["public"]["Enums"]["financing_status"]
           loan_amount_cents: number | null
           loan_needed: boolean | null
@@ -152,6 +153,7 @@ export type Database = {
           created_at?: string
           current_financing_document_id?: string | null
           down_payment_cents?: number | null
+          financing_checked_at?: string | null
           financing_status?: Database["public"]["Enums"]["financing_status"]
           loan_amount_cents?: number | null
           loan_needed?: boolean | null
@@ -166,6 +168,7 @@ export type Database = {
           created_at?: string
           current_financing_document_id?: string | null
           down_payment_cents?: number | null
+          financing_checked_at?: string | null
           financing_status?: Database["public"]["Enums"]["financing_status"]
           loan_amount_cents?: number | null
           loan_needed?: boolean | null
@@ -176,6 +179,12 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "buyer_profiles_current_doc_fk"
+            columns: ["current_financing_document_id"]
+            referencedRelation: "financing_documents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "buyer_profiles_profile_id_fkey"
             columns: ["profile_id"]
@@ -488,6 +497,64 @@ export type Database = {
             foreignKeyName: "favorites_listing_id_fkey"
             columns: ["listing_id"]
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financing_documents: {
+        Row: {
+          buyer_id: string
+          check_note: string | null
+          checked_at: string | null
+          checked_by: string | null
+          created_at: string
+          deleted_at: string | null
+          document_date: string
+          id: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+          type: Database["public"]["Enums"]["financing_document_type"]
+        }
+        Insert: {
+          buyer_id: string
+          check_note?: string | null
+          checked_at?: string | null
+          checked_by?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          document_date: string
+          id?: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+          type: Database["public"]["Enums"]["financing_document_type"]
+        }
+        Update: {
+          buyer_id?: string
+          check_note?: string | null
+          checked_at?: string | null
+          checked_by?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          document_date?: string
+          id?: string
+          mime_type?: string
+          size_bytes?: number
+          storage_path?: string
+          type?: Database["public"]["Enums"]["financing_document_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financing_documents_buyer_id_fkey"
+            columns: ["buyer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financing_documents_checked_by_fkey"
+            columns: ["checked_by"]
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -821,6 +888,248 @@ export type Database = {
             foreignKeyName: "notifications_profile_id_fkey"
             columns: ["profile_id"]
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event: string
+          id: number
+          meta: Json | null
+          offer_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event: string
+          id?: never
+          meta?: Json | null
+          offer_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event?: string
+          id?: never
+          meta?: Json | null
+          offer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_events_actor_id_fkey"
+            columns: ["actor_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_events_offer_id_fkey"
+            columns: ["offer_id"]
+            referencedRelation: "offer_for_seller"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_events_offer_id_fkey"
+            columns: ["offer_id"]
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offers: {
+        Row: {
+          acquisition_mode: Database["public"]["Enums"]["acquisition_mode"]
+          acquisition_mode_other: string | null
+          answered_at: string | null
+          buyer_id: string
+          buyer_identity: Json
+          co_buyers: Json
+          condition_authorization: boolean
+          condition_other: boolean
+          condition_prior_sale: boolean
+          conditions_details: string | null
+          created_at: string
+          declarations: Json
+          down_payment_cents: number
+          expired_at: string | null
+          financing_document_id: string | null
+          financing_mode: Database["public"]["Enums"]["financing_mode"] | null
+          financing_progress:
+            | Database["public"]["Enums"]["financing_progress"]
+            | null
+          financing_progress_other: string | null
+          financing_status_at_submit:
+            | Database["public"]["Enums"]["financing_status"]
+            | null
+          id: string
+          lender_name: string | null
+          listing_id: string
+          loan_amount_cents: number
+          loan_duration_years: number | null
+          loan_rate_max_pct: number | null
+          message: string | null
+          pdf_path: string | null
+          precontract_signed_at: string | null
+          price_cents: number | null
+          price_in_words: string | null
+          property_snapshot: Json
+          reference: string
+          sci_details: Json | null
+          seller_acceptance: Json | null
+          seller_id: string
+          status: Database["public"]["Enums"]["offer_status"]
+          submitted_at: string | null
+          superseded_by: string | null
+          synthesis: Json | null
+          updated_at: string | null
+          validity_until: string | null
+          version: number
+          viewed_at: string | null
+          visited: boolean | null
+          withdrawal_period_start: string | null
+          withdrawn_at: string | null
+        }
+        Insert: {
+          acquisition_mode?: Database["public"]["Enums"]["acquisition_mode"]
+          acquisition_mode_other?: string | null
+          answered_at?: string | null
+          buyer_id: string
+          buyer_identity?: Json
+          co_buyers?: Json
+          condition_authorization?: boolean
+          condition_other?: boolean
+          condition_prior_sale?: boolean
+          conditions_details?: string | null
+          created_at?: string
+          declarations?: Json
+          down_payment_cents?: number
+          expired_at?: string | null
+          financing_document_id?: string | null
+          financing_mode?: Database["public"]["Enums"]["financing_mode"] | null
+          financing_progress?:
+            | Database["public"]["Enums"]["financing_progress"]
+            | null
+          financing_progress_other?: string | null
+          financing_status_at_submit?:
+            | Database["public"]["Enums"]["financing_status"]
+            | null
+          id?: string
+          lender_name?: string | null
+          listing_id: string
+          loan_amount_cents?: number
+          loan_duration_years?: number | null
+          loan_rate_max_pct?: number | null
+          message?: string | null
+          pdf_path?: string | null
+          precontract_signed_at?: string | null
+          price_cents?: number | null
+          price_in_words?: string | null
+          property_snapshot?: Json
+          reference: string
+          sci_details?: Json | null
+          seller_acceptance?: Json | null
+          seller_id: string
+          status?: Database["public"]["Enums"]["offer_status"]
+          submitted_at?: string | null
+          superseded_by?: string | null
+          synthesis?: Json | null
+          updated_at?: string | null
+          validity_until?: string | null
+          version?: number
+          viewed_at?: string | null
+          visited?: boolean | null
+          withdrawal_period_start?: string | null
+          withdrawn_at?: string | null
+        }
+        Update: {
+          acquisition_mode?: Database["public"]["Enums"]["acquisition_mode"]
+          acquisition_mode_other?: string | null
+          answered_at?: string | null
+          buyer_id?: string
+          buyer_identity?: Json
+          co_buyers?: Json
+          condition_authorization?: boolean
+          condition_other?: boolean
+          condition_prior_sale?: boolean
+          conditions_details?: string | null
+          created_at?: string
+          declarations?: Json
+          down_payment_cents?: number
+          expired_at?: string | null
+          financing_document_id?: string | null
+          financing_mode?: Database["public"]["Enums"]["financing_mode"] | null
+          financing_progress?:
+            | Database["public"]["Enums"]["financing_progress"]
+            | null
+          financing_progress_other?: string | null
+          financing_status_at_submit?:
+            | Database["public"]["Enums"]["financing_status"]
+            | null
+          id?: string
+          lender_name?: string | null
+          listing_id?: string
+          loan_amount_cents?: number
+          loan_duration_years?: number | null
+          loan_rate_max_pct?: number | null
+          message?: string | null
+          pdf_path?: string | null
+          precontract_signed_at?: string | null
+          price_cents?: number | null
+          price_in_words?: string | null
+          property_snapshot?: Json
+          reference?: string
+          sci_details?: Json | null
+          seller_acceptance?: Json | null
+          seller_id?: string
+          status?: Database["public"]["Enums"]["offer_status"]
+          submitted_at?: string | null
+          superseded_by?: string | null
+          synthesis?: Json | null
+          updated_at?: string | null
+          validity_until?: string | null
+          version?: number
+          viewed_at?: string | null
+          visited?: boolean | null
+          withdrawal_period_start?: string | null
+          withdrawn_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_buyer_id_fkey"
+            columns: ["buyer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_financing_document_fk"
+            columns: ["financing_document_id"]
+            referencedRelation: "financing_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_listing_id_fkey"
+            columns: ["listing_id"]
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_seller_id_fkey"
+            columns: ["seller_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_superseded_by_fkey"
+            columns: ["superseded_by"]
+            referencedRelation: "offer_for_seller"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_superseded_by_fkey"
+            columns: ["superseded_by"]
+            referencedRelation: "offers"
             referencedColumns: ["id"]
           },
         ]
@@ -1505,6 +1814,196 @@ export type Database = {
       }
     }
     Views: {
+      offer_for_seller: {
+        Row: {
+          acquisition_mode:
+            | Database["public"]["Enums"]["acquisition_mode"]
+            | null
+          acquisition_mode_other: string | null
+          answered_at: string | null
+          buyer_id: string | null
+          buyer_identity: Json | null
+          co_buyers: Json | null
+          condition_authorization: boolean | null
+          condition_other: boolean | null
+          condition_prior_sale: boolean | null
+          conditions_details: string | null
+          created_at: string | null
+          declarations: Json | null
+          down_payment_cents: number | null
+          expired_at: string | null
+          financing_mode: Database["public"]["Enums"]["financing_mode"] | null
+          financing_progress:
+            | Database["public"]["Enums"]["financing_progress"]
+            | null
+          financing_progress_other: string | null
+          financing_status_at_submit:
+            | Database["public"]["Enums"]["financing_status"]
+            | null
+          id: string | null
+          lender_name: string | null
+          listing_id: string | null
+          loan_amount_cents: number | null
+          loan_duration_years: number | null
+          loan_rate_max_pct: number | null
+          message: string | null
+          pdf_path: string | null
+          precontract_signed_at: string | null
+          price_cents: number | null
+          price_in_words: string | null
+          property_snapshot: Json | null
+          reference: string | null
+          sci_details: Json | null
+          seller_acceptance: Json | null
+          seller_id: string | null
+          status: Database["public"]["Enums"]["offer_status"] | null
+          submitted_at: string | null
+          superseded_by: string | null
+          synthesis: Json | null
+          validity_until: string | null
+          version: number | null
+          viewed_at: string | null
+          visited: boolean | null
+          withdrawal_period_start: string | null
+          withdrawn_at: string | null
+        }
+        Insert: {
+          acquisition_mode?:
+            | Database["public"]["Enums"]["acquisition_mode"]
+            | null
+          acquisition_mode_other?: string | null
+          answered_at?: string | null
+          buyer_id?: string | null
+          buyer_identity?: never
+          co_buyers?: never
+          condition_authorization?: boolean | null
+          condition_other?: boolean | null
+          condition_prior_sale?: boolean | null
+          conditions_details?: string | null
+          created_at?: string | null
+          declarations?: Json | null
+          down_payment_cents?: number | null
+          expired_at?: never
+          financing_mode?: Database["public"]["Enums"]["financing_mode"] | null
+          financing_progress?:
+            | Database["public"]["Enums"]["financing_progress"]
+            | null
+          financing_progress_other?: string | null
+          financing_status_at_submit?:
+            | Database["public"]["Enums"]["financing_status"]
+            | null
+          id?: string | null
+          lender_name?: string | null
+          listing_id?: string | null
+          loan_amount_cents?: number | null
+          loan_duration_years?: number | null
+          loan_rate_max_pct?: number | null
+          message?: string | null
+          pdf_path?: never
+          precontract_signed_at?: string | null
+          price_cents?: number | null
+          price_in_words?: string | null
+          property_snapshot?: Json | null
+          reference?: string | null
+          sci_details?: never
+          seller_acceptance?: Json | null
+          seller_id?: string | null
+          status?: never
+          submitted_at?: string | null
+          superseded_by?: string | null
+          synthesis?: Json | null
+          validity_until?: string | null
+          version?: number | null
+          viewed_at?: string | null
+          visited?: boolean | null
+          withdrawal_period_start?: string | null
+          withdrawn_at?: string | null
+        }
+        Update: {
+          acquisition_mode?:
+            | Database["public"]["Enums"]["acquisition_mode"]
+            | null
+          acquisition_mode_other?: string | null
+          answered_at?: string | null
+          buyer_id?: string | null
+          buyer_identity?: never
+          co_buyers?: never
+          condition_authorization?: boolean | null
+          condition_other?: boolean | null
+          condition_prior_sale?: boolean | null
+          conditions_details?: string | null
+          created_at?: string | null
+          declarations?: Json | null
+          down_payment_cents?: number | null
+          expired_at?: never
+          financing_mode?: Database["public"]["Enums"]["financing_mode"] | null
+          financing_progress?:
+            | Database["public"]["Enums"]["financing_progress"]
+            | null
+          financing_progress_other?: string | null
+          financing_status_at_submit?:
+            | Database["public"]["Enums"]["financing_status"]
+            | null
+          id?: string | null
+          lender_name?: string | null
+          listing_id?: string | null
+          loan_amount_cents?: number | null
+          loan_duration_years?: number | null
+          loan_rate_max_pct?: number | null
+          message?: string | null
+          pdf_path?: never
+          precontract_signed_at?: string | null
+          price_cents?: number | null
+          price_in_words?: string | null
+          property_snapshot?: Json | null
+          reference?: string | null
+          sci_details?: never
+          seller_acceptance?: Json | null
+          seller_id?: string | null
+          status?: never
+          submitted_at?: string | null
+          superseded_by?: string | null
+          synthesis?: Json | null
+          validity_until?: string | null
+          version?: number | null
+          viewed_at?: string | null
+          visited?: boolean | null
+          withdrawal_period_start?: string | null
+          withdrawn_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_buyer_id_fkey"
+            columns: ["buyer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_listing_id_fkey"
+            columns: ["listing_id"]
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_seller_id_fkey"
+            columns: ["seller_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_superseded_by_fkey"
+            columns: ["superseded_by"]
+            referencedRelation: "offer_for_seller"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_superseded_by_fkey"
+            columns: ["superseded_by"]
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_listings: {
         Row: {
           bedrooms: number | null
@@ -1691,6 +2190,22 @@ export type Database = {
           cases_open: number
           reports_open: number
           advisor_unread: number
+        }[]
+      }
+      admin_financing_documents: {
+        Args: { p_buyer_id: string }
+        Returns: {
+          checked_by_name: string
+          type: Database["public"]["Enums"]["financing_document_type"]
+          document_date: string
+          mime_type: string
+          deleted_at: string
+          created_at: string
+          id: string
+          check_note: string
+          is_current: boolean
+          checked_at: string
+          size_bytes: number
         }[]
       }
       admin_knowledge_import: {
@@ -1963,12 +2478,12 @@ export type Database = {
       buyer_summary_for_seller: {
         Args: { p_property_id: string }
         Returns: {
+          financing_checked_at: string
+          buyer_id: string
+          first_name: string
           project: Database["public"]["Enums"]["buyer_project"]
           financing_status: Database["public"]["Enums"]["financing_status"]
           financing_document_type: Database["public"]["Enums"]["financing_document_type"]
-          financing_checked_at: string
-          first_name: string
-          buyer_id: string
         }[]
       }
       can_write_conversation: {
@@ -2062,6 +2577,36 @@ export type Database = {
       euros: {
         Args: { p_cents: number }
         Returns: string
+      }
+      financing_document_add: {
+        Args: {
+          p_size_bytes: number
+          p_mime_type: string
+          p_storage_path: string
+          p_document_date: string
+          p_type: Database["public"]["Enums"]["financing_document_type"]
+        }
+        Returns: string
+      }
+      financing_document_check: {
+        Args: { p_document_id: string; p_note?: string }
+        Returns: undefined
+      }
+      financing_document_remove: {
+        Args: { p_document_id: string }
+        Returns: undefined
+      }
+      financing_file_buyer: {
+        Args: { p_name: string }
+        Returns: string
+      }
+      financing_file_in_use: {
+        Args: { p_name: string }
+        Returns: boolean
+      }
+      financing_files_room: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       has_buyer_relation: {
         Args: { b: string; p: string }
@@ -2275,6 +2820,126 @@ export type Database = {
           group_last_sent_at: string
         }[]
       }
+      number_in_words_fr: {
+        Args: { p_n: number }
+        Returns: string
+      }
+      offer_answer: {
+        Args: {
+          p_accept: boolean
+          p_confirmed_read?: boolean
+          p_message?: string
+          p_ip_hash?: string
+          p_offer_id: string
+        }
+        Returns: Database["public"]["Enums"]["offer_status"]
+      }
+      offer_bad_transition: {
+        Args: {
+          p_action: string
+          p_status: Database["public"]["Enums"]["offer_status"]
+        }
+        Returns: undefined
+      }
+      offer_can_draft: {
+        Args: { p_listing: string }
+        Returns: boolean
+      }
+      offer_event: {
+        Args: { p_offer: string; p_event: string; p_meta?: Json }
+        Returns: undefined
+      }
+      offer_expire_if_due: {
+        Args: { p_offer: Database["public"]["Tables"]["offers"]["Row"] }
+        Returns: {
+          acquisition_mode: Database["public"]["Enums"]["acquisition_mode"]
+          acquisition_mode_other: string | null
+          answered_at: string | null
+          buyer_id: string
+          buyer_identity: Json
+          co_buyers: Json
+          condition_authorization: boolean
+          condition_other: boolean
+          condition_prior_sale: boolean
+          conditions_details: string | null
+          created_at: string
+          declarations: Json
+          down_payment_cents: number
+          expired_at: string | null
+          financing_document_id: string | null
+          financing_mode: Database["public"]["Enums"]["financing_mode"] | null
+          financing_progress:
+            | Database["public"]["Enums"]["financing_progress"]
+            | null
+          financing_progress_other: string | null
+          financing_status_at_submit:
+            | Database["public"]["Enums"]["financing_status"]
+            | null
+          id: string
+          lender_name: string | null
+          listing_id: string
+          loan_amount_cents: number
+          loan_duration_years: number | null
+          loan_rate_max_pct: number | null
+          message: string | null
+          pdf_path: string | null
+          precontract_signed_at: string | null
+          price_cents: number | null
+          price_in_words: string | null
+          property_snapshot: Json
+          reference: string
+          sci_details: Json | null
+          seller_acceptance: Json | null
+          seller_id: string
+          status: Database["public"]["Enums"]["offer_status"]
+          submitted_at: string | null
+          superseded_by: string | null
+          synthesis: Json | null
+          updated_at: string | null
+          validity_until: string | null
+          version: number
+          viewed_at: string | null
+          visited: boolean | null
+          withdrawal_period_start: string | null
+          withdrawn_at: string | null
+        }
+      }
+      offer_identity_complete: {
+        Args: { p: Json }
+        Returns: boolean
+      }
+      offer_identity_for_seller: {
+        Args: { p_full: boolean; p_identity: Json }
+        Returns: Json
+      }
+      offer_is_party: {
+        Args: { p_offer: string }
+        Returns: boolean
+      }
+      offer_mark_viewed: {
+        Args: { p_offer_id: string }
+        Returns: Database["public"]["Enums"]["offer_status"]
+      }
+      offer_record_precontract: {
+        Args: {
+          p_withdrawal_start?: string
+          p_offer_id: string
+          p_signed_at: string
+        }
+        Returns: undefined
+      }
+      offer_submit: {
+        Args: { p_offer_id: string }
+        Returns: Database["public"]["Enums"]["offer_status"]
+      }
+      offer_withdraw: {
+        Args: { p_offer_id: string }
+        Returns: Database["public"]["Enums"]["offer_status"]
+      }
+      offers_expire_due: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       owns_ai_conversation: {
         Args: { c: string }
         Returns: boolean
@@ -2302,6 +2967,10 @@ export type Database = {
       photos_reorder: {
         Args: { p_property_id: string; p_photo_ids: string[] }
         Returns: undefined
+      }
+      price_in_words_fr: {
+        Args: { p_cents: number }
+        Returns: string
       }
       profile_add_role: {
         Args: { p_role: Database["public"]["Enums"]["user_role"] }
@@ -2570,6 +3239,10 @@ export type Database = {
       team_email_addresses: {
         Args: Record<PropertyKey, never>
         Returns: string[]
+      }
+      words_below_1000_fr: {
+        Args: { p_final: boolean; p_n: number }
+        Returns: string
       }
     }
     Enums: {
