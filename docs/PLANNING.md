@@ -148,6 +148,11 @@ Lot 2 :
 - [ ] **P-04** Guide back office (`docs/GUIDE-BACK-OFFICE.md` + PDF) · PR : · Testé en préprod : ☐
 - [ ] **P-05** Répétition complète de la mise en production sur staging ; préprod validée par Cédric le 18 décembre · PR : · Testé en préprod : ☐
 
+## Applications mobiles · ajout du 13 nov. · dates à fixer (Q81)
+
+- [ ] **APP-01** Cadrage de l'application iOS et Android avec Younes : forme, écrans, échéance, comptes des stores au nom de SAS LEENKEY ; SPEC mise à jour · PR : · Testé en préprod : ☐
+- [ ] **APP-02** Construction et publication sur l'App Store et Google Play (inscription Apple relancée après la bascule de leenkey.fr) · PR : · Testé en préprod : ☐
+
 ## Fin du projet
 
 - [ ] **P-07** Tag `v2.0.0`, `CHANGELOG.md` complet · PR : · Testé en préprod : ☐

@@ -9,7 +9,7 @@ Demandes et idées hors périmètre V2. Rien de cette liste n'est implémenté e
 | 2026-10-01 | Cédric | Contre-offre structurée | Statut `counter_offer` prévu ; en V2 la négociation passe par la messagerie |
 | 2026-09 | Proposition | Signature électronique (Yousign) | Option chiffrée 1 500 € HT |
 | 2026-09 | Proposition | Diffusion sur les portails externes | Écartée : exclusivité Leenkey |
-| — | SPEC | Application mobile native | — |
+| — | SPEC | Application mobile native | Sortie du backlog le 2026-11-13 : incluse aux livrables par Younes (`DECISIONS.md`, Q81, tâches APP-01 et APP-02) |
 | — | SPEC | Édition de la base de connaissances depuis le back office | En V2 : import de fichiers |
 | — | SPEC | Services à l'unité, portail client Stripe, abonnements | — |
 | — | SPEC | Multi-langue | — |
