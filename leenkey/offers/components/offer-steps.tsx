@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useRef,
   useState,
   useTransition,
@@ -35,7 +36,7 @@ import {
   OFFER_VALIDITY_MAX_DAYS,
   OFFER_VALIDITY_MIN_DAYS,
   SCI_STATUSES,
-  isValidityInRange,
+  issueKinds,
   issuePaths,
   offerBuyerSchema,
   offerConditionsSchema,
@@ -43,9 +44,12 @@ import {
   offerFinancingSchema,
   offerPriceSchema,
   offerValiditySchema,
+  parseWholeEuros,
+  parseWholeNumber,
   validityAfterDays,
   type AcquisitionMode,
   type FinancingMode,
+  type IssueKind,
   type OfferBuyerInput,
   type OfferConditionsInput,
   type OfferIdentityField,
@@ -108,11 +112,21 @@ function useStepForm(listingId: string, step: OfferStep, next: string) {
 
   function save(schema: z.ZodTypeAny, input: unknown, message: (path: string) => string) {
     if (busy.current) return;
-    const fieldErrors = (paths: string[]) =>
-      Object.fromEntries(paths.map((path) => [path, message(path)]));
+    const fieldErrors = (paths: string[], kinds: Record<string, IssueKind> = {}) =>
+      Object.fromEntries(
+        paths.map((path) => [
+          path,
+          // Said as it is: a letter the document cannot draw, a text too long.
+          kinds[path] === "characters"
+            ? t.errors.characters
+            : kinds[path] === "too_long"
+              ? t.errors.tooLong
+              : message(path),
+        ]),
+      );
     const parsed = schema.safeParse(input);
     if (!parsed.success) {
-      fail(fieldErrors(issuePaths(parsed.error)), t.errors.invalid);
+      fail(fieldErrors(issuePaths(parsed.error), issueKinds(parsed.error)), t.errors.invalid);
       return;
     }
     busy.current = true;
@@ -202,8 +216,14 @@ function StepForm({
   );
 }
 
-/** « 12 000 » typed: a whole number, null when empty, NaN when it is not one. */
-const typedNumber = (value: string) => parseFrenchNumber(value);
+/**
+ * The radio checked in a group of cards. The cards are native radios the
+ * browser may restore on a reload (their state would then say nothing): read
+ * once the page is there, and again when the step is sent.
+ */
+function checkedRadio(form: HTMLFormElement | null, name: string): string | null {
+  return form?.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`)?.value ?? null;
+}
 
 // ---------------------------------------------------------------------------
 // Step 1: the buyer, the co-buyers, how they buy
@@ -310,6 +330,7 @@ export function BuyerStep({
   const [mode, setMode] = useState<AcquisitionMode>(initial.acquisitionMode);
   const [modeOther, setModeOther] = useState(initial.acquisitionModeOther);
   const [sci, setSci] = useState<OfferSciInput>(initial.sci);
+  const addCoBuyer = useRef<HTMLButtonElement>(null);
   const labels = t.buyer;
 
   function submit() {
@@ -373,6 +394,8 @@ export function BuyerStep({
                 onClick={() => {
                   setCoBuyers((current) => current.filter((_, other) => other !== index));
                   step.fail({}, null);
+                  // Its button is gone: the focus goes to « Ajouter un co-acquéreur ».
+                  requestAnimationFrame(() => addCoBuyer.current?.focus());
                 }}
               >
                 <Trash2 aria-hidden="true" />
@@ -395,6 +418,7 @@ export function BuyerStep({
         ))}
         {coBuyers.length < OFFER_CO_BUYERS_MAX ? (
           <Button
+            ref={addCoBuyer}
             type="button"
             variant="secondary"
             className="self-start"
@@ -509,7 +533,7 @@ export function PriceStep({
   const [price, setPrice] = useState(initialEuros === null ? "" : formatInteger(initialEuros));
   const labels = t.price;
 
-  const typed = typedNumber(price);
+  const typed = parseWholeEuros(price);
   const cents =
     typed !== null && Number.isInteger(typed) && typed > 0 && typed <= OFFER_AMOUNT_MAX_EUROS
       ? typed * 100
@@ -597,6 +621,10 @@ export type FinancingInitial = {
 
 const amountText = (value: number | null) => (value === null ? "" : formatInteger(value));
 
+const MODE_NAME = "financing-mode";
+const readMode = (value: string | null): FinancingMode | null =>
+  value === "loan" ? "loan" : value === "no_loan" ? "no_loan" : null;
+
 function financingMessage(path: string): string {
   const labels = t.financing.errors;
   return path === "mode"
@@ -643,31 +671,50 @@ export function FinancingStep({
   const [progress, setProgress] = useState<string>(initial.progress ?? "");
   const [progressOther, setProgressOther] = useState(initial.progressOther);
   const labels = t.financing;
+  const { form } = step;
+  useEffect(() => {
+    const restored = readMode(checkedRadio(form.current, MODE_NAME));
+    if (restored) setMode(restored);
+  }, [form]);
 
   function submit() {
-    if (mode === null) {
+    const chosen = mode ?? readMode(checkedRadio(form.current, MODE_NAME));
+    if (chosen === null) {
       step.fail({ mode: labels.errors.mode }, null);
       return;
     }
     step.save(
       offerFinancingSchema,
-      {
-        mode,
-        downPaymentEuros: typedNumber(downPayment),
-        loanAmountEuros: typedNumber(loanAmount),
-        loanDurationYears: typedNumber(duration),
-        loanRateMaxPct: typedNumber(rate),
-        lenderName: lender,
-        progress: FINANCING_PROGRESS.find((option) => option === progress) ?? null,
-        progressOther,
-      },
+      chosen === "loan"
+        ? {
+            mode: chosen,
+            downPaymentEuros: parseWholeEuros(downPayment),
+            loanAmountEuros: parseWholeEuros(loanAmount),
+            loanDurationYears: parseWholeNumber(duration),
+            loanRateMaxPct: parseFrenchNumber(rate),
+            lenderName: lender,
+            progress: FINANCING_PROGRESS.find((option) => option === progress) ?? null,
+            progressOther,
+          }
+        : // Without a loan, what was typed for one is hidden: it is not sent,
+          // and cannot stop the step.
+          {
+            mode: chosen,
+            downPaymentEuros: null,
+            loanAmountEuros: null,
+            loanDurationYears: null,
+            loanRateMaxPct: null,
+            lenderName: "",
+            progress: null,
+            progressOther: "",
+          },
       financingMessage,
     );
   }
 
   const budget = priceCents === null ? null : offerBudget(priceCents, isNewBuild);
-  const down = typedNumber(downPayment);
-  const loan = typedNumber(loanAmount);
+  const down = parseWholeEuros(downPayment);
+  const loan = parseWholeEuros(loanAmount);
   const funds =
     mode === "loan" &&
     down !== null &&
@@ -695,8 +742,8 @@ export function FinancingStep({
           className="flex flex-col gap-2"
           onChange={(event) => {
             const target = event.target;
-            if (target instanceof HTMLInputElement && target.name === "financing-mode") {
-              setMode(target.value === "loan" ? "loan" : "no_loan");
+            if (target instanceof HTMLInputElement && target.name === MODE_NAME) {
+              setMode(readMode(target.value));
               step.clear("mode");
             }
           }}
@@ -705,7 +752,7 @@ export function FinancingStep({
             {labels.question}
           </p>
           <RoleCards
-            name="financing-mode"
+            name={MODE_NAME}
             legend={labels.question}
             defaultValue={initial.mode ?? undefined}
             error={step.errors.mode || undefined}
@@ -914,18 +961,13 @@ export function ValidityStep({
 }) {
   const step = useStepForm(listingId, "validity", offerFormPath(listingId, 7));
   const [days, setDays] = useState(initialDays);
+  // What the server will count when the step is saved, to the hour: shown
+  // here from its clock at first, and written by it (saveOfferStep).
   const [until, setUntil] = useState(() => validityAfterDays(initialDays, new Date(now)));
   const labels = t.validity;
 
   function submit() {
-    // The page may have stayed open: the date shown is checked against now,
-    // and counted again when it no longer stands.
-    if (!isValidityInRange(until)) {
-      setUntil(validityAfterDays(days));
-      step.fail({ validityUntil: labels.errors.range }, null);
-      return;
-    }
-    step.save(offerValiditySchema(), { validityUntil: until }, () => labels.errors.range);
+    step.save(offerValiditySchema, { days }, () => labels.errors.range);
   }
 
   return (
@@ -935,12 +977,12 @@ export function ValidityStep({
         <Select
           label={labels.duration}
           value={String(days)}
-          error={step.errors.validityUntil || undefined}
+          error={step.errors.days || undefined}
           onChange={(event) => {
             const next = Number(event.target.value);
             setDays(next);
             setUntil(validityAfterDays(next));
-            step.clear("validityUntil");
+            step.clear("days");
           }}
         >
           {VALIDITY_DAYS.map((option) => (
@@ -972,6 +1014,7 @@ const DECLARATIONS = [
   "infoRead",
 ] as const;
 type Declaration = (typeof DECLARATIONS)[number];
+const VISIT_NAME = "visited";
 
 export function DeclarationsStep({
   listingId,
@@ -989,6 +1032,11 @@ export function DeclarationsStep({
     infoRead: initial.infoRead,
   });
   const labels = t.declarations;
+  const { form } = step;
+  useEffect(() => {
+    const restored = checkedRadio(form.current, VISIT_NAME);
+    if (restored) setVisited(restored === "yes");
+  }, [form]);
   const complete = visited !== null && DECLARATIONS.every((name) => ticked[name]);
 
   function submit() {
@@ -1017,7 +1065,7 @@ export function DeclarationsStep({
           className="flex flex-col gap-2"
           onChange={(event) => {
             const target = event.target;
-            if (target instanceof HTMLInputElement && target.name === "visited") {
+            if (target instanceof HTMLInputElement && target.name === VISIT_NAME) {
               setVisited(target.value === "yes");
               step.clear("visited");
             }
@@ -1027,7 +1075,7 @@ export function DeclarationsStep({
             {labels.visit}
           </p>
           <RoleCards
-            name="visited"
+            name={VISIT_NAME}
             legend={labels.visit}
             defaultValue={initial.visited === null ? undefined : initial.visited ? "yes" : "no"}
             error={step.errors.visited || undefined}

@@ -12,6 +12,8 @@ import {
   offerFinancingSchema,
   offerPriceSchema,
   offerValiditySchema,
+  OFFER_STEPS,
+  validityAfterDays,
   type OfferStep,
 } from "@/lib/validations/offer";
 import { writeIdentity, writeSci } from "./content";
@@ -87,9 +89,10 @@ function columnsOf(step: OfferStep, input: unknown): OfferUpdate | { fields: str
       };
     }
     case "validity": {
-      const parsed = offerValiditySchema().safeParse(input);
+      const parsed = offerValiditySchema.safeParse(input);
       if (!parsed.success) return { fields: issuePaths(parsed.error) };
-      return { validity_until: parsed.data.validityUntil };
+      // Counted with the clock of the server, never the one of the browser.
+      return { validity_until: validityAfterDays(parsed.data.days) };
     }
     case "declarations": {
       const parsed = offerDeclarationsSchema.safeParse(input);
@@ -123,6 +126,8 @@ export async function saveOfferStep(
   const profile = await getProfile();
   if (!profile) return { ok: false, error: "auth" };
   if (!UUID.test(listingId)) return { ok: false, error: "invalid" };
+  // The step comes from the client: one of the seven, nothing else.
+  if (!(OFFER_STEPS as readonly string[]).includes(step)) return { ok: false, error: "invalid" };
   const columns = columnsOf(step, input);
   if ("fields" in columns) return { ok: false, error: "invalid", fields: columns.fields };
   const values: OfferUpdate = step === "declarations" ? columns : { ...columns, declarations: {} };
@@ -212,6 +217,8 @@ export async function submitOffer(offerId: string): Promise<SubmitOfferResult> {
   const { error } = await supabase.rpc("offer_submit", { p_offer_id: offerId });
   if (error) {
     if (error.code === "22023") {
+      // Already sent (a second click, a retry after a lost answer): its page says so.
+      if (error.message.startsWith("cannot send")) return { ok: true, data: { offerId } };
       return { ok: false, error: error.message.includes("validity") ? "validity" : "incomplete" };
     }
     if (error.code === "42501") return { ok: false, error: "closed" };

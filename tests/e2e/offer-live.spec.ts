@@ -33,7 +33,11 @@ async function seriousViolations(page: Page) {
 }
 
 /** Signs a seed account in, accepts the terms when asked, and lands on `path`. */
-async function signIn(page: Page, account: "seller_a" | "seller_b" | "buyer_c", path: string) {
+async function signIn(
+  page: Page,
+  account: "seller_a" | "seller_b" | "buyer_c" | "buyer_d",
+  path: string,
+) {
   await page.goto(`/connexion?next=${encodeURIComponent(path)}`);
   await page.getByLabel("Email").fill(`${account}@test.leenkey.fr`);
   await page.getByLabel("Mot de passe").fill(SEED_PASSWORD ?? "");
@@ -120,7 +124,8 @@ test("un acquéreur fait une offre en sept étapes, la relit, l'envoie ; elle es
     await expect(step(page, "Étape 3 sur 7 · Mon offre")).toBeVisible();
     await next(page).click();
     await expect(page.getByText("Ce champ est obligatoire.")).toBeVisible();
-    await page.getByLabel("Prix proposé").fill("150 000");
+    // A dot between thousands is read as thousands, never as 150 euros.
+    await page.getByLabel("Prix proposé").fill("150.000");
     await expect(page.getByText("cent cinquante mille euros")).toBeVisible();
     const gap = page.locator("dl").filter({ hasText: "Prix affiché" });
     await expect(gap).toContainText("159 000 €");
@@ -137,6 +142,18 @@ test("un acquéreur fait une offre en sept étapes, la relit, l'envoie ; elle es
     await expect(page.getByLabel("Montant prévisionnel du prêt")).toHaveValue(/^320\s000$/);
     await next(page).click();
     await expect(page.getByText("Indiquez une durée de 1 à 40 ans.")).toBeVisible();
+
+    // « Sans prêt »: what was typed for a loan, even wrong, is hidden and stops nothing.
+    await page.getByLabel("Taux maximal envisagé").fill("3,5%");
+    await page.locator("label").filter({ hasText: "Sans prêt" }).click();
+    await expect(page.getByLabel("Apport personnel")).toHaveCount(0);
+    await next(page).click();
+    await expect(step(page, "Étape 5 sur 7 · Conditions de l'offre")).toBeVisible();
+    await expect(page.getByText("Offre formulée sans recours à un prêt immobilier.")).toBeVisible();
+    await page.getByRole("link", { name: "Précédent" }).click();
+    await expect(page.getByRole("radio", { name: /Sans prêt/ })).toBeChecked();
+    await page.locator("label").filter({ hasText: "Avec prêt" }).click();
+    await page.getByLabel("Apport personnel").fill("60 000");
     await page.getByLabel("Montant prévisionnel du prêt").fill("100 000");
     await page.getByLabel("Durée envisagée").fill("25");
     await page.getByLabel("Taux maximal envisagé").fill("3,85");
@@ -274,6 +291,14 @@ test("un acquéreur fait une offre en sept étapes, la relit, l'envoie ; elle es
     // Their own listing takes no offer from them.
     expect((await seller.goto(`/offres/nouvelle?listing=${listingId}`))?.status()).toBe(404);
     await sellerContext.close();
+
+    // Another buyer: the offer does not exist for them.
+    const otherContext = await browser.newContext({ baseURL: url });
+    const other = await otherContext.newPage();
+    await signIn(other, "buyer_d", "/acquereur");
+    expect((await other.request.get(`${offerPath}/pdf`)).status()).toBe(404);
+    expect((await other.goto(offerPath))?.status()).toBe(404);
+    await otherContext.close();
   });
 });
 

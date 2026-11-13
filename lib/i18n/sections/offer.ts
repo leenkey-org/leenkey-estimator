@@ -34,6 +34,9 @@ export const frOffer = {
     closed: "Cette annonce n'accepte plus d'offre pour le moment.",
     invalid: "Vérifiez les champs signalés.",
     required: "Ce champ est obligatoire.",
+    characters:
+      "Ce texte contient des caractères qui ne peuvent pas figurer dans l'offre. Écrivez-le en lettres latines.",
+    tooLong: "Ce texte est trop long.",
   },
 
   // What stops an offer before the form (SPEC 13, prerequisites).

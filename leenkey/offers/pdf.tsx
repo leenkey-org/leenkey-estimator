@@ -12,7 +12,10 @@ const fr = { offer: frOffer } as const;
 // the document (leenkey/offers/document.ts), a blue rule under the header,
 // reference, version and page at the foot. Drawn from the frozen offer each
 // time it is asked for (DECISIONS.md 2026-11-13, L2-03): no file a client
-// could replace. Sora embedded (leenkey/offers/fonts, OFL).
+// could replace. Fonts embedded (leenkey/offers/fonts, OFL): Sora (Latin and
+// Latin Extended), then Noto Sans for the letters Sora does not draw
+// (Vietnamese, the rest of the Latin script): a name is never mangled. The
+// form takes Latin letters only (lib/validations/offer.ts, `drawable`).
 
 const FONTS = path.join(process.cwd(), "leenkey/offers/fonts");
 Font.register({
@@ -23,6 +26,18 @@ Font.register({
     { src: path.join(FONTS, "Sora-700.ttf"), fontWeight: 700 },
   ],
 });
+Font.register({
+  family: "Noto Sans",
+  fonts: [
+    { src: path.join(FONTS, "NotoSans-400.ttf"), fontWeight: 400 },
+    { src: path.join(FONTS, "NotoSans-700.ttf"), fontWeight: 600 },
+    { src: path.join(FONTS, "NotoSans-700.ttf"), fontWeight: 700 },
+  ],
+});
+/** The files of the fonts, in the order they are tried (tests: what they draw). */
+export const PDF_FONT_FILES = ["Sora-400.ttf", "NotoSans-400.ttf"].map((file) =>
+  path.join(FONTS, file),
+);
 // A word is never cut: an amount, a name, a reference stay whole.
 Font.registerHyphenationCallback((word) => [word]);
 
@@ -38,7 +53,7 @@ const styles = StyleSheet.create({
     paddingTop: MARGIN,
     paddingHorizontal: MARGIN,
     paddingBottom: MARGIN + 18,
-    fontFamily: "Sora",
+    fontFamily: ["Sora", "Noto Sans"],
     fontSize: 10,
     lineHeight: 1.5,
     color: INK,

@@ -52,8 +52,22 @@ export const OFFER_VALIDITY_DEFAULT_DAYS = 5;
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 
-const text = (max: number) => z.string().trim().min(1).max(max);
-const optionalText = (max: number) => z.string().trim().max(max);
+/**
+ * What the document of an offer can draw (leenkey/offers/pdf.tsx): the Latin
+ * script with its accents (French, the languages of Europe, Vietnamese),
+ * figures, usual punctuation, the euro sign. Another script or an emoji
+ * would be missing from the PDF: refused in the form instead.
+ */
+const DRAWABLE =
+  /^(?:[\n\r\u0020-\u007E\u00A0-\u024F\u1E00-\u1EFF\u2010-\u2027\u2030-\u203A\u202F\u20AC\u2116]|[\u0300-\u036F])*$/;
+export const isDrawable = (value: string) => DRAWABLE.test(value);
+/** Message of a text the document cannot draw (issueKinds). */
+const UNDRAWABLE = "characters";
+
+const text = (max: number) =>
+  z.string().trim().min(1).max(max).refine(isDrawable, { message: UNDRAWABLE });
+const optionalText = (max: number) =>
+  z.string().trim().max(max).refine(isDrawable, { message: UNDRAWABLE });
 const euros = z.number().int().min(0).max(OFFER_AMOUNT_MAX_EUROS);
 
 /** « 2026-02-31 » is read as the 3rd of March: refused. */
@@ -194,19 +208,15 @@ export const offerConditionsSchema = z
 export type OfferConditionsInput = z.infer<typeof offerConditionsSchema>;
 
 /**
- * Step 6: until when the offer stands. From 2 to 10 days from now, with the
- * hour of margin the database gives (offer_submit) for the time between this
- * step and the sending.
+ * Step 6: how many days the offer stands, from 2 to 10. The date itself is
+ * counted by the server when the step is saved (validityAfterDays): the clock
+ * of a browser is not trusted with it.
  */
-export function offerValiditySchema(now: Date = new Date()) {
-  return z.object({
-    validityUntil: z
-      .string()
-      .datetime({ offset: true })
-      .refine((value) => isValidityInRange(value, now)),
-  });
-}
+export const offerValiditySchema = z.object({
+  days: z.number().int().min(OFFER_VALIDITY_MIN_DAYS).max(OFFER_VALIDITY_MAX_DAYS),
+});
 
+/** As offer_submit checks it: from 2 to 10 days from now, an hour of margin on each side. */
 export function isValidityInRange(validityUntil: string, now: Date = new Date()): boolean {
   const time = Date.parse(validityUntil);
   return (
@@ -217,13 +227,14 @@ export function isValidityInRange(validityUntil: string, now: Date = new Date())
 }
 
 /**
- * The end of an offer valid `days` days: the same hour of the clock, without
- * its minutes (« jusqu'au 18/11/2026 à 14:00 »).
+ * The end of an offer valid `days` days: `days` times 24 hours from now, up
+ * to the next full hour (« jusqu'au 18/11/2026 à 15:00 »). Rounded up, never
+ * down: the buyer keeps the whole hour the database gives between this step
+ * and the sending, and 10 days stay within its upper bound.
  */
 export function validityAfterDays(days: number, now: Date = new Date()): string {
-  const end = new Date(now.getTime() + days * DAY);
-  end.setUTCMinutes(0, 0, 0);
-  return end.toISOString();
+  const end = now.getTime() + days * DAY;
+  return new Date(Math.ceil(end / HOUR) * HOUR).toISOString();
 }
 
 /** The number of days a saved validity stands for, within the range. */
@@ -243,6 +254,44 @@ export const offerDeclarationsSchema = z.object({
   infoRead: z.literal(true),
 });
 export type OfferDeclarationsInput = z.infer<typeof offerDeclarationsSchema>;
+
+/**
+ * An amount in whole euros as typed: « 338 000 », « 338000 », and « 338.000 »
+ * or « 338,000 » read as thousands (never as 338 euros). Null when empty, NaN
+ * when it is not a whole amount (« 338 000,50 », « 12,5 », « abc »).
+ */
+export function parseWholeEuros(text: string): number | null {
+  const compact = text.replace(/[\s\u00A0\u202F]/g, "");
+  if (compact === "") return null;
+  if (/^\d+$/.test(compact)) return Number(compact);
+  if (/^\d{1,3}([.,]\d{3})+$/.test(compact)) return Number(compact.replace(/[.,]/g, ""));
+  return Number.NaN;
+}
+
+/** A whole number as typed (« 25 »); null when empty, NaN otherwise. */
+export function parseWholeNumber(text: string): number | null {
+  const compact = text.trim();
+  if (compact === "") return null;
+  return /^\d+$/.test(compact) ? Number(compact) : Number.NaN;
+}
+
+export type IssueKind = "characters" | "too_long" | "invalid";
+
+/** Why each field is in error, by its dotted path: the first reason found. */
+export function issueKinds(error: z.ZodError): Record<string, IssueKind> {
+  const kinds: Record<string, IssueKind> = {};
+  for (const issue of error.issues) {
+    const path = issue.path.join(".");
+    if (path in kinds) continue;
+    kinds[path] =
+      issue.message === UNDRAWABLE
+        ? "characters"
+        : issue.code === "too_big" && issue.type === "string"
+          ? "too_long"
+          : "invalid";
+  }
+  return kinds;
+}
 
 /** The dotted paths of the fields in error (« coBuyers.0.email », « sci.siren »). */
 export function issuePaths(error: z.ZodError): string[] {

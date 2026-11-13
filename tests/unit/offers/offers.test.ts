@@ -1,3 +1,4 @@
+import { openSync } from "fontkit";
 import { describe, expect, it, vi } from "vitest";
 import {
   firstStepToFill,
@@ -21,7 +22,9 @@ import { offerFormPath, readOfferFormStep } from "@/leenkey/offers/paths";
 import { numberInWordsFr, priceInWordsFr } from "@/leenkey/offers/words";
 import { fr } from "@/lib/i18n/fr";
 import {
+  isDrawable,
   isValidityInRange,
+  issueKinds,
   issuePaths,
   offerBuyerSchema,
   offerConditionsSchema,
@@ -29,6 +32,8 @@ import {
   offerFinancingSchema,
   offerPriceSchema,
   offerValiditySchema,
+  parseWholeEuros,
+  parseWholeNumber,
   validityAfterDays,
   validityDays,
 } from "@/lib/validations/offer";
@@ -296,20 +301,72 @@ describe("offer schemas", () => {
     ]);
   });
 
-  it("takes a validity from 2 to 10 days, with an hour of margin", () => {
+  it("counts the validity from the days chosen, up to the full hour", () => {
     const now = new Date("2026-11-13T13:37:00Z");
-    expect(validityAfterDays(5, now)).toBe("2026-11-18T13:00:00.000Z");
-    expect(isValidityInRange(validityAfterDays(2, now), now)).toBe(true);
-    expect(isValidityInRange(validityAfterDays(10, now), now)).toBe(true);
-    expect(isValidityInRange("2026-11-15T12:00:00.000Z", now)).toBe(false);
-    expect(isValidityInRange("2026-11-23T15:00:00.000Z", now)).toBe(false);
-    expect(
-      offerValiditySchema(now).safeParse({ validityUntil: validityAfterDays(5, now) }).success,
-    ).toBe(true);
-    expect(offerValiditySchema(now).safeParse({ validityUntil: "demain" }).success).toBe(false);
-    expect(validityDays("2026-11-18T13:00:00.000Z", now)).toBe(5);
+    expect(validityAfterDays(5, now)).toBe("2026-11-18T14:00:00.000Z");
+    expect(validityAfterDays(5, new Date("2026-11-13T13:00:00Z"))).toBe("2026-11-18T13:00:00.000Z");
+    expect(offerValiditySchema.safeParse({ days: 5 }).success).toBe(true);
+    expect(offerValiditySchema.safeParse({ days: 1 }).success).toBe(false);
+    expect(offerValiditySchema.safeParse({ days: 11 }).success).toBe(false);
+    expect(offerValiditySchema.safeParse({ days: 2.5 }).success).toBe(false);
+    expect(validityDays("2026-11-18T14:00:00.000Z", now)).toBe(5);
     expect(validityDays(null, now)).toBe(5);
     expect(validityDays("2026-11-13T14:00:00.000Z", now)).toBe(2);
+  });
+
+  it("keeps the hour of margin of the database, whatever the minute of the choice", () => {
+    // offer_submit: from now + 2 days - 1 hour to now + 10 days + 1 hour.
+    for (const minute of [0, 1, 30, 50, 59]) {
+      const chosen = new Date(Date.UTC(2026, 10, 13, 13, minute, 0));
+      const hourLater = new Date(chosen.getTime() + 3_600_000);
+      for (const days of [2, 10]) {
+        const until = validityAfterDays(days, chosen);
+        expect(isValidityInRange(until, chosen)).toBe(true);
+        // Sent a full hour after the step was saved: still accepted.
+        expect(isValidityInRange(until, hourLater)).toBe(true);
+      }
+    }
+    const now = new Date("2026-11-13T13:37:00Z");
+    expect(isValidityInRange("2026-11-15T12:00:00.000Z", now)).toBe(false);
+    expect(isValidityInRange("2026-11-23T15:00:00.000Z", now)).toBe(false);
+  });
+
+  it("reads an amount in whole euros, never thousands as decimals", () => {
+    expect(parseWholeEuros("338 000")).toBe(338000);
+    expect(parseWholeEuros("338\u202F000")).toBe(338000);
+    expect(parseWholeEuros("338000")).toBe(338000);
+    expect(parseWholeEuros("338.000")).toBe(338000);
+    expect(parseWholeEuros("338,000")).toBe(338000);
+    expect(parseWholeEuros("1.250.000")).toBe(1250000);
+    expect(parseWholeEuros("")).toBeNull();
+    expect(parseWholeEuros("  ")).toBeNull();
+    expect(parseWholeEuros("338 000,50")).toBeNaN();
+    expect(parseWholeEuros("12,5")).toBeNaN();
+    expect(parseWholeEuros("338.00")).toBeNaN();
+    expect(parseWholeEuros("abc")).toBeNaN();
+    expect(parseWholeEuros("-5")).toBeNaN();
+    expect(parseWholeNumber("25")).toBe(25);
+    expect(parseWholeNumber("25,5")).toBeNaN();
+    expect(parseWholeNumber("")).toBeNull();
+  });
+
+  it("takes Latin letters only, and says why a field is refused", () => {
+    expect(isDrawable("Łukasz Kovač, Nguyễn Thị Ánh, Ştefan Đorđe — « 12 bis » n° 4 €")).toBe(true);
+    expect(isDrawable("Иван")).toBe(false);
+    expect(isDrawable("李")).toBe(false);
+    expect(isDrawable("Jean 🙂")).toBe(false);
+    const parsed = offerBuyerSchema.safeParse({
+      ...buyer,
+      identity: { ...IDENTITY, lastName: "Иванов", firstName: "a".repeat(81), city: "" },
+    });
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) {
+      expect(issueKinds(parsed.error)).toEqual({
+        "identity.lastName": "characters",
+        "identity.firstName": "too_long",
+        "identity.city": "invalid",
+      });
+    }
   });
 
   it("asks for the visit and the four declarations", () => {
@@ -479,6 +536,26 @@ describe("offer document", () => {
     expect(pdf.subarray(0, 5).toString("latin1")).toBe("%PDF-");
     expect(pdf.length).toBeGreaterThan(5000);
   }, 30_000);
+
+  it("has a glyph in its fonts for every letter the form takes", async () => {
+    // A name the PDF could not draw would be a wrong identity on the document.
+    const { PDF_FONT_FILES } = await import("@/leenkey/offers/pdf");
+    const fonts = PDF_FONT_FILES.map((file) => openSync(file));
+    const missing: string[] = [];
+    for (let code = 0x20; code <= 0x2116; code += 1) {
+      const character = String.fromCodePoint(code);
+      // The narrow no-break space is replaced before the drawing (pdf.tsx).
+      if (code === 0x202f || !isDrawable(character)) continue;
+      if (!fonts.some((font) => font.hasGlyphForCodePoint(code))) {
+        missing.push(code.toString(16));
+      }
+    }
+    expect(missing).toEqual([]);
+    // Sora itself draws French and the usual European names.
+    for (const character of "éèêëàâçîïôöùûüÿœæÉÈÀÇŒ«»€’–—…ŁłčšžřńśźćęąőűşţğıČŠŽ") {
+      expect(fonts[0].hasGlyphForCodePoint(character.codePointAt(0) ?? 0)).toBe(true);
+    }
+  });
 });
 
 describe("offer texts", () => {
@@ -494,8 +571,11 @@ describe("offer texts", () => {
   });
 
   it("never says « financement validé » nor « on »", () => {
+    // The texts built by a function too, with any arguments.
     const words = JSON.stringify(fr.offer, (_key, value: unknown) =>
-      typeof value === "function" ? "" : value,
+      typeof value === "function"
+        ? String((value as (...values: unknown[]) => unknown)("x", "y"))
+        : value,
     );
     expect(words).not.toMatch(/financement validé|validé par/i);
     expect(words).not.toMatch(/\bon\b/i);
