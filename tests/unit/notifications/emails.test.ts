@@ -498,6 +498,60 @@ describe("emails of an offer (L2-04a)", () => {
     expect(accepted?.text).not.toMatch(/Message du vendeur|\bon\b/i);
   });
 
+  it("tells the seller a withdrawal with its date and time, both parties an expiry (L2-04b)", async () => {
+    const { renderNotificationEmail, emailPolicy } =
+      await import("@/leenkey/notifications/email-catalog");
+    for (const type of ["offer.withdrawn", "offer.expired"]) {
+      expect(emailPolicy(type)).toEqual({
+        audience: "recipient",
+        preference: "email_offers",
+        throttleMinutes: 0,
+      });
+    }
+    const plain = (value: string | undefined) => (value ?? "").replace(/[\u00A0\u202F]/g, " ");
+    const withdrawn = await renderNotificationEmail(
+      planned([
+        queued({
+          type: "offer.withdrawn",
+          groupKey: "offer:o1",
+          link: "/offres/o1",
+          data: { ...offer, buyer_first_name: "Chloé", withdrawn_at: "2026-11-14T09:12:00Z" },
+        }),
+      ]),
+    );
+    expect(withdrawn?.subject).toBe("Offre d'achat retirée · LK-2026-00012");
+    expect(plain(withdrawn?.text)).toContain(
+      "Chloé a retiré son offre de 338 000 € pour votre bien « Maison familiale 5 pièces » le 14/11/2026 à 10:12.",
+    );
+    expect(withdrawn?.text).toContain("/offres/o1");
+    expect(withdrawn?.text).not.toMatch(/\bon\b|@example/i);
+
+    const expired = (role: string) =>
+      renderNotificationEmail(
+        planned([
+          queued({
+            type: "offer.expired",
+            groupKey: "offer:o1",
+            link: "/offres/o1",
+            data: { ...offer, role, expired_at: "2026-11-18T13:00:00Z" },
+          }),
+        ]),
+      );
+    const buyer = await expired("buyer");
+    expect(buyer?.subject).toBe("Offre d'achat expirée · LK-2026-00012");
+    expect(plain(buyer?.text)).toContain(
+      "Votre offre de 338 000 € pour le bien « Maison familiale 5 pièces » a expiré le 18/11/2026 à 14:00",
+    );
+    expect(buyer?.text).toContain("vous pouvez faire une nouvelle offre");
+    expect(buyer?.text).toContain("vous avez fait une offre d'achat sur Leenkey");
+    const seller = await expired("seller");
+    expect(plain(seller?.text)).toContain(
+      "L'offre de 338 000 € reçue pour votre bien « Maison familiale 5 pièces » a expiré le 18/11/2026 à 14:00",
+    );
+    expect(seller?.text).toContain("vous avez reçu une offre d'achat sur Leenkey");
+    expect(seller?.text).not.toMatch(/nouvelle offre|\bon\b/i);
+  });
+
   it("sends nothing without the facts of the offer", async () => {
     const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
     expect(

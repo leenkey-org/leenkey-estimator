@@ -71,6 +71,11 @@ async function shots(page: Page, name: string) {
   if (size) await page.setViewportSize(size);
 }
 
+/** The bell visible on the page (one per header; the other one hidden by its breakpoint). */
+const bell = (page: Page) =>
+  page.getByRole("button", { name: /^Notifications/ }).locator("visible=true");
+const bellPanel = (page: Page) => page.getByRole("dialog", { name: "Notifications" });
+
 const step = (page: Page, label: string) => page.getByRole("progressbar", { name: label });
 const next = (page: Page) => page.getByRole("button", { name: "Continuer" });
 
@@ -282,6 +287,12 @@ test("un acquéreur fait une offre en sept étapes et l'envoie ; son vendeur la 
     expect(pdf.headers()["content-type"]).toBe("application/pdf");
     expect(pdf.headers()["cache-control"]).toContain("no-store");
     expect((await pdf.body()).subarray(0, 5).toString("latin1")).toBe("%PDF-");
+    // While it waits: it may be withdrawn, or changed by a new offer (L2-04b).
+    await expect(page.getByRole("button", { name: "Retirer mon offre" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Faire une nouvelle offre" })).toBeVisible();
+    await expect(
+      page.getByText(/^Pour modifier un élément de votre offre, faites-en une nouvelle/),
+    ).toBeVisible();
   });
 
   await test.step("une nouvelle offre reste possible : elle remplacera celle en cours", async () => {
@@ -417,6 +428,88 @@ test("un acquéreur fait une offre en sept étapes et l'envoie ; son vendeur la 
     expect(await seriousViolations(seller)).toEqual([]);
     await seller.goto(`/vendeur?bien=${PROPERTY}`);
     await expect(seller.getByText("Nouvelle offre reçue")).toHaveCount(0);
+  });
+
+  await test.step("acceptée : plus de retrait pour l'acquéreur, il est notifié (L2-04b)", async () => {
+    await page.goto(offerPath);
+    await expect(page.getByRole("button", { name: "Retirer mon offre" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Faire une nouvelle offre" })).toHaveCount(0);
+    await expect(page.getByText("Vous souhaitez renoncer à votre projet ?")).toBeVisible();
+    await expect(
+      page.getByText(
+        "Votre offre a déjà été acceptée par le vendeur. Les conséquences dépendent de votre situation et de l'avancement de la transaction. Contactez le vendeur et votre notaire avant toute démarche.",
+      ),
+    ).toBeVisible();
+    await expect(page.getByText(/rétractation/i)).toHaveCount(0);
+    expect(await seriousViolations(page)).toEqual([]);
+    await shots(page, "buyer-offer-accepted");
+
+    // Their home lists the offer; the bell says the answer of the seller.
+    await page.goto("/acquereur");
+    const offers = page.getByRole("list", { name: "Vos offres d'achat" });
+    const line = offers.getByRole("link").filter({ hasText: "Morsang-sur-Orge" });
+    await expect(line).toContainText("150 000 €");
+    await expect(line).toContainText("Acceptée");
+    await expect(line).toHaveAttribute("href", offerPath);
+    await shots(page, "buyer-home-offers");
+    // A long title is cut: the page is never wider than a phone.
+    const size = page.viewportSize();
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      390,
+    );
+    if (size) await page.setViewportSize(size);
+    await bell(page).click();
+    await expect(
+      bellPanel(page).getByRole("link").filter({ hasText: "Votre offre d'achat a été acceptée" }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+  });
+
+  await test.step("l'avant-contrat : le vendeur l'enregistre, l'acquéreur lit le délai indicatif (L2-04b)", async () => {
+    await seller.goto(offerPath);
+    const section = seller.getByRole("region", { name: "Avant-contrat" });
+    await expect(section).toContainText("Une fois l'avant-contrat signé");
+    // A date before the acceptance is refused, on its field.
+    await section.getByLabel("Date de signature de l'avant-contrat").fill("2020-01-01");
+    await section.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(
+      section.getByText(
+        "Indiquez une date entre le jour de l'acceptation de l'offre et aujourd'hui.",
+      ),
+    ).toBeVisible();
+    await section.getByLabel("Date de signature de l'avant-contrat").fill(day);
+    await section.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(section.getByText("Avant-contrat enregistré.")).toBeVisible();
+    await expect(section).toContainText(/Avant-contrat signé le \d{2}\/\d{2}\/\d{4}\./);
+    await expect(section).not.toContainText("Fin du délai légal");
+
+    // Without the day of the notification, the buyer reads no date.
+    await page.goto(offerPath);
+    const buyerSection = page.getByRole("region", { name: "Avant-contrat" });
+    await expect(buyerSection).toContainText(/Avant-contrat signé le \d{2}\/\d{2}\/\d{4}\./);
+    await expect(buyerSection).toContainText(
+      "Le point de départ de votre délai de rétractation dépend de la date de notification ou de remise de l'avant-contrat. Votre notaire peut vous l'indiquer.",
+    );
+    await expect(buyerSection).not.toContainText("jusqu'au");
+    await expect(page.getByText("Vous souhaitez renoncer à votre projet ?")).toHaveCount(0);
+
+    // The seller corrects it with the day of the notification: an indicative end.
+    await section.getByRole("button", { name: "Modifier" }).click();
+    await section.getByLabel(/^Date de notification ou de remise de l'avant-contrat/).fill(day);
+    await section.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(section).toContainText(
+      /Fin du délai légal de rétractation de l'acquéreur : \d{2}\/\d{2}\/\d{4}\. Date indicative calculée à partir de la date que vous avez renseignée\. Votre notaire fait foi\./,
+    );
+    expect(await seriousViolations(seller)).toEqual([]);
+    await shots(seller, "seller-precontract");
+    await page.reload();
+    await expect(buyerSection).toContainText(
+      /Délai légal de rétractation de 10 jours : jusqu'au \d{2}\/\d{2}\/\d{4}\./,
+    );
+    await expect(buyerSection).toContainText("Date indicative. Votre notaire fait foi.");
+    expect(await seriousViolations(page)).toEqual([]);
+    await shots(page, "buyer-precontract");
     await sellerContext.close();
   });
 
@@ -506,7 +599,6 @@ test("le vendeur refuse une offre avec un message ; l'acquéreur le lit", async 
     seller.getByRole("article").filter({ hasText: "OFFRE D'ACHAT LEENKEY" }),
   ).not.toContainText(/buyer_c@test\.leenkey\.fr|06 12 34 56 78/);
   expect((await seller.request.get(`${offerPath}/pdf`)).status()).toBe(404);
-  await sellerContext.close();
 
   await page.goto(offerPath);
   await expect(page.getByText("Refusée", { exact: true })).toBeVisible();
@@ -515,10 +607,88 @@ test("le vendeur refuse une offre avec un message ; l'acquéreur le lit", async 
   await expect(history).toContainText(
     "Message du vendeur : « Merci, le prix est trop éloigné du nôtre. »",
   );
-  // A refusal leaves the way to a new offer, and nothing to replace.
-  await page.goto(`/offres/nouvelle?listing=${listingId}`);
+  await expect(page.getByText("Le vendeur a refusé cette offre.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retirer mon offre" })).toHaveCount(0);
+
+  // « Faire une nouvelle offre » (L2-04b): a new draft with the content of
+  // this one, read again from its first step; nothing to replace.
+  await expect(page.getByText(/^Vous pouvez faire une nouvelle offre sur ce bien/)).toBeVisible();
+  await page.getByRole("button", { name: "Faire une nouvelle offre" }).click();
+  await page.waitForURL((address) => address.pathname === "/offres/nouvelle");
+  expect(new URL(page.url()).searchParams.get("listing")).toBe(listingId);
   await expect(step(page, "Étape 1 sur 7 · L'acquéreur")).toBeVisible();
   await expect(page.getByText("Vous avez déjà une offre en cours sur ce bien.")).toHaveCount(0);
+  await expect(page.getByLabel("Date de naissance")).toHaveValue("1990-06-15");
+  await expect(page.getByLabel("Adresse")).toHaveValue("8 rue des Écoles");
+  await next(page).click();
+  await expect(step(page, "Étape 2 sur 7 · Le bien concerné")).toBeVisible();
+  await page.getByRole("link", { name: "Continuer" }).click();
+  await expect(page.getByLabel("Prix proposé")).toHaveValue(/^380\s000$/);
+  await page.getByLabel("Prix proposé").fill("395 000");
+  await next(page).click();
+  await expect(step(page, "Étape 4 sur 7 · Financement")).toBeVisible();
+  await expect(page.getByRole("radio", { name: /Sans prêt/ })).toBeChecked();
+  await next(page).click();
+  await expect(step(page, "Étape 5 sur 7 · Conditions de l'offre")).toBeVisible();
+  await next(page).click();
+  // Neither the validity nor the declarations are copied: given again.
+  await expect(step(page, "Étape 6 sur 7 · Durée de validité")).toBeVisible();
+  await expect(page.getByLabel("Votre offre est valable")).toHaveValue("5");
+  await next(page).click();
+  await expect(page.getByRole("radio", { name: /Sans visite/ })).toBeChecked();
+  for (const box of await page.getByRole("checkbox").all()) {
+    await expect(box).not.toBeChecked();
+    await box.check();
+  }
+  await page.getByRole("button", { name: "Relire mon offre" }).click();
+  await page.getByRole("button", { name: "Envoyer mon offre au vendeur" }).click();
+  await page.waitForURL(
+    (address) =>
+      /^\/offres\/[0-9a-f-]{36}$/.test(address.pathname) && address.pathname !== offerPath,
+  );
+  const secondPath = new URL(page.url()).pathname;
+  await expect(page.getByText(/Version 2 · Envoyée le/)).toBeVisible();
+  await expect(page.getByRole("article")).toContainText("395 000 €");
+
+  // The buyer withdraws it, after the confirmation of the SPEC.
+  await page.getByRole("button", { name: "Retirer mon offre" }).click();
+  const confirm = page.getByRole("dialog");
+  await expect(confirm.getByRole("heading", { name: "Retirer votre offre ?" })).toBeVisible();
+  await expect(confirm).toContainText(
+    "Vous êtes sur le point de retirer votre offre. Le vendeur en sera immédiatement informé et votre retrait sera enregistré dans Leenkey.",
+  );
+  expect(await seriousViolations(page)).toEqual([]);
+  await shots(page, "buyer-withdraw-dialog");
+  await confirm.getByRole("button", { name: "Retirer mon offre" }).click();
+  await expect(
+    page.getByText(/^Offre retirée le \d{2}\/\d{2}\/\d{4} à \d{2}:\d{2}\.$/),
+  ).toBeVisible();
+  await expect(page.getByText("Retirée", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retirer mon offre" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Historique" })).toContainText(
+    "Offre retirée par l'acquéreur",
+  );
+  expect(await seriousViolations(page)).toEqual([]);
+  await shots(page, "buyer-offer-withdrawn");
+
+  // The seller is told: the page of the offer, the bell, the conversation.
+  await seller.goto(secondPath);
+  await expect(
+    seller.getByText(/^L'acquéreur a retiré cette offre le \d{2}\/\d{2}\/\d{4} à \d{2}:\d{2}\.$/),
+  ).toBeVisible();
+  await expect(seller.getByRole("link", { name: "Accepter l'offre" })).toHaveCount(0);
+  await expect(seller.getByRole("button", { name: "Refuser l'offre" })).toHaveCount(0);
+  await bell(seller).click();
+  await expect(
+    bellPanel(seller).getByRole("link").filter({ hasText: "Chloé a retiré son offre d'achat" }),
+  ).toBeVisible();
+  await seller.keyboard.press("Escape");
+  await seller.goto("/messages");
+  await seller.getByRole("link").filter({ hasText: "Chloé" }).first().click();
+  await expect(
+    seller.getByText(/^Offre d'achat LK-\d{4}-\d{5} retirée par l'acquéreur\.$/),
+  ).toBeVisible();
+  await sellerContext.close();
 });
 
 test("sans projet d'achat déclaré, le formulaire renvoie au profil acquéreur", async ({ page }) => {

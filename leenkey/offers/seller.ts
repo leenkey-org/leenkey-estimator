@@ -31,10 +31,13 @@ export type SellerOffer = {
   viewedAt: string | null;
   answeredAt: string | null;
   withdrawnAt: string | null;
+  /** The avant-contrat, « YYYY-MM-DD », once the seller or the team recorded it. */
+  precontractSignedAt: string | null;
+  withdrawalPeriodStart: string | null;
 };
 
 const SELLER_COLUMNS =
-  `${OFFER_COLUMNS}, buyer_id, property_id, financing_status_at_submit, financing_checked_at, viewed_at, answered_at, withdrawn_at` as const;
+  `${OFFER_COLUMNS}, buyer_id, property_id, financing_status_at_submit, financing_checked_at, viewed_at, answered_at, withdrawn_at, precontract_signed_at, withdrawal_period_start` as const;
 
 type Client = Awaited<ReturnType<typeof createClient>>;
 type SellerRow = NonNullable<Awaited<ReturnType<typeof readRows>>["data"]>[number];
@@ -86,6 +89,8 @@ function readSellerOffer(row: SellerRow): SellerOffer | null {
     viewedAt: row.viewed_at,
     answeredAt: row.answered_at,
     withdrawnAt: row.withdrawn_at,
+    precontractSignedAt: row.precontract_signed_at,
+    withdrawalPeriodStart: row.withdrawal_period_start,
   };
 }
 

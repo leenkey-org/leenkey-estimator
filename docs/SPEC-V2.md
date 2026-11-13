@@ -1819,6 +1819,8 @@ Trois états, textes à reprendre exactement :
 
 Expiration automatique à `validity_until` (cron) → `expired`, `expired_at`, notifications, statut clairement affiché « Offre expirée ».
 
+Mise en œuvre (L2-04b, `DECISIONS.md` 2026-11-13) : retrait et nouvelle offre sur la page de l'offre (`leenkey/offers/buyer-actions.ts`) ; « Faire une nouvelle offre » reprend le contenu sauf la durée de validité et les déclarations ; le champ saisi par le vendeur pour `withdrawal_period_start` est la « date de notification ou de remise de l'avant-contrat à l'acquéreur », et la fin indicative du délai est cette date + 10 jours, reportée au premier jour ouvrable (`leenkey/offers/withdrawal.ts`, Q86) ; `offer.expired` va à l'acquéreur et au vendeur, `offer.withdrawn` au vendeur ; section « Vos offres » sur l'accueil acquéreur.
+
 ### Confidentialité des données de l'offre
 
 Avant acceptation, le vendeur voit le nom, le prénom et la ville de l'acquéreur, le financement déclaré et la qualification. Date de naissance, adresse complète, téléphone et e-mail ne lui sont visibles qu'après acceptation (vue `offer_for_seller` qui masque ces champs selon le statut ; avant acceptation, le vendeur consulte l'offre complète à l'écran avec ces champs masqués, le PDF n'est téléchargeable par lui qu'après acceptation). Validé par Cédric le 2026-10-05.
@@ -2020,7 +2022,7 @@ Voir `CLAUDE.md` section 13. Détail :
 |---|---|---|
 | `/api/cron/ping-db` | `0 3 * * *` | Requête légère pour éviter la mise en pause du projet Supabase gratuit |
 | `/api/cron/reset-ai-quotas` | `0 22 * * *` | Remise à zéro de `ai_messages_today`. Filet de sécurité : le compteur est aussi remis à zéro à la lecture si sa date (`ai_messages_date`, en `Europe/Paris`) n'est pas celle du jour, ce qui couvre le passage à l'heure d'hiver |
-| `/api/cron/expire-offers` | `0 5 * * *` | Offres `submitted`/`viewed` dont `validity_until` est passée → `expired` |
+| `/api/cron/expire-offers` | `0 5 * * *` | Offres `submitted`/`viewed` dont `validity_until` est passée → `expired`. Depuis L2-04b (`DECISIONS.md` 2026-11-13) : tâche `expire-offers` de `pg_cron`, en SQL (`offers_expire_due`), sans route, **toutes les heures** (`4 * * * *`) |
 | `/api/cron/buyer-alerts` | `0 5 * * *` | Digest d'alertes (7 h Paris) |
 | `/api/cron/visit-reminders` | `0 6 * * *` | Rappels J-1 |
 | `/api/cron/visit-feedback` | `0 8 * * *` | Demandes de retour J+1 |

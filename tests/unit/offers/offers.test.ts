@@ -20,6 +20,7 @@ import {
 import { formatRate, gapLabel, offerBudget, offerGap } from "@/leenkey/offers/figures";
 import { offerFormPath, readOfferFormStep } from "@/leenkey/offers/paths";
 import { buildOfferSynthesis, remainingLabel } from "@/leenkey/offers/synthesis";
+import { frenchPublicHolidays, withdrawalPeriodEnd } from "@/leenkey/offers/withdrawal";
 import { numberInWordsFr, priceInWordsFr } from "@/leenkey/offers/words";
 import { fr } from "@/lib/i18n/fr";
 import {
@@ -32,6 +33,7 @@ import {
   offerConditionsSchema,
   offerDeclarationsSchema,
   offerFinancingSchema,
+  offerPrecontractSchema,
   offerPriceSchema,
   offerValiditySchema,
   parseWholeEuros,
@@ -692,6 +694,97 @@ describe("summary for the seller (templates, no model)", () => {
       false,
     );
     expect(offerAnswerSchema.safeParse({ ...answer, offerId: "x" }).success).toBe(false);
+  });
+});
+
+describe("withdrawal period after an avant-contrat (indicative, L2-04b)", () => {
+  it("knows the eleven public holidays of a year", () => {
+    expect(frenchPublicHolidays(2026)).toEqual([
+      "2026-01-01",
+      "2026-04-06", // Easter Monday
+      "2026-05-01",
+      "2026-05-08",
+      "2026-05-14", // Ascension
+      "2026-05-25", // Whit Monday
+      "2026-07-14",
+      "2026-08-15",
+      "2026-11-01",
+      "2026-11-11",
+      "2026-12-25",
+    ]);
+    expect(frenchPublicHolidays(2027)).toContain("2027-03-29");
+    expect(frenchPublicHolidays(2030)).toContain("2030-04-22");
+  });
+
+  it("ends ten days after the day of the notification, the period starting the day after", () => {
+    // Monday 16 November: day 1 is the 17th, day 10 Thursday the 26th.
+    expect(withdrawalPeriodEnd("2026-11-16")).toBe("2026-11-26");
+  });
+
+  it("goes on to the next working day after a Saturday, a Sunday or a public holiday", () => {
+    // Saturday 14 November: Monday the 16th.
+    expect(withdrawalPeriodEnd("2026-11-04")).toBe("2026-11-16");
+    // Wednesday 11 November, a public holiday: Thursday the 12th.
+    expect(withdrawalPeriodEnd("2026-11-01")).toBe("2026-11-12");
+    // Friday 25 December, then the week-end: Monday the 28th.
+    expect(withdrawalPeriodEnd("2026-12-15")).toBe("2026-12-28");
+    // Over the year: Friday 1 January 2027, then the week-end.
+    expect(withdrawalPeriodEnd("2026-12-22")).toBe("2027-01-04");
+    // Friday 8 May 2026, then the week-end: Monday the 11th.
+    expect(withdrawalPeriodEnd("2026-04-28")).toBe("2026-05-11");
+  });
+
+  it("says nothing of what is not a day", () => {
+    expect(withdrawalPeriodEnd("2026-02-30")).toBeNull();
+    expect(withdrawalPeriodEnd("16/11/2026")).toBeNull();
+    expect(withdrawalPeriodEnd("")).toBeNull();
+  });
+
+  it("takes the day of the signature, and a notification never before it", () => {
+    const offerId = "0b7d4c1e-5f3a-4b8e-9c2d-1a6e8f4b3c27";
+    expect(
+      offerPrecontractSchema.safeParse({ offerId, signedAt: "2026-11-20", notifiedAt: "" }).success,
+    ).toBe(true);
+    expect(
+      offerPrecontractSchema.safeParse({
+        offerId,
+        signedAt: "2026-11-20",
+        notifiedAt: "2026-11-20",
+      }).success,
+    ).toBe(true);
+    const before = offerPrecontractSchema.safeParse({
+      offerId,
+      signedAt: "2026-11-20",
+      notifiedAt: "2026-11-19",
+    });
+    expect(before.success ? [] : issuePaths(before.error)).toEqual(["notifiedAt"]);
+    const empty = offerPrecontractSchema.safeParse({ offerId, signedAt: "", notifiedAt: "" });
+    expect(empty.success ? [] : issuePaths(empty.error)).toEqual(["signedAt"]);
+    expect(
+      offerPrecontractSchema.safeParse({ offerId: "x", signedAt: "2026-11-20", notifiedAt: "" })
+        .success,
+    ).toBe(false);
+  });
+
+  it("the texts of the follow-up are those of the SPEC, without a legal conclusion", () => {
+    const t = fr.offer.followUp;
+    expect(t.withdrawDialog.description).toBe(
+      "Vous êtes sur le point de retirer votre offre. Le vendeur en sera immédiatement informé et votre retrait sera enregistré dans Leenkey.",
+    );
+    expect(`${t.accepted.title} ${t.accepted.text}`).toBe(
+      "Vous souhaitez renoncer à votre projet ? Votre offre a déjà été acceptée par le vendeur. Les conséquences dépendent de votre situation et de l'avancement de la transaction. Contactez le vendeur et votre notaire avant toute démarche.",
+    );
+    expect(t.precontract.unknownStart).toBe(
+      "Le point de départ de votre délai de rétractation dépend de la date de notification ou de remise de l'avant-contrat. Votre notaire peut vous l'indiquer.",
+    );
+    expect(t.precontract.indicative).toBe("Date indicative. Votre notaire fait foi.");
+    expect(fr.offer.seller.precontract.indicative).toBe(
+      "Date indicative calculée à partir de la date que vous avez renseignée. Votre notaire fait foi.",
+    );
+    // Never « ten days after the signature », never a duty to sign to withdraw.
+    expect(JSON.stringify({ ...t, periodEnd: t.precontract.periodEnd("24/11/2026") })).not.toMatch(
+      /après la signature|devez signer|vous rétracter en/i,
+    );
   });
 });
 
