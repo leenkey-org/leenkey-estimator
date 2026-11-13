@@ -12,6 +12,9 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-13 · Documentation · PR #97 · Applications mobiles dans les livrables
+- Modifié : l'application mobile iOS et Android entre dans les livrables (décision de Younes) ; cadrage en APP-01 (Q81), inscription Apple relancée après la bascule de leenkey.fr.
+
 ### 2026-11-12 · P-06 · PR #96 · Performance mobile
 - Modifié : le bandeau des cookies est dans la page dès le premier affichage (masqué tout de suite pour un visiteur qui a déjà choisi), sans décalage de mise en page ; son texte en trois courts paragraphes.
 - Modifié : les textes de l'interface découpés par partie (`lib/i18n/sections/`, `lib/i18n/sections/site/`) : une page ne reçoit plus tous les textes du site (environ 200 Ko avant compression), seulement ceux qu'elle affiche.

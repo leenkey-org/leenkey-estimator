@@ -2241,7 +2241,7 @@ Chaque placeholder est tracé dans `docs/DECISIONS.md` et remplacé dès récept
 - Diffusion sur les portails externes (choix stratégique : exclusivité Leenkey).
 - Signature électronique (option Yousign chiffrée à part).
 - Contre-offre structurée (la contre-proposition passe par la messagerie en V2).
-- Application mobile native.
+- ~~Application mobile native.~~ Incluse aux livrables le 2026-11-13 (décision de Younes, `DECISIONS.md`) ; forme et périmètre à définir (Q81, tâche APP-01).
 - Édition de la base de connaissances depuis le back office.
 - Services additionnels vendus à l'unité, portail client Stripe, abonnements.
 - Multi-langue.
