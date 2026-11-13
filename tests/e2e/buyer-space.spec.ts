@@ -55,7 +55,7 @@ async function seriousViolations(page: Page) {
 
 const lastSearch = (page: Page) => page.locator("section[aria-labelledby='derniere-recherche']");
 
-test("accueil acquéreur : bandeau, recherche, favoris, conversations, dossier complet @a11y", async ({
+test("accueil acquéreur : bandeau, recherche, favoris, conversations, dossier à compléter @a11y", async ({
   page,
 }) => {
   await signIn(page, "buyer_c", "/acquereur");
@@ -96,22 +96,24 @@ test("accueil acquéreur : bandeau, recherche, favoris, conversations, dossier c
       .getByRole("link", { name: "Valoriser mon bien" }),
   ).toHaveAttribute("href", "/estimer");
 
-  // Her file is complete: after the rest, to edit it.
+  // Her financing is declared, its proof not filed yet (L2-02): the file
+  // stays at the top, to complete.
   const file = page.getByRole("region", {
     name: "Votre dossier fait la différence auprès des vendeurs",
   });
   await expect(
-    file.getByRole("heading", { name: "Votre dossier acquéreur : 2 étapes sur 2 faites" }),
+    file.getByRole("heading", { name: "Votre dossier acquéreur : 2 étapes sur 3 faites" }),
   ).toBeVisible();
   await expect(file.getByText("Informations déclarées")).toBeVisible();
-  await expect(file.getByRole("link", { name: "Modifier mon projet" })).toHaveAttribute(
+  await expect(file.getByRole("link", { name: "Votre justificatif de financement" })).toBeVisible();
+  await expect(file.getByRole("link", { name: "Compléter mon dossier" })).toHaveAttribute(
     "href",
     "/acquereur/profil",
   );
   const order = await page
     .locator("main section[aria-labelledby]")
     .evaluateAll((sections) => sections.map((section) => section.getAttribute("aria-labelledby")));
-  expect(order.indexOf("dossier")).toBeGreaterThan(order.indexOf("services"));
+  expect(order.indexOf("dossier")).toBeLessThan(order.indexOf("favoris"));
 
   expect(await seriousViolations(page)).toEqual([]);
 });
