@@ -347,6 +347,7 @@ npm run db:migrate:prod  # demande une confirmation explicite
 npm run db:seed          # charge supabase/seed/ en local (npm run db:seed:staging pour la préprod ; refuse la prod)
 npm run kb:import        # fiches de supabase/seed/knowledge/ puis leurs embeddings (Edge Function embed, en admin) ; kb:import:staging
 npm run kb:eval          # pertinence de la recherche dans la FAQ (questions de test, fiche attendue parmi les 5)
+npm run ai:eval-search   # les 10 recherches en langage naturel contre le vrai modèle (L2-06 ; ANTHROPIC_API_KEY requise, facturé, hors CI)
 scripts/local-stack.sh up # pile locale type Supabase (Auth, API, Edge Functions, emails capturés) pour tester les parcours connectés
 npm run db:rls-test      # tests de permissions
 npm run a11y             # contrôle d'accessibilité axe sur les parcours E2E (docs/DESIGN.md section 15)

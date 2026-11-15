@@ -940,6 +940,6 @@ const aiSections: readonly LegalSection[] = [
 ];
 
 export const aiText = {
-  updated: "En vigueur depuis le 16 novembre 2026",
+  updated: "En vigueur depuis le 15 novembre 2026",
   sections: aiSections,
 } as const;
