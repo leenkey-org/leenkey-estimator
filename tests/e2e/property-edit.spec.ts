@@ -275,6 +275,11 @@ test("le résumé de l'assistant suit l'annonce : écrit, retiré à la modifica
   const task = "/api/cron/listing-summaries";
   const secret = process.env.CRON_SECRET;
   test.skip(!secret, "CRON_SECRET de la pile locale requis (scripts/local-stack.sh env)");
+  // The model of the tests only: never a call of the real one from a test.
+  test.skip(
+    process.env.AI_MOCK !== "1",
+    "AI_MOCK=1 requis : le résumé est celui du modèle de test",
+  );
   // Without its secret, the task does not run.
   expect((await request.get(task)).status()).toBe(401);
   /** The scheduled task, until it has nothing left to write (a few listings a run). */
@@ -300,10 +305,11 @@ test("le résumé de l'assistant suit l'annonce : écrit, retiré à la modifica
 
   // The description changes: the summary of before is gone at once.
   await page.goto(`${sheet}/modifier/annonce`);
+  // A text of this run: a second run, or a retry, changes the description again.
   await page
     .getByLabel("Description")
     .fill(
-      "Maison de 1985 sur deux niveaux, au calme, avec un grand jardin, un garage et une cave.",
+      `Maison de 1985 sur deux niveaux, au calme, avec un grand jardin, un garage et une cave (${Date.now().toString(36)}).`,
     );
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page).toHaveURL(`${sheet}/annonce`);

@@ -5,7 +5,7 @@ import { createModelMessage, isAiConfigured, isAiMock } from "@/core/ai/client";
 import { toStoredBlocks } from "@/core/ai/conversation";
 import { generateText, textRequest, type TextCall } from "@/core/ai/generate";
 import { answerRow } from "@/core/ai/log";
-import { MODELS, SUGGESTION_SETTINGS } from "@/core/ai/models";
+import { MODELS } from "@/core/ai/models";
 import { promptFile } from "@/core/ai/prompts";
 import { mockText } from "@/leenkey/ai/mock";
 import { asData, breaksRules, cleanSuggestion } from "@/leenkey/ai/suggestions";
@@ -37,6 +37,12 @@ type PublicRow = Database["public"]["Views"]["public_listings"]["Row"];
 export const SUMMARY_BATCH = 6;
 /** No new call of the model after this long in a run. */
 const RUN_BUDGET_MS = 40_000;
+/**
+ * One call: 12 s, no retry. The last call of a run starts before 40 s and
+ * ends before 52 s: within the minute of the route and the 55 s pg_net waits.
+ * A listing whose call timed out is taken again by the next run.
+ */
+const CALL = { timeout: 12_000, maxRetries: 0 } as const;
 /** 300 characters asked of the model, a few more kept. */
 export const SUMMARY_MAX = 340;
 
@@ -131,19 +137,48 @@ export function listingSummaryPrompt(row: SummaryRow): string {
   ].join("\n");
 }
 
-const LINK = /(?:https?:\/\/|www\.)\S+/i;
+/**
+ * What a summary never says, checked in code after the prompt: the title and
+ * the description of a listing are typed by its seller, who could ask the
+ * model for a text Leenkey would seem to sign.
+ */
+const FORBIDDEN: readonly RegExp[] = [
+  // A link, a handle, a long number (a phone number without its spaces).
+  /(?:https?:\/\/|www\.)\S+/i,
+  /@\w/,
+  /\d{5,}/,
+  // The name of the platform, a guarantee, a check: never claimed by a summary.
+  /leenkey/i,
+  /garanti|v[ée]rifi[ée]|certifi[ée]|valid[ée]|agr[ée]{2}|officiel|labellis/i,
+  // An amount: the price is shown beside the summary, by the page.
+  /€|\beuros?\b/i,
+  // A street address.
+  /\b\d{1,4}(?:\s?(?:bis|ter))?,?\s+(?:rue|avenue|boulevard|bd|all[ée]e|impasse|chemin|place|route|quai|cours|square|passage)\b/i,
+  /\p{Extended_Pictographic}/u,
+];
 
 /**
- * The summary as the page shows it: one paragraph of plain text, within its
- * length (cut after the last sentence that fits). Null when it breaks a rule
- * the prompt gives (a phone number, an email, a link, « Prix ferme »), or
- * when nothing is left: such a text is never shown.
+ * The summary as the page shows it: one paragraph of plain text, its first
+ * two sentences, whole. Null (such a text is never shown) when it breaks a
+ * rule of the prompt (a phone number, an email, « Prix ferme », and what
+ * FORBIDDEN lists), when it has no whole sentence, or when two sentences do
+ * not fit its length: never a text cut in the middle of a word.
  */
 export function cleanSummary(text: string): string | null {
-  const value = cleanSuggestion(text.replace(/[*_#`]/g, ""), SUMMARY_MAX)
+  const plain = cleanSuggestion(text.replace(/[*_#`]/g, ""), Number.MAX_SAFE_INTEGER)
     .replace(/\s+/g, " ")
     .trim();
-  if (value === "" || breaksRules(value) || LINK.test(value)) return null;
+  // A sentence ends with its mark, followed by a space or the end (« 68.5 m² »
+  // is not two sentences). The first two, as long as each one is whole.
+  const parts = plain.split(/(?<=[.!?])\s+/);
+  const whole: string[] = [];
+  for (const part of parts.slice(0, 2)) {
+    if (!/[.!?]$/.test(part)) break;
+    whole.push(part);
+  }
+  const value = whole.join(" ");
+  if (value === "" || Array.from(value).length > SUMMARY_MAX) return null;
+  if (breaksRules(value) || FORBIDDEN.some((pattern) => pattern.test(value))) return null;
   return value;
 }
 
@@ -194,13 +229,7 @@ export async function summarizeListings(
 
   const call: TextCall =
     options.call ??
-    (isAiMock()
-      ? mockText("listing_summary")
-      : (request) =>
-          createModelMessage(request, {
-            timeout: SUGGESTION_SETTINGS.timeoutMs,
-            maxRetries: SUGGESTION_SETTINGS.maxRetries,
-          }));
+    (isAiMock() ? mockText("listing_summary") : (request) => createModelMessage(request, CALL));
 
   for (const listing of pending.data) {
     const asked = listing.summary_requested_at;
@@ -303,7 +332,8 @@ async function logSummary(
     return;
   }
   const { message } = entry;
-  const { error } = await admin.from("ai_messages").insert([
+  // One after the other: the log is read in the order of its dates.
+  const rows: Database["public"]["Tables"]["ai_messages"]["Insert"][] = [
     {
       conversation_id: conversation.data.id,
       role: "user",
@@ -319,11 +349,15 @@ async function logSummary(
         usage: message.usage,
       }),
     },
-  ]);
-  if (error) {
-    console.error("[listings] summary not logged", {
-      entity_id: entry.listingId,
-      code: error.code,
-    });
+  ];
+  for (const row of rows) {
+    const { error } = await admin.from("ai_messages").insert(row);
+    if (error) {
+      console.error("[listings] summary not logged", {
+        entity_id: entry.listingId,
+        code: error.code,
+      });
+      return;
+    }
   }
 }

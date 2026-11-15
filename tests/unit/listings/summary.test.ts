@@ -10,6 +10,8 @@ import type { Database } from "@/types/database";
 
 const mocks = vi.hoisted(() => ({
   publicRows: [] as Record<string, unknown>[],
+  /** What the task asks the public client: the relation, its columns, the ids. */
+  publicReads: [] as { relation: string; columns: string; ids: unknown }[],
   configured: true,
 }));
 
@@ -23,9 +25,12 @@ vi.mock("@/core/ai/client", () => ({
 vi.mock("@/core/ai/prompts", () => ({ promptFile: () => "Règles du résumé." }));
 vi.mock("@/lib/supabase/public", () => ({
   createPublicClient: () => ({
-    from: () => ({
-      select: () => ({
-        in: async () => ({ data: mocks.publicRows, error: null }),
+    from: (relation: string) => ({
+      select: (columns: string) => ({
+        in: async (_column: string, ids: unknown) => {
+          mocks.publicReads.push({ relation, columns, ids });
+          return { data: mocks.publicRows, error: null };
+        },
       }),
     }),
   }),
@@ -81,21 +86,26 @@ type Pending = { id: string; property_id: string; summary_requested_at: string |
 function fakeAdmin(pending: Pending[], { changed = [] as string[] } = {}) {
   const updates: { id: string; summary: string | null; asked: string }[] = [];
   const logged: { table: string; rows: unknown }[] = [];
+  /** The filters of the read of the pending listings, in their order. */
+  const filters: unknown[][] = [];
   const client = {
     from(table: string) {
       if (table === "listings") {
         return {
           select: () => ({
-            eq: () => ({
-              not: () => ({
-                order: () => ({
-                  limit: async () => ({
-                    data: pending.map((listing) => ({
-                      ...listing,
-                      property: { owner_id: "owner" },
-                    })),
-                    error: null,
-                  }),
+            eq: (...eq: unknown[]) => ({
+              not: (...not: unknown[]) => ({
+                order: (...order: unknown[]) => ({
+                  limit: async (...limit: unknown[]) => {
+                    filters.push(eq, not, order, limit);
+                    return {
+                      data: pending.map((listing) => ({
+                        ...listing,
+                        property: { owner_id: "owner" },
+                      })),
+                      error: null,
+                    };
+                  },
                 }),
               }),
             }),
@@ -132,7 +142,7 @@ function fakeAdmin(pending: Pending[], { changed = [] as string[] } = {}) {
       };
     },
   };
-  return { client: client as unknown as SupabaseClient<Database>, updates, logged };
+  return { client: client as unknown as SupabaseClient<Database>, updates, logged, filters };
 }
 
 const pendingOne: Pending[] = [
@@ -141,6 +151,7 @@ const pendingOne: Pending[] = [
 
 beforeEach(() => {
   mocks.publicRows = [row];
+  mocks.publicReads = [];
   mocks.configured = true;
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
@@ -184,12 +195,41 @@ describe("what is kept of its text", () => {
     );
   });
 
-  it("cut after the last sentence that fits", () => {
-    const long = `${"Une phrase factuelle sur le bien. ".repeat(20)}`;
-    const kept = cleanSummary(long);
-    expect(kept).not.toBeNull();
-    expect(kept!.length).toBeLessThanOrEqual(SUMMARY_MAX);
-    expect(kept!.endsWith(".")).toBe(true);
+  it("its first two sentences, whole: never a text cut in the middle of a word", () => {
+    expect(cleanSummary("Une phrase factuelle sur le bien. ".repeat(20))).toBe(
+      "Une phrase factuelle sur le bien. Une phrase factuelle sur le bien.",
+    );
+    // A decimal point is not the end of a sentence.
+    expect(cleanSummary("Maison de 114.5 m² à Épinay-sur-Orge. Jardin et garage. Cave.")).toBe(
+      "Maison de 114.5 m² à Épinay-sur-Orge. Jardin et garage.",
+    );
+    // A second sentence left unfinished is not kept; nothing without a whole sentence.
+    expect(cleanSummary("Appartement de 3 pièces. Balcon et")).toBe("Appartement de 3 pièces.");
+    expect(cleanSummary("Appartement de 3 pièces avec balcon et")).toBeNull();
+    // Two sentences that do not fit are not shortened: no summary.
+    const long = `${"Appartement ".repeat(40)}de 3 pièces. Balcon.`;
+    expect(long.length).toBeGreaterThan(SUMMARY_MAX);
+    expect(cleanSummary(long)).toBeNull();
+  });
+
+  it("nothing a seller could make Leenkey seem to sign", () => {
+    for (const text of [
+      "Annonce vérifiée par Leenkey. Bien en très bon état.",
+      "Appartement de 3 pièces. État garanti par le vendeur.",
+      "Maison certifiée conforme. Jardin de 300 m².",
+      "Appartement de 3 pièces à 239 000 €. Balcon.",
+      "Maison de 5 pièces pour 419 000 euros. Jardin.",
+      "Appartement au 12 rue des Lilas. Balcon et cave.",
+      "Appartement de 3 pièces. Contact : @vendeur91.",
+      "Appartement de 3 pièces. Appelez le 0612345678.",
+      "Appartement lumineux \u2600\uFE0F. Balcon et cave.",
+    ]) {
+      expect(cleanSummary(text), text).toBeNull();
+    }
+    // A year, a surface, a floor are not what is refused.
+    expect(cleanSummary("Maison de 1985 de 114 m². Jardin de 1 200 m² et garage.")).toBe(
+      "Maison de 1985 de 114 m². Jardin de 1 200 m² et garage.",
+    );
   });
 
   it("nothing when it breaks a rule of the prompt, or says nothing", () => {
@@ -216,6 +256,22 @@ describe("the scheduled task", () => {
         asked: "2026-11-15T10:00:00+00:00",
       },
     ]);
+    // The listings read: online, a summary asked for, the oldest request first, a few a run.
+    expect(admin.filters).toEqual([
+      ["status", "published"],
+      ["summary_requested_at", "is", null],
+      ["summary_requested_at"],
+      [6],
+    ]);
+    // What the model is given comes from the public view, with the public key:
+    // no column of a price, an address, a postal code, a place or a name.
+    expect(mocks.publicReads).toHaveLength(1);
+    expect(mocks.publicReads[0].relation).toBe("public_listings");
+    expect(mocks.publicReads[0].ids).toEqual(["l1"]);
+    expect(mocks.publicReads[0].columns.split(", ").sort()).toEqual(Object.keys(row).sort());
+    expect(mocks.publicReads[0].columns).not.toMatch(
+      /price|address|postal|location|lat|lng|seller|owner|reference|slug/,
+    );
     // One call, with the rules and the public facts.
     expect(call).toHaveBeenCalledTimes(1);
     const request = call.mock.calls[0][0] as { system: { text: string }[] };
@@ -225,7 +281,8 @@ describe("the scheduled task", () => {
       table: "ai_conversations",
       rows: { profile_id: "owner", context: "seller", kind: "listing_summary", property_id: "p1" },
     });
-    const messages = admin.logged[1].rows as Record<string, unknown>[];
+    // The request, then the answer: two writes, in this order.
+    const messages = admin.logged.slice(1).map((entry) => entry.rows as Record<string, unknown>);
     expect(messages.map((message) => message.role)).toEqual(["user", "assistant"]);
     expect(messages[1]).toMatchObject({
       model: "model-fast",
@@ -254,7 +311,7 @@ describe("the scheduled task", () => {
       expect(run).toEqual({ written: 0, dropped: 1, left: 0 });
       expect(admin.updates[0].summary).toBeNull();
       // Logged all the same: its tokens were billed.
-      expect(admin.logged).toHaveLength(2);
+      expect(admin.logged).toHaveLength(3);
     }
   });
 

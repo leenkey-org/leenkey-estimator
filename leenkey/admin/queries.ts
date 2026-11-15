@@ -229,7 +229,7 @@ export async function adminListingCounts(): Promise<QueryResult<AdminListingCoun
 }
 
 const DETAIL_COLUMNS =
-  `id, reference, slug, title, description, price_cents, status, created_at, submitted_at, published_at, suspended_at, rejection_reason, suspension_reason, property:properties!inner(${LISTING_PROPERTY_COLUMNS}, dpe_date, dpe_number, estimation_value_cents)` as const;
+  `id, reference, slug, title, description, price_cents, status, created_at, submitted_at, published_at, suspended_at, rejection_reason, suspension_reason, summary, property:properties!inner(${LISTING_PROPERTY_COLUMNS}, dpe_date, dpe_number, estimation_value_cents)` as const;
 
 /**
  * One listing with its seller, plan and decisions; null when unknown or
@@ -291,7 +291,11 @@ export const adminListing = cache(async function adminListing(
     return {
       ok: true,
       data: {
-        listing: listingForPage(row, property, accompanied, dpeSettings?.rules ?? null),
+        listing: {
+          ...listingForPage(row, property, accompanied, dpeSettings?.rules ?? null),
+          // What the public page shows under « Résumé par l'assistant » (L2-05).
+          summary: row.summary,
+        },
         status: row.status,
         createdAt: row.created_at,
         submittedAt: row.submitted_at,

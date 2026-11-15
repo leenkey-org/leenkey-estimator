@@ -8,12 +8,15 @@
 -- them title, description and price only). The database asks for it:
 -- - `summary_requested_at` is set when a listing goes online, and when a
 --   listing online changes its title, its description, its price, or when
---   its property changes what a listing shows of it;
+--   its property changes one of the facts the summary is written from. It is
+--   the moment of the change itself (clock_timestamp, not the start of the
+--   transaction): each change has its own request;
 -- - the summary of before is removed at once: the page never shows a summary
 --   of what the listing no longer says;
 -- - the task writes the new one and clears the request, unless the listing
 --   changed again meanwhile (the request is then a later one).
 -- Read by the public through `public_listing_summary`, online listings only.
+-- The log of the assistant takes its kind, written by the task only.
 
 alter table public.listings add column summary_requested_at timestamptz;
 create index listings_summary_requested_idx on public.listings (summary_requested_at)
@@ -31,7 +34,7 @@ begin
        or new.description is distinct from old.description
        or new.price_cents is distinct from old.price_cents) then
     new.summary := null;
-    new.summary_requested_at := now();
+    new.summary_requested_at := clock_timestamp();
   end if;
   return new;
 end;
@@ -41,20 +44,27 @@ create trigger listings_summary_request before update on public.listings
   for each row execute function public.listings_summary_request();
 
 -- ---------------------------------------------------------------------------
--- The property of a listing online changed: whatever a listing may show of it
--- (every column but its dates, its exact address and place, its analysis of
--- value: a column added later counts too).
+-- The property of a listing online changed one of the facts the summary is
+-- written from (the columns leenkey/listings/summary.ts gives the model, and
+-- no other: a change of its address, of its charges or of its analysis of
+-- value would only bill the same summary again).
 -- ---------------------------------------------------------------------------
 create function public.properties_summary_request() returns trigger
 language plpgsql security definer set search_path = '' as $$
 declare
-  hidden constant text[] := array['updated_at', 'address_line', 'location', 'estimation_id',
-                                  'estimation_value_cents', 'estimation_low_cents',
-                                  'estimation_high_cents'];
+  shown constant text[] := array[
+    'type', 'city', 'district', 'surface_m2', 'carrez_m2', 'rooms', 'bedrooms', 'floor',
+    'floors_total', 'has_elevator', 'has_balcony', 'has_terrace', 'has_garden', 'has_parking',
+    'has_cellar', 'orientation', 'build_year', 'is_new_build', 'dpe_class', 'ges_class',
+    'heating', 'copro_lots'];
+  before jsonb;
+  after jsonb;
 begin
-  if (to_jsonb(new) - hidden) is distinct from (to_jsonb(old) - hidden) then
+  select jsonb_object_agg(key, value) into before from jsonb_each(to_jsonb(old)) where key = any(shown);
+  select jsonb_object_agg(key, value) into after from jsonb_each(to_jsonb(new)) where key = any(shown);
+  if after is distinct from before then
     update public.listings
-       set summary = null, summary_requested_at = now()
+       set summary = null, summary_requested_at = clock_timestamp()
      where property_id = new.id and status = 'published';
   end if;
   return null;
@@ -93,6 +103,11 @@ alter table public.ai_conversations
 alter table public.ai_conversations
   add constraint ai_conversations_listing_summary_check
     check (kind <> 'listing_summary' or (context = 'seller' and property_id is not null));
+-- Written by the scheduled task only (service role): an account does not log
+-- a summary of its own, with tokens of its choice.
+create policy ai_conversations_no_own_listing_summary on public.ai_conversations
+  as restrictive for insert to authenticated
+  with check (kind <> 'listing_summary');
 
 -- ---------------------------------------------------------------------------
 -- Every 5 minutes (pg_cron and pg_net, as the notification emails): the route

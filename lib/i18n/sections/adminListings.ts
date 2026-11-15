@@ -134,6 +134,7 @@ export const frAdminListings = {
     dpeMissing:
       "Le DPE de cette annonce manque ou n'est plus valable : elle ne peut pas être publiée. Refusez-la avec le motif « Une information obligatoire manque ».",
     preview: "Aperçu de l'annonce",
+    summary: "Résumé par l'assistant, affiché sur l'annonce",
     history: "Historique",
     historyEmpty: "Aucune décision pour l'instant.",
     publicPage: "Voir la page publique",

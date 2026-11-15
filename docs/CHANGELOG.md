@@ -15,7 +15,8 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 ### 2026-11-15 · L2-05 · PR #103 · Résumé de l'annonce par l'assistant
 - Ajouté : « Résumé par l'assistant » sur la page d'une annonce en ligne (deux phrases factuelles), sous la colonne du prix sur grand écran, après la carte sur téléphone.
 - Ajouté : tâche planifiée `/api/cron/listing-summaries` (toutes les 5 minutes) qui écrit les résumés demandés à la mise en ligne et à chaque modification de l'annonce ou de son bien ; journal et tokens sous le genre `listing_summary`.
-- Migration : `20261115100000_listing_summary.sql` (`listings.summary_requested_at`, déclencheurs sur `listings` et `properties`, `public_listing_summary`, genre `listing_summary` du journal, tâche `listing-summaries`).
+- Ajouté : le résumé affiché aussi sur la fiche de l'annonce du back office, pour que l'équipe le lise.
+- Migration : `20261115100000_listing_summary.sql` (`listings.summary_requested_at`, déclencheurs sur `listings` et `properties`, `public_listing_summary`, genre `listing_summary` du journal réservé à la tâche, tâche `listing-summaries`).
 
 ### 2026-11-13 · L2-04b · PR #102 · Offre d'achat : suivi de l'acquéreur
 - Ajouté : « Retirer mon offre » (confirmation, « Offre retirée le … »), « Faire une nouvelle offre » (brouillon repris de l'offre, version suivante), encart après acceptation, section « Vos offres » sur l'accueil acquéreur.

@@ -7,7 +7,7 @@
 -- the file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(24);
+select plan(32);
 \ir _plan.psql
 
 \set who seller_a
@@ -124,17 +124,38 @@ update listings set description = description where id = :'listing';
 reset role;
 select is((select summary = 'Résumé 5.' and summary_requested_at is null from listings where id = :'listing'),
           true, 'a save that changes nothing: no new summary');
+-- What the summary is not written from: the same summary would be billed again.
+\set who seller_a
+\ir _as.psql
+update properties set charges_monthly_cents = 18000, property_tax_yearly_cents = 115000 where id = :'prop';
+reset role;
+update properties set estimation_value_cents = 24000000 where id = :'prop';
+select is((select summary = 'Résumé 5.' and summary_requested_at is null from listings where id = :'listing'),
+          true, 'its charges, its tax, its analysis of value: no new summary');
 
--- The task answers late: the listing changed again meanwhile.
+-- The task answers late: the listing changed again while the model wrote.
+-- Each change has its own request (the moment of the change), even here in
+-- one transaction: the write of the task, bound to the request it read,
+-- finds nothing to write.
 \set who seller_a
 \ir _as.psql
 update listings set price_cents = 23000000 where id = :'listing';
 reset role;
 select summary_requested_at as asked from listings where id = :'listing' \gset
-update listings set summary = 'En retard.', summary_requested_at = null
- where id = :'listing' and summary_requested_at = :'asked'::timestamptz - interval '1 second';
+\set who seller_a
+\ir _as.psql
+update listings set price_cents = 22900000 where id = :'listing';
+reset role;
+select isnt((select summary_requested_at from listings where id = :'listing'), :'asked'::timestamptz,
+            'a second change is a new request');
+with written as (
+  update listings set summary = 'En retard.', summary_requested_at = null
+   where id = :'listing' and summary_requested_at = :'asked'::timestamptz
+  returning id)
+select is((select count(*)::int from written), 0,
+          'the summary of the older request is not written');
 select is((select summary is null and summary_requested_at is not null from listings where id = :'listing'),
-          true, 'a summary of an older request is not written over a newer one');
+          true, 'the newer request stays');
 
 -- ===========================================================================
 -- Off line: kept, not shown; back online: a new one
@@ -154,9 +175,10 @@ select is((select public_listing_summary(:'listing')), null, 'anon: no summary o
 \set who seller_a
 \ir _as.psql
 update listings set description = 'En pause, retouchée.' where id = :'listing';
+update properties set bedrooms = 3 where id = :'prop';
 reset role;
 select is((select summary = 'Résumé 6.' and summary_requested_at is null from listings where id = :'listing'),
-          true, 'changed while paused: nothing asked for');
+          true, 'the listing or its property changed while paused: nothing asked for');
 \set who seller_a
 \ir _as.psql
 \o /dev/null
@@ -165,6 +187,28 @@ select listing_resume(:'listing');
 reset role;
 select is((select summary is null and summary_requested_at is not null from listings where id = :'listing'),
           true, 'back online: a summary of what it now says is asked for');
+
+-- Suspended by the team, then back online.
+update listings set summary = 'Résumé 7.', summary_requested_at = null where id = :'listing';
+\set who admin
+\ir _as.psql
+\o /dev/null
+select listing_suspend(:'listing', 'Contrôle en cours.');
+\o
+reset role;
+select is((select summary_requested_at is null from listings where id = :'listing'),
+          true, 'suspended: nothing asked for');
+\set who anon
+\ir _as.psql
+select is((select public_listing_summary(:'listing')), null, 'anon: no summary of a suspended listing');
+\set who admin
+\ir _as.psql
+\o /dev/null
+select listing_unsuspend(:'listing');
+\o
+reset role;
+select is((select summary is null and summary_requested_at is not null from listings where id = :'listing'),
+          true, 'the suspension lifted: asked for again');
 
 -- ===========================================================================
 -- The log of the assistant
@@ -175,6 +219,14 @@ select lives_ok(format($$insert into ai_conversations (profile_id, context, kind
 select throws_ok(format($$insert into ai_conversations (profile_id, context, kind)
                           values (%L, 'seller', 'listing_summary')$$, tests.uid('seller_a')),
                  '23514', null, 'never without its property');
+\set who seller_a
+\ir _as.psql
+select throws_ok(format($$insert into ai_conversations (profile_id, context, kind, property_id)
+                          values (%L, 'seller', 'listing_summary', %L)$$, tests.uid('seller_a'), :'prop'),
+                 '42501', null, 'seller_a: does not log a summary of its own (the task only)');
+select lives_ok(format($$insert into ai_conversations (profile_id, context, kind, property_id)
+                         values (%L, 'seller', 'chat', %L)$$, tests.uid('seller_a'), :'prop'),
+                'seller_a: its conversations with the assistant are logged as before');
 \set who seller_b
 \ir _as.psql
 select is((select count(*)::int from ai_conversations where kind = 'listing_summary' and property_id = :'prop'),
