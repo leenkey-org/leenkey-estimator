@@ -147,7 +147,7 @@ beforeEach(() => {
 
 describe("what the model is given", () => {
   it("the public facts of the listing, a line per fact given", () => {
-    const prompt = listingSummaryPrompt(row).replace(/[  ]/g, " ");
+    const prompt = listingSummaryPrompt(row).replace(/[\u00A0\u202F]/g, " ");
     expect(prompt).toContain("Type : Appartement");
     expect(prompt).toContain("Commune : Savigny-sur-Orge");
     expect(prompt).toContain("Surface : 68 m²");
@@ -204,7 +204,9 @@ describe("what is kept of its text", () => {
 describe("the scheduled task", () => {
   it("writes the summary, closes the request and logs the call with its tokens", async () => {
     const admin = fakeAdmin(pendingOne);
-    const call = vi.fn(async () => answer("Appartement de 3 pièces de 68 m². Balcon et cave."));
+    const call = vi.fn(async (_request: unknown) =>
+      answer("Appartement de 3 pièces de 68 m². Balcon et cave."),
+    );
     const run = await summarizeListings(admin.client, { call });
     expect(run).toEqual({ written: 1, dropped: 0, left: 0 });
     expect(admin.updates).toEqual([
