@@ -209,9 +209,7 @@ export default async function AdminOffersPage({ searchParams }: Props) {
                     <span className="font-semibold text-lk-ink">
                       {row.priceCents !== null ? formatPrice(row.priceCents) : "—"}
                     </span>
-                    {gapOf(row) ? (
-                      <span className="text-lk-caption text-lk-ink-3">{gapOf(row)}</span>
-                    ) : null}
+                    <span className="text-lk-caption text-lk-ink-3">{gapOf(row)}</span>
                   </span>
                 </DataTableCell>
                 <DataTableCell>

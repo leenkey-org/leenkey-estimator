@@ -8,8 +8,10 @@ import { expect, test, type Page } from "@playwright/test";
 // seller_b reads it with the assistant, then accepts it; the team is told,
 // reads the offer, ticks « Offre analysée avec le conseiller » and records
 // the avant-contrat in the place of the seller. The offer stays: this spec
-// changes the seed for good (project « seed-mutations »). Needs E2E_SEED=1,
-// SEED_PASSWORD, E2E_MUTATE=1 and a local stack.
+// changes the seed for good, and moves the sale of LK-0008 that other specs
+// read: project « seed-offers », after « seed-mutations »
+// (playwright.config.ts). Needs E2E_SEED=1, SEED_PASSWORD, E2E_MUTATE=1 and
+// a local stack.
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
@@ -181,7 +183,7 @@ test("back office : l'équipe est prévenue, lit l'offre, la marque analysée et
     await bell(page).click();
     const notice = bellPanel(page)
       .getByRole("link")
-      .filter({ hasText: "Offre acceptée sur une vente accompagnée" })
+      .filter({ hasText: "Offre acceptée sur une vente avec conseiller" })
       .first();
     await expect(notice).toContainText(/470\s000\s€/);
     await expect(notice).toContainText("LK-0008");

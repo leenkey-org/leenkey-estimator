@@ -40,6 +40,12 @@ export function OfferAnalysed({ offerId }: { offerId: string }) {
         report({ tone: "warning", text: t.stale });
         return;
       }
+      // The plan ended or was refunded since the page was shown.
+      if (result?.error === "not_found") {
+        router.refresh();
+        report({ tone: "warning", text: t.noRight });
+        return;
+      }
       report({ tone: "danger", text: t.failed, reload: result === null });
     });
   };

@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { requireAdmin } from "@/core/auth/session";
 import { hasEntitlement } from "@/leenkey/billing/entitlements";
+import { isUuid } from "@/leenkey/messaging/queries";
 import { OFFER_COLUMNS, readOffer, readPropertySnapshot } from "@/leenkey/offers/content";
 import { offerEvents, type OfferEvent, type SellerOffer } from "@/leenkey/offers/seller";
 import { createClient } from "@/lib/supabase/server";
@@ -46,8 +47,6 @@ export type AdminOfferCounts = {
 
 /** Rows of /admin/offres at most (admin_offers). */
 export const ADMIN_OFFERS_LIMIT = 200;
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function logFailure(read: string, error: unknown, context: Record<string, unknown> = {}) {
   console.error(`[admin] ${read} failed`, {
@@ -156,7 +155,7 @@ const SHEET_COLUMNS =
 export const adminOffer = cache(
   async (offerId: string): Promise<QueryResult<AdminOffer | null>> => {
     await requireAdmin();
-    if (!UUID.test(offerId)) return { ok: true, data: null };
+    if (!isUuid(offerId)) return { ok: true, data: null };
     try {
       const supabase = await createClient();
       const { data: row, error } = await supabase
@@ -199,7 +198,8 @@ export const adminOffer = cache(
       const [analysed, precontractByTeam, sale, task] = await Promise.all([
         hasEntitlement(propertyId, "human_offer_analysis"),
         hasEntitlement(propertyId, "notary_coordination"),
-        supabase.from("sale_progress").select("plan").eq("property_id", propertyId).maybeSingle(),
+        // The plan in force, as the list and the rights read it (an ended plan is Autonomie).
+        supabase.rpc("property_current_plan", { p: propertyId }),
         supabase
           .from("sale_task_status")
           .select("done_at, sale_step_tasks!inner(code)")
@@ -208,7 +208,7 @@ export const adminOffer = cache(
           .not("done_at", "is", null)
           .limit(1),
       ]);
-      if (sale.error) throw new Error(`sale_progress: ${sale.error.code}`);
+      if (sale.error) throw new Error(`property_current_plan: ${sale.error.code}`);
       if (task.error) throw new Error(`sale_task_status: ${task.error.code}`);
 
       const offer = readOffer(row);
@@ -238,7 +238,7 @@ export const adminOffer = cache(
           },
           listingReference: listing.data?.reference ?? null,
           city: (Array.isArray(city) ? city[0]?.city : city?.city) ?? null,
-          plan: sale.data?.plan ?? null,
+          plan: sale.data ?? null,
           buyer: { id: row.buyer_id, name: name(row.buyer_id) },
           seller: { id: row.seller_id, name: name(row.seller_id) },
           events: events.data[row.id] ?? [],

@@ -297,20 +297,19 @@ export const frEmails = {
     reason: "Motif",
     action: (count: number) => (count > 1 ? "Voir les signalements" : "Voir le signalement"),
   },
-  // L1-31: the requests written to the team since the last email (cron of L1-22, grouped).
   // L2-07: offers accepted on sales with an adviser since the last email, to the team.
   offersAccepted: {
     subject: (count: number, reference: string | null) =>
       count > 1
-        ? `${count}\u00A0offres acceptées sur des ventes accompagnées`
+        ? `${count}\u00A0offres acceptées sur des ventes avec conseiller`
         : reference
-          ? `Offre acceptée sur une vente accompagnée (${reference})`
-          : "Offre acceptée sur une vente accompagnée",
+          ? `Offre acceptée sur une vente avec conseiller (${reference})`
+          : "Offre acceptée sur une vente avec conseiller",
     title: (count: number) => (count > 1 ? "Des offres acceptées" : "Une offre acceptée"),
     text: (count: number) =>
       count > 1
-        ? `${count}\u00A0vendeurs accompagnés ont accepté une offre d'achat.`
-        : "Un vendeur accompagné a accepté une offre d'achat.",
+        ? `${count}\u00A0offres d'achat ont été acceptées sur des ventes avec conseiller.`
+        : "Une offre d'achat a été acceptée sur une vente avec conseiller.",
     item: (reference: string, property: string | null) =>
       property ? `Offre ${reference} · ${property}` : `Offre ${reference}`,
     price: (price: string) => `Prix accepté : ${price}`,
@@ -318,6 +317,7 @@ export const frEmails = {
     next: "La suite revient au vendeur et à son notaire ; la formule de la vente prévoit l'accompagnement d'un conseiller.",
     action: (count: number) => (count > 1 ? "Voir les offres" : "Ouvrir l'offre"),
   },
+  // L1-31: the requests written to the team since the last email (cron of L1-22, grouped).
   caseRequests: {
     subject: (count: number, reference: string | null) =>
       count > 1

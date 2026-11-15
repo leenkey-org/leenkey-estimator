@@ -192,7 +192,7 @@ export default async function AdminOfferPage({ params }: Props) {
                 ) : null}
                 {periodEnd ? (
                   <p>
-                    {p.periodEnd(formatNumericDay(periodEnd))} {p.indicative}
+                    {p.periodEnd(formatNumericDay(periodEnd))} {t.precontract.indicative}
                   </p>
                 ) : null}
               </div>

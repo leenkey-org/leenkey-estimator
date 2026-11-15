@@ -5,11 +5,12 @@
 -- offers, by the team only, and is written in the audit log. An offer
 -- accepted on a property whose plan includes an adviser tells the team;
 -- under the free plan it tells no one of the team. The team records the
--- avant-contrat of an accepted offer. Fixtures in postal code 99996: the
+-- avant-contrat of an accepted offer when the plan of its sale follows it to
+-- its signature. Fixtures in postal code 99996: the
 -- file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(34);
+select plan(40);
 \ir _plan.psql
 
 -- The plans and their rights (reference data, absent from a bare database).
@@ -113,6 +114,9 @@ select throws_ok($$select * from admin_offers()$$, '42501', null, 'seller_a: not
 \set who anon
 \ir _as.psql
 select throws_ok($$select * from admin_offers()$$, '42501', null, 'anon: not the offers of the back office');
+select throws_ok($$select * from admin_offer_counts()$$, '42501', null, 'anon: nor their counts');
+select throws_ok(format($$select admin_offer_mark_analysed(%L)$$, :'offer_paid'), '42501', null,
+                 'anon: does not tick the task of the team');
 
 \set who admin
 \ir _as.psql
@@ -133,8 +137,12 @@ select is((select count(*)::int from admin_offers(p_status => 'accepted', p_quer
 select is((select count(*)::int from admin_offers(p_account => tests.uid('seller_b'))
             where id in (:'offer_paid', :'offer_free')), 1,
           'admin: the offers of an account (received by seller_b)');
-select is((select count(*)::int from admin_offers(p_query => '100%')), 0,
-          'admin: a search reads its signs as text');
+select is((select count(*)::int from admin_offers(p_query => '%'))
+          + (select count(*)::int from admin_offers(p_query => '_'))
+          + (select count(*)::int from admin_offers(p_query => E'\\')), 0,
+          'admin: a search reads %, _ and \ as text, never as a pattern');
+select is((select count(*)::int from admin_offers(p_query => 'Équipeville', p_limit => 0)), 1,
+          'admin: a limit below one reads one offer');
 select throws_ok($$select * from admin_offers(p_status => 'draft')$$, '22023', null,
                  'admin: a filter that is not one is refused');
 select ok((select waiting >= 2 and total >= waiting + accepted + declined from admin_offer_counts()),
@@ -165,7 +173,7 @@ select throws_ok(format($$select admin_offer_mark_analysed(%L)$$, :'offer_paid')
                  'buyer_c: neither');
 \set who admin
 \ir _as.psql
-select throws_ok(format($$select admin_offer_mark_analysed(%L)$$, :'offer_free'), '22023', null,
+select throws_ok(format($$select admin_offer_mark_analysed(%L)$$, :'offer_free'), 'P0002', null,
                  'admin: not for a property whose plan has no analysis of its offers');
 select throws_ok(format($$select admin_offer_mark_analysed(%L)$$, gen_random_uuid()), '42501', null,
                  'admin: not an offer that does not exist');
@@ -192,6 +200,16 @@ select is((select st.done_at is not null
 -- ===========================================================================
 -- An offer accepted: the team is told when the plan has an adviser
 -- ===========================================================================
+-- For this acceptance, the seller is also of the team, and buyer_d a
+-- suspended admin: neither is told.
+reset role;
+alter table profiles disable trigger user;
+update profiles set roles = array_append(roles, 'admin'::user_role) where id = tests.uid('seller_a');
+update profiles set roles = array_append(roles, 'admin'::user_role), suspended_at = now()
+ where id = tests.uid('buyer_d');
+alter table profiles enable trigger user;
+\set who seller_a
+\ir _as.psql
 \o /dev/null
 select offer_mark_viewed(:'offer_paid');
 select offer_answer(:'offer_paid', true, true);
@@ -201,8 +219,9 @@ select is((select count(*)::int from notifications n join profiles p on p.id = n
             where n.type = 'offer.accepted_team' and n.data->>'offer_id' = :'offer_paid'
               and 'admin' = any(p.roles)),
           (select count(*)::int from profiles
-            where 'admin' = any(roles) and deleted_at is null and suspended_at is null),
-          'accepted under a plan with an adviser: each admin is told');
+            where 'admin' = any(roles) and deleted_at is null and suspended_at is null
+              and id <> tests.uid('seller_a')),
+          'accepted under a plan with an adviser: each active admin is told');
 select is((select row(link, group_key, email_after is not null, data->>'plan')::text
              from notifications
             where type = 'offer.accepted_team' and data->>'offer_id' = :'offer_paid' limit 1),
@@ -210,7 +229,15 @@ select is((select row(link, group_key, email_after is not null, data->>'plan')::
           'with the sheet of the offer, by email too, grouped for the team');
 select is((select count(*)::int from notifications
             where type = 'offer.accepted_team' and profile_id in (tests.uid('seller_a'), tests.uid('buyer_c'))),
-          0, 'never to its seller nor its buyer');
+          0, 'never to its seller, even of the team, nor to its buyer');
+select is((select count(*)::int from notifications
+            where type = 'offer.accepted_team' and profile_id = tests.uid('buyer_d')),
+          0, 'nor to a suspended admin');
+alter table profiles disable trigger user;
+update profiles set roles = array_remove(roles, 'admin'::user_role) where id = tests.uid('seller_a');
+update profiles set roles = array_remove(roles, 'admin'::user_role), suspended_at = null
+ where id = tests.uid('buyer_d');
+alter table profiles enable trigger user;
 
 -- Under the free plan: its buyer is told, not the team.
 alter table offers disable trigger user;
@@ -240,9 +267,19 @@ select throws_ok(format($$select offer_record_precontract(%L, %L)$$, :'offer_pai
                  '42501', null, 'buyer_d: not the avant-contrat of an offer of others');
 \set who admin
 \ir _as.psql
+select throws_ok(format($$select offer_record_precontract(%L, %L)$$, :'offer_paid',
+                        (now() at time zone 'Europe/Paris')::date),
+                 '42501', null,
+                 'admin: not when the plan of the sale has no avant-contrat recorded by the team');
+-- The right, as Sérénité has it in the reference data: a right, never a plan name.
+reset role;
+insert into plan_entitlements (plan, feature) values ('accompagne', 'notary_coordination')
+on conflict do nothing;
+\set who admin
+\ir _as.psql
 select lives_ok(format($$select offer_record_precontract(%L, %L, %L)$$, :'offer_paid',
                        (now() at time zone 'Europe/Paris')::date, (now() at time zone 'Europe/Paris')::date),
-                'admin: records the avant-contrat of an accepted offer');
+                'admin: records the avant-contrat of an accepted offer, with the right of the plan');
 select is((select precontract_signed_at is not null and withdrawal_period_start is not null
              from offers where id = :'offer_paid'),
           true, 'its dates are on the offer');

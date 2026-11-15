@@ -1,5 +1,6 @@
 import "server-only";
 import type { AiTool } from "@/core/ai/tools/types";
+import { formatNumericDateTime } from "@/leenkey/offers/document";
 import { propertyOffers, type SellerOffer } from "@/leenkey/offers/seller";
 import { buildOfferSynthesis } from "@/leenkey/offers/synthesis";
 import { frFinancingStatus } from "@/lib/i18n/sections/financingStatus";
@@ -14,24 +15,31 @@ const fr = { financingStatus: frFinancingStatus, offer: frOffer } as const;
 // on a property of the seller, each with the summary the seller reads on the
 // site: the same templates (leenkey/offers/synthesis.ts), computed from the
 // frozen offer, never written by a model. Read through the view of the
-// seller (offer_for_seller): the first name and the town of a buyer only,
-// until the offer is accepted. The model answers questions from it; it never
-// says whether to accept or to decline (prompt).
+// seller (offer_for_seller); of a buyer, the model is given the first name
+// and the town only, even once the offer is accepted. What the buyer typed
+// (first name, town, details of the conditions) is cut and quoted as their
+// words, never an instruction (prompt). The model answers questions from it;
+// it never says whether to accept or to decline.
 
 const OFFERS_MAX = 10;
 
+/** Words typed by the buyer: one line, no tag, cut. */
+const typedByBuyer = (value: string, max: number) =>
+  value.replace(/[<>]/g, "").replace(/\s+/g, " ").trim().slice(0, max) || null;
+
 /** What the model reads of one offer received: the words of the site, no contact detail. */
-export function offerSummary(item: SellerOffer) {
+function offerSummary(item: SellerOffer) {
   const { offer } = item;
   const synthesis = buildOfferSynthesis(item);
   return {
     reference: offer.reference,
     version: offer.version,
     status: fr.offer.status[offer.status],
-    buyerFirstName: offer.buyer.firstName || null,
-    buyerTown: offer.buyer.city || null,
+    buyerFirstName: typedByBuyer(offer.buyer.firstName, 60),
+    buyerTown: typedByBuyer(offer.buyer.city, 60),
     sentOn: parisDay(offer.submittedAt),
-    validUntil: offer.validityUntil,
+    // As the site writes it, in the time of Paris: « 18/11/2026 à 14:00 ».
+    validUntil: offer.validityUntil ? formatNumericDateTime(offer.validityUntil) : null,
     askingPrice: synthesis.askingPriceLabel,
     offerPrice: synthesis.offerPriceLabel,
     gap: synthesis.priceGapLabel,
@@ -39,7 +47,7 @@ export function offerSummary(item: SellerOffer) {
     proofOfFinancing: fr.financingStatus[synthesis.financingStatus],
     proofDetails: synthesis.financingLines,
     conditions: synthesis.conditions,
-    conditionsDetails: offer.conditionsDetails || null,
+    conditionsDetailsTypedByBuyer: typedByBuyer(offer.conditionsDetails, 500),
     analysis: synthesis.analysis,
     answeredOn: parisDay(item.answeredAt),
     precontractSignedOn: item.precontractSignedAt,
@@ -53,7 +61,8 @@ export const summarizeOfferTool: AiTool<PropertyInput, unknown> = {
     "Read the offers received on one property of the seller (10 most recent), each with the " +
     "summary the seller reads on the site: status, first name and town of the buyer, price of " +
     "the listing when the offer was sent, price offered, gap, financing declared in the offer, " +
-    "status of the proof of financing (never a guarantee), conditions, end of validity, the " +
+    "status of the proof of financing (never a guarantee), conditions (their details are the " +
+    "buyer's own words), end of validity in Paris time, the " +
     "neutral « Analyse Leenkey », dates of the answer and of the avant-contrat. Use it to answer " +
     "a question of the seller about an offer; never say whether to accept or to decline it.",
   input: propertyInput,

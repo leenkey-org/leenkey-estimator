@@ -170,6 +170,22 @@ describe("wording of the notifications (from type and data)", () => {
     expect(
       describeNotification(view({ data: { excerpt: "Long", truncated: true } })),
     ).toMatchObject({ title: "Nouveau message", detail: "« Long… »" });
+    // L2-07: an offer accepted on a sale with an adviser, for the team: no buyer.
+    const team = describeNotification(
+      view({
+        type: "offer.accepted_team",
+        data: {
+          price_cents: 33_800_000,
+          listing_reference: "LK-0042",
+          city: "Savigny-sur-Orge",
+          buyer_first_name: "Chloé",
+        },
+      }),
+    );
+    expect(team.title).toBe("Offre acceptée sur une vente avec conseiller");
+    expect(team.detail?.replace(/[\u00A0\u202F]/g, " ")).toBe(
+      "338 000 € · LK-0042 · Savigny-sur-Orge",
+    );
     // L1-34: the adviser to the seller; a seller to the team, its reference first.
     expect(
       describeNotification(view({ type: "advisor.message", data: { excerpt: "Bonjour" } })),

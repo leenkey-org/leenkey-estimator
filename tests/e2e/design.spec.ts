@@ -109,7 +109,7 @@ test.describe("catalogue /design", () => {
     await expect(page.getByRole("heading", { level: 2 })).toHaveCount(19);
     // L2-07: an offer accepted on a sale with an adviser, for the team.
     await expect(
-      page.getByText("Sujet : Offre acceptée sur une vente accompagnée (LK-0042)"),
+      page.getByText("Sujet : Offre acceptée sur une vente avec conseiller (LK-0042)"),
     ).toBeVisible();
     // L1-40: the summary of an order, a withdrawal, the end of a plan.
     await expect(

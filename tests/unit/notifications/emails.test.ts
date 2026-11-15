@@ -492,8 +492,8 @@ describe("emails of an offer (L2-04a)", () => {
       planned([accepted("o1", "LK-2026-00012", 33_800_000)], { audience: "team" }),
     );
     const text = (one?.text ?? "").replace(/[\u00A0\u202F]/g, " ");
-    expect(one?.subject).toBe("Offre acceptée sur une vente accompagnée (LK-0042)");
-    expect(text).toContain("Un vendeur accompagné a accepté une offre d'achat.");
+    expect(one?.subject).toBe("Offre acceptée sur une vente avec conseiller (LK-0042)");
+    expect(text).toContain("Une offre d'achat a été acceptée sur une vente avec conseiller.");
     expect(text).toContain("Offre LK-2026-00012 · LK-0042 · Savigny-sur-Orge");
     expect(text).toContain("Prix accepté : 338 000 €");
     expect(one?.html).toContain("https://leenkey-v2.vercel.app/admin/offres/o1");
@@ -505,7 +505,7 @@ describe("emails of an offer (L2-04a)", () => {
       }),
     );
     expect(two?.subject.replace(/[\u00A0\u202F]/g, " ")).toBe(
-      "2 offres acceptées sur des ventes accompagnées",
+      "2 offres acceptées sur des ventes avec conseiller",
     );
     expect(two?.text).toContain("Offre à lire dans le back office.");
     expect(two?.html).toContain("https://leenkey-v2.vercel.app/admin/offres?statut=acceptees");

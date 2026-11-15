@@ -63,7 +63,6 @@ export const frAdminOffers = {
     buyer: "Acquéreur",
     seller: "Vendeur",
     property: "Bien",
-    plan: "Formule de la vente",
     sent: "Envoyée le",
     answered: "Réponse du vendeur le",
     pdf: "Ouvrir le PDF de l'offre",
@@ -83,6 +82,8 @@ export const frAdminOffers = {
     doneOn: (date: string) => `Offre analysée avec le conseiller le ${date}.`,
     done: "La tâche « Offre analysée avec le conseiller » est cochée sur la vente.",
     stale: "La tâche était déjà cochée : la fiche est à jour.",
+    noRight:
+      "La formule de ce bien ne comprend plus l'analyse de ses offres : la fiche est à jour.",
     failed: "La tâche n'a pas pu être cochée. Réessayez dans un instant.",
   },
   precontract: {
@@ -90,5 +91,6 @@ export const frAdminOffers = {
     intro:
       "La formule de ce bien comprend le suivi jusqu'à la signature : vous pouvez enregistrer les dates de l'avant-contrat à la place du vendeur. La saisie est tracée.",
     none: "Aucun avant-contrat enregistré pour cette offre.",
+    indicative: "Date indicative : le notaire fait foi.",
   },
 } as const;

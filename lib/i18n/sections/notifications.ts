@@ -150,7 +150,7 @@ export const frNotifications = {
     },
     // L2-07: for the team, an offer accepted on a property whose plan has an adviser.
     offerAcceptedTeam: {
-      title: "Offre acceptée sur une vente accompagnée",
+      title: "Offre acceptée sur une vente avec conseiller",
       detail: (price: string | null, reference: string | null, city: string | null) =>
         [price, [reference, city].filter(Boolean).join(" · ")].filter(Boolean).join(" · ") || null,
     },

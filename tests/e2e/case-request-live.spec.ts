@@ -9,9 +9,10 @@ import { devices, expect, test, type Browser, type Page } from "@playwright/test
 // assistant, the seller writes the request themselves. The cases stay: only
 // on a local stack just made by `scripts/local-stack.sh up`, with
 // E2E_SEED=1, SEED_PASSWORD, E2E_MUTATE=1 and AI_MOCK=1 (project
-// « seed-mutations »). Seed used here only: the assistant of seller_b, about
+// « seed-mutations »). Seed used here: the assistant of seller_b, about
 // LK-0012 (Autonomie, which no other spec turns into a paid plan) and LK-0008
-// (Sérénité).
+// (Sérénité); tests/e2e/admin-offers-live.spec.ts asks it about the offers of
+// LK-0008 afterwards, in its own project.
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;

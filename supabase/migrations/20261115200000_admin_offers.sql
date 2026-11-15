@@ -14,9 +14,13 @@
 --    conseiller si formule payante ». The rest of offer_events_notify is the
 --    one of L2-04b, unchanged.
 --
--- The avant-contrat recorded by the team needs nothing new:
--- offer_record_precontract (L2-01, L2-04b) already takes an admin and writes
--- the audit log. No table, no policy.
+-- 4. offer_record_precontract (L2-01, L2-04b) already took an admin and
+--    wrote the audit log: the team now records the avant-contrat in the
+--    place of the seller only when the plan of the sale follows it to its
+--    signature (plan_entitlements, « notary_coordination »), as the sheet of
+--    the back office shows it. The seller records theirs as before.
+--
+-- No table, no policy.
 
 -- 1. ---------------------------------------------------------------------------
 create function public.admin_offers(
@@ -144,7 +148,7 @@ begin
      where e.plan = public.property_current_plan(v_property)
        and e.feature = 'human_offer_analysis') then
     raise exception 'the plan of this property has no analysis of its offers'
-      using errcode = '22023';
+      using errcode = 'P0002';
   end if;
   select t.id into v_task
     from public.sale_progress sp
@@ -152,7 +156,7 @@ begin
     join public.sale_step_tasks t on t.step_id = s.id and t.code = 'offer_analysed'
    where sp.property_id = v_property;
   if v_task is null then
-    raise exception 'the sale of this property has no such task' using errcode = '22023';
+    raise exception 'the sale of this property has no such task' using errcode = 'P0002';
   end if;
   select st.done_at into v_done_at
     from public.sale_task_status st
@@ -165,7 +169,12 @@ begin
   values (v_property, v_task, now(), auth.uid())
   on conflict (property_id, task_id) do update
     set done_at = excluded.done_at, done_by = excluded.done_by
+    where public.sale_task_status.done_at is null
   returning done_at into v_done_at;
+  -- Ticked by another call in between (no row was there to lock): once only.
+  if v_done_at is null then
+    raise exception 'already analysed' using errcode = '22023';
+  end if;
   perform public.audit('offer.analysed', 'offer', p_offer,
     jsonb_build_object('property_id', v_property));
   return v_done_at;
@@ -277,19 +286,24 @@ begin
       if exists (select 1 from public.plan_entitlements e
                   where e.plan = public.property_current_plan(p.id)
                     and e.feature = 'advisor') then
-        for v_admin in
-          select a.id from public.profiles a
-           where 'admin' = any(a.roles) and a.deleted_at is null and a.suspended_at is null
-             and a.id not in (o.seller_id, o.buyer_id)
-        loop
-          perform public.notification_add(
-            v_admin, 'offer.accepted_team',
-            info || jsonb_build_object(
-              'listing_reference', l.reference,
-              'plan', public.property_current_plan(p.id),
-              'asking_price_cents', (o.property_snapshot->>'asking_price_cents')::bigint),
-            '/admin/offres/' || o.id, 'offers:accepted', now());
-        end loop;
+        -- Telling the team never undoes the answer of the seller.
+        begin
+          for v_admin in
+            select a.id from public.profiles a
+             where 'admin' = any(a.roles) and a.deleted_at is null and a.suspended_at is null
+               and a.id not in (o.seller_id, o.buyer_id)
+          loop
+            perform public.notification_add(
+              v_admin, 'offer.accepted_team',
+              info || jsonb_build_object(
+                'listing_reference', l.reference,
+                'plan', public.property_current_plan(p.id),
+                'asking_price_cents', (o.property_snapshot->>'asking_price_cents')::bigint),
+              '/admin/offres/' || o.id, 'offers:accepted', now());
+          end loop;
+        exception when others then
+          raise warning 'offer.accepted_team not sent for offer %: %', o.id, sqlerrm;
+        end;
       end if;
     end if;
     perform public.offer_notice(
@@ -299,6 +313,55 @@ begin
       'offer_' || new.event);
   end if;
   return null;
+end;
+$$;
+
+-- 4. ---------------------------------------------------------------------------
+-- As in L2-04b, plus the right of the plan when the team types the dates.
+create or replace function public.offer_record_precontract(
+  p_offer_id uuid, p_signed_at date, p_withdrawal_start date default null
+) returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  o public.offers;
+begin
+  select * into o from public.offers where id = p_offer_id
+     and (seller_id = auth.uid() or public.is_admin()) for update;
+  if not found or not public.is_active_user() then
+    raise exception 'offer not found' using errcode = '42501';
+  end if;
+  -- The team, in the place of the seller: a right of the plan in force,
+  -- never a plan name.
+  if o.seller_id <> auth.uid() and not exists (
+    select 1 from public.listings l
+      join public.plan_entitlements e
+        on e.plan = public.property_current_plan(l.property_id)
+     where l.id = o.listing_id and e.feature = 'notary_coordination') then
+    raise exception 'the plan of this sale has no avant-contrat recorded by the team'
+      using errcode = '42501';
+  end if;
+  if o.status <> 'accepted' then
+    perform public.offer_bad_transition(o.status, 'record the avant-contrat of');
+  end if;
+  if p_signed_at is null or p_signed_at > (now() at time zone 'Europe/Paris')::date
+     or p_signed_at < (o.answered_at at time zone 'Europe/Paris')::date then
+    raise exception 'the date of the avant-contrat is not valid' using errcode = '22023';
+  end if;
+  if p_withdrawal_start is not null
+     and (p_withdrawal_start < p_signed_at
+          or p_withdrawal_start > (now() at time zone 'Europe/Paris')::date) then
+    raise exception 'the withdrawal period starts from the avant-contrat to today'
+      using errcode = '22023';
+  end if;
+  update public.offers
+     set precontract_signed_at = p_signed_at, withdrawal_period_start = p_withdrawal_start
+   where id = o.id;
+  perform public.offer_event(o.id, 'precontract_recorded',
+    jsonb_build_object('signed_at', p_signed_at, 'withdrawal_start', p_withdrawal_start));
+  if public.is_admin() and o.seller_id <> auth.uid() then
+    perform public.audit('offer.precontract', 'offer', o.id,
+      jsonb_build_object('signed_at', p_signed_at, 'withdrawal_start', p_withdrawal_start));
+  end if;
 end;
 $$;
 

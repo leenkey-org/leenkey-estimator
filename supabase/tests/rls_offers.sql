@@ -7,7 +7,7 @@
 -- the file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(81);
+select plan(82);
 \ir _plan.psql
 
 -- ===========================================================================
@@ -292,6 +292,18 @@ select lives_ok(format($$select offer_record_precontract(%L, (now() at time zone
                 'seller_a: records its avant-contrat');
 select ok((select precontract_signed_at = (now() at time zone 'Europe/Paris')::date from offer_for_seller where id = :'offer2'),
           'its date recorded');
+\set who admin
+\ir _as.psql
+select throws_ok(format($$select offer_record_precontract(%L, (now() at time zone 'Europe/Paris')::date, null)$$, :'offer2'),
+                 '42501', null, 'admin: not without the right of the plan of the sale (L2-07)');
+-- The right of the plan in force for this property, as Sérénité has it.
+reset role;
+insert into plans (code, name, tagline, price_cents, description, features, position)
+values ('autonomie', 'Autonomie', 'Tous les outils.', 0, 'Gratuit', '{}', 1)
+on conflict (code) do nothing;
+insert into plan_entitlements (plan, feature)
+select public.property_current_plan(:'prop'), 'notary_coordination'
+on conflict do nothing;
 \set who admin
 \ir _as.psql
 select lives_ok(format($$select offer_record_precontract(%L, (now() at time zone 'Europe/Paris')::date, null)$$, :'offer2'),
