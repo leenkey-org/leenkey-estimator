@@ -17,7 +17,8 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Ajouté : fiche d'une offre en lecture seule (parties, bien, formule, synthèse lue par le vendeur, document, PDF, journal) ; « Marquer comme analysée » pour les biens dont la formule comprend l'analyse des offres ; saisie des dates de l'avant-contrat par l'équipe pour ceux dont la formule suit la vente jusqu'à la signature.
 - Ajouté : l'équipe est prévenue (cloche et email groupé) quand une offre est acceptée sur une vente avec conseiller.
 - Ajouté : l'assistant du vendeur lit les offres reçues d'un bien (`summarize_offer`) et répond aux questions sur une offre, sans jamais conseiller d'accepter ou de refuser.
-- Migration : `20261115200000_admin_offers.sql` (fonctions `admin_offers`, `admin_offer_counts`, `admin_offer_mark_analysed` ; `offer_events_notify` prévient l'équipe).
+- Modifié : l'équipe n'enregistre l'avant-contrat à la place du vendeur que pour un bien dont la formule suit la vente jusqu'à la signature (contrôle en base).
+- Migration : `20261115200000_admin_offers.sql` (fonctions `admin_offers`, `admin_offer_counts`, `admin_offer_mark_analysed` ; `offer_events_notify` prévient l'équipe ; `offer_record_precontract` exige le droit de la formule pour l'équipe).
 
 ### 2026-11-15 · L2-06 · PR #104 · Assistant acquéreur
 - Ajouté : l'assistant de l'acquéreur, dans son espace (panneau à partir de 768 px, bouton à côté de la cloche sur téléphone), depuis les notifications et depuis une annonce (« Demander à l'assistant ») ; `/assistant?annonce=…` ou `?contexte=acquereur`.
