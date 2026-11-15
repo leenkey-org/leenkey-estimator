@@ -61,6 +61,11 @@ export type PublicListing = {
    * for the map of the area (L1-16); read on the public page only.
    */
   location?: { lat: number; lng: number } | null;
+  /**
+   * Two factual sentences written by the assistant (L2-05), on the public
+   * page only; null while none is written (just published, just changed).
+   */
+  summary?: string | null;
 };
 
 /**
@@ -146,11 +151,21 @@ export const getPublicListing = cache(
         return { ok: true, data: null };
       }
       // Without its photos the page still shows: the gallery keeps the drawing.
-      const photos = await supabase.rpc("public_listing_photos", { p_listing_ids: [row.id] });
+      // Nor is its summary by the assistant (L2-05) a reason to show nothing.
+      const [photos, summary] = await Promise.all([
+        supabase.rpc("public_listing_photos", { p_listing_ids: [row.id] }),
+        supabase.rpc("public_listing_summary", { p_listing_id: row.id }),
+      ]);
       if (photos.error) {
         console.error("[listings] photos read failed", {
           entity_id: row.id,
           code: photos.error.code,
+        });
+      }
+      if (summary.error) {
+        console.error("[listings] summary read failed", {
+          entity_id: row.id,
+          code: summary.error.code,
         });
       }
       return {
@@ -193,6 +208,8 @@ export const getPublicListing = cache(
           propertyTaxYearlyCents: row.property_tax_yearly_cents,
           coproLots: row.copro_lots,
           sellerFirstName: row.seller_first_name,
+          // Generated types declare the result of a function as never null.
+          summary: (summary.data as string | null) || null,
           energy: energy.data
             ? {
                 kind: energy.data.dpe_kind === "tertiaire" ? "tertiaire" : "logement",

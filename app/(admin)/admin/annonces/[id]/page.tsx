@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
+import { AssistantNote } from "@/components/shared/assistant-note";
 import { Gallery } from "@/components/shared/gallery";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { KeyFactsTable } from "@/components/shared/key-facts-table";
@@ -211,6 +212,10 @@ export default async function AdminListingPage({ params }: Props) {
             <PriceBlock priceCents={listing.priceCents} surfaceM2={listing.surfaceM2} />
             <KeyFigures items={listingKeyFigures(listing)} />
             <ListingDescription text={listing.description} />
+            {/* Written by the assistant from the listing: read by the team as buyers read it. */}
+            {listing.summary ? (
+              <AssistantNote title={t.detail.summary}>{listing.summary}</AssistantNote>
+            ) : null}
             <KeyFactsTable items={listingKeyFacts(listing)} />
             <RegulatoryMentions listing={listing} className="mt-0" />
           </div>

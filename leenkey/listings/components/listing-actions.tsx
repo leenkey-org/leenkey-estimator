@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Calendar, FileSignature } from "lucide-react";
 import type { PublicListing } from "../queries";
@@ -68,13 +69,16 @@ export function ActionBar({
 export function PriceColumn({
   listing,
   links,
+  note,
 }: {
   listing: PublicListing;
   /** null: the preview of the seller before sending (L1-13), buttons inactive. */
   links: ContactLinks | null;
+  /** Under the column, following it down the page: the summary of the assistant (L2-05). */
+  note?: ReactNode;
 }) {
-  return (
-    <div className="sticky top-24 flex flex-col gap-4 rounded-lk-3xl border border-lk-line bg-lk-surface p-6 shadow-lk-d-block">
+  const column = (
+    <div className="flex flex-col gap-4 rounded-lk-3xl border border-lk-line bg-lk-surface p-6 shadow-lk-d-block">
       <PriceBlock priceCents={listing.priceCents} surfaceM2={listing.surfaceM2} size="lg" />
       {links ? (
         <>
@@ -112,6 +116,12 @@ export function PriceColumn({
           {links ? t.accountRequired : t.inactive}
         </p>
       )}
+    </div>
+  );
+  return (
+    <div className="sticky top-24 flex flex-col gap-4">
+      {column}
+      {note}
     </div>
   );
 }

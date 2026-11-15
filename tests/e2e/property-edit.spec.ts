@@ -266,3 +266,76 @@ test("l'historique des modifications : chez le vendeur, puis dans le back office
   await expectNoSeriousViolation(admin);
   await context.close();
 });
+
+test("le résumé de l'assistant suit l'annonce : écrit, retiré à la modification, réécrit (L2-05)", async ({
+  page,
+  request,
+}) => {
+  test.setTimeout(120_000);
+  const task = "/api/cron/listing-summaries";
+  const secret = process.env.CRON_SECRET;
+  test.skip(!secret, "CRON_SECRET de la pile locale requis (scripts/local-stack.sh env)");
+  // The model of the tests only: never a call of the real one from a test.
+  test.skip(
+    process.env.AI_MOCK !== "1",
+    "AI_MOCK=1 requis : le résumé est celui du modèle de test",
+  );
+  // Without its secret, the task does not run.
+  expect((await request.get(task)).status()).toBe(401);
+  /** The scheduled task, until it has nothing left to write (a few listings a run). */
+  const runTask = async () => {
+    for (let round = 0; round < 8; round += 1) {
+      const response = await request.get(task, { headers: { Authorization: `Bearer ${secret}` } });
+      expect(response.status()).toBe(200);
+      const body = (await response.json()) as { written: number; dropped: number };
+      if (body.written + body.dropped === 0) return;
+    }
+  };
+  // Shown once: beside the price from 1 024 px, after the map below.
+  const note = page.getByText("Résumé par l'assistant", { exact: true }).locator("visible=true");
+  const text = page.getByText(/^Résumé de l'assistant de test/).locator("visible=true");
+
+  await signIn(page, sheet);
+  const href = await publicHref(page);
+  await runTask();
+  await page.goto(href);
+  await expect(note).toHaveCount(1);
+  await expect(text).toHaveCount(1);
+  await expectNoSeriousViolation(page);
+
+  // The description changes: the summary of before is gone at once.
+  await page.goto(`${sheet}/modifier/annonce`);
+  // A text of this run: a second run, or a retry, changes the description again.
+  await page
+    .getByLabel("Description")
+    .fill(
+      `Maison de 1985 sur deux niveaux, au calme, avec un grand jardin, un garage et une cave (${Date.now().toString(36)}).`,
+    );
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page).toHaveURL(`${sheet}/annonce`);
+  await page.goto(href);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(note).toHaveCount(0);
+
+  // The task writes the one of what the listing now says.
+  await runTask();
+  await page.reload();
+  await expect(note).toHaveCount(1);
+
+  // On a phone: once too, and the page no wider than the screen.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(note).toHaveCount(1);
+  await expect(text).toHaveCount(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  if (process.env.SHOTS_DIR) {
+    await page.screenshot({
+      path: `${process.env.SHOTS_DIR}/listing-summary-390.png`,
+      fullPage: true,
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.screenshot({
+      path: `${process.env.SHOTS_DIR}/listing-summary-1280.png`,
+      fullPage: true,
+    });
+  }
+});

@@ -52,6 +52,8 @@ export const frListing = {
     rooms: (rooms: number) => (rooms === 1 ? "1 pièce" : `${rooms} pièces`),
   },
   // L1-16: the area of the listing, never its address (docs/DESIGN.md 8).
+  // L2-05: the summary of the listing written by the assistant.
+  assistantNote: { title: "Résumé par l'assistant" },
   map: {
     title: "Où se situe le bien",
     region: "Carte du secteur du bien",

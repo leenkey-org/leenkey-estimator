@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { AssistantNote } from "@/components/shared/assistant-note";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { getProfile } from "@/core/auth/session";
@@ -105,6 +106,11 @@ export default async function ListingPage({ params }: Props) {
     <ShareButton url={url} title={listing.title} variant={variant} />
   );
   const jsonLd = listingJsonLd(listing, url, absoluteUrl(`/api/og/${listing.slug}`));
+  // Two factual sentences written by the assistant (L2-05): none while a new
+  // one is being written after a change of the listing.
+  const note = listing.summary ? (
+    <AssistantNote title={fr.listing.assistantNote.title}>{listing.summary}</AssistantNote>
+  ) : null;
 
   return (
     <FacadeRoot className="min-h-screen bg-lk-surface">
@@ -135,7 +141,8 @@ export default async function ListingPage({ params }: Props) {
               {heart("white-float")}
             </div>
           }
-          aside={<PriceColumn listing={listing} links={links} />}
+          aside={<PriceColumn listing={listing} links={links} note={note} />}
+          note={note}
           map={
             listing.location ? (
               <ListingMap

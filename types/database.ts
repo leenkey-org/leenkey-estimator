@@ -727,6 +727,7 @@ export type Database = {
           status: Database["public"]["Enums"]["listing_status"]
           submitted_at: string | null
           summary: string | null
+          summary_requested_at: string | null
           suspended_at: string | null
           suspension_reason: string | null
           title: string
@@ -750,6 +751,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["listing_status"]
           submitted_at?: string | null
           summary?: string | null
+          summary_requested_at?: string | null
           suspended_at?: string | null
           suspension_reason?: string | null
           title: string
@@ -773,6 +775,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["listing_status"]
           submitted_at?: string | null
           summary?: string | null
+          summary_requested_at?: string | null
           suspended_at?: string | null
           suspension_reason?: string | null
           title?: string
@@ -3051,6 +3054,10 @@ export type Database = {
           total: number
           position: number
         }[]
+      }
+      public_listing_summary: {
+        Args: { p_listing_id: string }
+        Returns: string
       }
       public_listings_details: {
         Args: Record<PropertyKey, never>

@@ -420,6 +420,7 @@ create table listings (
   sold_price_cents bigint,              -- prix de vente final saisi au passage en « vendu » (facultatif)
   review jsonb,                         -- pré-analyse admin calculée à la soumission (section 12)
   summary text,                         -- résumé de l'assistant (L2-05), régénéré à chaque modification
+  summary_requested_at timestamptz,     -- demande de résumé posée par la base (mise en ligne, modification), close par la tâche planifiée
   views_count int not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz,
@@ -880,7 +881,7 @@ create table ai_conversations (
   property_id uuid references properties(id),
   -- L1-29 (DECISIONS 2026-11-02) : la conversation avec l'assistant, ou une suggestion journalisée
   -- L1-30d (DECISIONS 2026-11-12) : le motif de refus et la synthèse avant appel, contexte admin seulement
-  kind text not null default 'chat' check (kind in ('chat','reply_suggestion','listing_description','rejection_reason','case_summary')),
+  kind text not null default 'chat' check (kind in ('chat','reply_suggestion','listing_description','rejection_reason','case_summary','listing_summary')),
   created_at timestamptz not null default now()
 );
 
@@ -1267,7 +1268,7 @@ Ordre du contenu (mise en page mobile et desktop : `docs/DESIGN.md` 12.7 et 12.8
 6. **« Ce que vous savez avant de visiter »** : une seule `KeyFactsTable` qui regroupe les caractéristiques complètes et les informations utiles avant visite : charges, taxe foncière, lots, travaux votés et procédures (issus de l'analyse des documents en L3 ; « Non renseigné » sinon), documents disponibles avec « Demander l'accès ». En desktop, la carte vient sous la `KeyFactsTable`, sur la largeur de la colonne (`docs/DESIGN.md` 12.8, L1-16).
 7. Carte avec la zone approximative (cercle de 400 m de rayon autour de `public_location`), jamais l'adresse, et « Voir la rue » (Street View le plus proche du point public), chargée quand le bloc approche de l'écran, sans clic (L1-16, L1-63).
 7 bis. **Informations réglementaires** (L1-65, L1-66), sous les caractéristiques : « Non soumis au DPE (motif : …). » (le motif relu par l'équipe), ou, pour un logement, « Logement à consommation énergétique excessive. » (classes de `dpe_rules` : F et G) et la fourchette des dépenses annuelles d'énergie avec l'année des prix (« abonnements compris ») ; un local professionnel (DPE tertiaire) n'a ni l'une ni l'autre ; pour toutes les annonces, terrain compris : « Les informations sur les risques auxquels ce bien est exposé sont disponibles sur le site Géorisques : www.georisques.gouv.fr » (lien). La consommation (kWh/m²/an) et les émissions (kg CO₂/m²/an) ne figurent à côté de leur classe (« D · 215 kWh/m²/an ») que si la règle du type de DPE le dit (`dpe_rules.figures_public`, désactivé : avec le code postal, ces deux chiffres désignent un seul DPE, ou quelques-uns, dans les données ouvertes de l'ADEME, donc l'adresse ; Q78). La date et le numéro du DPE ne sont jamais publics : avec la commune et les classes, les données ouvertes de l'ADEME donnent l'adresse du bien.
-8. Résumé de l'assistant (L2) : 2 phrases factuelles générées à la publication, stockées, régénérées à chaque modification. `AssistantNote` (encart `--lk-blue-tint`) ; en desktop, sous la `PriceColumn`.
+8. Résumé de l'assistant (L2) : 2 phrases factuelles générées à la publication, stockées, régénérées à chaque modification. `AssistantNote` (encart `--lk-blue-tint`) ; en desktop, sous la `PriceColumn`. Mise en œuvre (L2-05, `DECISIONS.md` 2026-11-15) : écrit par une tâche planifiée toutes les 5 minutes (jamais par le vendeur), à partir de ce que le public lit de l'annonce ; retiré dès qu'une modification en demande un nouveau ; lu par `public_listing_summary`.
 9. Barre d'action : mobile, `ActionBar` fixée en bas (« Contacter le vendeur » + bouton visite) ; desktop, `PriceColumn` collante à droite avec `PriceBlock`, `ContactCard` et les boutons « Contacter le vendeur », « Demander une visite », « Faire une offre » (L2).
 
 Règles d'accès aux actions :
@@ -2027,6 +2028,7 @@ Voir `CLAUDE.md` section 13. Détail :
 | `/api/cron/visit-reminders` | `0 6 * * *` | Rappels J-1 |
 | `/api/cron/visit-feedback` | `0 8 * * *` | Demandes de retour J+1 |
 | `/api/cron/send-notification-emails` | `*/5 * * * *` | Envoi des emails de notification en attente (regroupement) |
+| `/api/cron/listing-summaries` | `*/5 * * * *` | Résumés d'annonce demandés (L2-05) : 6 annonces au plus par passage, un appel du modèle rapide chacune |
 | `/api/cron/anonymize-deleted` | `0 2 * * 0` | Anonymisation des comptes supprimés depuis plus de 30 jours |
 | *(en base, sans route)* `subscriptions-daily` | `23 7 * * *` | Formules (L1-40) : `subscriptions_daily()` remet la vente d'un bien dont la formule est échue sur la formule en vigueur (Autonomie) et prévient une fois le propriétaire d'une formule qui se termine dans 30 jours (`plan.ending`, email par le job des notifications) |
 | *(en base, sans route)* `purge-estimations` | `53 3 * * *` | Analyses de valeur faites sans compte : `estimations_purge()` supprime celles qui ont plus de 12 mois et ne sont rattachées ni à un compte ni à un bien (politique de confidentialité, `DECISIONS.md` 2026-11-09) |
