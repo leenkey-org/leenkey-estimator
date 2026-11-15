@@ -220,9 +220,9 @@ test("un acquéreur sur téléphone : sa page depuis son accueil, une recherche 
   }).toPass({ timeout: 15_000 });
   // The questions proposed fit the screen of a phone.
   await expect(page.getByRole("button", { name: /^Je cherche un 3/ })).toBeVisible();
-  expect(
-    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
-  ).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
   const thread = page.getByRole("log", { name: "Conversation avec l'assistant" });
   await expect(async () => {
     await page.getByLabel("Votre question").fill(SEARCH);
