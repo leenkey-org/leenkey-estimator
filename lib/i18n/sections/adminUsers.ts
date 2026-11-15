@@ -87,6 +87,10 @@ export const frAdminUsers = {
     deletedAccount: "un compte supprimé",
     closed: "Close",
     lastMessage: (when: string) => `Dernier message : ${when}`,
+    // L2-07: the offers the account sent or received, read in /admin/offres.
+    offers: "Offres",
+    offersNote: "Les offres d'achat que ce compte a envoyées ou reçues.",
+    offersLink: "Voir ses offres",
     cases: "Dossiers",
     casesEmpty: "Aucun dossier.",
     caseStatus: {

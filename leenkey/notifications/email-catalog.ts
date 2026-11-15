@@ -6,6 +6,7 @@ import { emailSafeText } from "@/core/notifications/user-text";
 import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
 import { AccountsCreatedEmail, accountsCreatedSubject } from "@/emails/accounts-created";
 import { CaseRequestsEmail, caseRequestsSubject } from "@/emails/case-requests";
+import { OffersAcceptedEmail, offersAcceptedSubject } from "@/emails/offers-accepted";
 import { ListingToReviewEmail, listingToReviewSubject } from "@/emails/listing-submitted";
 import { ListingsToReviewEmail, listingsToReviewSubject } from "@/emails/listings-to-review";
 import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
@@ -66,6 +67,9 @@ const POLICIES: Record<string, EmailPolicy> = {
   // L2-04b: an offer withdrawn (the seller), an offer expired (its buyer, its seller).
   "offer.withdrawn": { audience: "recipient", preference: "email_offers", throttleMinutes: 0 },
   "offer.expired": { audience: "recipient", preference: "email_offers", throttleMinutes: 0 },
+  // L2-07: an offer accepted on a sale with an adviser, to the team: the first at once, the
+  // next ones together.
+  "offer.accepted_team": { audience: "team", throttleMinutes: 20 },
 };
 
 export function emailPolicy(type: string): EmailPolicy | null {
@@ -290,6 +294,34 @@ async function caseRequests(email: PlannedEmail): Promise<RenderedEmail | null> 
   );
 }
 
+/** Offers accepted on sales with an adviser (L2-07), to the team: one line each. */
+async function offersAccepted(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const [first] = email.items;
+  if (!first) return null;
+  const count = email.items.length;
+  const items = email.items.map((item) => {
+    const price = Number(item.data.price_cents);
+    return {
+      reference: text(item.data.reference) ?? "",
+      property:
+        [text(item.data.listing_reference), emailSafeText(item.data.city)]
+          .filter(Boolean)
+          .join(" · ") || null,
+      price: Number.isFinite(price) && price > 0 ? formatAmount(price) : null,
+    };
+  });
+  return rendered(
+    offersAcceptedSubject(count, text(first.data.listing_reference)),
+    OffersAcceptedEmail({
+      items,
+      url: absoluteUrl(
+        count > 1 ? "/admin/offres?statut=acceptees" : (first.link ?? "/admin/offres"),
+      ),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
 /** Withdrawals to refund (L1-40), to the team: one line each. */
 async function withdrawalsToProcess(email: PlannedEmail): Promise<RenderedEmail | null> {
   if (email.items.length === 0) return null;
@@ -464,6 +496,8 @@ export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEm
       return offerWithdrawn(email);
     case "offer.expired":
       return offerExpired(email);
+    case "offer.accepted_team":
+      return offersAccepted(email);
     default:
       return Promise.resolve(null);
   }

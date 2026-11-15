@@ -1012,6 +1012,7 @@ export const emails = {
     withdrawalReceived: "Accusé de réception d'une rétractation (vendeur)",
     withdrawalsToProcess: "Rétractations à rembourser (équipe)",
     planEnding: "Formule qui se termine dans 30 jours (vendeur)",
+    offersAccepted: "Offre acceptée sur une vente avec conseiller (équipe)",
     planPurchased: "Formule souscrite ou passage à une formule supérieure (équipe)",
     messageSeller: "Nouveau message (vendeur)",
     messagesBuyer: "Nouveaux messages (acquéreur)",

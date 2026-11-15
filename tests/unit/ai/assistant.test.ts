@@ -619,6 +619,7 @@ describe("the tools of the seller", () => {
       "get_sale_progress",
       "get_upgrade_context",
       "summarize_contacts",
+      "summarize_offer",
       "update_listing_description",
       "update_listing_price",
     ]);

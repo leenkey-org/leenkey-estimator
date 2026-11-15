@@ -460,8 +460,12 @@ test("un acquéreur fait une offre en sept étapes et l'envoie ; son vendeur la 
     );
     if (size) await page.setViewportSize(size);
     await bell(page).click();
+    // This offer, by the title of its listing: buyer_c may have others accepted.
     await expect(
-      bellPanel(page).getByRole("link").filter({ hasText: "Votre offre d'achat a été acceptée" }),
+      bellPanel(page)
+        .getByRole("link")
+        .filter({ hasText: "Votre offre d'achat a été acceptée" })
+        .filter({ hasText: "2 pièces de 45 m² proche du centre" }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
   });

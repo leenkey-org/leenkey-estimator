@@ -465,6 +465,52 @@ describe("emails of an offer (L2-04a)", () => {
     expect(text).not.toMatch(/validé|\bon\b|@example|\.pdf/i);
   });
 
+  it("tells the team an offer was accepted on a sale with an adviser, never who the buyer is", async () => {
+    const { renderNotificationEmail, emailPolicy } =
+      await import("@/leenkey/notifications/email-catalog");
+    expect(emailPolicy("offer.accepted_team")).toEqual({ audience: "team", throttleMinutes: 20 });
+    const accepted = (id: string, reference: string, price: number) =>
+      queued({
+        type: "offer.accepted_team",
+        profileId: "admin",
+        email: null,
+        firstName: null,
+        groupKey: "offers:accepted",
+        link: `/admin/offres/${id}`,
+        data: {
+          ...offer,
+          reference,
+          price_cents: price,
+          listing_reference: "LK-0042",
+          city: "Savigny-sur-Orge",
+          plan: "accompagne",
+          asking_price_cents: 35_000_000,
+          buyer_first_name: "Chloé",
+        },
+      });
+    const one = await renderNotificationEmail(
+      planned([accepted("o1", "LK-2026-00012", 33_800_000)], { audience: "team" }),
+    );
+    const text = (one?.text ?? "").replace(/[\u00A0\u202F]/g, " ");
+    expect(one?.subject).toBe("Offre acceptée sur une vente avec conseiller (LK-0042)");
+    expect(text).toContain("Une offre d'achat a été acceptée sur une vente avec conseiller.");
+    expect(text).toContain("Offre LK-2026-00012 · LK-0042 · Savigny-sur-Orge");
+    expect(text).toContain("Prix accepté : 338 000 €");
+    expect(one?.html).toContain("https://leenkey-v2.vercel.app/admin/offres/o1");
+    expect(text).not.toMatch(/Chloé|validé|\bon\b|@example/i);
+
+    const two = await renderNotificationEmail(
+      planned([accepted("o1", "LK-2026-00012", 33_800_000), accepted("o2", "LK-2026-00013", 0)], {
+        audience: "team",
+      }),
+    );
+    expect(two?.subject.replace(/[\u00A0\u202F]/g, " ")).toBe(
+      "2 offres acceptées sur des ventes avec conseiller",
+    );
+    expect(two?.text).toContain("Offre à lire dans le back office.");
+    expect(two?.html).toContain("https://leenkey-v2.vercel.app/admin/offres?statut=acceptees");
+  });
+
   it("tells the buyer the answer of the seller, with its message", async () => {
     const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
     const declined = await renderNotificationEmail(

@@ -257,3 +257,54 @@ export const reportCommandSchema = z.discriminatedUnion("action", [
 ]);
 
 export type ReportCommand = z.infer<typeof reportCommandSchema>;
+
+// L2-07: the offers of the back office (SPEC-V2 section 17).
+
+/** Filters of /admin/offres (without one: every offer sent), with their URL value. */
+export const ADMIN_OFFER_FILTERS = [
+  { status: "waiting", param: "en-attente" },
+  { status: "accepted", param: "acceptees" },
+  { status: "declined", param: "refusees" },
+  { status: "ended", param: "terminees" },
+] as const;
+
+export type AdminOfferFilter = (typeof ADMIN_OFFER_FILTERS)[number]["status"];
+
+export type AdminOffersQuery = {
+  status?: AdminOfferFilter;
+  query?: string;
+  /** The offers an account sent or received (from its sheet). */
+  account?: string;
+};
+
+const OFFER_PARAMS = ADMIN_OFFER_FILTERS.map((filter) => filter.param) as [string, ...string[]];
+
+/** /admin/offres?statut=en-attente&q=LK-2026-00012&compte=<id>; anything unknown is ignored. */
+export function parseAdminOffersQuery(
+  params: Record<string, string | string[] | undefined>,
+): AdminOffersQuery {
+  const param = z.enum(OFFER_PARAMS).safeParse(firstOf(params.statut));
+  const query = z.string().trim().min(1).max(100).safeParse(firstOf(params.q));
+  const account = z.string().uuid().safeParse(firstOf(params.compte));
+  return {
+    status: param.success
+      ? ADMIN_OFFER_FILTERS.find((filter) => filter.param === param.data)?.status
+      : undefined,
+    query: query.success ? query.data : undefined,
+    account: account.success ? account.data : undefined,
+  };
+}
+
+/** Address of the list of the offers for a filter, a search and an account. */
+export function adminOffersHref({ status, query, account }: AdminOffersQuery): string {
+  const params = new URLSearchParams();
+  const param = ADMIN_OFFER_FILTERS.find((filter) => filter.status === status)?.param;
+  if (param) params.set("statut", param);
+  if (query) params.set("q", query);
+  if (account) params.set("compte", account);
+  const search = params.toString();
+  return search ? `/admin/offres?${search}` : "/admin/offres";
+}
+
+/** « Marquer comme analysée » (SPEC-V2 17). */
+export const offerAnalysedSchema = z.object({ offerId: z.string().uuid() });

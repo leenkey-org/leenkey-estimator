@@ -2273,6 +2273,50 @@ export type Database = {
           id: string
         }[]
       }
+      admin_offer_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          accepted: number
+          declined: number
+          ended: number
+          total: number
+          waiting: number
+        }[]
+      }
+      admin_offer_mark_analysed: {
+        Args: { p_offer: string }
+        Returns: string
+      }
+      admin_offers: {
+        Args: {
+          p_status?: string
+          p_query?: string
+          p_account?: string
+          p_limit?: number
+        }
+        Returns: {
+          asking_price_cents: number
+          submitted_at: string
+          validity_until: string
+          seller_first_name: string
+          buyer_id: string
+          property_id: string
+          id: string
+          reference: string
+          version: number
+          status: Database["public"]["Enums"]["offer_status"]
+          price_cents: number
+          seller_id: string
+          listing_reference: string
+          city: string
+          buyer_last_name: string
+          answered_at: string
+          buyer_first_name: string
+          listing_id: string
+          seller_last_name: string
+          plan: Database["public"]["Enums"]["plan_code"]
+        }[]
+      }
       admin_report_counts: {
         Args: Record<PropertyKey, never>
         Returns: {

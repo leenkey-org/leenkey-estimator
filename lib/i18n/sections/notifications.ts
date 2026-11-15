@@ -148,6 +148,12 @@ export const frNotifications = {
       detail: (price: string | null, title: string | null) =>
         [price, title ? `«\u00A0${title}\u00A0»` : null].filter(Boolean).join(" · ") || null,
     },
+    // L2-07: for the team, an offer accepted on a property whose plan has an adviser.
+    offerAcceptedTeam: {
+      title: "Offre acceptée sur une vente avec conseiller",
+      detail: (price: string | null, reference: string | null, city: string | null) =>
+        [price, [reference, city].filter(Boolean).join(" · ")].filter(Boolean).join(" · ") || null,
+    },
     offerExpired: {
       buyer: "Votre offre d'achat a expiré",
       seller: "Une offre d'achat reçue a expiré",

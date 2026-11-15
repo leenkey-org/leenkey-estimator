@@ -342,6 +342,27 @@ export const mockModel: ModelCall = async (request, options) => {
     }
   }
 
+  // summarize_offer (L2-07): « Que disent les offres reçues ? ».
+  if (/offres? reçues?/i.test(asked)) {
+    if (!result) return message([call("get_my_properties", {})], "tool_use");
+    if (result.name === "get_my_properties") {
+      const propertyId =
+        conversationProperty(file) ?? /"propertyId":"([0-9a-f-]{36})"/.exec(result.content)?.[1];
+      if (!propertyId) return say("Vous n'avez pas encore de bien.");
+      return message([call("summarize_offer", { propertyId })], "tool_use");
+    }
+    if (result.name === "summarize_offer") {
+      const total = /"total":(\d+)/.exec(result.content)?.[1];
+      const price = /"offerPrice":"([^"]*)"/.exec(result.content)?.[1];
+      if (!total) return say("Les offres n'ont pas pu être lues.");
+      return say(
+        total === "0"
+          ? "Vous n'avez pas encore reçu d'offre pour ce bien."
+          : `Vous avez reçu ${total} offre(s) pour ce bien. La plus récente propose ${price ?? "un prix"}.`,
+      );
+    }
+  }
+
   if (wantsDescription || wantsPrice) {
     const tool = wantsDescription ? "update_listing_description" : "update_listing_price";
     if (!result) return message([call("get_my_properties", {})], "tool_use");

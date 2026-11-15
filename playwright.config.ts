@@ -12,6 +12,11 @@ const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH;
 // stack (see each file). `--no-deps` runs one of them alone.
 const MUTATING =
   /(account-live|admin-assistant-live|advisor-live|admin-cases|admin-listings|admin-users|assistant-live|billing|assistant-suggestions|buyer-assistant-live|buyer-profile-live|case-request-live|journeys-live|messaging-live|notifications-live|offer-live|property-creation|property-edit|property-from-estimation|property-photos|property-status)\.spec\.ts$/;
+// The offers of the back office (L2-07) move the sale of LK-0008, whose case
+// tests/e2e/admin-cases.spec.ts works on, and add an accepted offer to the
+// bell of buyer_c, which tests/e2e/offer-live.spec.ts reads: after all the
+// other specs that change the seed, in its own project.
+const AFTER_MUTATIONS = /admin-offers-live\.spec\.ts$/;
 const desktop = { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } };
 
 // Cookie consent already answered (refused) so that the banner of L1-37
@@ -60,14 +65,20 @@ export default defineConfig({
   projects: [
     {
       name: "mobile",
-      testIgnore: MUTATING,
+      testIgnore: [MUTATING, AFTER_MUTATIONS],
       use: { ...devices["Pixel 7"], viewport: { width: 390, height: 844 } },
     },
-    { name: "desktop", testIgnore: MUTATING, use: desktop },
+    { name: "desktop", testIgnore: [MUTATING, AFTER_MUTATIONS], use: desktop },
     {
       name: "seed-mutations",
       testMatch: MUTATING,
       dependencies: ["mobile", "desktop"],
+      use: desktop,
+    },
+    {
+      name: "seed-offers",
+      testMatch: AFTER_MUTATIONS,
+      dependencies: ["seed-mutations"],
       use: desktop,
     },
   ],
