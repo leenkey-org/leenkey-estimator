@@ -10,7 +10,7 @@
 -- file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(40);
+select plan(39);
 \ir _plan.psql
 
 -- The plans and their rights (reference data, absent from a bare database).
