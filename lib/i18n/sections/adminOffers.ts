@@ -37,7 +37,6 @@ export const frAdminOffers = {
     property: "Bien",
     plan: "Formule",
     price: "Prix proposé",
-    gap: "Écart au prix affiché",
     status: "Statut",
     sent: "Envoyée",
   },

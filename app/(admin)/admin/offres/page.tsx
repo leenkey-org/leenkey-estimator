@@ -24,6 +24,7 @@ import {
 } from "@/leenkey/admin/offers/queries";
 import { OfferStatusBadge } from "@/leenkey/offers/components/offer-status-badge";
 import { gapLabel, offerGap } from "@/leenkey/offers/figures";
+import { formatNumericDateTime } from "@/leenkey/offers/document";
 import { formatDate, formatPrice } from "@/lib/format";
 import { frAdminOffers } from "@/lib/i18n/sections/adminOffers";
 import {
@@ -47,7 +48,6 @@ const COLUMNS = [
   t.table.property,
   t.table.plan,
   t.table.price,
-  t.table.gap,
   t.table.status,
   t.table.sent,
 ];
@@ -202,17 +202,23 @@ export default async function AdminOffersPage({ searchParams }: Props) {
                     <span className="text-lk-ink-3">—</span>
                   )}
                 </DataTableCell>
-                <DataTableCell className="whitespace-nowrap font-semibold text-lk-ink tabular">
-                  {row.priceCents !== null ? formatPrice(row.priceCents) : "—"}
-                </DataTableCell>
-                <DataTableCell className="whitespace-nowrap text-lk-ink-2 tabular">
-                  {gapOf(row) ?? "—"}
+                {/* The price and, under it, its gap to the price of the listing: seven
+                    columns did not fit beside the menu at 1 280 px. */}
+                <DataTableCell className="whitespace-nowrap tabular">
+                  <span className="flex flex-col gap-0.5">
+                    <span className="font-semibold text-lk-ink">
+                      {row.priceCents !== null ? formatPrice(row.priceCents) : "—"}
+                    </span>
+                    {gapOf(row) ? (
+                      <span className="text-lk-caption text-lk-ink-3">{gapOf(row)}</span>
+                    ) : null}
+                  </span>
                 </DataTableCell>
                 <DataTableCell>
                   <OfferStatusBadge status={row.status} />
                 </DataTableCell>
                 <DataTableCell className="whitespace-nowrap text-lk-ink-2">
-                  {row.submittedAt ? formatDate(row.submittedAt, now) : "—"}
+                  {row.submittedAt ? formatNumericDateTime(row.submittedAt) : "—"}
                 </DataTableCell>
               </DataTableRow>
             ))}
