@@ -148,6 +148,7 @@ describe("wording of the notifications (from type and data)", () => {
         "listing.rejected",
         "listing.revised",
         "message.new",
+        "offer.accepted_team",
         "offer.answered",
         "offer.expired",
         "offer.received",

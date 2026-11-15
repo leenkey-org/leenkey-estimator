@@ -15,6 +15,7 @@ import {
 import { ListingsToReviewEmail, listingsToReviewSubject } from "@/emails/listings-to-review";
 import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
 import { PlanActivatedEmail, planActivatedSubject } from "@/emails/plan-activated";
+import { OffersAcceptedEmail, offersAcceptedSubject } from "@/emails/offers-accepted";
 import { PlanEndingEmail, planEndingSubject } from "@/emails/plan-ending";
 import { WithdrawalReceivedEmail, withdrawalReceivedSubject } from "@/emails/withdrawal-received";
 import {
@@ -235,6 +236,21 @@ function previews(): Preview[] {
         property: s.reference,
         endsOn: "2 décembre 2026",
         planUrl: `${site}/vendeur/formule`,
+        siteUrl: site,
+      }),
+    },
+    {
+      name: t.names.offersAccepted,
+      subject: offersAcceptedSubject(1, s.reference),
+      element: OffersAcceptedEmail({
+        items: [
+          {
+            reference: "LK-2026-00012",
+            property: `${s.reference} · Savigny-sur-Orge`,
+            price: formatPrice(33800000),
+          },
+        ],
+        url: `${site}/admin/offres`,
         siteUrl: site,
       }),
     },

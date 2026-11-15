@@ -294,6 +294,21 @@ const CATALOG: Record<string, Entry> = {
       return t.offerReceived.detail(price ? formatPrice(price) : null, text(data.title));
     },
   },
+  // L2-07: an offer accepted on a property whose plan has an adviser, for the team.
+  "offer.accepted_team": {
+    icon: FileSignature,
+    tone: "blue",
+    filters: [],
+    title: () => t.offerAcceptedTeam.title,
+    detail: (data) => {
+      const price = amount(data.price_cents);
+      return t.offerAcceptedTeam.detail(
+        price ? formatPrice(price) : null,
+        text(data.listing_reference),
+        text(data.city),
+      );
+    },
+  },
   "offer.viewed": {
     icon: Eye,
     tone: "stone",

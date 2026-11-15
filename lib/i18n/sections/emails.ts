@@ -298,6 +298,26 @@ export const frEmails = {
     action: (count: number) => (count > 1 ? "Voir les signalements" : "Voir le signalement"),
   },
   // L1-31: the requests written to the team since the last email (cron of L1-22, grouped).
+  // L2-07: offers accepted on sales with an adviser since the last email, to the team.
+  offersAccepted: {
+    subject: (count: number, reference: string | null) =>
+      count > 1
+        ? `${count}\u00A0offres acceptées sur des ventes accompagnées`
+        : reference
+          ? `Offre acceptée sur une vente accompagnée (${reference})`
+          : "Offre acceptée sur une vente accompagnée",
+    title: (count: number) => (count > 1 ? "Des offres acceptées" : "Une offre acceptée"),
+    text: (count: number) =>
+      count > 1
+        ? `${count}\u00A0vendeurs accompagnés ont accepté une offre d'achat.`
+        : "Un vendeur accompagné a accepté une offre d'achat.",
+    item: (reference: string, property: string | null) =>
+      property ? `Offre ${reference} · ${property}` : `Offre ${reference}`,
+    price: (price: string) => `Prix accepté : ${price}`,
+    noPrice: "Offre à lire dans le back office.",
+    next: "La suite revient au vendeur et à son notaire ; la formule de la vente prévoit l'accompagnement d'un conseiller.",
+    action: (count: number) => (count > 1 ? "Voir les offres" : "Ouvrir l'offre"),
+  },
   caseRequests: {
     subject: (count: number, reference: string | null) =>
       count > 1

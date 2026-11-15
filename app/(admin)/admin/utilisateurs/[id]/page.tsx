@@ -25,7 +25,7 @@ import { frFinancingDocument } from "@/lib/i18n/sections/financingDocument";
 import { frFinancingStatus } from "@/lib/i18n/sections/financingStatus";
 import { frListing } from "@/lib/i18n/sections/listing";
 import { frPropertyType } from "@/lib/i18n/sections/propertyType";
-import { adminUsersHref } from "@/lib/validations/admin";
+import { adminOffersHref, adminUsersHref } from "@/lib/validations/admin";
 import { isFinancingDocumentOld } from "@/lib/validations/buyer";
 import { AdminPage } from "../../_components/admin-page";
 
@@ -127,8 +127,8 @@ const empty = "text-lk-secondary text-lk-ink-3";
 // metadata only, never their messages), its cases and its history
 // (audit_log); « Suspendre le compte » with a motive sent by email, or
 // « Réactiver le compte »; for a buyer, its proofs of financing with
-// « Marquer le justificatif comme vérifié » (L2-02). Not yet here: its offers
-// (L2-07). The page checks the admin role itself.
+// « Marquer le justificatif comme vérifié » (L2-02); its offers, in the list
+// of the offers (L2-07). The page checks the admin role itself.
 export default async function AdminUserPage({ params }: Props) {
   const admin = await requireAdmin();
   const { id } = await params;
@@ -389,6 +389,19 @@ export default async function AdminUserPage({ params }: Props) {
               })}
             </ul>
           )}
+        </Section>
+
+        {/* Its offers, sent or received (L2-07): read in the list of the offers. */}
+        <Section id="offres" title={d.offers}>
+          <p className={empty}>{d.offersNote}</p>
+          <div>
+            <Link
+              href={adminOffersHref({ account: user.id })}
+              className="inline-flex min-h-11 items-center text-lk-secondary font-semibold text-lk-blue underline-offset-2 hover:underline"
+            >
+              {d.offersLink}
+            </Link>
+          </div>
         </Section>
 
         <Section id="dossiers" title={d.cases}>

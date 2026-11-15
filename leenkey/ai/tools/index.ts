@@ -12,6 +12,7 @@ import { getUpgradeContextTool } from "./get-upgrade-context";
 import { prefillOfferTool } from "./prefill-offer";
 import { searchListingsTool } from "./search-listings";
 import { summarizeContactsTool } from "./summarize-contacts";
+import { summarizeOfferTool } from "./summarize-offer";
 import { updateListingDescriptionTool } from "./update-listing-description";
 import { updateListingPriceTool } from "./update-listing-price";
 
@@ -21,8 +22,8 @@ import { updateListingPriceTool } from "./update-listing-price";
 // model of the conversation: the whole FAQ is in its prompt (Q69, option a).
 // The buyer (L2-06): search_listings, get_listing_public, prefill_offer and
 // its own create_case (two tools of the same name, one per context). To come
-// with their tasks: summarize_offer (L2-07), summarize_shared_documents,
-// create_alert and propose_visit_slot (L3).
+// with their tasks: summarize_shared_documents, create_alert and
+// propose_visit_slot (L3).
 
 const TOOLS: readonly AnyAiTool[] = [
   getMyPropertiesTool,
@@ -30,6 +31,7 @@ const TOOLS: readonly AnyAiTool[] = [
   getSaleProgressTool,
   getListingStatsTool,
   summarizeContactsTool,
+  summarizeOfferTool,
   getUpgradeContextTool,
   draftListingDescriptionTool,
   updateListingDescriptionTool,
