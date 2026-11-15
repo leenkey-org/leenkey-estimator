@@ -1617,7 +1617,7 @@ Chaque outil : `core/ai/tools/<nom>.ts` exportant `{ name, description, input: Z
 | `draft_listing_description` | seller | non | Produit une proposition de description, pas écrite : rendue à l'assistant, qui la propose avec `update_listing_description` et sa confirmation (décision du 2026-11-02) ; à l'étape « Prix et description », la même rédaction s'affiche en `AssistantSuggestion` |
 | `update_listing_description` | seller | **oui** | Remplace la description (confirmation avec avant / après) |
 | `update_listing_price` | seller | **oui** | Modifie le prix (confirmation, rappel de l'écart à l'estimation) |
-| `summarize_offer` | seller | non | Répond aux questions du vendeur sur une offre reçue à partir de sa `synthesis`, dans la conversation avec l'assistant (L2). Pas de bouton « Expliquer cette offre » en V2 (V3). |
+| `summarize_offer` | seller | non | Répond aux questions du vendeur sur une offre reçue à partir de sa `synthesis`, dans la conversation avec l'assistant (L2). Pas de bouton « Expliquer cette offre » en V2 (V3). Depuis L2-07 : les 10 offres les plus récentes d'un bien, avec la synthèse calculée à la lecture (gabarits, `offers.synthesis` reste vide) ; de l'acquéreur, le prénom et la ville seulement ; jamais un conseil d'accepter, de refuser ou de négocier. |
 | `summarize_contacts` | seller | non | Résume les contacts reçus : qui, statut de financement, dernière activité |
 | `create_case` | seller, buyer | **oui** | Crée un `case` avec résumé de la conversation (Autonomie et acquéreurs), via la fonction SQL `create_case` (`security definer`). Vendeur : L1-31 (objet et résumé relus avant l'envoi ; refusé pour un bien dont la formule comprend un conseiller, renvoyé vers `contact_advisor`) ; acquéreur : L2-06 |
 | `contact_advisor` | seller (`advisor`) | **oui** | Poste un résumé de la question dans la conversation conseiller du bien |
@@ -1965,6 +1965,8 @@ Boîte partagée des conversations conseiller (`advisor`) : non-lues en tête, f
 ### Offres `/admin/offres`
 
 Lecture seule : toutes les offres et leur journal, filtres, accès à la synthèse et au PDF. Pour les biens en formule payante, bouton « Marquer comme analysée » (tâche « Offre analysée avec le conseiller »). Saisie des dates d'avant-contrat et de départ du délai de rétractation pour les biens en Sérénité.
+
+Mise en œuvre (L2-07, `DECISIONS.md` 2026-11-15) : liste des offres envoyées (jamais un brouillon) avec les filtres « En attente », « Acceptées », « Refusées », « Terminées », une recherche et les offres d'un compte depuis sa fiche ; fiche en lecture seule (l'équipe n'accepte, ne refuse et ne modifie jamais une offre). « Marquer comme analysée » dépend du droit `human_offer_analysis` de la formule du bien, la saisie de l'avant-contrat du droit `notary_coordination` ; les deux sont tracées dans `audit_log`. À l'acceptation d'une offre sur une vente avec conseiller, chaque admin est notifié (`offer.accepted_team`, application et email groupé de l'équipe).
 
 ### Signalements `/admin/signalements`
 
