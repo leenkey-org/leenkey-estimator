@@ -16,8 +16,9 @@
 -- listing went off line (or before the buyer emptied their project) would
 -- take a price for a form that no longer opens. The draft of the buyer on
 -- this listing is the one that changes (offers_one_draft_idx); without one,
--- it is created, as the first step of the form does. Its declarations are unticked, as after any change
--- of a step: what was declared is no longer what is written.
+-- it is created, as the first step of the form does. Its declarations are
+-- unticked, as after any change of a step: what was declared is no longer
+-- what is written.
 --
 -- No table, no policy. The file only adds.
 
