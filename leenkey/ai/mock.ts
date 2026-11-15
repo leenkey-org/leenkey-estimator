@@ -23,6 +23,11 @@ export const MOCK_CASE_SUMMARY =
   "Points à aborder : les tâches de Leenkey de l'étape en cours.\n" +
   "À éviter : rien de particulier.";
 
+/** The summary of a listing on its public page (L2-05). */
+export const MOCK_LISTING_SUMMARY =
+  "Résumé de l'assistant de test : un bien présenté d'après sa fiche et sa description. " +
+  "Ses caractéristiques sont reprises telles que le vendeur les a renseignées.";
+
 export const MOCK_DESCRIPTIONS = [
   "Bien au calme, proche des commerces et des transports. Description proposée par l'assistant " +
     "de test : séjour lumineux, cuisine équipée, chambres et rangements. Chauffage individuel.",
@@ -283,13 +288,19 @@ export const MOCK_LISTING_DESCRIPTION =
 
 /** The suggestions of the tests: the same text for the same kind, no call to the API. */
 export function mockText(
-  kind: "reply_suggestion" | "listing_description" | "rejection_reason" | "case_summary",
+  kind:
+    | "reply_suggestion"
+    | "listing_description"
+    | "rejection_reason"
+    | "case_summary"
+    | "listing_summary",
 ): TextCall {
   const answer = {
     reply_suggestion: MOCK_REPLY,
     listing_description: MOCK_LISTING_DESCRIPTION,
     rejection_reason: MOCK_REJECTION_REASON,
     case_summary: MOCK_CASE_SUMMARY,
+    listing_summary: MOCK_LISTING_SUMMARY,
   }[kind];
   return async () => message([text(answer)], "end_turn");
 }

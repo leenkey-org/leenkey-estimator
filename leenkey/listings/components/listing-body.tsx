@@ -107,6 +107,7 @@ export function ListingBody({
   galleryTopRight,
   aside,
   map,
+  note,
   inlinePrice = false,
   level = 1,
   className,
@@ -121,6 +122,8 @@ export function ListingBody({
   aside: ReactNode;
   /** The map of the area (L1-16), on the public page. */
   map?: ReactNode;
+  /** The summary of the assistant (L2-05), under 1024 px; beside the price above. */
+  note?: ReactNode;
   /** The price under the facts line under 1024 px: the preview, without the bar of the page. */
   inlinePrice?: boolean;
   /**
@@ -256,6 +259,7 @@ export function ListingBody({
               {map}
             </Block>
           ) : null}
+          {note ? <div className="lg:hidden">{note}</div> : null}
         </div>
 
         <aside className="hidden pt-4 lg:block">{aside}</aside>
