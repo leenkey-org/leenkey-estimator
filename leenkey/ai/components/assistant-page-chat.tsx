@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SquarePen } from "lucide-react";
 import { frAssistant } from "@/lib/i18n/sections/assistant";
+import type { AssistantContext } from "@/lib/validations/assistant";
 import type { AssistantConversation } from "../types";
 import { AssistantChat } from "./assistant-chat";
 import { AssistantPageHeader } from "./assistant-page-header";
@@ -13,22 +14,30 @@ const fr = { assistant: frAssistant } as const;
 const t = fr.assistant;
 
 /**
- * The page /assistant of a seller: its header with « Nouvelle conversation »
+ * The page /assistant of a seller or of a buyer: its header with « Nouvelle conversation »
  * (an icon on a phone, its words from 768 px), which starts over in the
  * browser, and the conversation. The conversation is never read again by the
  * server while the page is open: a confirmation does not reload it.
  */
 export function AssistantPageChat({
+  context,
   initial,
   propertyId,
+  listingId = null,
+  back,
 }: {
+  context: AssistantContext;
   initial: AssistantConversation;
   propertyId: string | null;
+  /** The listing a buyer came from. */
+  listingId?: string | null;
+  back?: { href: string; label: string };
 }) {
   const [start, setStart] = useState({ key: 0, conversation: initial });
   return (
     <>
       <AssistantPageHeader
+        back={back}
         action={
           <button
             type="button"
@@ -51,8 +60,9 @@ export function AssistantPageChat({
       <AssistantChat
         key={start.key}
         layout="page"
-        context="seller"
+        context={context}
         propertyId={propertyId}
+        listingId={listingId}
         initial={start.conversation}
         className="bg-lk-bg"
       />

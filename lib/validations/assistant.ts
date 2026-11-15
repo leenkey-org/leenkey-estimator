@@ -6,8 +6,8 @@ import { z } from "zod";
 /** A message to the assistant: 2 000 characters at most. */
 export const ASSISTANT_MESSAGE_MAX = 2_000;
 
-/** The contexts open to the browser (the buyer with lot 2, the admin with L1-30). */
-export const ASSISTANT_CONTEXTS = ["seller"] as const;
+/** The contexts open to the browser: the seller (L1-28), the buyer (L2-06). */
+export const ASSISTANT_CONTEXTS = ["seller", "buyer"] as const;
 export type AssistantContext = (typeof ASSISTANT_CONTEXTS)[number];
 
 const common = {
@@ -15,6 +15,8 @@ const common = {
   context: z.enum(ASSISTANT_CONTEXTS),
   /** The property the conversation is about (a new conversation only). */
   propertyId: z.string().uuid().nullish(),
+  /** The listing the buyer is reading when they write (the page the assistant is opened from). */
+  listingId: z.string().uuid().nullish(),
 };
 
 /** A message of the person, or the turn going on after their confirmations. */

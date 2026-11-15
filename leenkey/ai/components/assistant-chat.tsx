@@ -10,13 +10,16 @@ import { ChangeBlock, ConfirmActionCard } from "@/components/shared/confirm-acti
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { MessageBubble } from "@/components/shared/message-bubble";
 import { ROUTES } from "@/leenkey/navigation/spaces";
+import { offerFormPath } from "@/leenkey/offers/paths";
 import { formatPrice } from "@/lib/format";
 import { frAssistant } from "@/lib/i18n/sections/assistant";
 import { cn } from "@/lib/utils";
 import { ASSISTANT_MESSAGE_MAX, type AssistantContext } from "@/lib/validations/assistant";
 import { assistantHelp, confirmToolCall, declineToolCall, type AssistantHelp } from "../actions";
 import { actionPreview, type ActionPreview } from "../previews";
+import { shownListings } from "../shown";
 import { readEvents, type StreamEvent } from "../stream-events";
+import { AssistantListings } from "./assistant-listings";
 import { CaseRequestForm } from "./case-request-form";
 import type { ActionState, AssistantConversation, ChatItem } from "../types";
 
@@ -47,6 +50,35 @@ function ActionContent({ preview, unknown }: { preview: ActionPreview | null; un
         <ChangeBlock label={t.action.request.message} tone="after">
           {preview.summary}
         </ChangeBlock>
+      </>
+    );
+  }
+  if (preview.kind === "offer_prefill") {
+    const offer = t.action.offer;
+    return (
+      <>
+        <p className="text-lk-caption text-lk-ink-3">
+          {offer.listing(preview.listingTitle, preview.city)}
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <ChangeBlock label={offer.asking} tone="before">
+            {formatPrice(preview.askingEuros * 100)}
+          </ChangeBlock>
+          <ChangeBlock label={offer.offered} tone="after">
+            <span className="font-semibold">{formatPrice(preview.priceEuros * 100)}</span>
+          </ChangeBlock>
+        </div>
+        {preview.gapPercent !== null ? (
+          <p className="text-lk-caption text-lk-ink-2">
+            {offer.gap(`${gapFormat.format(preview.gapPercent)}\u00A0%`)}
+          </p>
+        ) : null}
+        {preview.draftPriceEuros !== null && preview.draftPriceEuros !== preview.priceEuros ? (
+          <p className="text-lk-caption text-lk-ink-2">
+            {offer.draft(formatPrice(preview.draftPriceEuros * 100))}
+          </p>
+        ) : null}
+        <p className="text-lk-caption text-lk-ink-3">{offer.note}</p>
       </>
     );
   }
@@ -111,10 +143,14 @@ const ERROR_OF: Record<string, ChatError> = {
  * answers in blue tint on the left, written as they stream; the changes
  * proposed as ConfirmActionCard, before and after, « Confirmer » or
  * « Annuler »; then the turn goes on. Its field at the bottom (Composer).
+ * For a buyer (L2-06): the listings a search found, as cards before what
+ * the assistant says of them, and the draft of an offer prepared, whose
+ * form opens once confirmed.
  */
 export function AssistantChat({
   context,
   propertyId,
+  listingId = null,
   initial,
   layout,
   className,
@@ -122,6 +158,8 @@ export function AssistantChat({
   context: AssistantContext;
   /** The property the conversation is about, for a new conversation. */
   propertyId: string | null;
+  /** The listing the buyer is reading (the page the assistant is opened from). */
+  listingId?: string | null;
   initial: AssistantConversation;
   /**
    * panel: the thread scrolls inside the panel, and the page behind is read
@@ -166,9 +204,15 @@ export function AssistantChat({
 
   useEffect(() => () => pending.current?.abort(), []);
 
+  const buyer = context === "buyer";
   const atLimit = error === "quota";
   useEffect(() => {
     if (!atLimit) return;
+    // A buyer has no adviser: the team only.
+    if (buyer) {
+      setHelp("unknown");
+      return;
+    }
     let current = true;
     setHelp(null);
     assistantHelp({ conversationId, propertyId })
@@ -179,7 +223,7 @@ export function AssistantChat({
     return () => {
       current = false;
     };
-  }, [atLimit, conversationId, propertyId]);
+  }, [atLimit, buyer, conversationId, propertyId]);
   const advisor = atLimit && help && help !== "unknown" ? help : null;
 
   // The request sent or given up: the field of the conversation is back, with the focus.
@@ -219,6 +263,13 @@ export function AssistantChat({
     } else if (event.type === "tool") {
       writing.current = null;
       setReading(true);
+    } else if (event.type === "shown") {
+      // The listings of a search: cards in the conversation, before the sentence that follows.
+      const listings = shownListings.safeParse(event.data);
+      if (listings.success) {
+        writing.current = null;
+        setItems((current) => [...current, { id: newId(), kind: "listings", data: listings.data }]);
+      }
     } else if (event.type === "confirm") {
       writing.current = null;
       setReading(false);
@@ -312,7 +363,8 @@ export function AssistantChat({
     const outcome = await stream({
       context,
       conversationId,
-      ...(conversationId ? {} : { propertyId }),
+      ...(conversationId || buyer ? {} : { propertyId }),
+      ...(buyer && listingId ? { listingId } : {}),
       message,
     });
     // Refused before anything was written (the limit of the day): as before, the text kept.
@@ -346,12 +398,35 @@ export function AssistantChat({
       return;
     }
     setState(toolCallId, result.data.outcome);
+    // The draft of an offer prepared: its form opens (SPEC-V2 section 12:
+    // « redirection, pas d'envoi »). The assistant has nothing to add: the
+    // result waits in the log for the next message.
+    const done = items.find((item) => item.kind === "action" && item.toolCallId === toolCallId);
+    if (
+      result.data.outcome === "confirmed" &&
+      done?.kind === "action" &&
+      done.name === "prefill_offer" &&
+      done.preview?.kind === "offer_prefill"
+    ) {
+      router.push(offerFormPath(done.preview.listingId));
+      return;
+    }
     // The page behind the panel shows the change.
     if (result.data.outcome === "confirmed" && layout === "panel") router.refresh();
     if (result.data.remaining === 0) await stream({ context, conversationId, resume: true });
   }
 
-  const errorText = error ? t.errors[error] : null;
+  const errorText = error
+    ? error === "refused" && buyer
+      ? t.buyer.refused
+      : t.errors[error]
+    : null;
+  const intro = buyer ? t.buyer.intro : t.intro;
+  const suggestions = buyer
+    ? listingId
+      ? t.buyer.listingSuggestions
+      : t.buyer.suggestions
+    : t.suggestions;
 
   return (
     <div className={cn("flex flex-1 flex-col", layout === "panel" && "min-h-0", className)}>
@@ -366,11 +441,11 @@ export function AssistantChat({
       >
         {items.length === 0 ? (
           <div className="flex flex-col gap-4">
-            <p className="text-lk-compact text-lk-ink-2">{t.intro}</p>
+            <p className="text-lk-compact text-lk-ink-2">{intro}</p>
             <div className="flex flex-col items-start gap-2">
               <p className="text-lk-caption font-semibold text-lk-ink-3">{t.suggestionsLabel}</p>
               <ul className="flex flex-wrap gap-2">
-                {t.suggestions.map((suggestion) => (
+                {suggestions.map((suggestion) => (
                   <li key={suggestion}>
                     <Button
                       variant="secondary"
@@ -401,13 +476,26 @@ export function AssistantChat({
                 </MessageBubble>
               );
             }
-            // Sent to a person, the adviser of the plan or the team: its own words.
+            if (item.kind === "listings") {
+              return <AssistantListings key={item.id} data={item.data} />;
+            }
+            // Sent to a person (the adviser of the plan, the team) or prepared
+            // for the person (the draft of an offer): its own words.
             const handoff =
               item.name === "contact_advisor"
                 ? t.action.handoff
                 : item.name === "create_case"
                   ? t.action.request
-                  : null;
+                  : item.name === "prefill_offer"
+                    ? t.action.offer
+                    : null;
+            const href =
+              item.name === "prefill_offer" && item.state === "confirmed"
+                ? (item.href ??
+                  (item.preview?.kind === "offer_prefill"
+                    ? offerFormPath(item.preview.listingId)
+                    : undefined))
+                : undefined;
             const title = handoff
               ? handoff.title
               : item.name === "update_listing_price"
@@ -425,6 +513,15 @@ export function AssistantChat({
                 cancelLabel={t.action.cancel}
                 onConfirm={() => void answer(item.toolCallId, true)}
                 onCancel={() => void answer(item.toolCallId, false)}
+                // A price is never confirmed unseen (the listing went off line since).
+                confirmDisabled={item.name === "prefill_offer" && item.preview === null}
+                after={
+                  href ? (
+                    <Button asChild variant="secondary" size="sm">
+                      <Link href={href}>{t.action.offer.open}</Link>
+                    </Button>
+                  ) : undefined
+                }
                 className="max-w-[min(100%,40rem)]"
               >
                 {item.state === "pending" || (item.state === "confirmed" && item.preview) ? (
@@ -437,7 +534,9 @@ export function AssistantChat({
             );
           })
         )}
-        {reading ? <p className="text-lk-caption text-lk-ink-3">{t.reading}</p> : null}
+        {reading ? (
+          <p className="text-lk-caption text-lk-ink-3">{buyer ? t.buyer.reading : t.reading}</p>
+        ) : null}
         {streaming && !reading && items.at(-1)?.kind !== "assistant" ? (
           <p className="text-lk-caption text-lk-ink-3">{t.writing}</p>
         ) : null}
@@ -472,7 +571,7 @@ export function AssistantChat({
             </InlineAlert>
           ) : null}
           {/* Without an adviser in the plan: shown greyed, with the plans that have one. */}
-          {advisor && !advisor.advisorHref && request === "closed" ? (
+          {!buyer && advisor && !advisor.advisorHref && request === "closed" ? (
             <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 px-1 text-lk-caption text-lk-ink-3">
               <Lock aria-hidden="true" className="size-3.5 shrink-0" />
               <span>{t.errors.quotaAdvisor}</span>

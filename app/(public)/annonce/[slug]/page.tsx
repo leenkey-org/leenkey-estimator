@@ -4,6 +4,7 @@ import { AssistantNote } from "@/components/shared/assistant-note";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { getProfile } from "@/core/auth/session";
+import { AssistantAskLink } from "@/leenkey/ai/components/assistant-ask-link";
 import { FavoriteButton } from "@/leenkey/favorites/components/favorite-button";
 import { favoriteState } from "@/leenkey/favorites/queries";
 import { BackLink } from "@/leenkey/listings/components/back-link";
@@ -108,9 +109,18 @@ export default async function ListingPage({ params }: Props) {
   const jsonLd = listingJsonLd(listing, url, absoluteUrl(`/api/og/${listing.slug}`));
   // Two factual sentences written by the assistant (L2-05): none while a new
   // one is being written after a change of the listing.
-  const note = listing.summary ? (
+  const summary = listing.summary ? (
     <AssistantNote title={fr.listing.assistantNote.title}>{listing.summary}</AssistantNote>
   ) : null;
+  // The assistant of the buyer about this listing (L2-06), for an account that buys.
+  const ask = profile?.roles.includes("buyer") ? <AssistantAskLink listingId={listing.id} /> : null;
+  const note =
+    summary || ask ? (
+      <div className="flex flex-col gap-2">
+        {summary}
+        {ask}
+      </div>
+    ) : null;
 
   return (
     <FacadeRoot className="min-h-screen bg-lk-surface">

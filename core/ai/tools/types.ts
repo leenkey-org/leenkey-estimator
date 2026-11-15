@@ -49,6 +49,13 @@ export type AiTool<Input, Output, Preview = never> = {
   /** Tools to confirm: the change, before and after, read with the session of the person. */
   preview?(input: Input, ctx: ToolContext): Promise<ToolPreview<Preview>>;
   execute(input: Input, ctx: ToolContext): Promise<Output>;
+  /**
+   * Tools that read: what the person sees of a result in the conversation (a
+   * list of cards), beside what the model writes of it; null: nothing. Read
+   * again from the log when the conversation is opened again: the log is the
+   * person's to write, so what is shown is checked by who shows it.
+   */
+  show?(output: Output): unknown;
 };
 
 /**

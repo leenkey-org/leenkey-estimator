@@ -1,3 +1,4 @@
+import type { BuyerFile, BuyerOfferFact } from "./buyer-data";
 import type { PropertyOverview } from "./seller-data";
 
 // The file of the seller as the model reads it with each of their messages
@@ -83,6 +84,86 @@ export function sellerContextText({
   if (about) {
     lines.push(
       `- La conversation porte sur le bien ${about.propertyId} (« ${typed(about.name)} »).`,
+    );
+  }
+  lines.push("</dossier>");
+  return lines.join("\n");
+}
+
+// The file of a buyer (L2-06), in the same way: their buying project and the
+// status of their financing file (the budget, never the other amounts nor
+// the proof), their offers with their dates, and the listing they are
+// reading when they write.
+
+const PROJECTS = {
+  residence_principale: "résidence principale",
+  residence_secondaire: "résidence secondaire",
+  investissement: "investissement",
+} as const;
+
+function offerLine(offer: BuyerOfferFact): string {
+  const parts = [
+    `- Offre ${offer.reference || offer.offerId} sur l'annonce ${offer.listingId} (« ${typed(offer.listingTitle)} », ${typed(offer.city)}) : ${offer.status}`,
+  ];
+  if (offer.priceEuros !== null) parts.push(`, ${euros(offer.priceEuros)}`);
+  if (offer.sentOn) parts.push(`, envoyée le ${offer.sentOn}`);
+  if (offer.validUntil) parts.push(`, valable jusqu'au ${offer.validUntil}`);
+  parts.push(".");
+  if (offer.precontractSignedOn) {
+    parts.push(` Avant-contrat signé le ${offer.precontractSignedOn}.`);
+    parts.push(
+      offer.withdrawalStart
+        ? ` Délai de rétractation : départ enregistré le ${offer.withdrawalStart}${offer.withdrawalEnd ? `, fin indicative le ${offer.withdrawalEnd} (le notaire fait foi)` : ""}.`
+        : " Délai de rétractation : date de départ non enregistrée dans le dossier.",
+    );
+  }
+  return parts.join("");
+}
+
+export function buyerContextText({
+  firstName,
+  now,
+  file,
+}: {
+  firstName: string | null;
+  now: Date;
+  file: BuyerFile;
+}): string {
+  const lines = [
+    "<dossier>",
+    "Dossier de l'acquéreur au moment de son message, résumé par Leenkey (les noms et titres sont ceux qui ont été saisis) :",
+    `- Date : ${day(now)}.`,
+    `- Prénom : ${firstName ? typed(firstName) : "non renseigné"}.`,
+  ];
+  const project = file.project;
+  if (!project || !project.declared) {
+    lines.push(
+      "- Projet d'achat : non renseigné. Il se renseigne sur la page « Mon projet d'achat » ; une offre ne peut être préparée qu'ensuite.",
+    );
+  } else {
+    const parts = [`- Projet d'achat : ${project.kind ? PROJECTS[project.kind] : "non précisé"}`];
+    if (project.cities.length > 0) {
+      parts.push(` ; villes recherchées : ${project.cities.slice(0, 10).map(typed).join(", ")}`);
+    }
+    if (project.budgetMaxEuros !== null) {
+      parts.push(` ; budget maximum déclaré : ${euros(project.budgetMaxEuros)}`);
+    }
+    lines.push(`${parts.join("")}.`);
+    lines.push(
+      `- Dossier de financement : ${project.financing}${project.financingCheckedOn ? ` (contrôlé par Leenkey le ${project.financingCheckedOn})` : ""}.`,
+    );
+  }
+  if (file.offers.length === 0) {
+    lines.push("- Offres d'achat : aucune.");
+  } else {
+    lines.push(
+      `- Offres d'achat : ${file.offersTotal}${file.offersTotal > file.offers.length ? ` (les ${file.offers.length} plus récentes ci-dessous)` : ""}.`,
+    );
+    lines.push(...file.offers.map(offerLine));
+  }
+  if (file.listing) {
+    lines.push(
+      `- Annonce consultée en ce moment : ${file.listing.listingId} (« ${typed(file.listing.title)} », ${typed(file.listing.city)}, prix affiché ${euros(file.listing.priceEuros)}).`,
     );
   }
   lines.push("</dossier>");

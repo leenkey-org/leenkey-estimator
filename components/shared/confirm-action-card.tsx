@@ -21,6 +21,8 @@ export function ConfirmActionCard({
   cancelLabel,
   onConfirm,
   onCancel,
+  confirmDisabled = false,
+  after,
   className,
 }: {
   title: string;
@@ -35,6 +37,10 @@ export function ConfirmActionCard({
   cancelLabel: string;
   onConfirm: () => void;
   onCancel: () => void;
+  /** What would change cannot be shown: it cannot be confirmed, only cancelled. */
+  confirmDisabled?: boolean;
+  /** Once answered, under the line of its state: where the change leads (a link). */
+  after?: ReactNode;
   className?: string;
 }) {
   const StateIcon = state === "confirmed" ? Check : state === "error" ? CircleAlert : X;
@@ -57,7 +63,7 @@ export function ConfirmActionCard({
       {children ? <div className="flex flex-col gap-2.5">{children}</div> : null}
       {state === "pending" ? (
         <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" onClick={onConfirm} loading={busy}>
+          <Button size="sm" onClick={onConfirm} loading={busy} disabled={confirmDisabled}>
             {confirmLabel}
           </Button>
           <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy}>
@@ -79,6 +85,7 @@ export function ConfirmActionCard({
           {stateText}
         </p>
       )}
+      {state !== "pending" && after ? <div>{after}</div> : null}
     </section>
   );
 }

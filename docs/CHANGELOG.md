@@ -12,6 +12,15 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-15 · L2-06 · PR #104 · Assistant acquéreur
+- Ajouté : l'assistant de l'acquéreur, dans son espace (panneau à partir de 768 px, bouton à côté de la cloche sur téléphone), depuis les notifications et depuis une annonce (« Demander à l'assistant ») ; `/assistant?annonce=…` ou `?contexte=acquereur`.
+- Ajouté : recherche en langage naturel (`search_listings`) : les biens trouvés s'affichent en cartes dans la conversation, avec le lien vers la recherche du site aux mêmes critères ; détails publics d'une annonce (`get_listing_public`).
+- Ajouté : « Préparer mon offre » (`prefill_offer`) : le prix dit dans la conversation est écrit dans le brouillon après confirmation, puis le formulaire de l'offre s'ouvre ; rien n'est envoyé au vendeur.
+- Ajouté : demande à l'équipe Leenkey depuis l'assistant acquéreur (`create_case`), relue et confirmée.
+- Ajouté : `npm run ai:eval-search` (les 10 recherches de test contre le vrai modèle, hors CI) ; la page « Intelligence artificielle » décrit l'assistant acquéreur et le résumé d'annonce.
+- Modifié : un brouillon d'offre qui n'a qu'un prix ouvre sa première étape à partir du compte, comme un premier brouillon.
+- Migration : `20261115180000_ai_prefill_offer.sql` (fonction `ai_prefill_offer`).
+
 ### 2026-11-15 · L2-05 · PR #103 · Résumé de l'annonce par l'assistant
 - Ajouté : « Résumé par l'assistant » sur la page d'une annonce en ligne (deux phrases factuelles), sous la colonne du prix sur grand écran, après la carte sur téléphone.
 - Ajouté : tâche planifiée `/api/cron/listing-summaries` (toutes les 5 minutes) qui écrit les résumés demandés à la mise en ligne et à chaque modification de l'annonce ou de son bien ; journal et tokens sous le genre `listing_summary`.

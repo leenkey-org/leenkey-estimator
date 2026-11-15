@@ -294,16 +294,20 @@ export type DisplayItem =
       state: ToolStatus | "pending";
       /** The output of the tool, once run. */
       result: unknown;
-    };
+    }
+  /** The output of a tool that read and shows it to the person (AiTool.show). */
+  | { kind: "result"; toolCallId: string; name: string; result: unknown };
 
 /**
  * The conversation as the person sees it: their messages, the text of the
  * answers, and the actions to confirm (`confirmable`: the tools that write)
- * with what became of them. The tools that read stay out of sight.
+ * with what became of them. The tools that read stay out of sight, except
+ * those that show their result (`shown`), once they ran.
  */
 export function displayItems(
   rows: readonly LogRow[],
   confirmable: (name: string) => boolean,
+  shown: (name: string) => boolean = () => false,
 ): DisplayItem[] {
   const entries = rows.map(readRow).filter((entry): entry is Entry => entry !== null);
   const results = new Map<string, StoredToolResult>();
@@ -329,7 +333,20 @@ export function displayItems(
       .trim();
     if (text) items.push({ kind: "assistant", text });
     for (const block of entry.content.blocks) {
-      if (block.type !== "tool_use" || !confirmable(block.name)) continue;
+      if (block.type !== "tool_use") continue;
+      if (shown(block.name)) {
+        const read = results.get(block.id);
+        if (read?.status === "done") {
+          items.push({
+            kind: "result",
+            toolCallId: block.id,
+            name: block.name,
+            result: read.result,
+          });
+        }
+        continue;
+      }
+      if (!confirmable(block.name)) continue;
       const result = results.get(block.id);
       const waiting = index === lastAnswer && index > lastUser;
       items.push({

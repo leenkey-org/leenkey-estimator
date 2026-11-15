@@ -37,11 +37,12 @@ type Loaded =
   | { status: "ready"; conversation: AssistantConversation };
 
 /**
- * The assistant of the seller on a large screen (L1-28, DESIGN.md 10.5):
- * AssistantFab at the bottom right of the pages of the seller space opens a
- * panel on the right, as the notifications (420 px, page dimmed, from the
- * right in 220 ms): « Assistant Leenkey », « Nouvelle conversation », the
- * last conversation. Below 768 px, the button of the header opens the page
+ * The assistant on a large screen (L1-28, DESIGN.md 10.5): AssistantFab at
+ * the bottom right of the pages of the seller space, and of the buyer space
+ * since L2-06 (DESIGN.md 12.10), opens a panel on the right, as the
+ * notifications (420 px, page dimmed, from the right in 220 ms):
+ * « Assistant Leenkey », « Nouvelle conversation », the last conversation of
+ * the space. Below 768 px, the button of the header opens the page
  * /assistant instead.
  */
 export function AssistantPanel({ roles }: { roles: readonly string[] }) {
@@ -52,13 +53,13 @@ export function AssistantPanel({ roles }: { roles: readonly string[] }) {
   const [loaded, setLoaded] = useState<Loaded>({ status: "idle" });
   const [chat, setChat] = useState(0);
 
-  if (space !== "seller" || !roles.includes("seller") || pathname === ROUTES.assistant) {
-    return null;
-  }
+  // The assistant of the space, for an account that has its role.
+  const context = space === "seller" || space === "buyer" ? space : null;
+  if (!context || !roles.includes(context) || pathname === ROUTES.assistant) return null;
 
   async function load() {
     setLoaded({ status: "loading" });
-    const result = await loadAssistantConversation().catch(() => null);
+    const result = await loadAssistantConversation(context).catch(() => null);
     setLoaded(result?.ok ? { status: "ready", conversation: result.data } : { status: "error" });
   }
 
@@ -120,10 +121,13 @@ export function AssistantPanel({ roles }: { roles: readonly string[] }) {
           </div>
           {loaded.status === "ready" ? (
             <AssistantChat
-              key={chat}
+              // A conversation of the other space is never shown in this one.
+              key={`${context}-${chat}`}
               layout="panel"
-              context="seller"
-              propertyId={pageProperty(pathname, searchParams.get("bien"))}
+              context={context}
+              propertyId={
+                context === "seller" ? pageProperty(pathname, searchParams.get("bien")) : null
+              }
               initial={loaded.conversation}
             />
           ) : loaded.status === "error" ? (

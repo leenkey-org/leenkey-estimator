@@ -1,13 +1,16 @@
 import "server-only";
 import type { AiContext, AnyAiTool } from "@/core/ai/tools/types";
 import { contactAdvisorTool } from "./contact-advisor";
-import { createCaseTool } from "./create-case";
+import { createBuyerCaseTool, createCaseTool } from "./create-case";
 import { draftListingDescriptionTool } from "./draft-listing-description";
+import { getListingPublicTool } from "./get-listing-public";
 import { getListingStatsTool } from "./get-listing-stats";
 import { getMyPropertiesTool } from "./get-my-properties";
 import { getPropertyDetailsTool } from "./get-property-details";
 import { getSaleProgressTool } from "./get-sale-progress";
 import { getUpgradeContextTool } from "./get-upgrade-context";
+import { prefillOfferTool } from "./prefill-offer";
+import { searchListingsTool } from "./search-listings";
 import { summarizeContactsTool } from "./summarize-contacts";
 import { updateListingDescriptionTool } from "./update-listing-description";
 import { updateListingPriceTool } from "./update-listing-price";
@@ -16,9 +19,10 @@ import { updateListingPriceTool } from "./update-listing-price";
 // properties, listings and buyers live here (CLAUDE.md section 3: core/ knows
 // none of them); search_knowledge (core/ai/tools) is not offered to the
 // model of the conversation: the whole FAQ is in its prompt (Q69, option a).
-// To come with their tasks: summarize_offer (L2), the tools of the buyer
-// (L2, create_case among them) and of the admin (L1-30), propose_visit_slot
-// (L3).
+// The buyer (L2-06): search_listings, get_listing_public, prefill_offer and
+// its own create_case (two tools of the same name, one per context). To come
+// with their tasks: summarize_offer (L2-07), summarize_shared_documents,
+// create_alert and propose_visit_slot (L3).
 
 const TOOLS: readonly AnyAiTool[] = [
   getMyPropertiesTool,
@@ -32,6 +36,10 @@ const TOOLS: readonly AnyAiTool[] = [
   updateListingPriceTool,
   contactAdvisorTool,
   createCaseTool,
+  searchListingsTool,
+  getListingPublicTool,
+  prefillOfferTool,
+  createBuyerCaseTool,
 ];
 
 /** The tools of a context. */

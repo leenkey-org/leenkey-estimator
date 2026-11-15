@@ -274,6 +274,11 @@ export function isIdentityComplete(identity: OfferIdentity): boolean {
   );
 }
 
+/** An identity nothing was typed in: a draft the assistant prepared with its price only (L2-06). */
+export function isIdentityBlank(identity: OfferIdentity): boolean {
+  return Object.values(identity).every((value) => value.trim() === "");
+}
+
 /**
  * How far a draft goes: the number of the first step still to fill, 8 when the
  * seven are filled (the review). Step 2 has nothing to fill.

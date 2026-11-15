@@ -2420,6 +2420,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      ai_prefill_offer: {
+        Args: {
+          p_conversation_id: string
+          p_tool_name: string
+          p_listing_id: string
+          p_price_cents: number
+          p_tool_use_id: string
+        }
+        Returns: string
+      }
       ai_quota_consume: {
         Args: { p_limit: number }
         Returns: {

@@ -20,7 +20,7 @@ import {
   ReviewActions,
   ValidityStep,
 } from "@/leenkey/offers/components/offer-steps";
-import { firstStepToFill, type OfferContent } from "@/leenkey/offers/content";
+import { firstStepToFill, isIdentityBlank, type OfferContent } from "@/leenkey/offers/content";
 import { buildOfferDocument } from "@/leenkey/offers/document";
 import {
   offerFormPath,
@@ -121,7 +121,10 @@ export default async function NewOfferPage({ searchParams }: Props) {
   });
 
   if (step === 1 || !offer) {
-    const prefill = offer ? null : await offerPrefill(profile.id);
+    // A draft the assistant prepared holds a price and no identity yet (L2-06):
+    // its first step starts from the account, as a first draft does.
+    const typed = offer && !isIdentityBlank(offer.buyer) ? offer : null;
+    const prefill = typed ? null : await offerPrefill(profile.id);
     return (
       <>
         <OfferHeader step={1} back={{ href: listingHref, label: t.header.backToListing }} />
@@ -131,13 +134,13 @@ export default async function NewOfferPage({ searchParams }: Props) {
             backHref={listingHref}
             note={access.data.inProgress ? t.replaces : undefined}
             initial={
-              offer
+              typed
                 ? {
-                    identity: offer.buyer,
-                    coBuyers: offer.coBuyers,
-                    acquisitionMode: offer.acquisitionMode,
-                    acquisitionModeOther: offer.acquisitionModeOther,
-                    sci: offer.sci ?? EMPTY_SCI,
+                    identity: typed.buyer,
+                    coBuyers: typed.coBuyers,
+                    acquisitionMode: typed.acquisitionMode,
+                    acquisitionModeOther: typed.acquisitionModeOther,
+                    sci: typed.sci ?? EMPTY_SCI,
                   }
                 : {
                     identity: { ...EMPTY_IDENTITY, ...prefill?.identity },

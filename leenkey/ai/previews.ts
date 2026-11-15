@@ -37,20 +37,39 @@ export const casePreview = z.object({
   summary: z.string(),
 });
 
+/**
+ * prefill_offer (L2-06): the price the draft of an offer will hold, beside
+ * the price of the listing; the price already in the draft, when the buyer
+ * wrote one.
+ */
+export const offerPrefillPreview = z.object({
+  kind: z.literal("offer_prefill"),
+  listingId: z.string().uuid(),
+  listingTitle: z.string(),
+  city: z.string(),
+  askingEuros: z.number(),
+  priceEuros: z.number(),
+  /** Gap of the price offered to the price of the listing, in %, one decimal. */
+  gapPercent: z.number().nullable(),
+  draftPriceEuros: z.number().nullable(),
+});
+
 export const actionPreview = z.discriminatedUnion("kind", [
   descriptionPreview,
   pricePreview,
   handoffPreview,
   casePreview,
+  offerPrefillPreview,
 ]);
 
 export type DescriptionPreview = z.infer<typeof descriptionPreview>;
 export type PricePreview = z.infer<typeof pricePreview>;
 export type HandoffPreview = z.infer<typeof handoffPreview>;
 export type CasePreview = z.infer<typeof casePreview>;
+export type OfferPrefillPreview = z.infer<typeof offerPrefillPreview>;
 export type ActionPreview = z.infer<typeof actionPreview>;
 
-/** The gap of a price to the analysis of value, in %, one decimal; null without one. */
+/** The gap of a price to a reference (the analysis of value, the price of a listing), in %, one decimal; null without one. */
 export function gapPercent(priceEuros: number, valuationEuros: number | null): number | null {
   if (valuationEuros === null || valuationEuros <= 0) return null;
   return Math.round(((priceEuros - valuationEuros) / valuationEuros) * 1000) / 10;
