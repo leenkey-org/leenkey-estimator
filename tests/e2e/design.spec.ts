@@ -106,7 +106,11 @@ test.describe("catalogue /design", () => {
     await page.getByRole("link", { name: "Aperçu des emails" }).click();
     await expect(page).toHaveURL("/design/emails");
     await expect(page.getByRole("heading", { level: 1, name: "Emails" })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(18);
+    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(19);
+    // L2-07: an offer accepted on a sale with an adviser, for the team.
+    await expect(
+      page.getByText("Sujet : Offre acceptée sur une vente accompagnée (LK-0042)"),
+    ).toBeVisible();
     // L1-40: the summary of an order, a withdrawal, the end of a plan.
     await expect(
       page.getByText("Sujet : Confirmation de votre souscription Leenkey · Accompagné · LK-"),
