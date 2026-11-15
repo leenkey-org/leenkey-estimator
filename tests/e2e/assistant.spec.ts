@@ -184,11 +184,8 @@ test("un acquéreur : son assistant dans un panneau, une recherche montrée en c
   await expectSearchShown(page, thread);
   expect(await seriousViolations(page, '[role="dialog"]')).toEqual([]);
 
-  // Opened again: the same conversation, its cards read again from the log.
-  await page.keyboard.press("Escape");
-  await expect(panel).toBeHidden();
-  await openPanel(page);
-  await expectSearchShown(page, panel.getByRole("log", { name: "Conversation avec l'assistant" }));
+  // Read again from the log once reopened: buyer-assistant-live.spec.ts (this
+  // account is also used by the phone test, which may open a newer conversation).
 
   // The route refuses the context of the seller to an account that does not sell.
   const response = await page.request.post("/api/ai/chat", {

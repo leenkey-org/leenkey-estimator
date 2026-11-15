@@ -172,7 +172,7 @@ function eurosIn(text: string): number | null {
 /**
  * A search as the model of the tests writes it down: the type, the rooms,
  * the commune after « à » and the budget, read from a few fixed turns of
- * phrase. Not the reading of the real model (scripts/ai-eval-search.mjs).
+ * phrase. Not the reading of the real model (tests/eval, `npm run ai:eval-search`).
  */
 export function mockSearchRequest(asked: string) {
   const type = /appartement/i.test(asked)
@@ -181,7 +181,7 @@ export function mockSearchRequest(asked: string) {
       ? "maison"
       : /terrain/i.test(asked)
         ? "terrain"
-        : "";
+        : "any";
   const rooms = /(\d+)\s*pièces?/i.exec(asked);
   const place = /(?:^|\s)à\s+([A-ZÀ-Ý][\p{L}'’-]*(?: [A-ZÀ-Ý][\p{L}'’-]*)*)/u.exec(asked);
   return {
@@ -197,7 +197,7 @@ export function mockSearchRequest(asked: string) {
     outdoor: [],
     parking: false,
     elevator: false,
-    dpeMax: "",
+    dpeMax: "any",
     sort: "recent",
   };
 }

@@ -7,7 +7,7 @@
 -- code 99995: the file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(22);
+select plan(30);
 \ir _plan.psql
 
 \set who seller_a
@@ -110,6 +110,67 @@ select is((select count(*)::int from offers
           'never an offer sent');
 
 -- ===========================================================================
+-- A draft already there, on a listing that takes no offer any more
+-- ===========================================================================
+-- The buyer emptied their project: no price for a form that no longer opens.
+update buyer_profiles set project = null where profile_id = tests.uid('buyer_c');
+select throws_ok(format($$select ai_prefill_offer(%L, 'toolu_6', 'prefill_offer', %L, 26000000)$$,
+                        :'conv_c', :'listing'),
+                 '42501', null, 'a draft there, the project emptied: refused');
+update buyer_profiles
+   set project = 'residence_principale', budget_max_cents = 40000000,
+       down_payment_cents = 9000000, loan_needed = true
+ where profile_id = tests.uid('buyer_c');
+-- The seller takes the listing off line.
+\set who seller_a
+\ir _as.psql
+\o /dev/null
+select listing_pause(:'listing');
+\o
+\set who buyer_c
+\ir _as.psql
+select throws_ok(format($$select ai_prefill_offer(%L, 'toolu_6', 'prefill_offer', %L, 26000000)$$,
+                        :'conv_c', :'listing'),
+                 '42501', null, 'a draft there, the listing off line: refused');
+select is((select price_cents from offers where id = :'offer1'), 29000000::bigint,
+          'the draft kept its price');
+select is((select count(*)::int from ai_messages
+            where conversation_id = :'conv_c' and content->>'tool_use_id' = 'toolu_6'), 0,
+          'and nothing was logged');
+\set who seller_a
+\ir _as.psql
+\o /dev/null
+select listing_resume(:'listing');
+\o
+
+-- An offer sent stays as it was sent: a new price goes to a new draft.
+\set who buyer_c
+\ir _as.psql
+update offers
+   set buyer_identity = '{"last_name":"Martin","first_name":"Chloé","birth_date":"1990-04-12",
+                          "address":{"line":"3 rue Verte","postal_code":"75011","city":"Paris"},
+                          "email":"chloe@example.test","phone":"0600000000"}',
+       financing_mode = 'no_loan',
+       validity_until = now() + interval '5 days', visited = true,
+       declarations = '{"accuracy":true,"price_and_financing_checked":true,
+                        "legal_effects_understood":true,"info_read":true}'
+ where id = :'offer1';
+\o /dev/null
+select offer_submit(:'offer1');
+\o
+select ai_prefill_offer(:'conv_c', 'toolu_7', 'prefill_offer', :'listing', 29500000) as offer2 \gset
+select isnt(:'offer2'::uuid, :'offer1'::uuid, 'after an offer is sent, a new price opens a new draft');
+select is((select row(status, price_cents)::text from offers where id = :'offer1'),
+          row('submitted'::offer_status, 29000000::bigint)::text,
+          'the offer sent keeps its status and its price');
+select is((select row(status, price_cents, version)::text from offers where id = :'offer2'),
+          row('draft'::offer_status, 29500000::bigint, 2)::text,
+          'the new draft: its price, the next version');
+select throws_ok(format($$select ai_prefill_offer(%L, 'toolu_8', 'prefill_offer', null, 29500000)$$,
+                        :'conv_c'),
+                 '42501', null, 'never without a listing');
+
+-- ===========================================================================
 -- The others
 -- ===========================================================================
 \set who buyer_d
@@ -122,7 +183,7 @@ select throws_ok(format($$select ai_prefill_offer(%L, 'toolu_3', 'prefill_offer'
                         :'conv_c', :'listing'),
                  '42501', null, 'buyer_d: not in the conversation of another buyer');
 select is((select count(*)::int from offers where listing_id = :'listing'), 0,
-          'buyer_d: no draft written, and none of buyer_c read');
+          'buyer_d: no draft written, and no offer of buyer_c read');
 
 \set who seller_a
 \ir _as.psql
@@ -141,8 +202,10 @@ select throws_ok(format($$select ai_prefill_offer(%L, 'toolu_5', 'prefill_offer'
                  '42501', null, 'anon: not the function');
 
 reset role;
-select is((select price_cents from offers where id = :'offer1'), 29000000::bigint,
-          'the draft of buyer_c is as it left it');
+select is((select array_agg(price_cents order by version) from offers
+            where buyer_id = tests.uid('buyer_c') and listing_id = :'listing'),
+          array[29000000, 29500000]::bigint[],
+          'the offers of buyer_c are as they left them');
 
 select * from finish();
 rollback;

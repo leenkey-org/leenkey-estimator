@@ -1,7 +1,7 @@
 import "server-only";
 import type { AiTool } from "@/core/ai/tools/types";
 import { placeLabel } from "@/leenkey/search/cards";
-import { searchListings, withCovers, type SearchListing } from "@/leenkey/search/queries";
+import { searchListings, type SearchListing } from "@/leenkey/search/queries";
 import {
   appliedCriteria,
   searchParamsOf,
@@ -18,8 +18,8 @@ import { parisDay } from "./shared";
 // the search page runs it (the SQL function search_listings: listings
 // online, public columns, the session of the buyer). The model reads the 5
 // first listings, their number and the criteria really applied; the buyer
-// sees them as cards under the answer, with the way to the search page
-// (`show`).
+// sees them as cards in the conversation, before what the model then says
+// of them, with the way to the search page (`show`).
 
 type Output =
   | { error: string }
@@ -61,10 +61,11 @@ export const searchListingsTool: AiTool<SearchRequest, Output> = {
   description:
     "Search the listings online on Leenkey from what the buyer asks for: a place, a type, a " +
     "budget, surfaces, rooms, outdoor spaces, parking, elevator, energy class. Fill each field " +
-    'from the words of the buyer only, and leave every other one empty ("", 0, [], false): ' +
+    'from the words of the buyer only, and leave every other one empty (« any », "", 0, [], ' +
+    "false): " +
     "never add a criterion they did not give. Returns the number of listings found, the criteria " +
-    "really applied and the 5 first listings; the buyer sees these listings as cards under your " +
-    "answer, with a link to the whole search.",
+    "really applied and the 5 first listings; the buyer sees these listings as cards in the " +
+    "conversation, just before your answer, with a link to the whole search.",
   input: searchRequest,
   inputSchema: searchRequestSchema,
   requiresConfirmation: false,
@@ -73,10 +74,11 @@ export const searchListingsTool: AiTool<SearchRequest, Output> = {
     const query = searchQueryOf(request);
     const results = await searchListings(query);
     if (!results.ok) return { error: "The search could not be run. Try again later." };
-    const first = await withCovers(results.data.items.slice(0, SHOWN_LISTINGS_MAX));
+    // Each listing comes with its main photo (searchListings).
+    const first = results.data.items.slice(0, SHOWN_LISTINGS_MAX);
     return {
       total: results.data.total,
-      applied: appliedCriteria(query),
+      applied: appliedCriteria(query, request),
       search: searchParamsOf(query),
       listings: first.map((listing) => ({
         listingId: listing.id,

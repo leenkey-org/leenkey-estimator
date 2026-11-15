@@ -189,6 +189,29 @@ test("un acquéreur, depuis une annonce : une question, une offre préparée pui
     );
   });
 
+  await test.step("une recherche : ses biens en cartes, relus du journal à la réouverture", async () => {
+    await ask(page, "Je cherche une maison à Morangis");
+    const found = thread(page).getByRole("region", { name: "Biens trouvés par l'assistant" });
+    await expect(found.getByRole("listitem").getByRole("link")).toHaveAttribute(
+      "href",
+      "/annonce/maison-5-pieces-morangis-lk0010",
+    );
+    await expect(
+      thread(page).getByText("J'ai trouvé 1 bien(s) pour cette recherche."),
+    ).toBeVisible();
+    await page.reload();
+    const again = thread(page).getByRole("region", { name: "Biens trouvés par l'assistant" });
+    await expect(again.getByText("1\u00A0bien trouvé")).toBeVisible();
+    await expect(again.getByRole("listitem").getByRole("link")).toHaveAttribute(
+      "href",
+      "/annonce/maison-5-pieces-morangis-lk0010",
+    );
+    await expect(again.getByRole("link", { name: "Ouvrir la recherche" })).toHaveAttribute(
+      "href",
+      "/acheter?ville=morangis&type=maison",
+    );
+  });
+
   await test.step("une demande transmise à l'équipe, relue avant de partir", async () => {
     await ask(page, "Je voudrais écrire à l'équipe Leenkey au sujet de cette annonce");
     const card = page.getByRole("region", { name: "Écrire à l'équipe Leenkey" });

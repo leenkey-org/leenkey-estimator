@@ -107,14 +107,19 @@ const euros = (cents: number | null) => (cents === null ? null : Math.round(cent
 const LISTING_COLUMNS =
   "id, slug, reference, title, description, price_cents, published_at, type, city, postal_code, district, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, has_elevator, has_balcony, has_terrace, has_garden, has_parking, has_cellar, orientation, build_year, is_new_build, dpe_class, ges_class, heating, charges_monthly_cents, property_tax_yearly_cents, copro_lots, seller_first_name";
 
-/** A listing online by its id; null: none (unknown, off line). */
+/**
+ * A listing online by its id; null: none (unknown, off line). Its summary is
+ * read only when asked (the tool get_listing_public): the file of the buyer
+ * and the page of the assistant need its title, its commune and its price.
+ */
 export async function listingFacts(
   listingId: string,
+  { withSummary = false }: { withSummary?: boolean } = {},
 ): Promise<{ ok: true; data: ListingFacts | null } | { ok: false }> {
   const supabase = createPublicClient();
   const [listing, summary] = await Promise.all([
     supabase.from("public_listings").select(LISTING_COLUMNS).eq("id", listingId).maybeSingle(),
-    supabase.rpc("public_listing_summary", { p_listing_id: listingId }),
+    withSummary ? supabase.rpc("public_listing_summary", { p_listing_id: listingId }) : null,
   ]);
   if (listing.error) {
     console.error("[ai] listing read failed", { entity_id: listingId, code: listing.error.code });
@@ -165,7 +170,7 @@ export async function listingFacts(
       coproLots: row.copro_lots,
       sellerFirstName: row.seller_first_name,
       // Without its summary the listing is still read.
-      summary: summary.error ? null : (summary.data ?? null),
+      summary: !summary || summary.error ? null : (summary.data ?? null),
     },
   };
 }

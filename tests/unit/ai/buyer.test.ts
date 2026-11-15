@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
   rpc: [] as { name: string; args: Record<string, unknown> }[],
   rpcResult: { data: "offer-1", error: null } as {
     data: string | null;
-    error: { code: string } | null;
+    error: { code: string; message?: string } | null;
   },
 }));
 
@@ -53,8 +53,15 @@ vi.mock("@/leenkey/ai/seller-data", () => ({
 }));
 vi.mock("@/leenkey/properties/sheet", () => ({ propertyName: () => "Maison" }));
 
-const { appliedCriteria, searchParamsOf, searchQueryOf, searchRequest, searchRequestSchema } =
-  await import("@/leenkey/ai/search-request");
+const {
+  appliedCriteria,
+  placeOf,
+  searchParamsOf,
+  searchQueryOf,
+  searchRequest,
+  searchRequestSchema,
+} = await import("@/leenkey/ai/search-request");
+const { assistantPageContext } = await import("@/leenkey/ai/page-context");
 const { shownListings } = await import("@/leenkey/ai/shown");
 const { buyerContextText } = await import("@/leenkey/ai/context");
 const { actionHref, isFailure } = await import("@/leenkey/ai/queries");
@@ -153,6 +160,28 @@ describe("a search in the words of a buyer (SPEC-V2 23, L2-06: 10 requests)", ()
     expect(appliedCriteria(inZone)).toMatchObject({ place: "Grigny", radiusKm: 5 });
   });
 
+  it("a department or a region is no place of a search: dropped, and the model is told", () => {
+    // « 91 » would otherwise be the first commune whose postal code starts with it.
+    expect(placeOf("91")).toBeUndefined();
+    expect(placeOf(" 9 1 ")).toBeUndefined();
+    expect(placeOf("913600")).toBeUndefined();
+    expect(placeOf("91360")).toBe("91360");
+    expect(placeOf("Savigny")).toBe("savigny-sur-orge");
+    expect(placeOf("")).toBeUndefined();
+    const request = { ...EMPTY_SEARCH_REQUEST, location: "91", radiusKm: 10, roomsMin: 3 };
+    const query = searchQueryOf(request);
+    expect(query.filters).toEqual({ roomsMin: 3 });
+    const applied = appliedCriteria(query, request);
+    expect(applied.place).toBeUndefined();
+    expect(applied.placeNote).toMatch(/takes a commune or a 5-digit postal code/);
+    // Nothing said when no place was asked for, nor when the place is searched.
+    expect(appliedCriteria(searchQueryOf(EMPTY_SEARCH_REQUEST), EMPTY_SEARCH_REQUEST)).toEqual({
+      sort: "recent",
+    });
+    const savigny = { ...EMPTY_SEARCH_REQUEST, location: "Savigny-sur-Orge" };
+    expect(appliedCriteria(searchQueryOf(savigny), savigny).placeNote).toBeUndefined();
+  });
+
   it("the schema given to the model names the fields of Zod, all required, nothing optional", () => {
     const fields = Object.keys(searchRequest.shape).sort();
     expect(Object.keys(searchRequestSchema.properties).sort()).toEqual(fields);
@@ -162,6 +191,12 @@ describe("a search in the words of a buyer (SPEC-V2 23, L2-06: 10 requests)", ()
     expect(JSON.stringify(searchRequestSchema)).not.toMatch(
       /"(minimum|maximum|minLength|maxLength)"/,
     );
+    // No empty string among the choices of a closed list: « any » says « none ».
+    for (const field of ["propertyType", "dpeMax", "sort"] as const) {
+      const choices = (searchRequestSchema.properties[field] as { enum: string[] }).enum;
+      expect(choices, field).not.toContain("");
+      expect(searchRequest.shape[field].options, field).toEqual(choices);
+    }
   });
 
   it("the model of the tests reads a few fixed turns of phrase", () => {
@@ -509,16 +544,34 @@ describe("prefill_offer", () => {
   });
 
   it("a call already answered, a listing closed meanwhile, a failure: nothing is said done", async () => {
-    mocks.rpcResult = { data: null, error: { code: "23505" } };
+    mocks.rpcResult = {
+      data: null,
+      error: {
+        code: "23505",
+        message: 'duplicate key value violates unique constraint "ai_messages_tool_result_idx"',
+      },
+    };
     expect(await prefillOfferTool.execute(input, { ...ctx, call })).toEqual({
       prefilled: false,
       answered: true,
     });
-    mocks.rpcResult = { data: null, error: { code: "42501" } };
+    // Another duplicate (a draft the form created at the same moment): a failure, not « answered ».
+    mocks.rpcResult = {
+      data: null,
+      error: {
+        code: "23505",
+        message: 'duplicate key value violates unique constraint "offers_one_draft_idx"',
+      },
+    };
+    const raced = await prefillOfferTool.execute(input, { ...ctx, call });
+    expect(raced).toMatchObject({ prefilled: false });
+    expect("answered" in raced).toBe(false);
+    expect(isFailure(raced)).toBe(true);
+    mocks.rpcResult = { data: null, error: { code: "42501", message: "refused" } };
     const closed = await prefillOfferTool.execute(input, { ...ctx, call });
     expect(closed).toEqual({ prefilled: false, error: OFFER_CLOSED });
     expect(isFailure(closed)).toBe(true);
-    mocks.rpcResult = { data: null, error: { code: "XX000" } };
+    mocks.rpcResult = { data: null, error: { code: "XX000", message: "boom" } };
     expect(isFailure(await prefillOfferTool.execute(input, { ...ctx, call }))).toBe(true);
     expect(isFailure({ prefilled: true, offerId: "o" })).toBe(false);
   });
@@ -581,6 +634,30 @@ describe("create_case for a buyer", () => {
     ]);
     const mine = toolsFor("buyer").find((item) => item.name === "create_case");
     expect(mine).toBe(createBuyerCaseTool);
+  });
+});
+
+describe("which assistant the page /assistant opens", () => {
+  const none = { listing: false, buyer: false };
+
+  it("an account that only buys, or only sells: its own", () => {
+    expect(assistantPageContext(["buyer"], none)).toBe("buyer");
+    expect(assistantPageContext(["seller"], none)).toBe("seller");
+    // A seller who is not a buyer keeps the seller's, whatever the address asks.
+    expect(assistantPageContext(["seller"], { listing: true, buyer: true })).toBe("seller");
+  });
+
+  it("an account that sells and buys: the seller's, the buyer's when the address asks", () => {
+    const both = ["seller", "buyer"];
+    expect(assistantPageContext(both, none)).toBe("seller");
+    expect(assistantPageContext(both, { listing: true, buyer: false })).toBe("buyer");
+    expect(assistantPageContext(both, { listing: false, buyer: true })).toBe("buyer");
+  });
+
+  it("neither role (an admin alone): no assistant on this page", () => {
+    expect(assistantPageContext(["admin"], { listing: true, buyer: true })).toBeNull();
+    expect(assistantPageContext([], none)).toBeNull();
+    expect(assistantPageContext(["admin", "buyer"], none)).toBe("buyer");
   });
 });
 

@@ -12,7 +12,7 @@ import type { SearchFilters, SearchSort } from "@/lib/validations/search";
 const NONE: SearchRequest = {
   location: "",
   radiusKm: 0,
-  propertyType: "",
+  propertyType: "any",
   budgetMinEuros: 0,
   budgetMaxEuros: 0,
   surfaceMinM2: 0,
@@ -22,7 +22,7 @@ const NONE: SearchRequest = {
   outdoor: [],
   parking: false,
   elevator: false,
-  dpeMax: "",
+  dpeMax: "any",
   sort: "recent",
 };
 

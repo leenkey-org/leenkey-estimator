@@ -13,7 +13,7 @@ const t = fr.assistant.listings;
 
 /**
  * The listings a search of the assistant found (search_listings, L2-06), in
- * the conversation, under the answer: their number, 5 cards at most
+ * the conversation, before what the assistant says of them: their number, 5 cards at most
  * (PropertyCard compact, DESIGN.md 10.3) and the way to the search page with
  * the same criteria. The addresses are built here, from a slug and from the
  * parameters of the search: never taken as written in the log.

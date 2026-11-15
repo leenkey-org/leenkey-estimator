@@ -5,6 +5,7 @@ import { requireProfile } from "@/core/auth/session";
 import { listingFacts } from "@/leenkey/ai/buyer-data";
 import { AssistantPageChat } from "@/leenkey/ai/components/assistant-page-chat";
 import { AssistantPageHeader } from "@/leenkey/ai/components/assistant-page-header";
+import { assistantPageContext } from "@/leenkey/ai/page-context";
 import { assistantConversation } from "@/leenkey/ai/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { frAssistant } from "@/lib/i18n/sections/assistant";
@@ -37,10 +38,10 @@ export default async function AssistantPage({ searchParams }: Props) {
   const profile = await requireProfile();
   const params = await searchParams;
   const listingId = uuid(params.annonce);
-  const sells = profile.roles.includes("seller");
-  const buys = profile.roles.includes("buyer");
-  const asksBuyer = listingId !== null || params.contexte === "acquereur";
-  const context = buys && (asksBuyer || !sells) ? "buyer" : sells ? "seller" : null;
+  const context = assistantPageContext(profile.roles, {
+    listing: listingId !== null,
+    buyer: params.contexte === "acquereur",
+  });
   if (!context) {
     redirect(profile.roles.includes("admin") ? ROUTES.adminAssistant : ROUTES.account);
   }

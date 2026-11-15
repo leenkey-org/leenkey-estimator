@@ -38,10 +38,11 @@ export const getListingPublicTool: AiTool<Input, unknown> = {
   requiresConfirmation: false,
   contexts: ["buyer"],
   async execute({ listingId }) {
-    const found = await listingFacts(listingId);
+    const found = await listingFacts(listingId, { withSummary: true });
     if (!found.ok) return { error: "The listing could not be read. Try again later." };
     if (!found.data) return { error: LISTING_NOT_FOUND };
-    const { slug, ...facts } = found.data;
-    return { ...facts, page: `/annonce/${slug}` };
+    // Never an address of a page: the model writes plain text, a link would not open.
+    const { slug: _slug, ...facts } = found.data;
+    return facts;
   },
 };

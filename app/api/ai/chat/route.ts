@@ -45,7 +45,7 @@ export async function POST(request: Request): Promise<Response> {
   }
   const parsed = chatRequestSchema.safeParse(body);
   if (!parsed.success) return json({ error: "invalid" }, 400);
-  // The context of a role of the account (the seller, until lot 2).
+  // The context of a role of the account: the seller, the buyer (L2-06).
   if (!profile.roles.includes(parsed.data.context)) return json({ error: "forbidden" }, 403);
   if (!isAiConfigured()) return json({ error: "unavailable" }, 503);
 

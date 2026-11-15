@@ -143,9 +143,9 @@ const ERROR_OF: Record<string, ChatError> = {
  * answers in blue tint on the left, written as they stream; the changes
  * proposed as ConfirmActionCard, before and after, « Confirmer » or
  * « Annuler »; then the turn goes on. Its field at the bottom (Composer).
- * For a buyer (L2-06): the listings a search found, as cards under the
- * answer, and the draft of an offer prepared, whose form opens once
- * confirmed.
+ * For a buyer (L2-06): the listings a search found, as cards before what
+ * the assistant says of them, and the draft of an offer prepared, whose
+ * form opens once confirmed.
  */
 export function AssistantChat({
   context,
@@ -264,7 +264,7 @@ export function AssistantChat({
       writing.current = null;
       setReading(true);
     } else if (event.type === "shown") {
-      // The listings of a search: cards under the answer being written.
+      // The listings of a search: cards in the conversation, before the sentence that follows.
       const listings = shownListings.safeParse(event.data);
       if (listings.success) {
         writing.current = null;
@@ -513,6 +513,8 @@ export function AssistantChat({
                 cancelLabel={t.action.cancel}
                 onConfirm={() => void answer(item.toolCallId, true)}
                 onCancel={() => void answer(item.toolCallId, false)}
+                // A price is never confirmed unseen (the listing went off line since).
+                confirmDisabled={item.name === "prefill_offer" && item.preview === null}
                 after={
                   href ? (
                     <Button asChild variant="secondary" size="sm">

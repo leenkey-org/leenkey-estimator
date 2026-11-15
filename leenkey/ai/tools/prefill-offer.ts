@@ -110,7 +110,12 @@ export const prefillOfferTool: AiTool<Input, Output, OfferPrefillPreview> = {
       p_price_cents: priceEuros * 100,
     });
     if (!error) return { prefilled: true, offerId: data };
-    if (error.code === "23505") return { prefilled: false, answered: true };
+    // The result of this call is already in the log (a second click, another
+    // tab). Any other duplicate (a draft created by the form at the same
+    // moment) is a failure, said as one: the call stays answered by it.
+    if (error.code === "23505" && error.message.includes("ai_messages_tool_result_idx")) {
+      return { prefilled: false, answered: true };
+    }
     // The policy said no: the listing went off line, an offer was accepted meanwhile.
     if (error.code === "42501") return { prefilled: false, error: OFFER_CLOSED };
     console.error("[ai] offer prefill failed", {

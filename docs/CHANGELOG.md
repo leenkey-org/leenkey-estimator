@@ -14,7 +14,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 
 ### 2026-11-15 · L2-06 · PR #104 · Assistant acquéreur
 - Ajouté : l'assistant de l'acquéreur, dans son espace (panneau à partir de 768 px, bouton à côté de la cloche sur téléphone), depuis les notifications et depuis une annonce (« Demander à l'assistant ») ; `/assistant?annonce=…` ou `?contexte=acquereur`.
-- Ajouté : recherche en langage naturel (`search_listings`) : les biens trouvés s'affichent en cartes sous la réponse, avec le lien vers la recherche du site aux mêmes critères ; détails publics d'une annonce (`get_listing_public`).
+- Ajouté : recherche en langage naturel (`search_listings`) : les biens trouvés s'affichent en cartes dans la conversation, avec le lien vers la recherche du site aux mêmes critères ; détails publics d'une annonce (`get_listing_public`).
 - Ajouté : « Préparer mon offre » (`prefill_offer`) : le prix dit dans la conversation est écrit dans le brouillon après confirmation, puis le formulaire de l'offre s'ouvre ; rien n'est envoyé au vendeur.
 - Ajouté : demande à l'équipe Leenkey depuis l'assistant acquéreur (`create_case`), relue et confirmée.
 - Ajouté : `npm run ai:eval-search` (les 10 recherches de test contre le vrai modèle, hors CI) ; la page « Intelligence artificielle » décrit l'assistant acquéreur et le résumé d'annonce.

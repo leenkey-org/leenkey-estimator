@@ -11,9 +11,12 @@
 -- its result is logged, once (ai_messages_tool_result_idx): a call already
 -- answered (cancelled, replaced by a new message, confirmed in another tab)
 -- or a listing that takes no offer from this buyer (offer_can_draft) leaves
--- both as they were. The draft of the buyer on this listing is the one that
--- changes (offers_one_draft_idx); without one, it is created, as the first
--- step of the form does. Its declarations are unticked, as after any change
+-- both as they were. The rule is checked here too: the policy of an update
+-- only asks that the draft be the buyer's, and a draft written before the
+-- listing went off line (or before the buyer emptied their project) would
+-- take a price for a form that no longer opens. The draft of the buyer on
+-- this listing is the one that changes (offers_one_draft_idx); without one,
+-- it is created, as the first step of the form does. Its declarations are unticked, as after any change
 -- of a step: what was declared is no longer what is written.
 --
 -- No table, no policy. The file only adds.
@@ -34,6 +37,10 @@ begin
   end if;
   if p_price_cents is null or p_price_cents <= 0 or p_price_cents % 100 <> 0 then
     raise exception 'ai_prefill_offer: a price in whole euros' using errcode = '22023';
+  end if;
+  if p_listing_id is null or not public.offer_can_draft(p_listing_id) then
+    raise exception 'ai_prefill_offer: this listing takes no offer from this buyer'
+      using errcode = '42501';
   end if;
   insert into public.ai_messages (conversation_id, role, content)
   values (p_conversation_id, 'tool', jsonb_build_object(
