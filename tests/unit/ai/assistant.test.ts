@@ -600,9 +600,16 @@ describe("prompts", () => {
 
 describe("the tools of the seller", () => {
   it("one name each, the names of SPEC-V2 12, a schema for the model with the fields of Zod", () => {
-    const names = ALL_TOOLS.map((item) => item.name);
-    expect(new Set(names).size).toBe(names.length);
-    expect(names.sort()).toEqual([
+    // One name each within a context (create_case has one tool per context, L2-06).
+    for (const context of ["seller", "buyer"] as const) {
+      const offered = toolsFor(context).map((item) => item.name);
+      expect(new Set(offered).size, context).toBe(offered.length);
+    }
+    expect(
+      toolsFor("seller")
+        .map((item) => item.name)
+        .sort(),
+    ).toEqual([
       "contact_advisor",
       "create_case",
       "draft_listing_description",
@@ -615,6 +622,12 @@ describe("the tools of the seller", () => {
       "update_listing_description",
       "update_listing_price",
     ]);
+    expect(
+      toolsFor("buyer")
+        .map((item) => item.name)
+        .sort(),
+    ).toEqual(["create_case", "get_listing_public", "prefill_offer", "search_listings"]);
+    expect(toolsFor("admin")).toEqual([]);
     for (const item of ALL_TOOLS) {
       const schema = item.inputSchema;
       expect(schema, item.name).toBeDefined();
@@ -631,7 +644,8 @@ describe("the tools of the seller", () => {
       const writes =
         item.name.startsWith("update_") ||
         item.name === "contact_advisor" ||
-        item.name === "create_case";
+        item.name === "create_case" ||
+        item.name === "prefill_offer";
       expect(item.requiresConfirmation, item.name).toBe(writes);
       if (writes) expect(item.preview, item.name).toBeTypeOf("function");
     }
@@ -752,7 +766,7 @@ describe("the stream and the request of the browser", () => {
     expect(second.rest).toBe("");
   });
 
-  it("a message of the seller, or going on after confirmations; the buyer with lot 2", () => {
+  it("a message of the seller or of the buyer, or going on after confirmations", () => {
     const id = "5eed1000-0000-4000-8000-000000000001";
     expect(chatRequestSchema.safeParse({ context: "seller", message: " Bonjour " }).success).toBe(
       true,
@@ -762,6 +776,16 @@ describe("the stream and the request of the browser", () => {
     ).toBe(false);
     expect(chatRequestSchema.safeParse({ context: "seller", message: "   " }).success).toBe(false);
     expect(chatRequestSchema.safeParse({ context: "buyer", message: "Bonjour" }).success).toBe(
+      true,
+    );
+    expect(
+      chatRequestSchema.safeParse({ context: "buyer", message: "Bonjour", listingId: id }).success,
+    ).toBe(true);
+    expect(
+      chatRequestSchema.safeParse({ context: "buyer", message: "Bonjour", listingId: "1" }).success,
+    ).toBe(false);
+    // The back office has no conversation here (its assistant is its own screens, L1-30d).
+    expect(chatRequestSchema.safeParse({ context: "admin", message: "Bonjour" }).success).toBe(
       false,
     );
     expect(chatRequestSchema.safeParse({ context: "seller", resume: true }).success).toBe(false);

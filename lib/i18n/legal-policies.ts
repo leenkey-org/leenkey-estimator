@@ -889,6 +889,12 @@ const aiSections: readonly LegalSection[] = [
         "Dans votre espace vendeur, l'assistant Leenkey répond à vos questions sur la vente de votre bien, à partir de notre base de questions fréquentes et des informations de votre espace. Il peut aussi vous proposer un texte : une description d'annonce, une réponse à un message.",
       ),
       para(
+        "Dans votre espace acquéreur et depuis une annonce, il cherche des annonces à partir de votre demande, répond à vos questions à partir de ce que l'annonce publie et de notre base de questions fréquentes, et peut préparer le brouillon de votre offre d'achat avec le prix que vous lui indiquez : vous complétez, relisez et envoyez votre offre vous-même.",
+      ),
+      para(
+        "Sur la page d'une annonce, le « Résumé par l'assistant » reprend en deux phrases ce que le vendeur a publié.",
+      ),
+      para(
         "Sur le site, sans compte, il répond à vos questions sur nos formules et vous aide à souscrire, à partir de nos formules et de notre FAQ seulement.",
       ),
       para(
@@ -934,6 +940,6 @@ const aiSections: readonly LegalSection[] = [
 ];
 
 export const aiText = {
-  updated: "En vigueur depuis le 9 novembre 2026",
+  updated: "En vigueur depuis le 16 novembre 2026",
   sections: aiSections,
 } as const;

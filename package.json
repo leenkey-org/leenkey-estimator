@@ -22,6 +22,7 @@
     "kb:import": "scripts/kb-import.sh local",
     "kb:import:staging": "scripts/kb-import.sh staging",
     "kb:eval": "node scripts/kb-eval.mjs",
+    "ai:eval-search": "vitest run --config vitest.eval.config.ts",
     "db:types": "scripts/db-types.sh",
     "stripe:listen": "stripe listen --events checkout.session.completed,charge.refunded --forward-to localhost:3000/api/webhooks/stripe"
   },

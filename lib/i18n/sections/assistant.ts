@@ -148,7 +148,7 @@ export const frAssistant = {
     intro:
       "Décrivez le bien que vous cherchez, posez vos questions sur une annonce ou sur les étapes d'un achat. L'assistant peut aussi préparer votre offre d'achat, toujours après votre confirmation.",
     suggestions: [
-      "Je cherche un appartement de 3\u00A0pièces à Savigny-sur-Orge",
+      "Je cherche un 3\u00A0pièces à Savigny-sur-Orge",
       "Comment se passe une offre d'achat ?",
       "Que vérifier avant de visiter un bien ?",
     ],
@@ -156,7 +156,7 @@ export const frAssistant = {
     listingSuggestions: [
       "Que faut-il savoir sur ce bien ?",
       "Comment faire une offre sur ce bien ?",
-      "Trouve-moi des biens du même type dans cette ville",
+      "Quelles questions poser au vendeur ?",
     ],
     reading: "L'assistant consulte les annonces…",
     back: "Retour à mon espace",

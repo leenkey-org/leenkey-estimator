@@ -9,8 +9,9 @@ import type { TextCall } from "@/core/ai/generate";
 // scenarios of the tests: « description » (reads the properties and the
 // listing of the conversation, or the first that may change, proposes one of
 // two texts, not the current one, then says what happened), « prix » (5 000 €
-// less), anything else (one sentence). The suggestions (L1-29) give one
-// fixed text each.
+// less), anything else (one sentence). The buyer (L2-06) has its own
+// scenarios (mockBuyerModel). The suggestions (L1-29) give one fixed text
+// each.
 
 /** The motive of a refusal drafted for the team (L1-30d). */
 export const MOCK_REJECTION_REASON =
@@ -155,7 +156,129 @@ function conversationProperty(file: string): string | null {
   return /La conversation porte sur le bien ([0-9a-f-]{36})/.exec(file)?.[1] ?? null;
 }
 
-export const mockModel: ModelCall = async (request, { onText }) => {
+/** The listing the buyer is reading, as their file names it. */
+function viewedListing(file: string): string | null {
+  return /Annonce consultée en ce moment : ([0-9a-f-]{36})/.exec(file)?.[1] ?? null;
+}
+
+/** « 285 000 € », « 285000 euros »: the amount, in euros. */
+function eurosIn(text: string): number | null {
+  const match = /(\d[\d\s\u00A0\u202F]*)\s*(?:€|euros?)/i.exec(text);
+  if (!match) return null;
+  const value = Number(match[1].replace(/[\s\u00A0\u202F]/g, ""));
+  return Number.isSafeInteger(value) && value > 0 ? value : null;
+}
+
+/**
+ * A search as the model of the tests writes it down: the type, the rooms,
+ * the commune after « à » and the budget, read from a few fixed turns of
+ * phrase. Not the reading of the real model (scripts/ai-eval-search.mjs).
+ */
+export function mockSearchRequest(asked: string) {
+  const type = /appartement/i.test(asked)
+    ? "appartement"
+    : /maison/i.test(asked)
+      ? "maison"
+      : /terrain/i.test(asked)
+        ? "terrain"
+        : "";
+  const rooms = /(\d+)\s*pièces?/i.exec(asked);
+  const place = /(?:^|\s)à\s+([A-ZÀ-Ý][\p{L}'’-]*(?: [A-ZÀ-Ý][\p{L}'’-]*)*)/u.exec(asked);
+  return {
+    location: place?.[1] ?? "",
+    radiusKm: 0,
+    propertyType: type,
+    budgetMinEuros: 0,
+    budgetMaxEuros: eurosIn(asked) ?? 0,
+    surfaceMinM2: 0,
+    surfaceMaxM2: 0,
+    roomsMin: rooms ? Number(rooms[1]) : 0,
+    bedroomsMin: 0,
+    outdoor: [],
+    parking: false,
+    elevator: false,
+    dpeMax: "",
+    sort: "recent",
+  };
+}
+
+/**
+ * The assistant of the buyer in the tests (L2-06): « cherche » (a search of
+ * the listings), « offre » with an amount (the draft of an offer on the
+ * listing being read), « équipe » (a request to the team), « bien » or
+ * « annonce » (the listing being read), anything else (one sentence).
+ */
+const mockBuyerModel: ModelCall = async (request, { onText }) => {
+  const { text: asked, file, after } = currentTurn(request.messages);
+  const result = lastResult(after);
+  const say = (value: string) => {
+    onText(value);
+    return message([text(value)], "end_turn");
+  };
+  const listingId = viewedListing(file);
+
+  if (/équipe/i.test(asked)) {
+    if (!result) {
+      const summary = `Demande transmise par l'assistant : ${asked.slice(0, 200)}`;
+      onText("Voici votre demande pour l'équipe Leenkey. ");
+      return message(
+        [
+          text("Voici votre demande pour l'équipe Leenkey. "),
+          call("create_case", { subject: "Demande d'un acquéreur", summary }),
+        ],
+        "tool_use",
+      );
+    }
+    if (result.content.includes('"sent":true')) return say("C'est transmis à l'équipe Leenkey.");
+    if (result.content.includes("cancelled")) return say("Très bien, je n'envoie rien.");
+    return say("La demande n'a pas pu être envoyée.");
+  }
+
+  if (/offre/i.test(asked) && eurosIn(asked) !== null) {
+    if (!result) {
+      if (!listingId) return say("Dites-moi sur quelle annonce vous souhaitez faire une offre.");
+      onText("Voici l'offre que je peux préparer. ");
+      return message(
+        [
+          text("Voici l'offre que je peux préparer. "),
+          call("prefill_offer", { listingId, priceEuros: eurosIn(asked) }),
+        ],
+        "tool_use",
+      );
+    }
+    if (result.content.includes('"prefilled":true')) return say("Votre offre est préparée.");
+    if (result.content.includes("cancelled")) return say("Très bien, je ne prépare rien.");
+    if (result.content.includes("buying project")) {
+      return say("Renseignez d'abord votre projet d'achat.");
+    }
+    return say("Votre offre n'a pas pu être préparée.");
+  }
+
+  if (/cherche/i.test(asked)) {
+    if (!result) return message([call("search_listings", mockSearchRequest(asked))], "tool_use");
+    const total = /"total":(\d+)/.exec(result.content)?.[1];
+    if (!total) return say("La recherche n'a pas pu être lancée.");
+    return say(
+      total === "0"
+        ? "Aucun bien ne correspond à cette recherche pour le moment."
+        : `J'ai trouvé ${total} bien(s) pour cette recherche.`,
+    );
+  }
+
+  if (/\b(bien|annonce)\b/i.test(asked) && listingId) {
+    if (!result) return message([call("get_listing_public", { listingId })], "tool_use");
+    const title = /"title":"([^"]*)"/.exec(result.content)?.[1];
+    return say(title ? `Cette annonce : ${title}.` : "Cette annonce n'est plus en ligne.");
+  }
+  return say(`Réponse de test de l'assistant à : ${asked.slice(0, 80)}`);
+};
+
+export const mockModel: ModelCall = async (request, options) => {
+  // The tools offered say who is asking: the buyer has search_listings.
+  if (request.tools?.some((tool) => "name" in tool && tool.name === "search_listings")) {
+    return mockBuyerModel(request, options);
+  }
+  const { onText } = options;
   const { text: asked, file, after } = currentTurn(request.messages);
   const result = lastResult(after);
   const say = (value: string) => {

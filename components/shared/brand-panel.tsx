@@ -82,7 +82,7 @@ export function BrandPanel({
             hero ? "gap-4 lg:gap-5" : titleAccent ? "gap-3" : "gap-2",
             illustration && "lg:max-w-lk-form",
             // The title never runs under the corner.
-            corner && (cornerWide ? "max-md:pr-26" : "max-md:pr-12"),
+            corner && "max-md:pr-12",
           )}
         >
           <Title
@@ -92,6 +92,8 @@ export function BrandPanel({
             className={cn(
               "text-lk-display font-bold text-wide",
               hero && "md:text-lk-display-md lg:text-lk-display-lg",
+              // Two buttons in the corner: the title alone keeps clear of them.
+              corner && cornerWide && "max-md:pr-14",
             )}
           >
             {words ? (

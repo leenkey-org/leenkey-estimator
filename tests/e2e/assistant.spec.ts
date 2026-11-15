@@ -7,6 +7,8 @@ import { expect, test, type Page } from "@playwright/test";
 // its page on a phone (the button of the header of « Ma vente »), an answer
 // streamed, a change proposed with its before and after, cancelled: the
 // listing stays as it is. The change confirmed: assistant-live.spec.ts.
+// The assistant of the buyer (L2-06): a search shown as cards, in its panel
+// and on its page; what it writes: buyer-assistant-live.spec.ts.
 // Only conversations of the assistant are written (and its count of the day).
 
 const seeded = process.env.E2E_SEED === "1";
@@ -135,19 +137,101 @@ test("la page de l'assistant sur téléphone : depuis Ma vente, une suggestion, 
   expect(await seriousViolations(page)).toEqual([]);
 });
 
-test("un acquéreur : pas de bouton de l'assistant, la page annonce celui qui arrive", async ({
+// L2-06: the assistant of the buyer. buyer_c (Chloé) has declared a project
+// in the seed; the search is one of the seed: one apartment of 3 rooms online
+// in Savigny-sur-Orge (LK-0001).
+const SEARCH = "Je cherche un appartement de 3 pièces à Savigny-sur-Orge";
+const FOUND = "/annonce/appartement-3-pieces-savigny-sur-orge-lk0001";
+
+async function expectSearchShown(page: Page, thread: ReturnType<Page["getByRole"]>) {
+  await expect(thread.getByText("J'ai trouvé 1 bien(s) pour cette recherche.")).toBeVisible();
+  const found = thread.getByRole("region", { name: "Biens trouvés par l'assistant" });
+  await expect(found.getByText("1\u00A0bien trouvé")).toBeVisible();
+  const card = found.getByRole("listitem").getByRole("link");
+  await expect(card).toHaveCount(1);
+  await expect(card).toHaveAttribute("href", FOUND);
+  await expect(card).toContainText("239\u202F000\u00A0€");
+  await expect(card).toContainText("Savigny-sur-Orge");
+  // The same search on the page of the site, with its criteria.
+  await expect(found.getByRole("link", { name: "Ouvrir la recherche" })).toHaveAttribute(
+    "href",
+    "/acheter?ville=savigny-sur-orge&type=appartement&pieces_min=3",
+  );
+  // Never wider than its screen.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+}
+
+test("un acquéreur : son assistant dans un panneau, une recherche montrée en cartes @a11y", async ({
   page,
+  isMobile,
 }) => {
+  test.skip(isMobile, "le panneau s'ouvre à partir de 768 px");
   await signIn(page, "buyer_c", "/acquereur");
-  await expect(page.getByRole("button", { name: "Assistant Leenkey" })).toHaveCount(0);
-  await page.goto("/assistant");
-  await expect(page.getByText("L'assistant de l'espace acquéreur arrive")).toBeVisible();
-  await expect(page.getByLabel("Votre question")).toHaveCount(0);
+  const panel = await openPanel(page);
+  const fresh = panel.getByRole("button", { name: "Nouvelle conversation" });
+  await expect(fresh).toBeEnabled();
+  await fresh.click();
+  await expect(panel.getByText("Décrivez le bien que vous cherchez")).toBeVisible();
+  // The questions of a buyer, never those of a seller.
+  await expect(panel.getByRole("button", { name: "Que dois-je faire maintenant ?" })).toHaveCount(
+    0,
+  );
+  await panel.getByLabel("Votre question").fill(SEARCH);
+  await panel.getByRole("button", { name: "Envoyer" }).click();
+  const thread = panel.getByRole("log", { name: "Conversation avec l'assistant" });
+  await expectSearchShown(page, thread);
+  expect(await seriousViolations(page, '[role="dialog"]')).toEqual([]);
+
+  // Opened again: the same conversation, its cards read again from the log.
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await openPanel(page);
+  await expectSearchShown(page, panel.getByRole("log", { name: "Conversation avec l'assistant" }));
+
   // The route refuses the context of the seller to an account that does not sell.
   const response = await page.request.post("/api/ai/chat", {
     data: { context: "seller", message: "Bonjour" },
   });
   expect(response.status()).toBe(403);
+});
+
+test("un acquéreur sur téléphone : sa page depuis son accueil, une recherche montrée en cartes @a11y", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, "la page s'ouvre depuis l'en-tête sur téléphone");
+  await signIn(page, "buyer_c", "/acquereur");
+  await expect(page.getByRole("button", { name: "Assistant Leenkey" })).toBeHidden();
+  // Beside the bell, the title never under them.
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await page.getByRole("link", { name: "Ouvrir l'assistant Leenkey" }).click();
+  await expect(page).toHaveURL("/assistant?contexte=acquereur");
+  await expect(page.getByRole("heading", { level: 1, name: "Assistant Leenkey" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Retour à mon espace" })).toHaveAttribute(
+    "href",
+    "/acquereur",
+  );
+  const intro = page.getByText("Décrivez le bien que vous cherchez");
+  await expect(async () => {
+    await page.getByRole("button", { name: "Nouvelle conversation" }).click();
+    await expect(intro).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+  // The questions proposed fit the screen of a phone.
+  await expect(page.getByRole("button", { name: /^Je cherche un 3/ })).toBeVisible();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+  ).toBe(true);
+  const thread = page.getByRole("log", { name: "Conversation avec l'assistant" });
+  await expect(async () => {
+    await page.getByLabel("Votre question").fill(SEARCH);
+    await page.getByRole("button", { name: "Envoyer", exact: true }).click();
+    await expect(thread.getByText("Vous", { exact: true })).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+  await expectSearchShown(page, thread);
+  await expect(page.getByLabel("Votre question")).toBeInViewport();
+  expect(await seriousViolations(page)).toEqual([]);
 });
 
 test("la route : une session, une demande valide, sa propre conversation", async ({
