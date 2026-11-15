@@ -35,15 +35,21 @@ test("le pied de page des pages V1 a les mêmes liens et l'adresse légale", asy
   await expect(footer).toContainText("36 rue Pierre Brossolette, 91360 Épinay-sur-Orge");
 });
 
-test("les textes légaux sont publiés, datés, avec l'adresse légale (2026-11-09)", async ({
-  page,
-}) => {
-  for (const path of ["/cgv", "/confidentialite", "/signalement", "/intelligence-artificielle"]) {
+test("les textes légaux sont publiés, datés, avec l'adresse légale", async ({ page }) => {
+  // The page about artificial intelligence says what the assistant of the
+  // buyer does since L2-06: dated of that day.
+  for (const [path, date] of [
+    ["/cgv", "9 novembre 2026"],
+    ["/confidentialite", "9 novembre 2026"],
+    ["/signalement", "9 novembre 2026"],
+    ["/intelligence-artificielle", "15 novembre 2026"],
+  ]) {
     await page.goto(path);
     await expect(page.getByText("en cours de rédaction")).toHaveCount(0);
-    await expect(page.getByText(/^En vigueur depuis le 9 novembre 2026/)).toBeVisible();
+    await expect(page.getByText(new RegExp(`^En vigueur depuis le ${date}`))).toBeVisible();
     await expect(page.locator("address")).toContainText("36 rue Pierre Brossolette");
   }
+  await expect(page.getByText(/Dans votre espace acquéreur et depuis une annonce/)).toBeVisible();
 });
 
 test("la politique cookies liste les cookies et le stockage du site", async ({ page }) => {
