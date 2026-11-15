@@ -24,6 +24,8 @@ export type ChatEvent =
   | { type: "text"; delta: string }
   /** A tool that reads is running (« Je consulte votre dossier… »). */
   | { type: "tool"; name: string }
+  /** What a tool that read shows the person (AiTool.show): cards in the conversation. */
+  | { type: "shown"; toolCallId: string; name: string; data: unknown }
   /** A tool that writes waits for the person: what it will change. */
   | { type: "confirm"; toolCallId: string; name: string; preview: unknown }
   | { type: "done"; reason: "end" | "confirm" | "limit" | "length" }
@@ -244,6 +246,11 @@ export async function runTurn(input: TurnInput): Promise<void> {
           return;
         }
         results.push(prepared.result);
+        const shown =
+          prepared.result.status === "done" ? tool?.show?.(prepared.result.result) : null;
+        if (shown !== null && shown !== undefined) {
+          emit({ type: "shown", toolCallId: call.id, name: call.name, data: shown });
+        }
       }
     }
     // The results already given wait with the actions to confirm: the

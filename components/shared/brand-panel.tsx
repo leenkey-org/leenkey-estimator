@@ -33,6 +33,8 @@ export type BrandPanelProps = {
   children?: ReactNode;
   /** In the top right corner, below 768 px: the bell of a signed-in home. */
   corner?: ReactNode;
+  /** The corner holds two buttons (the assistant beside the bell): more room kept beside the title. */
+  cornerWide?: boolean;
   className?: string;
 };
 
@@ -52,6 +54,7 @@ export function BrandPanel({
   illustration = false,
   children,
   corner,
+  cornerWide = false,
   className,
 }: BrandPanelProps) {
   const hero = titleSize === "hero";
@@ -79,7 +82,7 @@ export function BrandPanel({
             hero ? "gap-4 lg:gap-5" : titleAccent ? "gap-3" : "gap-2",
             illustration && "lg:max-w-lk-form",
             // The title never runs under the corner.
-            corner && "max-md:pr-12",
+            corner && (cornerWide ? "max-md:pr-26" : "max-md:pr-12"),
           )}
         >
           <Title

@@ -1,3 +1,5 @@
+import { buyerAssistantHref } from "@/leenkey/ai/components/assistant-ask-link";
+import { AssistantHeaderLink } from "@/leenkey/ai/components/assistant-header-link";
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -170,7 +172,14 @@ export default async function BuyerHomePage() {
         title={fr.spaces.greeting(profile.firstName)}
         description={t.description}
         illustration
-        corner={<SpaceNotificationBell roles={profile.roles} profileId={profile.id} tone="dark" />}
+        cornerWide
+        corner={
+          // The assistant beside the bell on a phone (L2-06); from 768 px, AssistantFab.
+          <div className="flex shrink-0 items-center gap-2">
+            <AssistantHeaderLink href={buyerAssistantHref()} />
+            <SpaceNotificationBell roles={profile.roles} profileId={profile.id} tone="dark" />
+          </div>
+        }
         className="pb-8"
       />
       <div className="lk-frame flex flex-col gap-9">

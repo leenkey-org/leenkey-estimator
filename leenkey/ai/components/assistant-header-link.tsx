@@ -11,18 +11,22 @@ const fr = { assistant: frAssistant } as const;
 /**
  * The assistant in the header of « Ma vente » on a phone (DESIGN.md 10.4,
  * Q26: beside the bell): an IconButton on-dark, Sparkles, to the page
- * /assistant about the property shown. From 768 px, AssistantFab.
+ * /assistant about the property shown. From 768 px, AssistantFab. The same
+ * on the home of a buyer (L2-06), to their own assistant (`href`).
  */
 export function AssistantHeaderLink({
-  propertyId,
+  propertyId = null,
+  href,
   className,
 }: {
-  propertyId: string | null;
+  propertyId?: string | null;
+  /** The page of the assistant, when it is not the one of the seller. */
+  href?: string;
   className?: string;
 }) {
   return (
     <Link
-      href={propertyId ? `${ROUTES.assistant}?bien=${propertyId}` : ROUTES.assistant}
+      href={href ?? (propertyId ? `${ROUTES.assistant}?bien=${propertyId}` : ROUTES.assistant)}
       aria-label={fr.assistant.open}
       className={cn(
         iconButtonVariants({ variant: "on-dark" }),

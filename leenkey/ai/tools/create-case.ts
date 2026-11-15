@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import type { AiTool } from "@/core/ai/tools/types";
+import type { AiTool, ToolContext } from "@/core/ai/tools/types";
 import { hasEntitlement } from "@/leenkey/billing/entitlements";
 import { propertyName } from "@/leenkey/properties/sheet";
 import { createClient } from "@/lib/supabase/server";
@@ -36,8 +36,38 @@ const HAS_ADVISOR =
   "Use contact_advisor for this property instead.";
 
 export const TOO_MANY_REQUESTS =
-  "The seller already has 5 requests the team has not closed yet: nothing was sent. " +
+  "The person already has 5 requests the team has not closed yet: nothing was sent. " +
   "The team answers them by email; a new one can be sent once one is closed.";
+
+/** The case and the result of the tool, in one transaction (ai_create_case). */
+async function send(
+  ctx: ToolContext,
+  subject: string,
+  summary: string,
+  propertyId: string,
+): Promise<Output> {
+  if (!ctx.call) return { sent: false, error: "Not confirmed by the person: nothing was sent." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("ai_create_case", {
+    p_conversation_id: ctx.call.conversationId,
+    p_tool_use_id: ctx.call.toolUseId,
+    p_tool_name: ctx.call.name,
+    p_subject: subject,
+    p_summary: summary,
+    p_property: propertyId || undefined,
+  });
+  if (!error) return { sent: true, caseId: data };
+  if (error.code === "23505") return { sent: false, answered: true };
+  if (error.code === "54000") return { sent: false, error: TOO_MANY_REQUESTS };
+  if (error.code !== "42501" && error.code !== "22023") {
+    console.error("[ai] case handoff failed", {
+      user_id: ctx.profileId,
+      entity_id: propertyId || undefined,
+      code: error.code,
+    });
+  }
+  return { sent: false, error: "The request could not be sent. Nothing was sent." };
+}
 
 export const createCaseTool: AiTool<Input, Output, CasePreview> = {
   name: "create_case",
@@ -92,25 +122,53 @@ export const createCaseTool: AiTool<Input, Output, CasePreview> = {
     if (propertyId && (await hasEntitlement(propertyId, "advisor"))) {
       return { sent: false, error: HAS_ADVISOR };
     }
-    const supabase = await createClient();
-    const { data, error } = await supabase.rpc("ai_create_case", {
-      p_conversation_id: ctx.call.conversationId,
-      p_tool_use_id: ctx.call.toolUseId,
-      p_tool_name: ctx.call.name,
-      p_subject: subject,
-      p_summary: summary,
-      p_property: propertyId || undefined,
-    });
-    if (!error) return { sent: true, caseId: data };
-    if (error.code === "23505") return { sent: false, answered: true };
-    if (error.code === "54000") return { sent: false, error: TOO_MANY_REQUESTS };
-    if (error.code !== "42501" && error.code !== "22023") {
-      console.error("[ai] case handoff failed", {
-        user_id: ctx.profileId,
-        entity_id: propertyId || undefined,
-        code: error.code,
-      });
-    }
-    return { sent: false, error: "The request could not be sent. Nothing was sent." };
+    return send(ctx, subject, summary, propertyId);
+  },
+};
+
+// The same handoff for a buyer (L2-06): a request about no property (a buyer
+// has none in this context: a listing is named in the text of the request),
+// to the Leenkey team, which answers by email. A buyer has no adviser: the
+// advisers belong to the plans of the sellers.
+
+const buyerInput = z.object({
+  subject: z.string().trim().min(3).max(CASE_SUBJECT_MAX),
+  summary: z.string().trim().min(CASE_SUMMARY_MIN).max(CASE_SUMMARY_MAX),
+});
+
+type BuyerInput = z.infer<typeof buyerInput>;
+
+export const createBuyerCaseTool: AiTool<BuyerInput, Output, CasePreview> = {
+  name: "create_case",
+  description:
+    "Hand a request of the buyer over to the Leenkey team (a person): a short subject and a " +
+    "summary written for the team (the request, its context, the listing or the offer it is " +
+    "about with its reference, what the buyer expects), in French, in the buyer's voice. Only " +
+    "when the buyer asks for a person, or for a dispute or a problem the assistant cannot " +
+    "settle. The buyer reads the request and must confirm before it is sent; the team answers " +
+    "by email.",
+  input: buyerInput,
+  inputSchema: {
+    type: "object",
+    properties: {
+      subject: {
+        type: "string",
+        description: `What the request is about, in a few words, plain text, ${CASE_SUBJECT_MAX} characters at most.`,
+      },
+      summary: {
+        type: "string",
+        description: `The request for the team, plain text, ${CASE_SUMMARY_MAX} characters at most.`,
+      },
+    },
+    required: ["subject", "summary"],
+    additionalProperties: false,
+  },
+  requiresConfirmation: true,
+  contexts: ["buyer"],
+  async preview({ subject, summary }) {
+    return { ok: true, data: { kind: "case_request", propertyName: null, subject, summary } };
+  },
+  async execute({ subject, summary }, ctx) {
+    return send(ctx, subject, summary, "");
   },
 };

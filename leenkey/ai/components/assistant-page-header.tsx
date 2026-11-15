@@ -10,19 +10,27 @@ import { cn } from "@/lib/utils";
 const fr = { assistant: frAssistant } as const;
 
 /**
- * The header of the page /assistant (gabarit G6): back to « Ma vente », the
- * Sparkles and « Assistant Leenkey » (h1), an action on its right. Sticky,
- * 73 px as the header of a conversation (app/globals.css).
+ * The header of the page /assistant (gabarit G6): back to « Ma vente » (to
+ * their space or to the listing they came from, for a buyer), the Sparkles
+ * and « Assistant Leenkey » (h1), an action on its right. Sticky, 73 px as
+ * the header of a conversation (app/globals.css).
  */
-export function AssistantPageHeader({ action }: { action?: ReactNode }) {
+export function AssistantPageHeader({
+  action,
+  back,
+}: {
+  action?: ReactNode;
+  /** Where the arrow leads; « Ma vente » by default. */
+  back?: { href: string; label: string };
+}) {
   return (
     <header
       data-sticky-subheader="conversation"
       className="sticky top-0 z-20 box-content flex h-18 items-center gap-3 border-b border-lk-line bg-lk-surface px-4 md:top-18"
     >
       <Link
-        href={ROUTES.seller}
-        aria-label={fr.assistant.back}
+        href={back?.href ?? ROUTES.seller}
+        aria-label={back?.label ?? fr.assistant.back}
         className={cn(
           iconButtonVariants({ variant: "stone" }),
           "inline-flex items-center justify-center",

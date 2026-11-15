@@ -11,15 +11,17 @@ import type { AnyAiTool, ToolContext } from "@/core/ai/tools/types";
 import type { SessionProfile } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { ChatRequest } from "@/lib/validations/assistant";
-import { sellerContextText } from "./context";
+import { buyerFile } from "./buyer-data";
+import { buyerContextText, sellerContextText } from "./context";
 import { mockModel } from "./mock";
-import { sellerFile } from "./seller-data";
+import { sellerFile, sellerHasPaidPlan } from "./seller-data";
 import { toolsFor } from "./tools";
 
-// A turn of the assistant of the seller (L1-28), prepared before the answer
-// streams (app/api/ai/chat/route.ts): the conversation (found or opened), the
-// message of the person counted against their daily limit and logged with
-// their file, the history, the system prompt with the FAQ, the tools.
+// A turn of the assistant of a seller (L1-28) or of a buyer (L2-06), prepared
+// before the answer streams (app/api/ai/chat/route.ts): the conversation
+// (found or opened), the message of the person counted against their daily
+// limit and logged with their file, the history, the system prompt with the
+// FAQ of their audience, the tools of their context.
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -27,9 +29,9 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 export const HISTORY_TURNS = 10;
 
 /** What the model reads of an action the person did not confirm. */
-export const DECLINED = "The seller cancelled this action: nothing was changed.";
+export const DECLINED = "The person cancelled this action: nothing was changed.";
 export const SUPERSEDED =
-  "Not run: the seller wrote a new message before answering this action; nothing was changed.";
+  "Not run: the person wrote a new message before answering this action; nothing was changed.";
 
 export type PreparedTurn = {
   conversationId: string;
@@ -79,6 +81,49 @@ const endsWithResults = (messages: readonly Anthropic.MessageParam[]) => {
   );
 };
 
+/**
+ * The file of the person in the context of the turn: what counts for their
+ * daily limit, the properties a conversation may be about, and the summary
+ * given to the model with their message.
+ */
+type TurnFile = {
+  hasPaidPlan: boolean;
+  owns(propertyId: string): boolean;
+  contextText(propertyId: string | null): string;
+};
+
+async function turnFile(profile: SessionProfile, request: ChatRequest): Promise<TurnFile | null> {
+  const now = new Date();
+  if (request.context === "buyer") {
+    // An account that also sells keeps the limit of its plans (core/ai/quotas.ts).
+    const [file, paid] = await Promise.all([
+      buyerFile(profile.id, request.listingId ?? null),
+      profile.roles.includes("seller") ? sellerHasPaidPlan(profile.id) : false,
+    ]);
+    if (!file || paid === null) return null;
+    return {
+      hasPaidPlan: paid,
+      // A conversation of a buyer is about no property of theirs.
+      owns: () => false,
+      contextText: () => buyerContextText({ firstName: profile.firstName, now, file }),
+    };
+  }
+  const file = await sellerFile(profile.id);
+  if (!file) return null;
+  return {
+    hasPaidPlan: file.hasPaidPlan,
+    owns: (propertyId) => file.properties.some((property) => property.id === propertyId),
+    contextText: (propertyId) =>
+      sellerContextText({
+        firstName: profile.firstName,
+        now,
+        overview: file.overview,
+        total: file.properties.length,
+        propertyId,
+      }),
+  };
+}
+
 export async function prepareTurn(
   profile: SessionProfile,
   request: ChatRequest,
@@ -87,8 +132,8 @@ export async function prepareTurn(
   const context = request.context;
 
   let conversationId = request.conversationId ?? null;
-  // The property of the conversation: given when it opens, kept after.
-  let about = request.propertyId ?? null;
+  // The property of the conversation: given when it opens, kept after (a seller only).
+  let about = context === "seller" ? (request.propertyId ?? null) : null;
   if (conversationId) {
     const found = await findConversation(supabase, profile.id, conversationId);
     if (!found.ok) return { ok: false, error: "unavailable" };
@@ -96,7 +141,7 @@ export async function prepareTurn(
     about = found.data.entityId;
   }
 
-  const [cards, file] = await Promise.all([knowledgeCards(context), sellerFile(profile.id)]);
+  const [cards, file] = await Promise.all([knowledgeCards(context), turnFile(profile, request)]);
   if (!cards.ok || !file) return { ok: false, error: "unavailable" };
 
   const ready = (history: ReturnType<typeof buildHistory>): Prepared => ({
@@ -125,7 +170,7 @@ export async function prepareTurn(
     return quota.ok ? ready(history) : quota;
   }
 
-  if (about && !file.properties.some((property) => property.id === about)) {
+  if (about && !file.owns(about)) {
     // Deleted since the conversation opened: about none of them now.
     if (request.conversationId) about = null;
     else return { ok: false, error: "invalid" };
@@ -154,13 +199,7 @@ export async function prepareTurn(
     }
   }
 
-  const contextText = sellerContextText({
-    firstName: profile.firstName,
-    now: new Date(),
-    overview: file.overview,
-    total: file.properties.length,
-    propertyId: about,
-  });
+  const contextText = file.contextText(about);
   const logged = await logUser(supabase, conversationId, {
     type: "user",
     text: request.message,

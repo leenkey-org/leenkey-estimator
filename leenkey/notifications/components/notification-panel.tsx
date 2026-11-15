@@ -157,10 +157,13 @@ export function NotificationPanel({
         >
           {t.markAllRead}
         </Button>
-        {/* The assistant of the seller (DESIGN.md 10.7, L1-28). */}
-        {space === "seller" ? (
+        {/* The assistant of the seller (DESIGN.md 10.7, L1-28) and of the buyer (L2-06). */}
+        {space === "seller" || space === "buyer" ? (
           <Button asChild variant="outline-ink" size="sm">
-            <Link href={ROUTES.assistant} onClick={close}>
+            <Link
+              href={space === "buyer" ? `${ROUTES.assistant}?contexte=acquereur` : ROUTES.assistant}
+              onClick={close}
+            >
               {fr.assistant.name}
             </Link>
           </Button>

@@ -102,7 +102,7 @@ export type OfferAccess =
   | { state: "closed" };
 
 export async function offerAccess(
-  profile: SessionProfile,
+  profile: Pick<SessionProfile, "id"> & { roles: readonly string[] },
   listingId: string,
 ): Promise<QueryResult<OfferAccess>> {
   const supabase = await createClient();

@@ -8,6 +8,12 @@ export const streamEvent = z.discriminatedUnion("type", [
   z.object({ type: z.literal("text"), delta: z.string() }),
   z.object({ type: z.literal("tool"), name: z.string() }),
   z.object({
+    type: z.literal("shown"),
+    toolCallId: z.string(),
+    name: z.string(),
+    data: z.unknown(),
+  }),
+  z.object({
     type: z.literal("confirm"),
     toolCallId: z.string(),
     name: z.string(),

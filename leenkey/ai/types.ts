@@ -1,4 +1,5 @@
 import type { ActionPreview } from "./previews";
+import type { ShownListings } from "./shown";
 
 // The conversation with the assistant as the browser shows it (L1-28).
 
@@ -15,7 +16,11 @@ export type ChatItem =
       state: ActionState;
       /** Before and after, read when the action waits for the person; null once answered. */
       preview: ActionPreview | null;
-    };
+      /** Where a confirmed action leads (prefill_offer: the form of the offer). */
+      href?: string;
+    }
+  /** The listings of a search of the assistant (search_listings), as cards. */
+  | { id: string; kind: "listings"; data: ShownListings };
 
 export type AssistantConversation = { conversationId: string | null; items: ChatItem[] };
 

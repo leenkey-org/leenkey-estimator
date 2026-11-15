@@ -11,6 +11,7 @@ import { ROUTES } from "@/leenkey/navigation/spaces";
 import { advisorConversation } from "@/leenkey/properties/dashboard";
 import { createClient } from "@/lib/supabase/server";
 import {
+  ASSISTANT_CONTEXTS,
   assistantHelpSchema,
   caseRequestSchema,
   descriptionDraftSchema,
@@ -122,8 +123,14 @@ async function answer(input: unknown, confirm: boolean): Promise<ToolCallResult>
   // Answered meanwhile (a second click, another tab, a new message): nothing written.
   if (answered(output)) return { ok: false, error: "not_found" };
   if (!isFailure(output)) {
-    // Written with its result in the log. The pages of the seller show it (L1-14b).
-    revalidatePath("/vendeur", "layout");
+    // Written with its result in the log. The pages of the seller show it
+    // (L1-14b); those of the buyer, the draft of an offer (L2-06).
+    if (context === "buyer") {
+      revalidatePath("/acquereur", "layout");
+      revalidatePath("/offres/nouvelle");
+    } else {
+      revalidatePath("/vendeur", "layout");
+    }
     return { ok: true, data: { outcome: "confirmed", remaining } };
   }
   // Nothing written: the reason in the log, for the model and the person.
@@ -252,13 +259,19 @@ export async function sendCaseRequest(input: unknown): Promise<CaseRequestResult
   return { ok: false, error: "unavailable" };
 }
 
-/** The last conversation of the seller with the assistant, to open it again (the panel). */
-export async function loadAssistantConversation(): Promise<
+/**
+ * The last conversation of the person with the assistant of a context (the
+ * seller, the buyer), to open it again (the panel).
+ */
+export async function loadAssistantConversation(
+  context: unknown,
+): Promise<
   { ok: true; data: AssistantConversation } | { ok: false; error: "auth" | "unavailable" }
 > {
   const profile = await getProfile();
-  if (!profile || !profile.roles.includes("seller")) return { ok: false, error: "auth" };
-  const conversation = await assistantConversation(profile.id, "seller");
+  const asked = ASSISTANT_CONTEXTS.find((candidate) => candidate === context);
+  if (!profile || !asked || !profile.roles.includes(asked)) return { ok: false, error: "auth" };
+  const conversation = await assistantConversation(profile, asked);
   return conversation.ok ? conversation : { ok: false, error: "unavailable" };
 }
 

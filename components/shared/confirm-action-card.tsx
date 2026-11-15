@@ -21,6 +21,7 @@ export function ConfirmActionCard({
   cancelLabel,
   onConfirm,
   onCancel,
+  after,
   className,
 }: {
   title: string;
@@ -35,6 +36,8 @@ export function ConfirmActionCard({
   cancelLabel: string;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Once answered, under the line of its state: where the change leads (a link). */
+  after?: ReactNode;
   className?: string;
 }) {
   const StateIcon = state === "confirmed" ? Check : state === "error" ? CircleAlert : X;
@@ -79,6 +82,7 @@ export function ConfirmActionCard({
           {stateText}
         </p>
       )}
+      {state !== "pending" && after ? <div>{after}</div> : null}
     </section>
   );
 }
