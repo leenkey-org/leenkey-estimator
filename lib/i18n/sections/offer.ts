@@ -272,6 +272,66 @@ export const frOffer = {
     loadError: "Votre offre n'a pas pu être chargée. Réessayez dans un instant.",
   },
 
+  // What follows an offer for its buyer (SPEC-V2 13, « Côté acquéreur : suivi
+  // et retrait de l'offre »): three states, the texts of the SPEC word for
+  // word. Never a legal conclusion, never a button to withdraw once accepted.
+  followUp: {
+    withdraw: "Retirer mon offre",
+    withdrawDialog: {
+      title: "Retirer votre offre ?",
+      description:
+        "Vous êtes sur le point de retirer votre offre. Le vendeur en sera immédiatement informé et votre retrait sera enregistré dans Leenkey.",
+      confirm: "Retirer mon offre",
+      back: "Retour",
+      close: "Fermer",
+      cancel: "Annuler",
+    },
+    withdrawnOn: (date: string) => `Offre retirée le ${date}.`,
+    declined: "Le vendeur a refusé cette offre.",
+    expired: "Offre expirée : le vendeur ne peut plus l'accepter.",
+    newOffer: "Faire une nouvelle offre",
+    /** While the offer waits: a change is a new offer. */
+    newOfferToChange:
+      "Pour modifier un élément de votre offre, faites-en une nouvelle : elle reprend son contenu et remplace celle-ci à son envoi.",
+    /** Once it is over (declined, expired, withdrawn). */
+    newOfferAgain:
+      "Vous pouvez faire une nouvelle offre sur ce bien : elle reprend le contenu de celle-ci.",
+    accepted: {
+      title: "Vous souhaitez renoncer à votre projet ?",
+      text: "Votre offre a déjà été acceptée par le vendeur. Les conséquences dépendent de votre situation et de l'avancement de la transaction. Contactez le vendeur et votre notaire avant toute démarche.",
+    },
+    precontract: {
+      title: "Avant-contrat",
+      signedOn: (date: string) => `Avant-contrat signé le ${date}.`,
+      periodEnd: (date: string) => `Délai légal de rétractation de 10 jours : jusqu'au ${date}.`,
+      indicative: "Date indicative. Votre notaire fait foi.",
+      unknownStart:
+        "Le point de départ de votre délai de rétractation dépend de la date de notification ou de remise de l'avant-contrat. Votre notaire peut vous l'indiquer.",
+    },
+    errors: {
+      generic: "Votre demande n'a pas pu être enregistrée. Réessayez.",
+      signedOut: "Votre session a expiré. Reconnectez-vous pour continuer.",
+      expired: "Cette offre a expiré : elle ne peut plus être retirée.",
+      answered: "Cette offre n'est plus en cours : elle a reçu une réponse ou a déjà été retirée.",
+      closed: "Une nouvelle offre n'est pas possible sur ce bien pour le moment.",
+    },
+    // The offers of the buyer, on their home (docs/DESIGN.md 12.10).
+    list: {
+      title: "Vos offres",
+      label: "Vos offres d'achat",
+      open: "Voir l'offre",
+      resume: "Reprendre",
+      detail: (price: string | null, date: string | null) =>
+        [price, date].filter((part) => part !== null).join(" · "),
+      sentOn: (date: string) => `envoyée le ${date}`,
+      draft: "brouillon non envoyé",
+      /** A draft whose listing is no longer online. */
+      offline: "Annonce hors ligne",
+      about: (title: string) => `offre sur ${title}`,
+      loadError: "Vos offres n'ont pas pu être chargées. Rechargez la page.",
+    },
+  },
+
   status: {
     draft: "Brouillon",
     submitted: "Envoyée",
@@ -426,6 +486,34 @@ export const frOffer = {
       receivedOn: (date: string) => `Reçue le ${date}`,
       open: "Voir l'offre",
       loadError: "Les offres de ce bien n'ont pas pu être chargées. Rechargez la page.",
+    },
+    // The avant-contrat of an accepted offer, recorded by its seller (SPEC-V2
+    // 13, Q7): its date and, when known, the day it was notified or handed to
+    // the buyer, from which an indicative end of the withdrawal period is read.
+    precontract: {
+      title: "Avant-contrat",
+      intro:
+        "Une fois l'avant-contrat signé (promesse ou compromis de vente), enregistrez sa date. L'acquéreur la lit sur son offre.",
+      signedAt: "Date de signature de l'avant-contrat",
+      notifiedAt: "Date de notification ou de remise de l'avant-contrat à l'acquéreur",
+      notifiedAtHelp:
+        "Si vous la connaissez. Elle sert à indiquer une date indicative de fin du délai légal de rétractation de l'acquéreur.",
+      save: "Enregistrer",
+      edit: "Modifier",
+      cancel: "Annuler",
+      saved: "Avant-contrat enregistré.",
+      signedOn: (date: string) => `Avant-contrat signé le ${date}.`,
+      notifiedOn: (date: string) => `Notifié ou remis à l'acquéreur le ${date}.`,
+      periodEnd: (date: string) => `Fin du délai légal de rétractation de l'acquéreur : ${date}.`,
+      indicative:
+        "Date indicative calculée à partir de la date que vous avez renseignée. Votre notaire fait foi.",
+      errors: {
+        signedAt: "Indiquez une date entre le jour de l'acceptation de l'offre et aujourd'hui.",
+        notifiedAt: "Indiquez une date entre la signature de l'avant-contrat et aujourd'hui.",
+        generic: "L'avant-contrat n'a pas pu être enregistré. Réessayez.",
+        signedOut: "Votre session a expiré. Reconnectez-vous pour continuer.",
+        closed: "Cette offre n'est plus acceptée : l'avant-contrat ne peut pas être enregistré.",
+      },
     },
     dashboard: {
       title: "Offres en attente de votre réponse",

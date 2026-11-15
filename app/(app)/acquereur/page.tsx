@@ -15,12 +15,15 @@ import { FavoriteButton } from "@/leenkey/favorites/components/favorite-button";
 import { listFavorites } from "@/leenkey/favorites/queries";
 import { buyerSignUpHref, listingSummary } from "@/leenkey/listings/presentation";
 import { RecentConversations } from "@/leenkey/messaging/components/recent-conversations";
+import { BuyerOffersList } from "@/leenkey/offers/components/buyer-offers-list";
+import { buyerOffers } from "@/leenkey/offers/queries";
 import { listConversations } from "@/leenkey/messaging/queries";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { toPropertyCard } from "@/leenkey/search/cards";
 import { frBuyerSpace } from "@/lib/i18n/sections/buyerSpace";
 import { frFavorites } from "@/lib/i18n/sections/favorites";
+import { frOffer } from "@/lib/i18n/sections/offer";
 import { frProperties } from "@/lib/i18n/sections/properties";
 import { frSpaces } from "@/lib/i18n/sections/spaces";
 
@@ -28,6 +31,7 @@ import { frSpaces } from "@/lib/i18n/sections/spaces";
 const fr = {
   buyerSpace: frBuyerSpace,
   favorites: frFavorites,
+  offer: frOffer,
   properties: frProperties,
   spaces: frSpaces,
 } as const;
@@ -135,17 +139,18 @@ function FileBlock({ file, status }: { file: BuyerFile; status: FinancingStatus 
 // The buyer home (L1-25, SPEC-V2 8.9, docs/DESIGN.md 12.10): the greeting on
 // the brand panel, the last search of this browser over its bottom edge,
 // the file of the buyer first while it is not complete, their favourites,
-// their conversations, the services; a complete file goes to the end. The
-// visits and offers (L2, L3), the alerts (L3) and the assistant (L2-08)
-// come with their tasks.
+// their offers once they made one (L2-04b), their conversations, the
+// services; a complete file goes to the end. The visits and the alerts (L3)
+// and the assistant (L2-08) come with their tasks.
 export default async function BuyerHomePage() {
   const profile = await requireProfile();
   // Before the reads: a heart changed since then wins (favorite-store.ts).
   const checkedAt = Date.now();
-  const [project, favourites, conversations] = await Promise.all([
+  const [project, favourites, conversations, offers] = await Promise.all([
     buyerProfile(profile.id),
     listFavorites(profile.id),
     listConversations(),
+    buyerOffers(profile.id),
   ]);
   const now = new Date(checkedAt);
   const file = project.ok ? buyerFile(project.data) : null;
@@ -154,7 +159,7 @@ export default async function BuyerHomePage() {
   const recent = conversations.ok
     ? conversations.data.filter((conversation) => conversation.role === "buyer").slice(0, 3)
     : [];
-  const failed = !project.ok || !favourites.ok || !conversations.ok;
+  const failed = !project.ok || !favourites.ok || !conversations.ok || !offers.ok;
   const fileBlock = file ? <FileBlock file={file} status={status} /> : null;
 
   return (
@@ -189,6 +194,13 @@ export default async function BuyerHomePage() {
         ) : null}
 
         {file && !file.complete ? fileBlock : null}
+
+        {/* Only once an offer exists: nothing to say to a buyer who made none. */}
+        {offers.ok && offers.data.length > 0 ? (
+          <Section id="offres" title={fr.offer.followUp.list.title}>
+            <BuyerOffersList offers={offers.data} />
+          </Section>
+        ) : null}
 
         {favourites.ok ? (
           <Section

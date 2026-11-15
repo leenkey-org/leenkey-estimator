@@ -153,12 +153,20 @@ test("photos de l'étape 2 : envoi, refus propres, ordre, légende, suppression,
   await expect(tiles.nth(0)).toBeFocused();
 
   // With the keyboard: the main photo moves after the other one, keeping the focus.
+  // The move is shown at once and saved by a request of its own: the reload
+  // waits for its answer, or it could read the order of before.
+  const saved = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.request().headers()["next-action"] !== undefined,
+  );
   await tiles.nth(0).press("ArrowRight");
   await expect(status).toHaveText("Photo déplacée en position 2 sur 2.");
   await expect(tiles.nth(1)).toHaveAccessibleName("Photo 2 sur 2, Séjour");
   await expect(tiles.nth(1)).toBeFocused();
   await expect(tiles.nth(0)).toHaveAccessibleName("Photo 1 sur 2, photo principale");
   // Saved: the order is the same after a reload.
+  expect((await saved).ok()).toBe(true);
   await page.reload();
   await expect(tiles.nth(1)).toHaveAccessibleName("Photo 2 sur 2, Séjour");
 

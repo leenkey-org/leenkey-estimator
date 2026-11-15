@@ -3,6 +3,7 @@ import { getUser, type SessionProfile } from "@/core/auth/session";
 import { ownedPropertyId } from "@/leenkey/messaging/queries";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createClient } from "@/lib/supabase/server";
+import { buyerOfferLines, type BuyerOfferLine } from "./lines";
 import {
   OFFER_ANNEXES,
   OFFER_COLUMNS,
@@ -167,8 +168,22 @@ export async function buyerDraft(
   return { ok: true, data: data ? readOffer(data) : null };
 }
 
+/** What happened to an offer once sent, as its buyer reads it. */
+export type OfferFollowUp = {
+  answeredAt: string | null;
+  withdrawnAt: string | null;
+  /** « YYYY-MM-DD », recorded by the seller or the team once the offer is accepted. */
+  precontractSignedAt: string | null;
+  withdrawalPeriodStart: string | null;
+};
+
 /** An offer of the session (its buyer, or the team), with its property snapshot. */
-export type BuyerOffer = { offer: OfferContent; snapshot: OfferProperty | null; isBuyer: boolean };
+export type BuyerOffer = {
+  offer: OfferContent;
+  snapshot: OfferProperty | null;
+  isBuyer: boolean;
+  followUp: OfferFollowUp;
+};
 
 export async function buyerOffer(
   profileId: string,
@@ -177,7 +192,9 @@ export async function buyerOffer(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("offers")
-    .select(`${OFFER_COLUMNS}, buyer_id`)
+    .select(
+      `${OFFER_COLUMNS}, buyer_id, answered_at, withdrawn_at, precontract_signed_at, withdrawal_period_start`,
+    )
     .eq("id", offerId)
     .maybeSingle();
   if (error) {
@@ -195,8 +212,55 @@ export async function buyerOffer(
       offer: readOffer(data),
       snapshot: readPropertySnapshot(data.property_snapshot),
       isBuyer: data.buyer_id === profileId,
+      followUp: {
+        answeredAt: data.answered_at,
+        withdrawnAt: data.withdrawn_at,
+        precontractSignedAt: data.precontract_signed_at,
+        withdrawalPeriodStart: data.withdrawal_period_start,
+      },
     },
   };
+}
+
+/**
+ * The offers of a buyer, the most recent first: the last one of each listing
+ * (a replaced offer is its history, read from the new one), with the draft
+ * in progress when there is one.
+ */
+export async function buyerOffers(profileId: string): Promise<QueryResult<BuyerOfferLine[]>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("offers")
+    .select(
+      "id, listing_id, status, price_cents, submitted_at, validity_until, property_snapshot, created_at",
+    )
+    .eq("buyer_id", profileId)
+    .neq("status", "superseded")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) {
+    console.error("[offers] buyer offers read failed", { user_id: profileId, code: error.code });
+    return { ok: false, error: "unavailable" };
+  }
+  // A draft has no photograph of its listing yet: read as the public reads it
+  // (nothing when the listing is no longer online).
+  const drafts = data.filter((row) => row.status === "draft").map((row) => row.listing_id);
+  const online = new Map<string, { title: string; city: string }>();
+  if (drafts.length > 0) {
+    const listings = await createPublicClient()
+      .from("public_listings")
+      .select("id, title, city")
+      .in("id", drafts);
+    if (listings.error) {
+      console.error("[offers] draft listings read failed", { code: listings.error.code });
+    }
+    for (const listing of listings.data ?? []) {
+      if (listing.id) {
+        online.set(listing.id, { title: listing.title ?? "", city: listing.city ?? "" });
+      }
+    }
+  }
+  return { ok: true, data: buyerOfferLines(data, online, Date.now()) };
 }
 
 /** What a first draft starts with: the account of the buyer and its declared project. */

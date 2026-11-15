@@ -10,7 +10,9 @@ import { ListingToReviewEmail, listingToReviewSubject } from "@/emails/listing-s
 import { ListingsToReviewEmail, listingsToReviewSubject } from "@/emails/listings-to-review";
 import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
 import { OfferAnsweredEmail, offerAnsweredSubject } from "@/emails/offer-answered";
+import { OfferExpiredEmail, offerExpiredSubject } from "@/emails/offer-expired";
 import { OfferReceivedEmail, offerReceivedSubject } from "@/emails/offer-received";
+import { OfferWithdrawnEmail, offerWithdrawnSubject } from "@/emails/offer-withdrawn";
 import { ReportsToReviewEmail, reportsToReviewSubject } from "@/emails/reports-to-review";
 import { formatAmount, formatPrice } from "@/lib/format";
 import { PlanEndingEmail, planEndingSubject } from "@/emails/plan-ending";
@@ -61,6 +63,9 @@ const POLICIES: Record<string, EmailPolicy> = {
   // unless the account turned the emails of the offers off.
   "offer.received": { audience: "recipient", preference: "email_offers", throttleMinutes: 0 },
   "offer.answered": { audience: "recipient", preference: "email_offers", throttleMinutes: 0 },
+  // L2-04b: an offer withdrawn (the seller), an offer expired (its buyer, its seller).
+  "offer.withdrawn": { audience: "recipient", preference: "email_offers", throttleMinutes: 0 },
+  "offer.expired": { audience: "recipient", preference: "email_offers", throttleMinutes: 0 },
 };
 
 export function emailPolicy(type: string): EmailPolicy | null {
@@ -388,6 +393,49 @@ async function offerAnswered(email: PlannedEmail): Promise<RenderedEmail | null>
   );
 }
 
+/** An offer withdrawn by its buyer (L2-04b), to the seller: the date and the time of the withdrawal. */
+async function offerWithdrawn(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  const price = cents(last?.data.price_cents);
+  const reference = text(last?.data.reference);
+  if (!last || !price || !reference) return null;
+  const withdrawnAt = text(last.data.withdrawn_at);
+  return rendered(
+    offerWithdrawnSubject(reference),
+    OfferWithdrawnEmail({
+      firstName: email.firstName,
+      buyerFirstName: emailSafeText(last.data.buyer_first_name),
+      property: emailSafeText(last.data.title) ?? reference,
+      price: formatPrice(price),
+      withdrawnAt: withdrawnAt ? formatNumericDateTime(withdrawnAt) : null,
+      offerUrl: absoluteUrl(last.link ?? "/vendeur"),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
+/** An offer past its validity (L2-04b), to its buyer or to its seller (`role`). */
+async function offerExpired(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  const price = cents(last?.data.price_cents);
+  const reference = text(last?.data.reference);
+  if (!last || !price || !reference) return null;
+  const seller = last.data.role === "seller";
+  const expiredAt = text(last.data.expired_at);
+  return rendered(
+    offerExpiredSubject(reference),
+    OfferExpiredEmail({
+      firstName: email.firstName,
+      seller,
+      property: emailSafeText(last.data.title) ?? reference,
+      price: formatPrice(price),
+      expiredAt: expiredAt ? formatNumericDateTime(expiredAt) : null,
+      offerUrl: absoluteUrl(last.link ?? (seller ? "/vendeur" : "/acquereur")),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
 /** The email of a group, ready to leave; null when its type has none. */
 export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEmail | null> {
   switch (email.type) {
@@ -412,6 +460,10 @@ export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEm
       return offerReceived(email);
     case "offer.answered":
       return offerAnswered(email);
+    case "offer.withdrawn":
+      return offerWithdrawn(email);
+    case "offer.expired":
+      return offerExpired(email);
     default:
       return Promise.resolve(null);
   }

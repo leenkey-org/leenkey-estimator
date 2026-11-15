@@ -4,6 +4,7 @@ import {
   CircleAlert,
   CircleCheck,
   ClipboardList,
+  Clock,
   Eye,
   FileSignature,
   Flag,
@@ -11,6 +12,7 @@ import {
   type LucideIcon,
   MessageCircle,
   PencilLine,
+  Undo2,
   UserPlus,
 } from "lucide-react";
 import type { NotificationTone } from "@/components/shared/notification-item";
@@ -310,6 +312,28 @@ const CATALOG: Record<string, Entry> = {
     detail: (data) => {
       const title = text(data.title);
       return title ? t.offerAnswered.detail(title) : null;
+    },
+  },
+  // L2-04b: an offer withdrawn by its buyer, for its seller; an offer past its
+  // validity, for its buyer and its seller (`role` says which one reads it).
+  "offer.withdrawn": {
+    icon: Undo2,
+    tone: "stone",
+    filters: ["offersVisits"],
+    title: (data) => t.offerWithdrawn.title(text(data.buyer_first_name)),
+    detail: (data) => {
+      const price = amount(data.price_cents);
+      return t.offerWithdrawn.detail(price ? formatPrice(price) : null, text(data.title));
+    },
+  },
+  "offer.expired": {
+    icon: Clock,
+    tone: "stone",
+    filters: ["visitsOffers", "offersVisits"],
+    title: (data) => (data.role === "seller" ? t.offerExpired.seller : t.offerExpired.buyer),
+    detail: (data) => {
+      const price = amount(data.price_cents);
+      return t.offerExpired.detail(price ? formatPrice(price) : null, text(data.title));
     },
   },
   "step.advanced": {

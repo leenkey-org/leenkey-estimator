@@ -1040,6 +1040,8 @@ Contenu et textes : `SPEC-V2` section 13 (modèle de Cédric). Mise en forme :
 
 **États de l'offre côté acquéreur** : `StatusBadge` Envoyée (`--lk-blue-tint`), Consultée (`--lk-blue-tint` + icône œil), Acceptée (`--lk-success`), Refusée (`--lk-danger-bg`), Expirée (`--lk-stone-2`), Retirée (`--lk-stone-2`), Remplacée (`--lk-stone-2`).
 
+> **Mise en œuvre (L2-04b).** Page `/offres/[id]` de l'acquéreur, sous la référence : `InlineAlert` de l'état quand l'offre n'attend plus (« Offre retirée le … à … », refusée, expirée) ; phrase 14 px `--lk-ink-2` puis « Faire une nouvelle offre » (`secondary`) et « Retirer mon offre » (`danger`, ouvre un `ConfirmDialog` au texte de la SPEC) ; offre acceptée : `InfoNote` titrée « Vous souhaitez renoncer à votre projet ? », aucun bouton ; avant-contrat enregistré : section « Avant-contrat » (h2) avec une `InfoNote` (date de signature en 600, délai indicatif et sa mention, ou la phrase « Le point de départ… »). Page du vendeur, offre acceptée : section « Avant-contrat » (h2), deux `Input` de type date (le second facultatif, avec son aide), « Enregistrer » ; une fois enregistré, les dates en texte et « Modifier » (`secondary sm`). Accueil acquéreur : section « Vos offres » (DESIGN 12.10, « Vos visites et offres », les visites en L3), cartes en 2 colonnes à partir de 768 px, pavé 52 px `--lk-blue-tint` à icône, titre 14 px 600, détail 12 px, `StatusBadge`, « Voir l'offre » ou « Reprendre » à droite ; la carte entière est le lien.
+
 ---
 
 ## 14. Supports hors interface

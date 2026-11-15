@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-13 · L2-04b · PR #102 · Offre d'achat : suivi de l'acquéreur
+- Ajouté : « Retirer mon offre » (confirmation, « Offre retirée le … »), « Faire une nouvelle offre » (brouillon repris de l'offre, version suivante), encart après acceptation, section « Vos offres » sur l'accueil acquéreur.
+- Ajouté : avant-contrat enregistré par le vendeur sur l'offre acceptée (date de signature, date de notification facultative), fin indicative du délai de rétractation pour l'acquéreur et le vendeur, tâche « Avant-contrat signé » cochée.
+- Ajouté : notifications et emails `offer.withdrawn` (vendeur) et `offer.expired` (acquéreur et vendeur) ; expiration des offres planifiée toutes les heures (`pg_cron`).
+- Migration : `20261114100000_offer_followup.sql` (déclencheur du journal des offres complété, date de notification bornée dans `offer_record_precontract`, tâche planifiée `expire-offers`).
+- Corrigé (hors offres, trouvé par la suite E2E) : l'exemple de la cloche du catalogue `/design` n'avait plus de notification « Aujourd'hui » dans les minutes après minuit ; le test des photos rechargeait la page avant l'enregistrement de l'ordre.
+
 ### 2026-11-13 · L2-04a · PR #101 · Offre d'achat : côté vendeur
 - Ajouté : carte « Nouvelle offre reçue » sur « Ma vente » (prix demandé, offre, écart, financement déclaré, justificatif, « Analyse Leenkey » par gabarits, temps restant) ; page de l'offre pour le vendeur, coordonnées des acquéreurs masquées avant acceptation ; « Consultée » à la première ouverture.
 - Ajouté : écran d'acceptation `/offres/[id]/accepter` (jamais en un clic), refus avec message facultatif, « Discuter avec l'acquéreur » ; PDF pour le vendeur une fois l'offre acceptée.

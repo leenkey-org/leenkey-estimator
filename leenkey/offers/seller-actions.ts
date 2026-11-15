@@ -7,7 +7,7 @@ import { getProfile } from "@/core/auth/session";
 import { clientAddress } from "@/lib/client-address";
 import { rateLimitKeys } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
-import { offerAnswerSchema } from "@/lib/validations/offer";
+import { issuePaths, offerAnswerSchema, offerPrecontractSchema } from "@/lib/validations/offer";
 
 // What a seller does with an offer received (L2-04a, SPEC-V2 13): opening it
 // (« Consultée »), accepting it (never in one click: the acceptance screen,
@@ -92,4 +92,65 @@ export async function answerOffer(input: unknown): Promise<AnswerOfferResult> {
   // Past its validity at the moment of the click: written expired, no answer.
   if (data !== "accepted" && data !== "declined") return { ok: false, error: "expired" };
   return { ok: true, data: { status: data } };
+}
+
+export type RecordPrecontractResult =
+  | { ok: true; data: null }
+  | {
+      ok: false;
+      error: "auth" | "invalid" | "closed" | "unavailable";
+      /** The field in error. */
+      field?: "signedAt" | "notifiedAt";
+    };
+
+/**
+ * The avant-contrat of an accepted offer (L2-04b, SPEC-V2 13): the day it was
+ * signed and, when the seller knows it, the day it was notified or handed to
+ * the buyer. Recorded again to correct it. The database checks that the offer
+ * is theirs and accepted, and the dates (offer_record_precontract).
+ */
+export async function recordPrecontract(input: unknown): Promise<RecordPrecontractResult> {
+  const profile = await getProfile();
+  if (!profile) return { ok: false, error: "auth" };
+  const parsed = offerPrecontractSchema.safeParse(input);
+  if (!parsed.success) {
+    const paths = issuePaths(parsed.error);
+    return {
+      ok: false,
+      error: "invalid",
+      field: paths.includes("signedAt")
+        ? "signedAt"
+        : paths.includes("notifiedAt")
+          ? "notifiedAt"
+          : undefined,
+    };
+  }
+  const { offerId, signedAt, notifiedAt } = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("offer_record_precontract", {
+    p_offer_id: offerId,
+    p_signed_at: signedAt,
+    p_withdrawal_start: notifiedAt || undefined,
+  });
+  if (error) {
+    if (error.code === "22023") {
+      // « cannot record… »: no longer accepted; otherwise one of the two dates.
+      if (error.message.startsWith("cannot")) return { ok: false, error: "closed" };
+      return {
+        ok: false,
+        error: "invalid",
+        field: error.message.includes("withdrawal period") ? "notifiedAt" : "signedAt",
+      };
+    }
+    if (error.code === "42501") return { ok: false, error: "closed" };
+    console.error("[offers] avant-contrat not recorded", {
+      user_id: profile.id,
+      entity_id: offerId,
+      code: error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  revalidatePath("/offres", "layout");
+  revalidatePath("/vendeur", "layout");
+  return { ok: true, data: null };
 }

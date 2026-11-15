@@ -270,6 +270,31 @@ export const offerAnswerSchema = z
   })
   .refine((value) => !value.accept || value.confirmedRead, { path: ["confirmedRead"] });
 
+/** « YYYY-MM-DD », a day of the calendar (never « 2026-02-31 »). */
+const day = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((value) => {
+    const time = Date.parse(`${value}T00:00:00Z`);
+    return !Number.isNaN(time) && new Date(time).toISOString().slice(0, 10) === value;
+  });
+
+/**
+ * The avant-contrat of an accepted offer (L2-04b): the day it was signed and,
+ * when known, the day it was notified or handed to the buyer, never before
+ * the signature. The database checks the signature against the acceptance
+ * and today (offer_record_precontract).
+ */
+export const offerPrecontractSchema = z
+  .object({
+    offerId: z.string().uuid(),
+    signedAt: day,
+    notifiedAt: z.union([day, z.literal("")]),
+  })
+  .refine((value) => value.notifiedAt === "" || value.notifiedAt >= value.signedAt, {
+    path: ["notifiedAt"],
+  });
+
 /**
  * An amount in whole euros as typed: « 338 000 », « 338000 », and « 338.000 »
  * or « 338,000 » read as thousands (never as 338 euros). Null when empty, NaN
