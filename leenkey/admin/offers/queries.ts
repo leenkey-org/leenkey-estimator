@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { requireAdmin } from "@/core/auth/session";
 import { hasEntitlement } from "@/leenkey/billing/entitlements";
 import { OFFER_COLUMNS, readOffer, readPropertySnapshot } from "@/leenkey/offers/content";
@@ -148,101 +149,106 @@ export type AdminOffer = {
 const SHEET_COLUMNS =
   `${OFFER_COLUMNS}, buyer_id, seller_id, financing_status_at_submit, financing_document_id, viewed_at, answered_at, withdrawn_at, precontract_signed_at, withdrawal_period_start` as const;
 
-/** An offer sent, by its id; null: none (unknown, a draft). */
-export async function adminOffer(offerId: string): Promise<QueryResult<AdminOffer | null>> {
-  await requireAdmin();
-  if (!UUID.test(offerId)) return { ok: true, data: null };
-  try {
-    const supabase = await createClient();
-    const { data: row, error } = await supabase
-      .from("offers")
-      .select(SHEET_COLUMNS)
-      .eq("id", offerId)
-      .neq("status", "draft")
-      .maybeSingle();
-    if (error) throw new Error(`offers: ${error.code} ${error.message}`);
-    if (!row) return { ok: true, data: null };
-    const property = readPropertySnapshot(row.property_snapshot);
-    if (!property) return { ok: true, data: null };
+/**
+ * An offer sent, by its id; null: none (unknown, a draft). Read once per
+ * request: the metadata and the page share it.
+ */
+export const adminOffer = cache(
+  async (offerId: string): Promise<QueryResult<AdminOffer | null>> => {
+    await requireAdmin();
+    if (!UUID.test(offerId)) return { ok: true, data: null };
+    try {
+      const supabase = await createClient();
+      const { data: row, error } = await supabase
+        .from("offers")
+        .select(SHEET_COLUMNS)
+        .eq("id", offerId)
+        .neq("status", "draft")
+        .maybeSingle();
+      if (error) throw new Error(`offers: ${error.code} ${error.message}`);
+      if (!row) return { ok: true, data: null };
+      const property = readPropertySnapshot(row.property_snapshot);
+      if (!property) return { ok: true, data: null };
 
-    const [listing, people, proof, events] = await Promise.all([
-      supabase
-        .from("listings")
-        .select("reference, property_id, properties(city)")
-        .eq("id", row.listing_id)
-        .maybeSingle(),
-      supabase
-        .from("profiles")
-        .select("id, first_name, last_name")
-        .in("id", [row.buyer_id, row.seller_id]),
-      row.financing_document_id
-        ? supabase
-            .from("financing_documents")
-            .select("checked_at")
-            .eq("id", row.financing_document_id)
-            .maybeSingle()
-        : null,
-      offerEvents([row.id]),
-    ]);
-    if (listing.error) throw new Error(`listings: ${listing.error.code}`);
-    if (people.error) throw new Error(`profiles: ${people.error.code}`);
-    if (proof?.error) throw new Error(`financing_documents: ${proof.error.code}`);
-    if (!events.ok) throw new Error("offer_events");
-    const propertyId = listing.data?.property_id ?? null;
-    if (!propertyId) return { ok: true, data: null };
+      const [listing, people, proof, events] = await Promise.all([
+        supabase
+          .from("listings")
+          .select("reference, property_id, properties(city)")
+          .eq("id", row.listing_id)
+          .maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("id, first_name, last_name")
+          .in("id", [row.buyer_id, row.seller_id]),
+        row.financing_document_id
+          ? supabase
+              .from("financing_documents")
+              .select("checked_at")
+              .eq("id", row.financing_document_id)
+              .maybeSingle()
+          : null,
+        offerEvents([row.id]),
+      ]);
+      if (listing.error) throw new Error(`listings: ${listing.error.code}`);
+      if (people.error) throw new Error(`profiles: ${people.error.code}`);
+      if (proof?.error) throw new Error(`financing_documents: ${proof.error.code}`);
+      if (!events.ok) throw new Error("offer_events");
+      const propertyId = listing.data?.property_id ?? null;
+      if (!propertyId) return { ok: true, data: null };
 
-    const [analysed, precontractByTeam, sale, task] = await Promise.all([
-      hasEntitlement(propertyId, "human_offer_analysis"),
-      hasEntitlement(propertyId, "notary_coordination"),
-      supabase.from("sale_progress").select("plan").eq("property_id", propertyId).maybeSingle(),
-      supabase
-        .from("sale_task_status")
-        .select("done_at, sale_step_tasks!inner(code)")
-        .eq("property_id", propertyId)
-        .eq("sale_step_tasks.code", "offer_analysed")
-        .not("done_at", "is", null)
-        .limit(1),
-    ]);
-    if (sale.error) throw new Error(`sale_progress: ${sale.error.code}`);
-    if (task.error) throw new Error(`sale_task_status: ${task.error.code}`);
+      const [analysed, precontractByTeam, sale, task] = await Promise.all([
+        hasEntitlement(propertyId, "human_offer_analysis"),
+        hasEntitlement(propertyId, "notary_coordination"),
+        supabase.from("sale_progress").select("plan").eq("property_id", propertyId).maybeSingle(),
+        supabase
+          .from("sale_task_status")
+          .select("done_at, sale_step_tasks!inner(code)")
+          .eq("property_id", propertyId)
+          .eq("sale_step_tasks.code", "offer_analysed")
+          .not("done_at", "is", null)
+          .limit(1),
+      ]);
+      if (sale.error) throw new Error(`sale_progress: ${sale.error.code}`);
+      if (task.error) throw new Error(`sale_task_status: ${task.error.code}`);
 
-    const offer = readOffer(row);
-    // Past its validity: expired, before the cron writes it (as the seller reads it).
-    const waiting = offer.status === "submitted" || offer.status === "viewed";
-    const due = offer.validityUntil !== null && Date.parse(offer.validityUntil) <= Date.now();
-    const name = (id: string) => {
-      const person = people.data.find((candidate) => candidate.id === id);
-      return person ? fullName(person.first_name, person.last_name) : null;
-    };
-    const city = listing.data?.properties;
-    return {
-      ok: true,
-      data: {
-        item: {
-          offer: waiting && due ? { ...offer, status: "expired" } : offer,
-          property,
-          propertyId,
-          buyerId: row.buyer_id,
-          financingStatus: row.financing_status_at_submit ?? "not_provided",
-          financingCheckedAt: proof?.data?.checked_at ?? null,
-          viewedAt: row.viewed_at,
-          answeredAt: row.answered_at,
-          withdrawnAt: row.withdrawn_at,
-          precontractSignedAt: row.precontract_signed_at,
-          withdrawalPeriodStart: row.withdrawal_period_start,
+      const offer = readOffer(row);
+      // Past its validity: expired, before the cron writes it (as the seller reads it).
+      const waiting = offer.status === "submitted" || offer.status === "viewed";
+      const due = offer.validityUntil !== null && Date.parse(offer.validityUntil) <= Date.now();
+      const name = (id: string) => {
+        const person = people.data.find((candidate) => candidate.id === id);
+        return person ? fullName(person.first_name, person.last_name) : null;
+      };
+      const city = listing.data?.properties;
+      return {
+        ok: true,
+        data: {
+          item: {
+            offer: waiting && due ? { ...offer, status: "expired" } : offer,
+            property,
+            propertyId,
+            buyerId: row.buyer_id,
+            financingStatus: row.financing_status_at_submit ?? "not_provided",
+            financingCheckedAt: proof?.data?.checked_at ?? null,
+            viewedAt: row.viewed_at,
+            answeredAt: row.answered_at,
+            withdrawnAt: row.withdrawn_at,
+            precontractSignedAt: row.precontract_signed_at,
+            withdrawalPeriodStart: row.withdrawal_period_start,
+          },
+          listingReference: listing.data?.reference ?? null,
+          city: (Array.isArray(city) ? city[0]?.city : city?.city) ?? null,
+          plan: sale.data?.plan ?? null,
+          buyer: { id: row.buyer_id, name: name(row.buyer_id) },
+          seller: { id: row.seller_id, name: name(row.seller_id) },
+          events: events.data[row.id] ?? [],
+          analysis: analysed ? { doneAt: task.data[0]?.done_at ?? null } : null,
+          precontractByTeam,
         },
-        listingReference: listing.data?.reference ?? null,
-        city: (Array.isArray(city) ? city[0]?.city : city?.city) ?? null,
-        plan: sale.data?.plan ?? null,
-        buyer: { id: row.buyer_id, name: name(row.buyer_id) },
-        seller: { id: row.seller_id, name: name(row.seller_id) },
-        events: events.data[row.id] ?? [],
-        analysis: analysed ? { doneAt: task.data[0]?.done_at ?? null } : null,
-        precontractByTeam,
-      },
-    };
-  } catch (error) {
-    logFailure("offer", error, { entity_id: offerId });
-    return { ok: false, error: "unavailable" };
-  }
-}
+      };
+    } catch (error) {
+      logFailure("offer", error, { entity_id: offerId });
+      return { ok: false, error: "unavailable" };
+    }
+  },
+);
