@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -414,7 +415,9 @@ export default async function SellerHomePage({ searchParams }: Props) {
           </Section>
         </div>
         {/* A plan proposed in context (L2-09, SPEC 11 bis): at most one, after the useful content. */}
-        <UpgradePromptSlot propertyId={property.id} place={{ kind: "dashboard" }} />
+        <Suspense fallback={null}>
+          <UpgradePromptSlot propertyId={property.id} place={{ kind: "dashboard" }} />
+        </Suspense>
       </>
     );
   }

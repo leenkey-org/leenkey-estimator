@@ -15,8 +15,12 @@ const t = fr.upgrade;
 
 // The upgrade prompt of a property (L2-09, SPEC-V2 11 bis): recorded as
 // shown once on the page, hidden for good by its X, recorded as opened
-// before the plans page opens. A failed recording never stops the seller:
-// the prompt still hides, the link still opens.
+// before the plans page opens, one second at most. A failed or slow
+// recording never stops the seller: the prompt still hides, the link still
+// opens.
+
+/** The longest a click waits for its recording before the plans open. */
+const CLICK_WAIT_MS = 1_000;
 
 export function PropertyUpgradePrompt({
   prompt,
@@ -57,13 +61,16 @@ export function PropertyUpgradePrompt({
 
   const open = (event: MouseEvent<HTMLAnchorElement>) => {
     // A new tab or window opens as a link does; the click is recorded on the way.
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       void record("clicked");
       return;
     }
     event.preventDefault();
     startTransition(async () => {
-      await record("clicked");
+      await Promise.race([
+        record("clicked"),
+        new Promise((resolve) => setTimeout(resolve, CLICK_WAIT_MS)),
+      ]);
       router.push(prompt.action.href);
     });
   };
@@ -83,6 +90,10 @@ export function PropertyUpgradePrompt({
         <a
           href={prompt.action.href}
           onClick={open}
+          // The middle button opens a new tab: recorded too.
+          onAuxClick={(event) => {
+            if (event.button === 1) void record("clicked");
+          }}
           aria-busy={opening || undefined}
           className="inline-flex min-h-11 items-center gap-1.5 text-lk-label font-semibold text-lk-blue underline-offset-2 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-lk-brand-blue md:min-h-0"
         >

@@ -3340,7 +3340,6 @@ export type Database = {
       }
       upgrade_prompt_record: {
         Args: {
-          p_target: Database["public"]["Enums"]["plan_code"]
           p_property: string
           p_trigger: string
           p_event: string

@@ -3,11 +3,9 @@
 // ones of the SPEC, word for word; the titles are ours (DESIGN 10.4).
 
 export const frUpgrade = {
-  label: "Proposition d'accompagnement",
   dismiss: "Masquer cette proposition",
   action: "Voir l'accompagnement",
   passTo: (plan: string, price: string) => `Passer à ${plan}\u00A0: +${price}`,
-  failed: "La page des formules n'a pas pu s'ouvrir. Réessayez dans un instant.",
   prompts: {
     offer_accepted: {
       title: "Préparer la suite jusqu'au notaire",

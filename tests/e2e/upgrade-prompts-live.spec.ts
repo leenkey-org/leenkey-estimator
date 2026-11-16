@@ -2,12 +2,13 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
 // L2-09: the upgrade prompts (SPEC-V2 section 11 bis). seller_b, under
-// Autonomie: LK-0009 online for 30 days without a contact reads « Faire le
-// point sur votre prix » on its dashboard, after the useful content, and
-// hides it for good; LK-0016, to correct, reads « Faire relire votre
-// annonce » before « Envoyer en validation », which stays there, and opens
-// the plans. The team reads the measure on its dashboard. The prompts of an
-// offer: tests/e2e/offer-live.spec.ts (Autonomie) and
+// Autonomie: LK-0011, online for 14 days without a contact and that no
+// other spec pays for, reads « Faire le point sur votre prix » on its
+// dashboard, after the useful content, opens the plans with it, then hides
+// it for good; LK-0016, to correct, reads no « Votre annonce est prête »
+// (its complete listing does: tests/e2e/property-creation.spec.ts). The team
+// reads the measure on its dashboard. The prompts of an offer:
+// tests/e2e/offer-live.spec.ts (Autonomie) and
 // tests/e2e/admin-offers-live.spec.ts (Sérénité: none); the one of a
 // valuation: tests/e2e/property-from-estimation.spec.ts. What is hidden
 // stays hidden: this spec changes the seed for good (project
@@ -29,7 +30,7 @@ test.skip(
 // The measure of the team reads what the seller did: one after the other.
 test.describe.configure({ mode: "serial" });
 
-const LK0009 = "5eed1000-0000-4000-8000-000000000009";
+const LK0011 = "5eed1000-0000-4000-8000-000000000011";
 const LK0016 = "5eed1000-0000-4000-8000-000000000016";
 
 async function expectNoSeriousViolation(page: Page) {
@@ -78,14 +79,14 @@ async function shots(page: Page, name: string) {
 test("le tableau de bord : une proposition après le contenu utile, masquée pour de bon", async ({
   page,
 }) => {
-  await signIn(page, "seller_b", `/vendeur?bien=${LK0009}`);
+  await signIn(page, "seller_b", `/vendeur?bien=${LK0011}`);
   const proposal = page.getByRole("region", { name: "Faire le point sur votre prix" });
   await expect(proposal).toContainText(
     "Votre annonce génère peu de demandes. Faites le point sur votre prix et votre stratégie avec un conseiller Leenkey.",
   );
   await expect(proposal.getByRole("link", { name: "Voir l'accompagnement" })).toHaveAttribute(
     "href",
-    `/vendeur/formule?bien=${LK0009}&formule=accompagne`,
+    `/vendeur/formule?bien=${LK0011}&formule=accompagne`,
   );
   // Never a dialog, and after the conversations of the sale.
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -107,6 +108,17 @@ test("le tableau de bord : une proposition après le contenu utile, masquée pou
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.setViewportSize({ width: 1280, height: 900 });
 
+  // Opened: the plans, the plan aimed at chosen; opened is not hidden.
+  await proposal.getByRole("link", { name: "Voir l'accompagnement" }).click();
+  await page.waitForURL(
+    (address) =>
+      address.pathname === "/vendeur/formule" &&
+      address.searchParams.get("bien") === LK0011 &&
+      address.searchParams.get("formule") === "accompagne",
+  );
+  await page.goto(`/vendeur?bien=${LK0011}`);
+  await expect(proposal).toBeVisible();
+
   await proposal.getByRole("button", { name: "Masquer cette proposition" }).click();
   await expect(proposal).toHaveCount(0);
   // Read again: hidden for good on this property.
@@ -120,31 +132,13 @@ test("le tableau de bord : une proposition après le contenu utile, masquée pou
   }).toPass({ timeout: 15_000 });
 });
 
-test("avant « Envoyer en validation » : la proposition ne prend jamais la place du bouton", async ({
+test("une annonce à corriger : pas de « Votre annonce est prête », le bouton reste là", async ({
   page,
 }) => {
   await signIn(page, "seller_b", `/vendeur/biens/${LK0016}/apercu`);
-  const proposal = page.getByRole("region", { name: "Faire relire votre annonce" });
-  await expect(proposal).toContainText(
-    "Votre annonce est prête. Vous souhaitez faire vérifier votre prix, votre présentation et votre annonce par un conseiller Leenkey ?",
-  );
-  const submit = page.getByRole("button", { name: "Envoyer en validation" });
-  await expect(submit).toBeVisible();
-  await expect(submit).toBeEnabled();
-  await expectNoSeriousViolation(page);
-  await shots(page, "preview-upgrade-prompt");
-
-  // Opened: the plans, the plan aimed at chosen.
-  await proposal.getByRole("link", { name: "Voir l'accompagnement" }).click();
-  await page.waitForURL(
-    (address) =>
-      address.pathname === "/vendeur/formule" &&
-      address.searchParams.get("bien") === LK0016 &&
-      address.searchParams.get("formule") === "accompagne",
-  );
-  // Opened is not hidden: back on the preview, it is still there.
-  await page.goto(`/vendeur/biens/${LK0016}/apercu`);
-  await expect(page.getByRole("region", { name: "Faire relire votre annonce" })).toBeVisible();
+  await expect(page.getByText("Votre annonce est à corriger").first()).toBeVisible();
+  await expect(page.getByRole("region", { name: "Faire relire votre annonce" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Envoyer en validation" })).toBeEnabled();
 });
 
 test("le back office lit la mesure : affichées, ouvertes, masquées", async ({ page }) => {
@@ -152,13 +146,12 @@ test("le back office lit la mesure : affichées, ouvertes, masquées", async ({ 
   const measure = page.getByRole("region", { name: "Propositions de formule" });
   await expect(measure).toContainText("30 derniers jours");
   const low = measure.getByRole("listitem").filter({ hasText: "Peu de contacts" });
-  const ready = measure.getByRole("listitem").filter({ hasText: "Annonce prête" });
   const figure = (line: typeof low, label: string) =>
     line.locator("dl > div").filter({ hasText: label }).locator("dd");
   await expect(async () => {
     await page.reload();
     expect(Number(await figure(low, "Masquées").innerText())).toBeGreaterThanOrEqual(1);
-    expect(Number(await figure(ready, "Ouvertes").innerText())).toBeGreaterThanOrEqual(1);
+    expect(Number(await figure(low, "Ouvertes").innerText())).toBeGreaterThanOrEqual(1);
   }).toPass({ timeout: 15_000 });
   await expectNoSeriousViolation(page);
   await shots(page, "admin-upgrade-measure");

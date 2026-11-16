@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -275,10 +276,12 @@ async function SellerView({ profile, item }: { profile: SessionProfile; item: Se
           <SellerPrecontract item={item} answeredAt={item.answeredAt} />
         ) : null}
         {/* offer_received, offer_accepted (L2-09, SPEC 11 bis): after the answer, never before it. */}
-        <UpgradePromptSlot
-          propertyId={item.propertyId}
-          place={{ kind: "offer", offerId: offer.id }}
-        />
+        <Suspense fallback={null}>
+          <UpgradePromptSlot
+            propertyId={item.propertyId}
+            place={{ kind: "offer", offerId: offer.id }}
+          />
+        </Suspense>
         <OfferDocumentView document={buildOfferDocument(offer, property)} />
         {events.ok && events.data[offer.id] ? <History events={events.data[offer.id]} /> : null}
       </div>

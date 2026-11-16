@@ -242,7 +242,7 @@ describe("recordUpgradePrompt", () => {
     mocks.error = null;
   });
 
-  it("records with the plan of the code, never the one the browser sends", async () => {
+  it("sends no plan: the database sets the one of the code, whatever the browser says", async () => {
     const { recordUpgradePrompt } = await import("@/leenkey/billing/upgrade-actions");
     expect(
       await recordUpgradePrompt({
@@ -259,7 +259,6 @@ describe("recordUpgradePrompt", () => {
         args: {
           p_property: PROPERTY,
           p_trigger: "offer_accepted",
-          p_target: "serenite",
           p_subject: OFFER,
           p_event: "dismissed",
         },
@@ -310,5 +309,31 @@ describe("recordUpgradePrompt", () => {
     expect(
       upgradePromptEventSchema.safeParse({ ...base, subjectId: "x", event: "shown" }).success,
     ).toBe(false);
+  });
+});
+
+describe("the boundaries", () => {
+  it("low_contacts from the 14th day online, not before", () => {
+    expect(chooseUpgradePrompt(facts({ publishedAt: daysAgo(14) }), dashboard, NOW)).toMatchObject({
+      trigger: "low_contacts",
+    });
+    expect(
+      chooseUpgradePrompt(
+        facts({ publishedAt: new Date(NOW.getTime() - 14 * 86_400_000 + 60_000).toISOString() }),
+        dashboard,
+        NOW,
+      ),
+    ).toBeNull();
+  });
+
+  it("file_incomplete at step 05 or after it, once the sale file exists (lot 3)", () => {
+    const file = { missingDocuments: 1, publishedAt: daysAgo(2) };
+    expect(
+      chooseUpgradePrompt(facts({ ...file, stepCode: "notary" }), dashboard, NOW),
+    ).toMatchObject({ trigger: "file_incomplete", targetPlan: "serenite" });
+    expect(
+      chooseUpgradePrompt(facts({ ...file, stepCode: "closing" }), dashboard, NOW),
+    ).toMatchObject({ trigger: "file_incomplete" });
+    expect(chooseUpgradePrompt(facts({ ...file, stepCode: "offers" }), dashboard, NOW)).toBeNull();
   });
 });

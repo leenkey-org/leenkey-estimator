@@ -155,7 +155,9 @@ function subjects(
         : [];
     case "file_incomplete":
       return facts.missingDocuments !== null &&
+        // « Étape 05 atteinte »: the notary, or the step after it.
         (facts.stepCode === "notary" ||
+          facts.stepCode === "closing" ||
           (facts.missingDocuments >= t.fileIncomplete.missing && online >= t.fileIncomplete.days))
         ? [null]
         : [];

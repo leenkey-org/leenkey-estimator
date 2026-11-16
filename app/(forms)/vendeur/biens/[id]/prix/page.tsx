@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CreationHeader } from "@/leenkey/properties/components/creation-header";
@@ -58,11 +59,13 @@ export default async function PropertyPricePage({ params }: Props) {
           valuation={valuationOf(property.estimation)}
         />
         {/* valuation_done (L2-09, SPEC 11 bis): a property created from a valuation. */}
-        <UpgradePromptSlot
-          propertyId={property.id}
-          place={{ kind: "price", fromValuation: property.estimation !== null }}
-          className="mt-6"
-        />
+        <Suspense fallback={null}>
+          <UpgradePromptSlot
+            propertyId={property.id}
+            place={{ kind: "price", fromValuation: property.estimation !== null }}
+            className="mt-6"
+          />
+        </Suspense>
       </CreationBody>
     </>
   );

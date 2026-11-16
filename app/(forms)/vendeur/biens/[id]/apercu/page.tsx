@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -108,14 +109,19 @@ export default async function PropertyPreviewPage({ params }: Props) {
             className="border-y border-lk-line bg-lk-surface pb-6 md:overflow-hidden md:rounded-lk-md md:border lg:px-8 lg:pb-8"
           />
         </div>
-        {/* listing_ready (L2-09, SPEC 11 bis): after the listing, never in place of its button. */}
-        <div className="lk-frame w-full pt-5 empty:hidden">
-          <UpgradePromptSlot
-            propertyId={property.id}
-            place={{ kind: "submit" }}
-            className="max-w-lk-prose"
-          />
-        </div>
+        {/* listing_ready (L2-09, SPEC 11 bis): after the listing, never in place of its button;
+            only when it is complete (a DPE missing refuses the sending) and not to correct. */}
+        {!dpe && property.listing?.status !== "rejected" ? (
+          <div className="lk-frame w-full pt-5 empty:hidden">
+            <Suspense fallback={null}>
+              <UpgradePromptSlot
+                propertyId={property.id}
+                place={{ kind: "submit" }}
+                className="max-w-lk-prose"
+              />
+            </Suspense>
+          </div>
+        ) : null}
         <SubmitListing propertyId={property.id} />
       </div>
     </>

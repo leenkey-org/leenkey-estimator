@@ -110,7 +110,8 @@ export async function propertyUpgradePrompt(
     let text: string;
     if (choice.trigger === "offer_received") {
       const { offer } = choice;
-      if (offer?.priceCents == null || offer.askingPriceCents == null) return null;
+      // Both prices, or no sentence (an asking price is never 0).
+      if (!offer?.priceCents || !offer.askingPriceCents) return null;
       text = t.prompts.offer_received.text(
         formatPrice(offer.priceCents),
         formatPrice(offer.askingPriceCents),

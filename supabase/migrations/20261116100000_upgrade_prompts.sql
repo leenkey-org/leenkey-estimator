@@ -9,9 +9,10 @@
 --    clicked_at are written once, shown_at never changes (a trigger, whoever
 --    updates the row).
 -- 4. upgrade_prompt_record: the page records what its seller saw, hid or
---    opened, with the rights of the seller (security invoker: the policies
---    of L1-05, owner of the property only). The plan aimed at comes with the
---    call, checked against the codes.
+--    opened, on their own property only. The only way to write the table:
+--    the direct rights of L1-05 (insert, update) are taken back, so that the
+--    plan aimed at is the one of the code (set here, never by the caller)
+--    and the subject of an offer prompt is an offer sent on this property.
 -- 5. admin_upgrade_prompt_stats: the measure of SPEC 11 bis for the back
 --    office, per trigger: shown, opened, hidden, converted (a plan ordered on
 --    the property within 7 days of the click).
@@ -56,18 +57,34 @@ create trigger upgrade_prompts_write_once
 create function public.upgrade_prompt_record(
   p_property uuid,
   p_trigger text,
-  p_target public.plan_code,
   p_event text,
   p_subject uuid default null
 ) returns void
-language plpgsql security invoker set search_path = '' as $$
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_target public.plan_code;
 begin
+  if not public.is_active_user() or not public.owns_property(p_property) then
+    raise exception 'not the owner of this property' using errcode = '42501';
+  end if;
   if p_event not in ('shown', 'clicked', 'dismissed') then
     raise exception 'upgrade_prompt_record: unknown event' using errcode = '22023';
   end if;
-  -- The constraints of the table check the code and its subject; the policy, the owner.
+  -- The plan each prompt proposes (SPEC 11 bis), as leenkey/billing/upgrade-prompts.ts.
+  v_target := case p_trigger
+    when 'offer_accepted' then 'serenite'
+    when 'file_incomplete' then 'serenite'
+    else 'accompagne' end;
+  -- The prompt of an offer: an offer sent on this property.
+  if p_subject is not null and not exists (
+    select 1 from public.offers o
+      join public.listings l on l.id = o.listing_id
+     where o.id = p_subject and l.property_id = p_property and o.status <> 'draft') then
+    raise exception 'not an offer of this property' using errcode = '22023';
+  end if;
+  -- The constraints of the table check the code and that only an offer prompt has a subject.
   insert into public.upgrade_prompts (property_id, trigger_code, target_plan, subject_id)
-  values (p_property, p_trigger, p_target, p_subject)
+  values (p_property, p_trigger, v_target, p_subject)
   on conflict (property_id, trigger_code, subject_id) do nothing;
   if p_event = 'clicked' then
     update public.upgrade_prompts set clicked_at = now()
@@ -107,8 +124,9 @@ end;
 $$;
 
 revoke execute on function public.upgrade_prompts_write_once() from public, anon, authenticated;
-revoke execute on function public.upgrade_prompt_record(uuid, text, public.plan_code, text, uuid) from public, anon;
-grant execute on function public.upgrade_prompt_record(uuid, text, public.plan_code, text, uuid) to authenticated;
+revoke execute on function public.upgrade_prompt_record(uuid, text, text, uuid) from public, anon;
+grant execute on function public.upgrade_prompt_record(uuid, text, text, uuid) to authenticated;
 revoke execute on function public.admin_upgrade_prompt_stats(int) from public, anon;
 grant execute on function public.admin_upgrade_prompt_stats(int) to authenticated;
-grant insert (property_id, trigger_code, target_plan, subject_id) on public.upgrade_prompts to authenticated;
+-- Written through upgrade_prompt_record only; read as before (owner, admin).
+revoke insert, update on public.upgrade_prompts from authenticated;
