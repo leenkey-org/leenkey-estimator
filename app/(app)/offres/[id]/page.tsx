@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -34,6 +33,7 @@ import {
   type SellerOffer,
 } from "@/leenkey/offers/seller";
 import { UpgradePromptSlot } from "@/leenkey/billing/components/upgrade-prompt-slot";
+import { propertyUpgradePrompt } from "@/leenkey/billing/upgrade-queries";
 import { withdrawalPeriodEnd } from "@/leenkey/offers/withdrawal";
 import { sheetHref } from "@/leenkey/properties/sheet";
 import { frOffer } from "@/lib/i18n/sections/offer";
@@ -214,9 +214,11 @@ async function BuyerView({
 async function SellerView({ profile, item }: { profile: SessionProfile; item: SellerOffer }) {
   const { offer, property } = item;
   const waiting = offer.status === "submitted" || offer.status === "viewed";
-  const [events, discussHref] = await Promise.all([
+  const [events, discussHref, prompt] = await Promise.all([
     offerEvents([offer.id]),
     buyerConversationHref(offer.listingId, item.buyerId),
+    // offer_received, offer_accepted (L2-09), for this offer.
+    propertyUpgradePrompt(item.propertyId, { kind: "offer", offerId: offer.id }),
   ]);
   const at = (value: string | null) => (value ? formatNumericDateTime(value) : "");
   const state =
@@ -276,12 +278,7 @@ async function SellerView({ profile, item }: { profile: SessionProfile; item: Se
           <SellerPrecontract item={item} answeredAt={item.answeredAt} />
         ) : null}
         {/* offer_received, offer_accepted (L2-09, SPEC 11 bis): after the answer, never before it. */}
-        <Suspense fallback={null}>
-          <UpgradePromptSlot
-            propertyId={item.propertyId}
-            place={{ kind: "offer", offerId: offer.id }}
-          />
-        </Suspense>
+        <UpgradePromptSlot prompt={prompt} />
         <OfferDocumentView document={buildOfferDocument(offer, property)} />
         {events.ok && events.data[offer.id] ? <History events={events.data[offer.id]} /> : null}
       </div>

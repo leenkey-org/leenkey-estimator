@@ -1,9 +1,9 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CreationHeader } from "@/leenkey/properties/components/creation-header";
 import { CreationBody, CreationLoadError } from "@/leenkey/properties/components/creation-page";
 import { UpgradePromptSlot } from "@/leenkey/billing/components/upgrade-prompt-slot";
+import { propertyUpgradePrompt } from "@/leenkey/billing/upgrade-queries";
 import { PriceStep } from "@/leenkey/properties/components/price-step";
 import { suggestedTitle } from "@/leenkey/properties/creation";
 import { propertyForCreation } from "@/leenkey/properties/load";
@@ -43,6 +43,11 @@ export default async function PropertyPricePage({ params }: Props) {
     redirect(`/vendeur/biens/${id}/caracteristiques`);
   }
   const { listing } = property;
+  // valuation_done (L2-09): a property created from a valuation.
+  const prompt = await propertyUpgradePrompt(property.id, {
+    kind: "price",
+    fromValuation: property.estimation !== null,
+  });
   return (
     <>
       <CreationHeader step="price" back="previous" />
@@ -59,13 +64,7 @@ export default async function PropertyPricePage({ params }: Props) {
           valuation={valuationOf(property.estimation)}
         />
         {/* valuation_done (L2-09, SPEC 11 bis): a property created from a valuation. */}
-        <Suspense fallback={null}>
-          <UpgradePromptSlot
-            propertyId={property.id}
-            place={{ kind: "price", fromValuation: property.estimation !== null }}
-            className="mt-6"
-          />
-        </Suspense>
+        <UpgradePromptSlot prompt={prompt} className="mt-6" />
       </CreationBody>
     </>
   );

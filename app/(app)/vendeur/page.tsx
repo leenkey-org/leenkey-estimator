@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -16,6 +15,7 @@ import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { hasEntitlement } from "@/leenkey/billing/entitlements";
 import { UpgradePromptSlot } from "@/leenkey/billing/components/upgrade-prompt-slot";
+import { propertyUpgradePrompt } from "@/leenkey/billing/upgrade-queries";
 import { AdvisorCard } from "@/leenkey/messaging/components/advisor-card";
 import { RecentConversations } from "@/leenkey/messaging/components/recent-conversations";
 import { OfferReceivedCard } from "@/leenkey/offers/components/offer-received-card";
@@ -164,7 +164,13 @@ export default async function SellerHomePage({ searchParams }: Props) {
   const property = chooseProperty(properties, requested) ?? properties[0];
   const mode = dashboardMode(property);
   const now = new Date();
-  const data = await saleDashboard(property, now);
+  // The upgrade prompt of the sale (L2-09), read beside the dashboard.
+  const [data, prompt] = await Promise.all([
+    saleDashboard(property, now),
+    mode === "draft" || mode === "sold"
+      ? Promise.resolve(null)
+      : propertyUpgradePrompt(property.id, { kind: "dashboard" }, now),
+  ]);
   const situation = data.ok ? data.data.situation : null;
   const progress = situation?.progress ?? null;
   const step = progress ? currentStep(progress) : null;
@@ -415,9 +421,7 @@ export default async function SellerHomePage({ searchParams }: Props) {
           </Section>
         </div>
         {/* A plan proposed in context (L2-09, SPEC 11 bis): at most one, after the useful content. */}
-        <Suspense fallback={null}>
-          <UpgradePromptSlot propertyId={property.id} place={{ kind: "dashboard" }} />
-        </Suspense>
+        <UpgradePromptSlot prompt={prompt} />
       </>
     );
   }
