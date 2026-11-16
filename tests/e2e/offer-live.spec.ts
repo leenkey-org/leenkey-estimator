@@ -328,6 +328,20 @@ test("un acquéreur fait une offre en sept étapes et l'envoie ; son vendeur la 
       "L'offre mentionne également une vente préalable d'un autre bien.",
     );
     await expect(card).not.toContainText(/validé|buyer_c@|06 12 34/);
+    // Autonomie: a plan proposed beside the offer, after it, never in place of its answer (L2-09).
+    const proposal = seller.getByRole("region", { name: "Être accompagné sur cette offre" });
+    await expect(proposal).toContainText(
+      /Vous avez reçu une offre de 150\s000\s€ pour un prix affiché de 159\s000\s€\./,
+    );
+    await expect(card.getByRole("link", { name: "Accepter l'offre" })).toBeVisible();
+    expect(
+      await card.evaluate(
+        (element, other) =>
+          other !== null &&
+          (element.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
+        await proposal.elementHandle(),
+      ),
+    ).toBe(true);
     await shots(seller, "seller-dashboard-card");
     // Never the PDF before acceptance: it carries the contact details.
     expect((await seller.request.get(`${offerPath}/pdf`)).status()).toBe(404);
@@ -344,6 +358,12 @@ test("un acquéreur fait une offre en sept étapes et l'envoie ; son vendeur la 
     await expect(
       seller.getByText(/^Avant acceptation, vous voyez le nom, le prénom et la ville/),
     ).toBeVisible();
+    // The same proposal on the page of the offer, with the link to the plan aimed at (L2-09).
+    await expect(
+      seller
+        .getByRole("region", { name: "Être accompagné sur cette offre" })
+        .getByRole("link", { name: "Voir l'accompagnement" }),
+    ).toHaveAttribute("href", `/vendeur/formule?bien=${PROPERTY}&formule=accompagne`);
     expect(await seriousViolations(seller)).toEqual([]);
     await shots(seller, "seller-offer-page");
 
@@ -401,6 +421,15 @@ test("un acquéreur fait une offre en sept étapes et l'envoie ; son vendeur la 
     await expect(document).toContainText("06 12 34 56 78");
     await expect(document).toContainText("8 rue des Écoles");
     await expect(seller.getByRole("button", { name: "Refuser l'offre" })).toHaveCount(0);
+    // Accepted: Sérénité proposed for the rest of the sale (L2-09); the other one is gone.
+    await expect(
+      seller
+        .getByRole("region", { name: "Préparer la suite jusqu'au notaire" })
+        .getByRole("link", { name: "Voir l'accompagnement" }),
+    ).toHaveAttribute("href", `/vendeur/formule?bien=${PROPERTY}&formule=serenite`);
+    await expect(
+      seller.getByRole("region", { name: "Être accompagné sur cette offre" }),
+    ).toHaveCount(0);
     const history = seller.getByRole("region", { name: "Historique" });
     await expect(history).toContainText("Offre envoyée");
     await expect(history).toContainText("Offre consultée par le vendeur");

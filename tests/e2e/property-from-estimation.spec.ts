@@ -144,6 +144,10 @@ test("une analyse de valeur devient une annonce en validation", async ({ page })
   ).toBeVisible();
   await page.getByLabel("Prix de vente").fill("349 000");
   await expect(page.getByText("Votre prix est 2 % au-dessus de cette valeur.")).toBeVisible();
+  // Created from a valuation, under Autonomie: an adviser proposed for the price (L2-09).
+  await expect(
+    page.getByRole("region", { name: "Définir votre prix de mise en vente" }),
+  ).toContainText("Vous connaissez maintenant la valeur de votre bien.");
   await page
     .getByRole("textbox", { name: "Description" })
     .fill("Trois pièces traversant au 3e étage, balcon et cave, à deux pas de la gare.");
