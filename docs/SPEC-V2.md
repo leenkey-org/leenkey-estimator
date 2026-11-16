@@ -1584,6 +1584,8 @@ Règles :
 - Un déclencheur masqué (bouton de fermeture `X` de l'`UpgradePrompt`) ne réapparaît pas pour ce bien ; `offer_received` et `offer_accepted` peuvent réapparaître pour une nouvelle offre.
 - Mesure : `shown_at`, `clicked_at`, `dismissed_at` et la conversion (subscription créée dans les 7 jours suivant `clicked_at`) sont visibles dans le tableau de bord admin.
 
+Mise en œuvre (L2-09, `DECISIONS.md` 2026-11-16) : module dans `leenkey/billing/upgrade-prompts.ts` (ses conditions connaissent offres et contacts), seuils dans `lib/config/upgrade.ts`. Une proposition par offre pour `offer_received` et `offer_accepted` (`upgrade_prompts.subject_id`). `contacts_no_visit`, `visits_no_offer` et `file_incomplete` attendent que visites et dossier soient comptés (lot 3) ; `low_contacts` et `contacts_no_visit` s'éteignent dès qu'une offre est reçue ; aucune proposition tant qu'une formule payante n'est pas commandable (Q32). Emplacements : tableau de bord, aperçu avant envoi (`listing_ready`), étape du prix (`valuation_done`), page de l'offre.
+
 ## 12. Assistant IA
 
 ### Principes

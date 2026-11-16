@@ -160,6 +160,8 @@ test("le vendeur lit ses offres reçues avec l'assistant, puis accepte", async (
   await shots(page, "seller-assistant-offers");
 
   await page.goto(`/offres/${offerId}`);
+  // Sérénité: no plan proposed, never (L2-09, SPEC 11 bis).
+  await expect(page.getByRole("button", { name: "Masquer cette proposition" })).toHaveCount(0);
   await page.getByRole("link", { name: "Accepter l'offre" }).click();
   await page.waitForURL((address) => address.pathname === `/offres/${offerId}/accepter`);
   await page

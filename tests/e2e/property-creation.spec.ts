@@ -289,6 +289,8 @@ test("envoyer une annonce en validation en mobile : prix, description, aperçu",
   // Without its DPE, said before the sending, then refused (L1-65).
   const missing = /^Il manque le DPE de votre bien/;
   await expect(page.getByText(missing)).toBeVisible();
+  // Not complete: « Votre annonce est prête » is not said (L2-09).
+  await expect(page.getByRole("region", { name: "Faire relire votre annonce" })).toHaveCount(0);
   await page.getByRole("button", { name: "Envoyer en validation" }).click();
   await expect(page.getByRole("alert").filter({ hasText: missing })).toBeVisible();
   await expect(page).toHaveURL(`/vendeur/biens/${id}/apercu`);
@@ -362,6 +364,11 @@ test("envoyer une annonce en validation en mobile : prix, description, aperçu",
   await next.click();
   await expect(page).toHaveURL(`/vendeur/biens/${id}/apercu`);
   await expect(page.getByText(missing)).toHaveCount(0);
+  // Complete, under Autonomie: an adviser proposed before the sending, the button still there (L2-09).
+  await expect(page.getByRole("region", { name: "Faire relire votre annonce" })).toContainText(
+    "Votre annonce est prête.",
+  );
+  await expect(page.getByRole("button", { name: "Envoyer en validation" })).toBeEnabled();
   // The mentions of a listing for sale, as its page will show them.
   await expect(page.getByText("Logement à consommation énergétique excessive.")).toBeVisible();
   await expect(

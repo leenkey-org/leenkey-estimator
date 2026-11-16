@@ -6,6 +6,8 @@ import { PriceColumn } from "@/leenkey/listings/components/listing-actions";
 import { ListingBody } from "@/leenkey/listings/components/listing-body";
 import { CreationHeader } from "@/leenkey/properties/components/creation-header";
 import { CreationLoadError } from "@/leenkey/properties/components/creation-page";
+import { UpgradePromptSlot } from "@/leenkey/billing/components/upgrade-prompt-slot";
+import { propertyUpgradePrompt } from "@/leenkey/billing/upgrade-queries";
 import { SubmitListing } from "@/leenkey/properties/components/submit-listing";
 import { creationStep } from "@/leenkey/properties/creation";
 import { getDpeSettings } from "@/leenkey/properties/dpe-rules";
@@ -41,9 +43,14 @@ export default async function PropertyPreviewPage({ params }: Props) {
       save={false}
     />
   );
-  const [preview, settings] = property
-    ? await Promise.all([sellerListingPreview(property.id), getDpeSettings()])
-    : [null, null];
+  const [preview, settings, prompt] = property
+    ? await Promise.all([
+        sellerListingPreview(property.id),
+        getDpeSettings(),
+        // listing_ready (L2-09), shown below only when the listing can be sent.
+        propertyUpgradePrompt(property.id, { kind: "submit" }),
+      ])
+    : [null, null, null];
   if (
     !property ||
     !preview?.ok ||
@@ -107,6 +114,13 @@ export default async function PropertyPreviewPage({ params }: Props) {
             className="border-y border-lk-line bg-lk-surface pb-6 md:overflow-hidden md:rounded-lk-md md:border lg:px-8 lg:pb-8"
           />
         </div>
+        {/* listing_ready (L2-09, SPEC 11 bis): after the listing, never in place of its button;
+            only when it is complete (a DPE missing refuses the sending) and not to correct. */}
+        {!dpe && property.listing?.status !== "rejected" ? (
+          <div className="lk-frame w-full pt-5 empty:hidden">
+            <UpgradePromptSlot prompt={prompt} className="max-w-lk-prose" />
+          </div>
+        ) : null}
         <SubmitListing propertyId={property.id} />
       </div>
     </>

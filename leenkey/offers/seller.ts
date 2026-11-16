@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import type { FinancingStatus } from "@/components/shared/financing-badge";
 import { hasEntitlement } from "@/leenkey/billing/entitlements";
 import { ROUTES } from "@/leenkey/navigation/spaces";
@@ -105,8 +106,13 @@ export async function sellerOffer(offerId: string): Promise<QueryResult<SellerOf
   return { ok: true, data: data ? readSellerOffer(data) : null };
 }
 
-/** Every offer received on a property, the most recent first: its whole history. */
-export async function propertyOffers(propertyId: string): Promise<QueryResult<SellerOffer[]>> {
+/**
+ * Every offer received on a property, the most recent first: its whole
+ * history. Read once per request (the dashboard and its upgrade prompt).
+ */
+export const propertyOffers = cache(async function propertyOffers(
+  propertyId: string,
+): Promise<QueryResult<SellerOffer[]>> {
   const supabase = await createClient();
   const { data, error } = await readRows(supabase)
     .eq("property_id", propertyId)
@@ -122,7 +128,7 @@ export async function propertyOffers(propertyId: string): Promise<QueryResult<Se
     ok: true,
     data: data.map(readSellerOffer).filter((offer): offer is SellerOffer => offer !== null),
   };
-}
+});
 
 /** The offers of a property that still wait for an answer. */
 export const awaitingAnswer = (offers: readonly SellerOffer[]) =>

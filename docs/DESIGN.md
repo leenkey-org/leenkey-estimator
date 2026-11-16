@@ -717,6 +717,8 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 **UpgradePrompt** : encart fond `--lk-blue-tint`, bordure 1 px `--lk-blue-line`, rayon 6, padding 14 × 16. Titre 14 px 600, texte 13 px, lien d'action `ghost` bleu. Toujours placé **après** le contenu utile (jamais avant, jamais en modale). Bouton de fermeture `X` 16 px.
 
+> **Mise en œuvre (L2-09).** `components/shared/upgrade-prompt.tsx` : région nommée par son titre, lien « Voir l'accompagnement » suivi d'une flèche (cible de 44 px sur téléphone), `X` de 16 px dans une cible de 40 px en haut à droite (« Masquer cette proposition »). Emplacements : dernier bloc du tableau de bord ; sur l'aperçu, entre l'annonce et la barre « Envoyer en validation » ; sous le formulaire du prix ; sur la page d'une offre, après la réponse et l'avant-contrat. Back office : section « Propositions de formule » du tableau de bord, une ligne par déclencheur (quatre chiffres en deux colonnes sur téléphone, en ligne à partir de 1 024 px).
+
 ### 10.5 Messagerie et assistant
 
 **ConversationHeader** : fond blanc, bordure basse, padding 16 × 16 × 12. Retour (`IconButton stone`) ; vignette du bien 44 × 44 rayon 4 ; titre 14 px 600 tronqué (« Appartement 3 p · Savigny-sur-Orge ») ; sous-titre 12 px `--lk-ink-3` « Avec Thomas · justificatif vérifié » ; menu `MoreVertical`.

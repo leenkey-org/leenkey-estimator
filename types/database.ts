@@ -1785,6 +1785,7 @@ export type Database = {
           id: string
           property_id: string
           shown_at: string
+          subject_id: string | null
           target_plan: Database["public"]["Enums"]["plan_code"]
           trigger_code: string
         }
@@ -1794,6 +1795,7 @@ export type Database = {
           id?: string
           property_id: string
           shown_at?: string
+          subject_id?: string | null
           target_plan: Database["public"]["Enums"]["plan_code"]
           trigger_code: string
         }
@@ -1803,6 +1805,7 @@ export type Database = {
           id?: string
           property_id?: string
           shown_at?: string
+          subject_id?: string | null
           target_plan?: Database["public"]["Enums"]["plan_code"]
           trigger_code?: string
         }
@@ -2390,6 +2393,16 @@ export type Database = {
       admin_unsuspend_user: {
         Args: { p_profile_id: string }
         Returns: undefined
+      }
+      admin_upgrade_prompt_stats: {
+        Args: { p_days?: number }
+        Returns: {
+          shown: number
+          clicked: number
+          trigger_code: string
+          converted: number
+          dismissed: number
+        }[]
       }
       admin_user_contact: {
         Args: { p_profile_id: string }
@@ -3324,6 +3337,15 @@ export type Database = {
       team_email_addresses: {
         Args: Record<PropertyKey, never>
         Returns: string[]
+      }
+      upgrade_prompt_record: {
+        Args: {
+          p_property: string
+          p_event: string
+          p_trigger: string
+          p_subject?: string
+        }
+        Returns: undefined
       }
       words_below_1000_fr: {
         Args: { p_final: boolean; p_n: number }
