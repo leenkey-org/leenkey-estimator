@@ -3,7 +3,6 @@ import { Button } from "@/components/shared/button";
 import { CookieSettingsButton } from "@/components/shared/cookie-settings-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { SavedNotice } from "@/components/shared/saved-notice";
-import { SectionTitle } from "@/components/shared/section-title";
 import { getUser, requireProfile } from "@/core/auth/session";
 import {
   AccountRow,
@@ -16,13 +15,12 @@ import { signOut } from "@/leenkey/auth/actions";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { frAccount } from "@/lib/i18n/sections/account";
 import { frAuth } from "@/lib/i18n/sections/auth";
-import { frLegal } from "@/lib/i18n/sections/legal";
 import { frSpaces } from "@/lib/i18n/sections/spaces";
 import { createClient } from "@/lib/supabase/server";
 import { SpacePage } from "../_components/space-page";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { account: frAccount, auth: frAuth, legal: frLegal, spaces: frSpaces } as const;
+const fr = { account: frAccount, auth: frAuth, spaces: frSpaces } as const;
 
 const t = fr.account;
 
@@ -38,8 +36,8 @@ const SAVED: Record<string, string> = {
 
 // « Mon compte » (L1-39, SPEC-V2 8.14, DESIGN.md 13.1 G9): what the account
 // holds, in rows of 56 px, each to the page that changes it; the spaces of
-// the account (« Je vends », « J'achète »), cookies, sign-out, and how to
-// close the account until its deletion from here (L2-10).
+// the account (« Je vends », « J'achète »), cookies, its data (the export and
+// the deletion, L2-10), sign-out.
 export default async function AccountPage({ searchParams }: { searchParams: SearchParams }) {
   const [profile, params] = await Promise.all([requireProfile(), searchParams]);
   const user = await getUser();
@@ -119,28 +117,27 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
             </li>
           </AccountSection>
 
+          <AccountSection id="compte-donnees" title={t.sections.data}>
+            <AccountRow
+              href={ROUTES.accountExport}
+              label={t.rows.export}
+              value={t.rows.exportValue}
+              download
+            />
+            {account.roles.includes("admin") ? null : (
+              <AccountRow
+                href={ROUTES.accountDeletion}
+                label={t.rows.delete}
+                value={t.rows.deleteValue}
+              />
+            )}
+          </AccountSection>
+
           <form action={signOut} className="mt-8">
             <Button type="submit" variant="secondary" className="w-full md:w-auto">
               {fr.spaces.signOut}
             </Button>
           </form>
-
-          <section
-            aria-labelledby="compte-fermer"
-            className="mt-10 flex flex-col gap-2 border-t border-lk-line pt-6"
-          >
-            <SectionTitle id="compte-fermer">{t.sections.close}</SectionTitle>
-            <p className="text-lk-secondary text-lk-ink-2">
-              {t.closeText.before}
-              <a
-                href={`mailto:${fr.legal.contactEmail}`}
-                className="rounded-lk-sm font-semibold text-lk-blue underline underline-offset-2 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue"
-              >
-                {fr.legal.contactEmail}
-              </a>
-              {t.closeText.after}
-            </p>
-          </section>
         </>
       )}
     </SpacePage>

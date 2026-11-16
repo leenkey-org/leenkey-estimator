@@ -25,7 +25,13 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
     <AuthShell title={fr.auth.login.title} lead={fr.auth.login.lead}>
       <LoginForm
         next={next}
-        notice={params.lien === "expire" ? fr.auth.login.linkExpired : undefined}
+        notice={
+          params.lien === "expire"
+            ? fr.auth.login.linkExpired
+            : params.compte === "ferme"
+              ? fr.auth.login.accountClosed
+              : undefined
+        }
       />
     </AuthShell>
   );

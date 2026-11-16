@@ -175,6 +175,11 @@ describe("legal texts of the launch (2026-11-09)", () => {
     expect(termsExempt("/vendeur/biens/5eed")).toBe(false);
   });
 
+  it("the deletion of the account skips it too (L2-10)", () => {
+    expect(termsExempt("/compte/supprimer")).toBe(true);
+    expect(termsExempt("/compte")).toBe(false);
+  });
+
   it("the moderation is told as it is done: by a person, with a way to contest", () => {
     const all = [terms, reporting, ai].flatMap((text) => texts(text.sections)).join(" ");
     expect(all).not.toMatch(/outils automatiques\. Ces contrôles/);

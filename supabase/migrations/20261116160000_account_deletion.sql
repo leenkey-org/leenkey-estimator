@@ -1,8 +1,11 @@
 -- L2-10: closing an account from /compte, then its anonymisation 30 days
 -- later (SPEC-V2 sections 19 and 21, « export JSON et suppression depuis
--- /compte ; anonymisation à 30 jours »). The export is read with the session
--- of the account (RLS), no SQL here.
+-- /compte ; anonymisation à 30 jours »), and the export of its data.
 --
+-- 0. account_export(): what the account holds, as one JSON document, read
+--    with the session of the person (security invoker: the policies of each
+--    table apply; an offer received through offer_for_seller, which hides the
+--    buyer until the offer is accepted).
 -- 1. account_close(): the person closes their own account, unless a sale is
 --    in progress (an offer accepted, the property not sold) or the account
 --    is an admin one. At once: the offers they sent waiting for an answer
@@ -33,6 +36,64 @@
 -- No new table; one column, profiles.anonymized_at.
 
 alter table public.profiles add column anonymized_at timestamptz;
+
+-- 0. ---------------------------------------------------------------------------
+create function public.account_export() returns jsonb
+language sql stable security invoker set search_path = '' as $$
+  with me as (select auth.uid() as id),
+  my_properties as (select p.* from public.properties p, me where p.owner_id = me.id),
+  my_conversations as (
+    select c.* from public.conversations c, me where me.id in (c.buyer_id, c.seller_id)),
+  my_offers as (select o.* from public.offers o, me where o.buyer_id = me.id),
+  received as (select o.* from public.offer_for_seller o, me where o.seller_id = me.id),
+  my_ai as (select a.* from public.ai_conversations a, me where a.profile_id = me.id)
+  select jsonb_build_object(
+    'profile', (select to_jsonb(p) from public.profiles p, me where p.id = me.id),
+    'buyer_profile', (select to_jsonb(b) from public.buyer_profiles b, me where b.profile_id = me.id),
+    'legal_acceptances', (select coalesce(jsonb_agg(to_jsonb(a) order by a.accepted_at), '[]')
+                            from public.legal_acceptances a, me where a.profile_id = me.id),
+    'properties', (select coalesce(jsonb_agg(to_jsonb(p) order by p.created_at), '[]') from my_properties p),
+    'listings', (select coalesce(jsonb_agg(to_jsonb(l) order by l.created_at), '[]')
+                   from public.listings l where l.property_id in (select id from my_properties)),
+    'photos', (select coalesce(jsonb_agg(to_jsonb(ph) order by ph.property_id, ph.position), '[]')
+                 from public.photos ph where ph.property_id in (select id from my_properties)),
+    'subscriptions', (select coalesce(jsonb_agg(to_jsonb(s) order by s.activated_at), '[]')
+                        from public.subscriptions s, me where s.owner_id = me.id),
+    'conversations', (select coalesce(jsonb_agg(to_jsonb(c) order by c.created_at), '[]') from my_conversations c),
+    'messages', (select coalesce(jsonb_agg(to_jsonb(m) order by m.created_at), '[]')
+                   from public.messages m where m.conversation_id in (select id from my_conversations)),
+    'offers_sent', (select coalesce(jsonb_agg(to_jsonb(o) order by o.created_at), '[]') from my_offers o),
+    'offers_received', (select coalesce(jsonb_agg(to_jsonb(o) order by o.submitted_at), '[]') from received o),
+    'offer_events', (select coalesce(jsonb_agg(to_jsonb(e) order by e.created_at), '[]')
+                       from public.offer_events e
+                      where e.offer_id in (select id from my_offers union select id from received)),
+    -- The columns the person reads (not the note nor the author of the check).
+    'financing_documents', (select coalesce(jsonb_agg(jsonb_build_object(
+                                'id', f.id, 'type', f.type, 'document_date', f.document_date,
+                                'mime_type', f.mime_type, 'size_bytes', f.size_bytes,
+                                'created_at', f.created_at, 'checked_at', f.checked_at,
+                                'deleted_at', f.deleted_at) order by f.created_at), '[]')
+                              from public.financing_documents f, me where f.buyer_id = me.id),
+    'favorites', (select coalesce(jsonb_agg(to_jsonb(f) order by f.created_at), '[]')
+                    from public.favorites f, me where f.buyer_id = me.id),
+    'assistant_conversations', (select coalesce(jsonb_agg(to_jsonb(a) order by a.created_at), '[]') from my_ai a),
+    'assistant_messages', (select coalesce(jsonb_agg(to_jsonb(m) order by m.created_at), '[]')
+                             from public.ai_messages m where m.conversation_id in (select id from my_ai)),
+    -- Without the claim token of an anonymous valuation.
+    'valuations', (select coalesce(jsonb_agg(to_jsonb(e) order by e.created_at), '[]')
+                     from (select v.id, v.created_at, v.input, v.result, v.low_cents, v.value_cents,
+                                  v.high_cents, v.email
+                             from public.estimations v, me where v.profile_id = me.id) e),
+    'notifications', (select coalesce(jsonb_agg(to_jsonb(n) order by n.created_at), '[]')
+                        from public.notifications n, me where n.profile_id = me.id),
+    'requests_to_the_team', (select coalesce(jsonb_agg(to_jsonb(c) order by c.created_at), '[]')
+                               from public.cases c, me where c.profile_id = me.id),
+    'reports', (select coalesce(jsonb_agg(to_jsonb(r) order by r.created_at), '[]')
+                  from public.reports r, me where r.reporter_id = me.id))
+  from me where me.id is not null;
+$$;
+revoke execute on function public.account_export() from public, anon;
+grant execute on function public.account_export() to authenticated;
 
 -- 1. ---------------------------------------------------------------------------
 create function public.account_close() returns timestamptz

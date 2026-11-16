@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // L1-39: the forms of « Mon compte » and their actions, with Supabase mocked:
 // the schemas, the address compared without case, the current password
 // checked before any change and counted when wrong, the other sessions
-// closed, the roles a person may add.
+// closed, the roles a person may add; the deletion of the account (L2-10).
 
 const mocks = vi.hoisted(() => ({
   user: { id: "u1", email: "dominique@exemple.test" } as { id: string; email?: string } | null,
@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   signOuts: [] as unknown[],
   checkSignOuts: [] as unknown[],
   rpc: { data: ["buyer", "seller"] as unknown, error: null as { code: string } | null },
+  rpcCalls: [] as string[],
   allowed: true,
   counted: 0,
   redirects: [] as string[],
@@ -59,7 +60,10 @@ vi.mock("@/lib/supabase/server", () => ({
       self.maybeSingle = async () => mocks.update;
       return self;
     },
-    rpc: async () => mocks.rpc,
+    rpc: async (name: string) => {
+      mocks.rpcCalls.push(name);
+      return mocks.rpc;
+    },
     auth: {
       updateUser: async (args: Record<string, unknown>) => {
         mocks.updateUserArgs.push(args);
@@ -89,6 +93,7 @@ beforeEach(() => {
   mocks.signOuts = [];
   mocks.checkSignOuts = [];
   mocks.rpc = { data: ["buyer", "seller"], error: null };
+  mocks.rpcCalls = [];
   mocks.allowed = true;
   mocks.counted = 0;
   mocks.redirects = [];
@@ -270,5 +275,54 @@ describe("addRole", () => {
     const { addRole } = await import("@/leenkey/account/actions");
     expect(await addRole("seller")).toEqual({ ok: true, data: { roles: ["buyer", "seller"] } });
     expect(await addRole("admin")).toMatchObject({ ok: false });
+  });
+});
+
+describe("closeAccount (L2-10)", () => {
+  const filled = { password: "mot-de-passe", confirm: "on" };
+
+  it("the password and the box first: nothing is closed without them", async () => {
+    const { closeAccount } = await import("@/leenkey/account/actions");
+    const result = await closeAccount(null, form({ password: "" }));
+    expect(result).toMatchObject({
+      ok: false,
+      fieldErrors: {
+        password: "Indiquez votre mot de passe.",
+        confirm: "Cochez la case pour confirmer.",
+      },
+    });
+    expect(mocks.rpcCalls).toEqual([]);
+  });
+
+  it("checks the password, closes the account, then every session, then the sign-in page", async () => {
+    const { closeAccount } = await import("@/leenkey/account/actions");
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    mocks.rpc = { data: "2026-11-16T10:00:00Z", error: null };
+    await expect(closeAccount(null, form(filled))).rejects.toThrow(
+      "NEXT_REDIRECT /connexion?compte=ferme",
+    );
+    expect(mocks.rpcCalls).toEqual(["account_close"]);
+    expect(mocks.checkSignOuts).toEqual([{ scope: "local" }]);
+    expect(mocks.signOuts).toEqual([{ scope: "global" }]);
+  });
+
+  it("a wrong password closes nothing and counts as a failed sign-in", async () => {
+    const { closeAccount } = await import("@/leenkey/account/actions");
+    mocks.check = { error: { code: "invalid_credentials" } };
+    expect(await closeAccount(null, form(filled))).toMatchObject({
+      ok: false,
+      fieldErrors: { password: "Ce mot de passe n'est pas le bon." },
+    });
+    expect(mocks.rpcCalls).toEqual([]);
+    expect(mocks.counted).toBe(1);
+  });
+
+  it("a sale in progress: the account stays open, the person is told whom to write to", async () => {
+    const { closeAccount } = await import("@/leenkey/account/actions");
+    mocks.rpc = { data: null, error: { code: "55000" } };
+    const result = await closeAccount(null, form(filled));
+    expect(result).toMatchObject({ ok: false });
+    expect(result.ok === false && result.error).toContain("Une vente est en cours");
+    expect(mocks.signOuts).toEqual([]);
   });
 });

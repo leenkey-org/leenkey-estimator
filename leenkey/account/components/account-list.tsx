@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Download } from "lucide-react";
 import { SectionTitle } from "@/components/shared/section-title";
 import { cn } from "@/lib/utils";
 
@@ -39,19 +39,29 @@ export function AccountRow({
   label,
   value,
   detail,
+  download = false,
 }: {
   href: string;
   label: string;
   value: string;
   /** A second line, e.g. an address waiting for its confirmation. */
   detail?: string | null;
+  /** A file to save (a route handler): a plain link, never prefetched. */
+  download?: boolean;
 }) {
   return (
     <li className="border-t border-lk-line first:border-t-0">
-      <Link href={href} className={accountRowClass}>
-        <AccountRowText label={label} value={value} detail={detail} />
-        <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-lk-ink-3" />
-      </Link>
+      {download ? (
+        <a href={href} download className={accountRowClass}>
+          <AccountRowText label={label} value={value} detail={detail} />
+          <Download aria-hidden="true" className="size-4 shrink-0 text-lk-ink-3" />
+        </a>
+      ) : (
+        <Link href={href} className={accountRowClass}>
+          <AccountRowText label={label} value={value} detail={detail} />
+          <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-lk-ink-3" />
+        </Link>
+      )}
     </li>
   );
 }

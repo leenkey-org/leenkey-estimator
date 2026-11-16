@@ -9,10 +9,12 @@ import { authErrorMessage } from "@/leenkey/auth/errors";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { frAccount } from "@/lib/i18n/sections/account";
 import { frAuth } from "@/lib/i18n/sections/auth";
+import { frLegal } from "@/lib/i18n/sections/legal";
 import { allowRequest } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { createStatelessClient } from "@/lib/supabase/public";
 import {
+  accountDeletionSchema,
   addRoleSchema,
   emailChangeSchema,
   identitySchema,
@@ -21,7 +23,7 @@ import {
 import { fieldErrors } from "@/lib/validations/auth";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { account: frAccount, auth: frAuth } as const;
+const fr = { account: frAccount, auth: frAuth, legal: frLegal } as const;
 
 // « Mon compte » (L1-39, SPEC-V2 8.14): each change with the session of the
 // person (RLS, column grants of profiles, Supabase Auth), never the service
@@ -118,6 +120,34 @@ export async function changeEmail(
 }
 
 /**
+ * The password of the account checked on a client without cookies whose
+ * session is closed at once; a wrong one is counted with the failed sign-ins
+ * of the address (L1-38).
+ */
+async function checkPassword(
+  email: string,
+  password: string,
+  context: string,
+): Promise<"ok" | "wrong" | { error: string }> {
+  const requestHeaders = await headers();
+  if (!(await allowRequest("signin", requestHeaders, { count: false }))) {
+    return { error: errors.tooManyRequests };
+  }
+  const verifier = createStatelessClient();
+  const check = await verifier.auth.signInWithPassword({ email, password });
+  // The session of the check is closed at once, whatever comes next.
+  if (!check.error) {
+    await verifier.auth.signOut({ scope: "local" });
+    return "ok";
+  }
+  if (check.error.code === "invalid_credentials") {
+    await allowRequest("signin", requestHeaders);
+    return "wrong";
+  }
+  return { error: authErrorMessage(check.error, `${context} check`) };
+}
+
+/**
  * A new password, the current one checked first, on a client without
  * cookies whose session is closed at once; a wrong one is counted with the
  * failed sign-ins of the address (L1-38). Then every other session is
@@ -137,28 +167,15 @@ export async function changePassword(
   });
   if (!parsed.success) return { ok: false, ...invalid(parsed.error) };
 
-  const requestHeaders = await headers();
-  if (!(await allowRequest("signin", requestHeaders, { count: false }))) {
-    return { ok: false, error: errors.tooManyRequests };
+  const check = await checkPassword(user.email, parsed.data.current, "changePassword");
+  if (check === "wrong") {
+    return {
+      ok: false,
+      error: errors.summary(1),
+      fieldErrors: { current: t.password.errors.currentWrong },
+    };
   }
-  const verifier = createStatelessClient();
-  const check = await verifier.auth.signInWithPassword({
-    email: user.email,
-    password: parsed.data.current,
-  });
-  // The session of the check is closed at once, whatever comes next.
-  if (!check.error) await verifier.auth.signOut({ scope: "local" });
-  if (check.error) {
-    if (check.error.code === "invalid_credentials") {
-      await allowRequest("signin", requestHeaders);
-      return {
-        ok: false,
-        error: errors.summary(1),
-        fieldErrors: { current: t.password.errors.currentWrong },
-      };
-    }
-    return { ok: false, error: authErrorMessage(check.error, "changePassword check") };
-  }
+  if (check !== "ok") return { ok: false, error: check.error };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
@@ -190,4 +207,53 @@ export async function addRole(role: unknown): Promise<AddRoleResult> {
   // The tabs and menus of every page follow the roles.
   revalidatePath("/", "layout");
   return { ok: true, data: { roles: data } };
+}
+
+/**
+ * The deletion of the account (L2-10, SPEC-V2 sections 19 and 21): the
+ * password checked, then account_close (refused during a sale in progress
+ * and for an admin account), then every session of the account closed. The
+ * anonymisation follows 30 days later (/api/cron/anonymize-deleted).
+ */
+export async function closeAccount(
+  _previous: FormResult | null,
+  formData: FormData,
+): Promise<FormResult> {
+  const user = await getUser();
+  if (!user?.email) return { ok: false, error: t.errors.session };
+  const parsed = accountDeletionSchema.safeParse({
+    password: text(formData, "password"),
+    confirm: text(formData, "confirm"),
+  });
+  if (!parsed.success) return { ok: false, ...invalid(parsed.error) };
+
+  const check = await checkPassword(user.email, parsed.data.password, "closeAccount");
+  if (check === "wrong") {
+    return {
+      ok: false,
+      error: errors.summary(1),
+      fieldErrors: { password: t.password.errors.currentWrong },
+    };
+  }
+  if (check !== "ok") return { ok: false, error: check.error };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("account_close");
+  if (error) {
+    if (error.code === "55000") {
+      return { ok: false, error: t.deletion.errors.saleInProgress(fr.legal.contactEmail) };
+    }
+    console.error("[account] close failed", { user_id: user.id, code: error.code });
+    return { ok: false, error: errors.generic };
+  }
+  console.info("[account] closed", { user_id: user.id });
+  const { error: signOutError } = await supabase.auth.signOut({ scope: "global" });
+  if (signOutError) {
+    console.error("[account] global sign-out failed", {
+      user_id: user.id,
+      code: signOutError.code,
+    });
+  }
+  revalidatePath("/", "layout");
+  redirect("/connexion?compte=ferme");
 }

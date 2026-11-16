@@ -41,3 +41,13 @@ export const passwordChangeSchema = z
 /** The roles a person adds to their account (never « admin »). */
 export const addRoleSchema = z.enum(["seller", "buyer"]);
 export type AddableRole = z.infer<typeof addRoleSchema>;
+
+/** The deletion of the account (L2-10): the password, and the box ticked. */
+export const accountDeletionSchema = z.object({
+  password: z
+    .string({ required_error: t.deletion.errors.passwordRequired })
+    .min(1, t.deletion.errors.passwordRequired),
+  confirm: z.literal("on", {
+    errorMap: () => ({ message: t.deletion.errors.confirmRequired }),
+  }),
+});

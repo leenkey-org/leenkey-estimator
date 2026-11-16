@@ -72,9 +72,18 @@ async function siteOrigin(): Promise<string> {
 }
 
 async function rolesOf(userId: string): Promise<string[]> {
+  return (await accountOf(userId)).roles;
+}
+
+/** The roles of an account, and whether it is closed (L2-10). */
+async function accountOf(userId: string): Promise<{ roles: string[]; closed: boolean }> {
   const supabase = await createClient();
-  const { data } = await supabase.from("profiles").select("roles").eq("id", userId).maybeSingle();
-  return data?.roles ?? [];
+  const { data } = await supabase
+    .from("profiles")
+    .select("roles, deleted_at")
+    .eq("id", userId)
+    .maybeSingle();
+  return { roles: data?.roles ?? [], closed: Boolean(data?.deleted_at) };
 }
 
 // --- Sign-up ---------------------------------------------------------------
@@ -239,7 +248,13 @@ export async function signIn(
       unconfirmed: error.code === "email_not_confirmed",
     };
   }
-  redirect(safeNextPath(parsed.data.next, homePathForRoles(await rolesOf(data.user.id))));
+  // A closed account (L2-10) does not sign in again: its session ends here.
+  const account = await accountOf(data.user.id);
+  if (account.closed) {
+    await supabase.auth.signOut({ scope: "local" });
+    return { ok: false, error: fr.auth.login.closed, values };
+  }
+  redirect(safeNextPath(parsed.data.next, homePathForRoles(account.roles)));
 }
 
 /** This device only: the other sessions of the account stay open. */

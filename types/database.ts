@@ -2076,6 +2076,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      account_export: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       account_files: {
         Args: { p_now?: string; p_profile: string }
         Returns: {

@@ -1,5 +1,5 @@
--- L2-10: closing an account, then its anonymisation 30 days later (date
--- simulated). Only the person closes their own account, never during a
+-- L2-10: the export of an account (its own data only), closing it, then its
+-- anonymisation 30 days later (date simulated). Only the person closes their own account, never during a
 -- sale in progress nor an admin one; at once the offers they sent waiting
 -- are withdrawn, those they received declined, their listings leave the
 -- site, their conversations close. Only the cron (service role) reads the accounts due
@@ -10,7 +10,7 @@
 -- file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(39);
+select plan(46);
 \ir _plan.psql
 -- The ids, read here: the service role does not read the schema tests.
 select tests.uid('buyer_c') as buyer_c, tests.uid('buyer_d') as buyer_d,
@@ -106,6 +106,29 @@ select offer_submit(:'offer3');
 \o /dev/null
 select offer_answer(:'offer2', true, true);
 \o
+
+-- ===========================================================================
+-- The export: what the account holds, nothing of another account
+-- ===========================================================================
+\set who buyer_c
+\ir _as.psql
+select is((select jsonb_array_length(account_export()->'offers_sent')), 2,
+          'buyer_c: its offers, the one sent and its draft');
+select ok((select account_export()->'buyer_profile'->>'project' = 'residence_principale'),
+          'buyer_c: its buyer project');
+select ok(not (account_export()::text like '%rue des Adieux%'),
+          'buyer_c: nothing of the properties of the sellers');
+\set who seller_a
+\ir _as.psql
+select ok((select account_export()->'properties' @> jsonb_build_array(jsonb_build_object('id', :'prop_a'))),
+          'seller_a: its property');
+select ok((select account_export()->'offers_received' @> jsonb_build_array(jsonb_build_object('id', :'offer1'))),
+          'seller_a: the offer it received');
+select ok(not (account_export()::text like '%chloe@example.test%'),
+          'seller_a: without the contact details of the buyer, as on its screen');
+\set who anon
+\ir _as.psql
+select throws_ok($$select account_export()$$, '42501', null, 'anon: no export');
 
 -- ===========================================================================
 -- Closing: the person only, their own account
