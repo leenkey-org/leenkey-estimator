@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-16 · L2-09 · PR #106 · Déclencheurs de montée en gamme
+- Ajouté : propositions de formule en contexte, une à la fois, jamais en Sérénité, masquables pour de bon : peu de contacts (tableau de bord), annonce prête (avant « Envoyer en validation »), valorisation faite (étape du prix), offre reçue et offre acceptée (tableau de bord et page de l'offre, une par offre).
+- Ajouté : mesure dans le tableau de bord du back office (affichées, ouvertes, masquées, formule commandée sous 7 jours).
+- Modifié : aucune proposition tant qu'une formule payante n'est pas commandable (en production, jusqu'au médiateur).
+- Migration : `20261116100000_upgrade_prompts.sql` (`upgrade_prompts.subject_id`, contrôles, écriture unique, `upgrade_prompt_record`, `admin_upgrade_prompt_stats`).
+
 ### 2026-11-15 · L2-07 · PR #105 · Back office des offres, outil vendeur `summarize_offer`
 - Ajouté : `/admin/offres`, toutes les offres envoyées avec filtres (« En attente », « Acceptées », « Refusées », « Terminées »), recherche (référence, ville, acquéreur, vendeur) et offres d'un compte depuis sa fiche.
 - Ajouté : fiche d'une offre en lecture seule (parties, bien, formule, synthèse lue par le vendeur, document, PDF, journal) ; « Marquer comme analysée » pour les biens dont la formule comprend l'analyse des offres ; saisie des dates de l'avant-contrat par l'équipe pour ceux dont la formule suit la vente jusqu'à la signature.
