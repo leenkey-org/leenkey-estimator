@@ -1,0 +1,225 @@
+-- L2-10: closing an account, then its anonymisation 30 days later (date
+-- simulated). Only the person closes their own account, never during a
+-- sale in progress nor an admin one; at once the offers they sent waiting
+-- are withdrawn, those they received declined, their listings leave the
+-- site, their conversations close. Only the cron (service role) reads the accounts due
+-- and anonymises them: before 30 days nothing, after 30 days the names, the
+-- phone, the buyer project, the assistant, the notifications, the favorites,
+-- the drafts, the address of the properties and the files go; the orders,
+-- the offers sent and the messages stay. Fixtures in postal code 99993: the
+-- file passes on an empty and on a seeded database.
+begin;
+\ir _helpers.psql
+select plan(39);
+\ir _plan.psql
+-- The ids, read here: the service role does not read the schema tests.
+select tests.uid('buyer_c') as buyer_c, tests.uid('buyer_d') as buyer_d,
+       tests.uid('seller_b') as seller_b \gset
+
+-- seller_a: a listing online; seller_b: a listing online, to close.
+\set who seller_a
+\ir _as.psql
+insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms, location)
+values (tests.uid('seller_a'), 'maison', '1 rue des Adieux', '99993', 'Effaceville', 100, 5,
+        extensions.st_setsrid(extensions.st_makepoint(2.3813, 48.7214), 4326)::extensions.geography)
+returning id as prop_a \gset
+insert into listings (property_id, title, description, price_cents)
+values (:'prop_a', 'Maison à quitter', 'Description.', 35000000)
+returning id as listing_a \gset
+\o /dev/null
+select tests.dpe(:'listing_a');
+select listing_submit(:'listing_a');
+\o
+\set who seller_b
+\ir _as.psql
+insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms, location)
+values (tests.uid('seller_b'), 'appartement', '2 rue des Adieux', '99993', 'Effaceville', 60, 3,
+        extensions.st_setsrid(extensions.st_makepoint(2.3814, 48.7215), 4326)::extensions.geography)
+returning id as prop_b \gset
+insert into listings (property_id, title, description, price_cents)
+values (:'prop_b', 'Appartement qui part', 'Description.', 20000000)
+returning id as listing_b \gset
+\o /dev/null
+select tests.dpe(:'listing_b');
+select listing_submit(:'listing_b');
+\o
+\set who admin
+\ir _as.psql
+\o /dev/null
+select listing_publish(:'listing_a');
+select listing_publish(:'listing_b');
+\o
+
+-- buyer_c: an offer sent to seller_a, a draft, a favorite, a conversation.
+\set who buyer_c
+\ir _as.psql
+update buyer_profiles
+   set project = 'residence_principale', budget_max_cents = 40000000,
+       down_payment_cents = 9000000, loan_needed = false
+ where profile_id = tests.uid('buyer_c');
+insert into offers (listing_id, buyer_id, price_cents) values (:'listing_a', tests.uid('buyer_c'), 33800000)
+returning id as offer1 \gset
+update offers
+   set buyer_identity = '{"last_name":"Martin","first_name":"Chloé","birth_date":"1990-04-12",
+                          "address":{"line":"3 rue Verte","postal_code":"75011","city":"Paris"},
+                          "email":"chloe@example.test","phone":"0600000000"}',
+       financing_mode = 'no_loan',
+       validity_until = now() + interval '5 days', visited = true,
+       declarations = '{"accuracy":true,"price_and_financing_checked":true,
+                        "legal_effects_understood":true,"info_read":true}'
+ where id = :'offer1';
+\o /dev/null
+select offer_submit(:'offer1');
+\o
+insert into offers (listing_id, buyer_id, price_cents) values (:'listing_b', tests.uid('buyer_c'), 19000000)
+returning id as draft \gset
+insert into favorites (buyer_id, listing_id) values (tests.uid('buyer_c'), :'listing_b');
+select conversation_start(:'listing_a') as conv \gset
+
+-- buyer_d: an offer accepted by seller_a (a sale in progress), one waiting
+-- for seller_b.
+\set who buyer_d
+\ir _as.psql
+update buyer_profiles
+   set project = 'residence_principale', budget_max_cents = 40000000,
+       down_payment_cents = 9000000, loan_needed = false
+ where profile_id = tests.uid('buyer_d');
+insert into offers (listing_id, buyer_id, price_cents) values (:'listing_a', tests.uid('buyer_d'), 34000000)
+returning id as offer2 \gset
+insert into offers (listing_id, buyer_id, price_cents) values (:'listing_b', tests.uid('buyer_d'), 19500000)
+returning id as offer3 \gset
+update offers
+   set buyer_identity = '{"last_name":"Durand","first_name":"Léo","birth_date":"1988-02-01",
+                          "address":{"line":"4 rue Bleue","postal_code":"75010","city":"Paris"},
+                          "email":"leo@example.test","phone":"0600000001"}',
+       financing_mode = 'no_loan',
+       validity_until = now() + interval '5 days', visited = true,
+       declarations = '{"accuracy":true,"price_and_financing_checked":true,
+                        "legal_effects_understood":true,"info_read":true}'
+ where id in (:'offer2', :'offer3');
+\o /dev/null
+select offer_submit(:'offer2');
+select offer_submit(:'offer3');
+\o
+\set who seller_a
+\ir _as.psql
+\o /dev/null
+select offer_answer(:'offer2', true, true);
+\o
+
+-- ===========================================================================
+-- Closing: the person only, their own account
+-- ===========================================================================
+\set who anon
+\ir _as.psql
+select throws_ok($$select account_close()$$, '42501', null, 'anon: closes no account');
+\set who buyer_c
+\ir _as.psql
+select throws_ok($$select accounts_due()$$, '42501', null, 'buyer_c: not the accounts due');
+select throws_ok(format($$select account_anonymize(%L)$$, tests.uid('buyer_d')), '42501', null,
+                 'buyer_c: anonymises no account');
+select lives_ok($$select account_close()$$, 'buyer_c: closes its own account');
+select throws_ok($$select account_close()$$, '42501', null, 'closed once: not twice');
+
+reset role;
+select ok((select deleted_at is not null and anonymized_at is null from profiles where id = tests.uid('buyer_c')),
+          'the account is marked closed, not yet anonymised');
+select is((select status::text from offers where id = :'offer1'), 'withdrawn',
+          'its offer waiting for an answer is withdrawn');
+select is((select count(*)::int from notifications
+            where type = 'offer.withdrawn' and profile_id = tests.uid('seller_a')
+              and data->>'offer_id' = :'offer1'), 1,
+          'and its seller is told, as for a withdrawal');
+select ok((select closed_at is not null from conversations where id = :'conv'),
+          'its conversations are closed');
+select is((select first_name from profiles where id = tests.uid('buyer_c')) is not null, true,
+          'nothing is erased yet');
+
+-- A sale in progress: neither party closes; nor an admin.
+\set who seller_a
+\ir _as.psql
+select throws_ok($$select account_close()$$, '55000', null, 'seller_a: not during a sale in progress');
+\set who buyer_d
+\ir _as.psql
+select throws_ok($$select account_close()$$, '55000', null, 'buyer_d: nor the buyer of that sale');
+\set who admin
+\ir _as.psql
+select throws_ok($$select account_close()$$, '42501', null, 'admin: an admin account is closed by the team');
+
+-- seller_b closes: its listing leaves the site, the offer it received is declined.
+\set who seller_b
+\ir _as.psql
+select lives_ok($$select account_close()$$, 'seller_b: closes its own account');
+reset role;
+select is((select status::text from offers where id = :'offer3'), 'declined',
+          'the offer waiting for its answer is declined');
+select is((select count(*)::int from notifications
+            where type = 'offer.answered' and profile_id = tests.uid('buyer_d')
+              and data->>'offer_id' = :'offer3' and data->>'message' like '%fermé son compte%'), 1,
+          'and its buyer is told why');
+\set who anon
+\ir _as.psql
+select is((select count(*)::int from public_listings where id = :'listing_b'), 0,
+          'its listing is no longer on the site');
+select is((select count(*)::int from public_listings where id = :'listing_a'), 1,
+          'the listing of another seller still is');
+
+-- ===========================================================================
+-- 30 days later (date simulated): the cron only
+-- ===========================================================================
+reset role;
+set local role service_role;
+select ok(not exists (select 1 from accounts_due(now() + interval '29 days') d where d = :'buyer_c'),
+          'after 29 days: not due');
+select ok(exists (select 1 from accounts_due(now() + interval '31 days') d where d = :'buyer_c'),
+          'after 31 days: due');
+select throws_ok(format($$select account_anonymize(%L, now() + interval '29 days')$$, :'buyer_c'),
+                 '22023', null, 'never before 30 days');
+select throws_ok(format($$select account_anonymize(%L, now() + interval '31 days')$$, :'buyer_d'),
+                 '22023', null, 'never an account that is open');
+select ok((select count(*) >= 0 from account_files(:'buyer_c', now() + interval '31 days')),
+          'the cron lists the files of buyer_c first');
+select ok((select count(*) = 3 * (select count(*) from photos where property_id = :'prop_b')
+             from account_files(:'seller_b', now() + interval '31 days') where bucket = 'photos'),
+          'three widths of each photo of seller_b');
+select throws_ok(format($$select * from account_files(%L, now() + interval '29 days')$$, :'buyer_c'),
+                 '22023', null, 'no files before 30 days');
+select lives_ok(format($$select account_anonymize(%L, now() + interval '31 days')$$, :'buyer_c'),
+                'the cron anonymises buyer_c');
+select lives_ok(format($$select account_anonymize(%L, now() + interval '31 days')$$, :'seller_b'),
+                'and seller_b');
+reset role;
+select is((select row(first_name, last_name, phone)::text from profiles where id = :'buyer_c'),
+          row(null::text, null::text, null::text)::text, 'buyer_c: no name, no phone');
+select is((select count(*)::int from buyer_profiles where profile_id = :'buyer_c'), 0,
+          'no buyer project');
+select is((select count(*)::int from favorites where buyer_id = :'buyer_c')
+          + (select count(*)::int from notifications where profile_id = :'buyer_c')
+          + (select count(*)::int from ai_conversations where profile_id = :'buyer_c'), 0,
+          'no favorite, notification nor assistant conversation');
+select is((select count(*)::int from offers where id = :'draft'), 0, 'its draft is erased');
+select is((select status::text from offers where id = :'offer1'), 'withdrawn',
+          'the offer it sent stays, the document of both parties');
+select is((select row(address_line, location is null)::text from properties where id = :'prop_b'),
+          row('Adresse effacée', true)::text, 'seller_b: the address of its property is erased');
+select is((select count(*)::int from properties where id = :'prop_a' and address_line = '1 rue des Adieux'), 1,
+          'the property of seller_a is untouched');
+
+-- Marked once the sign-in and the files are erased (the cron route).
+set local role service_role;
+select lives_ok(format($$select account_mark_anonymized(%L, now() + interval '31 days')$$, :'buyer_c'),
+                'the cron marks buyer_c anonymised');
+select ok(not exists (select 1 from accounts_due(now() + interval '31 days') d where d = :'buyer_c'),
+          'no longer due');
+select ok(exists (select 1 from accounts_due(now() + interval '31 days') d where d = :'seller_b'),
+          'seller_b, not marked yet, stays due: a failed run is resumed');
+reset role;
+\set who admin
+\ir _as.psql
+select throws_ok($$select accounts_due()$$, '42501', null, 'admin: the cron only');
+select is((select count(*)::int from audit_log where action = 'account.closed'
+            and entity_id in (tests.uid('buyer_c'), tests.uid('seller_b'))), 2,
+          'each closing is in the audit log');
+
+select * from finish();
+rollback;

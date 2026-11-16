@@ -1245,6 +1245,7 @@ export type Database = {
         Row: {
           ai_messages_date: string | null
           ai_messages_today: number
+          anonymized_at: string | null
           avatar_path: string | null
           created_at: string
           deleted_at: string | null
@@ -1261,6 +1262,7 @@ export type Database = {
         Insert: {
           ai_messages_date?: string | null
           ai_messages_today?: number
+          anonymized_at?: string | null
           avatar_path?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -1277,6 +1279,7 @@ export type Database = {
         Update: {
           ai_messages_date?: string | null
           ai_messages_today?: number
+          anonymized_at?: string | null
           avatar_path?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -2065,6 +2068,29 @@ export type Database = {
       }
     }
     Functions: {
+      account_anonymize: {
+        Args: { p_profile: string; p_now?: string }
+        Returns: undefined
+      }
+      account_close: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      account_files: {
+        Args: { p_now?: string; p_profile: string }
+        Returns: {
+          bucket: string
+          path: string
+        }[]
+      }
+      account_mark_anonymized: {
+        Args: { p_profile: string; p_now?: string }
+        Returns: undefined
+      }
+      accounts_due: {
+        Args: { p_now?: string }
+        Returns: string[]
+      }
       admin_activity: {
         Args: { p_days?: number }
         Returns: {
