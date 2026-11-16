@@ -20,23 +20,29 @@
 -- 3. account_anonymize(p_profile, p_now): what can name the person is
 --    erased: names, phone, avatar, buyer project, assistant conversations,
 --    notifications, favorites, valuations, drafts of offers, the street
---    address and the location of their properties, their photos and their
+--    address, the location and the DPE number of their properties, the
+--    title, the description and the history of their listings, their photos and their
 --    financing documents (their files: account_files lists them, the cron
 --    route removes them from Storage first). Kept, as the law or the other
 --    party requires (privacy policy, « sauf celles que la loi impose de
 --    garder »): orders and invoices (10 years), the offers sent and their
 --    journal (the document of both parties), the messages received by the
---    other party, the legal acceptances, the reports and cases, the audit
+--    other party, the legal acceptances, the requests to the team and the
+--    reports, the characteristics and prices of the properties, the audit
 --    log; all now tied to an account without a name.
 -- 4. account_mark_anonymized(p_profile): once the route has erased the
 --    sign-in (Supabase Auth: email, password, sign-in barred) and the files.
---    Until then the account stays due: a failed run is resumed next time.
+--    Until then the account stays due: a failed run is resumed next time,
+--    after the others (account_anonymize_failed, the team told in the bell).
 -- 5. pg_cron: every Sunday at 2:00 (SPEC 19), /api/cron/anonymize-deleted.
 --
 -- No new table; one column, profiles.anonymized_at; the path of a financing
 -- document may be empty once its file is erased.
 
 alter table public.profiles add column anonymized_at timestamptz;
+-- The last run that could not anonymise the account: it goes to the back of
+-- the queue, never blocks the others (accounts_due), and the team is told.
+alter table public.profiles add column anonymize_failed_at timestamptz;
 
 -- A financing document an offer refers to keeps its row once its file is
 -- erased (account_anonymize): its path is then empty.
@@ -97,15 +103,25 @@ language sql stable security invoker set search_path = '' as $$
     'notifications', (select coalesce(jsonb_agg(to_jsonb(n) order by n.created_at), '[]')
                         from public.notifications n, me where n.profile_id = me.id),
     'requests_to_the_team', (select coalesce(jsonb_agg(to_jsonb(c) order by c.created_at), '[]')
-                               from public.cases c, me where c.profile_id = me.id),
-    'reports', (select coalesce(jsonb_agg(to_jsonb(r) order by r.created_at), '[]')
-                  from public.reports r, me where r.reporter_id = me.id))
+                               from public.cases c, me where c.profile_id = me.id))
   from me where me.id is not null;
 $$;
 revoke execute on function public.account_export() from public, anon;
 grant execute on function public.account_export() to authenticated;
 
 -- 1. ---------------------------------------------------------------------------
+-- A sale in progress on the account of the caller (an offer accepted, the
+-- property not sold yet), as seller or buyer: the account is not closed then
+-- (the page says it before the form).
+create function public.account_sale_in_progress() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.offers ao
+      join public.listings al on al.id = ao.listing_id
+     where auth.uid() in (ao.buyer_id, ao.seller_id)
+       and ao.status = 'accepted' and al.status <> 'sold');
+$$;
+
 create function public.account_close() returns timestamptz
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -123,11 +139,7 @@ begin
   end if;
   -- A sale in progress (an offer accepted, the property not sold yet), as
   -- seller or buyer: the other party and the notary count on the account.
-  if exists (
-    select 1 from public.offers ao
-      join public.listings al on al.id = ao.listing_id
-     where (ao.buyer_id = v_me or ao.seller_id = v_me)
-       and ao.status = 'accepted' and al.status <> 'sold') then
+  if public.account_sale_in_progress() then
     raise exception 'a sale is in progress' using errcode = '55000';
   end if;
   -- The offers received waiting for an answer: declined, the buyer told why
@@ -176,7 +188,7 @@ language sql stable security definer set search_path = '' as $$
   select id from public.profiles
    where deleted_at is not null and deleted_at <= p_now - interval '30 days'
      and anonymized_at is null
-   order by deleted_at
+   order by anonymize_failed_at nulls first, deleted_at
    limit 50;
 $$;
 
@@ -225,7 +237,8 @@ begin
          notification_prefs = '{"email_alerts": false, "email_offers": false, "email_messages": false}'::jsonb
    where id = p_profile;
   delete from public.buyer_profiles where profile_id = p_profile;
-  -- A document an offer refers to keeps its row (type, date), never its file.
+  delete from public.offers where buyer_id = p_profile and status = 'draft';
+  -- A document an offer sent refers to keeps its row (type, date), never its file.
   update public.financing_documents set storage_path = ''
    where buyer_id = p_profile
      and id in (select financing_document_id from public.offers where financing_document_id is not null);
@@ -234,10 +247,22 @@ begin
      and id not in (select financing_document_id from public.offers where financing_document_id is not null);
   delete from public.photos
    where property_id in (select id from public.properties where owner_id = p_profile);
+  -- The address, what finds it (the DPE number gives it, through the
+  -- register of the ADEME), the free texts of the seller and their history;
+  -- the characteristics and the prices stay (city, surface, rooms).
   update public.properties
-     set address_line = 'Adresse effacée', location = null, public_location = null
+     set address_line = 'Adresse effacée', location = null, public_location = null,
+         district = null, dpe_number = null, dpe_date = null, dpe_exemption_reason = null,
+         estimation_id = null
    where owner_id = p_profile;
-  delete from public.offers where buyer_id = p_profile and status = 'draft';
+  update public.listings l
+     set title = 'Annonce supprimée', description = '', summary = null,
+         rejection_reason = null, suspension_reason = null
+    from public.properties p
+   where p.id = l.property_id and p.owner_id = p_profile;
+  delete from public.listing_revisions r
+   using public.listings l, public.properties p
+   where l.id = r.listing_id and p.id = l.property_id and p.owner_id = p_profile;
   delete from public.ai_conversations where profile_id = p_profile;
   delete from public.notifications where profile_id = p_profile;
   delete from public.favorites where buyer_id = p_profile;
@@ -253,6 +278,41 @@ language sql security definer set search_path = '' as $$
    where id = p_profile and deleted_at is not null and anonymized_at is null;
 $$;
 
+-- A run that could not anonymise the account (the cron route): at the back
+-- of the queue, and each admin told in the bell (once a day at most).
+create function public.account_anonymize_failed(p_profile uuid, p_now timestamptz default now())
+returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_admin uuid;
+  v_first boolean;
+begin
+  select anonymize_failed_at is null or anonymize_failed_at < p_now - interval '1 day'
+    into v_first
+    from public.profiles where id = p_profile and deleted_at is not null and anonymized_at is null;
+  if not found then
+    return;
+  end if;
+  update public.profiles set anonymize_failed_at = p_now where id = p_profile;
+  if not v_first then
+    return;
+  end if;
+  for v_admin in
+    select p.id from public.profiles p
+     where 'admin' = any(p.roles) and p.deleted_at is null and p.suspended_at is null
+  loop
+    perform public.notification_add(
+      v_admin, 'account.anonymize_failed',
+      jsonb_build_object('entity_id', p_profile, 'profile_id', p_profile),
+      '/admin', 'accounts:anonymize');
+  end loop;
+end;
+$$;
+
+revoke execute on function public.account_sale_in_progress() from public, anon;
+grant execute on function public.account_sale_in_progress() to authenticated;
+revoke execute on function public.account_anonymize_failed(uuid, timestamptz) from public, anon, authenticated;
+grant execute on function public.account_anonymize_failed(uuid, timestamptz) to service_role;
 revoke execute on function public.account_close() from public, anon;
 grant execute on function public.account_close() to authenticated;
 revoke execute on function public.accounts_due(timestamptz) from public, anon, authenticated;

@@ -98,6 +98,12 @@ describe("anonymizeDeletedAccounts", () => {
           call.name === "account_mark_anonymized" && JSON.stringify(call.args).includes("b2"),
       ),
     ).toBe(true);
+    // At the back of the queue, the team told: recorded for a1 only.
+    expect(
+      calls
+        .filter((call) => call.name === "account_anonymize_failed")
+        .map((call) => (call.args as { p_profile: string }).p_profile),
+    ).toEqual(["a1"]);
     expect(log).toHaveBeenCalledWith(
       "[account] anonymisation failed",
       expect.objectContaining({ user_id: "a1" }),

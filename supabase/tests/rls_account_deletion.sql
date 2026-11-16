@@ -10,7 +10,7 @@
 -- file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(48);
+select plan(55);
 \ir _plan.psql
 -- The ids, read here: the service role does not read the schema tests.
 select tests.uid('buyer_c') as buyer_c, tests.uid('buyer_d') as buyer_d,
@@ -49,6 +49,11 @@ select listing_submit(:'listing_b');
 select listing_publish(:'listing_a');
 select listing_publish(:'listing_b');
 \o
+-- seller_b made its property from a valuation (the key that held a run back).
+reset role;
+insert into estimations (profile_id, input, result, value_cents)
+values (tests.uid('seller_b'), '{}', '{}', 20000000) returning id as valuation_b \gset
+update properties set estimation_id = :'valuation_b' where id = :'prop_b';
 
 -- buyer_c: an offer sent to seller_a, a draft, a favorite, a conversation.
 \set who buyer_c
@@ -175,6 +180,7 @@ select is((select first_name from profiles where id = tests.uid('buyer_c')) is n
 -- A sale in progress: neither party closes; nor an admin.
 \set who seller_a
 \ir _as.psql
+select ok(account_sale_in_progress(), 'seller_a: the page knows its sale is in progress');
 select throws_ok($$select account_close()$$, '55000', null, 'seller_a: not during a sale in progress');
 \set who buyer_d
 \ir _as.psql
@@ -242,8 +248,14 @@ select is((select count(*)::int from financing_documents where id = :'doc_gone')
           'the other document is erased');
 select is((select status::text from offers where id = :'offer1'), 'withdrawn',
           'the offer it sent stays, the document of both parties');
-select is((select row(address_line, location is null)::text from properties where id = :'prop_b'),
-          row('Adresse effacée', true)::text, 'seller_b: the address of its property is erased');
+select is((select row(address_line, location is null, dpe_number is null, estimation_id is null)::text
+             from properties where id = :'prop_b'),
+          row('Adresse effacée', true, true, true)::text,
+          'seller_b: the address of its property is erased, and what finds it (DPE number)');
+select is((select row(title, description)::text from listings where id = :'listing_b'),
+          row('Annonce supprimée', '')::text, 'seller_b: the texts of its listing too');
+select is((select count(*)::int from estimations where id = :'valuation_b'), 0,
+          'seller_b: its valuation is erased, though its property came from it');
 select is((select count(*)::int from properties where id = :'prop_a' and address_line = '1 rue des Adieux'), 1,
           'the property of seller_a is untouched');
 
@@ -255,10 +267,23 @@ select ok(not exists (select 1 from accounts_due(now() + interval '31 days') d w
           'no longer due');
 select ok(exists (select 1 from accounts_due(now() + interval '31 days') d where d = :'seller_b'),
           'seller_b, not marked yet, stays due: a failed run is resumed');
+-- A failed run: at the back of the queue, the team told once a day.
+select lives_ok(format($$select account_anonymize_failed(%L, now() + interval '31 days')$$, :'seller_b'),
+                'the cron records a failed run');
+select lives_ok(format($$select account_anonymize_failed(%L, now() + interval '31 days 1 hour')$$, :'seller_b'),
+                'and a second one the same day');
+reset role;
+select is((select count(*)::int from notifications
+            where type = 'account.anonymize_failed' and profile_id = tests.uid('admin')
+              and data->>'profile_id' = :'seller_b'), 1,
+          'each admin is told in the bell, once a day');
+set local role service_role;
 reset role;
 \set who admin
 \ir _as.psql
 select throws_ok($$select accounts_due()$$, '42501', null, 'admin: the cron only');
+select throws_ok(format($$select account_anonymize_failed(%L)$$, :'seller_b'), '42501', null,
+                 'admin: nor records a failed run');
 select is((select count(*)::int from audit_log where action = 'account.closed'
             and entity_id in (tests.uid('buyer_c'), tests.uid('seller_b'))), 2,
           'each closing is in the audit log');

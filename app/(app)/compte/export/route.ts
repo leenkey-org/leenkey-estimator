@@ -24,7 +24,8 @@ export async function GET(request: Request) {
   const { data, error } = await supabase.rpc("account_export");
   if (error || data === null) {
     console.error("[account] export failed", { user_id: profile.id, code: error?.code });
-    return NextResponse.json({ ok: false, error: "unavailable" }, { status: 500 });
+    // A page with its message, never a file that is not the export.
+    return NextResponse.redirect(new URL(`${ROUTES.account}?export=erreur`, request.url), 303);
   }
   const user = await getUser();
   const body = {

@@ -55,6 +55,11 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
           <SavedNotice text={saved} />
         </div>
       ) : null}
+      {params.export === "erreur" ? (
+        <InlineAlert tone="danger" className="mt-6">
+          {t.deletion.errors.export}
+        </InlineAlert>
+      ) : null}
       {!account ? (
         <InlineAlert tone="danger" className="mt-6">
           {fr.auth.errors.generic}

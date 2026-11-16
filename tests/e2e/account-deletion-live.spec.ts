@@ -186,6 +186,8 @@ test("un compte de l'équipe ne se supprime pas depuis la page", async ({ browse
   await expect(page.getByRole("region", { name: "Mes données" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Supprimer mon compte/ })).toHaveCount(0);
   await page.goto("/compte/supprimer");
-  await expect(page.getByText("Un compte de l'équipe Leenkey se ferme par l'équipe")).toBeVisible();
+  await expect(
+    page.getByText("Un compte de l'équipe Leenkey ne se supprime pas depuis cette page"),
+  ).toBeVisible();
   await expect(page.getByLabel("Mot de passe")).toHaveCount(0);
 });

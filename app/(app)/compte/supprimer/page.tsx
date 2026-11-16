@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoNote } from "@/components/shared/info-note";
+import { InlineAlert } from "@/components/shared/inline-alert";
 import { SectionTitle } from "@/components/shared/section-title";
 import { requireProfile } from "@/core/auth/session";
 import { DeletionForm } from "@/leenkey/account/components/deletion-form";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { frAccount } from "@/lib/i18n/sections/account";
+import { frLegal } from "@/lib/i18n/sections/legal";
+import { createClient } from "@/lib/supabase/server";
 import { SpacePage } from "../../_components/space-page";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { account: frAccount } as const;
+const fr = { account: frAccount, legal: frLegal } as const;
 
 const t = fr.account.deletion;
 
@@ -33,11 +36,21 @@ function Block({ id, title, items }: { id: string; title: string; items: readonl
 
 // The deletion of the account (L2-10, SPEC-V2 sections 19 and 21): what
 // happens at once, after 30 days, what is kept; the export first; then the
-// password and a box ticked. An admin account is closed by the team. Open
+// password and a box ticked; during a sale in progress, why not instead of
+// the form. An admin account is closed by the team. Open
 // without the current terms accepted (lib/legal/versions.ts).
 export default async function AccountDeletionPage() {
   const profile = await requireProfile();
   const admin = profile.roles.includes("admin");
+  // A sale in progress: said before the form (account_close refuses it too).
+  let saleInProgress = false;
+  if (!admin) {
+    const { data, error } = await (await createClient()).rpc("account_sale_in_progress");
+    if (error) {
+      console.error("[account] sale check failed", { user_id: profile.id, code: error.code });
+    }
+    saleInProgress = data === true;
+  }
   return (
     <SpacePage
       title={t.title}
@@ -66,12 +79,18 @@ export default async function AccountDeletionPage() {
             ) : null}
             <p className="text-lk-secondary text-lk-ink-2">
               {t.exportNote}{" "}
-              <a href={ROUTES.accountExport} download className={linkClass}>
+              <a href={ROUTES.accountExport} className={linkClass}>
                 {fr.account.rows.export}
               </a>
             </p>
           </div>
-          <DeletionForm />
+          {saleInProgress ? (
+            <InlineAlert tone="warning" className="mt-8">
+              {t.errors.saleInProgress(fr.legal.contactEmail)}
+            </InlineAlert>
+          ) : (
+            <DeletionForm />
+          )}
         </>
       )}
     </SpacePage>

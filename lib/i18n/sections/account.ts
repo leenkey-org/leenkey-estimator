@@ -68,7 +68,8 @@ export const frAccount = {
       title: "Au bout de 30 jours",
       items: [
         "Nous effaçons votre nom, votre téléphone, votre projet d'achat, vos photos, vos justificatifs, l'adresse de vos biens, vos favoris, vos conversations avec l'assistant et vos notifications.",
-        "Votre adresse email ne permet plus de se connecter.",
+        "Votre adresse email ne permet plus de se connecter. Elle reste liée au compte fermé jusque-là : une nouvelle inscription avec elle n'est possible qu'après ces 30 jours.",
+        "La suppression ne s'annule pas, et aucun email ne la confirme : cette page est la dernière étape.",
       ],
     },
     kept: {
@@ -77,6 +78,8 @@ export const frAccount = {
         "Vos commandes et factures, que la loi nous impose de garder 10 ans.",
         "Les offres d'achat envoyées, telles qu'elles ont été envoyées : elles engagent aussi l'autre partie.",
         "Les messages échangés, que vos interlocuteurs gardent dans leurs conversations.",
+        "Vos demandes à l'équipe Leenkey et les conditions que vous avez acceptées.",
+        "Les caractéristiques et les prix de vos biens (ville, surface, pièces), sans leur adresse, et vos annonces, sans leur titre ni leur texte.",
       ],
     },
     plan: "La suppression du compte ne rembourse pas une formule payée. Si vous êtes encore dans le délai de rétractation de 14 jours, exercez-le d'abord depuis la page de votre formule.",
@@ -87,12 +90,13 @@ export const frAccount = {
       "Je comprends que mon compte est fermé tout de suite et que mes données sont effacées au bout de 30 jours.",
     submit: "Supprimer mon compte",
     admin:
-      "Un compte de l'équipe Leenkey se ferme par l'équipe : il n'est pas supprimé depuis cette page.",
+      "Un compte de l'équipe Leenkey ne se supprime pas depuis cette page : demandez sa fermeture au gérant de Leenkey.",
     errors: {
       passwordRequired: "Indiquez votre mot de passe.",
       confirmRequired: "Cochez la case pour confirmer.",
       saleInProgress: (email: string) =>
-        `Une vente est en cours sur votre compte (une offre acceptée). Écrivez-nous à ${email} : nous fermerons votre compte avec vous une fois la vente terminée.`,
+        `Une vente est en cours sur votre compte (une offre acceptée) : vous pourrez le supprimer une fois le bien vendu. Une question ? Écrivez-nous à ${email}.`,
+      export: "Vos données n'ont pas pu être préparées. Réessayez dans un instant.",
     },
   },
   saved: {

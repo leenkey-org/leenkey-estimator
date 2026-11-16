@@ -13,6 +13,8 @@ import type { Database } from "@/types/database";
 //   3. its sign-in (Supabase Auth): an address that leads nowhere, a random
 //      password, no metadata, sign-in barred for good;
 //   4. the account marked anonymised (account_mark_anonymized).
+// A failed account goes to the back of the queue (account_anonymize_failed,
+// which tells the team in the bell): it never holds the others back.
 // The orders, the offers sent and the messages stay (the migration says why).
 
 /** The service client of the scheduled task (given by its route, never imported here). */
@@ -98,6 +100,17 @@ export async function anonymizeDeletedAccounts(
         user_id: profileId,
         error: failure instanceof Error ? failure.message : String(failure),
       });
+      // At the back of the queue next time, and the team told in the bell.
+      const noted = await admin.rpc("account_anonymize_failed", {
+        p_profile: profileId,
+        p_now: now.toISOString(),
+      });
+      if (noted.error) {
+        console.error("[account] failed run not recorded", {
+          user_id: profileId,
+          code: noted.error.code,
+        });
+      }
     }
   }
   return { due: due.length, anonymized, failed };

@@ -46,13 +46,16 @@ export function AccountRow({
   value: string;
   /** A second line, e.g. an address waiting for its confirmation. */
   detail?: string | null;
-  /** A file to save (a route handler): a plain link, never prefetched. */
+  /**
+   * A file to save (a route handler that sends it as an attachment): a plain
+   * link, never prefetched; on a failure the route leads to a page instead.
+   */
   download?: boolean;
 }) {
   return (
     <li className="border-t border-lk-line first:border-t-0">
       {download ? (
-        <a href={href} download className={accountRowClass}>
+        <a href={href} className={accountRowClass}>
           <AccountRowText label={label} value={value} detail={detail} />
           <Download aria-hidden="true" className="size-4 shrink-0 text-lk-ink-3" />
         </a>

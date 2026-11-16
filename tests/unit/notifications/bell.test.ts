@@ -139,6 +139,7 @@ describe("wording of the notifications (from type and data)", () => {
   it("each type written by the database has its words", () => {
     expect(NOTIFICATION_TYPES.sort()).toEqual(
       [
+        "account.anonymize_failed",
         "account.created",
         "advisor.message",
         "advisor.message_from_client",

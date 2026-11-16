@@ -56,6 +56,12 @@ export const frNotifications = {
         [name, subject, reference].filter(Boolean).join(" · "),
     },
     // 2026-11-08: an account confirmed, to the team.
+    // L2-10: an account closed 30 days ago the scheduled task could not anonymise.
+    accountAnonymizeFailed: {
+      title: "Anonymisation d'un compte en échec",
+      detail:
+        "Un compte fermé depuis plus de 30 jours n'a pas pu être anonymisé. Le journal de la tâche planifiée « anonymize-deleted » dit pourquoi ; elle réessaie chaque dimanche.",
+    },
     accountCreated: {
       title: "Nouveau compte",
       detail: (name: string | null, roles: string | null) =>
