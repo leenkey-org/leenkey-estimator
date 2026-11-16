@@ -62,3 +62,25 @@ export const withdrawalResultSchema = z.object({
   replaced_amount_paid_cents: z.number().int().optional(),
   replaced_activated_at: z.string().optional(),
 });
+
+/** The upgrade prompts (L2-09, SPEC-V2 11 bis), in the order a page chooses them. */
+export const UPGRADE_TRIGGERS = [
+  "offer_accepted",
+  "offer_received",
+  "visits_no_offer",
+  "contacts_no_visit",
+  "low_contacts",
+  "file_incomplete",
+  "listing_ready",
+  "valuation_done",
+] as const;
+
+/** What the seller did with a prompt: seen, opened, hidden. */
+export const upgradePromptEventSchema = z.object({
+  propertyId: z.string().uuid(),
+  trigger: z.enum(UPGRADE_TRIGGERS),
+  subjectId: z.string().uuid().nullable(),
+  event: z.enum(["shown", "clicked", "dismissed"]),
+});
+
+export type UpgradePromptEvent = z.infer<typeof upgradePromptEventSchema>;

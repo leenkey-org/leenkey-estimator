@@ -12,13 +12,17 @@ import {
   adminActivity,
   adminCounts,
   adminTodo,
+  adminUpgradeStats,
   type AdminTodoItem,
+  UPGRADE_STATS_DAYS,
 } from "@/leenkey/admin/dashboard/queries";
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import { formatInteger, formatPrice, formatWaiting } from "@/lib/format";
 import { frAdminDashboard } from "@/lib/i18n/sections/adminDashboard";
 import { frNav } from "@/lib/i18n/sections/nav";
 import { frSpaces } from "@/lib/i18n/sections/spaces";
+import { frUpgrade } from "@/lib/i18n/sections/upgrade";
+import { UPGRADE_TRIGGERS } from "@/lib/validations/billing";
 import { cn } from "@/lib/utils";
 import { AdminPage } from "./_components/admin-page";
 
@@ -96,7 +100,12 @@ function Tile({
 // page checks the admin role itself, not only the layout.
 export default async function AdminHomePage() {
   const profile = await requireAdmin();
-  const [counts, activity, todo] = await Promise.all([adminCounts(), adminActivity(), adminTodo()]);
+  const [counts, activity, todo, upgrades] = await Promise.all([
+    adminCounts(),
+    adminActivity(),
+    adminTodo(),
+    adminUpgradeStats(),
+  ]);
   const now = new Date();
   const failed = !counts.ok || !activity.ok || !todo.ok;
 
@@ -237,7 +246,68 @@ export default async function AdminHomePage() {
         </section>
       ) : null}
 
+      <UpgradeStats result={upgrades} />
+
       <p className="text-lk-caption text-lk-ink-3">{t.later}</p>
     </AdminPage>
+  );
+}
+
+const u = frUpgrade.admin;
+
+/**
+ * The measure of the upgrade prompts (L2-09, SPEC-V2 11 bis): per trigger,
+ * shown, opened, hidden and converted into a plan within 7 days. One line
+ * per trigger shown, in the order of the SPEC; a list of lines on a phone.
+ */
+function UpgradeStats({ result }: { result: Awaited<ReturnType<typeof adminUpgradeStats>> }) {
+  const rows = result.ok
+    ? UPGRADE_TRIGGERS.flatMap((code) => result.data.filter((row) => row.trigger === code))
+    : [];
+  const figures = (row: (typeof rows)[number]) => [
+    { label: u.shown, value: row.shown },
+    { label: u.clicked, value: row.clicked },
+    { label: u.dismissed, value: row.dismissed },
+    { label: u.converted, value: row.converted },
+  ];
+  return (
+    <section aria-labelledby="propositions" className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
+        <SectionTitle id="propositions">{u.title}</SectionTitle>
+        <p className="text-lk-secondary text-lk-ink-3">{u.period(UPGRADE_STATS_DAYS)}</p>
+      </div>
+      {!result.ok ? (
+        <InlineAlert tone="danger" live={false}>
+          {u.error}
+        </InlineAlert>
+      ) : rows.length === 0 ? (
+        <p className="rounded-lk-md border border-lk-line bg-lk-surface px-4 py-3.5 text-lk-secondary text-lk-ink-3">
+          {u.empty}
+        </p>
+      ) : (
+        <ul className="flex flex-col overflow-hidden rounded-lk-md border border-lk-line bg-lk-surface">
+          {rows.map((row) => (
+            <li
+              key={row.trigger}
+              className="flex flex-col gap-2 border-t border-lk-line px-4 py-3 first:border-t-0 lg:flex-row lg:items-center lg:justify-between"
+            >
+              <span className="text-lk-label font-semibold text-lk-ink">
+                {u.names[row.trigger as keyof typeof u.names] ?? row.trigger}
+              </span>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-4 lg:flex lg:gap-6">
+                {figures(row).map((figure) => (
+                  <div key={figure.label} className="flex flex-col">
+                    <dt className="text-lk-caption text-lk-ink-3">{figure.label}</dt>
+                    <dd className="text-lk-label font-semibold text-lk-ink tabular">
+                      {formatInteger(figure.value)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

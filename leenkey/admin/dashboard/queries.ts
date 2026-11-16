@@ -235,3 +235,43 @@ export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult
     return { ok: false, error: "unavailable" };
   }
 }
+
+export type AdminUpgradeStat = {
+  trigger: string;
+  shown: number;
+  clicked: number;
+  dismissed: number;
+  /** A plan ordered on the property within 7 days of the click. */
+  converted: number;
+};
+
+/** The days of the measure of the upgrade prompts. */
+export const UPGRADE_STATS_DAYS = 30;
+
+/**
+ * The upgrade prompts (L2-09, SPEC-V2 11 bis) over the last days, per
+ * trigger: shown, opened, hidden, converted (admin_upgrade_prompt_stats).
+ */
+export async function adminUpgradeStats(
+  days: number = UPGRADE_STATS_DAYS,
+): Promise<QueryResult<AdminUpgradeStat[]>> {
+  await requireAdmin();
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("admin_upgrade_prompt_stats", { p_days: days });
+    if (error) throw new Error(`admin_upgrade_prompt_stats: ${error.code} ${error.message}`);
+    return {
+      ok: true,
+      data: data.map((row) => ({
+        trigger: row.trigger_code,
+        shown: row.shown,
+        clicked: row.clicked,
+        dismissed: row.dismissed,
+        converted: row.converted,
+      })),
+    };
+  } catch (error) {
+    logFailure("upgrade prompts", error);
+    return { ok: false, error: "unavailable" };
+  }
+}

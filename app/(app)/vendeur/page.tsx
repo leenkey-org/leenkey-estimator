@@ -14,6 +14,7 @@ import { currentStep } from "@/core/steps/progress";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { hasEntitlement } from "@/leenkey/billing/entitlements";
+import { UpgradePromptSlot } from "@/leenkey/billing/components/upgrade-prompt-slot";
 import { AdvisorCard } from "@/leenkey/messaging/components/advisor-card";
 import { RecentConversations } from "@/leenkey/messaging/components/recent-conversations";
 import { OfferReceivedCard } from "@/leenkey/offers/components/offer-received-card";
@@ -412,6 +413,8 @@ export default async function SellerHomePage({ searchParams }: Props) {
             )}
           </Section>
         </div>
+        {/* A plan proposed in context (L2-09, SPEC 11 bis): at most one, after the useful content. */}
+        <UpgradePromptSlot propertyId={property.id} place={{ kind: "dashboard" }} />
       </>
     );
   }

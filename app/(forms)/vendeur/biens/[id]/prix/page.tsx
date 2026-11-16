@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CreationHeader } from "@/leenkey/properties/components/creation-header";
 import { CreationBody, CreationLoadError } from "@/leenkey/properties/components/creation-page";
+import { UpgradePromptSlot } from "@/leenkey/billing/components/upgrade-prompt-slot";
 import { PriceStep } from "@/leenkey/properties/components/price-step";
 import { suggestedTitle } from "@/leenkey/properties/creation";
 import { propertyForCreation } from "@/leenkey/properties/load";
@@ -55,6 +56,12 @@ export default async function PropertyPricePage({ params }: Props) {
           }}
           saved={listing !== null}
           valuation={valuationOf(property.estimation)}
+        />
+        {/* valuation_done (L2-09, SPEC 11 bis): a property created from a valuation. */}
+        <UpgradePromptSlot
+          propertyId={property.id}
+          place={{ kind: "price", fromValuation: property.estimation !== null }}
+          className="mt-6"
         />
       </CreationBody>
     </>

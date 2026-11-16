@@ -6,6 +6,7 @@ import { PriceColumn } from "@/leenkey/listings/components/listing-actions";
 import { ListingBody } from "@/leenkey/listings/components/listing-body";
 import { CreationHeader } from "@/leenkey/properties/components/creation-header";
 import { CreationLoadError } from "@/leenkey/properties/components/creation-page";
+import { UpgradePromptSlot } from "@/leenkey/billing/components/upgrade-prompt-slot";
 import { SubmitListing } from "@/leenkey/properties/components/submit-listing";
 import { creationStep } from "@/leenkey/properties/creation";
 import { getDpeSettings } from "@/leenkey/properties/dpe-rules";
@@ -105,6 +106,14 @@ export default async function PropertyPreviewPage({ params }: Props) {
             inlinePrice
             aside={<PriceColumn listing={listing} links={null} />}
             className="border-y border-lk-line bg-lk-surface pb-6 md:overflow-hidden md:rounded-lk-md md:border lg:px-8 lg:pb-8"
+          />
+        </div>
+        {/* listing_ready (L2-09, SPEC 11 bis): after the listing, never in place of its button. */}
+        <div className="lk-frame w-full pt-5 empty:hidden">
+          <UpgradePromptSlot
+            propertyId={property.id}
+            place={{ kind: "submit" }}
+            className="max-w-lk-prose"
           />
         </div>
         <SubmitListing propertyId={property.id} />

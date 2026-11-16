@@ -32,6 +32,7 @@ import {
   type OfferEvent,
   type SellerOffer,
 } from "@/leenkey/offers/seller";
+import { UpgradePromptSlot } from "@/leenkey/billing/components/upgrade-prompt-slot";
 import { withdrawalPeriodEnd } from "@/leenkey/offers/withdrawal";
 import { sheetHref } from "@/leenkey/properties/sheet";
 import { frOffer } from "@/lib/i18n/sections/offer";
@@ -273,6 +274,11 @@ async function SellerView({ profile, item }: { profile: SessionProfile; item: Se
         {offer.status === "accepted" && item.answeredAt ? (
           <SellerPrecontract item={item} answeredAt={item.answeredAt} />
         ) : null}
+        {/* offer_received, offer_accepted (L2-09, SPEC 11 bis): after the answer, never before it. */}
+        <UpgradePromptSlot
+          propertyId={item.propertyId}
+          place={{ kind: "offer", offerId: offer.id }}
+        />
         <OfferDocumentView document={buildOfferDocument(offer, property)} />
         {events.ok && events.data[offer.id] ? <History events={events.data[offer.id]} /> : null}
       </div>
