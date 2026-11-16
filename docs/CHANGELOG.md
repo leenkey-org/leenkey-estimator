@@ -16,7 +16,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Ajouté : propositions de formule en contexte, une à la fois, jamais en Sérénité, masquables pour de bon : peu de contacts (tableau de bord), annonce prête (avant « Envoyer en validation »), valorisation faite (étape du prix), offre reçue et offre acceptée (tableau de bord et page de l'offre, une par offre).
 - Ajouté : mesure dans le tableau de bord du back office (affichées, ouvertes, masquées, formule commandée sous 7 jours).
 - Modifié : aucune proposition tant qu'une formule payante n'est pas commandable (en production, jusqu'au médiateur).
-- Migration : `20261116100000_upgrade_prompts.sql` (`upgrade_prompts.subject_id`, contrôles, écriture unique, `upgrade_prompt_record`, `admin_upgrade_prompt_stats`).
+- Migration : `20261116100000_upgrade_prompts.sql` (`upgrade_prompts.subject_id`, contrôles, écriture unique, `upgrade_prompt_record` seule voie d'écriture, `admin_upgrade_prompt_stats`).
 
 ### 2026-11-15 · L2-07 · PR #105 · Back office des offres, outil vendeur `summarize_offer`
 - Ajouté : `/admin/offres`, toutes les offres envoyées avec filtres (« En attente », « Acceptées », « Refusées », « Terminées »), recherche (référence, ville, acquéreur, vendeur) et offres d'un compte depuis sa fiche.
