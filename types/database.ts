@@ -2397,11 +2397,11 @@ export type Database = {
       admin_upgrade_prompt_stats: {
         Args: { p_days?: number }
         Returns: {
-          dismissed: number
-          clicked: number
           shown: number
+          clicked: number
           trigger_code: string
           converted: number
+          dismissed: number
         }[]
       }
       admin_user_contact: {
@@ -3341,8 +3341,8 @@ export type Database = {
       upgrade_prompt_record: {
         Args: {
           p_property: string
-          p_trigger: string
           p_event: string
+          p_trigger: string
           p_subject?: string
         }
         Returns: undefined
