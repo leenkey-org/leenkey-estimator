@@ -33,9 +33,19 @@
 --    Until then the account stays due: a failed run is resumed next time.
 -- 5. pg_cron: every Sunday at 2:00 (SPEC 19), /api/cron/anonymize-deleted.
 --
--- No new table; one column, profiles.anonymized_at.
+-- No new table; one column, profiles.anonymized_at; the path of a financing
+-- document may be empty once its file is erased.
 
 alter table public.profiles add column anonymized_at timestamptz;
+
+-- A financing document an offer refers to keeps its row once its file is
+-- erased (account_anonymize): its path is then empty.
+alter table public.financing_documents
+  drop constraint financing_documents_path,
+  add constraint financing_documents_path check (
+    storage_path = ''
+    or storage_path ~ ('^' || buyer_id::text
+                       || '/financing/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(pdf|jpg)$'));
 
 -- 0. ---------------------------------------------------------------------------
 create function public.account_export() returns jsonb

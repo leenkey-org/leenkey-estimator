@@ -219,13 +219,15 @@ export async function closeAccount(
   _previous: FormResult | null,
   formData: FormData,
 ): Promise<FormResult> {
+  // The box stays ticked when the form comes back (never the password).
+  const values = { confirm: text(formData, "confirm") };
   const user = await getUser();
-  if (!user?.email) return { ok: false, error: t.errors.session };
+  if (!user?.email) return { ok: false, error: t.errors.session, values };
   const parsed = accountDeletionSchema.safeParse({
     password: text(formData, "password"),
-    confirm: text(formData, "confirm"),
+    confirm: values.confirm,
   });
-  if (!parsed.success) return { ok: false, ...invalid(parsed.error) };
+  if (!parsed.success) return { ok: false, ...invalid(parsed.error), values };
 
   const check = await checkPassword(user.email, parsed.data.password, "closeAccount");
   if (check === "wrong") {
@@ -233,18 +235,23 @@ export async function closeAccount(
       ok: false,
       error: errors.summary(1),
       fieldErrors: { password: t.password.errors.currentWrong },
+      values,
     };
   }
-  if (check !== "ok") return { ok: false, error: check.error };
+  if (check !== "ok") return { ok: false, error: check.error, values };
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("account_close");
   if (error) {
     if (error.code === "55000") {
-      return { ok: false, error: t.deletion.errors.saleInProgress(fr.legal.contactEmail) };
+      return {
+        ok: false,
+        error: t.deletion.errors.saleInProgress(fr.legal.contactEmail),
+        values,
+      };
     }
     console.error("[account] close failed", { user_id: user.id, code: error.code });
-    return { ok: false, error: errors.generic };
+    return { ok: false, error: errors.generic, values };
   }
   console.info("[account] closed", { user_id: user.id });
   const { error: signOutError } = await supabase.auth.signOut({ scope: "global" });

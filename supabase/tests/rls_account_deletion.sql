@@ -10,7 +10,7 @@
 -- file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(46);
+select plan(48);
 \ir _plan.psql
 -- The ids, read here: the service role does not read the schema tests.
 select tests.uid('buyer_c') as buyer_c, tests.uid('buyer_d') as buyer_d,
@@ -59,6 +59,20 @@ update buyer_profiles
  where profile_id = tests.uid('buyer_c');
 insert into offers (listing_id, buyer_id, price_cents) values (:'listing_a', tests.uid('buyer_c'), 33800000)
 returning id as offer1 \gset
+-- A financing document the offer refers to, and one it does not.
+reset role;
+insert into financing_documents (buyer_id, type, document_date, storage_path, mime_type, size_bytes)
+values (tests.uid('buyer_c'), 'accord_principe', current_date,
+        tests.uid('buyer_c') || '/financing/' || gen_random_uuid() || '.pdf', 'application/pdf', 1000)
+returning id as doc_kept \gset
+insert into financing_documents (buyer_id, type, document_date, storage_path, mime_type, size_bytes)
+values (tests.uid('buyer_c'), 'accord_principe', current_date,
+        tests.uid('buyer_c') || '/financing/' || gen_random_uuid() || '.pdf', 'application/pdf', 1000)
+returning id as doc_gone \gset
+-- Its current document: the offer takes it when sent (offers_before_submit).
+update buyer_profiles set current_financing_document_id = :'doc_kept' where profile_id = tests.uid('buyer_c');
+\set who buyer_c
+\ir _as.psql
 update offers
    set buyer_identity = '{"last_name":"Martin","first_name":"Chloé","birth_date":"1990-04-12",
                           "address":{"line":"3 rue Verte","postal_code":"75011","city":"Paris"},
@@ -200,8 +214,9 @@ select throws_ok(format($$select account_anonymize(%L, now() + interval '29 days
                  '22023', null, 'never before 30 days');
 select throws_ok(format($$select account_anonymize(%L, now() + interval '31 days')$$, :'buyer_d'),
                  '22023', null, 'never an account that is open');
-select ok((select count(*) >= 0 from account_files(:'buyer_c', now() + interval '31 days')),
-          'the cron lists the files of buyer_c first');
+select is((select count(*)::int from account_files(:'buyer_c', now() + interval '31 days')
+            where bucket = 'documents'), 2,
+          'the cron lists the files of buyer_c first: its two financing documents');
 select ok((select count(*) = 3 * (select count(*) from photos where property_id = :'prop_b')
              from account_files(:'seller_b', now() + interval '31 days') where bucket = 'photos'),
           'three widths of each photo of seller_b');
@@ -221,6 +236,10 @@ select is((select count(*)::int from favorites where buyer_id = :'buyer_c')
           + (select count(*)::int from ai_conversations where profile_id = :'buyer_c'), 0,
           'no favorite, notification nor assistant conversation');
 select is((select count(*)::int from offers where id = :'draft'), 0, 'its draft is erased');
+select is((select storage_path from financing_documents where id = :'doc_kept'), '',
+          'the document its offer refers to keeps its row, never its file');
+select is((select count(*)::int from financing_documents where id = :'doc_gone'), 0,
+          'the other document is erased');
 select is((select status::text from offers where id = :'offer1'), 'withdrawn',
           'the offer it sent stays, the document of both parties');
 select is((select row(address_line, location is null)::text from properties where id = :'prop_b'),

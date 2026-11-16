@@ -36,7 +36,13 @@ export function DeletionForm() {
         error={errors.password}
         required
       />
-      <Checkbox name="confirm" label={t.confirm} error={errors.confirm} required />
+      <Checkbox
+        name="confirm"
+        label={t.confirm}
+        error={errors.confirm}
+        defaultChecked={failed?.values?.confirm === "on"}
+        required
+      />
       <div>
         <Button
           type="submit"
