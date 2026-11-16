@@ -401,7 +401,7 @@ create table estimations (               -- analyses de valeur faites sur l'esti
   created_at timestamptz not null default now()
 );
 -- Écrite par /api/estimate via la fonction estimation_record() (security definer, pas de clé service role) ; rattachée au compte par estimation_claim(token).
--- RGPD : estimations anonymes (sans profile_id) supprimées après 12 mois par le cron anonymize-deleted.
+-- RGPD : estimations anonymes (sans profile_id) supprimées après 12 mois, chaque nuit (estimations_purge, DECISIONS 2026-11-09).
 alter table properties add constraint properties_estimation_fk foreign key (estimation_id) references estimations(id);
 
 create table listings (
@@ -1358,7 +1358,7 @@ Mise en œuvre (L2-06, `DECISIONS.md` 2026-11-15) : `/assistant` ouvre l'assista
 
 ### 8.14 Compte `/compte`
 
-Informations personnelles, email (changement avec confirmation), mot de passe, préférences de notification (messages, offres, alertes), rôles (ajouter « Je vends » / « J'achète »), export de mes données (JSON, RGPD), suppression du compte (confirmation par saisie de l'email ; suppression logique immédiate, anonymisation sous 30 jours par cron ; biens publiés dépubliés).
+Informations personnelles, email (changement avec confirmation), mot de passe, préférences de notification (messages, offres, alertes), rôles (ajouter « Je vends » / « J'achète »), export de mes données (JSON, RGPD), suppression du compte (confirmation par saisie de l'email ; suppression logique immédiate, anonymisation sous 30 jours par cron ; biens publiés dépubliés). *Livré en L2-10 (`docs/DECISIONS.md` 2026-11-16) : confirmation par le mot de passe et une case à cocher, suppression refusée pendant une vente en cours et pour un compte admin, offres en attente retirées ou refusées.*
 
 ### 8.15 Back office
 

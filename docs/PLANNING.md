@@ -128,7 +128,7 @@ Lot 2 :
 - [x] **L2-06** Assistant acquéreur : `search_listings`, `get_listing_public`, `prefill_offer`, `create_case` · PR : #104 · Testé en préprod : ☐
 - [x] **L2-07** Outil vendeur `summarize_offer`, `summarize_contacts` ; back office offres · PR : #105 · Testé en préprod : ☐
 - [x] **L2-09** Déclencheurs de montée en gamme : `upgrade_prompts`, `getUpgradePrompt`, `UpgradePrompt`, 6 déclencheurs (S6, déplacé depuis L1-33) · PR : #106 · Testé en préprod : ☐
-- [ ] **L2-10** RGPD : export JSON et suppression du compte depuis `/compte`, cron `anonymize-deleted` (S7) · PR : · Testé en préprod : ☐
+- [x] **L2-10** RGPD : export JSON et suppression du compte depuis `/compte`, cron `anonymize-deleted` (S7) · PR : #107 · Testé en préprod : ☐
 - [ ] **L2-08** Recette lot 2 · PR : · Testé en préprod : ☐
 
 ## S8-S9 · semaines du 30 nov. et 7 déc. · Lot 3 : visites, documents, alertes → livraison ven. 11 déc.
