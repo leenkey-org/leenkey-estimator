@@ -1245,6 +1245,8 @@ export type Database = {
         Row: {
           ai_messages_date: string | null
           ai_messages_today: number
+          anonymize_failed_at: string | null
+          anonymized_at: string | null
           avatar_path: string | null
           created_at: string
           deleted_at: string | null
@@ -1261,6 +1263,8 @@ export type Database = {
         Insert: {
           ai_messages_date?: string | null
           ai_messages_today?: number
+          anonymize_failed_at?: string | null
+          anonymized_at?: string | null
           avatar_path?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -1277,6 +1281,8 @@ export type Database = {
         Update: {
           ai_messages_date?: string | null
           ai_messages_today?: number
+          anonymize_failed_at?: string | null
+          anonymized_at?: string | null
           avatar_path?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -2065,6 +2071,41 @@ export type Database = {
       }
     }
     Functions: {
+      account_anonymize: {
+        Args: { p_now?: string; p_profile: string }
+        Returns: undefined
+      }
+      account_anonymize_failed: {
+        Args: { p_profile: string; p_now?: string }
+        Returns: undefined
+      }
+      account_close: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      account_export: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      account_files: {
+        Args: { p_profile: string; p_now?: string }
+        Returns: {
+          path: string
+          bucket: string
+        }[]
+      }
+      account_mark_anonymized: {
+        Args: { p_now?: string; p_profile: string }
+        Returns: undefined
+      }
+      account_sale_in_progress: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      accounts_due: {
+        Args: { p_now?: string }
+        Returns: string[]
+      }
       admin_activity: {
         Args: { p_days?: number }
         Returns: {

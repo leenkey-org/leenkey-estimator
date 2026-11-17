@@ -45,7 +45,7 @@ test("le compte d'un acquéreur : ses informations, ses espaces, ses réglages",
     "Notifications",
     "Mes espaces",
     "Cookies",
-    "Fermer mon compte",
+    "Mes données",
   ]) {
     await expect(page.getByRole("heading", { level: 2, name: section })).toBeVisible();
   }
@@ -75,9 +75,15 @@ test("le compte d'un acquéreur : ses informations, ses espaces, ses réglages",
       .getByRole("button", { name: "Gérer mes cookies" }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Se déconnecter" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "contact.leenkey@gmail.com" })).toHaveAttribute(
+  // Its data (L2-10): the export, a file; the deletion, a page.
+  const data = page.getByRole("region", { name: "Mes données" });
+  await expect(data.getByRole("link", { name: /Télécharger mes données/ })).toHaveAttribute(
     "href",
-    "mailto:contact.leenkey@gmail.com",
+    "/compte/export",
+  );
+  await expect(data.getByRole("link", { name: /Supprimer mon compte/ })).toHaveAttribute(
+    "href",
+    "/compte/supprimer",
   );
   // Rows of 56 px (DESIGN.md 13.1, G9).
   const row = await identity.getByRole("link", { name: /Prénom et nom/ }).boundingBox();

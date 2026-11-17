@@ -6,7 +6,7 @@ Claude Code coche une tâche (`[x]`) dans la même PR que son code, avec le num�
 
 Rééquilibrage du 5 octobre : la semaine 5 passe de 10 à 8 tâches. L1-20 est réduite au sitemap et aux robots (pages villes en V3) ; L1-35 avance en S3 ; L1-27 (embeddings, sans dépendance au reste de S4) avance en S4 ; les déclencheurs de montée en gamme, non contractuels, deviennent L2-09 (S6) ; l'export RGPD et la suppression de compte deviennent L2-10 (S7). Aucune fonctionnalité du cahier des charges ne quitte le lot 1. Ajout du 8 octobre : L1-36 et L1-37 (S2), L1-38 et L1-39 (S4), L3-09 (S8-S9).
 
-**Recalage du 15 octobre** (décision de Younes) : la semaine 1 a perdu deux jours (reprise après le cadrage, mise en pause du projet Supabase de staging). Le lot 1 reste livré le **vendredi 13 novembre** et la V2 est **mise en ligne avant le 30 novembre** (semaine du 23 novembre, P-05b). Pour tenir ces dates :
+**Recalage du 15 octobre** (décision de Younes) : la semaine 1 a perdu deux jours (reprise après le cadrage, mise en pause du projet Supabase de staging). Le lot 1 reste livré le **vendredi 13 novembre** et la V2 est **mise en ligne avant le 30 novembre** (semaine du 23 novembre, P-05b). **Recalage du 17 novembre** (Younes) : mise en ligne le **mercredi 25 novembre**. Pour tenir ces dates :
 - L1-06, L1-07 et L1-08 sont terminées le lundi 19 octobre.
 - Décalés en S6, sans effet sur les parcours du lot 1 : la carte avancée (regroupement, synchronisation liste et carte, « rechercher dans cette zone » ; L1-16 livre au lot 1 une carte avec les marqueurs de prix), les suggestions de l'assistant en messagerie et la rédaction de description (L1-29), l'historique des modifications d'annonce (L1-35), le résumé du jour par l'assistant dans le back office (partie de L1-30).
 - Le bloc « vendre légalement » (environ 3 jours, inclus au forfait) est réparti : acceptation des CGU à l'inscription en L1-09 (S2), date de fin des formules en L1-05 (faite), récapitulatif de commande, cases, rétractation, e-mail récapitulatif et échéance en L1-40 (S5).
@@ -114,7 +114,7 @@ Mise en ligne :
 
 - [x] **P-06** Performance mobile (recette interne du 12 novembre) : LCP sous 2,5 s sur la recherche et l'annonce (SPEC 21), JavaScript du premier chargement réduit, bandeau des cookies sans effet sur le LCP ; mesuré en local (bridage réel), à confirmer sur la production après la bascule · PR : #96 · Testé en préprod : ☐
 
-- [ ] **P-05b** Mise en ligne de la V2 (semaine du 23 nov., avant le 30 nov., sur go de Younes) : projet Supabase de production, migrations, seed `plans` et `sale_steps`, variables de production, Resend, vérification des modèles IA, Stripe live si CGV et médiateur prêts ; puis changement de la branche de production du projet Vercel de `leenkey.fr` (jamais de fusion dans `main`) ; retour arrière : remettre `main` · PR : · Testé en préprod : ☐
+- [ ] **P-05b** Mise en ligne de la V2 (**mercredi 25 nov.**, décision du 17 novembre, sur go de Younes) : projet Supabase de production, migrations, seed `plans` et `sale_steps`, variables de production, Resend, vérification des modèles IA, Stripe live si CGV et médiateur prêts ; puis changement de la branche de production du projet Vercel de `leenkey.fr` (jamais de fusion dans `main`) ; retour arrière : remettre `main` · PR : · Testé en préprod : ☐
 
 Lot 2 :
 
@@ -128,7 +128,7 @@ Lot 2 :
 - [x] **L2-06** Assistant acquéreur : `search_listings`, `get_listing_public`, `prefill_offer`, `create_case` · PR : #104 · Testé en préprod : ☐
 - [x] **L2-07** Outil vendeur `summarize_offer`, `summarize_contacts` ; back office offres · PR : #105 · Testé en préprod : ☐
 - [x] **L2-09** Déclencheurs de montée en gamme : `upgrade_prompts`, `getUpgradePrompt`, `UpgradePrompt`, 6 déclencheurs (S6, déplacé depuis L1-33) · PR : #106 · Testé en préprod : ☐
-- [ ] **L2-10** RGPD : export JSON et suppression du compte depuis `/compte`, cron `anonymize-deleted` (S7) · PR : · Testé en préprod : ☐
+- [x] **L2-10** RGPD : export JSON et suppression du compte depuis `/compte`, cron `anonymize-deleted` (S7) · PR : #107 · Testé en préprod : ☐
 - [ ] **L2-08** Recette lot 2 · PR : · Testé en préprod : ☐
 
 ## S8-S9 · semaines du 30 nov. et 7 déc. · Lot 3 : visites, documents, alertes → livraison ven. 11 déc.
@@ -169,6 +169,6 @@ Lot 2 :
 | Lot 2 | ven. 27 nov. | ☐ | — |
 | Lot 3 | ven. 11 déc. | ☐ | — |
 | Livraison : préprod complète validée | ven. 18 déc. | ☐ | 20 % · 3 399,60 € TTC |
-| Mise en ligne de la V2 (décision du 15 octobre) | semaine du 23 nov. (avant le 30 nov.) | — | — |
+| Mise en ligne de la V2 (décisions du 15 octobre et du 17 novembre) | mer. 25 nov. | — | — |
 
 Décision du 2026-10-07 : les 20 % sont dus à la livraison de la préprod validée (18 décembre), indépendamment de la date de mise en ligne.

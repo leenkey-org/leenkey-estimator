@@ -39,6 +39,9 @@ export const ROUTES = {
   accountEmail: "/compte/email",
   accountPassword: "/compte/mot-de-passe",
   notificationSettings: "/compte/notifications",
+  /** The data of the account, as a JSON file (L2-10, route handler). */
+  accountExport: "/compte/export",
+  accountDeletion: "/compte/supprimer",
   admin: "/admin",
   adminListings: "/admin/annonces",
   /** The listings to review first (lib/validations/admin.ts, ADMIN_LISTING_FILTERS). */

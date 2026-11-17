@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-16 · L2-10 · PR #107 · Export et suppression du compte
+- Ajouté : section « Mes données » de `/compte` : « Télécharger mes données » (fichier JSON de ce que contient le compte) et « Supprimer mon compte » (page qui explique ce qui se passe, mot de passe et case à cocher).
+- Ajouté : fermeture immédiate (annonces retirées, offres en attente retirées ou refusées avec leurs auteurs prévenus, conversations fermées, toutes les sessions fermées), refusée pendant une vente en cours et pour un compte de l'équipe ; connexion refusée à un compte fermé.
+- Ajouté : anonymisation au bout de 30 jours, chaque dimanche à 2 h (`/api/cron/anonymize-deleted`) : fichiers, données qui nomment la personne, connexion ; un échec prévient l'équipe dans la cloche.
+- Modifié : la fermeture du compte par email sur `/compte` est remplacée par la page de suppression.
+- Migration : `20261116160000_account_deletion.sql` (`profiles.anonymized_at`, `account_export`, `account_close`, `accounts_due`, `account_files`, `account_anonymize`, `account_mark_anonymized`, `account_sale_in_progress`, `account_anonymize_failed`, `profiles.anonymize_failed_at`, job `anonymize-deleted`, chemin vide permis pour un justificatif effacé).
+
 ### 2026-11-16 · L2-09 · PR #106 · Déclencheurs de montée en gamme
 - Ajouté : propositions de formule en contexte, une à la fois, jamais en Sérénité, masquables pour de bon : peu de contacts (tableau de bord), annonce prête (avant « Envoyer en validation »), valorisation faite (étape du prix), offre reçue et offre acceptée (tableau de bord et page de l'offre, une par offre).
 - Ajouté : mesure dans le tableau de bord du back office (affichées, ouvertes, masquées, formule commandée sous 7 jours).

@@ -13,7 +13,7 @@ export const frAccount = {
     spaces: "Mes espaces",
     plan: "Formule",
     privacy: "Cookies",
-    close: "Fermer mon compte",
+    data: "Mes données",
   },
   rows: {
     name: "Prénom et nom",
@@ -25,6 +25,10 @@ export const frAccount = {
     notificationsValue: "Choisir les emails que vous recevez",
     plan: "Ma formule",
     planValue: "Voir ou changer la formule de vos biens",
+    export: "Télécharger mes données",
+    exportValue: "Un fichier JSON de ce que contient votre compte",
+    delete: "Supprimer mon compte",
+    deleteValue: "Fermer le compte, puis effacer vos données",
   },
   notSet: "Non renseigné",
   emailPending: (email: string) => `Nouvelle adresse à confirmer : ${email}`,
@@ -46,10 +50,54 @@ export const frAccount = {
     error: "Ce changement n'a pas pu être enregistré. Réessayez dans un instant.",
     suspended: "Votre compte est suspendu : aucun espace ne peut y être ajouté.",
   },
-  // Until the deletion from this page (L2-10): the way of the CGU, article 17.
-  closeText: {
-    before: "Pour fermer votre compte, écrivez-nous à ",
-    after: " : nous vous répondons sous 48\u00A0h, 7\u00A0j/7.",
+  // The deletion of the account (L2-10, SPEC-V2 sections 19 and 21).
+  deletion: {
+    metaTitle: "Supprimer mon compte · Leenkey",
+    title: "Supprimer mon compte",
+    lead: "Avant de confirmer, voici ce qui se passe.",
+    now: {
+      title: "Tout de suite",
+      items: [
+        "Votre compte est fermé et tous vos appareils sont déconnectés.",
+        "Vos annonces sont retirées du site.",
+        "Les offres que vous avez envoyées et qui attendent une réponse sont retirées. Celles que vous avez reçues sont refusées, et leurs auteurs sont prévenus.",
+        "Vos conversations sont fermées.",
+      ],
+    },
+    later: {
+      title: "Au bout de 30 jours",
+      items: [
+        "Nous effaçons votre nom, votre téléphone, votre projet d'achat, vos photos, vos justificatifs, l'adresse de vos biens, vos favoris, vos conversations avec l'assistant et vos notifications.",
+        "Votre adresse email ne permet plus de se connecter. Elle reste liée au compte fermé jusque-là : une nouvelle inscription avec elle n'est possible qu'après ces 30 jours.",
+        "La suppression ne s'annule pas, et aucun email ne la confirme : cette page est la dernière étape.",
+      ],
+    },
+    kept: {
+      title: "Ce que nous gardons",
+      items: [
+        "Vos commandes et factures, que la loi nous impose de garder 10 ans.",
+        "Les offres d'achat envoyées, telles qu'elles ont été envoyées : elles engagent aussi l'autre partie.",
+        "Les messages échangés, que vos interlocuteurs gardent dans leurs conversations.",
+        "Vos demandes à l'équipe Leenkey et les conditions que vous avez acceptées.",
+        "Les caractéristiques et les prix de vos biens (ville, surface, pièces), sans leur adresse, et vos annonces, sans leur titre ni leur texte.",
+      ],
+    },
+    plan: "La suppression du compte ne rembourse pas une formule payée. Si vous êtes encore dans le délai de rétractation de 14 jours, exercez-le d'abord depuis la page de votre formule.",
+    planLink: "Ma formule",
+    exportNote: "Vous pouvez d'abord télécharger vos données.",
+    password: "Mot de passe",
+    confirm:
+      "Je comprends que mon compte est fermé tout de suite et que mes données sont effacées au bout de 30 jours.",
+    submit: "Supprimer mon compte",
+    admin:
+      "Un compte de l'équipe Leenkey ne se supprime pas depuis cette page : demandez sa fermeture au gérant de Leenkey.",
+    errors: {
+      passwordRequired: "Indiquez votre mot de passe.",
+      confirmRequired: "Cochez la case pour confirmer.",
+      saleInProgress: (email: string) =>
+        `Une vente est en cours sur votre compte (une offre acceptée) : vous pourrez le supprimer une fois le bien vendu. Une question ? Écrivez-nous à ${email}.`,
+      export: "Vos données n'ont pas pu être préparées. Réessayez dans un instant.",
+    },
   },
   saved: {
     identity: "Vos informations sont enregistrées.",

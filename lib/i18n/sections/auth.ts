@@ -50,6 +50,10 @@ export const frAuth = {
     noAccount: "Pas encore de compte ?",
     signup: "Créer un compte",
     linkExpired: "Ce lien n'est plus valable. Connectez-vous, ou demandez un nouveau lien.",
+    // L2-10: after the deletion of the account, and a sign-in to it.
+    accountClosed:
+      "Votre compte est fermé. Au bout de 30 jours, nous effaçons vos données, sauf ce que la loi nous impose de garder et ce qui appartient aussi à l'autre partie (offres envoyées, messages échangés).",
+    closed: "Ce compte est fermé.",
   },
   forgot: {
     metaTitle: "Mot de passe oublié · Leenkey",

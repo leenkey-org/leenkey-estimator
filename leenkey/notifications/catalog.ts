@@ -254,6 +254,15 @@ const CATALOG: Record<string, Entry> = {
         text(data.reference),
       ),
   },
+  // L2-10: a closed account the scheduled task could not anonymise, to each
+  // admin, in the bell only (account_anonymize_failed, once a day at most).
+  "account.anonymize_failed": {
+    icon: CircleAlert,
+    tone: "warning",
+    filters: [],
+    title: () => t.accountAnonymizeFailed.title,
+    detail: () => t.accountAnonymizeFailed.detail,
+  },
   // 2026-11-08: an account confirmed, to each admin (and by email, grouped).
   "account.created": {
     icon: UserPlus,
