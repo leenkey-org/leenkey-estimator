@@ -25,7 +25,9 @@ select is((select coalesce(string_agg(tablename || '.' || policyname, ', '), '')
               and (qual = 'true' or with_check = 'true')),
           '', 'no policy writes with using (true)');
 
-select is((select coalesce(string_agg(id, ', '), '') from storage.buckets where public),
+-- Read through jsonb: the bare database of the CI has no column public.
+select is((select coalesce(string_agg(b.id, ', '), '') from storage.buckets b
+            where coalesce((to_jsonb(b) ->> 'public')::boolean, false)),
           '', 'no public bucket: files are read through signed URLs or the policies');
 
 select is((select coalesce(string_agg(distinct p.proname, ', ' order by p.proname), '')
