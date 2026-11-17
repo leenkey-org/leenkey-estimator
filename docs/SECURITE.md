@@ -51,5 +51,5 @@
 - [ ] `leenkey-prod` créé en `eu-west-3` (la politique de confidentialité dit les données hébergées dans l'Union européenne) ; reçus et factures Stripe envoyés par email (annoncés par les CGV)
 - [x] Export et suppression de compte fonctionnels depuis `/compte` **P-01 (2026-11-17)** : L2-10, PR #107.
 - [x] Emails hors prod redirigés vers `EMAIL_TEST_INBOX` **P-01 (2026-11-17)** : `core/notifications/routing.ts`, testé (`tests/unit/admin/moderation.test.ts`).
-- [ ] Sauvegarde quotidienne et restauration testée (P-03)
+- [x] Sauvegarde quotidienne et restauration testée (P-03) **P-01 (2026-11-17)** : action nocturne chiffrée, 14 jours ; restauration testée sur une base vide (`docs/RECETTE.md`). Restent les deux secrets GitHub et la branche par défaut, avant la bascule.
 - [ ] Journal de l'assistant (`ai_messages`) : les suggestions et brouillons de l'équipe (motif de refus, synthèse avant appel, L1-30d) gardent les données envoyées au modèle (nom du client, notes, messages avec le conseiller) dans des lignes de l'admin, qui ne disparaissent pas avec le compte du client ; seules les conversations des visiteurs sont purgées (30 jours). Durée de conservation du journal à fixer avant la mise en ligne, avec la suppression de compte (L2-10).

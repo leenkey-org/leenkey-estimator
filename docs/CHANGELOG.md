@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-17 · P-03 · PR #109 · Sauvegarde et restauration
+- Ajouté : sauvegarde nocturne des données de la base de production, chiffrée, gardée 14 jours (action GitHub `Backup`).
+- Ajouté : `npm run restore`, restauration dans un projet vide (migrations, puis données) ; procédure et test dans `docs/RECETTE.md`.
+
 ### 2026-11-17 · P-01 · PR #108 · Revue sécurité
 - Corrigé : une photo dont le fichier est écrit de nouveau après son envoi n'est plus montrée au public.
 - Corrigé : le compteur de vues d'une annonce et l'enregistrement d'une valorisation n'acceptent plus que le serveur du site.

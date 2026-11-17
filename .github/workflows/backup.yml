@@ -1,0 +1,48 @@
+name: Backup
+
+# P-03 (CLAUDE.md section 13): each night, the data of the production
+# database (scripts/backup.sh), encrypted with BACKUP_PASSPHRASE, kept 14 days
+# as an artifact of this private repository. Restore: scripts/restore.sh
+# (docs/RECETTE.md, P-03).
+#
+# Secrets of the repository (Settings > Secrets and variables > Actions):
+#   PROD_DATABASE_URL  connection string of leenkey-prod (session pooler)
+#   BACKUP_PASSPHRASE  passphrase of the archives, kept outside GitHub too
+# Without them the run says so and stops, green: nothing to back up yet.
+# GitHub runs a schedule only on the default branch of the repository.
+
+on:
+  schedule:
+    - cron: "37 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dump and encrypt
+        env:
+          PROD_DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$PROD_DATABASE_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::warning::PROD_DATABASE_URL or BACKUP_PASSPHRASE is not set: no backup."
+            exit 0
+          fi
+          scripts/backup.sh
+          for file in backups/*.sql.gz; do
+            gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
+              --passphrase "$BACKUP_PASSPHRASE" --output "$file.gpg" "$file"
+            rm "$file"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: leenkey-backup-${{ github.run_id }}
+          path: backups/*.gpg
+          retention-days: 14
+          if-no-files-found: ignore
