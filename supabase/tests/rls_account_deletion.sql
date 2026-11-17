@@ -10,7 +10,7 @@
 -- file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(55);
+select plan(62);
 \ir _plan.psql
 -- The ids, read here: the service role does not read the schema tests.
 select tests.uid('buyer_c') as buyer_c, tests.uid('buyer_d') as buyer_d,
@@ -54,6 +54,19 @@ reset role;
 insert into estimations (profile_id, input, result, value_cents)
 values (tests.uid('seller_b'), '{}', '{}', 20000000) returning id as valuation_b \gset
 update properties set estimation_id = :'valuation_b' where id = :'prop_b';
+-- Lot 3 (written as the owner of the tables): a visit of buyer_d to come on
+-- the property of seller_b, a document of its sale file shared with buyer_d,
+-- a request of buyer_d waiting, an alert of buyer_c.
+insert into visit_slots (property_id, starts_at, ends_at)
+values (:'prop_b', now() + interval '3 days', now() + interval '3 days 30 minutes') returning id as slot_b \gset
+insert into visits (slot_id, property_id, buyer_id) values (:'slot_b', :'prop_b', :'buyer_d') returning id as visit_b \gset
+select :'prop_b' || '/sale/' || gen_random_uuid() || '.pdf' as sale_path \gset
+insert into storage.objects (bucket_id, name) values ('documents', :'sale_path');
+insert into documents (property_id, owner_id, type, title, storage_path, mime_type, size_bytes)
+values (:'prop_b', :'seller_b', 'dpe', 'DPE', :'sale_path', 'application/pdf', 1000) returning id as sale_doc \gset
+insert into document_shares (document_id, buyer_id) values (:'sale_doc', :'buyer_d');
+insert into document_access_requests (property_id, buyer_id) values (:'prop_b', :'buyer_d') returning id as sale_req \gset
+insert into alerts (buyer_id, name, criteria) values (:'buyer_c', 'Effaceville', '{"city": "Effaceville"}');
 
 -- buyer_c: an offer sent to seller_a, a draft, a favorite, a conversation.
 \set who buyer_c
@@ -135,6 +148,7 @@ select is((select jsonb_array_length(account_export()->'offers_sent')), 2,
           'buyer_c: its offers, the one sent and its draft');
 select ok((select account_export()->'buyer_profile'->>'project' = 'residence_principale'),
           'buyer_c: its buyer project');
+select is((select account_export()->'alerts'->0->>'name'), 'Effaceville', 'buyer_c: its alerts are in the export');
 select ok(not (account_export()::text like '%rue des Adieux%'),
           'buyer_c: nothing of the properties of the sellers');
 \set who seller_a
@@ -200,6 +214,16 @@ select is((select count(*)::int from notifications
             where type = 'offer.answered' and profile_id = tests.uid('buyer_d')
               and data->>'offer_id' = :'offer3' and data->>'message' like '%fermé son compte%'), 1,
           'and its buyer is told why');
+select is((select status::text from visits where id = :'visit_b'), 'cancelled',
+          'the visit to come on its property is cancelled');
+select is((select status from document_access_requests where id = :'sale_req'), 'declined',
+          'the request to its sale file is declined');
+select is((select count(*)::int from alerts where buyer_id = :'buyer_c' and active), 0,
+          'buyer_c, closed: its alerts stop');
+\set who buyer_d
+\ir _as.psql
+select is((select count(*)::int from documents where id = :'sale_doc'), 0,
+          'buyer_d no longer reads the sale file of seller_b');
 \set who anon
 \ir _as.psql
 select is((select count(*)::int from public_listings where id = :'listing_b'), 0,
@@ -226,6 +250,9 @@ select is((select count(*)::int from account_files(:'buyer_c', now() + interval 
 select ok((select count(*) = 3 * (select count(*) from photos where property_id = :'prop_b')
              from account_files(:'seller_b', now() + interval '31 days') where bucket = 'photos'),
           'three widths of each photo of seller_b');
+select is((select count(*)::int from account_files(:'seller_b', now() + interval '31 days')
+            where bucket = 'documents' and path = :'sale_path'), 1,
+          'and the files of its sale file');
 select throws_ok(format($$select * from account_files(%L, now() + interval '29 days')$$, :'buyer_c'),
                  '22023', null, 'no files before 30 days');
 select lives_ok(format($$select account_anonymize(%L, now() + interval '31 days')$$, :'buyer_c'),
@@ -256,6 +283,9 @@ select is((select row(title, description)::text from listings where id = :'listi
           row('Annonce supprimée', '')::text, 'seller_b: the texts of its listing too');
 select is((select count(*)::int from estimations where id = :'valuation_b'), 0,
           'seller_b: its valuation is erased, though its property came from it');
+select is((select count(*)::int from documents where property_id = :'prop_b')
+          + (select count(*)::int from alerts where buyer_id = :'buyer_c'), 0,
+          'its sale file and the alerts of buyer_c are erased');
 select is((select count(*)::int from properties where id = :'prop_a' and address_line = '1 rue des Adieux'), 1,
           'the property of seller_a is untouched');
 

@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-17 · L3-01 · PR #110 · Tables du lot 3
+- Ajouté : visites sur invitation (créneaux, invitations à jeton de 7 jours, réservation, annulation, adresse révélée à la seule visite confirmée), dossier de vente (documents du bien dans le bucket privé `documents`, partages, demandes d'accès), alertes acheteur (5 au plus) : tables, permissions et fonctions, sans écran (L3-02, L3-04, L3-06).
+- Modifié : export, fermeture et anonymisation du compte couvrent les nouvelles tables.
+- Migrations : `20261117120000_visits.sql`, `20261117120100_sale_documents.sql`, `20261117120200_alerts.sql`, `20261117120300_account_deletion_lot3.sql`.
+
 ### 2026-11-17 · P-03 · PR #109 · Sauvegarde et restauration
 - Ajouté : sauvegarde nocturne des données de la base de production, chiffrée, gardée 14 jours (action GitHub `Backup`).
 - Ajouté : `npm run restore`, restauration dans un projet vide (migrations, puis données) ; procédure et test dans `docs/RECETTE.md`.

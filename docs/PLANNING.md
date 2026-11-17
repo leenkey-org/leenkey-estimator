@@ -133,7 +133,7 @@ Lot 2 :
 
 ## S8-S9 · semaines du 30 nov. et 7 déc. · Lot 3 : visites, documents, alertes → livraison ven. 11 déc.
 
-- [ ] **L3-01** Migrations visites, documents, partages, demandes d'accès, alertes + RLS + tests · PR : · Testé en préprod : ☐
+- [x] **L3-01** Migrations visites, documents, partages, demandes d'accès, alertes + RLS + tests · PR : #110 · Testé en préprod : ☐
 - [ ] **L3-02** Créneaux ponctuels, invitations avec jeton, réservation, `.ics`, annulation, adresse révélée, outil `propose_visit_slot` · PR : · Testé en préprod : ☐
 - [ ] **L3-03** Retours de visite (cron J+1 et formulaires) · PR : · Testé en préprod : ☐
 - [ ] **L3-04** Dossier de vente : checklist, dépôt, indicateur notaire, partage, demandes d'accès · PR : · Testé en préprod : ☐
