@@ -49,3 +49,4 @@ test-results
 
 # scripts/local-stack.sh (keys, seed password, logs)
 .local-stack/
+backups/

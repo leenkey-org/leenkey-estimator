@@ -111,3 +111,26 @@ Revue des permissions (base locale et préprod, linter de sécurité de Supabase
 
 | # | Écran | Constat | Attendu | Gravité | Corrigé |
 |---|---|---|---|---|---|
+
+## Sauvegarde et restauration (P-03)
+
+**Chaque nuit** (`.github/workflows/backup.yml`, 1 h 37 UTC) : `scripts/backup.sh` fait un dump des données de la base de production. Il contient les schémas `public`, `auth` (comptes et identités, pas les sessions) et `storage` (liste des fichiers). L'archive est chiffrée avec `BACKUP_PASSPHRASE` et gardée 14 jours comme artefact privé du dépôt.
+
+**À faire avant la bascule**
+- Dans GitHub, Settings > Secrets and variables > Actions, ajouter deux secrets :
+  - `PROD_DATABASE_URL` : chaîne de connexion du *session pooler* de `leenkey-prod` ;
+  - `BACKUP_PASSPHRASE` : phrase de passe longue, gardée aussi hors de GitHub (sans elle, une archive est illisible).
+- Passer la branche par défaut du dépôt de `main` à `v2`, ou à la branche de production de la V2. GitHub ne lance une tâche planifiée que sur la branche par défaut ; d'ici là, l'action se lance à la main (Actions > Backup > Run workflow).
+- Lancer l'action une fois à la main et vérifier qu'un artefact `leenkey-backup-…` apparaît.
+
+**Restaurer** dans un nouveau projet Supabase (jamais dans la base d'origine) :
+1. Télécharger l'artefact, puis lancer `RESTORE_DATABASE_URL=<chaîne du nouveau projet> npm run restore -- backups/leenkey-….sql.gz.gpg`. Le script demande la phrase de passe à `gpg`. Il joue les migrations, puis charge les données en une transaction, déclencheurs coupés, et affiche le nombre de lignes des tables principales.
+2. Comparer ces nombres avec ceux de la base d'origine si elle répond encore.
+3. Recréer le secret `cron_secret` dans le coffre (Vault) du nouveau projet, avec la même valeur que `CRON_SECRET` de Vercel.
+4. Faire pointer les variables Supabase de Vercel vers le nouveau projet, puis redéployer.
+5. Les fichiers (photos, justificatifs) ne sont pas dans le dump : ils restent dans le Storage de l'ancien projet. Si ce projet est perdu, les annonces s'affichent sans photos tant que les fichiers n'ont pas été recopiés.
+
+**Restauration testée le 17 novembre 2026** sur la pile locale. Source : la base des tests E2E. Cible : une base vide dont les schémas `auth` et `storage` ont été mis à jour par les services d'authentification et de stockage, comme sur un projet neuf.
+- Archive de 184 Ko.
+- Mêmes nombres de lignes après restauration : 7 comptes, 7 profils, 16 biens, 16 annonces, 29 photos, 11 messages, 2 formules, 87 fichiers.
+- Un visiteur voit les mêmes 12 annonces et la même recherche.

@@ -353,6 +353,7 @@ npm run db:rls-test      # tests de permissions
 npm run a11y             # contrôle d'accessibilité axe sur les parcours E2E (docs/DESIGN.md section 15)
 npm run stripe:listen    # Stripe CLI vers /api/webhooks/stripe en local
 npm run backup           # pg_dump du projet lié vers ./backups/ (utilisé par la GitHub Action nocturne)
+npm run restore -- <fichier> # restaure une sauvegarde dans un projet vide ($RESTORE_DATABASE_URL ; docs/RECETTE.md, P-03)
 ```
 
 Scripts à créer dans `scripts/` et déclarés dans `package.json` dès la semaine 1.

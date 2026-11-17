@@ -147,7 +147,7 @@ Lot 2 :
 
 - [x] **P-01** Revue sécurité (RLS avec tous les comptes, en-têtes, rate limits, secrets, uploads) · PR : #108 · Testé en préprod : ☐ Restent 6 points de la bascule et des comptes de production (`docs/SECURITE.md`).
 - [ ] **P-02** Performance et accessibilité finales · PR : · Testé en préprod : ☐
-- [ ] **P-03** Sauvegarde GitHub Action + restauration testée sur un projet vide · PR : · Testé en préprod : ☐
+- [x] **P-03** Sauvegarde GitHub Action + restauration testée sur un projet vide · PR : #109 · Testé en préprod : ☐ Restent les deux secrets GitHub et la branche par défaut (`docs/RECETTE.md`).
 - [ ] **P-04** Guide back office (`docs/GUIDE-BACK-OFFICE.md` + PDF) · PR : · Testé en préprod : ☐
 - [ ] **P-05** Répétition complète de la mise en production sur staging ; préprod validée par Cédric le 18 décembre · PR : · Testé en préprod : ☐
 
