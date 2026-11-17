@@ -4,7 +4,7 @@
 -- the buyer of a confirmed visit. Fixtures in postal code 99993.
 begin;
 \ir _helpers.psql
-select plan(46);
+select plan(53);
 \ir _plan.psql
 
 -- seller_a: a listing online, and a draft listing.
@@ -121,7 +121,10 @@ select is((select count(*)::int from visit_invitations), 0, 'buyer_d: reads no i
 \ir _as.psql
 select throws_ok(format($$select * from visit_open_slots(%L)$$, :'old_token'),
                  '42501', null, 'buyer_c: the old token no longer works');
-select is((select count(*)::int from visit_open_slots(:'token_c')), 3, 'buyer_c: the free slots of the invitation');
+select is((select count(*)::int from visit_open_slots(:'token_c')), 2,
+          'buyer_c: the free slots of the invitation, 2 hours ahead at least');
+select throws_ok(format($$select visit_book(%L, %L)$$, :'token_c', :'slot_soon'),
+                 '22023', null, 'buyer_c: no booking less than 2 hours before (it could not be cancelled)');
 select is((select count(*)::int from visit_invitations), 1, 'buyer_c: reads its invitation');
 select throws_ok(format($$insert into visits (slot_id, property_id, buyer_id) values (%L, %L, %L)$$, :'slot1', :'prop', tests.uid('buyer_c')),
                  '42501', null, 'buyer_c: no direct write in visits');
@@ -129,7 +132,7 @@ select visit_book(:'token_c', :'slot1') as visit1 \gset
 select is((select status::text from visits where id = :'visit1'), 'confirmed', 'buyer_c: the visit is confirmed');
 select throws_ok(format($$select visit_book(%L, %L)$$, :'token_c', :'slot2'),
                  '23505', null, 'buyer_c: one visit to come per property');
-select is((select count(*)::int from visit_open_slots(:'token_c')), 2, 'buyer_c: a full slot is no longer offered');
+select is((select count(*)::int from visit_open_slots(:'token_c')), 1, 'buyer_c: a full slot is no longer offered');
 select is((select count(*)::int from visit_slots), 1, 'buyer_c: reads the slot of its visit only');
 select is((select city from visit_address(:'visit1')), 'Visiteville', 'buyer_c: the address of its confirmed visit');
 
@@ -165,7 +168,12 @@ select throws_ok(format($$select visit_book(%L, %L)$$, :'token_d', :'slot1'),
 select is(visit_cancel(:'visit1')::text, 'cancelled', 'buyer_c: cancels its visit more than 2 hours before');
 select throws_ok(format($$select * from visit_address(%L)$$, :'visit1'),
                  '42501', null, 'buyer_c: no address once the visit is cancelled');
-select visit_book(:'token_c', :'slot_soon') as visit_soon \gset
+-- A visit within 2 hours (written as the owner of the tables: no booking is that late).
+reset role;
+insert into visits (slot_id, property_id, buyer_id) values (:'slot_soon', :'prop', tests.uid('buyer_c'))
+returning id as visit_soon \gset
+\set who buyer_c
+\ir _as.psql
 select throws_ok(format($$select visit_cancel(%L)$$, :'visit_soon'),
                  '22023', null, 'buyer_c: too late to cancel less than 2 hours before');
 \set who seller_a
@@ -174,6 +182,31 @@ select throws_ok(format($$select visit_slot_remove(%L)$$, :'slot_soon'),
                  '22023', null, 'seller_a: a slot with a visit booked stays');
 select is(visit_cancel(:'visit_soon')::text, 'cancelled', 'seller_a: cancels a visit until it starts');
 select lives_ok(format($$select visit_slot_remove(%L)$$, :'slot2'), 'seller_a: removes a free slot');
+select is((select count(*)::int from visit_slots where id = :'slot2'), 0, 'a slot never booked is deleted');
+select lives_ok(format($$select visit_slot_remove(%L)$$, :'slot1'), 'seller_a: removes a slot whose visit was cancelled');
+select is((select removed_at is not null from visit_slots where id = :'slot1'), true,
+          'a slot with visits in its history is marked removed, the history keeps its date');
+select lives_ok(format($$select visit_slot_add(%L, date_trunc('hour', now()) + interval '2 days', 45)$$, :'prop'),
+                'seller_a: a new slot at the time of a removed one');
+\set who buyer_d
+\ir _as.psql
+select throws_ok(format($$select visit_book(%L, %L)$$, :'token_d', :'slot1'),
+                 '22023', null, 'buyer_d: a removed slot cannot be booked');
+\set who seller_a
+\ir _as.psql
+
+-- A slot of another property, with the token of this one.
+reset role;
+insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms)
+values (tests.uid('seller_b'), 'maison', '8 rue Ailleurs', '99993', 'Visiteville', 70, 3)
+returning id as prop_b \gset
+insert into visit_slots (property_id, starts_at, ends_at)
+values (:'prop_b', now() + interval '4 days', now() + interval '4 days 30 minutes')
+returning id as slot_b \gset
+\set who buyer_d
+\ir _as.psql
+select throws_ok(format($$select visit_book(%L, %L)$$, :'token_d', :'slot_b'),
+                 '22023', null, 'buyer_d: the token of a property books no slot of another one');
 
 -- A slot that has passed (written as the owner of the tables).
 reset role;

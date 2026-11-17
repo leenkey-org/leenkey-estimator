@@ -5,7 +5,7 @@
 -- postal code 99994.
 begin;
 \ir _helpers.psql
-select plan(44);
+select plan(45);
 \ir _plan.psql
 
 \set who seller_a
@@ -35,7 +35,9 @@ select listing_publish(:'listing');
 
 select :'prop' || '/sale/' || gen_random_uuid() || '.pdf' as path1,
        :'prop' || '/sale/' || gen_random_uuid() || '.pdf' as path2,
-       :'prop' || '/sale/' || gen_random_uuid() || '.jpg' as path3 \gset
+       :'prop' || '/sale/' || gen_random_uuid() || '.jpg' as path3,
+       :'prop' || '/sale/' || gen_random_uuid() || '.pdf' as path_fake,
+       :'prop' || '/sale/' || gen_random_uuid() || '.pdf' as path_big \gset
 
 -- ===========================================================================
 -- The files
@@ -50,10 +52,17 @@ select throws_ok(format($$insert into storage.objects (bucket_id, name, owner) v
 select throws_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('documents', %L, %L)$$,
                         :'prop' || '/sale/' || gen_random_uuid() || '.exe', tests.uid('seller_a')),
                  '42501', null, 'seller_a: nor a file that is not a PDF, a JPEG or a PNG');
-select lives_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('documents', %L, %L), ('documents', %L, %L), ('documents', %L, %L)$$,
-                       :'path1', tests.uid('seller_a'), :'path2', tests.uid('seller_a'), :'path3', tests.uid('seller_a')),
+-- The type and the size Storage records for a file it receives.
+select lives_ok(format($$insert into storage.objects (bucket_id, name, owner, metadata) values
+                         ('documents', %L, %L, '{"mimetype": "application/pdf", "size": 1000}'),
+                         ('documents', %L, %L, '{"mimetype": "application/pdf", "size": 2000}'),
+                         ('documents', %L, %L, '{"mimetype": "image/jpeg", "size": 3000}'),
+                         ('documents', %L, %L, '{"mimetype": "image/webp", "size": 1000}'),
+                         ('documents', %L, %L, '{"mimetype": "application/pdf", "size": 22020096}')$$,
+                       :'path1', tests.uid('seller_a'), :'path2', tests.uid('seller_a'), :'path3', tests.uid('seller_a'),
+                       :'path_fake', tests.uid('seller_a'), :'path_big', tests.uid('seller_a')),
                 'seller_a: sends the files of its documents');
-select is((select count(*)::int from storage.objects where bucket_id = 'documents' and name like :'prop' || '/sale/%'), 3,
+select is((select count(*)::int from storage.objects where bucket_id = 'documents' and name like :'prop' || '/sale/%'), 5,
           'seller_a: reads them');
 
 -- ===========================================================================
@@ -63,21 +72,21 @@ select throws_ok(format($$insert into documents (property_id, owner_id, type, ti
                           values (%L, %L, 'dpe', 'DPE', %L, 'application/pdf', 1000)$$,
                         :'prop', tests.uid('seller_a'), :'path1'),
                  '42501', null, 'seller_a: never writes the table itself');
-select throws_ok(format($$select document_add(%L, 'dpe', 'DPE', %L, 'application/pdf', 1000)$$,
+select throws_ok(format($$select document_add(%L, 'dpe', 'DPE', %L)$$,
                         :'prop', :'prop' || '/sale/' || gen_random_uuid() || '.pdf'),
                  '22023', null, 'seller_a: no document without its file');
-select throws_ok(format($$select document_add(%L, 'dpe', 'DPE', %L, 'application/pdf', 1000)$$, :'prop_b', :'path1'),
+select throws_ok(format($$select document_add(%L, 'dpe', 'DPE', %L)$$, :'prop_b', :'path1'),
                  '42501', null, 'seller_a: no document on the property of seller_b');
-select throws_ok(format($$select document_add(%L, 'dpe', 'DPE', %L, 'application/zip', 1000)$$, :'prop', :'path1'),
-                 '23514', null, 'seller_a: a PDF, a JPEG or a PNG');
-select throws_ok(format($$select document_add(%L, 'dpe', 'DPE', %L, 'application/pdf', 21 * 1024 * 1024)$$, :'prop', :'path1'),
+select throws_ok(format($$select document_add(%L, 'dpe', 'DPE', %L)$$, :'prop', :'path_fake'),
+                 '23514', null, 'seller_a: the file recorded by Storage is a PDF, a JPEG or a PNG of the type of its name');
+select throws_ok(format($$select document_add(%L, 'dpe', 'DPE', %L)$$, :'prop', :'path_big'),
                  '23514', null, 'seller_a: 20 MB at most');
-select document_add(:'prop', 'dpe', ' DPE 2025 ', :'path1', 'application/pdf', 1000) as doc1 \gset
-select document_add(:'prop', 'pv_ag', 'PV AG 2025', :'path2', 'application/pdf', 2000) as doc2 \gset
-select document_add(:'prop', 'taxe_fonciere', 'Taxe foncière', :'path3', 'image/jpeg', 3000) as doc3 \gset
-select is((select title || '|' || owner_id::text from documents where id = :'doc1'),
-          'DPE 2025|' || tests.uid('seller_a')::text, 'seller_a: the document is filed under its name');
-select throws_ok(format($$select document_add(%L, 'dpe', 'DPE', %L, 'application/pdf', 1000)$$, :'prop', :'path1'),
+select document_add(:'prop', 'dpe', ' DPE 2025 ', :'path1') as doc1 \gset
+select document_add(:'prop', 'pv_ag', 'PV AG 2025', :'path2') as doc2 \gset
+select document_add(:'prop', 'taxe_fonciere', 'Taxe foncière', :'path3') as doc3 \gset
+select is((select title || '|' || mime_type || '|' || size_bytes from documents where id = :'doc3'),
+          'Taxe foncière|image/jpeg|3000', 'seller_a: the document is filed with the type and the size of its file');
+select throws_ok(format($$select document_add(%L, 'dpe', 'DPE', %L)$$, :'prop', :'path1'),
                  '23505', null, 'seller_a: one document per file');
 select lives_ok(format($$update documents set title = 'DPE du 12 mars', type = 'dpe' where id = %L$$, :'doc1'),
                 'seller_a: renames its document');
@@ -128,6 +137,16 @@ select is((select count(*)::int from document_shares where buyer_id = tests.uid(
 select throws_ok(format($$select document_share(array[%L]::uuid[], %L)$$, :'doc3', tests.uid('buyer_c')),
                  '42501', null, 'seller_b: shares no document of seller_a');
 select is((select count(*)::int from document_shares where document_id = :'doc1'), 0, 'seller_b: reads no share of seller_a');
+-- A document of seller_b, shared together with one of seller_a.
+reset role;
+select :'prop_b' || '/sale/' || gen_random_uuid() || '.pdf' as path_b \gset
+insert into storage.objects (bucket_id, name, metadata) values ('documents', :'path_b', '{"mimetype": "application/pdf", "size": 10}');
+insert into documents (property_id, owner_id, type, title, storage_path, mime_type, size_bytes)
+values (:'prop_b', tests.uid('seller_b'), 'dpe', 'DPE B', :'path_b', 'application/pdf', 10) returning id as doc_b \gset
+\set who seller_b
+\ir _as.psql
+select throws_ok(format($$select document_share(array[%L, %L]::uuid[], %L)$$, :'doc_b', :'doc1', tests.uid('buyer_c')),
+                 '42501', null, 'seller_b: never a document of seller_a slipped among its own');
 
 \set who buyer_c
 \ir _as.psql

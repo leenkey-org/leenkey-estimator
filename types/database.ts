@@ -2058,6 +2058,7 @@ export type Database = {
           ends_at: string
           id: string
           property_id: string
+          removed_at: string | null
           starts_at: string
           updated_at: string | null
         }
@@ -2067,6 +2068,7 @@ export type Database = {
           ends_at: string
           id?: string
           property_id: string
+          removed_at?: string | null
           starts_at: string
           updated_at?: string | null
         }
@@ -2076,6 +2078,7 @@ export type Database = {
           ends_at?: string
           id?: string
           property_id?: string
+          removed_at?: string | null
           starts_at?: string
           updated_at?: string | null
         }
@@ -2931,8 +2934,8 @@ export type Database = {
         }
         Returns: undefined
       }
-      buyer_relates_to_property: {
-        Args: { p_buyer: string; p_property: string }
+      buyer_can_be_invited: {
+        Args: { p_property: string; p_buyer: string }
         Returns: boolean
       }
       buyer_summary_for_seller: {
@@ -3013,7 +3016,7 @@ export type Database = {
         Returns: number
       }
       document_access_answer: {
-        Args: { p_documents?: string[]; p_grant: boolean; p_request: string }
+        Args: { p_request: string; p_documents?: string[]; p_grant: boolean }
         Returns: number
       }
       document_access_request: {
@@ -3023,11 +3026,9 @@ export type Database = {
       document_add: {
         Args: {
           p_type: Database["public"]["Enums"]["document_type"]
-          p_property: string
           p_title: string
           p_storage_path: string
-          p_mime_type: string
-          p_size_bytes: number
+          p_property: string
         }
         Returns: string
       }
@@ -3036,7 +3037,7 @@ export type Database = {
         Returns: boolean
       }
       document_share: {
-        Args: { p_documents: string[]; p_buyer: string }
+        Args: { p_buyer: string; p_documents: string[] }
         Returns: number
       }
       document_shared_with_me: {
@@ -3044,7 +3045,7 @@ export type Database = {
         Returns: boolean
       }
       document_unshare: {
-        Args: { p_document: string; p_buyer: string }
+        Args: { p_buyer: string; p_document: string }
         Returns: undefined
       }
       estimation_claim: {
@@ -3793,8 +3794,8 @@ export type Database = {
         Args: { p_visit: string }
         Returns: {
           city: string
-          address_line: string
           postal_code: string
+          address_line: string
         }[]
       }
       visit_book: {
@@ -3817,22 +3818,22 @@ export type Database = {
         }
       }
       visit_invite: {
-        Args: { p_property: string; p_buyer: string }
+        Args: { p_buyer: string; p_property: string }
         Returns: {
-          expires_at: string
           token: string
+          expires_at: string
         }[]
       }
       visit_open_slots: {
         Args: { p_token: string }
         Returns: {
-          starts_at: string
           slot_id: string
+          starts_at: string
           ends_at: string
         }[]
       }
       visit_slot_add: {
-        Args: { p_starts_at: string; p_property: string; p_minutes: number }
+        Args: { p_minutes: number; p_property: string; p_starts_at: string }
         Returns: string
       }
       visit_slot_remove: {

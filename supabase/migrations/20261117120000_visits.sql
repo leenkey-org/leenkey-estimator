@@ -18,6 +18,7 @@ create table public.visit_slots (
   starts_at timestamptz not null,
   ends_at timestamptz not null,
   capacity int not null default 1 check (capacity between 1 and 10),
+  removed_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz,
   constraint visit_slots_length check (
@@ -81,15 +82,14 @@ revoke all on public.visit_slots, public.visit_invitations, public.visits from a
 grant select on public.visit_slots, public.visit_invitations, public.visits to authenticated;
 
 -- ---------------------------------------------------------------------------
--- A relation with the property: a conversation about it, or an offer sent
+-- A relation with the property: has_buyer_relation (a conversation about it,
+-- or an offer sent; L2-04a), the buyer's account open and not suspended.
 -- ---------------------------------------------------------------------------
-create function public.buyer_relates_to_property(p_property uuid, p_buyer uuid) returns boolean
+create function public.buyer_can_be_invited(p_property uuid, p_buyer uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
-  select exists (select 1 from public.conversations c
-                  where c.property_id = p_property and c.buyer_id = p_buyer and c.kind = 'listing')
-      or exists (select 1 from public.offers o
-                   join public.listings l on l.id = o.listing_id
-                  where l.property_id = p_property and o.buyer_id = p_buyer and o.status <> 'draft');
+  select public.has_buyer_relation(p_property, p_buyer)
+     and exists (select 1 from public.profiles
+                  where id = p_buyer and deleted_at is null and suspended_at is null);
 $$;
 
 -- The property can be visited: not deleted, its listing online or paused.
@@ -123,8 +123,10 @@ begin
   if p_starts_at < now() + interval '1 hour' or p_starts_at > now() + interval '90 days' then
     raise exception 'a slot starts between in one hour and in 90 days' using errcode = '22023';
   end if;
+  -- One check at a time per property: two slots added together never overlap.
+  perform 1 from public.properties where id = p_property for update;
   if exists (select 1 from public.visit_slots s
-              where s.property_id = p_property
+              where s.property_id = p_property and s.removed_at is null
                 and tstzrange(s.starts_at, s.ends_at) && tstzrange(p_starts_at, v_end)) then
     raise exception 'the slot overlaps another one' using errcode = '23P01';
   end if;
@@ -140,18 +142,20 @@ language plpgsql security definer set search_path = '' as $$
 declare
   s public.visit_slots;
 begin
-  select * into s from public.visit_slots where id = p_slot for update;
+  select * into s from public.visit_slots where id = p_slot and removed_at is null for update;
   if not found or not public.is_active_user() or not public.property_is_editable(s.property_id) then
     raise exception 'not a slot of yours' using errcode = '42501';
   end if;
   if exists (select 1 from public.visits v where v.slot_id = p_slot and v.status = 'confirmed') then
     raise exception 'cancel the visit of this slot first' using errcode = '22023';
   end if;
-  -- Kept when it has visits in its history (cancelled, done): only a free slot goes.
+  -- A slot with visits in its history (cancelled, done) is marked removed:
+  -- the history keeps its date; nobody books it any more.
   if exists (select 1 from public.visits v where v.slot_id = p_slot) then
-    raise exception 'the slot has visits in its history' using errcode = '22023';
+    update public.visit_slots set removed_at = now() where id = p_slot;
+  else
+    delete from public.visit_slots where id = p_slot;
   end if;
-  delete from public.visit_slots where id = p_slot;
 end;
 $$;
 
@@ -170,9 +174,7 @@ begin
   if not public.property_visitable(p_property) then
     raise exception 'the listing is not online' using errcode = '22023';
   end if;
-  if not public.buyer_relates_to_property(p_property, p_buyer)
-     or not exists (select 1 from public.profiles
-                     where id = p_buyer and deleted_at is null and suspended_at is null) then
+  if not public.buyer_can_be_invited(p_property, p_buyer) then
     raise exception 'this buyer has no relation with the property' using errcode = '22023';
   end if;
   insert into public.visit_invitations as i (property_id, buyer_id, token, expires_at)
@@ -201,10 +203,15 @@ begin
   if i.id is null or not public.is_active_user() then
     raise exception 'invitation not found or expired' using errcode = '42501';
   end if;
+  if not public.property_visitable(i.property_id) then
+    raise exception 'the listing is not online' using errcode = '22023';
+  end if;
+  -- Booked 2 hours before at the latest: the buyer can still cancel it then (SPEC 14).
   return query
     select s.id, s.starts_at, s.ends_at
       from public.visit_slots s
-     where s.property_id = i.property_id and s.starts_at > now()
+     where s.property_id = i.property_id and s.removed_at is null
+       and s.starts_at > now() + interval '2 hours'
        and (select count(*) from public.visits v
              where v.slot_id = s.id and v.status = 'confirmed') < s.capacity
      order by s.starts_at;
@@ -221,12 +228,15 @@ begin
   if i.id is null or not public.is_active_user() then
     raise exception 'invitation not found or expired' using errcode = '42501';
   end if;
-  select * into s from public.visit_slots where id = p_slot and property_id = i.property_id for update;
+  -- One booking at a time per invitation: one visit to come per property.
+  perform 1 from public.visit_invitations where id = i.id for update;
+  select * into s from public.visit_slots
+   where id = p_slot and property_id = i.property_id and removed_at is null for update;
   if not found then
     raise exception 'not a slot of this property' using errcode = '22023';
   end if;
-  if s.starts_at <= now() then
-    raise exception 'this slot has passed' using errcode = '22023';
+  if s.starts_at <= now() + interval '2 hours' then
+    raise exception 'too late to book this slot' using errcode = '22023';
   end if;
   if not public.property_visitable(i.property_id) then
     raise exception 'the listing is not online' using errcode = '22023';
@@ -294,7 +304,7 @@ begin
 end;
 $$;
 
-revoke execute on function public.buyer_relates_to_property(uuid, uuid) from public, anon, authenticated;
+revoke execute on function public.buyer_can_be_invited(uuid, uuid) from public, anon, authenticated;
 revoke execute on function public.property_visitable(uuid) from public, anon, authenticated;
 revoke execute on function public.visit_invitation_of(text) from public, anon, authenticated;
 revoke execute on function public.visit_slot_add(uuid, timestamptz, int) from public, anon;

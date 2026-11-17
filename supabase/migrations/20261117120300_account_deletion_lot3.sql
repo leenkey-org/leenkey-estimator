@@ -137,6 +137,9 @@ begin
   update public.document_access_requests set status = 'declined', answered_at = v_at
    where status = 'pending'
      and property_id in (select id from public.properties where owner_id = v_me);
+  -- As a buyer: its requests waiting are dropped, nothing more is shared with it.
+  delete from public.document_access_requests where buyer_id = v_me and status = 'pending';
+  delete from public.document_shares where buyer_id = v_me;
   update public.documents set deleted_at = v_at
    where deleted_at is null
      and property_id in (select id from public.properties where owner_id = v_me);
@@ -176,10 +179,11 @@ begin
       from public.financing_documents fd
      where fd.buyer_id = p_profile and fd.storage_path <> ''
     union all
-    select 'documents'::text, d.storage_path
-      from public.documents d
-      join public.properties p on p.id = d.property_id
-     where p.owner_id = p_profile;
+    -- Every file of the folder of its properties, a file never filed included.
+    select 'documents'::text, o.name
+      from storage.objects o
+      join public.properties p on o.name like p.id::text || '/sale/%'
+     where o.bucket_id = 'documents' and p.owner_id = p_profile;
 end;
 $$;
 
@@ -237,6 +241,7 @@ begin
   delete from public.alerts where buyer_id = p_profile;
   delete from public.visit_invitations where buyer_id = p_profile;
   delete from public.document_access_requests where buyer_id = p_profile;
+  delete from public.document_shares where buyer_id = p_profile;
   update public.visits set buyer_feedback = null where buyer_id = p_profile;
   update public.visits set seller_feedback = null
    where property_id in (select id from public.properties where owner_id = p_profile);

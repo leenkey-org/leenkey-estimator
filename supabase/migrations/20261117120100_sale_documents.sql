@@ -141,23 +141,34 @@ create policy documents_sale_insert on storage.objects for insert to authenticat
 -- Filing a document: its file is already in the bucket (sent with the
 -- session of the seller)
 -- ---------------------------------------------------------------------------
+-- Its type and its size are those Storage recorded for the file, its type
+-- matching the extension of its name.
 create function public.document_add(p_property uuid, p_type public.document_type, p_title text,
-                                    p_storage_path text, p_mime_type text, p_size_bytes int)
+                                    p_storage_path text)
 returns uuid
 language plpgsql security definer set search_path = '' as $$
 declare
   v_id uuid;
+  v_mime text;
+  v_size bigint;
 begin
   if not public.is_active_user() or not public.property_is_editable(p_property) then
     raise exception 'not a property of yours' using errcode = '42501';
   end if;
-  if public.sale_file_property(p_storage_path) is distinct from p_property
-     or not exists (select 1 from storage.objects
-                     where bucket_id = 'documents' and name = p_storage_path) then
+  select o.metadata->>'mimetype', (o.metadata->>'size')::bigint into v_mime, v_size
+    from storage.objects o
+   where o.bucket_id = 'documents' and o.name = p_storage_path;
+  if not found or public.sale_file_property(p_storage_path) is distinct from p_property then
     raise exception 'file not found' using errcode = '22023';
   end if;
+  if v_mime is distinct from (case right(p_storage_path, 4)
+                                when '.pdf' then 'application/pdf'
+                                when '.jpg' then 'image/jpeg'
+                                when '.png' then 'image/png' end) then
+    raise exception 'a PDF, a JPEG or a PNG named after its type' using errcode = '23514';
+  end if;
   insert into public.documents (property_id, owner_id, type, title, storage_path, mime_type, size_bytes)
-  values (p_property, auth.uid(), p_type, btrim(p_title), p_storage_path, p_mime_type, p_size_bytes)
+  values (p_property, auth.uid(), p_type, btrim(p_title), p_storage_path, v_mime, v_size)
   returning id into v_id;
   return v_id;
 end;
@@ -180,9 +191,11 @@ begin
           where d.id = any(p_documents) and d.deleted_at is null) <> cardinality(array(select distinct unnest(p_documents))) then
     raise exception 'not documents of yours' using errcode = '42501';
   end if;
-  if not public.buyer_relates_to_property(v_property, p_buyer)
-     and not exists (select 1 from public.document_access_requests r
-                      where r.property_id = v_property and r.buyer_id = p_buyer) then
+  if not exists (select 1 from public.profiles
+                  where id = p_buyer and deleted_at is null and suspended_at is null)
+     or (not public.has_buyer_relation(v_property, p_buyer)
+         and not exists (select 1 from public.document_access_requests r
+                          where r.property_id = v_property and r.buyer_id = p_buyer)) then
     raise exception 'this buyer has no relation with the property' using errcode = '22023';
   end if;
   insert into public.document_shares (document_id, buyer_id)
@@ -219,7 +232,7 @@ begin
     raise exception 'not allowed' using errcode = '42501';
   end if;
   if not public.property_visitable(p_property)
-     or not public.buyer_relates_to_property(p_property, auth.uid()) then
+     or not public.has_buyer_relation(p_property, auth.uid()) then
     raise exception 'contact the seller first' using errcode = '22023';
   end if;
   insert into public.document_access_requests as r (property_id, buyer_id)
@@ -272,7 +285,7 @@ grant execute on function public.document_of_mine(uuid) to authenticated;
 revoke execute on function public.sale_file_property(text) from public, anon;
 revoke execute on function public.sale_file_shared(text) from public, anon;
 revoke execute on function public.sale_files_room(uuid) from public, anon;
-revoke execute on function public.document_add(uuid, public.document_type, text, text, text, int) from public, anon;
+revoke execute on function public.document_add(uuid, public.document_type, text, text) from public, anon;
 revoke execute on function public.document_share(uuid[], uuid) from public, anon;
 revoke execute on function public.document_unshare(uuid, uuid) from public, anon;
 revoke execute on function public.document_access_request(uuid) from public, anon;
@@ -280,7 +293,7 @@ revoke execute on function public.document_access_answer(uuid, boolean, uuid[]) 
 grant execute on function public.sale_file_property(text) to authenticated;
 grant execute on function public.sale_file_shared(text) to authenticated;
 grant execute on function public.sale_files_room(uuid) to authenticated;
-grant execute on function public.document_add(uuid, public.document_type, text, text, text, int) to authenticated;
+grant execute on function public.document_add(uuid, public.document_type, text, text) to authenticated;
 grant execute on function public.document_share(uuid[], uuid) to authenticated;
 grant execute on function public.document_unshare(uuid, uuid) to authenticated;
 grant execute on function public.document_access_request(uuid) to authenticated;
