@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { VIEW_COOKIE, parisDay, readViewCookie, writeViewCookie } from "./view-cookie";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimitKeys } from "@/lib/rate-limit";
 
 // Server actions of the public listing page.
 
@@ -30,8 +31,14 @@ export async function recordListingView(
   if (seen.includes(listingId)) return { ok: true, data: { cookie: writeViewCookie(today, seen) } };
 
   try {
+    // Only this site's server counts a view (P-01): the key derived from CRON_SECRET.
+    const keys = rateLimitKeys();
+    if (!keys) return { ok: true, data: { cookie: writeViewCookie(today, [...seen, listingId]) } };
     const supabase = await createClient();
-    const { error } = await supabase.rpc("listing_view_increment", { p_listing_id: listingId });
+    const { error } = await supabase.rpc("listing_view_increment", {
+      p_listing_id: listingId,
+      p_server: keys.serverKey,
+    });
     if (error) throw new Error(`listing_view_increment: ${error.code} ${error.message}`);
   } catch (error) {
     console.error("[listings] recordListingView failed", {

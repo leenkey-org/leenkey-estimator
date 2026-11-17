@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-17 · P-01 · PR #108 · Revue sécurité
+- Corrigé : une photo dont le fichier est écrit de nouveau après son envoi n'est plus montrée au public.
+- Corrigé : le compteur de vues d'une annonce et l'enregistrement d'une valorisation n'acceptent plus que le serveur du site.
+- Ajouté : test de contrôle global des permissions (RLS de chaque table, fonctions, politiques, buckets, fonctions ouvertes aux visiteurs).
+- Modifié : liste de contrôle `docs/SECURITE.md` cochée ; 6 points restent pour la bascule et les comptes de production.
+- Migrations : `20261117100000_photo_files_unchanged.sql`, `20261117110000_site_only_writes.sql`.
+
 ### 2026-11-16 · L2-10 · PR #107 · Export et suppression du compte
 - Ajouté : section « Mes données » de `/compte` : « Télécharger mes données » (fichier JSON de ce que contient le compte) et « Supprimer mon compte » (page qui explique ce qui se passe, mot de passe et case à cocher).
 - Ajouté : fermeture immédiate (annonces retirées, offres en attente retirées ou refusées avec leurs auteurs prévenus, conversations fermées, toutes les sessions fermées), refusée pendant une vente en cours et pour un compte de l'équipe ; connexion refusée à un compte fermé.

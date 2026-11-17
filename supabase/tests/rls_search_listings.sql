@@ -5,7 +5,7 @@
 -- empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(73);
+select plan(75);
 \ir _plan.psql
 
 -- ===========================================================================
@@ -236,20 +236,24 @@ select set_eq($$select id from search_listings('{"postal_code":"99999"}')$$,
 -- ===========================================================================
 \set who anon
 \ir _as.psql
-select lives_ok(format($$select listing_view_increment(%L)$$, :'l1'), 'anon: a view is counted');
+select throws_ok(format($$select listing_view_increment(%L)$$, :'l1'), '42501', null,
+                 'anon: never the counter directly, without the server of the site');
+select throws_ok(format($$select listing_view_increment(%L, 'not-the-key')$$, :'l1'), '42501', null,
+                 'anon: nor with a key made up');
+select lives_ok(format($$select listing_view_increment(%L, %L)$$, :'l1', :'server_key'), 'anon: a view is counted');
 \set who buyer_c
 \ir _as.psql
-select lives_ok(format($$select listing_view_increment(%L)$$, :'l1'), 'buyer_c: a view is counted');
+select lives_ok(format($$select listing_view_increment(%L, %L)$$, :'l1', :'server_key'), 'buyer_c: a view is counted');
 \set who seller_a
 \ir _as.psql
-select lives_ok(format($$select listing_view_increment(%L)$$, :'l1'), 'seller_a: calls the counter on own listing');
+select lives_ok(format($$select listing_view_increment(%L, %L)$$, :'l1', :'server_key'), 'seller_a: calls the counter on own listing');
 \set who admin
 \ir _as.psql
-select lives_ok(format($$select listing_view_increment(%L)$$, :'l1'), 'admin: calls the counter');
+select lives_ok(format($$select listing_view_increment(%L, %L)$$, :'l1', :'server_key'), 'admin: calls the counter');
 \set who seller_b
 \ir _as.psql
-select lives_ok(format($$select listing_view_increment(%L)$$, :'l1'), 'seller_b: a view on someone else''s listing is counted');
-select lives_ok(format($$select listing_view_increment(%L)$$, '00000000-0000-4000-c000-000000000011'),
+select lives_ok(format($$select listing_view_increment(%L, %L)$$, :'l1', :'server_key'), 'seller_b: a view on someone else''s listing is counted');
+select lives_ok(format($$select listing_view_increment(%L, %L)$$, '00000000-0000-4000-c000-000000000011', :'server_key'),
                 'seller_b: calls the counter on a draft');
 
 reset role;

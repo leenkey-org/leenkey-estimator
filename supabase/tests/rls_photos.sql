@@ -10,7 +10,7 @@
 -- empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(38);
+select plan(40);
 \ir _plan.psql
 -- The storage service deletes a file this way (storage.protect_delete): as
 -- the user, under the RLS.
@@ -182,6 +182,23 @@ select is((select count(*) from storage.objects
 select is((select count(*) from storage.objects
             where bucket_id = 'photos' and name = :'prop_a' || '/' || :'stray_file' || '-400.webp')::int, 0,
           'anon: never a file uploaded without its photo');
+-- A file written again after its upload (a signed upload URL used later,
+-- « upsert »): out of the public, still read by its owner (P-01).
+reset role;
+update storage.objects set created_at = created_at - interval '1 hour'
+ where bucket_id = 'photos' and name = :'prop_a' || '/' || :'sent_file' || '-400.webp';
+\set who anon
+\ir _as.psql
+select is((select count(*) from storage.objects
+            where bucket_id = 'photos' and name = :'prop_a' || '/' || :'sent_file' || '-400.webp')::int, 0,
+          'anon: never a file written again after its upload');
+\set who seller_a
+\ir _as.psql
+select is((select count(*) from storage.objects
+            where bucket_id = 'photos' and name = :'prop_a' || '/' || :'sent_file' || '-400.webp')::int, 1,
+          'seller_a: still reads it');
+\set who anon
+\ir _as.psql
 select is((select count(*) from public_listing_photos(array[:'listing_a']::uuid[]))::int, 15,
           'anon: the photos of the published listing');
 select is((select array[path, total::text] from public_listing_photos(array[:'listing_a']::uuid[], true)),
