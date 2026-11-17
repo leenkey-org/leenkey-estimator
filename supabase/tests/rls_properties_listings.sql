@@ -2,7 +2,7 @@
 -- public_listings, status transitions, audit_log.
 begin;
 \ir _helpers.psql
-select plan(70);
+select plan(71);
 \ir _plan.psql
 
 -- ===========================================================================
@@ -70,7 +70,9 @@ select throws_ok('select count(*) from properties', '42501', null, 'anon: no acc
 select throws_ok('select count(*) from listings', '42501', null, 'anon: no access to listings');
 select is((select count(*) from public_listings where id = :'listing_a')::int, 0, 'anon: a draft is not in public_listings');
 select id as est_id, claim_token as est_token
-  from estimation_record('{"type":"maison"}'::jsonb, '{"value":300000}'::jsonb, 30000000, 28000000, 32000000, 'x@example.com') \gset
+  from estimation_record(:'server_key', '{"type":"maison"}'::jsonb, '{"value":300000}'::jsonb, 30000000, 28000000, 32000000, 'x@example.com') \gset
+select throws_ok($$select * from estimation_record('{"type":"maison"}'::jsonb, '{"value":1}'::jsonb, 1, 1, 1, null)$$,
+                 '42501', null, 'anon: never estimation_record directly, without the server of the site');
 select ok(char_length(:'est_token') = 48, 'anon: estimation_record returns a claim token');
 select throws_ok('select count(*) from estimations', '42501', null, 'anon: cannot read estimations');
 select throws_ok(format($$select listing_submit(%L)$$, :'listing_a'), '42501', null, 'anon: cannot call seller functions');
@@ -126,7 +128,7 @@ select hasnt_column('public', 'public_listings', 'address_line', 'public_listing
 select hasnt_column('public', 'public_listings', 'location', 'public_listings has no exact location');
 select hasnt_column('public', 'public_listings', 'owner_id', 'public_listings has no owner id');
 select hasnt_column('public', 'public_listings', 'review', 'public_listings has no admin review');
-select lives_ok(format($$select listing_view_increment(%L)$$, :'listing_a'), 'anon: a view is counted');
+select lives_ok(format($$select listing_view_increment(%L, %L)$$, :'listing_a', :'server_key'), 'anon: a view is counted');
 
 -- ===========================================================================
 -- favorites

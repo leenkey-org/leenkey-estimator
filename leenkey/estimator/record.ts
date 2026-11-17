@@ -1,4 +1,5 @@
 import "server-only";
+import { rateLimitKeys } from "@/lib/rate-limit";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { estimationPayloadSchema, estimationRecordArgs } from "@/lib/validations/estimation";
@@ -16,11 +17,13 @@ export type RecordedEstimation = {
  */
 export async function recordEstimation(payload: unknown): Promise<RecordedEstimation | null> {
   const parsed = estimationPayloadSchema.safeParse(payload);
-  if (!parsed.success || !isSupabaseConfigured()) return null;
+  // Only this site's server records an analysis (P-01): the key derived from CRON_SECRET.
+  const keys = rateLimitKeys();
+  if (!parsed.success || !isSupabaseConfigured() || !keys) return null;
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
-      .rpc("estimation_record", estimationRecordArgs(parsed.data))
+      .rpc("estimation_record", { ...estimationRecordArgs(parsed.data), p_server: keys.serverKey })
       .single();
     if (error || !data) {
       console.error("[estimator] estimation not recorded", { code: error?.code });

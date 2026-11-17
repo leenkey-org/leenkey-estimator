@@ -145,7 +145,7 @@ Lot 2 :
 
 ## S10 · semaine du 14 déc. · Préprod validée → livraison ven. 18 déc.
 
-- [ ] **P-01** Revue sécurité (RLS avec tous les comptes, en-têtes, rate limits, secrets, uploads) · PR : · Testé en préprod : ☐
+- [x] **P-01** Revue sécurité (RLS avec tous les comptes, en-têtes, rate limits, secrets, uploads) · PR : #108 · Testé en préprod : ☐ Restent 6 points de la bascule et des comptes de production (`docs/SECURITE.md`).
 - [ ] **P-02** Performance et accessibilité finales · PR : · Testé en préprod : ☐
 - [ ] **P-03** Sauvegarde GitHub Action + restauration testée sur un projet vide · PR : · Testé en préprod : ☐
 - [ ] **P-04** Guide back office (`docs/GUIDE-BACK-OFFICE.md` + PDF) · PR : · Testé en préprod : ☐

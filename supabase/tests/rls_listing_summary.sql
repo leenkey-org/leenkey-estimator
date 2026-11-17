@@ -76,7 +76,7 @@ select throws_ok(format($$update listings set summary_requested_at = null where 
 \set who buyer_c
 \ir _as.psql
 \o /dev/null
-select listing_view_increment(:'listing');
+select listing_view_increment(:'listing', :'server_key');
 \o
 reset role;
 select is((select summary is not null and summary_requested_at is null from listings where id = :'listing'),

@@ -2679,14 +2679,24 @@ export type Database = {
         Returns: string
       }
       estimation_record: {
-        Args: {
-          p_input: Json
-          p_result: Json
-          p_value_cents?: number
-          p_low_cents?: number
-          p_high_cents?: number
-          p_email?: string
-        }
+        Args:
+          | {
+              p_input: Json
+              p_result: Json
+              p_value_cents?: number
+              p_low_cents?: number
+              p_high_cents?: number
+              p_email?: string
+            }
+          | {
+              p_low_cents?: number
+              p_server: string
+              p_value_cents?: number
+              p_result: Json
+              p_email?: string
+              p_high_cents?: number
+              p_input: Json
+            }
         Returns: {
           id: string
           claim_token: string
@@ -2907,7 +2917,9 @@ export type Database = {
         Returns: Database["public"]["Enums"]["listing_status"]
       }
       listing_view_increment: {
-        Args: { p_listing_id: string }
+        Args:
+          | { p_listing_id: string }
+          | { p_listing_id: string; p_server: string }
         Returns: undefined
       }
       notification_add: {

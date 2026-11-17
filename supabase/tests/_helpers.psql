@@ -10,6 +10,17 @@ set search_path = public, extensions;
 create schema if not exists tests;
 grant usage on schema tests to anon, authenticated;
 
+-- The key with which this site's server calls the functions it alone may
+-- call (rate_limit_server: derived from the secret cron_secret of the vault,
+-- made up here when the database has none). Read now, as the owner: the
+-- roles of the tests do not read the vault.
+\o /dev/null
+select vault.create_secret('rls-test-cron-secret', 'cron_secret')
+ where not exists (select 1 from vault.secrets where name = 'cron_secret');
+\o
+select encode(extensions.hmac('leenkey:rate-limit:server', decrypted_secret, 'sha256'), 'hex') as server_key
+  from vault.decrypted_secrets where name = 'cron_secret' \gset
+
 create or replace function tests.uid(p_name text) returns uuid
 language sql immutable as $$
   select case p_name
