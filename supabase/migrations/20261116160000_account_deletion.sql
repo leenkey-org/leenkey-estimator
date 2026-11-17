@@ -36,22 +36,15 @@
 --    after the others (account_anonymize_failed, the team told in the bell).
 -- 5. pg_cron: every Sunday at 2:00 (SPEC 19), /api/cron/anonymize-deleted.
 --
--- No new table; one column, profiles.anonymized_at; the path of a financing
--- document may be empty once its file is erased.
+-- No new table; two columns, profiles.anonymized_at and anonymize_failed_at.
+-- The path of a financing document may be empty once its file is erased:
+-- 20261116160100_account_deletion_document_path.sql, a migration of its own
+-- (the constraint is dropped and added again, which Supabase asks to confirm).
 
 alter table public.profiles add column anonymized_at timestamptz;
 -- The last run that could not anonymise the account: it goes to the back of
 -- the queue, never blocks the others (accounts_due), and the team is told.
 alter table public.profiles add column anonymize_failed_at timestamptz;
-
--- A financing document an offer refers to keeps its row once its file is
--- erased (account_anonymize): its path is then empty.
-alter table public.financing_documents
-  drop constraint financing_documents_path,
-  add constraint financing_documents_path check (
-    storage_path = ''
-    or storage_path ~ ('^' || buyer_id::text
-                       || '/financing/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(pdf|jpg)$'));
 
 -- 0. ---------------------------------------------------------------------------
 create function public.account_export() returns jsonb
