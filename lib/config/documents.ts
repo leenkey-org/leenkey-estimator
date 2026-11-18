@@ -91,7 +91,11 @@ export const REQUIRED_DOCUMENTS: Record<PropertyType, readonly DocumentType[]> =
   ],
 };
 
-/** May be « Non concerné »: depends on the building, its installations, its place or its works. */
+/**
+ * May be « Non concerné »: depends on the building, its installations, its
+ * place or its works; the documents of a co-ownership and the Carrez
+ * measurement, for a flat that is not in one.
+ */
 export const EXEMPTIBLE_DOCUMENTS: readonly DocumentType[] = [
   "amiante",
   "plomb",
@@ -99,6 +103,13 @@ export const EXEMPTIBLE_DOCUMENTS: readonly DocumentType[] = [
   "gaz",
   "termites",
   "assainissement",
+  "carrez",
+  "pv_ag",
+  "reglement_copro",
+  "appel_charges",
+  "carnet_entretien",
+  "fiche_synthetique",
+  "pre_etat_date",
   "facture_travaux",
   "certificat_urbanisme",
 ];

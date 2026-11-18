@@ -41,7 +41,7 @@ export const frSaleFile = {
     loadError: "Les documents n'ont pas pu être chargés. Rechargez la page.",
     progress: (done: number, total: number) => `Dossier notaire : ${done} / ${total} pièces`,
     complete: "Dossier notaire complet",
-    states: { filed: "Déposé", exempt: "Non concerné", missing: "Manquant" },
+    states: { filed: "Déposé", exempt: "Non concerné", missing: "À déposer" },
     optional: "En plus du dossier notaire",
     filedOn: (date: string) => `Déposé le ${date}`,
     open: "Ouvrir",
@@ -67,7 +67,7 @@ export const frSaleFile = {
       description:
         "Indiquez pourquoi ce document ne s'applique pas à votre bien. Il comptera comme présent dans votre dossier. En cas de doute, demandez à votre diagnostiqueur.",
       reasonLabel: "Motif",
-      reasonHelp: "Par exemple : « Pas d'installation de gaz », « Construction de 2005 ».",
+      reasonHelp: "Par exemple : « Pas d'installation de gaz ».",
       confirm: "Enregistrer",
       back: "Retour",
       close: "Fermer",
@@ -125,7 +125,9 @@ export const frSaleFile = {
       noDocument: "Déposez d'abord un document.",
       someone: "Un acquéreur",
       shared: (count: number, total: number) =>
-        count === 0 ? "Aucun document partagé" : `${count} sur ${total} documents partagés`,
+        count === 0
+          ? "Aucun document partagé"
+          : `${count} ${count > 1 ? "documents partagés" : "document partagé"} sur ${total}`,
       all: "Partager tout le dossier",
       allAbout: (name: string) => `Partager tout le dossier avec ${name}`,
       diagnostics: "Partager les diagnostics",

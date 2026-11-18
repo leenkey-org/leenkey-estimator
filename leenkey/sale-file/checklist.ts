@@ -41,6 +41,8 @@ export function buildChecklist(
   propertyType: PropertyType | null,
   documents: readonly FiledDocument[],
   exemptions: readonly Exemption[],
+  /** The property is not subject to the DPE (L1-65): its reason; the DPE counts as « Non concerné ». */
+  dpeExemption: string | null = null,
 ): Checklist {
   const required = REQUIRED_DOCUMENTS[propertyType ?? "autre"];
   const reasonOf = new Map(exemptions.map((exemption) => [exemption.type, exemption.reason]));
@@ -51,7 +53,12 @@ export function buildChecklist(
   const lines: ChecklistLine[] = [...required, ...extra].map((type) => {
     const filed = documents.filter((document) => document.type === type);
     const exemptible = EXEMPTIBLE_DOCUMENTS.includes(type) && required.includes(type);
-    const reason = exemptible ? (reasonOf.get(type) ?? null) : null;
+    const reason =
+      type === "dpe" && required.includes(type)
+        ? dpeExemption
+        : exemptible
+          ? (reasonOf.get(type) ?? null)
+          : null;
     return {
       type,
       required: required.includes(type),
@@ -79,11 +86,11 @@ export function buildChecklist(
 export function sniffSaleFile(
   head: Uint8Array,
 ): "application/pdf" | "image/jpeg" | "image/png" | null {
-  const text = new TextDecoder("latin1").decode(head.subarray(0, 1024));
-  if (text.includes("%PDF-")) return "application/pdf";
+  // The images first, by their signature: a picture may hold « %PDF- » in its first bytes.
   if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) return "image/jpeg";
   if (head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47) {
     return "image/png";
   }
-  return null;
+  const text = new TextDecoder("latin1").decode(head.subarray(0, 1024));
+  return text.includes("%PDF-") ? "application/pdf" : null;
 }

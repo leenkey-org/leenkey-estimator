@@ -235,3 +235,20 @@ describe("sniffSaleFile", () => {
     expect(sniffSaleFile(ascii("RIFF\x00\x00\x00\x00WEBP"))).toBeNull();
   });
 });
+
+describe("review of L3-04", () => {
+  it("a property not subject to the DPE counts its DPE as « Non concerné », with its reason", async () => {
+    const { buildChecklist } = await import("@/leenkey/sale-file/checklist");
+    const without = buildChecklist("maison", [], []);
+    const exempt = buildChecklist("maison", [], [], "Bâtiment non chauffé");
+    const dpe = exempt.groups.flatMap((group) => group.lines).find((line) => line.type === "dpe");
+    expect(dpe).toMatchObject({ state: "exempt", reason: "Bâtiment non chauffé" });
+    expect(exempt.done).toBe(without.done + 1);
+  });
+
+  it("a picture is read by its signature, even with « %PDF- » in its first bytes", async () => {
+    const { sniffSaleFile } = await import("@/leenkey/sale-file/checklist");
+    const jpeg = new Uint8Array([0xff, 0xd8, 0xff, ...new TextEncoder().encode(" %PDF-1.4")]);
+    expect(sniffSaleFile(jpeg)).toBe("image/jpeg");
+  });
+});

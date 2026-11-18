@@ -79,7 +79,8 @@ export function UploadForm({
       if (!opened.ok) return setError(opened.error);
       // As the storage client sends a file to a signed upload URL.
       const body = new FormData();
-      body.append("cacheControl", "3600");
+      // A private document is never kept by a browser or a cache.
+      body.append("cacheControl", "0");
       body.append("", file);
       const sent = await fetch(opened.data.uploadUrl, {
         method: "PUT",

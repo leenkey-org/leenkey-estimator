@@ -95,7 +95,7 @@ test("dossier de vente : dépôt, non concerné, demande d'accès, partage, ouve
     await seller.getByRole("button", { name: "Déposer le document" }).click();
     await expect(seller.getByText("Document déposé.")).toBeVisible({ timeout: 20_000 });
     await expect(seller.getByText(/Dossier notaire : 1 \/ 16 pièces/)).toBeVisible();
-    await expect(seller.getByRole("link", { name: "Ouvrir DPE" })).toBeVisible();
+    await expect(seller.getByRole("link", { name: "DPE", exact: true })).toBeVisible();
   });
 
   await test.step("un fichier qui n'est pas ce que dit son nom est refusé", async () => {
@@ -144,7 +144,7 @@ test("dossier de vente : dépôt, non concerné, demande d'accès, partage, ouve
     await expect(seller.getByText("Chloé demande à consulter vos documents")).toBeVisible();
     await seller.getByRole("button", { name: "Accorder l'accès à Chloé" }).click();
     await expect(seller.getByText("1 document partagé.")).toBeVisible();
-    await expect(seller.getByText("1 sur 1 documents partagés")).toBeVisible();
+    await expect(seller.getByText("1 document partagé sur 1")).toBeVisible();
   });
 
   await test.step("l'acquéreur ouvre le document partagé, un autre compte non", async () => {
@@ -165,7 +165,7 @@ test("dossier de vente : dépôt, non concerné, demande d'accès, partage, ouve
   await test.step("retiré par le vendeur, le document disparaît pour l'acquéreur", async () => {
     await seller.getByRole("button", { name: "Retirer DPE" }).click();
     await seller.getByRole("dialog").getByRole("button", { name: "Retirer le document" }).click();
-    await expect(seller.getByRole("link", { name: "Ouvrir DPE" })).toHaveCount(0);
+    await expect(seller.getByRole("link", { name: "DPE", exact: true })).toHaveCount(0);
     await buyer.reload();
     await expect(buyer.getByRole("link", { name: "Ouvrir DPE" })).toHaveCount(0);
   });

@@ -8,7 +8,7 @@ import { conversationTitle } from "@/leenkey/messaging/presentation";
 import { listConversations } from "@/leenkey/messaging/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { RequestAccessButton } from "@/leenkey/sale-file/components/request-access-button";
-import { buyerAccess, buyerSharedDocuments } from "@/leenkey/sale-file/queries";
+import { buyerAccessByProperty, buyerSharedDocuments } from "@/leenkey/sale-file/queries";
 import { formatDateShort } from "@/lib/format";
 import { frSaleFile } from "@/lib/i18n/sections/saleFile";
 import { SpacePage } from "../../_components/space-page";
@@ -43,8 +43,9 @@ export default async function BuyerDocumentsPage() {
           all.findIndex((other) => other.propertyId === conversation.propertyId) === index,
       )
     : [];
-  const access = await Promise.all(
-    contacts.map((conversation) => buyerAccess(conversation.propertyId, profile.id)),
+  const access = await buyerAccessByProperty(
+    contacts.map((conversation) => conversation.propertyId),
+    profile.id,
   );
 
   return (
@@ -131,14 +132,14 @@ export default async function BuyerDocumentsPage() {
               </h2>
               <p className="text-lk-secondary text-pretty text-lk-ink-2">{t.ask.intro}</p>
               <ul className="flex flex-col gap-3">
-                {contacts.map((conversation, index) => {
+                {contacts.map((conversation) => {
                   const title = conversationTitle(conversation);
                   return (
                     <li key={conversation.propertyId} className={`${card} flex flex-col gap-2.5`}>
                       <p className="text-lk-body font-semibold text-lk-ink">{title}</p>
-                      {access[index] === "pending" ? (
+                      {access.get(conversation.propertyId) === "pending" ? (
                         <p className="text-lk-secondary text-lk-ink-2">{t.ask.pending}</p>
-                      ) : access[index] === "declined" ? (
+                      ) : access.get(conversation.propertyId) === "declined" ? (
                         <p className="text-lk-secondary text-lk-ink-2">{t.ask.declined}</p>
                       ) : (
                         <RequestAccessButton propertyId={conversation.propertyId} title={title} />

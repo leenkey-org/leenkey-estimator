@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { getProfile } from "@/core/auth/session";
 import {
+  EXEMPTIBLE_DOCUMENTS,
   SALE_FILE_EXTENSIONS,
   SALE_FILE_MAX_BYTES,
   type DocumentType,
@@ -66,30 +67,43 @@ async function removeFile(supabase: Client, path: string, userId: string) {
   if (error) console.error("[sale-file] file not removed", { user_id: userId, error: error.name });
 }
 
-/** What the file really is, from its first bytes, read through a short signed URL. */
+/**
+ * What the file really is, from its first bytes, read through a short signed
+ * URL; `unreadable` when the file could not be read (tried again, never
+ * taken for a wrong file).
+ */
 async function fileKind(supabase: Client, path: string) {
   const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 60);
-  if (signed.error || !signed.data) return null;
+  if (signed.error || !signed.data) return "unreadable" as const;
   try {
     const response = await fetch(signed.data.signedUrl, {
       headers: { Range: "bytes=0-1023" },
       signal: AbortSignal.timeout(10_000),
     });
-    if (!response.ok || !response.body) return null;
+    if (!response.ok || !response.body) return "unreadable" as const;
     // A server that ignores the range sends the whole file: the first chunk is enough.
     const reader = response.body.getReader();
     const { value } = await reader.read();
     await reader.cancel().catch(() => {});
     return value ? sniffSaleFile(value) : null;
   } catch {
-    return null;
+    return "unreadable" as const;
   }
 }
 
-/** Declares the notary file complete once every mandatory document is filed or « Non concerné ». */
+/**
+ * Declares the notary file complete once every mandatory document is filed
+ * or « Non concerné ». The task stays ticked when a document is removed
+ * afterwards (as every task of the sale: an event passed), while the tab
+ * shows the count as it is (DECISIONS.md 2026-11-18).
+ */
 async function declareIfComplete(supabase: Client, propertyId: string, userId: string) {
   const [property, documents, exemptions] = await Promise.all([
-    supabase.from("properties").select("type").eq("id", propertyId).maybeSingle(),
+    supabase
+      .from("properties")
+      .select("type, dpe_exempt, dpe_exemption_reason")
+      .eq("id", propertyId)
+      .maybeSingle(),
     supabase
       .from("documents")
       .select("id, type, title, created_at")
@@ -107,6 +121,7 @@ async function declareIfComplete(supabase: Client, propertyId: string, userId: s
       createdAt: row.created_at,
     })),
     exemptions.data ?? [],
+    property.data?.dpe_exempt ? (property.data.dpe_exemption_reason ?? "") : null,
   );
   if (!checklist.complete) return;
   const { error } = await supabase.rpc("sale_declare_event", {
@@ -139,6 +154,8 @@ export async function fileDocument(input: unknown): Promise<FileDocumentResult> 
   const expected = Object.entries(SALE_FILE_EXTENSIONS).find(([, extension]) =>
     path.endsWith(`.${extension}`),
   )?.[0];
+  // Not read (the storage did not answer): the file stays, the filing is tried again.
+  if (kind === "unreadable") return { ok: false, error: "unavailable" };
   if (!kind || kind !== expected) {
     await removeFile(supabase, path, profile.id);
     return { ok: false, error: "unsupported" };
@@ -212,6 +229,7 @@ export async function setExemption(input: unknown): Promise<SimpleResult> {
   const parsed = exemptionSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
   const { propertyId, type, reason } = parsed.data;
+  if (!EXEMPTIBLE_DOCUMENTS.includes(type)) return { ok: false, error: "invalid" };
   const supabase = await createClient();
   // Insert, then the reason alone when it is said again: the columns of the
   // key are not updatable (an upsert would ask for it).
@@ -246,7 +264,8 @@ export async function clearExemption(
 ): Promise<SimpleResult> {
   const profile = await getProfile();
   if (!profile) return { ok: false, error: "auth" };
-  if (!UUID.test(propertyId)) return { ok: false, error: "invalid" };
+  if (!UUID.test(propertyId) || !EXEMPTIBLE_DOCUMENTS.includes(type))
+    return { ok: false, error: "invalid" };
   const supabase = await createClient();
   const { error } = await supabase
     .from("document_exemptions")

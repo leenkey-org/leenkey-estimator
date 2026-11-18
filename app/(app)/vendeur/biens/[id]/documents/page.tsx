@@ -44,7 +44,11 @@ export default async function PropertyDocumentsPage({ params }: Props) {
   const property = await propertyForSheet(id);
   if (!property) return null;
   const propertyType = property.characteristics.type;
-  const result = await sellerSaleFile(property.id, propertyType);
+  const result = await sellerSaleFile(
+    property.id,
+    propertyType,
+    property.characteristics.dpeExempt ? (property.characteristics.dpeExemptionReason ?? "") : null,
+  );
   if (!result.ok) {
     return (
       <InlineAlert tone="danger" live={false}>
@@ -119,6 +123,9 @@ export default async function PropertyDocumentsPage({ params }: Props) {
           <h3 id={`file-${group.category}`} className={sectionTitle}>
             {fr.saleFile.categories[group.category]}
           </h3>
+          {group.category === "diagnostics" ? (
+            <p className="text-lk-caption text-pretty text-lk-ink-3">{t.disclaimer}</p>
+          ) : null}
           <ul className={cn(card, "flex flex-col divide-y divide-lk-line py-1")}>
             {group.lines.map((line) => (
               <li key={line.type} className="flex flex-col gap-2 py-3">
@@ -149,7 +156,6 @@ export default async function PropertyDocumentsPage({ params }: Props) {
                         href={`/documents/vente/${document.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label={t.openAbout(document.title)}
                         className="truncate text-lk-secondary font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
                       >
                         {document.title}

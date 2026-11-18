@@ -51,6 +51,8 @@ export type SellerSaleFile = {
 export async function sellerSaleFile(
   propertyId: string,
   propertyType: PropertyType | null,
+  /** Not subject to the DPE (L1-65): its reason. */
+  dpeExemption: string | null = null,
 ): Promise<QueryResult<SellerSaleFile>> {
   const supabase = await createClient();
   const [documents, exemptions, buyers, requests] = await Promise.all([
@@ -90,7 +92,7 @@ export async function sellerSaleFile(
   return {
     ok: true,
     data: {
-      checklist: buildChecklist(propertyType, rows, exemptions.data ?? []),
+      checklist: buildChecklist(propertyType, rows, exemptions.data ?? [], dpeExemption),
       documents: rows,
       contacts: (buyers.data ?? []).map((buyer) => ({
         buyerId: buyer.buyer_id,
@@ -158,16 +160,45 @@ export async function buyerSharedDocuments(): Promise<QueryResult<SharedProperty
 
 export type BuyerAccess = "none" | "pending" | "granted" | "declined";
 
-/** Where the access request of a buyer on a property stands. */
-export async function buyerAccess(propertyId: string, profileId: string): Promise<BuyerAccess> {
+/** A declined request is asked again after 7 days (document_access_request). */
+const ASK_AGAIN_MS = 7 * 86_400_000;
+
+/**
+ * Where the access requests of a buyer stand, by property: a request
+ * declined more than 7 days ago reads as none (it can be asked again).
+ */
+export async function buyerAccessByProperty(
+  propertyIds: readonly string[],
+  profileId: string,
+): Promise<Map<string, BuyerAccess>> {
+  const result = new Map<string, BuyerAccess>();
+  if (propertyIds.length === 0) return result;
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("document_access_requests")
-    .select("status")
-    .eq("property_id", propertyId)
+    .select("property_id, status, answered_at")
     .eq("buyer_id", profileId)
-    .maybeSingle();
-  return data?.status === "pending" || data?.status === "granted" || data?.status === "declined"
-    ? data.status
-    : "none";
+    .in("property_id", [...propertyIds]);
+  if (error) {
+    console.error("[sale-file] access requests read failed", {
+      user_id: profileId,
+      code: error.code,
+    });
+    return result;
+  }
+  for (const row of data) {
+    const again =
+      row.status === "declined" &&
+      row.answered_at !== null &&
+      Date.now() - Date.parse(row.answered_at) > ASK_AGAIN_MS;
+    result.set(
+      row.property_id,
+      again
+        ? "none"
+        : row.status === "pending" || row.status === "granted" || row.status === "declined"
+          ? row.status
+          : "none",
+    );
+  }
+  return result;
 }
