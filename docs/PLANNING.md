@@ -136,7 +136,7 @@ Lot 2 :
 - [x] **L3-01** Migrations visites, documents, partages, demandes d'accès, alertes + RLS + tests · PR : #110 · Testé en préprod : ☐
 - [x] **L3-02** Créneaux ponctuels, invitations avec jeton, réservation, `.ics`, annulation, adresse révélée, outil `propose_visit_slot` · PR : #111 · Testé en préprod : ☐
 - [ ] **L3-03** Retours de visite (cron J+1 et formulaires) · PR : · Testé en préprod : ☐
-- [ ] **L3-04** Dossier de vente : checklist, dépôt, indicateur notaire, partage, demandes d'accès · PR : · Testé en préprod : ☐
+- [x] **L3-04** Dossier de vente : checklist, dépôt, indicateur notaire, partage, demandes d'accès · PR : #112 · Testé en préprod : ☐
 - [ ] **L3-05** Analyse IA des documents (extraction, prompts par type, JSON validé), affichage vendeur, publication des… · PR : · Testé en préprod : ☐
 - [ ] **L3-06** Alertes : création, gestion, cron digest, biens similaires après vente, outil `create_alert` · PR : · Testé en préprod : ☐
 - [ ] **L3-07** `summarize_shared_documents`, tâches L3 dans le moteur d'étapes · PR : · Testé en préprod : ☐

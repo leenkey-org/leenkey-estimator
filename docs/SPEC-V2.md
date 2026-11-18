@@ -266,7 +266,9 @@ create type plan_feature as enum ('advisor','human_price_strategy','human_listin
 create type buyer_project    as enum ('residence_principale','residence_secondaire','investissement');
 create type document_type    as enum ('dpe','amiante','plomb','electricite','gaz','termites','erp','carrez',
                                       'titre_propriete','taxe_fonciere','pv_ag','reglement_copro',
-                                      'appel_charges','facture_travaux','autre');
+                                      'appel_charges','facture_travaux','autre',
+                                      -- L3-04 (DECISIONS.md 2026-11-18)
+                                      'assainissement','carnet_entretien','fiche_synthetique','pre_etat_date','certificat_urbanisme');
 create type notification_channel as enum ('in_app','email');
 ```
 
@@ -1876,6 +1878,8 @@ Onglet « Documents » de la fiche du bien :
   - Les diagnostics conditionnels (amiante, plomb, gaz, termites) sont marqués « non concerné » par le vendeur quand ils ne s'appliquent pas ; ils comptent alors comme présents. Le badge « Dossier complet » n'est affiché qu'à partir du lot 3.
   - **Diagnostics personnalisés** (amendement de L3-04 proposé par Cédric le 2026-11-09, Q77 ; ajout de périmètre au lot 3, **à arbitrer par Younes** avant L3-04) : la liste des diagnostics se calcule à partir de six réponses du vendeur (type de bien, année de construction ou du permis, installation électrique et son âge, gaz et son âge, assainissement collectif ou non, adresse et classe énergie). Chaque diagnostic a l'un de trois statuts : « Document fourni », « À fournir », « Non concerné » (coché par le vendeur). Règles : DPE (sauf terrain) ; audit énergétique pour une maison ou un immeuble en monopropriété classé F ou G, et E depuis 2025 ; amiante (permis de construire avant le 1er juillet 1997) ; plomb (construction avant 1949) ; électricité et gaz (installation de plus de 15 ans) ; termites et mérule (zones arrêtées par la préfecture) ; ERP (tous) ; assainissement non collectif ; bruit (zone d'un plan d'exposition au bruit d'aérodrome). Autres pièces proposées selon le type : mesurage Carrez (lot de copropriété), surface Boutin (bien loué), étude de sol G1 (terrain constructible en zone d'aléa argile), DTA, DPE collectif, DTG, PPPT, carnet d'information du logement, rapport structurel. Libellé : « potentiellement obligatoire selon vos réponses, à confirmer par votre diagnostiqueur certifié » ; Leenkey n'affirme jamais qu'un diagnostic est ou n'est pas obligatoire. Contrôle Géorisques à partir de l'adresse : `BACKLOG-V3.md` (2026-11-09). Précisions de Cédric du 2026-11-10 : « Non concerné » se donne avec une justification ; ces diagnostics s'ajoutent progressivement, sans jamais bloquer la publication (seul le DPE, ou son exemption vérifiée, la conditionne). Le DPE se dépose en PDF, ainsi que l'attestation de nouvelle étiquette énergétique d'un DPE actualisé (2024, 2026) : le back office les montre à côté du contrôle ADEME de L1-66.
 - Partage : par document ou par lot (« Partager les diagnostics »), à un acquéreur ayant une relation avec le bien. Demandes d'accès des acquéreurs listées en tête avec Accorder / Refuser.
+
+> **Mise en œuvre (L3-04, `DECISIONS.md` 2026-11-18).** Onglet `/vendeur/biens/[id]/documents` ; appartement 16 pièces (électricité et gaz comptés séparément) ; « Non concerné » avec motif (`document_exemptions`) ; dépôt par adresse d'envoi signée, contrôle du contenu par le serveur ; partage par acquéreur (tout le dossier, les diagnostics, plus rien) ; demandes d'accès avec délai de 7 jours après un refus ; page `/acquereur/documents` ; fichier ouvert par `/documents/vente/[id]` (URL signée 10 minutes). Diagnostics personnalisés (Q77) : non faits, en attente d'arbitrage.
 
 ### Analyse IA
 

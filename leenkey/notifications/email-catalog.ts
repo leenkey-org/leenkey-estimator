@@ -95,7 +95,9 @@ const POLICIES: Record<string, EmailPolicy> = {
   // L3-04: documents shared (the buyer): « un email par bien et par jour », the shares that
   // come meanwhile go together in the next one; a request to read the documents (the seller):
   // at once. Both follow the preference of the messages: they come from the other party.
-  "document.shared": { audience: "recipient", preference: "email_messages", throttleMinutes: 1440 },
+  // 23 hours, not 24: a share made right after an email would be a day old when its turn
+  // comes, and an email of an event a day old never leaves (core/notifications/batch.ts).
+  "document.shared": { audience: "recipient", preference: "email_messages", throttleMinutes: 1380 },
   "document.access_requested": {
     audience: "recipient",
     preference: "email_messages",

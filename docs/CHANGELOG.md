@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-18 · L3-04 · PR #112 · Dossier de vente
+- Ajouté : onglet « Documents » de la fiche du bien : pièces par catégorie selon le type de bien, dépôt (PDF, JPEG, PNG, 20 Mo), « Non concerné » avec motif, « Dossier notaire : x / y pièces », partage avec un acquéreur (tout le dossier ou les diagnostics), demandes d'accès à accorder ou refuser.
+- Ajouté : page « Documents partagés » de l'acquéreur (`/acquereur/documents`), avec la demande d'accès aux documents d'un bien avec lequel il est en contact.
+- Ajouté : notifications et emails « documents partagés » et « demande d'accès ».
+- Ajouté : cinq types de documents (assainissement, carnet d'entretien, fiche synthétique, pré-état daté, certificat d'urbanisme).
+- Migrations : `20261118150000_document_types.sql`, `20261118150100_sale_file.sql`.
+
 ### 2026-11-18 · L3-02 · PR #111 · Visites sur invitation
 - Ajouté : onglet « Visites » de la fiche du bien (créneaux ponctuels de 30, 45 ou 60 min, acquéreurs à inviter avec leur statut de financement, visites à venir et passées, annulation).
 - Ajouté : bouton calendrier de la conversation, qui invite l'acquéreur ; message d'invitation avec « Réserver un créneau ».

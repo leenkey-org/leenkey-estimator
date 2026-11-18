@@ -63,7 +63,9 @@ delete from storage.objects where bucket_id = 'documents' and name in (:'path1',
 select is((select array_agg(name order by name) from storage.objects where bucket_id = 'documents' and name like :'prop' || '/sale/%'),
           (select array_agg(n order by n) from unnest(array[:'path1', :'path2']) n),
           'seller_a: a file never filed is taken back, a filed one stays');
-select is(sale_declare_event(:'prop', 'documents.notary_ready'), true, 'seller_a: declares the notary file complete');
+-- Its task is ticked where the sale steps are loaded (seed): true or false.
+select lives_ok(format($$select sale_declare_event(%L, 'documents.notary_ready')$$, :'prop'),
+                'seller_a: declares the notary file complete');
 \set who seller_b
 \ir _as.psql
 select throws_ok(format($$select sale_declare_event(%L, 'documents.notary_ready')$$, :'prop'), '42501', null,

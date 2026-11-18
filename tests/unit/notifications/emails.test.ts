@@ -909,7 +909,7 @@ describe("the emails of the sale file (L3-04)", () => {
     expect(emailPolicy("document.shared")).toEqual({
       audience: "recipient",
       preference: "email_messages",
-      throttleMinutes: 1440,
+      throttleMinutes: 1380,
     });
     expect(emailPolicy("document.access_requested")).toEqual({
       audience: "recipient",
@@ -932,7 +932,7 @@ describe("the emails of the sale file (L3-04)", () => {
     const early = planEmails(rows, emailPolicy, NOW);
     expect(early.emails).toEqual([]);
     expect(early.postponed).toEqual([
-      { ids: ["s1", "s2"], until: new Date("2026-10-24T12:00:00Z") },
+      { ids: ["s1", "s2"], until: new Date("2026-10-24T11:00:00Z") },
     ]);
     // Then one email for both, another property apart, and the preference of the messages.
     const later = planEmails(
