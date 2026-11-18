@@ -4,7 +4,7 @@
 -- 8 h in Paris; the address is in no notification. Fixtures in 99995.
 begin;
 \ir _helpers.psql
-select plan(19);
+select plan(21);
 \ir _plan.psql
 
 \set who seller_a
@@ -55,8 +55,10 @@ select is((select count(*)::int from notifications where type like 'visit.%'), 0
 select throws_ok($$select visits_remind()$$, '42501', null, 'seller_b: the reminder is the cron''s');
 select throws_ok(format($$select * from visit_email_facts(%L)$$, gen_random_uuid()), '42501', null,
                  'nor the facts of the email of a visit');
+select is((select count(*)::int from visit_listing(:'prop')), 0, 'nor the listing of a visit of others');
 \set who buyer_c
 \ir _as.psql
+select is((select title from visit_listing(:'prop')), 'Maison du rappel', 'buyer_c, invited: the title of the listing');
 select throws_ok(format($$insert into messages (conversation_id, sender_id, body, kind) values (%L, %L, 'x', 'visit_invite')$$,
                         :'conv', tests.uid('buyer_c')),
                  '42501', null, 'buyer_c: never writes a notice itself');

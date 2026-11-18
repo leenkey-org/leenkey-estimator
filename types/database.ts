@@ -3846,6 +3846,14 @@ export type Database = {
           expires_at: string
         }[]
       }
+      visit_listing: {
+        Args: { p_property: string }
+        Returns: {
+          city: string
+          slug: string
+          title: string
+        }[]
+      }
       visit_notice: {
         Args: {
           p_body: string

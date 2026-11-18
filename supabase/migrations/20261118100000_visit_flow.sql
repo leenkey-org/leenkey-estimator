@@ -326,6 +326,25 @@ language sql stable security definer set search_path = '' as $$
    where v.id = p_visit;
 $$;
 
+-- What a party of a visit reads of the listing (its title, its town; its slug
+-- while it is online): the buyer invited or with a visit, the seller.
+create function public.visit_listing(p_property uuid)
+returns table (title text, slug text, city text)
+language sql stable security definer set search_path = '' as $$
+  select l.title, case when l.status = 'published' then l.slug end, p.city
+    from public.properties p
+    join public.listings l on l.property_id = p.id
+   where p.id = p_property
+     and (p.owner_id = auth.uid()
+          or exists (select 1 from public.visit_invitations i
+                      where i.property_id = p.id and i.buyer_id = auth.uid())
+          or exists (select 1 from public.visits v
+                      where v.property_id = p.id and v.buyer_id = auth.uid()))
+   order by l.created_at desc limit 1;
+$$;
+revoke execute on function public.visit_listing(uuid) from public, anon;
+grant execute on function public.visit_listing(uuid) to authenticated;
+
 revoke execute on function public.visit_date_label(timestamptz) from public, anon, authenticated;
 revoke execute on function public.visit_notice(uuid, uuid, uuid, text, text, jsonb) from public, anon, authenticated;
 revoke execute on function public.visit_facts(uuid, uuid) from public, anon, authenticated;
