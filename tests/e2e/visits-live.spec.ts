@@ -177,7 +177,7 @@ test("visite : invitation, créneau, réservation, adresse, agenda, annulation",
     await buyer.waitForURL(visitUrl);
     await buyer.getByRole("button", { name: "Annuler la visite" }).click();
     const dialog = buyer.getByRole("dialog");
-    await expect(dialog.getByText("Le vendeur est prévenu par email.")).toBeVisible();
+    await expect(dialog.getByText("Le vendeur est prévenu.")).toBeVisible();
     await dialog.getByRole("button", { name: "Annuler la visite" }).click();
     await expect(buyer.getByText("Cette visite est annulée.")).toBeVisible();
     await expect(buyer.getByText(/\d{5} Savigny-sur-Orge/)).toHaveCount(0);

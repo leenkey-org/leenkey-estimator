@@ -94,6 +94,11 @@ select throws_ok('select count(*) from visit_slots', '42501', null, 'anon: no ac
 select throws_ok(format($$select visit_invite(%L, %L)$$, :'prop', tests.uid('buyer_d')),
                  '22023', null, 'seller_a: no invitation for a buyer without relation with the property');
 select token as old_token from visit_invite(:'prop', tests.uid('buyer_c')) \gset
+-- Asked again more than 10 minutes later (L3-02: sooner, nothing changes).
+reset role;
+update visit_invitations set expires_at = expires_at - interval '1 hour' where property_id = :'prop';
+\set who seller_a
+\ir _as.psql
 select token as token_c, expires_at from visit_invite(:'prop', tests.uid('buyer_c')) \gset
 select isnt(:'token_c'::text, :'old_token'::text, 'seller_a: invited again, a new token');
 select is((select count(*)::int from visit_invitations where property_id = :'prop'), 1,
