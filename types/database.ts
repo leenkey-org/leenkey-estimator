@@ -95,6 +95,46 @@ export type Database = {
           },
         ]
       }
+      alerts: {
+        Row: {
+          active: boolean
+          buyer_id: string
+          created_at: string
+          criteria: Json
+          id: string
+          last_sent_at: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean
+          buyer_id: string
+          created_at?: string
+          criteria: Json
+          id?: string
+          last_sent_at?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean
+          buyer_id?: string
+          created_at?: string
+          criteria?: Json
+          id?: string
+          last_sent_at?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_buyer_id_fkey"
+            columns: ["buyer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -357,6 +397,153 @@ export type Database = {
             foreignKeyName: "conversations_seller_id_fkey"
             columns: ["seller_id"]
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_access_requests: {
+        Row: {
+          answered_at: string | null
+          buyer_id: string
+          created_at: string
+          id: string
+          property_id: string
+          status: string
+        }
+        Insert: {
+          answered_at?: string | null
+          buyer_id: string
+          created_at?: string
+          id?: string
+          property_id: string
+          status?: string
+        }
+        Update: {
+          answered_at?: string | null
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          property_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_access_requests_buyer_id_fkey"
+            columns: ["buyer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_access_requests_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_shares: {
+        Row: {
+          buyer_id: string
+          document_id: string
+          shared_at: string
+        }
+        Insert: {
+          buyer_id: string
+          document_id: string
+          shared_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          document_id?: string
+          shared_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_shares_buyer_id_fkey"
+            columns: ["buyer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_shares_document_id_fkey"
+            columns: ["document_id"]
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          analysis: Json | null
+          analyzed_at: string | null
+          created_at: string
+          deleted_at: string | null
+          extracted_text: string | null
+          id: string
+          mime_type: string
+          owner_id: string
+          page_count: number | null
+          property_id: string
+          public_facts_approved_at: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          size_bytes: number
+          storage_path: string
+          title: string
+          type: Database["public"]["Enums"]["document_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          analysis?: Json | null
+          analyzed_at?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          extracted_text?: string | null
+          id?: string
+          mime_type: string
+          owner_id: string
+          page_count?: number | null
+          property_id: string
+          public_facts_approved_at?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          size_bytes: number
+          storage_path: string
+          title: string
+          type: Database["public"]["Enums"]["document_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          analysis?: Json | null
+          analyzed_at?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          extracted_text?: string | null
+          id?: string
+          mime_type?: string
+          owner_id?: string
+          page_count?: number | null
+          property_id?: string
+          public_facts_approved_at?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          size_bytes?: number
+          storage_path?: string
+          title?: string
+          type?: Database["public"]["Enums"]["document_type"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_owner_id_fkey"
+            columns: ["owner_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
@@ -1824,6 +2011,156 @@ export type Database = {
           },
         ]
       }
+      visit_invitations: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          property_id: string
+          token: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          property_id: string
+          token: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          property_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_invitations_buyer_id_fkey"
+            columns: ["buyer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visit_invitations_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visit_slots: {
+        Row: {
+          capacity: number
+          created_at: string
+          ends_at: string
+          id: string
+          property_id: string
+          removed_at: string | null
+          starts_at: string
+          updated_at: string | null
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          ends_at: string
+          id?: string
+          property_id: string
+          removed_at?: string | null
+          starts_at: string
+          updated_at?: string | null
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          ends_at?: string
+          id?: string
+          property_id?: string
+          removed_at?: string | null
+          starts_at?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_slots_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visits: {
+        Row: {
+          buyer_feedback: string | null
+          buyer_id: string
+          buyer_interest: number | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          id: string
+          property_id: string
+          seller_feedback: string | null
+          slot_id: string
+          status: Database["public"]["Enums"]["visit_status"]
+          updated_at: string | null
+        }
+        Insert: {
+          buyer_feedback?: string | null
+          buyer_id: string
+          buyer_interest?: number | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          id?: string
+          property_id: string
+          seller_feedback?: string | null
+          slot_id: string
+          status?: Database["public"]["Enums"]["visit_status"]
+          updated_at?: string | null
+        }
+        Update: {
+          buyer_feedback?: string | null
+          buyer_id?: string
+          buyer_interest?: number | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          id?: string
+          property_id?: string
+          seller_feedback?: string | null
+          slot_id?: string
+          status?: Database["public"]["Enums"]["visit_status"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visits_buyer_id_fkey"
+            columns: ["buyer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_cancelled_by_fkey"
+            columns: ["cancelled_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_slot_id_fkey"
+            columns: ["slot_id"]
+            referencedRelation: "visit_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       offer_for_seller: {
@@ -2597,6 +2934,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      buyer_can_be_invited: {
+        Args: { p_property: string; p_buyer: string }
+        Returns: boolean
+      }
       buyer_summary_for_seller: {
         Args: { p_property_id: string }
         Returns: {
@@ -2673,6 +3014,39 @@ export type Database = {
       cron_call: {
         Args: { p_path: string }
         Returns: number
+      }
+      document_access_answer: {
+        Args: { p_request: string; p_documents?: string[]; p_grant: boolean }
+        Returns: number
+      }
+      document_access_request: {
+        Args: { p_property: string }
+        Returns: string
+      }
+      document_add: {
+        Args: {
+          p_type: Database["public"]["Enums"]["document_type"]
+          p_title: string
+          p_storage_path: string
+          p_property: string
+        }
+        Returns: string
+      }
+      document_of_mine: {
+        Args: { p_document: string }
+        Returns: boolean
+      }
+      document_share: {
+        Args: { p_buyer: string; p_documents: string[] }
+        Returns: number
+      }
+      document_shared_with_me: {
+        Args: { p_document: string }
+        Returns: boolean
+      }
+      document_unshare: {
+        Args: { p_buyer: string; p_document: string }
+        Returns: undefined
       }
       estimation_claim: {
         Args: { p_token: string }
@@ -3139,6 +3513,10 @@ export type Database = {
         Args: { p_property_id: string }
         Returns: undefined
       }
+      property_visitable: {
+        Args: { p_property: string }
+        Returns: boolean
+      }
       public_listing_dpe: {
         Args: { p_slug: string }
         Returns: {
@@ -3287,6 +3665,18 @@ export type Database = {
         Args: { p_property_id: string; p_event: string }
         Returns: number
       }
+      sale_file_property: {
+        Args: { p_name: string }
+        Returns: string
+      }
+      sale_file_shared: {
+        Args: { p_name: string }
+        Returns: boolean
+      }
+      sale_files_room: {
+        Args: { p_property: string }
+        Returns: boolean
+      }
       sale_refresh_progress: {
         Args: { p_property_id: string }
         Returns: undefined
@@ -3398,6 +3788,56 @@ export type Database = {
           p_trigger: string
           p_subject?: string
         }
+        Returns: undefined
+      }
+      visit_address: {
+        Args: { p_visit: string }
+        Returns: {
+          city: string
+          postal_code: string
+          address_line: string
+        }[]
+      }
+      visit_book: {
+        Args: { p_token: string; p_slot: string }
+        Returns: string
+      }
+      visit_cancel: {
+        Args: { p_visit: string }
+        Returns: Database["public"]["Enums"]["visit_status"]
+      }
+      visit_invitation_of: {
+        Args: { p_token: string }
+        Returns: {
+          buyer_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          property_id: string
+          token: string
+        }
+      }
+      visit_invite: {
+        Args: { p_buyer: string; p_property: string }
+        Returns: {
+          token: string
+          expires_at: string
+        }[]
+      }
+      visit_open_slots: {
+        Args: { p_token: string }
+        Returns: {
+          slot_id: string
+          starts_at: string
+          ends_at: string
+        }[]
+      }
+      visit_slot_add: {
+        Args: { p_minutes: number; p_property: string; p_starts_at: string }
+        Returns: string
+      }
+      visit_slot_remove: {
+        Args: { p_slot: string }
         Returns: undefined
       }
       words_below_1000_fr: {

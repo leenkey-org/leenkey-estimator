@@ -835,6 +835,8 @@ create table alerts (
 );
 ```
 
+Mise en œuvre des tables du lot 3 (L3-01, `DECISIONS.md` 2026-11-17) : `updated_at` (trigger) sur `visit_slots`, `visits`, `documents`, `alerts` ; `visits.cancelled_at` et `cancelled_by` ; `document_access_requests.answered_at` ; contrôles (durée d'un créneau 30, 45 ou 60 min, chemin `{property_id}/sale/{uuid}.{pdf|jpg|png}`, 20 Mo, 5 alertes). Visites, invitations, partages et demandes d'accès s'écrivent par fonctions SQL (`visit_slot_add`, `visit_invite`, `visit_book`, `visit_cancel`, `visit_address`, `document_add`, `document_share`, `document_unshare`, `document_access_request`, `document_access_answer`) ; `extracted_text`, `analysis` et `review_note` ne sont lisibles par aucun client.
+
 ### Accompagnement, assistant, notifications, audit
 
 ```sql
