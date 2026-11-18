@@ -2101,6 +2101,7 @@ export type Database = {
           created_at: string
           id: string
           property_id: string
+          reminder_sent_at: string | null
           seller_feedback: string | null
           slot_id: string
           status: Database["public"]["Enums"]["visit_status"]
@@ -2115,6 +2116,7 @@ export type Database = {
           created_at?: string
           id?: string
           property_id: string
+          reminder_sent_at?: string | null
           seller_feedback?: string | null
           slot_id: string
           status?: Database["public"]["Enums"]["visit_status"]
@@ -2129,6 +2131,7 @@ export type Database = {
           created_at?: string
           id?: string
           property_id?: string
+          reminder_sent_at?: string | null
           seller_feedback?: string | null
           slot_id?: string
           status?: Database["public"]["Enums"]["visit_status"]
@@ -3806,6 +3809,25 @@ export type Database = {
         Args: { p_visit: string }
         Returns: Database["public"]["Enums"]["visit_status"]
       }
+      visit_date_label: {
+        Args: { p_at: string }
+        Returns: string
+      }
+      visit_email_facts: {
+        Args: { p_visit: string }
+        Returns: {
+          address_line: string
+          ends_at: string
+          starts_at: string
+          status: Database["public"]["Enums"]["visit_status"]
+          postal_code: string
+          city: string
+        }[]
+      }
+      visit_facts: {
+        Args: { p_buyer: string; p_property: string }
+        Returns: Json
+      }
       visit_invitation_of: {
         Args: { p_token: string }
         Returns: {
@@ -3824,6 +3846,17 @@ export type Database = {
           expires_at: string
         }[]
       }
+      visit_notice: {
+        Args: {
+          p_body: string
+          p_meta: Json
+          p_kind: string
+          p_sender: string
+          p_buyer: string
+          p_property: string
+        }
+        Returns: undefined
+      }
       visit_open_slots: {
         Args: { p_token: string }
         Returns: {
@@ -3839,6 +3872,10 @@ export type Database = {
       visit_slot_remove: {
         Args: { p_slot: string }
         Returns: undefined
+      }
+      visits_remind: {
+        Args: { p_now?: string }
+        Returns: number
       }
       words_below_1000_fr: {
         Args: { p_final: boolean; p_n: number }
