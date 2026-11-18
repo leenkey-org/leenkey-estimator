@@ -12,6 +12,14 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-18 · L3-02 · PR #111 · Visites sur invitation
+- Ajouté : onglet « Visites » de la fiche du bien (créneaux ponctuels de 30, 45 ou 60 min, acquéreurs à inviter avec leur statut de financement, visites à venir et passées, annulation).
+- Ajouté : bouton calendrier de la conversation, qui invite l'acquéreur ; message d'invitation avec « Réserver un créneau ».
+- Ajouté : page `/visites/reserver/[jeton]` (créneaux libres groupés par jour) et page de la visite (date, adresse exacte pour la visite confirmée, « Ajouter à mon agenda », annulation jusqu'à 2 h avant) ; visites à venir sur l'accueil acquéreur.
+- Ajouté : emails et notifications d'invitation, de confirmation (fichier `.ics` joint, adresse pour l'acquéreur seulement), d'annulation et de rappel la veille à 8 h.
+- Ajouté : outil `propose_visit_slot` de l'assistant vendeur, qui n'écrit rien sans confirmation.
+- Migration : `20261118100000_visit_flow.sql`.
+
 ### 2026-11-17 · L3-01 · PR #110 · Tables du lot 3
 - Ajouté : visites sur invitation (créneaux, invitations à jeton de 7 jours, réservation, annulation, adresse révélée à la seule visite confirmée), dossier de vente (documents du bien dans le bucket privé `documents`, partages, demandes d'accès), alertes acheteur (5 au plus) : tables, permissions et fonctions, sans écran (L3-02, L3-04, L3-06).
 - Modifié : export, fermeture et anonymisation du compte couvrent les nouvelles tables.
