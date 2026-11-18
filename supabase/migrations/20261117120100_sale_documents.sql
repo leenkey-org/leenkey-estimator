@@ -127,15 +127,9 @@ language sql stable security definer set search_path = '' as $$
            where bucket_id = 'documents' and name like p_property::text || '/sale/%') < 200;
 $$;
 
-create policy documents_sale_select on storage.objects for select to authenticated
-  using (bucket_id = 'documents' and public.sale_file_property(name) is not null
-         and (public.owns_property(public.sale_file_property(name)) or public.is_admin()
-              or public.sale_file_shared(name)));
-create policy documents_sale_insert on storage.objects for insert to authenticated
-  with check (bucket_id = 'documents' and public.sale_file_property(name) is not null
-              and public.is_active_user()
-              and public.property_is_editable(public.sale_file_property(name))
-              and public.sale_files_room(public.sale_file_property(name)));
+-- The policies of storage.objects: 20261117120110_sale_documents_storage.sql
+-- (a migration of its own, so that the one of Supabase's tables is confirmed
+-- apart on the hosted projects).
 
 -- ---------------------------------------------------------------------------
 -- Filing a document: its file is already in the bucket (sent with the
