@@ -161,6 +161,10 @@ describe("wording of the notifications (from type and data)", () => {
         "plan.withdrawn",
         "report.created",
         "step.advanced",
+        "visit.booked",
+        "visit.cancelled",
+        "visit.invited",
+        "visit.reminder",
       ].sort(),
     );
     expect(describeNotification(view({}))).toMatchObject({
@@ -328,11 +332,83 @@ describe("wording of the notifications (from type and data)", () => {
     expect(
       describeNotification(view({ title: "Votre annonce est en ligne", body: "Bravo" })),
     ).toMatchObject({ title: "Votre annonce est en ligne", detail: "Bravo" });
-    expect(describeNotification(view({ type: "visit.booked", data: {} }))).toMatchObject({
+    expect(describeNotification(view({ type: "alert.matched", data: {} }))).toMatchObject({
       title: t.fallback,
       detail: null,
       tone: "stone",
     });
+  });
+
+  it("a visit: invited, booked, cancelled, reminded, never its address (L3-02)", () => {
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-11-18T10:00:00Z") });
+    try {
+      const plain = (value: string | null) => (value ?? "").replace(/[\u00A0\u202F]/g, " ");
+      const facts = {
+        entity_id: "v1",
+        visit_id: "v1",
+        property_id: "p1",
+        listing_id: "l1",
+        title: "Maison 5 pièces",
+        city: "Savigny-sur-Orge",
+        buyer_first_name: "Chloé",
+        seller_first_name: "Alice",
+        starts_at: "2026-11-21T09:30:00Z",
+        ends_at: "2026-11-21T10:00:00Z",
+      };
+      const invited = describeNotification(
+        view({ type: "visit.invited", data: { ...facts, expires_at: "2026-11-25T17:00:00Z" } }),
+      );
+      expect(invited.title).toBe("Alice vous invite à visiter son bien");
+      expect(plain(invited.detail)).toBe(
+        "« Maison 5 pièces » · Réservation jusqu'au mercredi 25 novembre à 18 h",
+      );
+      expect(invited.tone).toBe("blue");
+      expect(describeNotification(view({ type: "visit.invited", data: {} }))).toMatchObject({
+        title: "Invitation à visiter un bien",
+        detail: null,
+      });
+
+      const booked = (role: string) =>
+        describeNotification(view({ type: "visit.booked", data: { ...facts, role } }));
+      expect(booked("seller").title).toBe("Chloé a réservé une visite");
+      expect(booked("buyer").title).toBe("Votre visite est confirmée");
+      expect(plain(booked("buyer").detail)).toBe(
+        "samedi 21 novembre à 10 h 30 · « Maison 5 pièces »",
+      );
+      expect(booked("seller").tone).toBe("success");
+
+      const cancelled = (role: string) =>
+        describeNotification(view({ type: "visit.cancelled", data: { ...facts, role } }));
+      expect(cancelled("seller").title).toBe("Chloé a annulé sa visite");
+      expect(cancelled("buyer").title).toBe("Le vendeur a annulé votre visite");
+      expect(cancelled("buyer").tone).toBe("warning");
+      expect(
+        describeNotification(view({ type: "visit.cancelled", data: { role: "seller" } })),
+      ).toMatchObject({ title: "Une visite a été annulée", detail: null });
+
+      const reminder = describeNotification(
+        view({ type: "visit.reminder", data: { ...facts, role: "buyer" } }),
+      );
+      expect(reminder.title).toBe("Rappel de visite");
+      expect(plain(reminder.detail)).toBe("samedi 21 novembre à 10 h 30 · « Maison 5 pièces »");
+      // A date that is none is left out.
+      expect(
+        describeNotification(
+          view({ type: "visit.reminder", data: { title: "Maison", starts_at: "demain" } }),
+        ).detail,
+      ).toBe("«\u00A0Maison\u00A0»");
+
+      // The invitation is for a buyer; the others for the party `role` names.
+      expect(inFilter(view({ type: "visit.invited" }), "visitsOffers")).toBe(true);
+      expect(inFilter(view({ type: "visit.invited" }), "offersVisits")).toBe(false);
+      for (const type of ["visit.booked", "visit.cancelled", "visit.reminder"]) {
+        expect(inFilter(view({ type }), "visitsOffers")).toBe(true);
+        expect(inFilter(view({ type }), "offersVisits")).toBe(true);
+        expect(inFilter(view({ type }), "messages")).toBe(false);
+      }
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("filters of each space (DESIGN.md 10.7)", () => {

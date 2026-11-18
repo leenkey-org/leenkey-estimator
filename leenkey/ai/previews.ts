@@ -54,12 +54,38 @@ export const offerPrefillPreview = z.object({
   draftPriceEuros: z.number().nullable(),
 });
 
+/** The slots a preview of an invitation lists; the others are counted. */
+export const VISIT_PREVIEW_SLOTS_MAX = 12;
+
+const visitSlotRange = z.object({
+  startsAt: z.string().datetime({ offset: true }),
+  endsAt: z.string().datetime({ offset: true }),
+});
+
+/**
+ * propose_visit_slot (L3-02): who is invited to visit which property, the
+ * free slots they will be able to book (the first ones, the others counted)
+ * and the slot added first, when there is one. Never the token of the
+ * invitation, never the id of the buyer.
+ */
+export const visitInvitationPreview = z.object({
+  kind: z.literal("visit_invitation"),
+  propertyName: z.string(),
+  buyerFirstName: z.string(),
+  slots: z.array(visitSlotRange).max(VISIT_PREVIEW_SLOTS_MAX),
+  moreSlots: z.number().int().min(0),
+  newSlot: visitSlotRange.nullable(),
+  /** The buyer has an invitation still valid: this one replaces it (its link no longer works). */
+  replacesInvitation: z.boolean(),
+});
+
 export const actionPreview = z.discriminatedUnion("kind", [
   descriptionPreview,
   pricePreview,
   handoffPreview,
   casePreview,
   offerPrefillPreview,
+  visitInvitationPreview,
 ]);
 
 export type DescriptionPreview = z.infer<typeof descriptionPreview>;
@@ -67,6 +93,7 @@ export type PricePreview = z.infer<typeof pricePreview>;
 export type HandoffPreview = z.infer<typeof handoffPreview>;
 export type CasePreview = z.infer<typeof casePreview>;
 export type OfferPrefillPreview = z.infer<typeof offerPrefillPreview>;
+export type VisitInvitationPreview = z.infer<typeof visitInvitationPreview>;
 export type ActionPreview = z.infer<typeof actionPreview>;
 
 /** The gap of a price to a reference (the analysis of value, the price of a listing), in %, one decimal; null without one. */

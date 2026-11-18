@@ -94,7 +94,7 @@ export function InviteButton({
         size="sm"
         loading={pending}
         disabled={disabled}
-        aria-label={t.contacts.inviteAbout(name)}
+        aria-label={t.contacts.inviteAbout(name, again)}
         onClick={() => {
           setNotice(null);
           start(async () => {

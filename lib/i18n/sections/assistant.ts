@@ -76,6 +76,28 @@ export const frAssistant = {
         error: "Votre offre n'a pas pu être préparée.",
       },
     },
+    // propose_visit_slot (L3-02): a buyer invited to visit, on the slots of the seller.
+    visit: {
+      title: (firstName: string) => `Inviter ${firstName} à visiter`,
+      // The invitation cannot be read again (the conversation opened later).
+      titleUnknown: "Inviter un acquéreur à visiter",
+      unknown: "L'assistant propose d'inviter un acquéreur à visiter votre bien.",
+      slots: "Créneaux proposés",
+      newSlot: "Nouveau créneau",
+      more: (count: number) =>
+        count === 1 ? "et 1 autre créneau libre" : `et ${count} autres créneaux libres`,
+      replaces: (firstName: string) =>
+        `${firstName} a déjà une invitation en cours : celle-ci la remplace.`,
+      note: "L'invitation est valable 7\u00A0jours. L'acquéreur choisit son créneau ; l'adresse exacte ne lui est donnée qu'une fois la visite confirmée.",
+      confirm: "Envoyer l'invitation",
+      states: {
+        confirmed:
+          "Invitation envoyée : l'acquéreur la reçoit dans votre conversation et choisit son créneau.",
+        declined: "Invitation annulée : rien n'a été envoyé.",
+        superseded: "Invitation non confirmée : rien n'a été envoyé.",
+        error: "L'invitation n'a pas pu être envoyée.",
+      },
+    },
     // create_case (L1-31): the request passed on to the team, without an adviser in the plan.
     request: {
       title: "Écrire à l'équipe Leenkey",

@@ -145,7 +145,14 @@ async function deliver(
   const claimed = await claim(supabase, email.ids, claimedAt);
   const kept = claimed.size > 0 ? claimedEmail(email, claimed) : null;
   if (!kept) return "taken";
-  const content = await renderNotificationEmail(kept);
+  let content;
+  try {
+    content = await renderNotificationEmail(kept, supabase);
+  } catch (error) {
+    // What the email reads when it leaves (a visit, L3-02) did not answer: tried again later.
+    await release(supabase, kept.ids, claimedAt, new Date(now.getTime() + RETRY_MINUTES * 60_000));
+    throw error;
+  }
   if (!content) {
     console.error("[notifications] email without content", { type: email.type });
     return "taken";

@@ -9,7 +9,9 @@ import type { TextCall } from "@/core/ai/generate";
 // scenarios of the tests: « description » (reads the properties and the
 // listing of the conversation, or the first that may change, proposes one of
 // two texts, not the current one, then says what happened), « prix » (5 000 €
-// less), anything else (one sentence). The buyer (L2-06) has its own
+// less), « visite » (invites the first contact of the property, or the one
+// named after « visite à », on a new slot when the message gives « le
+// 2026-12-05 à 10:30 »), anything else (one sentence). The buyer (L2-06) has its own
 // scenarios (mockBuyerModel). The suggestions (L1-29) give one fixed text
 // each.
 
@@ -360,6 +362,51 @@ export const mockModel: ModelCall = async (request, options) => {
           ? "Vous n'avez pas encore reçu d'offre pour ce bien."
           : `Vous avez reçu ${total} offre(s) pour ce bien. La plus récente propose ${price ?? "un prix"}.`,
       );
+    }
+  }
+
+  // propose_visit_slot (L3-02): « Proposez une visite à Chloé » ; with « le
+  // 2026-12-05 à 10:30 », on a new slot of 30 minutes.
+  if (/visite/i.test(asked)) {
+    if (!result) return message([call("get_my_properties", {})], "tool_use");
+    if (result.name === "get_my_properties") {
+      const propertyId =
+        conversationProperty(file) ?? /"propertyId":"([0-9a-f-]{36})"/.exec(result.content)?.[1];
+      if (!propertyId) return say("Vous n'avez pas encore de bien.");
+      return message([call("summarize_contacts", { propertyId })], "tool_use");
+    }
+    if (result.name === "summarize_contacts") {
+      const named = /visite à ([A-ZÀ-Ý][\p{L}'’-]*)/u.exec(asked)?.[1];
+      const buyerFirstName = named ?? /"firstName":"([^"]+)"/.exec(result.content)?.[1];
+      const propertyId = after
+        .flatMap((item) => (Array.isArray(item.content) ? item.content : []))
+        .flatMap((block) =>
+          block.type === "tool_use" && block.name === "summarize_contacts" ? [block.input] : [],
+        )
+        .map((value) => z.object({ propertyId: z.string() }).safeParse(value))
+        .flatMap((read) => (read.success ? [read.data.propertyId] : []))
+        .at(-1);
+      if (!buyerFirstName || !propertyId) {
+        return say("Aucun acquéreur ne vous a encore écrit pour ce bien.");
+      }
+      const slot = /(\d{4}-\d{2}-\d{2}) à (\d{2}:\d{2})/.exec(asked);
+      const newSlot = slot ? { day: slot[1], time: slot[2], minutes: 30 } : null;
+      onText("Voici l'invitation que je peux envoyer. ");
+      return message(
+        [
+          text("Voici l'invitation que je peux envoyer. "),
+          call("propose_visit_slot", { propertyId, buyerFirstName, newSlot }),
+        ],
+        "tool_use",
+      );
+    }
+    if (result.name === "propose_visit_slot") {
+      if (result.content.includes('"invited":true')) return say("L'invitation est envoyée.");
+      if (result.content.includes("cancelled")) return say("Très bien, je n'envoie rien.");
+      if (result.content.includes("no free slot")) {
+        return say("Vous n'avez pas de créneau libre : indiquez-moi un jour et une heure.");
+      }
+      return say("L'invitation n'a pas pu être envoyée.");
     }
   }
 

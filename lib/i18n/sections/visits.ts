@@ -44,7 +44,8 @@ export const frVisits = {
       someone: "Un acquéreur",
       invite: "Inviter",
       inviteAgain: "Inviter de nouveau",
-      inviteAbout: (name: string) => `Inviter ${name} à visiter`,
+      inviteAbout: (name: string, again: boolean) =>
+        again ? `Inviter de nouveau ${name}` : `Inviter ${name} à visiter`,
       invitedUntil: (date: string) => `Invité, lien valable jusqu'au ${date}`,
       hasVisit: "Visite réservée",
       sent: (name: string) =>
