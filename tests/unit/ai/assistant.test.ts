@@ -618,6 +618,7 @@ describe("the tools of the seller", () => {
       "get_property_details",
       "get_sale_progress",
       "get_upgrade_context",
+      "propose_visit_slot",
       "summarize_contacts",
       "summarize_offer",
       "update_listing_description",
@@ -646,7 +647,8 @@ describe("the tools of the seller", () => {
         item.name.startsWith("update_") ||
         item.name === "contact_advisor" ||
         item.name === "create_case" ||
-        item.name === "prefill_offer";
+        item.name === "prefill_offer" ||
+        item.name === "propose_visit_slot";
       expect(item.requiresConfirmation, item.name).toBe(writes);
       if (writes) expect(item.preview, item.name).toBeTypeOf("function");
     }
@@ -692,6 +694,8 @@ describe("the tools of the seller", () => {
   it("a confirmed tool that wrote nothing is a failure, never « done » (L1-34)", () => {
     expect(isFailure({ updated: false, error: "x" })).toBe(true);
     expect(isFailure({ sent: false, error: "x" })).toBe(true);
+    expect(isFailure({ invited: false, error: "x" })).toBe(true);
+    expect(isFailure({ invited: true, expiresAt: "2026-11-25T09:00:00Z" })).toBe(false);
     expect(isFailure({ updated: true })).toBe(false);
     expect(isFailure({ sent: true, conversationId: "c" })).toBe(false);
     expect(isFailure(null)).toBe(false);

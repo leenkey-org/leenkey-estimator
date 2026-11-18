@@ -1447,7 +1447,8 @@ Fonction unique `notify(profileId, type, payload)` dans `core/notifications/`. E
 | `offer.expired` | oui | oui | — |
 | `visit.invited` | oui | oui | — |
 | `visit.booked` | oui | oui | — |
-| `visit.reminder` | non | oui | J-1 à 8 h |
+| `visit.reminder` | oui (L3-02, `DECISIONS.md` 2026-11-18) | oui | J-1 à partir de 8 h, heure de Paris |
+| `visit.cancelled` | oui | oui | Ajouté en L3-02 : à la partie qui n'a pas annulé |
 | `document.shared` | oui | oui | Un email par bien et par jour |
 | `document.access_requested` | oui | oui | — |
 | `case.created` (admin) | oui | oui | — |
@@ -1852,6 +1853,8 @@ Personne ne réserve une visite sans y avoir été invité par le vendeur. Le ve
 - Affiche les créneaux libres en grille de `ChipToggle` groupés par date (date en titre de groupe), en mobile comme en desktop (`docs/DESIGN.md` 13.1).
 - Réservation → `visits` (`confirmed`), message système, notifications, fichier `.ics` joint à l'email.
 - Annulation possible jusqu'à 2 h avant.
+
+> **Mise en œuvre (L3-02, `DECISIONS.md` 2026-11-18).** Onglet « Visites » de la fiche du bien (`/vendeur/biens/[id]/visites`) ; invitation depuis le bouton calendrier de la conversation, la liste des contacts ou l'assistant ; message `visit_invite` avec « Réserver un créneau » (acquéreur) ou « Gérer les créneaux » (vendeur) ; page de la visite `/visites/[id]` et son fichier `/visites/[id]/ics` ; un créneau se réserve au plus tard 2 h avant son début ; `visit.cancelled` prévient l'autre partie. Les retours de visite (J+1) : L3-03.
 
 ### Adresse
 

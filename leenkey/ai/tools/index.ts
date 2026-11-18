@@ -10,6 +10,7 @@ import { getPropertyDetailsTool } from "./get-property-details";
 import { getSaleProgressTool } from "./get-sale-progress";
 import { getUpgradeContextTool } from "./get-upgrade-context";
 import { prefillOfferTool } from "./prefill-offer";
+import { proposeVisitSlotTool } from "./propose-visit-slot";
 import { searchListingsTool } from "./search-listings";
 import { summarizeContactsTool } from "./summarize-contacts";
 import { summarizeOfferTool } from "./summarize-offer";
@@ -21,9 +22,9 @@ import { updateListingPriceTool } from "./update-listing-price";
 // none of them); search_knowledge (core/ai/tools) is not offered to the
 // model of the conversation: the whole FAQ is in its prompt (Q69, option a).
 // The buyer (L2-06): search_listings, get_listing_public, prefill_offer and
-// its own create_case (two tools of the same name, one per context). To come
-// with their tasks: summarize_shared_documents, create_alert and
-// propose_visit_slot (L3).
+// its own create_case (two tools of the same name, one per context). The
+// visits (L3-02): propose_visit_slot, for the seller. To come with their
+// tasks: summarize_shared_documents and create_alert (L3).
 
 const TOOLS: readonly AnyAiTool[] = [
   getMyPropertiesTool,
@@ -38,6 +39,7 @@ const TOOLS: readonly AnyAiTool[] = [
   updateListingPriceTool,
   contactAdvisorTool,
   createCaseTool,
+  proposeVisitSlotTool,
   searchListingsTool,
   getListingPublicTool,
   prefillOfferTool,

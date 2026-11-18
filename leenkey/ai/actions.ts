@@ -33,7 +33,8 @@ import type { AssistantConversation } from "./types";
 // The person answers an action proposed by the assistant (SPEC-V2 section
 // 12, ConfirmActionCard): « Confirmer » runs the tool with their session
 // (RLS), which writes its change and its result in the log in one
-// transaction (ai_listing_update); « Annuler » runs nothing. An action is
+// transaction (ai_listing_update; propose_visit_slot logs its result itself,
+// once its invitation is created); « Annuler » runs nothing. An action is
 // answered once: a second click, another tab or a message written meanwhile
 // finds it answered, and nothing more is written. Once every action of the
 // answer is answered, the browser asks the route /api/ai/chat to go on (a
@@ -130,6 +131,8 @@ async function answer(input: unknown, confirm: boolean): Promise<ToolCallResult>
       revalidatePath("/offres/nouvelle");
     } else {
       revalidatePath("/vendeur", "layout");
+      // An invitation to visit is a notice in the conversation with the buyer.
+      if (call.name === "propose_visit_slot") revalidatePath("/messages", "layout");
     }
     return { ok: true, data: { outcome: "confirmed", remaining } };
   }

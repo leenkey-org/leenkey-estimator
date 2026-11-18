@@ -235,6 +235,73 @@ export const frEmails = {
     buyerWhy: "Vous recevez cet email parce que vous avez fait une offre d'achat sur Leenkey.",
     sellerWhy: "Vous recevez cet email parce que vous avez reçu une offre d'achat sur Leenkey.",
   },
+  // L3-02: the emails of a visit on invitation (SPEC-V2 14 and 18). The exact
+  // address goes to the buyer of a confirmed visit only; never a contact
+  // detail of the other party.
+  visit: {
+    /** « le bien « Maison 5 pièces » », or words that need no title. */
+    property: (title: string | null, mine: boolean) =>
+      title
+        ? `${mine ? "votre bien" : "le bien"} «\u00A0${title}\u00A0»`
+        : mine
+          ? "votre bien"
+          : "le bien",
+    address: (address: string) => `Adresse : ${address}`,
+    calendar: "Le fichier joint à cet email ajoute la visite à votre agenda.",
+    icsSummary: (title: string | null) => (title ? `Visite : ${title}` : "Visite"),
+    icsBuyer: "Visite réservée sur Leenkey. Vous pouvez annuler jusqu'à 2 h avant la visite.",
+    icsSeller: (buyer: string | null) =>
+      buyer ? `Visite de ${buyer}, réservée sur Leenkey.` : "Visite réservée sur Leenkey.",
+    buyerWhy:
+      "Vous recevez cet email parce qu'un vendeur vous propose de visiter son bien sur Leenkey.",
+    sellerWhy:
+      "Vous recevez cet email parce que vous organisez les visites de votre bien sur Leenkey.",
+    invited: {
+      subject: (city: string | null) =>
+        city ? `Invitation à visiter un bien à ${city}` : "Invitation à visiter un bien",
+      title: "Invitation à visiter",
+      text: (seller: string | null, property: string, city: string | null) =>
+        `${seller ?? "Le vendeur"} vous invite à visiter ${property}${city ? ` à ${city}` : ""}.`,
+      next: "Choisissez le créneau qui vous convient parmi ceux que le vendeur propose.",
+      validity: (date: string) => `Cette invitation est valable jusqu'au ${date}.`,
+      action: "Réserver un créneau",
+    },
+    booked: {
+      subject: (date: string) => `Visite confirmée · ${date}`,
+      title: "Visite confirmée",
+      buyerText: (property: string, date: string) =>
+        `Votre visite pour ${property} est confirmée : ${date}.`,
+      buyerCancel: "Vous pouvez annuler jusqu'à 2 h avant la visite.",
+      sellerText: (buyer: string | null, property: string, date: string) =>
+        `${buyer ?? "Un acquéreur"} a réservé une visite de ${property} : ${date}.`,
+      sellerNext: "Vous retrouvez cette visite dans l'onglet Visites de votre bien.",
+      buyerAction: "Voir ma visite",
+      sellerAction: "Voir mes visites",
+    },
+    cancelled: {
+      subject: (date: string) => `Visite annulée · ${date}`,
+      title: "Visite annulée",
+      buyerText: (property: string, date: string) =>
+        `Le vendeur a annulé votre visite pour ${property}, prévue ${date}.`,
+      buyerNext:
+        "Vous pouvez réserver un autre créneau depuis votre invitation tant qu'elle est valide.",
+      sellerText: (buyer: string | null, property: string, date: string) =>
+        `${buyer ?? "L'acquéreur"} a annulé sa visite de ${property}, prévue ${date}.`,
+      sellerNext: "Vous n'avez rien à faire.",
+      buyerAction: "Voir ma visite",
+      sellerAction: "Voir mes visites",
+    },
+    reminder: {
+      subject: (hour: string) => `Rappel : visite demain à ${hour}`,
+      title: "Votre visite a lieu demain",
+      buyerText: (property: string, date: string) =>
+        `Nous vous rappelons votre visite pour ${property} : demain, ${date}.`,
+      sellerText: (buyer: string | null, property: string, date: string) =>
+        `Nous vous rappelons la visite de ${property} par ${buyer ?? "un acquéreur"} : demain, ${date}.`,
+      buyerAction: "Voir ma visite",
+      sellerAction: "Voir mes visites",
+    },
+  },
   // L1-40: a plan ending within 30 days, to its owner.
   planEnding: {
     subject: (plan: string, date: string) => `Votre formule ${plan} se termine le ${date}`,

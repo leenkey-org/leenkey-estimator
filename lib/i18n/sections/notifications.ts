@@ -166,6 +166,34 @@ export const frNotifications = {
       detail: (price: string | null, title: string | null) =>
         [price, title ? `«\u00A0${title}\u00A0»` : null].filter(Boolean).join(" · ") || null,
     },
+    // L3-02: a visit on invitation (SPEC-V2 14). The invitation goes to the
+    // buyer; a booking and a reminder to both parties; a cancelling to the
+    // party who did not cancel (`role` says who reads it). Never the address.
+    visitInvited: {
+      title: (seller: string | null) =>
+        seller ? `${seller} vous invite à visiter son bien` : "Invitation à visiter un bien",
+      until: (date: string) => `Réservation jusqu'au ${date}`,
+      detail: (parts: readonly (string | null)[]) => parts.filter(Boolean).join(" · ") || null,
+    },
+    visitBooked: {
+      buyer: "Votre visite est confirmée",
+      seller: (buyer: string | null) =>
+        buyer ? `${buyer} a réservé une visite` : "Une visite a été réservée",
+      detail: (date: string | null, title: string | null) =>
+        [date, title ? `«\u00A0${title}\u00A0»` : null].filter(Boolean).join(" · ") || null,
+    },
+    visitCancelled: {
+      buyer: "Le vendeur a annulé votre visite",
+      seller: (buyer: string | null) =>
+        buyer ? `${buyer} a annulé sa visite` : "Une visite a été annulée",
+      detail: (date: string | null, title: string | null) =>
+        [date, title ? `«\u00A0${title}\u00A0»` : null].filter(Boolean).join(" · ") || null,
+    },
+    visitReminder: {
+      title: "Rappel de visite",
+      detail: (date: string | null, title: string | null) =>
+        [date, title ? `«\u00A0${title}\u00A0»` : null].filter(Boolean).join(" · ") || null,
+    },
     // L1-23: the sale reaches a step (SPEC-V2 section 9).
     stepAdvanced: {
       title: (step: string | null) =>

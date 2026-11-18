@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PlannedEmail, QueuedNotification } from "@/core/notifications/batch";
+import type { EmailDatabase } from "@/leenkey/notifications/email-catalog";
 import { formatPrice } from "@/lib/format";
 
 // L1-22: the emails the cron sends (SPEC-V2 sections 10 and 18), their
@@ -609,20 +610,283 @@ describe("emails of an offer (L2-04a)", () => {
   });
 });
 
+describe("the emails of a visit (L3-02)", () => {
+  const ADDRESS = "12 rue des Lilas";
+  const facts = {
+    entity_id: "v1",
+    visit_id: "v1",
+    property_id: "p1",
+    listing_id: "l1",
+    title: "Maison familiale 5 pièces",
+    city: "Savigny-sur-Orge",
+    buyer_first_name: "Chloé",
+    seller_first_name: "Alice",
+    starts_at: "2026-11-21T09:30:00Z",
+    ends_at: "2026-11-21T10:00:00Z",
+  };
+  const plain = (value: string | undefined) => (value ?? "").replace(/[\u00A0\u202F]/g, " ");
+
+  /** The base of the cron: what visit_email_facts answers. */
+  function database(
+    answer: Record<string, unknown> | null | "error" = {
+      status: "confirmed",
+      starts_at: facts.starts_at,
+      ends_at: facts.ends_at,
+      address_line: ADDRESS,
+      postal_code: "91600",
+      city: "Savigny-sur-Orge",
+    },
+  ) {
+    const rpc = vi.fn(async (fn: string, args: { p_visit: string }) =>
+      answer === "error"
+        ? { data: null, error: { code: "57014", message: `canceled ${fn} ${args.p_visit}` } }
+        : { data: answer ? [answer] : [], error: null },
+    );
+    // @ts-expect-error: a script of answers, not a client.
+    const supabase: EmailDatabase = { rpc };
+    return { supabase, rpc };
+  }
+
+  const visit = (type: string, role: "buyer" | "seller") =>
+    planned([
+      queued({
+        type,
+        profileId: role,
+        firstName: role === "buyer" ? "Chloé" : "Alice",
+        groupKey: "visit:v1",
+        link: role === "buyer" ? "/visites/v1" : "/vendeur/biens/p1/visites",
+        data: { ...facts, role },
+      }),
+    ]);
+
+  const ics = (email: { attachments?: { filename: string; content: string }[] } | null) => {
+    expect(email?.attachments).toHaveLength(1);
+    expect(email?.attachments?.[0].filename).toBe("visite-leenkey.ics");
+    return Buffer.from(email?.attachments?.[0].content ?? "", "base64")
+      .toString("utf8")
+      .replace(/\r\n /g, "");
+  };
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-11-18T10:00:00Z") });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("who gets them: the invitation follows the preference of the messages, the others always leave", async () => {
+    const { emailPolicy } = await import("@/leenkey/notifications/email-catalog");
+    expect(emailPolicy("visit.invited")).toEqual({
+      audience: "recipient",
+      preference: "email_messages",
+      throttleMinutes: 0,
+    });
+    for (const type of ["visit.booked", "visit.cancelled", "visit.reminder"]) {
+      expect(emailPolicy(type)).toEqual({ audience: "recipient", throttleMinutes: 0 });
+    }
+  });
+
+  it("invites the buyer: the link to book, until when, no address", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const invitation = (
+      data: Record<string, unknown>,
+      link: string | null = "/visites/reserver/tok123",
+    ) =>
+      renderNotificationEmail(
+        planned([
+          queued({
+            type: "visit.invited",
+            profileId: "buyer-c",
+            firstName: "Chloé",
+            groupKey: "visit-invitation:i1",
+            link,
+            data,
+          }),
+        ]),
+      );
+    const email = await invitation({ ...facts, expires_at: "2026-11-25T17:00:00Z" });
+    expect(email?.subject).toBe("Invitation à visiter un bien à Savigny-sur-Orge");
+    const text = plain(email?.text);
+    expect(text).toContain("Bonjour Chloé,");
+    expect(text).toContain(
+      "Alice vous invite à visiter le bien « Maison familiale 5 pièces » à Savigny-sur-Orge.",
+    );
+    expect(text).toContain("Cette invitation est valable jusqu'au mercredi 25 novembre à 18 h.");
+    expect(text).toContain("Réserver un créneau");
+    expect(email?.html).toContain("https://leenkey-v2.vercel.app/visites/reserver/tok123");
+    expect(email?.attachments).toBeUndefined();
+    expect(text).not.toMatch(/\bon\b|@exemple|91600/i);
+
+    // The town once when the title carries it; words a mail client would link stay out.
+    const titled = await invitation({
+      ...facts,
+      title: "Maison 5 pièces · Savigny-sur-Orge",
+      seller_first_name: "www.exemple.fr",
+    });
+    expect(plain(titled?.text)).toContain(
+      "Le vendeur vous invite à visiter le bien « Maison 5 pièces · Savigny-sur-Orge ».",
+    );
+    // Without its link, nothing leaves.
+    expect(await invitation(facts, null)).toBeNull();
+  });
+
+  it("confirms the visit: the exact address for the buyer only, the calendar file for both", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const { supabase, rpc } = database();
+    const buyer = await renderNotificationEmail(visit("visit.booked", "buyer"), supabase);
+    expect(rpc).toHaveBeenCalledWith("visit_email_facts", { p_visit: "v1" });
+    expect(plain(buyer?.subject)).toBe("Visite confirmée · samedi 21 novembre à 10 h 30");
+    const text = plain(buyer?.text);
+    expect(text).toContain(
+      "Votre visite pour le bien « Maison familiale 5 pièces » est confirmée : samedi 21 novembre à 10 h 30.",
+    );
+    expect(text).toContain("Adresse : 12 rue des Lilas, 91600 Savigny-sur-Orge");
+    expect(text).toContain("Vous pouvez annuler jusqu'à 2 h avant la visite.");
+    expect(text).toContain("Le fichier joint à cet email ajoute la visite à votre agenda.");
+    expect(buyer?.html).toContain("https://leenkey-v2.vercel.app/visites/v1");
+    expect(text).not.toMatch(/\bon\b|@exemple/i);
+    const buyerIcs = ics(buyer);
+    expect(buyerIcs).toContain("UID:visit-v1@leenkey.fr");
+    expect(buyerIcs).toContain("DTSTART:20261121T093000Z");
+    expect(buyerIcs).toContain("DTEND:20261121T100000Z");
+    expect(buyerIcs).toContain("SUMMARY:Visite : Maison familiale 5 pièces");
+    expect(buyerIcs).toContain("LOCATION:12 rue des Lilas\\, 91600 Savigny-sur-Orge");
+    expect(buyerIcs).toContain("URL:https://leenkey-v2.vercel.app/visites/v1");
+
+    const seller = await renderNotificationEmail(visit("visit.booked", "seller"), supabase);
+    const sellerText = plain(seller?.text);
+    expect(sellerText).toContain("Bonjour Alice,");
+    expect(sellerText).toContain(
+      "Chloé a réservé une visite de votre bien « Maison familiale 5 pièces » : samedi 21 novembre à 10 h 30.",
+    );
+    // Neither the address nor a contact detail in the email of the seller.
+    expect(`${seller?.text}${seller?.html}`).not.toContain(ADDRESS);
+    expect(sellerText).not.toMatch(/Adresse|annuler jusqu|@exemple|\bon\b/i);
+    expect(seller?.html).toContain("https://leenkey-v2.vercel.app/vendeur/biens/p1/visites");
+    expect(ics(seller)).toContain("URL:https://leenkey-v2.vercel.app/vendeur/biens/p1/visites");
+  });
+
+  it("follows the slot of the base, and the town in the file without an address", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const email = await renderNotificationEmail(
+      visit("visit.booked", "buyer"),
+      database({
+        status: "confirmed",
+        starts_at: "2026-11-22T14:00:00Z",
+        ends_at: "2026-11-22T14:45:00Z",
+        address_line: null,
+        postal_code: null,
+        city: "Savigny-sur-Orge",
+      }).supabase,
+    );
+    expect(plain(email?.subject)).toBe("Visite confirmée · dimanche 22 novembre à 15 h");
+    expect(email?.text).not.toContain("Adresse");
+    expect(ics(email)).toContain("LOCATION:Savigny-sur-Orge");
+  });
+
+  it("sends nothing for a visit no longer confirmed, not found, or without the base", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const cancelled = {
+      status: "cancelled",
+      starts_at: facts.starts_at,
+      ends_at: facts.ends_at,
+      address_line: null,
+      postal_code: null,
+      city: "Savigny-sur-Orge",
+    };
+    for (const type of ["visit.booked", "visit.reminder"]) {
+      for (const role of ["buyer", "seller"] as const) {
+        expect(
+          await renderNotificationEmail(visit(type, role), database(cancelled).supabase),
+        ).toBeNull();
+        expect(
+          await renderNotificationEmail(visit(type, role), database(null).supabase),
+        ).toBeNull();
+        expect(await renderNotificationEmail(visit(type, role))).toBeNull();
+      }
+      // The base does not answer: an error, for a new try later.
+      await expect(
+        renderNotificationEmail(visit(type, "buyer"), database("error").supabase),
+      ).rejects.toThrow("visit_email_facts");
+    }
+  });
+
+  it("tells a cancelling to the other party, without the base nor the address", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const buyer = await renderNotificationEmail(visit("visit.cancelled", "buyer"));
+    expect(plain(buyer?.subject)).toBe("Visite annulée · samedi 21 novembre à 10 h 30");
+    expect(plain(buyer?.text)).toContain(
+      "Le vendeur a annulé votre visite pour le bien « Maison familiale 5 pièces », prévue samedi 21 novembre à 10 h 30.",
+    );
+    expect(buyer?.text).toContain(
+      "Vous pouvez réserver un autre créneau depuis votre invitation tant qu'elle est valide.",
+    );
+    expect(buyer?.attachments).toBeUndefined();
+
+    const seller = await renderNotificationEmail(visit("visit.cancelled", "seller"));
+    expect(plain(seller?.text)).toContain(
+      "Chloé a annulé sa visite de votre bien « Maison familiale 5 pièces », prévue samedi 21 novembre à 10 h 30.",
+    );
+    expect(seller?.text).toContain("Vous n'avez rien à faire.");
+    expect(seller?.text).not.toMatch(/autre créneau|\bon\b|@exemple/i);
+    // Without the date of the visit, nothing leaves.
+    expect(
+      await renderNotificationEmail(
+        planned([queued({ type: "visit.cancelled", data: { role: "buyer" } })]),
+      ),
+    ).toBeNull();
+  });
+
+  it("reminds the visit the day before: the address for the buyer only, the calendar file", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const { supabase } = database();
+    const buyer = await renderNotificationEmail(visit("visit.reminder", "buyer"), supabase);
+    expect(plain(buyer?.subject)).toBe("Rappel : visite demain à 10 h 30");
+    const text = plain(buyer?.text);
+    expect(text).toContain(
+      "Nous vous rappelons votre visite pour le bien « Maison familiale 5 pièces » : demain, samedi 21 novembre à 10 h 30.",
+    );
+    expect(text).toContain("Adresse : 12 rue des Lilas, 91600 Savigny-sur-Orge");
+    expect(ics(buyer)).toContain("LOCATION:12 rue des Lilas\\, 91600 Savigny-sur-Orge");
+
+    const seller = await renderNotificationEmail(visit("visit.reminder", "seller"), supabase);
+    expect(plain(seller?.text)).toContain(
+      "Nous vous rappelons la visite de votre bien « Maison familiale 5 pièces » par Chloé : demain, samedi 21 novembre à 10 h 30.",
+    );
+    expect(`${seller?.text}${seller?.html}`).not.toContain(ADDRESS);
+    expect(seller?.text).not.toMatch(/Adresse|\bon\b|@exemple/i);
+    expect(ics(seller)).toContain("DTSTART:20261121T093000Z");
+  });
+});
+
 describe("sendNotificationEmails", () => {
   type Update = { values: Record<string, unknown>; ids: string[]; filters: string[] };
 
   function client(
     rows: unknown[],
-    { claimed = true, team = [] }: { claimed?: boolean | string[]; team?: string[] | "error" } = {},
+    {
+      claimed = true,
+      team = [],
+      visit = [],
+    }: {
+      claimed?: boolean | string[];
+      team?: string[] | "error";
+      /** What visit_email_facts answers (L3-02). */
+      visit?: unknown[] | "error";
+    } = {},
   ) {
     const updates: Update[] = [];
     const supabase = {
       // The queue, and the addresses of the admins of the team.
       rpc: vi.fn(async (fn: string) =>
-        fn === "team_email_addresses" && team === "error"
+        (fn === "team_email_addresses" && team === "error") ||
+        (fn === "visit_email_facts" && visit === "error")
           ? { data: null, error: { code: "57014", message: "canceled" } }
-          : { data: fn === "team_email_addresses" ? team : rows, error: null },
+          : {
+              data:
+                fn === "team_email_addresses" ? team : fn === "visit_email_facts" ? visit : rows,
+              error: null,
+            },
       ),
       from: () => ({
         update(values: Record<string, unknown>) {
@@ -817,6 +1081,70 @@ describe("sendNotificationEmails", () => {
     // @ts-expect-error: a script of answers, not a client.
     await expect(teamAddresses(supabase)).resolves.toEqual(["contact.leenkey@exemple.test"]);
     delete process.env.ADMIN_NOTIFICATION_EMAIL;
+  });
+
+  it("a visit booked leaves with its calendar file; the base down, it is tried again (L3-02)", async () => {
+    const { sendNotificationEmails } = await import("@/leenkey/notifications/send-emails");
+    const booked = row({
+      id: "b1",
+      profile_id: "buyer-c",
+      type: "visit.booked",
+      group_key: "visit:v1",
+      link: "/visites/v1",
+      email: "buyer_c@exemple.test",
+      first_name: "Chloé",
+      // No preference turns it off.
+      prefs: { email_messages: false, email_offers: false, email_alerts: false },
+      data: {
+        entity_id: "v1",
+        visit_id: "v1",
+        title: "Maison 5 pièces",
+        city: "Savigny-sur-Orge",
+        role: "buyer",
+        starts_at: "2026-10-25T09:30:00Z",
+        ends_at: "2026-10-25T10:00:00Z",
+      },
+    });
+    const confirmed = {
+      status: "confirmed",
+      starts_at: "2026-10-25T09:30:00Z",
+      ends_at: "2026-10-25T10:00:00Z",
+      address_line: "12 rue des Lilas",
+      postal_code: "91600",
+      city: "Savigny-sur-Orge",
+    };
+    mocks.sendEmail.mockResolvedValue("test");
+    const sent = client([booked], { visit: [confirmed] });
+    // @ts-expect-error: a script of answers, not a client.
+    const summary = await sendNotificationEmails(sent.supabase, NOW, { paceMs: 0 });
+    expect(summary).toMatchObject({ due: 1, sent: 1, failed: 0, skipped: 0 });
+    expect(sent.supabase.rpc).toHaveBeenCalledWith("visit_email_facts", { p_visit: "v1" });
+    const [email] = mocks.sendEmail.mock.calls[0];
+    expect(email.to).toBe("buyer_c@exemple.test");
+    expect(email.text).toContain("12 rue des Lilas, 91600 Savigny-sur-Orge");
+    expect(email.attachments).toEqual([
+      { filename: "visite-leenkey.ics", content: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/) },
+    ]);
+
+    // Cancelled meanwhile: claimed, nothing leaves.
+    mocks.sendEmail.mockClear();
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const gone = client([booked], { visit: [{ ...confirmed, status: "cancelled" }] });
+    // @ts-expect-error: a script of answers, not a client.
+    await sendNotificationEmails(gone.supabase, NOW, { paceMs: 0 });
+    expect(mocks.sendEmail).not.toHaveBeenCalled();
+
+    // The base does not answer: its row is given back for a new try.
+    const down = client([booked], { visit: "error" });
+    // @ts-expect-error: a script of answers, not a client.
+    const failed = await sendNotificationEmails(down.supabase, NOW, { paceMs: 0 });
+    expect(mocks.sendEmail).not.toHaveBeenCalled();
+    expect(failed).toMatchObject({ sent: 0, failed: 1 });
+    expect(down.updates.at(-1)).toMatchObject({
+      values: { email_sent_at: null, email_after: "2026-10-24T10:15:00.000Z" },
+      ids: ["b1"],
+    });
+    log.mockRestore();
   });
 
   it("stops sending at the end of its time: the rest waits for the next run", async () => {

@@ -101,13 +101,15 @@ export async function assistantConversation(
 /**
  * The output of a tool that writes, when nothing was written: { updated:
  * false } (the listing), { sent: false } (contact_advisor, create_case),
- * { prefilled: false } (prefill_offer, L2-06).
+ * { prefilled: false } (prefill_offer, L2-06), { invited: false }
+ * (propose_visit_slot, L3-02).
  */
 export function isFailure(result: unknown): boolean {
   if (typeof result !== "object" || result === null) return false;
   return (
     ("updated" in result && result.updated === false) ||
     ("sent" in result && result.sent === false) ||
-    ("prefilled" in result && result.prefilled === false)
+    ("prefilled" in result && result.prefilled === false) ||
+    ("invited" in result && result.invited === false)
   );
 }

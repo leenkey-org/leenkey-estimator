@@ -6,6 +6,7 @@ import {
   useRef,
   type FormEvent,
   type KeyboardEvent,
+  type ReactNode,
   type RefObject,
 } from "react";
 import { Loader2, Send } from "lucide-react";
@@ -28,6 +29,8 @@ export type ComposerProps = {
   /** The error shown above, read with the field. */
   errorId?: string;
   textareaRef?: RefObject<HTMLTextAreaElement | null>;
+  /** A button before the field: the calendar of an invitation to visit (docs/DESIGN.md 10.5). */
+  leading?: ReactNode;
   className?: string;
 };
 
@@ -49,6 +52,7 @@ export function Composer({
   maxLength,
   errorId,
   textareaRef,
+  leading,
   className,
 }: ComposerProps) {
   const id = useId();
@@ -86,6 +90,7 @@ export function Composer({
         className,
       )}
     >
+      {leading}
       <label htmlFor={id} className="sr-only">
         {label}
       </label>

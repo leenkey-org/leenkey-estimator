@@ -11,6 +11,7 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { MessageBubble } from "@/components/shared/message-bubble";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { offerFormPath } from "@/leenkey/offers/paths";
+import { visitDateTime } from "@/leenkey/visits/dates";
 import { formatPrice } from "@/lib/format";
 import { frAssistant } from "@/lib/i18n/sections/assistant";
 import { cn } from "@/lib/utils";
@@ -85,6 +86,40 @@ function ActionContent({ preview, unknown }: { preview: ActionPreview | null; un
   const property = (
     <p className="text-lk-caption text-lk-ink-3">{t.action.property(preview.propertyName)}</p>
   );
+  if (preview.kind === "visit_invitation") {
+    const visit = t.action.visit;
+    // The slots the buyer will choose from, in order; the one added first is marked.
+    const slots = [
+      ...preview.slots.map((slot) => ({ ...slot, added: false })),
+      ...(preview.newSlot ? [{ ...preview.newSlot, added: true }] : []),
+    ].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+    return (
+      <>
+        {property}
+        <ChangeBlock label={visit.slots} tone="after">
+          <ul className="flex flex-col gap-1">
+            {slots.map((slot) => (
+              <li key={slot.startsAt} className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <span>{visitDateTime(slot.startsAt)}</span>
+                {slot.added ? (
+                  <span className="rounded-full bg-lk-surface px-2 py-0.5 text-lk-micro font-semibold text-lk-blue">
+                    {visit.newSlot}
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </ChangeBlock>
+        {preview.moreSlots > 0 ? (
+          <p className="text-lk-caption text-lk-ink-2">{visit.more(preview.moreSlots)}</p>
+        ) : null}
+        {preview.replacesInvitation ? (
+          <p className="text-lk-caption text-lk-ink-2">{visit.replaces(preview.buyerFirstName)}</p>
+        ) : null}
+        <p className="text-lk-caption text-lk-ink-3">{visit.note}</p>
+      </>
+    );
+  }
   if (preview.kind === "advisor_handoff") {
     return (
       <>
@@ -488,7 +523,9 @@ export function AssistantChat({
                   ? t.action.request
                   : item.name === "prefill_offer"
                     ? t.action.offer
-                    : null;
+                    : item.name === "propose_visit_slot"
+                      ? t.action.visit
+                      : null;
             const href =
               item.name === "prefill_offer" && item.state === "confirmed"
                 ? (item.href ??
@@ -497,7 +534,11 @@ export function AssistantChat({
                     : undefined))
                 : undefined;
             const title = handoff
-              ? handoff.title
+              ? typeof handoff.title === "string"
+                ? handoff.title
+                : item.preview?.kind === "visit_invitation"
+                  ? handoff.title(item.preview.buyerFirstName)
+                  : handoff.titleUnknown
               : item.name === "update_listing_price"
                 ? t.action.priceTitle
                 : t.action.descriptionTitle;
@@ -514,7 +555,11 @@ export function AssistantChat({
                 onConfirm={() => void answer(item.toolCallId, true)}
                 onCancel={() => void answer(item.toolCallId, false)}
                 // A price is never confirmed unseen (the listing went off line since).
-                confirmDisabled={item.name === "prefill_offer" && item.preview === null}
+                // Nor an invitation, without who is invited and on which slots.
+                confirmDisabled={
+                  (item.name === "prefill_offer" || item.name === "propose_visit_slot") &&
+                  item.preview === null
+                }
                 after={
                   href ? (
                     <Button asChild variant="secondary" size="sm">

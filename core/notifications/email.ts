@@ -19,7 +19,11 @@ export type OutgoingEmail = {
   text: string;
   /** Where an answer goes, when not to the sender. */
   replyTo?: string;
+  /** Files sent with it (a calendar file): their name and their content in base64. */
+  attachments?: readonly EmailAttachment[];
 };
+
+export type EmailAttachment = { filename: string; content: string };
 
 /**
  * sent: handed to Resend for the recipient (production); test: handed to
@@ -61,6 +65,14 @@ export async function sendEmail(email: OutgoingEmail): Promise<EmailDelivery> {
         text: email.text,
         // Outside production, an answer goes back to the test inbox too.
         ...(email.replyTo ? { reply_to: env === "production" ? email.replyTo : route.to[0] } : {}),
+        ...(email.attachments?.length
+          ? {
+              attachments: email.attachments.map(({ filename, content }) => ({
+                filename,
+                content,
+              })),
+            }
+          : {}),
       }),
       // Short: the caller waits (a decision of the back office).
       signal: AbortSignal.timeout(5_000),

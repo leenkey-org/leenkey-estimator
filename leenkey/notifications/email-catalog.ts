@@ -1,7 +1,9 @@
 import "server-only";
 import type { ReactElement } from "react";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { render } from "@react-email/components";
 import type { EmailPolicy, PlannedEmail, QueuedNotification } from "@/core/notifications/batch";
+import type { EmailAttachment } from "@/core/notifications/email";
 import { emailSafeText } from "@/core/notifications/user-text";
 import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
 import { AccountsCreatedEmail, accountsCreatedSubject } from "@/emails/accounts-created";
@@ -15,7 +17,11 @@ import { OfferExpiredEmail, offerExpiredSubject } from "@/emails/offer-expired";
 import { OfferReceivedEmail, offerReceivedSubject } from "@/emails/offer-received";
 import { OfferWithdrawnEmail, offerWithdrawnSubject } from "@/emails/offer-withdrawn";
 import { ReportsToReviewEmail, reportsToReviewSubject } from "@/emails/reports-to-review";
-import { formatAmount, formatPrice } from "@/lib/format";
+import { VisitBookedEmail, visitBookedSubject } from "@/emails/visit-booked";
+import { VisitCancelledEmail, visitCancelledSubject } from "@/emails/visit-cancelled";
+import { VisitInvitedEmail, visitInvitedSubject } from "@/emails/visit-invited";
+import { VisitReminderEmail, visitReminderSubject } from "@/emails/visit-reminder";
+import { formatAmount, formatHour, formatPrice } from "@/lib/format";
 import { PlanEndingEmail, planEndingSubject } from "@/emails/plan-ending";
 import {
   WithdrawalsToProcessEmail,
@@ -24,6 +30,8 @@ import {
 import { legalDate, legalDateTime } from "@/leenkey/billing/withdrawal";
 import { formatNumericDateTime } from "@/leenkey/offers/document";
 import { gapLabel, offerGap } from "@/leenkey/offers/figures";
+import { visitDateTime } from "@/leenkey/visits/dates";
+import { visitIcs } from "@/leenkey/visits/ics";
 import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { frEmails } from "@/lib/i18n/sections/emails";
 import { frFinancingStatus } from "@/lib/i18n/sections/financingStatus";
@@ -31,6 +39,7 @@ import { frLegal } from "@/lib/i18n/sections/legal";
 import { roleLabels } from "./catalog";
 import { absoluteUrl, siteUrl } from "@/lib/site";
 import { adminListingsHref } from "@/lib/validations/admin";
+import type { Database } from "@/types/database";
 
 // The texts this module shows (lib/i18n/sections, P-06).
 const fr = { adminUsers: frAdminUsers, emails: frEmails, legal: frLegal } as const;
@@ -70,13 +79,30 @@ const POLICIES: Record<string, EmailPolicy> = {
   // L2-07: an offer accepted on a sale with an adviser, to the team: the first at once, the
   // next ones together.
   "offer.accepted_team": { audience: "team", throttleMinutes: 20 },
+  // L3-02: an invitation to visit (the buyer), at once, unless the account turned the emails
+  // of its conversations off: the invitation is also a notice of the conversation.
+  "visit.invited": { audience: "recipient", preference: "email_messages", throttleMinutes: 0 },
+  // A visit booked, cancelled, and its reminder the day before: always sent, a party must
+  // know where and when it is expected, or that it no longer is.
+  "visit.booked": { audience: "recipient", throttleMinutes: 0 },
+  "visit.cancelled": { audience: "recipient", throttleMinutes: 0 },
+  "visit.reminder": { audience: "recipient", throttleMinutes: 0 },
 };
 
 export function emailPolicy(type: string): EmailPolicy | null {
   return POLICIES[type] ?? null;
 }
 
-export type RenderedEmail = { subject: string; html: string; text: string; replyTo?: string };
+export type RenderedEmail = {
+  subject: string;
+  html: string;
+  text: string;
+  replyTo?: string;
+  attachments?: EmailAttachment[];
+};
+
+/** The base an email reads when it leaves (the service role client of the cron). */
+export type EmailDatabase = Pick<SupabaseClient<Database>, "rpc">;
 
 function text(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
@@ -468,8 +494,188 @@ async function offerExpired(email: PlannedEmail): Promise<RenderedEmail | null> 
   );
 }
 
-/** The email of a group, ready to leave; null when its type has none. */
-export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEmail | null> {
+/** « Maison 5 pièces » and its town, said once: the titles often carry it already. */
+function visitPlace(item: QueuedNotification): { property: string | null; city: string | null } {
+  const property = emailSafeText(item.data.title);
+  const city = emailSafeText(item.data.city);
+  const said =
+    property && city
+      ? property.toLocaleLowerCase("fr-FR").includes(city.toLocaleLowerCase("fr-FR"))
+      : false;
+  return { property, city: said ? null : city };
+}
+
+function instant(value: unknown): string | null {
+  const iso = text(value);
+  return iso && !Number.isNaN(Date.parse(iso)) ? iso : null;
+}
+
+/** An invitation to visit (L3-02), to the buyer: the link to book, until when. Never the address. */
+async function visitInvited(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  // Without its link (the token), the invitation leads nowhere.
+  if (!last?.link) return null;
+  const { property, city } = visitPlace(last);
+  const expiresAt = instant(last.data.expires_at);
+  return rendered(
+    visitInvitedSubject(emailSafeText(last.data.city)),
+    VisitInvitedEmail({
+      firstName: email.firstName,
+      sellerFirstName: emailSafeText(last.data.seller_first_name),
+      property,
+      city,
+      validUntil: expiresAt ? visitDateTime(expiresAt) : null,
+      bookingUrl: absoluteUrl(last.link),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
+type VisitNow = {
+  startsAt: string;
+  endsAt: string;
+  /** « 12 rue des Lilas, 91600 Savigny-sur-Orge » */
+  address: string | null;
+  city: string | null;
+};
+
+/**
+ * A visit as it is when its email leaves (visit_email_facts, service role):
+ * its slot and the exact address. Null when it is no longer confirmed, or is
+ * not found: nothing to confirm, nothing to remind. Throws when the base does
+ * not answer: the email is tried again later.
+ */
+async function confirmedVisit(
+  item: QueuedNotification,
+  supabase: EmailDatabase | undefined,
+): Promise<VisitNow | null> {
+  const id = text(item.data.visit_id);
+  if (!id || !supabase) return null;
+  const { data, error } = await supabase.rpc("visit_email_facts", { p_visit: id });
+  if (error) throw new Error(`visit_email_facts: ${error.code} ${error.message}`);
+  const facts = data?.[0];
+  if (!facts || facts.status !== "confirmed") return null;
+  const line = text(facts.address_line);
+  const town = [text(facts.postal_code), text(facts.city)].filter(Boolean).join(" ");
+  return {
+    startsAt: facts.starts_at,
+    endsAt: facts.ends_at,
+    address: line ? [line, town].filter(Boolean).join(", ") : null,
+    city: text(facts.city),
+  };
+}
+
+const ICS_FILENAME = "visite-leenkey.ics";
+
+/** The calendar file of a visit: the exact address, the town without it. */
+function visitAttachment(
+  item: QueuedNotification,
+  visit: VisitNow,
+  seller: boolean,
+  url: string,
+): EmailAttachment {
+  const t = fr.emails.visit;
+  const ics = visitIcs({
+    id: text(item.data.visit_id) ?? item.id,
+    startsAt: visit.startsAt,
+    endsAt: visit.endsAt,
+    summary: t.icsSummary(text(item.data.title)),
+    location: visit.address ?? visit.city ?? text(item.data.city) ?? "",
+    description: seller ? t.icsSeller(text(item.data.buyer_first_name)) : t.icsBuyer,
+    url,
+  });
+  return { filename: ICS_FILENAME, content: Buffer.from(ics, "utf8").toString("base64") };
+}
+
+/**
+ * A visit booked (L3-02), to its buyer and to the seller, with its calendar
+ * file. The exact address is read when the email leaves and written for the
+ * buyer only; nothing leaves for a visit cancelled meanwhile.
+ */
+async function visitBooked(
+  email: PlannedEmail,
+  supabase: EmailDatabase | undefined,
+): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  if (!last) return null;
+  const visit = await confirmedVisit(last, supabase);
+  if (!visit) return null;
+  const seller = last.data.role === "seller";
+  const date = visitDateTime(visit.startsAt);
+  const url = absoluteUrl(last.link ?? (seller ? "/vendeur" : "/acquereur"));
+  const content = await rendered(
+    visitBookedSubject(date),
+    VisitBookedEmail({
+      firstName: email.firstName,
+      seller,
+      buyerFirstName: emailSafeText(last.data.buyer_first_name),
+      property: emailSafeText(last.data.title),
+      date,
+      address: seller ? null : visit.address,
+      visitUrl: url,
+      siteUrl: siteUrl(),
+    }),
+  );
+  return { ...content, attachments: [visitAttachment(last, visit, seller, url)] };
+}
+
+/** A visit cancelled (L3-02), to the party who did not cancel: no address. */
+async function visitCancelled(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  const startsAt = instant(last?.data.starts_at);
+  if (!last || !startsAt) return null;
+  const seller = last.data.role === "seller";
+  const date = visitDateTime(startsAt);
+  return rendered(
+    visitCancelledSubject(date),
+    VisitCancelledEmail({
+      firstName: email.firstName,
+      seller,
+      buyerFirstName: emailSafeText(last.data.buyer_first_name),
+      property: emailSafeText(last.data.title),
+      date,
+      visitUrl: absoluteUrl(last.link ?? (seller ? "/vendeur" : "/acquereur")),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
+/** The reminder of a visit (L3-02), the day before: as its confirmation. */
+async function visitReminder(
+  email: PlannedEmail,
+  supabase: EmailDatabase | undefined,
+): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  if (!last) return null;
+  const visit = await confirmedVisit(last, supabase);
+  if (!visit) return null;
+  const seller = last.data.role === "seller";
+  const url = absoluteUrl(last.link ?? (seller ? "/vendeur" : "/acquereur"));
+  const content = await rendered(
+    visitReminderSubject(formatHour(visit.startsAt)),
+    VisitReminderEmail({
+      firstName: email.firstName,
+      seller,
+      buyerFirstName: emailSafeText(last.data.buyer_first_name),
+      property: emailSafeText(last.data.title),
+      date: visitDateTime(visit.startsAt),
+      address: seller ? null : visit.address,
+      visitUrl: url,
+      siteUrl: siteUrl(),
+    }),
+  );
+  return { ...content, attachments: [visitAttachment(last, visit, seller, url)] };
+}
+
+/**
+ * The email of a group, ready to leave; null when its type has none. The
+ * emails of a visit read it when they leave (its address, whether it is still
+ * confirmed): they need the client of the cron, and send nothing without it.
+ */
+export function renderNotificationEmail(
+  email: PlannedEmail,
+  supabase?: EmailDatabase,
+): Promise<RenderedEmail | null> {
   switch (email.type) {
     case "message.new":
       return newMessages(email);
@@ -498,6 +704,14 @@ export function renderNotificationEmail(email: PlannedEmail): Promise<RenderedEm
       return offerExpired(email);
     case "offer.accepted_team":
       return offersAccepted(email);
+    case "visit.invited":
+      return visitInvited(email);
+    case "visit.booked":
+      return visitBooked(email, supabase);
+    case "visit.cancelled":
+      return visitCancelled(email);
+    case "visit.reminder":
+      return visitReminder(email, supabase);
     default:
       return Promise.resolve(null);
   }

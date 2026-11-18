@@ -75,6 +75,8 @@ describe("tabs of the page of a property", () => {
       { href: `/vendeur/biens/${id}/etapes`, label: "Étapes" },
       // The offers received, with their history (L2-04a).
       { href: `/vendeur/biens/${id}/offres`, label: "Offres" },
+      // Slots, invitations and visits (L3-02).
+      { href: `/vendeur/biens/${id}/visites`, label: "Visites" },
     ]);
   });
 });

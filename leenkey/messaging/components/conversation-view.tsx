@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CalendarPlus, ChevronLeft } from "lucide-react";
 import { AdvisorAvatar } from "@/components/shared/advisor-avatar";
 import { Button } from "@/components/shared/button";
 import { Composer } from "@/components/shared/composer";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { ConversationHeader } from "@/components/shared/conversation-header";
 import { FinancingMention, type FinancingStatus } from "@/components/shared/financing-badge";
-import { iconButtonVariants } from "@/components/shared/icon-button";
+import { IconButton, iconButtonVariants } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { MessageBubble, MessageDate, SystemMessage } from "@/components/shared/message-bubble";
 import { markConversationRead, sendMessage } from "@/core/messaging/actions";
@@ -17,13 +19,15 @@ import { threadItems } from "@/core/messaging/thread";
 import { mergeMessages, type SendError, type ThreadMessage } from "@/core/messaging/types";
 import { NBSP, formatClock } from "@/lib/format";
 import { frMessaging } from "@/lib/i18n/sections/messaging";
+import { frVisits } from "@/lib/i18n/sections/visits";
+import { inviteFromConversation } from "@/leenkey/visits/actions";
 import { MESSAGE_MAX } from "@/lib/validations/messaging";
 import { cn } from "@/lib/utils";
 import { ReplySuggestion } from "@/leenkey/ai/components/reply-suggestion";
 import { ConversationMenu } from "./conversation-menu";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { messaging: frMessaging } as const;
+const fr = { messaging: frMessaging, visits: frVisits } as const;
 
 const t = fr.messaging;
 
@@ -71,6 +75,12 @@ export type ConversationViewProps = {
   initialDraft?: string;
   /** The seller's view: « Suggérer une réponse » (L1-29) while the buyer wrote last. */
   suggestions?: boolean;
+  /**
+   * Visits (L3-02). The seller of a listing online: the calendar button of
+   * the field, which invites the buyer. The buyer: the link of their
+   * invitation while it is valid, under the notice of the invitation.
+   */
+  visits?: { invite: boolean; bookHref: string | null; manageHref: string | null };
   /** Time of the server render, for the days of the thread. */
   now: string;
 };
@@ -96,8 +106,16 @@ export function ConversationView({
   closed,
   initialDraft = "",
   suggestions = false,
+  visits,
   now,
 }: ConversationViewProps) {
+  const router = useRouter();
+  const [inviting, setInviting] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteNotice, setInviteNotice] = useState<{
+    tone: "success" | "danger";
+    text: string;
+  } | null>(null);
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState(initialDraft);
   // The text in the field came from a suggestion of the assistant (until it is emptied or sent).
@@ -175,6 +193,10 @@ export function ConversationView({
         (message) => !known.has(message.id) && message.senderId !== viewerId,
       );
       addMessages(incoming);
+      // An invitation: the page reads the link of the buyer again (« Réserver un créneau »).
+      if (incoming.some((message) => !known.has(message.id) && message.kind === "visit_invite")) {
+        router.refresh();
+      }
       if (!received) return;
       readPending.current = true;
       if (document.visibilityState === "visible") markRead();
@@ -227,6 +249,27 @@ export function ConversationView({
     // Realtime may have brought it first: the thread does not change then.
     scrollToEnd();
     fieldRef.current?.focus();
+  };
+
+  const invite = async () => {
+    if (inviting) return;
+    setInviting(true);
+    setInviteNotice(null);
+    let result: Awaited<ReturnType<typeof inviteFromConversation>> | null = null;
+    try {
+      result = await inviteFromConversation(conversationId);
+    } catch (caught) {
+      console.error("[visits] invitation not sent", caught);
+    }
+    setInviting(false);
+    setInviteOpen(false);
+    setInviteNotice(
+      result?.ok
+        ? { tone: "success", text: fr.visits.conversation.invited }
+        : { tone: "danger", text: fr.visits.conversation.errors[result?.error ?? "unavailable"] },
+    );
+    // The notice of the invitation comes with Realtime; stay at the end to read it.
+    if (result?.ok) atEnd.current = true;
   };
 
   // The last message written (a system message is not one): the buyer's, a reply is due.
@@ -316,7 +359,29 @@ export function ConversationView({
           // A question passed on by the assistant (L1-34) reads as its author's message.
           const handoff = message.kind === "assistant_handoff";
           if (message.kind !== "text" && !handoff) {
-            return <SystemMessage key={item.key}>{message.body}</SystemMessage>;
+            // The notice of an invitation: the buyer books from it, the seller manages the slots.
+            const href =
+              message.kind === "visit_invite" ? (visits?.bookHref ?? visits?.manageHref) : null;
+            return (
+              <SystemMessage
+                key={item.key}
+                icon={message.kind === "visit_invite" ? CalendarPlus : undefined}
+                action={
+                  href ? (
+                    <Link
+                      href={href}
+                      className="self-start font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
+                    >
+                      {visits?.bookHref
+                        ? fr.visits.conversation.book
+                        : fr.visits.conversation.manage}
+                    </Link>
+                  ) : undefined
+                }
+              >
+                {message.body}
+              </SystemMessage>
+            );
           }
           const author = authorOf(message.senderId);
           return (
@@ -359,6 +424,11 @@ export function ConversationView({
                 }}
               />
             ) : null}
+            {inviteNotice ? (
+              <div className="border-t border-lk-line bg-lk-surface px-3 pt-2.5">
+                <InlineAlert tone={inviteNotice.tone}>{inviteNotice.text}</InlineAlert>
+              </div>
+            ) : null}
             {error ? (
               <div id={errorId} className="border-t border-lk-line bg-lk-surface px-3 pt-2.5">
                 <InlineAlert tone="danger">{t.errors[error]}</InlineAlert>
@@ -378,11 +448,41 @@ export function ConversationView({
               maxLength={MESSAGE_MAX}
               errorId={error ? errorId : undefined}
               textareaRef={fieldRef}
-              className={cn(error && "border-t-0")}
+              leading={
+                visits?.invite ? (
+                  <IconButton
+                    type="button"
+                    icon={CalendarPlus}
+                    variant="stone"
+                    aria-label={fr.visits.conversation.invite}
+                    disabled={inviting}
+                    onClick={() => {
+                      setInviteNotice(null);
+                      setInviteOpen(true);
+                    }}
+                    className="shrink-0"
+                  />
+                ) : undefined
+              }
+              className={cn((error || inviteNotice) && "border-t-0")}
             />
           </>
         )}
       </div>
+      {visits?.invite ? (
+        <ConfirmDialog
+          open={inviteOpen}
+          title={fr.visits.conversation.dialog.title(counterpart)}
+          description={fr.visits.conversation.dialog.description}
+          confirmLabel={fr.visits.conversation.dialog.confirm}
+          labels={fr.visits.conversation.dialog}
+          working={inviting}
+          onConfirm={() => void invite()}
+          onClose={() => {
+            if (!inviting) setInviteOpen(false);
+          }}
+        />
+      ) : null}
       <div ref={endRef} aria-hidden="true" />
     </>
   );

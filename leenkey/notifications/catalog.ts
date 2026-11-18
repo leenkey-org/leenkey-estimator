@@ -1,6 +1,9 @@
 import {
   Bell,
+  CalendarCheck,
   CalendarClock,
+  CalendarPlus,
+  CalendarX,
   CircleAlert,
   CircleCheck,
   ClipboardList,
@@ -19,6 +22,7 @@ import type { NotificationTone } from "@/components/shared/notification-item";
 import type { NotificationView } from "@/core/notifications/types";
 import type { Space } from "@/leenkey/navigation/spaces";
 import { legalDate } from "@/leenkey/billing/withdrawal";
+import { visitDateTime } from "@/leenkey/visits/dates";
 import { formatAmount, formatPrice } from "@/lib/format";
 import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { frNotifications } from "@/lib/i18n/sections/notifications";
@@ -97,6 +101,12 @@ function position(value: unknown): number | null {
 
 function amount(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+/** « samedi 21 novembre à 10 h 30 », from a date of the facts; null when it is none. */
+function dateTime(value: unknown): string | null {
+  const iso = text(value);
+  return iso && !Number.isNaN(Date.parse(iso)) ? visitDateTime(iso) : null;
 }
 
 const CATALOG: Record<string, Entry> = {
@@ -359,6 +369,50 @@ const CATALOG: Record<string, Entry> = {
       const price = amount(data.price_cents);
       return t.offerExpired.detail(price ? formatPrice(price) : null, text(data.title));
     },
+  },
+  // L3-02: a visit on invitation. The invitation, for the buyer; a booking and
+  // a reminder, for both parties; a cancelling, for the party who did not
+  // cancel (`role` says who reads it). The address is in none of them.
+  "visit.invited": {
+    icon: CalendarPlus,
+    tone: "blue",
+    filters: ["visitsOffers"],
+    title: (data) => t.visitInvited.title(text(data.seller_first_name)),
+    detail: (data) => {
+      const title = text(data.title);
+      const until = dateTime(data.expires_at);
+      return t.visitInvited.detail([
+        title ? `«\u00A0${title}\u00A0»` : null,
+        until ? t.visitInvited.until(until) : null,
+      ]);
+    },
+  },
+  "visit.booked": {
+    icon: CalendarCheck,
+    tone: "success",
+    filters: ["visitsOffers", "offersVisits"],
+    title: (data) =>
+      data.role === "seller"
+        ? t.visitBooked.seller(text(data.buyer_first_name))
+        : t.visitBooked.buyer,
+    detail: (data) => t.visitBooked.detail(dateTime(data.starts_at), text(data.title)),
+  },
+  "visit.cancelled": {
+    icon: CalendarX,
+    tone: "warning",
+    filters: ["visitsOffers", "offersVisits"],
+    title: (data) =>
+      data.role === "seller"
+        ? t.visitCancelled.seller(text(data.buyer_first_name))
+        : t.visitCancelled.buyer,
+    detail: (data) => t.visitCancelled.detail(dateTime(data.starts_at), text(data.title)),
+  },
+  "visit.reminder": {
+    icon: CalendarClock,
+    tone: "stone",
+    filters: ["visitsOffers", "offersVisits"],
+    title: () => t.visitReminder.title,
+    detail: (data) => t.visitReminder.detail(dateTime(data.starts_at), text(data.title)),
   },
   "step.advanced": {
     icon: Flag,
