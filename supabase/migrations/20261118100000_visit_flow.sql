@@ -13,7 +13,7 @@ alter table public.visits add column reminder_sent_at timestamptz;
 -- « 21/11/2026 à 10h00 », Paris time, for the notices of the conversation.
 create function public.visit_date_label(p_at timestamptz) returns text
 language sql stable set search_path = '' as $$
-  select to_char(p_at at time zone 'Europe/Paris', 'DD/MM/YYYY "à" HH24"h"MI');
+  select to_char(p_at at time zone 'Europe/Paris', 'DD/MM/YYYY "à" FMHH24" h "MI');
 $$;
 
 -- A notice in the listing conversation of the buyer about the property.
@@ -50,7 +50,7 @@ begin
   end if;
   perform pg_advisory_xact_lock(hashtextextended('messages_rate_limit:' || new.sender_id::text, 0));
   if (select count(*) from public.messages
-       where sender_id = new.sender_id and kind = 'text'
+       where sender_id = new.sender_id and kind in ('text', 'assistant_handoff')
          and created_at > now() - interval '1 hour') >= 20 then
     raise exception 'messages_per_hour' using errcode = '54000';
   end if;
@@ -192,6 +192,51 @@ language sql stable security definer set search_path = '' as $$
 $$;
 
 -- ---------------------------------------------------------------------------
+-- visit_invite of L3-01, with two more rules (review of L3-02): the seller
+-- has a free slot to offer (an invitation without one sends the buyer to an
+-- empty page), and an invitation asked again within 10 minutes changes
+-- nothing (no second notice, no second email, the link stays).
+-- ---------------------------------------------------------------------------
+create or replace function public.visit_invite(p_property uuid, p_buyer uuid)
+returns table (token text, expires_at timestamptz)
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_token text := encode(extensions.gen_random_bytes(32), 'hex');
+  v_expires timestamptz := now() + interval '7 days';
+  i public.visit_invitations;
+begin
+  if not public.is_active_user() or not public.property_is_editable(p_property) then
+    raise exception 'not a property of yours' using errcode = '42501';
+  end if;
+  if not public.property_visitable(p_property) then
+    raise exception 'the listing is not online' using errcode = '22023';
+  end if;
+  if not public.buyer_can_be_invited(p_property, p_buyer) then
+    raise exception 'this buyer has no relation with the property' using errcode = '22023';
+  end if;
+  if not exists (
+    select 1 from public.visit_slots s
+     where s.property_id = p_property and s.removed_at is null
+       and s.starts_at > now() + interval '2 hours'
+       and (select count(*) from public.visits v
+             where v.slot_id = s.id and v.status = 'confirmed') < s.capacity) then
+    raise exception 'no free slot to offer' using errcode = '22023';
+  end if;
+  select * into i from public.visit_invitations vi
+   where vi.property_id = p_property and vi.buyer_id = p_buyer for update;
+  if found and i.expires_at > v_expires - interval '10 minutes' then
+    return query select i.token, i.expires_at;
+    return;
+  end if;
+  insert into public.visit_invitations as vi (property_id, buyer_id, token, expires_at)
+  values (p_property, p_buyer, v_token, v_expires)
+  on conflict (property_id, buyer_id)
+    do update set token = excluded.token, expires_at = excluded.expires_at;
+  return query select v_token, v_expires;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- An invitation (new, or asked again: a new token)
 -- ---------------------------------------------------------------------------
 create function public.visit_invitations_notify() returns trigger
@@ -203,6 +248,10 @@ begin
     return null;
   end if;
   select owner_id into v_seller from public.properties where id = new.property_id;
+  -- The link of an earlier invitation no longer works: its notification is
+  -- read, its email does not leave.
+  update public.notifications set read_at = now()
+   where profile_id = new.buyer_id and group_key = 'visit-invitation:' || new.id and read_at is null;
   perform public.visit_notice(
     new.property_id, new.buyer_id, v_seller, 'visit_invite',
     'Invitation à visiter le bien : réservation d''un créneau jusqu''au '
@@ -291,6 +340,9 @@ begin
       join public.visit_slots s on s.id = vi.slot_id
       join public.properties p on p.id = vi.property_id
      where vi.status = 'confirmed' and vi.reminder_sent_at is null and s.starts_at > p_now
+       -- Booked in the last 12 hours: the confirmation says it all.
+       and vi.created_at <= p_now - interval '12 hours'
+       and public.property_visitable(vi.property_id)
        and (s.starts_at at time zone 'Europe/Paris')::date
            = (p_now at time zone 'Europe/Paris')::date + 1
      for update of vi

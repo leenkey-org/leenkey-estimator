@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CalendarPlus, ChevronLeft } from "lucide-react";
 import { AdvisorAvatar } from "@/components/shared/advisor-avatar";
 import { Button } from "@/components/shared/button";
 import { Composer } from "@/components/shared/composer";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { ConversationHeader } from "@/components/shared/conversation-header";
 import { FinancingMention, type FinancingStatus } from "@/components/shared/financing-badge";
 import { IconButton, iconButtonVariants } from "@/components/shared/icon-button";
@@ -107,7 +109,9 @@ export function ConversationView({
   visits,
   now,
 }: ConversationViewProps) {
+  const router = useRouter();
   const [inviting, setInviting] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteNotice, setInviteNotice] = useState<{
     tone: "success" | "danger";
     text: string;
@@ -189,6 +193,10 @@ export function ConversationView({
         (message) => !known.has(message.id) && message.senderId !== viewerId,
       );
       addMessages(incoming);
+      // An invitation: the page reads the link of the buyer again (« Réserver un créneau »).
+      if (incoming.some((message) => !known.has(message.id) && message.kind === "visit_invite")) {
+        router.refresh();
+      }
       if (!received) return;
       readPending.current = true;
       if (document.visibilityState === "visible") markRead();
@@ -254,6 +262,7 @@ export function ConversationView({
       console.error("[visits] invitation not sent", caught);
     }
     setInviting(false);
+    setInviteOpen(false);
     setInviteNotice(
       result?.ok
         ? { tone: "success", text: fr.visits.conversation.invited }
@@ -446,8 +455,11 @@ export function ConversationView({
                     icon={CalendarPlus}
                     variant="stone"
                     aria-label={fr.visits.conversation.invite}
-                    aria-busy={inviting || undefined}
-                    onClick={() => void invite()}
+                    disabled={inviting}
+                    onClick={() => {
+                      setInviteNotice(null);
+                      setInviteOpen(true);
+                    }}
                     className="shrink-0"
                   />
                 ) : undefined
@@ -457,6 +469,20 @@ export function ConversationView({
           </>
         )}
       </div>
+      {visits?.invite ? (
+        <ConfirmDialog
+          open={inviteOpen}
+          title={fr.visits.conversation.dialog.title(counterpart)}
+          description={fr.visits.conversation.dialog.description}
+          confirmLabel={fr.visits.conversation.dialog.confirm}
+          labels={fr.visits.conversation.dialog}
+          working={inviting}
+          onConfirm={() => void invite()}
+          onClose={() => {
+            if (!inviting) setInviteOpen(false);
+          }}
+        />
+      ) : null}
       <div ref={endRef} aria-hidden="true" />
     </>
   );

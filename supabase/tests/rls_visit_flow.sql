@@ -4,7 +4,7 @@
 -- 8 h in Paris; the address is in no notification. Fixtures in 99995.
 begin;
 \ir _helpers.psql
-select plan(21);
+select plan(23);
 \ir _plan.psql
 
 \set who seller_a
@@ -34,8 +34,12 @@ select conversation_open(:'listing', 'Bonjour, une visite est-elle possible ?') 
 -- ===========================================================================
 \set who seller_a
 \ir _as.psql
+select throws_ok(format($$select visit_invite(%L, %L)$$, :'prop', tests.uid('buyer_c')),
+                 '22023', 'no free slot to offer', 'seller_a: no invitation without a free slot');
 select visit_slot_add(:'prop', date_trunc('hour', now()) + interval '2 days', 30) as slot1 \gset
 select token as token_c from visit_invite(:'prop', tests.uid('buyer_c')) \gset
+select is((select token from visit_invite(:'prop', tests.uid('buyer_c'))), :'token_c'::text,
+          'invited again within 10 minutes: the same link, nothing more');
 reset role;
 select is((select count(*)::int from messages where conversation_id = :'conv' and kind = 'visit_invite'
             and sender_id = tests.uid('seller_a')), 1,
@@ -68,6 +72,8 @@ select throws_ok(format($$insert into messages (conversation_id, sender_id, body
 -- ===========================================================================
 select visit_book(:'token_c', :'slot1') as visit1 \gset
 reset role;
+-- Booked more than 12 hours before the reminder (the simulated run is tomorrow morning).
+update visits set created_at = now() - interval '1 day' where id = :'visit1';
 select is((select count(*)::int from messages where conversation_id = :'conv' and kind = 'system'
             and body like 'Visite réservée pour le %'), 1, 'a booking posts its notice');
 select is((select array_agg(data->>'role' order by data->>'role') from notifications

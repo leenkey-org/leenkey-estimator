@@ -29,7 +29,7 @@ function escapeText(value: string): string {
     .replace(/\\/g, "\\\\")
     .replace(/;/g, "\\;")
     .replace(/,/g, "\\,")
-    .replace(/\r?\n/g, "\\n");
+    .replace(/\r\n?|\n/g, "\\n");
 }
 
 /** Lines of 75 octets at most, the next ones starting with a space. */

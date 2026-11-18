@@ -85,29 +85,43 @@ test("visite : invitation, créneau, réservation, adresse, agenda, annulation",
   const seller = await openBrowser(browser, base, false);
   const buyer = await openBrowser(browser, base, true);
 
-  await test.step("le vendeur invite l'acquéreur depuis la conversation", async () => {
-    await signIn(seller, "seller_a", SEED_CONVERSATION);
+  const invite = async () => {
     await seller.getByRole("button", { name: "Inviter à une visite" }).click();
-    await expect(seller.getByText("Invitation envoyée.")).toBeVisible();
-    await expect(
-      thread(seller)
-        .getByText(/Invitation à visiter le bien/)
-        .last(),
-    ).toBeVisible();
-    await expectNoSeriousViolation(seller);
+    const dialog = seller.getByRole("dialog");
+    await expect(dialog.getByText("Inviter Chloé à visiter ?")).toBeVisible();
+    await dialog.getByRole("button", { name: "Envoyer l'invitation" }).click();
+  };
+
+  await test.step("sans créneau libre, l'invitation ne part pas", async () => {
+    await signIn(seller, "seller_a", SEED_CONVERSATION);
+    await invite();
+    await expect(seller.getByText("Ajoutez d'abord un créneau libre")).toBeVisible();
+    await expect(thread(seller).getByText(/Invitation à visiter le bien/)).toHaveCount(0);
   });
 
   await test.step("le vendeur ouvre un créneau dans l'onglet Visites", async () => {
-    await thread(seller).getByRole("link", { name: "Gérer les créneaux" }).last().click();
+    await seller.getByRole("link", { name: "Voir mon bien" }).first().click();
+    await seller.getByRole("link", { name: "Visites", exact: true }).click();
     await seller.waitForURL(/\/vendeur\/biens\/[0-9a-f-]+\/visites$/);
     await expect(seller.getByRole("heading", { name: "Visites", level: 2 })).toBeVisible();
-    await expect(seller.getByText(/Invité, lien valable/)).toBeVisible();
     await seller.getByLabel("Date").fill(parisDay(3));
     await seller.getByLabel("Heure de début").fill("10:00");
     await seller.getByLabel("Durée").selectOption("30");
     await seller.getByRole("button", { name: "Ajouter le créneau" }).click();
     await expect(seller.getByText("Créneau ajouté.")).toBeVisible();
     await expect(seller.getByText(/10\sh\s–\s10\sh\s30\s·\sLibre/)).toBeVisible();
+    await expectNoSeriousViolation(seller);
+  });
+
+  await test.step("le vendeur invite l'acquéreur depuis la conversation", async () => {
+    await seller.goto(SEED_CONVERSATION);
+    await invite();
+    await expect(seller.getByText("Invitation envoyée.")).toBeVisible();
+    await expect(
+      thread(seller)
+        .getByText(/Invitation à visiter le bien/)
+        .last(),
+    ).toBeVisible();
     await expectNoSeriousViolation(seller);
   });
 
@@ -150,7 +164,8 @@ test("visite : invitation, créneau, réservation, adresse, agenda, annulation",
   });
 
   await test.step("le vendeur voit la visite à venir", async () => {
-    await seller.reload();
+    await thread(seller).getByRole("link", { name: "Gérer les créneaux" }).last().click();
+    await seller.waitForURL(/\/vendeur\/biens\/[0-9a-f-]+\/visites$/);
     await expect(seller.getByText("Avec Chloé").first()).toBeVisible();
     await expect(seller.getByText(/Réservé par Chloé/)).toBeVisible();
     await expect(seller.getByText("Visite réservée", { exact: true })).toBeVisible();

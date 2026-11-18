@@ -92,7 +92,7 @@ export async function removeVisitSlot(
   return { ok: true, data: null };
 }
 
-export type InviteError = "auth" | "invalid" | "noRelation" | "offline" | "unavailable";
+export type InviteError = "auth" | "invalid" | "noRelation" | "offline" | "noSlot" | "unavailable";
 export type InviteResult =
   | { ok: true; data: { expiresAt: string } }
   | { ok: false; error: InviteError };
@@ -111,7 +111,14 @@ export async function inviteToVisit(input: unknown): Promise<InviteResult> {
   });
   if (error || !data?.[0]) {
     if (error?.code === "22023") {
-      return { ok: false, error: error.message.includes("not online") ? "offline" : "noRelation" };
+      return {
+        ok: false,
+        error: error.message.includes("not online")
+          ? "offline"
+          : error.message.includes("no free slot")
+            ? "noSlot"
+            : "noRelation",
+      };
     }
     if (error?.code !== "42501") {
       console.error("[visits] buyer not invited", {

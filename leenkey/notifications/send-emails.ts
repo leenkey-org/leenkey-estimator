@@ -154,8 +154,13 @@ async function deliver(
     throw error;
   }
   if (!content) {
-    console.error("[notifications] email without content", { type: email.type });
-    return "taken";
+    // Nothing to say any more (a visit cancelled before its email left): never sent.
+    await supabase
+      .from("notifications")
+      .update({ email_sent_at: null, email_skipped_at: now.toISOString() })
+      .in("id", kept.ids)
+      .eq("email_sent_at", claimedAt);
+    return "skipped";
   }
   if ((await sendEmail({ to, ...content })) !== "failed") return "sent";
   await release(supabase, kept.ids, claimedAt, new Date(now.getTime() + RETRY_MINUTES * 60_000));

@@ -23,6 +23,7 @@ export type SellerSlot = Slot & {
 
 export type SellerVisit = {
   id: string;
+  slotId: string;
   startsAt: string;
   endsAt: string;
   status: VisitStatus;
@@ -57,7 +58,7 @@ export async function sellerVisits(propertyId: string): Promise<QueryResult<Sell
       .order("starts_at"),
     supabase
       .from("visits")
-      .select("id, status, buyer_id, slot:visit_slots!inner(starts_at, ends_at)")
+      .select("id, status, buyer_id, slot_id, slot:visit_slots!inner(starts_at, ends_at)")
       .eq("property_id", propertyId)
       .order("created_at", { ascending: false })
       .limit(200),
@@ -80,6 +81,7 @@ export async function sellerVisits(propertyId: string): Promise<QueryResult<Sell
   const invited = new Map((invitations.data ?? []).map((row) => [row.buyer_id, row.expires_at]));
   const visitRows: SellerVisit[] = (visits.data ?? []).map((row) => ({
     id: row.id,
+    slotId: row.slot_id,
     startsAt: row.slot.starts_at,
     endsAt: row.slot.ends_at,
     status: row.status,
@@ -88,14 +90,14 @@ export async function sellerVisits(propertyId: string): Promise<QueryResult<Sell
     financingStatus: buyerOf.get(row.buyer_id)?.financing_status ?? "not_provided",
   }));
   const upcoming = visitRows.filter(
-    (visit) => visit.status === "confirmed" && visit.startsAt > now,
+    (visit) => visit.status === "confirmed" && Date.parse(visit.startsAt) > Date.now(),
   );
-  const bySlotStart = new Map(upcoming.map((visit) => [visit.startsAt, visit]));
+  const bySlot = new Map(upcoming.map((visit) => [visit.slotId, visit]));
   return {
     ok: true,
     data: {
       slots: (slots.data ?? []).map((slot) => {
-        const visit = bySlotStart.get(slot.starts_at);
+        const visit = bySlot.get(slot.id);
         return {
           id: slot.id,
           startsAt: slot.starts_at,
@@ -229,6 +231,8 @@ export async function visitDetail(
     supabase.rpc("visit_listing", { p_property: visit.property_id }),
   ]);
   const place = address.data?.[0] ?? null;
+  // Neither its buyer nor the seller of the property (an admin reads the row): not their page.
+  if (role === "seller" && !listing.data?.[0]) return { ok: true, data: null };
   return {
     ok: true,
     data: {

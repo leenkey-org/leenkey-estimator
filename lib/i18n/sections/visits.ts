@@ -54,6 +54,7 @@ export const frVisits = {
         auth: "Votre session a expiré. Reconnectez-vous.",
         invalid: "Ça n'a pas fonctionné. Réessayez.",
         noRelation: "Cet acquéreur ne vous a ni écrit ni fait d'offre sur ce bien.",
+        noSlot: "Ajoutez d'abord un créneau libre.",
         offline: "Votre annonce n'est pas en ligne.",
         unavailable: "Ça n'a pas fonctionné. Réessayez.",
       },
@@ -76,9 +77,9 @@ export const frVisits = {
   },
   cancelDialog: {
     title: "Annuler cette visite ?",
-    seller: "L'acquéreur est prévenu par email. Le créneau redevient libre.",
+    seller: "L'acquéreur est prévenu. Le créneau redevient libre.",
     buyer:
-      "Le vendeur est prévenu par email. Vous pourrez réserver un autre créneau tant que votre invitation est valide.",
+      "Le vendeur est prévenu. Vous pourrez réserver un autre créneau tant que votre invitation est valide.",
     confirm: "Annuler la visite",
     back: "Retour",
     close: "Fermer",
@@ -94,11 +95,21 @@ export const frVisits = {
     invited: "Invitation envoyée. L'acquéreur peut réserver un créneau pendant 7 jours.",
     book: "Réserver un créneau",
     manage: "Gérer les créneaux",
+    dialog: {
+      title: (name: string) => `Inviter ${name} à visiter ?`,
+      description:
+        "L'acquéreur reçoit un lien pour réserver l'un de vos créneaux libres, valable 7 jours. L'adresse exacte ne lui est donnée qu'une fois la visite confirmée.",
+      confirm: "Envoyer l'invitation",
+      back: "Retour",
+      close: "Fermer",
+      cancel: "Annuler",
+    },
     errors: {
       auth: "Votre session a expiré. Reconnectez-vous.",
       invalid: "L'invitation n'a pas pu être envoyée. Réessayez.",
       noRelation: "L'invitation n'a pas pu être envoyée. Réessayez.",
       offline: "Votre annonce n'est pas en ligne : l'invitation n'est pas partie.",
+      noSlot: "Ajoutez d'abord un créneau libre dans l'onglet Visites de votre bien.",
       unavailable: "L'invitation n'a pas pu être envoyée. Réessayez.",
     },
   },
@@ -141,7 +152,7 @@ export const frVisits = {
   visit: {
     metaTitle: "Ma visite",
     title: "Visite",
-    booked: "Votre visite est réservée. Un email de confirmation vous est envoyé.",
+    booked: "Votre visite est réservée. Vous la retrouvez ici et sur votre accueil.",
     when: "Date et heure",
     where: "Adresse",
     addressLater: "L'adresse exacte est donnée à l'acquéreur d'une visite confirmée.",

@@ -193,6 +193,7 @@ export default async function PropertyVisitsPage({ params }: Props) {
                   <span className="text-lk-caption text-lk-ink-3">
                     {t.visits.with(visit.buyerFirstName)}
                   </span>
+                  <FinancingBadge status={visit.financingStatus} className="mt-1 self-start" />
                 </div>
                 <VisitStatusBadge status={visit.status} past={new Date(visit.startsAt) <= now} />
               </li>
