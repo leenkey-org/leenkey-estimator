@@ -306,6 +306,7 @@ export const frProperties = {
       listing: "Annonce",
       steps: "Étapes",
       offers: "Offres",
+      visits: "Visites",
     },
     pricePerM2: "prix au m²",
     status: {

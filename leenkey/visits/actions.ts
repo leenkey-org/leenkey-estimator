@@ -128,6 +128,40 @@ export async function inviteToVisit(input: unknown): Promise<InviteResult> {
   return { ok: true, data: { expiresAt: data[0].expires_at } };
 }
 
+/**
+ * The calendar button of a conversation (SPEC-V2 14): invites its buyer to
+ * visit the property it is about. The conversation is read with the session
+ * of the caller (a participant only); visit_invite checks the seller.
+ */
+export async function inviteFromConversation(conversationId: string): Promise<InviteResult> {
+  const profile = await getProfile();
+  if (!profile) return { ok: false, error: "auth" };
+  if (!UUID.test(conversationId)) return { ok: false, error: "invalid" };
+  const supabase = await createClient();
+  const { data: conversation, error } = await supabase
+    .from("conversations")
+    .select("property_id, buyer_id, seller_id, kind")
+    .eq("id", conversationId)
+    .maybeSingle();
+  if (error) {
+    console.error("[visits] conversation read failed", {
+      user_id: profile.id,
+      entity_id: conversationId,
+      code: error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  if (
+    !conversation?.property_id ||
+    !conversation.buyer_id ||
+    conversation.kind !== "listing" ||
+    conversation.seller_id !== profile.id
+  ) {
+    return { ok: false, error: "invalid" };
+  }
+  return inviteToVisit({ propertyId: conversation.property_id, buyerId: conversation.buyer_id });
+}
+
 export type BookError =
   | "auth"
   | "invalid"

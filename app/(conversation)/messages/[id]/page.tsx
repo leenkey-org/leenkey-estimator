@@ -20,6 +20,8 @@ import {
   listConversations,
   threadSenders,
 } from "@/leenkey/messaging/queries";
+import { sheetHref } from "@/leenkey/properties/sheet";
+import { invitationLink } from "@/leenkey/visits/queries";
 import { capitalize } from "@/lib/format";
 import { frMessaging } from "@/lib/i18n/sections/messaging";
 
@@ -66,6 +68,16 @@ export default async function ConversationPage({ params, searchParams }: Props) 
   const advisor = conversation.kind === "advisor";
   const names = advisor ? await threadSenders(id) : {};
   const heading = conversationHeading(conversation, now);
+  // Visits (L3-02): the seller invites from the field; the buyer books from the notice.
+  const seller = conversation.role === "seller";
+  const visits =
+    advisor || !conversation.propertyId
+      ? undefined
+      : {
+          invite: seller && !conversation.closed,
+          bookHref: seller ? null : await invitationLink(conversation.propertyId, profile.id),
+          manageHref: seller ? sheetHref(conversation.propertyId, "visites") : null,
+        };
 
   return (
     <>
@@ -103,6 +115,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
           closed={conversation.closed}
           initialDraft={visit && !conversation.closed && !advisor ? t.start.visit : ""}
           suggestions={conversation.role === "seller" && !advisor}
+          visits={visits}
           now={now.toISOString()}
         />
       </MessagesLayout>

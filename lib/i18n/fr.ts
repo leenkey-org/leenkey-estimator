@@ -27,6 +27,7 @@ import { frAdminListings } from "./sections/adminListings";
 import { frListingRevisions } from "./sections/listingRevisions";
 import { frFinancingDocument } from "./sections/financingDocument";
 import { frOffer } from "./sections/offer";
+import { frVisits } from "./sections/visits";
 import { frAdminDashboard } from "./sections/adminDashboard";
 import { frUpgrade } from "./sections/upgrade";
 import { frAdminUsers } from "./sections/adminUsers";
@@ -76,6 +77,7 @@ export const fr = {
   listingRevisions: frListingRevisions,
   financingDocument: frFinancingDocument,
   offer: frOffer,
+  visits: frVisits,
   adminDashboard: frAdminDashboard,
   upgrade: frUpgrade,
   adminUsers: frAdminUsers,

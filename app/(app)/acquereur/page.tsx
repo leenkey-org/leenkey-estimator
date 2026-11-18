@@ -23,10 +23,13 @@ import { listConversations } from "@/leenkey/messaging/queries";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { toPropertyCard } from "@/leenkey/search/cards";
+import { BuyerVisitsList } from "@/leenkey/visits/components/buyer-visits-list";
+import { buyerUpcomingVisits } from "@/leenkey/visits/queries";
 import { frBuyerSpace } from "@/lib/i18n/sections/buyerSpace";
 import { frFavorites } from "@/lib/i18n/sections/favorites";
 import { frOffer } from "@/lib/i18n/sections/offer";
 import { frProperties } from "@/lib/i18n/sections/properties";
+import { frVisits } from "@/lib/i18n/sections/visits";
 import { frSpaces } from "@/lib/i18n/sections/spaces";
 
 // The texts this module shows (lib/i18n/sections, P-06).
@@ -36,6 +39,7 @@ const fr = {
   offer: frOffer,
   properties: frProperties,
   spaces: frSpaces,
+  visits: frVisits,
 } as const;
 
 export const metadata: Metadata = { title: fr.spaces.buyer.metaTitle };
@@ -148,11 +152,12 @@ export default async function BuyerHomePage() {
   const profile = await requireProfile();
   // Before the reads: a heart changed since then wins (favorite-store.ts).
   const checkedAt = Date.now();
-  const [project, favourites, conversations, offers] = await Promise.all([
+  const [project, favourites, conversations, offers, visits] = await Promise.all([
     buyerProfile(profile.id),
     listFavorites(profile.id),
     listConversations(),
     buyerOffers(profile.id),
+    buyerUpcomingVisits(profile.id),
   ]);
   const now = new Date(checkedAt);
   const file = project.ok ? buyerFile(project.data) : null;
@@ -205,6 +210,12 @@ export default async function BuyerHomePage() {
         {file && !file.complete ? fileBlock : null}
 
         {/* Only once an offer exists: nothing to say to a buyer who made none. */}
+        {visits.ok && visits.data.length > 0 ? (
+          <Section id="visites" title={fr.visits.home.title}>
+            <BuyerVisitsList visits={visits.data} />
+          </Section>
+        ) : null}
+
         {offers.ok && offers.data.length > 0 ? (
           <Section id="offres" title={fr.offer.followUp.list.title}>
             <BuyerOffersList offers={offers.data} />
