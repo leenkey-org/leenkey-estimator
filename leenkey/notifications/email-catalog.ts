@@ -8,6 +8,11 @@ import { emailSafeText } from "@/core/notifications/user-text";
 import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
 import { AccountsCreatedEmail, accountsCreatedSubject } from "@/emails/accounts-created";
 import { CaseRequestsEmail, caseRequestsSubject } from "@/emails/case-requests";
+import {
+  DocumentAccessRequestedEmail,
+  documentAccessRequestedSubject,
+} from "@/emails/document-access-requested";
+import { DocumentsSharedEmail, documentsSharedSubject } from "@/emails/documents-shared";
 import { OffersAcceptedEmail, offersAcceptedSubject } from "@/emails/offers-accepted";
 import { ListingToReviewEmail, listingToReviewSubject } from "@/emails/listing-submitted";
 import { ListingsToReviewEmail, listingsToReviewSubject } from "@/emails/listings-to-review";
@@ -87,6 +92,15 @@ const POLICIES: Record<string, EmailPolicy> = {
   "visit.booked": { audience: "recipient", throttleMinutes: 0 },
   "visit.cancelled": { audience: "recipient", throttleMinutes: 0 },
   "visit.reminder": { audience: "recipient", throttleMinutes: 0 },
+  // L3-04: documents shared (the buyer): « un email par bien et par jour », the shares that
+  // come meanwhile go together in the next one; a request to read the documents (the seller):
+  // at once. Both follow the preference of the messages: they come from the other party.
+  "document.shared": { audience: "recipient", preference: "email_messages", throttleMinutes: 1440 },
+  "document.access_requested": {
+    audience: "recipient",
+    preference: "email_messages",
+    throttleMinutes: 0,
+  },
 };
 
 export function emailPolicy(type: string): EmailPolicy | null {
@@ -668,6 +682,57 @@ async function visitReminder(
 }
 
 /**
+ * Documents shared (L3-04), to the buyer: one email per property and per day,
+ * with the number shared by every row it covers. Never the name of a document.
+ */
+async function documentsShared(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  if (!last) return null;
+  // A row whose facts carry no number still says one document at least.
+  const count = email.items.reduce((sum, item) => {
+    const shared = item.data.count;
+    return (
+      sum + (typeof shared === "number" && Number.isInteger(shared) && shared > 0 ? shared : 1)
+    );
+  }, 0);
+  const { property, city } = visitPlace(last);
+  return rendered(
+    documentsSharedSubject(count, emailSafeText(last.data.city)),
+    DocumentsSharedEmail({
+      firstName: email.firstName,
+      count,
+      property,
+      city,
+      documentsUrl: absoluteUrl(last.link ?? "/acquereur/documents"),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
+/**
+ * A request to read the documents (L3-04), to the seller: the first name of
+ * the buyer, the status of the financing in its exact words, a link. Never an
+ * amount, never a contact detail of the buyer.
+ */
+async function documentAccessRequested(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  if (!last) return null;
+  const buyerFirstName = emailSafeText(last.data.buyer_first_name);
+  const status = last.data.financing_status;
+  return rendered(
+    documentAccessRequestedSubject(buyerFirstName),
+    DocumentAccessRequestedEmail({
+      firstName: email.firstName,
+      buyerFirstName,
+      property: emailSafeText(last.data.title),
+      financing: frFinancingStatus[isFinancingStatus(status) ? status : "not_provided"],
+      requestUrl: absoluteUrl(last.link ?? "/vendeur"),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
+/**
  * The email of a group, ready to leave; null when its type has none. The
  * emails of a visit read it when they leave (its address, whether it is still
  * confirmed): they need the client of the cron, and send nothing without it.
@@ -712,6 +777,10 @@ export function renderNotificationEmail(
       return visitCancelled(email);
     case "visit.reminder":
       return visitReminder(email, supabase);
+    case "document.shared":
+      return documentsShared(email);
+    case "document.access_requested":
+      return documentAccessRequested(email);
     default:
       return Promise.resolve(null);
   }

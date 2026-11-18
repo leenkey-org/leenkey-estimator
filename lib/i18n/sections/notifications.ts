@@ -194,6 +194,26 @@ export const frNotifications = {
       detail: (date: string | null, title: string | null) =>
         [date, title ? `«\u00A0${title}\u00A0»` : null].filter(Boolean).join(" · ") || null,
     },
+    // L3-04: the sale file (SPEC-V2 15). Documents shared, for the buyer (the
+    // number shared at once; the seller is not named); a request to read the
+    // documents, for the seller. Never the name of a document.
+    documentShared: {
+      title: (count: number | null) =>
+        count === null
+          ? "Des documents sont partagés avec vous"
+          : count > 1
+            ? `${count}\u00A0documents partagés avec vous`
+            : "1\u00A0document partagé avec vous",
+      detail: (title: string | null, city: string | null) =>
+        [title ? `«\u00A0${title}\u00A0»` : null, city].filter(Boolean).join(" · ") || null,
+    },
+    documentAccessRequested: {
+      title: (buyer: string | null) =>
+        buyer
+          ? `${buyer} demande l'accès à vos documents`
+          : "Un acquéreur demande l'accès à vos documents",
+      detail: (title: string | null) => (title ? `«\u00A0${title}\u00A0»` : null),
+    },
     // L1-23: the sale reaches a step (SPEC-V2 section 9).
     stepAdvanced: {
       title: (step: string | null) =>

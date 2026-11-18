@@ -213,9 +213,18 @@ export async function setExemption(input: unknown): Promise<SimpleResult> {
   if (!parsed.success) return { ok: false, error: "invalid" };
   const { propertyId, type, reason } = parsed.data;
   const supabase = await createClient();
-  const { error } = await supabase
+  // Insert, then the reason alone when it is said again: the columns of the
+  // key are not updatable (an upsert would ask for it).
+  let { error } = await supabase
     .from("document_exemptions")
-    .upsert({ property_id: propertyId, type, reason }, { onConflict: "property_id,type" });
+    .insert({ property_id: propertyId, type, reason });
+  if (error?.code === "23505") {
+    ({ error } = await supabase
+      .from("document_exemptions")
+      .update({ reason })
+      .eq("property_id", propertyId)
+      .eq("type", type));
+  }
   if (error) {
     if (error.code !== "42501") {
       console.error("[sale-file] exemption not saved", {
@@ -310,6 +319,46 @@ export async function unshareDocument(
       });
     }
     return { ok: false, error: "unavailable" };
+  }
+  revalidateFile(propertyId);
+  return { ok: true, data: null };
+}
+
+/** Stops sharing every document of a property with a buyer. */
+export async function unshareAll(propertyId: string, buyerId: string): Promise<SimpleResult> {
+  const profile = await getProfile();
+  if (!profile) return { ok: false, error: "auth" };
+  if (!UUID.test(propertyId) || !UUID.test(buyerId)) return { ok: false, error: "invalid" };
+  const supabase = await createClient();
+  const shared = await supabase
+    .from("documents")
+    .select("id, shares:document_shares!inner(buyer_id)")
+    .eq("property_id", propertyId)
+    .eq("shares.buyer_id", buyerId);
+  if (shared.error) {
+    console.error("[sale-file] shares read failed", {
+      user_id: profile.id,
+      entity_id: propertyId,
+      code: shared.error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  for (const document of shared.data) {
+    const { error } = await supabase.rpc("document_unshare", {
+      p_document: document.id,
+      p_buyer: buyerId,
+    });
+    if (error) {
+      if (error.code !== "42501") {
+        console.error("[sale-file] share not removed", {
+          user_id: profile.id,
+          entity_id: document.id,
+          code: error.code,
+        });
+      }
+      revalidateFile(propertyId);
+      return { ok: false, error: "unavailable" };
+    }
   }
   revalidateFile(propertyId);
   return { ok: true, data: null };

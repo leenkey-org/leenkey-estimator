@@ -18,7 +18,14 @@ const fr = { listing: frListing, properties: frProperties } as const;
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
 
-export type SheetTab = "infos" | "photos" | "annonce" | "etapes" | "offres" | "visites";
+export type SheetTab =
+  | "infos"
+  | "photos"
+  | "annonce"
+  | "etapes"
+  | "offres"
+  | "visites"
+  | "documents";
 
 /** Address of a tab of the page of a property; Infos is the page itself. */
 export function sheetHref(propertyId: string, tab: SheetTab = "infos"): string {
@@ -38,6 +45,8 @@ export function sheetTabs(propertyId: string): { href: string; label: string }[]
     { href: sheetHref(propertyId, "offres"), label: t.offers },
     // Slots, invitations and visits (L3-02).
     { href: sheetHref(propertyId, "visites"), label: t.visits },
+    // The sale file: checklist, shares, access requests (L3-04).
+    { href: sheetHref(propertyId, "documents"), label: t.documents },
   ];
 }
 

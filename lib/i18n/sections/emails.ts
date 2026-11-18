@@ -302,6 +302,40 @@ export const frEmails = {
       sellerAction: "Voir mes visites",
     },
   },
+  // L3-04: the emails of the sale file (SPEC-V2 10, 15 and 18). Documents
+  // shared, to the buyer: one email per property and per day, with the number
+  // shared since the last one. A request to read the documents, to the
+  // seller: the first name and the financing status of the buyer in its exact
+  // words, never an amount, never a contact detail.
+  documents: {
+    shared: {
+      subject: (count: number, city: string | null) =>
+        `${count > 1 ? `${count}\u00A0documents partagés avec vous` : "Un document partagé avec vous"}${city ? ` · ${city}` : ""}`,
+      title: (count: number) =>
+        count > 1 ? "Des documents sont partagés avec vous" : "Un document est partagé avec vous",
+      text: (count: number, title: string | null, city: string | null) => {
+        const property = `${title ? `du bien «\u00A0${title}\u00A0»` : "d'un bien"}${city ? ` à ${city}` : ""}`;
+        return count > 1
+          ? `${count}\u00A0documents ${property} sont partagés avec vous.`
+          : `Un document ${property} est partagé avec vous.`;
+      },
+      disclaimer:
+        "Ces documents vous sont transmis par le vendeur. Leenkey ne garantit ni leur contenu ni leur exhaustivité.",
+      action: "Voir les documents",
+      why: "Vous recevez cet email parce qu'un vendeur partage les documents de son bien avec vous sur Leenkey.",
+    },
+    requested: {
+      subject: (buyer: string | null) =>
+        `${buyer ?? "Un acquéreur"} demande l'accès à vos documents`,
+      title: "Demande d'accès à vos documents",
+      text: (buyer: string | null, title: string | null) =>
+        `${buyer ?? "Un acquéreur"} souhaite consulter les documents de votre bien${title ? ` «\u00A0${title}\u00A0»` : ""}.`,
+      financing: "Financement",
+      choice:
+        "Vous choisissez : accorder l'accès partage vos documents avec cet acquéreur, refuser ne partage rien.",
+      action: "Répondre à la demande",
+    },
+  },
   // L1-40: a plan ending within 30 days, to its owner.
   planEnding: {
     subject: (plan: string, date: string) => `Votre formule ${plan} se termine le ${date}`,

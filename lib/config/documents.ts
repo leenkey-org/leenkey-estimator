@@ -129,7 +129,7 @@ export function guessDocumentType(fileName: string): DocumentType | null {
     [/\berp\b|risques/, "erp"],
     [/carrez|mesurage/, "carrez"],
     [/assainissement|spanc/, "assainissement"],
-    [/titre|acte.de.vente|propriete/, "titre_propriete"],
+    [/titre|acte.de.vente|\bpropriete/, "titre_propriete"],
     [/taxe.fonciere|fonciere/, "taxe_fonciere"],
     [/urbanisme|bornage/, "certificat_urbanisme"],
     [/pre.?etat/, "pre_etat_date"],
