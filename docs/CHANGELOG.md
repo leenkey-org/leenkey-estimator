@@ -12,6 +12,9 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-20 · Tri du code : restes du modèle Lovable · PR #114
+- Retiré : 39 composants `components/ui` jamais importés (il en reste 7 : badge, button, input, label, radio-group, textarea, toggle), 26 dépendances qui ne servaient qu'à eux, le dossier `.lovable/`. Aucun changement visible.
+
 ### 2026-11-20 · Réponses de Cédric : textes légaux et site · PR #113
 - Modifié : CGV (version 2026-11-20) : rôle, disponibilité et interventions du conseiller, TVA de 20 % incluse, remboursement intégral en cas de rétractation ; politique de confidentialité (version 2026-11-20) : durées de conservation de Cédric ; page « Intelligence artificielle » : articles 2 à 4 ; page « Qui sommes-nous » : nouveau texte, sans chiffres ; adresse contact@leenkey.fr ; délais du conseiller (1 jour ouvré, 2 jours ouvrés) ; formules (`01_plans.sql`) ; consignes de l'assistant (aucune entremise).
 - Retiré : Google Tag Manager ; la page Investir des menus, du plan du site et de l'indexation ; l'étape « documents » de l'estimateur.
