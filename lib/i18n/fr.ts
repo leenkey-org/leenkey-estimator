@@ -28,6 +28,7 @@ import { frListingRevisions } from "./sections/listingRevisions";
 import { frFinancingDocument } from "./sections/financingDocument";
 import { frOffer } from "./sections/offer";
 import { frVisits } from "./sections/visits";
+import { frSaleFile } from "./sections/saleFile";
 import { frAdminDashboard } from "./sections/adminDashboard";
 import { frUpgrade } from "./sections/upgrade";
 import { frAdminUsers } from "./sections/adminUsers";
@@ -78,6 +79,7 @@ export const fr = {
   financingDocument: frFinancingDocument,
   offer: frOffer,
   visits: frVisits,
+  saleFile: frSaleFile,
   adminDashboard: frAdminDashboard,
   upgrade: frUpgrade,
   adminUsers: frAdminUsers,

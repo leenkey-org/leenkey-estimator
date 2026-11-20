@@ -859,6 +859,198 @@ describe("the emails of a visit (L3-02)", () => {
   });
 });
 
+describe("the emails of the sale file (L3-04)", () => {
+  const plain = (value: string | undefined) => (value ?? "").replace(/[\u00A0\u202F]/g, " ");
+  const AMOUNT = /€|\d[\d\s]*euros?\b|budget|apport/i;
+
+  const share = (id: string, count: unknown, data: Record<string, unknown> = {}) =>
+    queued({
+      id,
+      type: "document.shared",
+      profileId: "buyer-c",
+      email: "buyer_c@exemple.test",
+      firstName: "Chloé",
+      groupKey: "documents:p1:buyer-c",
+      link: "/acquereur/documents",
+      data: {
+        entity_id: "p1",
+        property_id: "p1",
+        title: "Maison familiale 5 pièces",
+        city: "Savigny-sur-Orge",
+        count,
+        ...data,
+      },
+    });
+
+  const request = (
+    data: Record<string, unknown>,
+    link: string | null = "/vendeur/biens/p1/documents",
+  ) =>
+    planned([
+      queued({
+        type: "document.access_requested",
+        profileId: "seller-a",
+        firstName: "Alice",
+        groupKey: "document-request:r1",
+        link,
+        data,
+      }),
+    ]);
+  const facts = {
+    entity_id: "r1",
+    property_id: "p1",
+    title: "Maison familiale 5 pièces",
+    buyer_first_name: "Chloé",
+    financing_status: "document_checked",
+  };
+
+  it("who gets them: one email per property and per day for the shares, the request at once", async () => {
+    const { emailPolicy } = await import("@/leenkey/notifications/email-catalog");
+    expect(emailPolicy("document.shared")).toEqual({
+      audience: "recipient",
+      preference: "email_messages",
+      throttleMinutes: 1380,
+    });
+    expect(emailPolicy("document.access_requested")).toEqual({
+      audience: "recipient",
+      preference: "email_messages",
+      throttleMinutes: 0,
+    });
+  });
+
+  it("the shares of a day wait for the next email of their property, and leave together", async () => {
+    const { planEmails } = await import("@/core/notifications/batch");
+    const { emailPolicy, renderNotificationEmail } =
+      await import("@/leenkey/notifications/email-catalog");
+    const sent = new Date("2026-10-23T12:00:00Z");
+    const rows = [share("s1", 2, { title: "Maison" }), share("s2", 3)].map((row, index) => ({
+      ...row,
+      createdAt: new Date(`2026-10-24T0${8 + index}:00:00Z`),
+      groupLastSentAt: sent,
+    }));
+    // 22 hours after the last email of this property: they wait for the 24th.
+    const early = planEmails(rows, emailPolicy, NOW);
+    expect(early.emails).toEqual([]);
+    expect(early.postponed).toEqual([
+      { ids: ["s1", "s2"], until: new Date("2026-10-24T11:00:00Z") },
+    ]);
+    // Then one email for both, another property apart, and the preference of the messages.
+    const later = planEmails(
+      [
+        ...rows,
+        { ...share("other", 1), groupKey: "documents:p2:buyer-c" },
+        { ...share("off", 4), groupKey: "documents:p3:buyer-c", prefs: { email_messages: false } },
+      ],
+      emailPolicy,
+      new Date("2026-10-24T12:01:00Z"),
+    );
+    expect(later.emails.map((email) => email.ids)).toEqual([["s1", "s2"], ["other"]]);
+    expect(later.skipped).toEqual([{ id: "off", reason: "disabled" }]);
+    const email = await renderNotificationEmail(later.emails[0]);
+    expect(plain(email?.subject)).toBe("5 documents partagés avec vous · Savigny-sur-Orge");
+  });
+
+  it("tells the buyer how many documents are shared: the sum of the rows, the words of the last", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const email = await renderNotificationEmail(
+      planned([share("s1", 2, { title: "Ancien titre" }), share("s2", 1), share("s3", 3)]),
+    );
+    expect(plain(email?.subject)).toBe("6 documents partagés avec vous · Savigny-sur-Orge");
+    const text = plain(email?.text);
+    expect(text).toContain("Bonjour Chloé,");
+    expect(text).toContain(
+      "6 documents du bien « Maison familiale 5 pièces » à Savigny-sur-Orge sont partagés avec vous.",
+    );
+    expect(text).toContain(
+      "Ces documents vous sont transmis par le vendeur. Leenkey ne garantit ni leur contenu ni leur exhaustivité.",
+    );
+    expect(text).toContain("Voir les documents");
+    expect(text).toContain("parce qu'un vendeur partage les documents de son bien avec vous");
+    expect(text).not.toContain("Ancien titre");
+    expect(email?.html).toContain("https://leenkey-v2.vercel.app/acquereur/documents");
+    expect(email?.attachments).toBeUndefined();
+    expect(text).not.toMatch(AMOUNT);
+    expect(text).not.toMatch(/\bon\b|@exemple|91600/i);
+  });
+
+  it("one document, a title that carries the town, facts that say little", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const one = await renderNotificationEmail(
+      planned([share("s1", 1, { title: "Maison 5 pièces · Savigny-sur-Orge" })]),
+    );
+    expect(one?.subject).toBe("Un document partagé avec vous · Savigny-sur-Orge");
+    expect(plain(one?.text)).toContain(
+      "Un document du bien « Maison 5 pièces · Savigny-sur-Orge » est partagé avec vous.",
+    );
+    // A row without its number counts for one document; a title a mail client would link stays out.
+    const bare = await renderNotificationEmail(
+      planned([
+        share("s1", "3", { title: "www.exemple.fr", city: null }),
+        share("s2", 2, { title: "www.exemple.fr", city: null }),
+      ]),
+    );
+    expect(plain(bare?.subject)).toBe("3 documents partagés avec vous");
+    expect(plain(bare?.text)).toContain("3 documents d'un bien sont partagés avec vous.");
+    expect(bare?.text).not.toContain("exemple.fr");
+    // Without a link of its own, the page of the documents of the buyer.
+    const unlinked = await renderNotificationEmail(planned([{ ...share("s1", 1), link: null }]));
+    expect(unlinked?.html).toContain("https://leenkey-v2.vercel.app/acquereur/documents");
+  });
+
+  it("tells the seller who asks to read the documents: the financing status in its words, no amount", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const email = await renderNotificationEmail(
+      request({
+        ...facts,
+        budget_cents: 35_000_000,
+        email: "chloe@exemple.test",
+        phone: "0601020304",
+      }),
+    );
+    expect(email?.subject).toBe("Chloé demande l'accès à vos documents");
+    const text = plain(email?.text);
+    expect(text).toContain("Bonjour Alice,");
+    expect(text).toContain(
+      "Chloé souhaite consulter les documents de votre bien « Maison familiale 5 pièces ».",
+    );
+    expect(text).toContain("Financement : Justificatif vérifié");
+    expect(text).toContain(
+      "Vous choisissez : accorder l'accès partage vos documents avec cet acquéreur, refuser ne partage rien.",
+    );
+    expect(text).toContain("Répondre à la demande");
+    expect(email?.html).toContain("https://leenkey-v2.vercel.app/vendeur/biens/p1/documents");
+    // Never an amount, a contact detail of the buyer, or a financing said « validé ».
+    expect(`${email?.subject} ${text}`).not.toMatch(AMOUNT);
+    expect(`${email?.text}${email?.html}`).not.toMatch(/350|chloe@exemple|0601020304/);
+    expect(text).not.toMatch(/validé|\bon\b/i);
+  });
+
+  it("each financing status has its exact label; an unknown one reads as not provided", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const labels = {
+      not_provided: "Financement : Financement non renseigné",
+      declared: "Financement : Informations déclarées",
+      document_provided: "Financement : Justificatif fourni",
+      document_checked: "Financement : Justificatif vérifié",
+      validated: "Financement : Financement non renseigné",
+    };
+    for (const [status, label] of Object.entries(labels)) {
+      const email = await renderNotificationEmail(request({ ...facts, financing_status: status }));
+      expect(plain(email?.text)).toContain(label);
+    }
+    // No first name, or one a mail client would link; no title; no link.
+    const bare = await renderNotificationEmail(
+      request({ buyer_first_name: "www.exemple.fr" }, null),
+    );
+    expect(bare?.subject).toBe("Un acquéreur demande l'accès à vos documents");
+    expect(plain(bare?.text)).toContain(
+      "Un acquéreur souhaite consulter les documents de votre bien.",
+    );
+    expect(plain(bare?.text)).toContain("Financement : Financement non renseigné");
+    expect(bare?.html).toContain("https://leenkey-v2.vercel.app/vendeur");
+  });
+});
+
 describe("sendNotificationEmails", () => {
   type Update = { values: Record<string, unknown>; ids: string[]; filters: string[] };
 

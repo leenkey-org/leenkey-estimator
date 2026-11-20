@@ -441,6 +441,37 @@ export type Database = {
           },
         ]
       }
+      document_exemptions: {
+        Row: {
+          created_at: string
+          property_id: string
+          reason: string
+          type: Database["public"]["Enums"]["document_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          property_id: string
+          reason: string
+          type: Database["public"]["Enums"]["document_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          property_id?: string
+          reason?: string
+          type?: Database["public"]["Enums"]["document_type"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_exemptions_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_shares: {
         Row: {
           buyer_id: string
@@ -3668,6 +3699,10 @@ export type Database = {
         Args: { p_property_id: string; p_event: string }
         Returns: number
       }
+      sale_file_filed: {
+        Args: { p_name: string }
+        Returns: boolean
+      }
       sale_file_property: {
         Args: { p_name: string }
         Returns: string
@@ -3738,6 +3773,21 @@ export type Database = {
           reference: string
           slug: string
           id: string
+        }[]
+      }
+      shared_documents: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          listing_slug: string
+          city: string
+          mime_type: string
+          title: string
+          shared_at: string
+          listing_title: string
+          type: Database["public"]["Enums"]["document_type"]
+          property_id: string
+          document_id: string
+          size_bytes: number
         }[]
       }
       slugify: {
@@ -3915,6 +3965,11 @@ export type Database = {
         | "appel_charges"
         | "facture_travaux"
         | "autre"
+        | "assainissement"
+        | "carnet_entretien"
+        | "fiche_synthetique"
+        | "pre_etat_date"
+        | "certificat_urbanisme"
       financing_document_type:
         | "accord_principe"
         | "attestation_courtier"
@@ -4117,6 +4172,11 @@ export const Constants = {
         "appel_charges",
         "facture_travaux",
         "autre",
+        "assainissement",
+        "carnet_entretien",
+        "fiche_synthetique",
+        "pre_etat_date",
+        "certificat_urbanisme",
       ],
       financing_document_type: [
         "accord_principe",

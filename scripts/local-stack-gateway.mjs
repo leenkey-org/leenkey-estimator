@@ -26,6 +26,18 @@ function handle(req, res) {
   }
   const route = routes.find(([prefix]) => req.url.startsWith(prefix));
   if (!route) return res.writeHead(404).end();
+  // As the gateway of a hosted project: a browser may call the services from
+  // the site (a file sent to a signed upload URL, L3-04).
+  if (req.method === "OPTIONS") {
+    return res
+      .writeHead(204, {
+        "access-control-allow-origin": "*",
+        "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+        "access-control-allow-headers": req.headers["access-control-request-headers"] ?? "*",
+        "access-control-max-age": "3600",
+      })
+      .end();
+  }
   const [prefix, target] = route;
   const upstream = http.request(
     {
@@ -36,7 +48,10 @@ function handle(req, res) {
       headers: { ...req.headers, host: `127.0.0.1:${target}` },
     },
     (response) => {
-      res.writeHead(response.statusCode, response.headers);
+      res.writeHead(response.statusCode, {
+        ...response.headers,
+        "access-control-allow-origin": "*",
+      });
       response.pipe(res);
     },
   );

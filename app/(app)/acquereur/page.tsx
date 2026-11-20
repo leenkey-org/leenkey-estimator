@@ -29,6 +29,7 @@ import { frBuyerSpace } from "@/lib/i18n/sections/buyerSpace";
 import { frFavorites } from "@/lib/i18n/sections/favorites";
 import { frOffer } from "@/lib/i18n/sections/offer";
 import { frProperties } from "@/lib/i18n/sections/properties";
+import { frSaleFile } from "@/lib/i18n/sections/saleFile";
 import { frVisits } from "@/lib/i18n/sections/visits";
 import { frSpaces } from "@/lib/i18n/sections/spaces";
 
@@ -39,6 +40,7 @@ const fr = {
   offer: frOffer,
   properties: frProperties,
   spaces: frSpaces,
+  saleFile: frSaleFile,
   visits: frVisits,
 } as const;
 
@@ -215,6 +217,16 @@ export default async function BuyerHomePage() {
             <BuyerVisitsList visits={visits.data} />
           </Section>
         ) : null}
+
+        {/* The documents sellers shared, and the requests of access (L3-04). */}
+        <p>
+          <Link
+            href="/acquereur/documents"
+            className="inline-flex min-h-11 items-center text-lk-secondary font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
+          >
+            {fr.saleFile.buyer.homeLink}
+          </Link>
+        </p>
 
         {offers.ok && offers.data.length > 0 ? (
           <Section id="offres" title={fr.offer.followUp.list.title}>

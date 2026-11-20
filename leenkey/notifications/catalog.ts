@@ -10,8 +10,10 @@ import {
   Clock,
   Eye,
   FileSignature,
+  FileText,
   Flag,
   Folder,
+  FolderOpen,
   type LucideIcon,
   MessageCircle,
   PencilLine,
@@ -101,6 +103,17 @@ function position(value: unknown): number | null {
 
 function amount(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+/** How many documents a statement shared; null when the facts do not say. */
+function documentCount(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
+}
+
+/** The town, unless the title of the listing carries it already. */
+function cityBesides(title: string | null, city: string | null): string | null {
+  if (!title || !city) return city;
+  return title.toLocaleLowerCase("fr-FR").includes(city.toLocaleLowerCase("fr-FR")) ? null : city;
 }
 
 /** « samedi 21 novembre à 10 h 30 », from a date of the facts; null when it is none. */
@@ -413,6 +426,26 @@ const CATALOG: Record<string, Entry> = {
     filters: ["visitsOffers", "offersVisits"],
     title: () => t.visitReminder.title,
     detail: (data) => t.visitReminder.detail(dateTime(data.starts_at), text(data.title)),
+  },
+  // L3-04: the sale file. Documents shared, for the buyer; a request to read
+  // the documents, for the seller of the property. No name of a document, no
+  // amount: the financing status of the request is read on its page.
+  "document.shared": {
+    icon: FileText,
+    tone: "blue",
+    filters: ["visitsOffers"],
+    title: (data) => t.documentShared.title(documentCount(data.count)),
+    detail: (data) => {
+      const title = text(data.title);
+      return t.documentShared.detail(title, cityBesides(title, text(data.city)));
+    },
+  },
+  "document.access_requested": {
+    icon: FolderOpen,
+    tone: "blue",
+    filters: ["offersVisits"],
+    title: (data) => t.documentAccessRequested.title(text(data.buyer_first_name)),
+    detail: (data) => t.documentAccessRequested.detail(text(data.title)),
   },
   "step.advanced": {
     icon: Flag,

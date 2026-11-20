@@ -144,6 +144,8 @@ describe("wording of the notifications (from type and data)", () => {
         "advisor.message",
         "advisor.message_from_client",
         "case.created",
+        "document.access_requested",
+        "document.shared",
         "listing.pending",
         "listing.published",
         "listing.rejected",
@@ -409,6 +411,67 @@ describe("wording of the notifications (from type and data)", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("the sale file: documents shared, access requested, never an amount (L3-04)", () => {
+    const plain = (value: string | null) => (value ?? "").replace(/[\u00A0\u202F]/g, " ");
+    const shared = (data: Record<string, unknown>) =>
+      describeNotification(view({ type: "document.shared", link: "/acquereur/documents", data }));
+    const facts = {
+      entity_id: "p1",
+      property_id: "p1",
+      title: "Maison 5 pièces",
+      city: "Savigny-sur-Orge",
+    };
+    const three = shared({ ...facts, count: 3 });
+    expect(plain(three.title)).toBe("3 documents partagés avec vous");
+    expect(plain(three.detail)).toBe("« Maison 5 pièces » · Savigny-sur-Orge");
+    expect(three).toMatchObject({ tone: "blue", link: "/acquereur/documents" });
+    expect(plain(shared({ ...facts, count: 1 }).title)).toBe("1 document partagé avec vous");
+    // The town once when the title carries it; facts that say nothing keep it readable.
+    expect(
+      plain(shared({ ...facts, title: "Maison 5 pièces · Savigny-sur-Orge", count: 2 }).detail),
+    ).toBe("« Maison 5 pièces · Savigny-sur-Orge »");
+    expect(shared({ count: "3" })).toMatchObject({
+      title: "Des documents sont partagés avec vous",
+      detail: null,
+    });
+    expect(shared({ city: "Massy", count: 0 }).detail).toBe("Massy");
+
+    const requested = (data: Record<string, unknown>) =>
+      describeNotification(
+        view({
+          type: "document.access_requested",
+          link: "/vendeur/biens/p1/documents",
+          data,
+        }),
+      );
+    const request = requested({
+      entity_id: "r1",
+      property_id: "p1",
+      title: "Maison 5 pièces",
+      buyer_first_name: "Chloé",
+      financing_status: "document_checked",
+    });
+    expect(request.title).toBe("Chloé demande l'accès à vos documents");
+    expect(plain(request.detail)).toBe("« Maison 5 pièces »");
+    expect(request).toMatchObject({ tone: "blue", link: "/vendeur/biens/p1/documents" });
+    expect(requested({})).toMatchObject({
+      title: "Un acquéreur demande l'accès à vos documents",
+      detail: null,
+    });
+    // Neither an amount nor the status of the financing in the bell.
+    for (const item of [three, request]) {
+      expect(`${item.title} ${item.detail}`).not.toMatch(/€|financement|justificatif|validé/i);
+    }
+
+    // Shared: for a buyer; requested: for a seller.
+    expect(inFilter(view({ type: "document.shared" }), "visitsOffers")).toBe(true);
+    expect(inFilter(view({ type: "document.shared" }), "offersVisits")).toBe(false);
+    expect(inFilter(view({ type: "document.shared" }), "searches")).toBe(false);
+    expect(inFilter(view({ type: "document.access_requested" }), "offersVisits")).toBe(true);
+    expect(inFilter(view({ type: "document.access_requested" }), "visitsOffers")).toBe(false);
+    expect(inFilter(view({ type: "document.access_requested" }), "messages")).toBe(false);
   });
 
   it("filters of each space (DESIGN.md 10.7)", () => {

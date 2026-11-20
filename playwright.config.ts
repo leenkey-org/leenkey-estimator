@@ -11,7 +11,7 @@ const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH;
 // the seed while they change it. They also need E2E_MUTATE=1 and a local
 // stack (see each file). `--no-deps` runs one of them alone.
 const MUTATING =
-  /(account-live|account-deletion-live|admin-assistant-live|advisor-live|admin-cases|admin-listings|admin-users|assistant-live|billing|assistant-suggestions|buyer-assistant-live|buyer-profile-live|case-request-live|journeys-live|messaging-live|notifications-live|offer-live|property-creation|property-edit|property-from-estimation|property-photos|property-status|upgrade-prompts-live|visits-live)\.spec\.ts$/;
+  /(account-live|account-deletion-live|admin-assistant-live|advisor-live|admin-cases|admin-listings|admin-users|assistant-live|billing|assistant-suggestions|buyer-assistant-live|buyer-profile-live|case-request-live|journeys-live|messaging-live|notifications-live|offer-live|property-creation|property-edit|property-from-estimation|property-photos|property-status|upgrade-prompts-live|sale-file-live|visits-live)\.spec\.ts$/;
 // The offers of the back office (L2-07) move the sale of LK-0008, whose case
 // tests/e2e/admin-cases.spec.ts works on, and add an accepted offer to the
 // bell of buyer_c, which tests/e2e/offer-live.spec.ts reads: after all the
