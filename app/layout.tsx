@@ -11,7 +11,6 @@ import { sora } from "@/lib/fonts";
 import "./globals.css";
 
 const GA_ID = "G-27N3E3WP2D";
-const GTM_ID = "GTM-MTRM36P4";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://leenkey.fr"),
@@ -40,7 +39,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // GA4 and GTM only count real visitors (off on the preprod and in local),
+  // GA4 only counts real visitors (off on the preprod and in local),
   // and only after they accept audience measurement (L1-37).
   const analytics = isProduction();
   return (
@@ -65,7 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* The page before, for « Retour aux annonces » (DECISIONS 2026-10-26). */}
         <RouteHistory />
         <Analytics />
-        <ConsentManager analyticsEnabled={analytics} gaId={GA_ID} gtmId={GTM_ID} />
+        <ConsentManager analyticsEnabled={analytics} gaId={GA_ID} />
       </body>
     </html>
   );

@@ -150,7 +150,7 @@ describe("the comparison table follows the rights of the plans", () => {
     expect(fr.billing.comparison.rows).toHaveLength(18);
     expect(ticks("Publication sur Leenkey")).toEqual([true, true, true]);
     expect(ticks("Conseiller dédié")).toEqual([false, true, true]);
-    expect(ticks("Aide à la décision jusqu'à l'acceptation d'une offre")).toEqual([
+    expect(ticks("Aide à la préparation et à l'organisation des documents")).toEqual([
       false,
       true,
       true,

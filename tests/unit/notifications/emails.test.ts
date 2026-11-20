@@ -97,7 +97,7 @@ describe("« Nouveau message »", () => {
     // To a seller: why they get it, and the preferences.
     expect(email?.text).toContain("parce que vous vendez un bien sur Leenkey");
     expect(email?.text).toContain("https://leenkey-v2.vercel.app/compte/notifications");
-    expect(email?.replyTo).toBe("contact.leenkey@gmail.com");
+    expect(email?.replyTo).toBe("contact@leenkey.fr");
     // An answer by email reaches Leenkey, not the other party: the email says so.
     expect(email?.text).toContain("Pour répondre, écrivez sur Leenkey");
   });
@@ -172,7 +172,7 @@ describe("the conversation with the adviser (L1-34)", () => {
     expect(email?.text).toContain("Bonjour Alice, je regarde votre prix.");
     expect(email?.text).toContain("https://leenkey-v2.vercel.app/messages/c9");
     expect(email?.text).toContain("parce que vous vendez un bien sur Leenkey");
-    expect(email?.replyTo).toBe("contact.leenkey@gmail.com");
+    expect(email?.replyTo).toBe("contact@leenkey.fr");
   });
 
   it("to the team: the seller and the reference, an internal email, to the back office", async () => {
@@ -414,7 +414,7 @@ describe("« Rétractation à rembourser » and « Votre formule se termine » (
     expect(email?.subject).toBe("Votre formule Sérénité se termine le 2 novembre 2027");
     expect(email?.text).toContain("Bonjour Alice");
     expect(email?.text).toContain("votre bien repasse en Autonomie");
-    expect(email?.replyTo).toBe("contact.leenkey@gmail.com");
+    expect(email?.replyTo).toBe("contact@leenkey.fr");
     for (const text of [email?.text ?? ""]) expect(text).not.toMatch(/\bon\b/i);
   });
 });

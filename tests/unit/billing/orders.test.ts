@@ -272,12 +272,14 @@ describe("emails of a plan", () => {
     expect(text).toContain("36 rue Pierre Brossolette, 91360 Épinay-sur-Orge");
     expect(text).toContain("Formule souscrite : Accompagné");
     expect(text).toContain("Médiateur de la consommation : en cours de désignation.");
-    expect(text).not.toContain("montant proportionnel");
+    expect(text).not.toContain("remboursons tout de même");
     const early = await render(
       PlanActivatedEmail({ ...seller, contactFrom: null, earlyStart: true }),
       EMAIL_PLAIN_TEXT,
     );
-    expect(early).toContain("montant proportionnel aux prestations déjà fournies");
+    // Full refund even after an immediate start (Cédric, DECISIONS.md 2026-11-20).
+    expect(early).toContain("nous vous remboursons tout de même l'intégralité du prix");
+    expect(early).not.toContain("montant proportionnel");
   });
 
   it("tells the seller what was paid and when the advisor gets in touch", async () => {
@@ -292,7 +294,7 @@ describe("emails of a plan", () => {
       PlanActivatedEmail({ ...seller, contactFrom: null }),
       EMAIL_PLAIN_TEXT,
     );
-    expect(now).toContain("sous 24 h");
+    expect(now).toContain("sous 1 jour ouvré");
     for (const text of [later, now]) {
       expect(text).not.toMatch(/\bon\b/i);
       expect(text).not.toMatch(/au succès/i);

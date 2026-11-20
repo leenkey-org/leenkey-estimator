@@ -26,6 +26,9 @@ export const metadata: Metadata = {
   title: t.metaTitle,
   description: t.metaDescription,
   alternates: { canonical: "/investir" },
+  // Out of the menus, the sitemap and the search engines since 2026-11-20
+  // (Cédric: sent by link to investors only, until his lawyer answers).
+  robots: { index: false, follow: false },
   openGraph: { title: t.metaTitle, description: t.metaDescription, url: "/investir" },
 };
 

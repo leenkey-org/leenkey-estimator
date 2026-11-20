@@ -48,11 +48,11 @@ export const frBilling = {
       },
       { label: "Relecture et optimisation de l'annonce", feature: "human_listing_review" },
       {
-        label: "Analyse des offres et des informations de financement",
+        label: "Explications sur les offres reçues et les points à examiner",
         feature: "human_offer_analysis",
       },
       {
-        label: "Aide à la décision jusqu'à l'acceptation d'une offre",
+        label: "Aide à la préparation et à l'organisation des documents",
         feature: "negotiation_support",
       },
       { label: "Préparation du dossier de vente", feature: "sale_file_building" },
@@ -144,7 +144,7 @@ export const frBilling = {
     text: (date: string) =>
       `Vous pouvez renoncer à votre formule, sans motif, jusqu'au ${date} inclus. Nous vous remboursons sous 14 jours.`,
     early:
-      "Vous avez demandé que les prestations commencent avant la fin de ce délai : un montant proportionnel à ce qui a déjà été fourni peut rester dû.",
+      "Vous avez demandé que les prestations commencent avant la fin de ce délai : en cas de rétractation, nous vous remboursons tout de même l'intégralité du prix.",
     action: "Renoncer au contrat",
     dialogTitle: "Renoncer à votre formule ?",
     dialogText: (plan: string, property: string, date: string) =>
@@ -163,10 +163,10 @@ export const frBilling = {
       "Votre rétractation est en cours : il n'est pas possible de commander une autre formule pour ce bien d'ici le remboursement.",
     errors: {
       session: "Votre session a expiré. Reconnectez-vous pour renoncer au contrat.",
-      over: "Le délai de rétractation de 14 jours est passé. Pour toute question, écrivez-nous à contact.leenkey@gmail.com.",
+      over: "Le délai de rétractation de 14 jours est passé. Pour toute question, écrivez-nous à contact@leenkey.fr.",
       notInForce: "Cette formule n'est plus en vigueur : la rétractation ne s'applique plus.",
       unavailable:
-        "La rétractation n'a pas pu être enregistrée. Réessayez, ou écrivez-nous à contact.leenkey@gmail.com.",
+        "La rétractation n'a pas pu être enregistrée. Réessayez, ou écrivez-nous à contact@leenkey.fr.",
     },
   },
   confirmation: {
@@ -180,7 +180,7 @@ export const frBilling = {
     reload: "Recharger la page",
     doneTitle: "C'est activé.",
     doneNow: (plan: string) =>
-      `Votre formule ${plan} est active. Votre conseiller Leenkey vous contacte sous 24\u00A0h.`,
+      `Votre formule ${plan} est active. Votre conseiller Leenkey vous contacte sous 1\u00A0jour ouvré.`,
     doneLater: (plan: string, date: string) =>
       `Votre formule ${plan} est active. Votre conseiller Leenkey vous contacte à partir du ${date}, après le délai de rétractation.`,
     back: "Retour à ma vente",

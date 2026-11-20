@@ -41,7 +41,7 @@ describe("contact links of /investir", () => {
     expect(
       emailHref(fr.legal.contactEmail, invest.contact.email.subject, invest.contact.email.body),
     ).toBe(
-      "mailto:contact.leenkey@gmail.com?subject=Investir%20dans%20Leenkey&body=Bonjour%20C%C3%A9dric%2C%0A%0AJe%20souhaite%20%C3%A9changer%20au%20sujet%20du%20projet%20Leenkey.",
+      "mailto:contact@leenkey.fr?subject=Investir%20dans%20Leenkey&body=Bonjour%20C%C3%A9dric%2C%0A%0AJe%20souhaite%20%C3%A9changer%20au%20sujet%20du%20projet%20Leenkey.",
     );
   });
 });

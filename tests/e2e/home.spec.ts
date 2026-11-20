@@ -268,7 +268,6 @@ test.describe("accueil", () => {
       "Concept",
       "Tarifs",
       "FAQ",
-      "Investir",
       "Qui sommes-nous",
     ]);
     await expect(footer.getByRole("link", { name: "Mentions légales" })).toBeVisible();
@@ -289,22 +288,17 @@ test.describe("accueil", () => {
       "Vendre",
       "Tarifs",
       "Valoriser mon bien",
-      "Leenkey et son fondateur",
-      "Investir dans Leenkey",
+      "Qui sommes-nous",
       "Contact",
       "Concept",
       "FAQ",
     ]);
-    // The two pages of « Qui sommes-nous » under its label (L1-51).
-    const about = menu.getByRole("list", { name: "Qui sommes-nous" });
-    await expect(about.getByRole("link", { name: "Leenkey et son fondateur" })).toHaveAttribute(
+    // « Qui sommes-nous » alone: /investir left the menus (DECISIONS 2026-11-20).
+    await expect(menu.getByRole("link", { name: "Qui sommes-nous" })).toHaveAttribute(
       "href",
       "/qui-sommes-nous",
     );
-    await expect(about.getByRole("link", { name: "Investir dans Leenkey" })).toHaveAttribute(
-      "href",
-      "/investir",
-    );
+    await expect(menu.locator('a[href="/investir"]')).toHaveCount(0);
     await expect(menu.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
     // « Vendre » leads to its two ways (DECISIONS 2026-10-26), not the home page.
     const sell = menu.getByRole("link", { name: "Vendre", exact: true });
@@ -341,10 +335,11 @@ test.describe("accueil", () => {
       "Vendre",
       "Tarifs",
       "Valoriser mon bien",
+      "Qui sommes-nous",
       "Contact",
     ]);
-    // Its two pages open from a button (L1-51).
-    await expect(nav.getByRole("button", { name: "Qui sommes-nous" })).toBeVisible();
+    // A plain link since /investir left the menus (DECISIONS 2026-11-20).
+    await expect(nav.getByRole("button", { name: "Qui sommes-nous" })).toHaveCount(0);
     // « Vendre » leads to its two ways (DECISIONS 2026-10-26): no longer the home page.
     const sell = nav.getByRole("link", { name: "Vendre", exact: true });
     await expect(sell).toHaveAttribute("href", "/vendre");

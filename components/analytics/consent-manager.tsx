@@ -56,16 +56,14 @@ function clearAnalyticsCookies() {
 /**
  * Cookie consent and the trackers it governs (L1-37, Q23). Asked on the first
  * visit, kept six months, reopened by « Gérer mes cookies » (CONSENT_OPEN_EVENT).
- * GA4 and GTM are mounted only after « Accepter » and only in production.
+ * GA4 is mounted only after « Accepter » and only in production.
  */
 export function ConsentManager({
   analyticsEnabled,
   gaId,
-  gtmId,
 }: {
   analyticsEnabled: boolean;
   gaId: string;
-  gtmId: string;
 }) {
   const [consent, setConsent] = useState<Consent | null>(null);
   // The banner is in the page sent by the server (P-06): it shows with the
@@ -133,7 +131,7 @@ export function ConsentManager({
 
   return (
     <>
-      {tagsMounted ? <AnalyticsTags gaId={gaId} gtmId={gtmId} /> : null}
+      {tagsMounted ? <AnalyticsTags gaId={gaId} /> : null}
       {view === "hidden" ? null : (
         <ConsentDialog
           key={view}

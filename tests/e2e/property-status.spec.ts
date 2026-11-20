@@ -123,9 +123,9 @@ test("une annonce suspendue par Leenkey : en lecture seule, avec son motif", asy
   const main = page.getByRole("main");
   await expect(main.getByText("Suspendue par Leenkey", { exact: true })).toBeVisible();
   await expect(main.getByText("Motif : Photos à remplacer")).toBeVisible();
-  await expect(main.getByRole("link", { name: "contact.leenkey@gmail.com" })).toHaveAttribute(
+  await expect(main.getByRole("link", { name: "contact@leenkey.fr" })).toHaveAttribute(
     "href",
-    "mailto:contact.leenkey@gmail.com",
+    "mailto:contact@leenkey.fr",
   );
   await expect(actions(page)).toHaveCount(0);
   await expect(main.getByRole("link", { name: /^Modifier/ })).toHaveCount(0);

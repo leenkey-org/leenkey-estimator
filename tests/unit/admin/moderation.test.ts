@@ -156,7 +156,7 @@ describe("moderation emails", () => {
     title: "Appartement 3 pièces lumineux",
     listingUrl: "https://leenkey.fr/annonce/appartement-3-pieces-savigny-sur-orge-lk0001",
     sellerUrl: "https://leenkey.fr/vendeur",
-    contactEmail: "contact.leenkey@gmail.com",
+    contactEmail: "contact@leenkey.fr",
     siteUrl: "https://leenkey.fr",
   };
 

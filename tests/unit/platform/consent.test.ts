@@ -76,7 +76,7 @@ describe("footer links", () => {
       "/cookies",
       "/signalement",
       "/intelligence-artificielle",
-      "mailto:contact.leenkey@gmail.com",
+      "mailto:contact@leenkey.fr",
     ]);
   });
 });

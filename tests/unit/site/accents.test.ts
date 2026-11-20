@@ -22,7 +22,6 @@ describe("mots mis en valeur des titres", () => {
     ["investir, vision", fr.site.invest.vision],
     ["investir, fin", fr.site.invest.final],
     ["qui sommes-nous, hero", fr.site.about.hero],
-    ["qui sommes-nous, histoire", fr.site.about.story],
     ["qui sommes-nous, fin", fr.site.about.final],
   ];
 

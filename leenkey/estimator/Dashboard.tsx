@@ -288,7 +288,7 @@ export function EstimationDashboard({
                 Votre demande de rappel est enregistrée
               </div>
               <p className="mt-1 text-lk-compact text-lk-ink-2">
-                Un conseiller Leenkey vous appelle sous 24&nbsp;h
+                Un conseiller Leenkey vous appelle sous 1&nbsp;jour ouvré
                 {form.telephone ? ` au ${form.telephone}` : ""}
                 {form.disponibilites.length
                   ? `, selon vos disponibilités (${form.disponibilites.join(", ")})`
@@ -641,7 +641,7 @@ export function EstimationDashboard({
                 {
                   l:
                     rappelEnvoye || contactStatus === "sent"
-                      ? "Rappel demandé — un conseiller vous appelle sous 24 h"
+                      ? "Rappel demandé — un conseiller vous appelle sous 1 jour ouvré"
                       : "Appel avec un conseiller Leenkey",
                   done: rappelEnvoye || contactStatus === "sent",
                 },
@@ -851,8 +851,8 @@ export function EstimationDashboard({
                         <div className="flex flex-col gap-4 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:px-6 md:pb-6">
                           <DialogPrimitive.Description className="text-lk-secondary text-pretty text-lk-ink-2">
                             {form.contact_conseiller
-                              ? "Vous avez demandé à être rappelé. Confirmez et un conseiller vous contactera sous 24 h."
-                              : "Un conseiller Leenkey vous contactera sous 24 h."}
+                              ? "Vous avez demandé à être rappelé. Confirmez et un conseiller vous contactera sous 1 jour ouvré."
+                              : "Un conseiller Leenkey vous contactera sous 1 jour ouvré."}
                           </DialogPrimitive.Description>
 
                           <div className="rounded-lk-sm bg-lk-blue-tint p-4 text-lk-compact">
@@ -919,7 +919,7 @@ export function EstimationDashboard({
                             {contactStatus === "error" ? (
                               <InlineAlert tone="danger" live={false}>
                                 Erreur d'envoi, réessayez ou contactez-nous directement à
-                                contact.leenkey@gmail.com
+                                contact@leenkey.fr
                               </InlineAlert>
                             ) : null}
                           </div>

@@ -84,7 +84,7 @@ test("le tableau de bord : le message du conseiller d'abord, sa carte ; l'invita
   await page.goto(`/vendeur?bien=${LK0003}`);
   const locked = page.getByRole("region", { name: "Mon conseiller Leenkey" });
   await expect(locked).toContainText("Accessible avec la formule Accompagné");
-  await expect(locked).toContainText("répond sous 24".replace(NBSP, " "));
+  await expect(locked).toContainText("répond sous 2");
   await expect(locked.getByRole("link", { name: "Voir les formules" })).toHaveAttribute(
     "href",
     `/vendeur/formule?bien=${LK0003}`,

@@ -77,7 +77,7 @@ export const frAdminOffers = {
   analysis: {
     title: "Analyse avec le conseiller",
     intro:
-      "La formule de ce bien comprend l'analyse de ses offres avec un conseiller. Une fois l'offre analysée avec le vendeur, cochez la tâche de sa vente.",
+      "La formule de ce bien comprend des explications du conseiller sur ses offres. Une fois l'offre expliquée au vendeur, sans recommandation ni négociation, cochez la tâche de sa vente.",
     mark: "Marquer comme analysée",
     doneOn: (date: string) => `Offre analysée avec le conseiller le ${date}.`,
     done: "La tâche « Offre analysée avec le conseiller » est cochée sur la vente.",

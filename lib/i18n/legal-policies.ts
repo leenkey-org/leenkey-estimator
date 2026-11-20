@@ -11,7 +11,7 @@
 import type { LegalBlock, LegalSection } from "./legal-texts";
 import type { Rich } from "./rich";
 
-const EMAIL = "contact.leenkey@gmail.com";
+const EMAIL = "contact@leenkey.fr";
 const S = " ";
 
 const p = (...text: Rich): LegalBlock => ({ kind: "p", text });
@@ -355,15 +355,28 @@ const salesSections: readonly LegalSection[] = [
         "des recommandations pour valoriser le bien et préparer les visites ;",
         "le suivi des performances de l'annonce et des pistes d'amélioration ;",
         "un accompagnement pour préparer les échanges avec les acquéreurs ;",
-        "l'analyse des offres reçues et des informations de financement communiquées ;",
-        "une aide à la décision jusqu'à l'acceptation d'une offre.",
+        "des explications sur les offres reçues et les points à examiner ;",
+        "une aide à la préparation et à l'organisation des documents ;",
+        "un rendez-vous initial de 30 minutes et 4 interventions personnalisées de 20 minutes.",
       ),
       sub(`Sérénité, 1${S}500${S}€ TTC par bien, pour 12 mois`),
       para("Tout Accompagné, plus :"),
       list(
+        "6 interventions personnalisées de 20 minutes au lieu de 4 ;",
+        "2 vérifications de complétude du dossier documentaire : présence des pièces, lisibilité et documents manquants, sans validation juridique ;",
         "la préparation du dossier de vente : organisation des documents, diagnostics et identification des pièces manquantes ;",
         "l'analyse des documents : lecture des pièces disponibles et signalement des éventuels points de vigilance ;",
         "le suivi jusqu'à la signature : accompagnement dans les démarches après l'acceptation de l'offre, rappel des échéances importantes et aide à la préparation des échanges avec le notaire.",
+      ),
+      sub("Le conseiller : rôle, disponibilité et interventions"),
+      para(
+        "Le conseiller accompagne le client dans la préparation et la bonne conduite de sa vente : compréhension du rapport de valeur et des étapes de la vente ; relecture et optimisation de l'annonce ; conseils de présentation du bien et de préparation des visites ; explications sur les offres reçues et les points à examiner ; aide à la préparation et à l'organisation des documents. Il ne contacte pas les acquéreurs, ne sélectionne pas les candidats, ne négocie pas et ne prend aucune décision commerciale à la place du client.",
+      ),
+      para(
+        `Il est disponible du lundi au vendredi, de 9${S}h à 18${S}h, hors jours fériés, par messagerie ou par téléphone sur rendez-vous. Il répond ou propose un rendez-vous sous 2 jours ouvrés. L'assistant reste disponible 24${S}h/24 et 7${S}j/7.`,
+      ),
+      para(
+        "Les interventions comprises dans la formule sont utilisables pendant ses 12 mois. L'assistance technique et les prestations déjà comprises dans la formule, comme la relecture de l'annonce, ne sont pas décomptées.",
       ),
       sub("Ce que les formules ne comprennent pas"),
       para(
@@ -379,7 +392,7 @@ const salesSections: readonly LegalSection[] = [
     title: "4. Prix et absence de commission",
     blocks: [
       para(
-        "Les prix sont exprimés en euros toutes taxes comprises. Les forfaits sont fixes, attachés au bien désigné lors de la commande, et indépendants du prix de vente comme de la réussite de la vente. Aucun frais caché n'est appliqué ; tout service payant supplémentaire ferait l'objet d'une information complète et d'une commande distincte.",
+        "Les prix sont exprimés en euros toutes taxes comprises, TVA au taux de 20\u00A0% incluse. Les forfaits sont fixes, attachés au bien désigné lors de la commande, et indépendants du prix de vente comme de la réussite de la vente. Aucun frais caché n'est appliqué ; tout service payant supplémentaire ferait l'objet d'une information complète et d'une commande distincte.",
       ),
       para(
         `Le passage de la formule Accompagné à la formule Sérénité coûte la différence entre les deux prix, soit 510${S}€ TTC ; il fait repartir la durée de 12 mois.`,
@@ -430,7 +443,7 @@ const salesSections: readonly LegalSection[] = [
         "Leenkey fournit avec diligence les services décrits dans la fiche de la formule. Le conseiller accompagne le client dans un rôle d'information et de conseil strictement délimité : il n'agit pas au nom du vendeur et n'accomplit aucun acte réservé à une profession réglementée.",
       ),
       para(
-        `Le conseiller contacte le client sous 24${S}h après la souscription lorsque le démarrage immédiat a été demandé, et à partir du 15e jour sinon, à l'issue du délai de rétractation.`,
+        `Le conseiller prend un premier contact avec le client sous 1 jour ouvré après la souscription lorsque le démarrage immédiat a été demandé, et à partir du 15e jour sinon, à l'issue du délai de rétractation.`,
       ),
     ],
   },
@@ -474,7 +487,7 @@ const salesSections: readonly LegalSection[] = [
         "Si le client souhaite que les prestations commencent avant la fin des 14 jours, il le demande expressément, par une case distincte de l'acceptation des CGV, au moment de la commande. Sans cette demande, le conseiller ne le contacte qu'à partir du 15e jour.",
       ),
       para(
-        "En cas de rétractation après un démarrage immédiat, seul un montant proportionnel aux prestations effectivement fournies jusqu'à la rétractation peut être dû, dans les conditions de l'article L221-25 du code de la consommation ; aucun montant n'est dû lorsque la loi le prévoit. Un simple accès à l'espace personnel ne vaut pas exécution complète d'une formule de 12 mois.",
+        "En cas de rétractation dans le délai de 14 jours, Leenkey rembourse l'intégralité du prix payé, même lorsque les prestations ont commencé à la demande du client.",
       ),
     ],
   },
@@ -566,7 +579,7 @@ const salesSections: readonly LegalSection[] = [
 ];
 
 export const salesTermsText = {
-  updated: "En vigueur depuis le 9 novembre 2026",
+  updated: "En vigueur depuis le 20 novembre 2026",
   toc: "Sommaire",
   sections: salesSections,
 } as const;
@@ -669,7 +682,7 @@ const privacySections: readonly LegalSection[] = [
         "Google (Gmail) : boîte de réception de l'équipe Leenkey, qui reçoit les demandes d'analyse de valeur, les rapports demandés et les messages du formulaire de contact.",
         "Google (Google Maps Platform) : affichage des cartes, qui reçoit l'adresse IP du visiteur et la zone affichée, jamais l'adresse exacte d'un bien.",
         "IGN, Géoplateforme (France) : suggestion et localisation des adresses saisies par les vendeurs, sans nom, email ni adresse IP.",
-        "Google (Google Analytics et Google Tag Manager) : mesure d'audience, seulement après votre accord.",
+        "Google (Google Analytics) : mesure d'audience, seulement après votre accord.",
       ),
       para(
         "Vos données ne sont jamais vendues. Elles peuvent être communiquées aux autorités dans les cas prévus par la loi.",
@@ -691,15 +704,29 @@ const privacySections: readonly LegalSection[] = [
     id: "durees",
     title: "9. Durées de conservation",
     blocks: [
+      // Text of Cédric, word for word (DECISIONS.md 2026-11-20).
+      para(
+        "Leenkey conserve les données personnelles uniquement pendant la durée nécessaire aux finalités pour lesquelles elles sont collectées, sous réserve des obligations légales et des nécessités de conservation de preuves.",
+      ),
       list(
-        "Compte, biens, annonces, messages, offres, documents et conversations avec l'assistant de votre espace : tant que le compte est ouvert ; à sa suppression, ces données sont effacées ou rendues anonymes, sauf celles que la loi impose de garder.",
-        "Analyse de valeur faite sans compte : 12 mois.",
-        "Conversations avec l'assistant du site sans compte : 30 jours ; l'empreinte de l'adresse IP utilisée pour limiter le nombre de questions est effacée le lendemain.",
-        "Empreintes d'adresses IP utilisées pour limiter les tentatives (inscription, connexion, mot de passe oublié, formulaire de contact, analyse de valeur, rapport par email) : 48 heures au plus.",
-        "Emails reçus par l'équipe Leenkey (demandes d'analyse de valeur, formulaire de contact) : 3 ans après le dernier échange.",
-        "Factures et pièces comptables : 10 ans, comme l'impose la loi.",
-        "Preuve des commandes et des conditions acceptées : le temps nécessaire à la preuve du contrat, dans la limite des délais de prescription.",
-        "Cookies : selon les durées indiquées dans la politique cookies.",
+        "Comptes utilisateurs : les informations du profil sont conservées pendant l'utilisation du compte. En cas d'inactivité prolongée, Leenkey pourra procéder à sa suppression après information préalable de l'utilisateur, selon une durée maximale de 3 ans d'inactivité, sauf justification particulière.",
+        "Biens, annonces, photos, messages, visites et conversations avec l'assistant IA dans l'espace personnel : les données sont conservées pendant la gestion du dossier immobilier, puis pendant une durée maximale de 12 mois après sa clôture, sauf suppression anticipée demandée par l'utilisateur ou nécessité justifiée de conservation.",
+        "Offres d'achat et réponses : conservées pendant la gestion du dossier. Les éléments nécessaires à la preuve d'une opération ou à la défense des droits pourront ensuite faire l'objet d'un archivage à accès restreint, pendant une durée maximale de 5 ans, sous réserve des délais légaux applicables.",
+        "Documents immobiliers : conservés pendant la gestion du dossier, puis supprimés dans un délai maximal de 6 mois après sa clôture, sauf obligation légale ou nécessité particulière dûment justifiée.",
+        "Pièces d'identité et justificatifs financiers éventuellement collectés : conservés uniquement pendant la durée nécessaire à la finalité annoncée. Ils sont supprimés dès qu'ils ne sont plus nécessaires, selon une procédure spécifique de suppression.",
+        "Analyses de valeur réalisées sans compte : 12 mois après leur création.",
+        "Conversations avec l'assistant du site sans compte : 30 jours. L'empreinte d'adresse IP utilisée pour limiter le nombre de questions est effacée le lendemain.",
+        "Empreintes d'adresses IP utilisées pour limiter les tentatives abusives : 48 heures au maximum.",
+        "Demandes de contact et échanges avec Leenkey : conservés pendant le traitement de la demande. Les données nécessaires à la prospection commerciale peuvent être conservées jusqu'à 3 ans après le dernier contact volontaire de la personne concernée, sous réserve de son droit d'opposition. Les échanges contractuels ou les réclamations peuvent être conservés plus longtemps lorsque cela est justifié.",
+        "Factures et pièces comptables : 10 ans conformément aux obligations légales.",
+        "Preuves de commande et conditions contractuelles acceptées : conservées pendant la durée nécessaire à l'exécution du contrat, puis archivées lorsque cela est justifié par les obligations légales ou la défense des droits de Leenkey, dans les limites des délais de prescription applicables.",
+        "Cookies et autres traceurs : selon les durées précisées dans la politique de cookies.",
+      ),
+      para(
+        "À l'expiration de ces durées, les données sont supprimées ou anonymisées. Lorsque leur conservation reste nécessaire pour respecter une obligation légale ou défendre un droit, elles sont placées en archivage à accès restreint.",
+      ),
+      para(
+        "La clôture d'un dossier correspond notamment à la déclaration de la vente du bien, à son retrait définitif ou à l'abandon du projet de vente par le propriétaire.",
       ),
     ],
   },
@@ -771,7 +798,7 @@ const privacySections: readonly LegalSection[] = [
 ];
 
 export const privacyText = {
-  updated: "En vigueur depuis le 9 novembre 2026",
+  updated: "En vigueur depuis le 20 novembre 2026",
   toc: "Sommaire",
   sections: privacySections,
 } as const;
@@ -905,12 +932,14 @@ const aiSections: readonly LegalSection[] = [
   {
     id: "jamais",
     title: "2. Ce qu'il ne fait jamais seul",
+    // Articles 2 to 4: texts of Cédric, word for word (DECISIONS.md 2026-11-20).
     blocks: [
       list(
-        "Il n'envoie aucun message et ne modifie rien sans votre confirmation : chaque action proposée s'affiche, et vous la validez ou la refusez.",
-        "Il ne prend aucune décision sur une offre, un prix, un financement ou un compte.",
-        "Il ne donne pas d'avis juridique, fiscal ou financier engageant : pour ces questions, il vous oriente vers l'équipe Leenkey ou un professionnel.",
-        "Il n'est pas votre interlocuteur : il ne contacte pas l'autre partie et ne négocie pas.",
+        "L'assistant n'envoie aucun message, ne publie aucune annonce et ne modifie aucune information sans confirmation de l'utilisateur.",
+        "Il ne fixe aucun prix, ne choisit aucun acquéreur et ne décide pas d'accepter ou de refuser une offre d'achat.",
+        "Lorsqu'il prépare un brouillon d'offre, il utilise les informations indiquées par l'acquéreur. Celui-ci reste responsable de la vérification des informations et de l'envoi de son offre.",
+        "Il fournit des informations générales et pédagogiques, sans délivrer de consultation juridique, fiscale ou financière personnalisée.",
+        "Il ne contacte pas les vendeurs ou les acquéreurs à la place des utilisateurs et ne conduit aucune négociation.",
       ),
     ],
   },
@@ -919,7 +948,16 @@ const aiSections: readonly LegalSection[] = [
     title: "3. Ses limites",
     blocks: [
       para(
-        "Ses réponses sont produites automatiquement et peuvent être incomplètes ou inexactes : vérifiez-les avant de vous en servir. En cas de doute, demandez à parler à une personne de l'équipe Leenkey. Le nombre de questions par jour est limité.",
+        "Les réponses de l'assistant sont générées automatiquement et peuvent comporter des erreurs, des omissions ou des informations inadaptées à une situation particulière.",
+      ),
+      para(
+        "L'utilisateur doit vérifier les informations importantes, notamment celles relatives au prix, aux diagnostics, au financement et aux offres d'achat, avant de prendre une décision.",
+      ),
+      para(
+        "L'assistant constitue une aide à l'information et à la préparation d'un projet immobilier. Il ne remplace pas les vérifications réalisées par les professionnels compétents.",
+      ),
+      para(
+        "Un service d'assistance Leenkey peut être sollicité selon les modalités prévues par la formule souscrite.",
       ),
     ],
   },
@@ -927,19 +965,34 @@ const aiSections: readonly LegalSection[] = [
     id: "donnees",
     title: "4. Vos données",
     blocks: [
+      para(
+        "L'assistant Leenkey utilise un modèle d'intelligence artificielle fourni par Anthropic PBC, société établie aux États-Unis.",
+      ),
+      para(
+        "Les questions posées à l'assistant ainsi que les informations nécessaires pour y répondre peuvent être transmises à Anthropic.",
+      ),
+      para(
+        "Les pièces d'identité et justificatifs de financement déposés dans les espaces dédiés de Leenkey ne sont pas transmis à Anthropic dans le cadre du fonctionnement de l'assistant.",
+      ),
+      para(
+        "Les conversations sont enregistrées afin de permettre la continuité du service. La dernière conversation reste accessible depuis l'espace utilisateur.",
+      ),
+      para(
+        "Certaines conversations peuvent être consultées par les personnes habilitées au sein de Leenkey, dans la mesure nécessaire au traitement des demandes d'assistance, à la résolution d'incidents et au contrôle de la qualité du service.",
+      ),
       p(
-        "L'assistant utilise un modèle d'Anthropic PBC (États-Unis). Vos questions et les informations nécessaires à la réponse lui sont transmises ; aucun justificatif de financement ni aucune pièce d'identité ne lui est transmis. Les conversations sont enregistrées ; la dernière reste affichée dans votre espace, et l'équipe Leenkey peut les relire pour la qualité du service. Pour en savoir plus, consultez la ",
+        "Les modalités de conservation, de protection des données et les informations relatives aux prestataires sont détaillées dans notre ",
         { link: "politique de confidentialité", href: "/confidentialite" },
         ".",
       ),
       para(
-        "Sans compte, vos questions et ses réponses sont conservées 30 jours, sans votre nom. Votre adresse IP n'est pas enregistrée : pour limiter le nombre de questions par jour, nous n'en gardons qu'une empreinte, calculée avec une clé secrète et effacée le lendemain.",
+        "Sans compte, les questions et réponses sont conservées pendant 30 jours. Pour limiter les utilisations abusives, une empreinte technique de l'adresse IP est conservée jusqu'au lendemain, sans conservation de l'adresse IP elle-même dans ce mécanisme.",
       ),
     ],
   },
 ];
 
 export const aiText = {
-  updated: "En vigueur depuis le 15 novembre 2026",
+  updated: "En vigueur depuis le 20 novembre 2026",
   sections: aiSections,
 } as const;

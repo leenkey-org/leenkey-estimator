@@ -224,7 +224,7 @@ describe("chooseUpgradePrompt", () => {
 describe("the texts", () => {
   it("are the sentences of the SPEC, in the voice of Leenkey", () => {
     expect(frUpgrade.prompts.offer_received.text("338 000 €", "350 000 €")).toBe(
-      "Vous avez reçu une offre de 338 000 € pour un prix affiché de 350 000 €. Vous pouvez la traiter vous-même ou demander à un conseiller Leenkey de l'analyser avec vous et de vous accompagner dans votre négociation.",
+      "Vous avez reçu une offre de 338 000 € pour un prix affiché de 350 000 €. Vous pouvez la traiter vous-même ou demander à un conseiller Leenkey de vous expliquer cette offre et les points à examiner. La décision reste la vôtre.",
     );
     expect(frUpgrade.prompts.low_contacts.text).toBe(
       "Votre annonce génère peu de demandes. Faites le point sur votre prix et votre stratégie avec un conseiller Leenkey.",

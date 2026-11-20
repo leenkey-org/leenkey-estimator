@@ -9,7 +9,7 @@ export type Mediator = { name: string; address: string; url: string };
 
 export const SALES_TERMS = {
   /** Published version (date) of the CGV accepted at checkout (/cgv, lib/i18n/legal-policies.ts). */
-  cgvVersion: "2026-11-09",
+  cgvVersion: "2026-11-20",
   /** The CGV for the launch are published (DECISIONS.md 2026-11-09, Q34). */
   cgvFinal: true,
   /** The consumer mediator Leenkey joined (Q32), null until then. */

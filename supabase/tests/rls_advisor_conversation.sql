@@ -50,9 +50,9 @@ select is((select count(*)::int from conversations where kind = 'advisor' and pr
 select conversations.id as conv from conversations where kind = 'advisor' and property_id = :'paid' \gset
 select is((select kind from messages where conversation_id = :'conv'), 'system',
           'its welcome message, written by the team');
-select ok((select body like 'Bonjour, je suis votre conseiller Leenkey%sous 24 h. L''équipe Leenkey'
+select ok((select body like 'Bonjour, je suis votre conseiller Leenkey%sous 2 jours ouvrés, du lundi au vendredi. L''équipe Leenkey'
              from messages where conversation_id = :'conv'),
-          'immediate start: the adviser answers within 24 h');
+          'immediate start: the adviser answers within 2 working days');
 
 -- One transaction gives every row the same now(): the welcome an hour ago.
 update messages set created_at = now() - interval '1 hour' where conversation_id = :'conv';

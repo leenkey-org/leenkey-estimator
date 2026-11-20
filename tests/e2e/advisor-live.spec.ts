@@ -103,7 +103,7 @@ test("le vendeur écrit à son conseiller, l'équipe répond en temps réel, sig
   await test.step("le vendeur ouvre « Mon conseiller Leenkey » et écrit", async () => {
     await signIn(seller, "seller_a", ADVISOR);
     await expect(seller.getByRole("heading", { level: 1 })).toHaveText("Mon conseiller Leenkey");
-    await expect(seller.getByText(/^Accompagné\s· Réponse sous 24\sh$/)).toBeVisible();
+    await expect(seller.getByText(/^Accompagné\s· Réponse sous 2\sjours ouvrés$/)).toBeVisible();
     await expect(
       thread(seller).getByText(/Bonjour, je suis votre conseiller Leenkey/),
     ).toBeVisible();

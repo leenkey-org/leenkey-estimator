@@ -132,7 +132,7 @@ export const frLegal = {
       {
         name: "_ga, _ga_…",
         provider: "Google",
-        purpose: "Mesure d'audience avec Google Analytics, par Google Tag Manager",
+        purpose: "Mesure d'audience avec Google Analytics",
         kind: "optional",
         duration: "13 mois au plus",
       },

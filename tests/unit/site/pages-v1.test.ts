@@ -32,7 +32,12 @@ describe("labels above the titles of the V1 pages", () => {
     invest.contact.eyebrow,
     about.hero.eyebrow,
     about.story.eyebrow,
-    about.values.eyebrow,
+    about.mission.eyebrow,
+    about.technology.eyebrow,
+    about.human.eyebrow,
+    about.pricing.eyebrow,
+    about.commitments.eyebrow,
+    about.future.eyebrow,
   ];
 
   it("those of the V1, word for word", () => {
@@ -52,9 +57,14 @@ describe("labels above the titles of the V1 pages", () => {
       "Ce que vous obtenez",
       "Questions fréquentes",
       "Échangeons",
-      "Qui sommes-nous",
-      "L'histoire",
-      "Nos valeurs",
+      "Qui sommes-nous\u00a0?",
+      "L'histoire de Leenkey",
+      "Notre mission",
+      "La technologie au service de votre autonomie",
+      "Et parce que l'humain reste essentiel…",
+      "Une autre façon de payer les services immobiliers",
+      "Nos engagements",
+      "Et demain\u00a0?",
     ]);
   });
 
@@ -118,8 +128,36 @@ describe("/qui-sommes-nous in the direction of the V1", () => {
     expect(about.founder).toMatchObject({
       initials: "CD",
       name: "Cédric Da Cunha",
-      role: "Fondateur & CEO · Leenkey",
+      role: "Fondateur de Leenkey",
     });
     expect(about.founder.photoAlt).toContain(about.founder.name);
+  });
+
+  // The text given by Cédric on 2026-11-19, word for word.
+  it("the hero, the signature and the last call of his text", () => {
+    expect(about.hero.title).toBe(
+      "Vendre son bien immobilier autrement. Sans agence, mais jamais seul.",
+    );
+    expect(about.hero.closing).toBe("Ni agence. Ni seul. Vendre accompagné.");
+    expect(about.story.signature).toBe("Cédric Da Cunha\u00a0— Fondateur de Leenkey");
+    expect(about.final.title).toBe("Prêt à vendre autrement\u00a0?");
+    expect(about.final.closing).toBe("Vous avez les clés. Nous vous aidons à les utiliser.");
+  });
+
+  it("three plans without a price, five commitments, no unconfirmed figure", () => {
+    expect(about.pricing.plans.map((plan) => plan.title)).toEqual([
+      "Autonomie\u00a0— Gratuit",
+      "Accompagné\u00a0— Forfait fixe",
+      "Sérénité\u00a0— Forfait fixe",
+    ]);
+    expect(about.commitments.items).toHaveLength(5);
+    const text = JSON.stringify(about);
+    expect(text).not.toContain("€");
+    for (const figure of ["15 ans", "300+", "100\u202f%", "24 / 7"])
+      expect(text).not.toContain(figure);
+  });
+
+  it("a no-break space before « ? » and « : », never a plain one", () => {
+    expect(JSON.stringify(about)).not.toMatch(/ [?:;!]/);
   });
 });

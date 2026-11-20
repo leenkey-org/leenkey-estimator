@@ -14,7 +14,7 @@ export const frUpgrade = {
     offer_received: {
       title: "Être accompagné sur cette offre",
       text: (price: string, asking: string) =>
-        `Vous avez reçu une offre de ${price} pour un prix affiché de ${asking}. Vous pouvez la traiter vous-même ou demander à un conseiller Leenkey de l'analyser avec vous et de vous accompagner dans votre négociation.`,
+        `Vous avez reçu une offre de ${price} pour un prix affiché de ${asking}. Vous pouvez la traiter vous-même ou demander à un conseiller Leenkey de vous expliquer cette offre et les points à examiner. La décision reste la vôtre.`,
     },
     visits_no_offer: {
       title: "Analyser les retours de visite",

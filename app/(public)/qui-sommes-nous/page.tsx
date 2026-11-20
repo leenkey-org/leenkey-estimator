@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import {
   AboutCta,
-  AboutFigures,
   AboutHero,
+  CommitmentsSection,
+  FutureSection,
+  HumanSection,
+  MissionSection,
+  PricingModelSection,
   StorySection,
-  ValuesSection,
+  TechnologySection,
 } from "@/leenkey/site/components/about-sections";
 import { PublicPage } from "@/leenkey/site/components/public-page";
 import { frSiteAbout } from "@/lib/i18n/sections/site/about";
@@ -21,14 +25,18 @@ export const metadata: Metadata = {
   openGraph: { title: t.metaTitle, description: t.metaDescription, url: "/qui-sommes-nous" },
 };
 
-// /qui-sommes-nous in V2 (L1-43, DECISIONS 2026-10-19): the V1 page in its order.
+// /qui-sommes-nous: the text given by Cédric on 2026-11-19, in its order.
 export default function AboutPage() {
   return (
     <PublicPage header="night">
       <AboutHero />
-      <AboutFigures />
       <StorySection />
-      <ValuesSection />
+      <MissionSection />
+      <TechnologySection />
+      <HumanSection />
+      <PricingModelSection />
+      <CommitmentsSection />
+      <FutureSection />
       <AboutCta />
     </PublicPage>
   );

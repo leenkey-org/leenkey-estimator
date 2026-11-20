@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import {
   Step1,
   Step10,
-  Step11,
   Step12,
   Step2,
   Step3,
@@ -91,11 +90,6 @@ const PROJET: FlowStep = {
   validate: (f) => (f.delai ? {} : { delai: "Requis" }),
 };
 
-const DOCUMENTS: FlowStep = {
-  label: "Vos documents",
-  render: (p) => <Step11 {...p} />,
-};
-
 const COORDONNEES: FlowStep = {
   label: "Vos coordonnées",
   render: (p) => <Step12 {...p} errors={p.errors ?? {}} />,
@@ -165,7 +159,6 @@ const PARCOURS_STANDARD: FlowStep[] = [
     },
   },
   PROJET,
-  DOCUMENTS,
   COORDONNEES,
 ];
 
@@ -196,7 +189,6 @@ const PARCOURS_TERRAIN: FlowStep[] = [
   { label: "Contraintes", render: (p) => <TerrainStep6 {...p} /> },
   { label: "Potentiel foncier", render: (p) => <TerrainStep7 {...p} /> },
   PROJET,
-  DOCUMENTS,
   COORDONNEES,
 ];
 
@@ -242,7 +234,6 @@ const PARCOURS_LOCAL: FlowStep[] = [
   },
   { label: "Potentiel", render: (p) => <LocalStep7 {...p} /> },
   PROJET,
-  DOCUMENTS,
   COORDONNEES,
 ];
 
@@ -273,7 +264,6 @@ const PARCOURS_IMMEUBLE: FlowStep[] = [
   { label: "Potentiel", render: (p) => <ImmeubleStep6 {...p} /> },
   { label: "Urbanisme", render: (p) => <ImmeubleStep7 {...p} /> },
   PROJET,
-  DOCUMENTS,
   COORDONNEES,
 ];
 
@@ -299,7 +289,6 @@ const PARCOURS_ATYPIQUE: FlowStep[] = [
   { label: "Contraintes", render: (p) => <AtypiqueStep6 {...p} /> },
   { label: "Données financières", render: (p) => <AtypiqueStep7 {...p} /> },
   PROJET,
-  DOCUMENTS,
   COORDONNEES,
 ];
 
