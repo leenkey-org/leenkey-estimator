@@ -24,7 +24,7 @@ export const frSiteAbout = {
     // The initials of the card on his photo, as in the V1.
     initials: "CD",
     name: "Cédric Da Cunha",
-    role: "Fondateur & CEO · Leenkey",
+    role: "Fondateur de Leenkey",
     photoAlt: "Cédric Da Cunha, fondateur de Leenkey",
   },
   story: {

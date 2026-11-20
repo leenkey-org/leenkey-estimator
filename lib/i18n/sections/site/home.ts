@@ -10,7 +10,7 @@ const NBSP = "\u00a0";
 
 export const frSiteHome = {
   metaDescription:
-    "La plateforme qui accompagne les propriétaires dans la vente de leur bien, sans agence : analyse de valeur, dossier, annonce, négociation, jusqu'à la signature. Forfait fixe et transparent.",
+    "La plateforme qui accompagne les propriétaires dans la vente de leur bien, sans agence : analyse de valeur, dossier, annonce, offres, jusqu'à la signature. Forfait fixe et transparent.",
   hero: {
     // The slogan of Leenkey (Younes, 2026-11-04).
     badge: "Parce que le lien, c'est la clé",

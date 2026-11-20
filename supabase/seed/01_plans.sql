@@ -33,7 +33,7 @@ insert into public.plans (code, name, tagline, price_cents, scope, description, 
   ('serenite', 'Sérénité', 'Votre vente avance, nous vous accompagnons jusqu''à la signature.', 150000, 'property',
    E'Tout Accompagné, plus :\nForfait fixe par bien · 12 mois d''accompagnement',
    array[
-     '6 interventions personnalisées de 20 minutes au lieu de 4',
+     '6 interventions personnalisées de 20 minutes au lieu de 4.',
      '2 vérifications de complétude de votre dossier documentaire : présence des pièces, lisibilité et documents manquants, sans validation juridique.',
      'Préparation de votre dossier de vente : organisation des documents, diagnostics et identification des pièces manquantes.',
      'Analyse des documents : lecture des pièces disponibles et signalement des éventuels points de vigilance.',

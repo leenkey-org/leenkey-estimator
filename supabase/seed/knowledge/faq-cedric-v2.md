@@ -14,7 +14,7 @@ Leenkey analyse les caractéristiques renseignées sur votre bien et les donnée
 
 Cette analyse constitue une aide pour déterminer votre prix de vente. Elle ne constitue pas une expertise immobilière.
 
-Accompagné / Sérénité : votre conseiller peut ensuite étudier avec vous le positionnement du bien et définir votre stratégie de prix.
+Accompagné / Sérénité : votre conseiller peut ensuite étudier avec vous le positionnement du bien et vous aider à réfléchir à votre stratégie de prix. Vous fixez votre prix.
 
 ## Puis-je fixer moi-même mon prix ?
 <!-- audience: seller | category: preparer | step_code: prepare -->
@@ -23,7 +23,7 @@ Oui. Vous restez décisionnaire du prix de votre bien.
 
 En Autonomie, Leenkey vous fournit les données et outils pour vous aider à le déterminer.
 
-Avec Accompagné et Sérénité, votre conseiller peut vous aider à définir votre stratégie de prix en fonction du bien, du marché et de vos objectifs.
+Avec Accompagné et Sérénité, votre conseiller peut vous aider à réfléchir à votre stratégie de prix en fonction du bien, du marché et de vos objectifs. Vous fixez votre prix.
 
 ## Pourquoi Leenkey me déconseille-t-il éventuellement mon prix ?
 <!-- audience: seller | category: preparer | step_code: prepare -->
@@ -219,14 +219,14 @@ Leenkey peut notamment vous présenter :
 
 Non.
 
-Leenkey peut analyser et expliquer les informations disponibles mais la décision appartient toujours au vendeur.
+Leenkey peut expliquer les informations disponibles mais la décision appartient toujours au vendeur.
 
 ## Quelle différence avec Accompagné ?
 <!-- audience: seller | category: offres | step_code: offers -->
 
 En Autonomie, vous disposez de la synthèse et des explications de l'assistant IA.
 
-Avec Accompagné et Sérénité, votre conseiller peut analyser l'offre avec vous, identifier les points de vigilance, la replacer dans votre stratégie de vente et vous accompagner dans la négociation.
+Avec Accompagné et Sérénité, votre conseiller peut vous expliquer l'offre et les points à examiner, et vous aider à préparer vos échanges avec l'acquéreur. Il ne négocie pas à votre place : vous échangez directement avec l'acquéreur et vous décidez.
 
 ## Leenkey valide-t-il le financement ?
 <!-- audience: both | category: offres | step_code: offers -->
@@ -397,7 +397,7 @@ Les formules payantes ajoutent principalement l'expertise humaine et la prise en
 
 Autonomie : vous faites vous-même avec les outils et l'IA Leenkey.
 
-Accompagné : vous restez acteur de votre vente, mais un conseiller vous accompagne dans les décisions importantes : stratégie de prix, annonce, acquéreurs, offres et négociation.
+Accompagné : vous restez acteur de votre vente, mais un conseiller vous accompagne dans les décisions importantes : stratégie de prix, annonce, visites, compréhension des offres et documents. Il ne négocie pas et ne choisit pas d'acquéreur à votre place.
 
 ## Quelle différence entre Accompagné et Sérénité ?
 <!-- audience: both | category: formules -->

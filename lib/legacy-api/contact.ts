@@ -169,10 +169,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ne part JAMAIS au client ici : lui ne reçoit son rapport que s'il clique
     // « Recevoir par email » (send-report). Cet email confirme la demande.
     if (sendToClient && clientEmail) {
-      // Le site promet 24 h pour le rappel conseiller (bandeau du rapport),
+      // Le site promet 1 jour ouvré pour le rappel conseiller (bandeau du rapport),
       // 48 h 7 j/7 pour les formulaires de contact : l'email doit dire pareil.
-      const delai =
-        source === "rappel-conseiller" ? "sous 24 heures, 7 j/7" : "sous 48 heures, 7 j/7";
+      const delai = source === "rappel-conseiller" ? "sous 1 jour ouvré" : "sous 48 heures, 7 j/7";
       const htmlClient = `
 <!DOCTYPE html>
 <html><body style="margin:0;padding:24px;background:#f8fafc;font-family:-apple-system,sans-serif;color:#0F172A;">

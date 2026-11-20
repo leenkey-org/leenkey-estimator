@@ -268,7 +268,6 @@ test.describe("accueil", () => {
       "Concept",
       "Tarifs",
       "FAQ",
-      "Investir",
       "Qui sommes-nous",
     ]);
     await expect(footer.getByRole("link", { name: "Mentions légales" })).toBeVisible();
@@ -289,8 +288,7 @@ test.describe("accueil", () => {
       "Vendre",
       "Tarifs",
       "Valoriser mon bien",
-      "Leenkey et son fondateur",
-      "Investir dans Leenkey",
+      "Qui sommes-nous",
       "Contact",
       "Concept",
       "FAQ",
@@ -337,10 +335,11 @@ test.describe("accueil", () => {
       "Vendre",
       "Tarifs",
       "Valoriser mon bien",
+      "Qui sommes-nous",
       "Contact",
     ]);
-    // Its two pages open from a button (L1-51).
-    await expect(nav.getByRole("button", { name: "Qui sommes-nous" })).toBeVisible();
+    // A plain link since /investir left the menus (DECISIONS 2026-11-20).
+    await expect(nav.getByRole("button", { name: "Qui sommes-nous" })).toHaveCount(0);
     // « Vendre » leads to its two ways (DECISIONS 2026-10-26): no longer the home page.
     const sell = nav.getByRole("link", { name: "Vendre", exact: true });
     await expect(sell).toHaveAttribute("href", "/vendre");

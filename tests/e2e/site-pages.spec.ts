@@ -328,7 +328,7 @@ test.describe("pages du site en V2", () => {
     await expect(photo).toHaveAttribute("fetchpriority", "high");
     await expect(photo).not.toHaveAttribute("loading", "lazy");
     await expect(hero.locator("figcaption")).toContainText("Cédric Da Cunha");
-    await expect(hero.locator("figcaption")).toContainText("Fondateur & CEO · Leenkey");
+    await expect(hero.locator("figcaption")).toContainText("Fondateur de Leenkey");
   });
 
   test("une adresse inconnue : la 404 de Façade, réponse 404 @a11y", async ({ page }) => {

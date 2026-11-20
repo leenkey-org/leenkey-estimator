@@ -133,7 +133,9 @@ describe("the conversation with the adviser (L1-34)", () => {
   it("is « Mon conseiller Leenkey », its plan and its delay in the header (SPEC 13)", () => {
     expect(counterpartName(advisor)).toBe("Mon conseiller Leenkey");
     expect(plain(conversationHeading(advisor).title)).toBe("Mon conseiller Leenkey");
-    expect(plain(conversationHeading(advisor).subtitle)).toBe("Accompagné · Réponse sous 2 jours ouvrés");
+    expect(plain(conversationHeading(advisor).subtitle)).toBe(
+      "Accompagné · Réponse sous 2 jours ouvrés",
+    );
     // Closed (the plan no longer includes it): the property it was about.
     expect(conversationHeading({ ...advisor, closed: true }).subtitle).toBe(
       "Appartement 3 pièces avec balcon",

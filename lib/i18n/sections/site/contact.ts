@@ -18,7 +18,7 @@ export const frSiteContact = {
   phone: "Téléphone",
   message: "Votre message",
   submit: "Envoyer ma demande",
-  note: "Vos données restent confidentielles · Réponse sous 48 h, 7 j/7 par un conseiller",
+  note: "Vos données restent confidentielles · Réponse sous 48 h, 7 j/7 par l'équipe Leenkey",
   privacy: "Politique de confidentialité",
   sent: {
     title: "Votre demande de contact a bien été envoyée",

@@ -128,7 +128,7 @@ describe("/qui-sommes-nous in the direction of the V1", () => {
     expect(about.founder).toMatchObject({
       initials: "CD",
       name: "Cédric Da Cunha",
-      role: "Fondateur & CEO · Leenkey",
+      role: "Fondateur de Leenkey",
     });
     expect(about.founder.photoAlt).toContain(about.founder.name);
   });

@@ -76,7 +76,7 @@ test("le wizard est en Sora, sans police de la V1, et sans violation sérieuse",
   await page.goto("/estimer");
   const title = page.getByRole("heading", { level: 1 });
   await expect(title).toHaveText("Quel type de bien souhaitez-vous vendre ?");
-  await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "8");
+  await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "9");
   expect(await fontFamilies(page)).toEqual(SITE_FONTS);
   expect(await title.evaluate((node) => getComputedStyle(node).fontFamily)).toMatch(/^"?Sora/);
   await expectNoEmoji(page);

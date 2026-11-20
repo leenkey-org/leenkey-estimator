@@ -294,7 +294,7 @@ describe("emails of a plan", () => {
       PlanActivatedEmail({ ...seller, contactFrom: null }),
       EMAIL_PLAIN_TEXT,
     );
-    expect(now).toContain("sous 24 h");
+    expect(now).toContain("sous 1 jour ouvré");
     for (const text of [later, now]) {
       expect(text).not.toMatch(/\bon\b/i);
       expect(text).not.toMatch(/au succès/i);

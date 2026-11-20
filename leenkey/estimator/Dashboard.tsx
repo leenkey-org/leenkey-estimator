@@ -288,7 +288,7 @@ export function EstimationDashboard({
                 Votre demande de rappel est enregistrée
               </div>
               <p className="mt-1 text-lk-compact text-lk-ink-2">
-                Un conseiller Leenkey vous appelle sous 24&nbsp;h
+                Un conseiller Leenkey vous appelle sous 1&nbsp;jour ouvré
                 {form.telephone ? ` au ${form.telephone}` : ""}
                 {form.disponibilites.length
                   ? `, selon vos disponibilités (${form.disponibilites.join(", ")})`
