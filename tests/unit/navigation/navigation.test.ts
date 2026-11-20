@@ -218,14 +218,10 @@ describe("TopNav", () => {
     ]);
   });
 
-  it("« Qui sommes-nous » opens the company and its founder, then the investors (L1-51)", () => {
-    const about = TOP_NAV_LINKS.find((link) => link.label === "Qui sommes-nous");
-    expect(about?.items?.map(({ href, label }) => ({ href, label }))).toEqual([
-      { href: "/qui-sommes-nous", label: "Leenkey et son fondateur" },
-      { href: "/investir", label: "Investir dans Leenkey" },
-    ]);
-    // The only group of the bar.
-    expect(TOP_NAV_LINKS.filter((link) => link.items)).toHaveLength(1);
+  it("no group in the bar: /investir left the menus (Cédric, DECISIONS 2026-11-20)", () => {
+    expect(TOP_NAV_LINKS.filter((link) => link.items)).toHaveLength(0);
+    expect(TOP_NAV_LINKS.some((link) => link.href === "/investir")).toBe(false);
+    expect(SITE_LINKS.some((link) => link.href === "/investir")).toBe(false);
   });
 
   it("pages of the site: in the footer, and in the mobile menu after the TopNav", () => {
@@ -233,10 +229,8 @@ describe("TopNav", () => {
       "Concept",
       "Tarifs",
       "FAQ",
-      "Investir",
       "Qui sommes-nous",
     ]);
-    // /investir under « Qui sommes-nous », not again after the TopNav.
     expect(MENU_LINKS.map((link) => link.label)).toEqual([
       "Acheter",
       "Vendre",
@@ -355,12 +349,9 @@ describe("current item: longest prefix of the path", () => {
     expect(currentHref("/annonces", TOP_NAV_LINKS)).toBeNull();
   });
 
-  it("TopNav: « Qui sommes-nous » on its two pages, each of its links on its own", () => {
-    const about = TOP_NAV_LINKS.find((link) => link.items);
-    expect(currentHref("/qui-sommes-nous", TOP_NAV_LINKS)).toBe(about?.href);
-    expect(currentHref("/investir", TOP_NAV_LINKS)).toBe(about?.href);
-    expect(currentHref("/qui-sommes-nous", about?.items ?? [])).toBe("/qui-sommes-nous");
-    expect(currentHref("/investir", about?.items ?? [])).toBe("/investir");
+  it("TopNav: « Qui sommes-nous » on its page; /investir is no longer in the bar", () => {
+    expect(currentHref("/qui-sommes-nous", TOP_NAV_LINKS)).toBe("/qui-sommes-nous");
+    expect(currentHref("/investir", TOP_NAV_LINKS)).toBeNull();
     expect(currentHref("/concept", TOP_NAV_LINKS)).toBeNull();
   });
 

@@ -26,12 +26,15 @@ insert into public.plans (code, name, tagline, price_cents, scope, description, 
      'Recommandations pour valoriser votre bien et préparer les visites',
      'Suivi des performances de votre annonce et pistes d''amélioration',
      'Accompagnement pour préparer vos échanges avec les acquéreurs',
-     'Analyse des offres reçues et des informations de financement communiquées',
-     'Aide à la décision jusqu''à l''acceptation d''une offre'
+     'Explications sur les offres reçues et les points à examiner',
+     'Aide à la préparation et à l''organisation de vos documents',
+     '1 rendez-vous initial de 30 minutes et 4 interventions personnalisées de 20 minutes'
    ], 2, true),
   ('serenite', 'Sérénité', 'Votre vente avance, nous vous accompagnons jusqu''à la signature.', 150000, 'property',
    E'Tout Accompagné, plus :\nForfait fixe par bien · 12 mois d''accompagnement',
    array[
+     '6 interventions personnalisées de 20 minutes au lieu de 4',
+     '2 vérifications de complétude de votre dossier documentaire : présence des pièces, lisibilité et documents manquants, sans validation juridique.',
      'Préparation de votre dossier de vente : organisation des documents, diagnostics et identification des pièces manquantes.',
      'Analyse des documents : lecture des pièces disponibles et signalement des éventuels points de vigilance.',
      'Suivi jusqu''à la signature : accompagnement dans les démarches après l''acceptation de l''offre, rappels des échéances importantes et aide à la préparation des échanges avec le notaire.'

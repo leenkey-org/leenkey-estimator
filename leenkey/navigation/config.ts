@@ -80,9 +80,8 @@ export function bottomTabs(space: Space, signedIn = true): readonly NavItem[] {
  * value or the listing straight away (/vendre, DECISIONS 2026-10-26);
  * « Acheter » stays current on a listing (AnnonceDesktop); « Tarifs » joins
  * them with the public site in V2 (DECISIONS 2026-10-19), then « Qui
- * sommes-nous » and « Contact » (DECISIONS 2026-10-20). « Qui sommes-nous »
- * opens the company and its founder, then the page of the investors, where
- * the vision is (L1-51, DECISIONS 2026-10-24): current on both. No
+ * sommes-nous » and « Contact » (DECISIONS 2026-10-20). The page of the
+ * investors left the menus on 2026-11-20 (reached by its link only). No
  * « Guides »: no such page in the SPEC.
  */
 export const TOP_NAV_LINKS: readonly NavItem[] = [
@@ -92,15 +91,7 @@ export const TOP_NAV_LINKS: readonly NavItem[] = [
   // and the mobile menu have them.
   { href: ROUTES.pricing, label: fr.site.links.pricing, from: "lg" },
   { href: ROUTES.valuation, label: fr.nav.links.valuation },
-  {
-    href: ROUTES.about,
-    label: fr.site.links.about,
-    from: "xl",
-    items: [
-      { href: ROUTES.about, label: fr.site.links.aboutCompany },
-      { href: ROUTES.invest, label: fr.site.links.aboutInvest },
-    ],
-  },
+  { href: ROUTES.about, label: fr.site.links.about, from: "xl" },
   { href: ROUTES.contact, label: fr.site.links.contact, from: "lg" },
 ];
 
@@ -114,7 +105,6 @@ export const SITE_LINKS: readonly NavItem[] = [
   { href: ROUTES.concept, label: fr.site.links.concept },
   { href: ROUTES.pricing, label: fr.site.links.pricing },
   { href: ROUTES.faq, label: fr.site.links.faq },
-  { href: ROUTES.invest, label: fr.site.links.invest },
   { href: ROUTES.about, label: fr.site.links.about },
 ];
 

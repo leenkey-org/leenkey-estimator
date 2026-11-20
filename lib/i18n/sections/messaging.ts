@@ -53,7 +53,7 @@ export const frMessaging = {
     member: (firstName: string) => `${firstName}, équipe Leenkey`,
     avatar: "LK",
     // The header of the seller: the plan of the property, then the delay (SPEC 8.13).
-    reply: "Réponse sous 24\u00A0h",
+    reply: "Réponse sous 2\u00A0jours ouvrés",
     // No immediate start (SPEC 11): the first contact after the withdrawal.
     from: (date: string) => `Accompagnement à partir du ${date}`,
     closed:
@@ -65,7 +65,7 @@ export const frMessaging = {
     // to the plans that have one.
     invite: {
       locked: "Accessible avec la formule Accompagné",
-      text: "Un conseiller Leenkey vous répond sous 24\u00A0h, avec les formules Accompagné et Sérénité.",
+      text: "Un conseiller Leenkey vous répond sous 2\u00A0jours ouvrés, avec les formules Accompagné et Sérénité.",
       action: "Voir les formules",
     },
     // Its link in the header: the plan of the property.

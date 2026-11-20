@@ -210,10 +210,6 @@ export interface LeenkeyForm {
   projet_achat_simultane: string | null;
   bien_achat_trouve: string | null;
 
-  // 11
-  photos: { name: string; size: number }[];
-  documents: { name: string; size: number }[];
-
   // 12
   prenom: string;
   nom: string;
@@ -375,8 +371,6 @@ export const initialForm: LeenkeyForm = {
   acheteur_identifie: null,
   projet_achat_simultane: null,
   bien_achat_trouve: null,
-  photos: [],
-  documents: [],
   prenom: "",
   nom: "",
   email: "",

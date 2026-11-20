@@ -4,14 +4,15 @@ import Script from "next/script";
 import { Suspense } from "react";
 import { GaPageView } from "./ga-page-view";
 
-// GA4 and GTM, mounted only once audience measurement is accepted (L1-37):
+// GA4 (Google Tag Manager is gone: nobody knew its tags, Cédric 2026-11-19,
+// DECISIONS.md 2026-11-20), mounted only once audience measurement is accepted (L1-37):
 // nothing from Google loads before, so no cookie can be set. Consent Mode
 // says the same to Google: analytics granted, advertising always denied.
 // GA cookies last 13 months at most (CNIL), counted from their creation
 // (cookie_update: false: a visit does not extend them).
 const COOKIE_EXPIRES = 60 * 60 * 24 * 395;
 
-export function AnalyticsTags({ gaId, gtmId }: { gaId: string; gtmId: string }) {
+export function AnalyticsTags({ gaId }: { gaId: string }) {
   return (
     <>
       <Suspense fallback={null}>
@@ -28,13 +29,6 @@ gtag('config', '${gaId}', {cookie_expires: ${COOKIE_EXPIRES}, cookie_update: fal
         src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
         strategy="afterInteractive"
       />
-      <Script id="gtm" strategy="afterInteractive">
-        {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${gtmId}');`}
-      </Script>
     </>
   );
 }

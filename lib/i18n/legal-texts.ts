@@ -20,14 +20,14 @@ export type LegalSection = {
   readonly blocks: readonly LegalBlock[];
 };
 
-const EMAIL = "contact.leenkey@gmail.com";
+const EMAIL = "contact@leenkey.fr";
 const email = { link: EMAIL, href: `mailto:${EMAIL}` } as const;
 const S = "\u00A0";
 
 export const legalNotice = {
   metaTitle: "Mentions légales · Leenkey",
   title: "Mentions légales",
-  updated: "Dernière mise à jour : 9 novembre 2026",
+  updated: "Dernière mise à jour : 20 novembre 2026",
   sections: [
     {
       id: "editeur",

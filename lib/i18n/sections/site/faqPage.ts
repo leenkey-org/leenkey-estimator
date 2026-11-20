@@ -54,7 +54,7 @@ export const frSiteFaqPage = {
     {
       question: "Et si je bloque en cours de route ?",
       answer: [
-        "Vous n'avancez jamais à l'aveugle. L'assistant Leenkey vous guide à chaque étape : le jargon est expliqué, les démarches détaillées. Avec Accompagné ou Sérénité, votre conseiller vous rappelle généralement sous 24 h. C'est le principe même de Leenkey.",
+        "Vous n'avancez jamais à l'aveugle. L'assistant Leenkey vous guide à chaque étape : le jargon est expliqué, les démarches détaillées. Avec Accompagné ou Sérénité, votre conseiller vous répond sous 2 jours ouvrés, du lundi au vendredi. C'est le principe même de Leenkey.",
       ],
     },
   ],

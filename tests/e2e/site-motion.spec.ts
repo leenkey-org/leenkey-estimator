@@ -78,26 +78,26 @@ test.describe("mouvement des pages publiques", () => {
   test("les chiffres défilent jusqu'à leur valeur ; jamais à 0 avec le mouvement réduit, ni imprimés", async ({
     page,
   }) => {
-    await page.goto("/qui-sommes-nous");
+    // The figure beside the market of /investir (/qui-sommes-nous has none
+    // since the text of 2026-11-19).
+    await page.goto("/investir");
     const figures = page.locator("[data-count-up]");
-    await expect(figures).toHaveCount(3);
+    await expect(figures).toHaveCount(1);
     const finals = await figures.locator(".sr-only").allTextContents();
-    expect(finals[0]).toBe("15 ans");
+    expect(finals[0]).toBe("15\u202f000\u202f€");
     for (const [index, figure] of (await figures.all()).entries()) {
       await figure.scrollIntoViewIfNeeded();
       await expect(figure.locator("[data-count-up-shown]")).toHaveText(finals[index]);
     }
-    // « 24 / 7 » is not a number: written as it is.
-    await expect(page.getByText("24 / 7", { exact: true })).toBeVisible();
 
     // Reduced motion: drawn with their figure, never at 0.
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/qui-sommes-nous");
+    await page.goto("/investir");
     await expect(figures.locator("[data-count-up-shown]")).toHaveText(finals);
 
     // On paper, the figure itself, whatever was shown on the screen.
     await page.emulateMedia({ reducedMotion: "no-preference" });
-    await page.goto("/qui-sommes-nous");
+    await page.goto("/investir");
     await page.emulateMedia({ media: "print" });
     await expect(figures.locator("[data-count-up-shown]").first()).toBeHidden();
     await expect(figures.locator(".sr-only").first()).toBeVisible();

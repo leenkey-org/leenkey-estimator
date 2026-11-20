@@ -78,9 +78,9 @@ test("ses caractéristiques changent, l'annonce reste en ligne ; son adresse ne 
   const main = page.getByRole("main");
   // The address no longer changes once sent: Leenkey corrects it.
   await expect(main.getByRole("link", { name: "Modifier l'adresse" })).toHaveCount(0);
-  await expect(main.getByRole("link", { name: "contact.leenkey@gmail.com" })).toHaveAttribute(
+  await expect(main.getByRole("link", { name: "contact@leenkey.fr" })).toHaveAttribute(
     "href",
-    "mailto:contact.leenkey@gmail.com",
+    "mailto:contact@leenkey.fr",
   );
   await page.goto(`${sheet}/adresse`);
   await expect(page).toHaveURL(sheet);

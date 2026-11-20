@@ -109,7 +109,7 @@ async function acceptAudience(page: Page, baseURL: string | undefined) {
     .addCookies([{ name: "lk_consent", value: consentValue(true), url: baseURL ?? "" }]);
 }
 
-test("GA4 et GTM ne chargent qu'en production, une fois la mesure d'audience acceptée", async ({
+test("GA4 ne charge qu'en production, une fois la mesure d'audience acceptée", async ({
   page,
   baseURL,
 }) => {
@@ -120,7 +120,7 @@ test("GA4 et GTM ne chargent qu'en production, une fois la mesure d'audience acc
   if (process.env.NEXT_PUBLIC_ENV === "production") {
     await page.waitForFunction(() => {
       const w = window as { gtag?: unknown; dataLayer?: Array<{ event?: string }> };
-      return typeof w.gtag === "function" && !!w.dataLayer?.some((e) => e?.event === "gtm.js");
+      return typeof w.gtag === "function" && !!w.dataLayer?.length;
     });
   } else {
     await page.waitForLoadState("networkidle");

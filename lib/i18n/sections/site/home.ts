@@ -116,7 +116,7 @@ export const frSiteHome = {
     accompanied: "Leenkey Accompagné",
     autonomy: "Leenkey Autonomie",
     saved: "Vous économisez environ",
-    note: "Comparaison avec la formule Accompagné. Les frais d'agence varient selon les agences et les biens.",
+    note: "Hypothèse indicative de 5\u00A0% de frais d'agence, comparée à la formule Accompagné. Les frais d'agence varient selon les agences et les biens.",
   },
   listings: {
     title: "Biens à vendre près de chez vous",
@@ -163,7 +163,7 @@ export const frSiteHome = {
         // The plans of 2026-11-06: Accompagné up to the offer accepted,
         // Sérénité up to the signature.
         title: "Signez",
-        text: "Analyse des offres et aide à la décision, puis suivi jusqu'à la signature. Un conseiller à vos côtés au moindre doute.",
+        text: "Des explications sur les offres reçues et les points à examiner, puis un suivi jusqu'à la signature. Vous décidez, un conseiller vous éclaire au moindre doute.",
         tag: "Accompagné ou Sérénité",
       },
     ],
@@ -237,6 +237,6 @@ export const frSiteHome = {
     accent: "les clés de votre vente",
     text: "Deux minutes pour connaître la valeur réelle de votre bien. Gratuit, sans engagement.",
     action: "Valoriser mon bien gratuitement",
-    note: "Réponse sous 24 h par un conseiller · Aucune carte requise",
+    note: "Gratuit et sans engagement · Aucune carte requise",
   },
 } as const;

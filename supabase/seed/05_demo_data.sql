@@ -227,11 +227,11 @@ select m.id, m.conversation_id, m.sender_id, m.body, m.kind, now() - m.age
 from (values
   ('5eed3000-0000-4000-8000-000000000101'::uuid, '5eed2000-0000-4000-8000-000000000001'::uuid,
    '5eed0000-0000-4000-8000-0000000000ad'::uuid, 'system',
-   'Bonjour, je suis votre conseiller Leenkey pour la vente de votre bien. Écrivez-moi ici à tout moment : je vous réponds sous 24 h.',
+   'Bonjour, je suis votre conseiller Leenkey pour la vente de votre bien. Écrivez-moi ici à tout moment : je vous réponds sous 2 jours ouvrés, du lundi au vendredi.',
    interval '20 days'),
   ('5eed3000-0000-4000-8000-000000000801'::uuid, '5eed2000-0000-4000-8000-000000000008'::uuid,
    '5eed0000-0000-4000-8000-0000000000ad'::uuid, 'system',
-   'Bonjour, je suis votre conseiller Leenkey pour la vente de votre bien. Écrivez-moi ici à tout moment : je vous réponds sous 24 h.',
+   'Bonjour, je suis votre conseiller Leenkey pour la vente de votre bien. Écrivez-moi ici à tout moment : je vous réponds sous 2 jours ouvrés, du lundi au vendredi.',
    interval '25 days'),
   ('5eed3000-0000-4000-8000-000000001101'::uuid, '5eed2000-0000-4000-8000-000000000011'::uuid,
    '5eed0000-0000-4000-8000-00000000000c'::uuid, 'text',

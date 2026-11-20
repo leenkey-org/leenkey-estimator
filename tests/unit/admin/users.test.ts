@@ -218,7 +218,7 @@ describe("suspension email", () => {
   const props = {
     firstName: "Denis",
     reason: "Plusieurs signalements pour des messages insistants.",
-    contactEmail: "contact.leenkey@gmail.com",
+    contactEmail: "contact@leenkey.fr",
     siteUrl: "https://leenkey.fr",
   };
 

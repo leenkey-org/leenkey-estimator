@@ -223,7 +223,7 @@ test("passer à Sérénité avec démarrage immédiat, puis un remboursement ram
   });
   await expect(
     page.getByText(
-      "Votre formule Sérénité est active. Votre conseiller Leenkey vous contacte sous 24 h.",
+      "Votre formule Sérénité est active. Votre conseiller Leenkey vous contacte sous 1 jour ouvré.",
     ),
   ).toBeVisible({ timeout: 10_000 });
 

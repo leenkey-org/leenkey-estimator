@@ -4,7 +4,8 @@
 export const LEGAL_VERSIONS = {
   // 2.0: the texts written for the launch (DECISIONS.md 2026-11-09).
   cgu: "2026-11-09",
-  privacy: "2026-11-09",
+  // 2026-11-20: retention periods as Cédric worded them (DECISIONS.md 2026-11-20).
+  privacy: "2026-11-20",
 } as const;
 
 export type LegalDocument = keyof typeof LEGAL_VERSIONS;

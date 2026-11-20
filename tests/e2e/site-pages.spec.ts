@@ -28,7 +28,7 @@ test.describe("pages du site en V2", () => {
     ["/tarifs", "Une formule pour chaque vendeur."],
     ["/faq", "Tout ce que vous vous demandez, sans détour."],
     ["/investir", "L'immobilier français se réinvente. Soyez-en."],
-    ["/qui-sommes-nous", "Rendre la vente immobilière enfin simple, humaine et transparente."],
+    ["/qui-sommes-nous", "Vendre son bien immobilier autrement. Sans agence, mais jamais seul."],
     ["/contact", "Parlons-en ensemble."],
   ] as const) {
     test(`${path} : titre, en-tête et pied V2, aucune violation sérieuse @a11y`, async ({
@@ -115,7 +115,7 @@ test.describe("pages du site en V2", () => {
     );
     await expect(main.getByRole("link", { name: /Écrire à l'équipe Leenkey/ })).toHaveAttribute(
       "href",
-      /^mailto:contact\.leenkey@gmail\.com\?subject=Investir%20dans%20Leenkey&body=/,
+      /^mailto:contact@leenkey\.fr\?subject=Investir%20dans%20Leenkey&body=/,
     );
     // Every call to action leads to the form of the page.
     for (const name of ["Rejoindre l'aventure", "Parlons-en", "Rejoindre le projet"]) {
@@ -160,11 +160,6 @@ test.describe("pages du site en V2", () => {
     const photo = main.getByRole("img", { name: "Cédric Da Cunha, fondateur de Leenkey" });
     await expect(photo).toBeVisible();
     expect(await photo.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(720);
-    // The vision of /investir, where its section starts (L1-51).
-    await expect(main.getByRole("link", { name: "Découvrir notre vision" })).toHaveAttribute(
-      "href",
-      "/investir#vision",
-    );
     await expect(main.getByRole("link", { name: "Nous contacter" })).toHaveAttribute(
       "href",
       "/contact",
@@ -215,7 +210,19 @@ test.describe("pages du site en V2", () => {
         "Échangeons",
       ],
     ],
-    ["/qui-sommes-nous", ["Qui sommes-nous", "L'histoire", "Nos valeurs"]],
+    [
+      "/qui-sommes-nous",
+      [
+        "Qui sommes-nous\u00a0?",
+        "L'histoire de Leenkey",
+        "Notre mission",
+        "La technologie au service de votre autonomie",
+        "Et parce que l'humain reste essentiel…",
+        "Une autre façon de payer les services immobiliers",
+        "Nos engagements",
+        "Et demain\u00a0?",
+      ],
+    ],
   ] as const) {
     test(`${path} : les surtitres de la V1, en capitales`, async ({ page }) => {
       await page.goto(path);
@@ -572,11 +579,9 @@ test.describe("ancres sous les en-têtes collants", () => {
     }
   });
 
-  test("« Découvrir notre vision » arrive sur la vision de /investir", async ({ page }) => {
+  test("/investir#vision arrive sur la vision de /investir", async ({ page }) => {
     // With the smooth scroll of the site (DESIGN.md 9): polled until it ends.
-    await page.goto("/qui-sommes-nous");
-    await page.getByRole("main").getByRole("link", { name: "Découvrir notre vision" }).click();
-    await expect(page).toHaveURL(/\/investir#vision$/);
+    await page.goto("/investir#vision");
     await expectAnchorUnderHeaders(page, "vision");
   });
 

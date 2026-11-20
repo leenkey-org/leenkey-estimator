@@ -1,6 +1,6 @@
 // Cookie consent (L1-37, DECISIONS Q23): the visitor's choice for the
 // optional trackers, kept six months in a first-party cookie. Only one
-// optional category today: audience measurement (GA4 through GTM).
+// optional category today: audience measurement (GA4).
 // « v1.1.2026-10-17 »: format version, audience measurement (1 accepted,
 // 0 refused), day of the choice.
 

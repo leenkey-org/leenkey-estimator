@@ -46,7 +46,7 @@ export function counterpartName({ kind, role, counterpartFirstName }: Party): st
 /**
  * The header of an open conversation: the property and « Avec Thomas »; for
  * the adviser (SPEC 13, ConversationHeader), « Mon conseiller Leenkey », the
- * plan of the property and « Réponse sous 24 h », or the property once closed.
+ * plan of the property and « Réponse sous 2 jours ouvrés », or the property once closed.
  */
 export function conversationHeading(
   conversation: Party &
@@ -64,7 +64,7 @@ export function conversationHeading(
     if (conversation.closed || !conversation.plan) {
       return { title: t.advisor.name, subtitle: property };
     }
-    // Before the end of the withdrawal, no « within 24 h » (SPEC 11).
+    // Before the end of the withdrawal, no delay of answer (SPEC 11).
     const from = conversation.advisorOrderedAt
       ? firstContactFrom(new Date(conversation.advisorOrderedAt), false)
       : null;

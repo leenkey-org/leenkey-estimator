@@ -295,16 +295,12 @@ test.describe("accueil", () => {
       "Concept",
       "FAQ",
     ]);
-    // The two pages of « Qui sommes-nous » under its label (L1-51).
-    const about = menu.getByRole("list", { name: "Qui sommes-nous" });
-    await expect(about.getByRole("link", { name: "Leenkey et son fondateur" })).toHaveAttribute(
+    // « Qui sommes-nous » alone: /investir left the menus (DECISIONS 2026-11-20).
+    await expect(menu.getByRole("link", { name: "Qui sommes-nous" })).toHaveAttribute(
       "href",
       "/qui-sommes-nous",
     );
-    await expect(about.getByRole("link", { name: "Investir dans Leenkey" })).toHaveAttribute(
-      "href",
-      "/investir",
-    );
+    await expect(menu.locator('a[href="/investir"]')).toHaveCount(0);
     await expect(menu.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
     // « Vendre » leads to its two ways (DECISIONS 2026-10-26), not the home page.
     const sell = menu.getByRole("link", { name: "Vendre", exact: true });

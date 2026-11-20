@@ -132,7 +132,7 @@ Dans ce document, « staging » désigne l'environnement de préprod : branche G
 | Branche Git | une branche par tâche | `v2` (joue le rôle de staging) | V1 : `main`, gelée. V2 : branche de production créée au lancement depuis `v2` (SPEC-V2 P-05b) |
 | URL | `localhost:3000` | `leenkey-v2.vercel.app` | `leenkey.fr` |
 | Vercel | preview automatique par PR (vérification du build uniquement, pas de test manuel) | projet `leenkey-v2`, déploiement « production » du projet à chaque push sur `v2` | projet `leenkey-estimator-main` (sa branche de production passe de `main` à celle de la V2 au lancement) |
-| Supabase | projet `leenkey-dev` (compte Nebula) | projet `leenkey-staging` (compte Nebula) | projet `leenkey-prod` (compte Leenkey, gratuit puis Pro au premier client payant) |
+| Supabase | projet `leenkey-dev` (compte Nebula) | projet `leenkey-staging` (compte Nebula) | projet `leenkey-prod` (compte Nebula, Leenkey invité ; Pro, inclus dans la maintenance : `DECISIONS.md` 2026-11-20) |
 | Stripe | mode test | mode test | mode live |
 | Anthropic | clé dev, quota bas | clé staging | clé prod |
 | Resend | domaine de test, envois vers une boîte de test uniquement | idem, préfixe `[PREPROD]` dans les sujets ; exception : les emails d'authentification de Supabase partent à l'adresse saisie (`DECISIONS.md` 2026-10-16, à valider par Younes) | domaine `leenkey.fr` vérifié |
@@ -442,7 +442,7 @@ Plateforme PropTech française de vente immobilière sans agence, développée p
 2. Estimateur porté en composants client (`"use client"`) sous `app/(public)/estimer`, moteur dans `leenkey/estimator/` sans modification de logique.
 3. Les 4 endpoints deviennent des route handlers aux **mêmes chemins** (`/api/estimate`, `/api/contact`, `/api/send-report`, `/api/dvf-comparables`), même format de requête et de réponse, CORS de `send-report` conservé.
 4. Pages marketing `public/pages/*.html` conservées, avec le comportement de `HtmlPage.tsx` (interception des `<form>`) et l'en-tête `Cache-Control: max-age=0, must-revalidate` sur `/pages/*`. **Remplacé** par le site public en V2 (décision du 2026-10-19) : accueil refait en composants Façade (L1-41), puis concept, tarifs, FAQ (L1-42), investir, qui sommes-nous et pages légales (L1-43), textes de Cédric repris mot pour mot ; `HtmlPage.tsx`, `SiteLayout`, le menu et le pied V1 et les HTML de `public/pages/` ont disparu avec L1-43 ; seul le wizard de l'estimateur garde son style V1 jusqu'à son re-stylage (L1-44).
-5. GA4, GTM, Vercel Analytics et le `page_view` à chaque changement de route. GA4 et GTM ne se chargent qu'après l'accord du visiteur (bandeau de L1-37) ; le `noscript` de GTM est retiré, un visiteur sans JavaScript ne pouvant pas consentir (`DECISIONS.md` 2026-10-17).
+5. GA4, Vercel Analytics et le `page_view` à chaque changement de route (GTM retiré le 2026-11-20, `DECISIONS.md`). GA4 ne se charge qu'après l'accord du visiteur (bandeau de L1-37) ; le `noscript` de GTM est retiré, un visiteur sans JavaScript ne pouvant pas consentir (`DECISIONS.md` 2026-10-17).
 6. Redirections 301 : `leenkey.com` et `www.leenkey.fr` → `leenkey.fr` (hors `/api`). URLs, `sitemap.xml` et `robots.txt` conservés.
 
 ### Règles éditoriales (décisions client, ne pas régresser)
@@ -451,7 +451,7 @@ S'appliquent à tous les textes : interface, emails, prompts de l'assistant, PDF
 
 - Paiement **« à la souscription »**, jamais « au succès » ni « payé au succès ».
 - Voix **« nous »**, jamais « on » dans les textes Leenkey.
-- Réponse **« sous 48 h, 7 j/7 »** pour le formulaire de contact du site, jamais « ouvrées ». (Délais V2 décidés par Cédric : relecture d'annonce et contact après achat d'une formule sous 24 h, même non ouvrées.)
+- Réponse **« sous 48 h, 7 j/7 »** pour le formulaire de contact du site, jamais « ouvrées ». (Délais V2 décidés par Cédric : relecture d'annonce sous 24 h, même non ouvrées ; conseiller des formules payantes du lundi au vendredi, premier contact sous 1 jour ouvré après l'achat, réponse sous 2 jours ouvrés : `DECISIONS.md` 2026-11-20.)
 - Vocabulaire **« valorisation / analyse de valeur »** : éviter « estimation » seul dans les textes marketing et d'interface (décision client maintenue en V2, même si l'activité est couverte par la carte d'agent immobilier de Cédric : `DECISIONS.md`, 2026-10-07). Le nom technique `estimation` reste permis dans le code et les tables.
 - Pas de chiffres ni de témoignages inventés sur le site.
 - Pas de mention « Prix ferme » sur les écrans.

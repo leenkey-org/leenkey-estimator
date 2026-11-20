@@ -11,7 +11,6 @@ import {
   ToggleCard,
 } from "./ui";
 import type { BienType, DpeLetter, EtatGeneral, LeenkeyForm } from "./types";
-import { FileText, Paperclip } from "lucide-react";
 import { buttonVariants } from "@/components/shared/button";
 import { Checkbox } from "@/components/shared/checkbox";
 import { InfoNote } from "@/components/shared/info-note";
@@ -1254,109 +1253,6 @@ export function Step10({ form, set, errors }: P) {
   );
 }
 
-/* ============ STEP 11 — Photos ============ */
-function FileDrop({
-  label,
-  hint,
-  accept,
-  files,
-  onAdd,
-  onRemove,
-}: {
-  label: string;
-  hint: string;
-  accept: string;
-  files: { name: string; size: number }[];
-  onAdd: (f: { name: string; size: number }[]) => void;
-  onRemove: (i: number) => void;
-}) {
-  return (
-    <div className="space-y-3">
-      <SectionTitle>{label}</SectionTitle>
-      {/* The input stays in the page (sr-only): the keyboard reaches it, its
-          label shows the focus. */}
-      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lk-md border-[1.5px] border-dashed border-lk-line bg-lk-blue-tint p-8 text-center transition hover:border-lk-ink-3 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-lk-brand-blue">
-        <Paperclip aria-hidden="true" className="size-6 text-lk-blue" />
-        <span className="text-lk-compact font-semibold text-lk-ink">
-          Glissez vos fichiers ou cliquez pour parcourir
-        </span>
-        <span className="text-lk-caption text-lk-ink-2">{hint}</span>
-        <input
-          type="file"
-          multiple
-          accept={accept}
-          className="sr-only"
-          onChange={(e) => {
-            const newF = Array.from(e.target.files ?? []).map((f) => ({
-              name: f.name,
-              size: f.size,
-            }));
-            onAdd(newF);
-          }}
-        />
-      </label>
-      {files.length > 0 && (
-        <ul className="space-y-2">
-          {files.map((f, i) => (
-            <li
-              key={i}
-              className="flex items-center justify-between rounded-lk-sm border-[1.5px] border-lk-line bg-lk-surface px-4 py-2 text-lk-compact"
-            >
-              <span className="flex min-w-0 items-center gap-2 text-lk-ink">
-                <FileText aria-hidden="true" className="size-4 shrink-0 text-lk-ink-3" />
-                <span className="truncate">{f.name}</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => onRemove(i)}
-                className="-mr-2 inline-flex min-h-11 shrink-0 items-center px-2 text-lk-caption font-semibold text-lk-danger hover:underline"
-              >
-                Retirer
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-export function Step11({ form, set }: P) {
-  return (
-    <div className="space-y-8">
-      <StepHeader
-        title="Des documents pour affiner votre rapport de valorisation ?"
-        subtitle="Cette étape est facultative mais améliore la précision de votre rapport de valorisation."
-      />
-      <div className="space-y-6">
-        <FileDrop
-          label="Photos du bien"
-          hint="JPG, PNG, HEIC · max 20 photos · 10 Mo / photo · Salon, cuisine, chambres, extérieurs"
-          accept="image/*,.heic"
-          files={form.photos}
-          onAdd={(f) => set({ photos: [...form.photos, ...f].slice(0, 20) })}
-          onRemove={(i) => set({ photos: form.photos.filter((_, idx) => idx !== i) })}
-        />
-        <FileDrop
-          label="Documents"
-          hint="Plan, DPE, taxe foncière, surface Carrez, charges (PDF, JPG)"
-          accept=".pdf,image/*"
-          files={form.documents}
-          onAdd={(f) => set({ documents: [...form.documents, ...f] })}
-          onRemove={(i) => set({ documents: form.documents.filter((_, idx) => idx !== i) })}
-        />
-        <InfoNote>
-          <p>
-            Ces documents sont traités de façon confidentielle et ne sont utilisés que pour
-            améliorer la précision de votre rapport de valorisation. Aucun document ne sera partagé
-            sans votre accord.
-          </p>
-        </InfoNote>
-      </div>
-    </div>
-  );
-}
-
 /* ============ STEP 12 — Contact ============ */
 const SOURCES = [
   "Google / Recherche internet",
@@ -1391,7 +1287,7 @@ export function Step12({
     <div className="space-y-8">
       <StepHeader
         title="Où envoyer votre rapport de valorisation ?"
-        subtitle="Votre rapport de valorisation personnalisée est prête. Entrez vos coordonnées pour la recevoir gratuitement et sans engagement."
+        subtitle="Votre rapport de valorisation personnalisé est prêt. Entrez vos coordonnées pour le recevoir gratuitement et sans engagement."
       />
       <div className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -1492,6 +1388,18 @@ export function Step12({
             }
           />
         </div>
+        <p className="text-lk-caption text-lk-ink-2">
+          {frEstimator.contactStep.retention.before}
+          <a
+            className="text-lk-blue underline"
+            href="/confidentialite"
+            target="_blank"
+            rel="noopener"
+          >
+            {frEstimator.contactStep.retention.link}
+          </a>
+          {frEstimator.contactStep.retention.after}
+        </p>
       </div>
     </div>
   );

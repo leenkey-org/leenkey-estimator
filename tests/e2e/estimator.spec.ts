@@ -175,18 +175,25 @@ test("les coordonnées : la case de consentement et sa politique de confidential
   await page.evaluate(() =>
     localStorage.setItem(
       "leenkey_form_v1",
-      JSON.stringify({ form: { type: "appartement" }, step: 12 }),
+      JSON.stringify({ form: { type: "appartement" }, step: 11 }),
     ),
   );
   await page.goto("/estimer");
   await page.getByRole("button", { name: "Reprendre", exact: true }).click();
-  await expect(page.getByText(/^Étape 12 sur 12/)).toBeVisible();
+  await expect(page.getByText(/^Étape 11 sur 11/)).toBeVisible();
   const consent = page.getByRole("checkbox", { name: /^J'accepte que Leenkey utilise/ });
   await expect(consent).not.toBeChecked();
   // The policy opens beside the form (it led nowhere in the V1).
-  const policy = page.getByRole("link", { name: "politique de confidentialité" });
+  // Two links to it: the consent, then how long the analysis is kept.
+  const policies = page.getByRole("link", { name: "politique de confidentialité" });
+  await expect(policies).toHaveCount(2);
+  const policy = policies.first();
   await expect(policy).toHaveAttribute("href", "/confidentialite");
   await expect(policy).toHaveAttribute("target", "_blank");
+  await expect(
+    page.getByText("Sans compte, votre analyse de valeur est conservée 12 mois."),
+  ).toBeVisible();
+  await expect(policies.last()).toHaveAttribute("href", "/confidentialite");
   await consent.check();
   await expect(consent).toBeChecked();
   await expectNoEmoji(page);

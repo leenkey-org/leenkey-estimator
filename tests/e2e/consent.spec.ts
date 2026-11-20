@@ -149,9 +149,7 @@ async function bannerShown(page: Page) {
 
 /** Nothing of Google in the page: no tag, no gtag, no cookie, no request. */
 async function expectNoGoogle(page: Page, requests: string[]) {
-  await expect(page.locator('script[src*="googletagmanager"], script#ga4, script#gtm')).toHaveCount(
-    0,
-  );
+  await expect(page.locator('script[src*="googletagmanager"], script#ga4')).toHaveCount(0);
   expect(await page.evaluate(() => typeof (window as { gtag?: unknown }).gtag)).toBe("undefined");
   expect(await analyticsCookies(page)).toEqual([]);
   expect(requests).toEqual([]);

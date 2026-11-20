@@ -24,7 +24,7 @@ test("chaque lien légal du pied de page mène à sa page", async ({ page }) => 
     await expect(page.getByRole("heading", { level: 1 }).first(), path).toHaveText(title);
     await page.goto("/cgv");
   }
-  await expect(footer.locator('a[href="mailto:contact.leenkey@gmail.com"]')).toHaveText("Contact");
+  await expect(footer.locator('a[href="mailto:contact@leenkey.fr"]')).toHaveText("Contact");
 });
 
 test("le pied de page des pages V1 a les mêmes liens et l'adresse légale", async ({ page }) => {

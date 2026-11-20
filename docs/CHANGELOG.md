@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-20 · Réponses de Cédric : textes légaux et site · PR #113
+- Modifié : CGV (version 2026-11-20) : rôle, disponibilité et interventions du conseiller, TVA de 20 % incluse, remboursement intégral en cas de rétractation ; politique de confidentialité (version 2026-11-20) : durées de conservation de Cédric ; page « Intelligence artificielle » : articles 2 à 4 ; page « Qui sommes-nous » : nouveau texte, sans chiffres ; adresse contact@leenkey.fr ; délais du conseiller (1 jour ouvré, 2 jours ouvrés) ; formules (`01_plans.sql`) ; consignes de l'assistant (aucune entremise).
+- Retiré : Google Tag Manager ; la page Investir des menus, du plan du site et de l'indexation ; l'étape « documents » de l'estimateur.
+- Corrigé : « Votre rapport de valorisation personnalisé est prêt ».
+- Migration : 20261120100000_advisor_delays.sql
+
 ### 2026-11-18 · L3-04 · PR #112 · Dossier de vente
 - Ajouté : onglet « Documents » de la fiche du bien : pièces par catégorie selon le type de bien, dépôt (PDF, JPEG, PNG, 20 Mo), « Non concerné » avec motif, « Dossier notaire : x / y pièces », partage avec un acquéreur (tout le dossier ou les diagnostics), demandes d'accès à accorder ou refuser.
 - Ajouté : page « Documents partagés » de l'acquéreur (`/acquereur/documents`), avec la demande d'accès aux documents d'un bien avec lequel il est en contact.

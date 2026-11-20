@@ -333,7 +333,7 @@ describe("warning email", () => {
   const props = {
     firstName: "David",
     reason: "Merci de rester courtois dans vos échanges.",
-    contactEmail: "contact.leenkey@gmail.com",
+    contactEmail: "contact@leenkey.fr",
     siteUrl: "https://leenkey.fr",
   };
 

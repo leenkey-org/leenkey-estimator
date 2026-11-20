@@ -11,5 +11,14 @@ export const frEstimator = {
   // « Prendre contact », the surface slider, the state of a next step.
   contactDialog: { back: "Retour", close: "Fermer" },
   surfaceSlider: "Surface habitable",
+  // Under the contact form of the wizard: how long an analysis made without
+  // an account is kept, with the way to the privacy policy.
+  contactStep: {
+    retention: {
+      before: "Sans compte, votre analyse de valeur est conservée 12 mois. Voir notre ",
+      link: "politique de confidentialité",
+      after: ".",
+    },
+  },
   nextStep: { done: "Fait :", todo: "À faire :" },
 } as const;

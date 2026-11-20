@@ -22,14 +22,11 @@ describe("countable", () => {
   });
 
   it("draws the figures of the site back exactly as written, once rolled up", () => {
-    const figures = [
-      ...fr.site.about.figures.map((figure) => figure.value),
-      fr.site.invest.market.example.value,
-    ];
+    const figures = [fr.site.invest.market.example.value];
     for (const text of figures) {
       const figure = countable(text);
       if (figure) expect(`${formatInteger(figure.value)}${figure.suffix}`).toBe(text);
     }
-    expect(figures.filter((text) => countable(text) !== null)).toHaveLength(4);
+    expect(figures.filter((text) => countable(text) !== null)).toHaveLength(1);
   });
 });

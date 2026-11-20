@@ -16,6 +16,6 @@ export const frConsent = {
   necessaryText:
     "Connexion à votre compte, sécurité, mémorisation de vos choix, reprise de votre analyse de valeur, comptage des visites des annonces. Toujours actifs.",
   analyticsLabel: "Mesure d'audience",
-  analyticsText: "Statistiques de visite avec Google Analytics, par Google Tag Manager.",
+  analyticsText: "Statistiques de visite avec Google Analytics.",
   save: "Enregistrer mes choix",
 } as const;
