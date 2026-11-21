@@ -147,6 +147,7 @@ describe("wording of the notifications (from type and data)", () => {
         "document.access_requested",
         "document.needs_attention",
         "document.shared",
+        "financing.checked",
         "listing.pending",
         "listing.published",
         "listing.rejected",
@@ -156,6 +157,7 @@ describe("wording of the notifications (from type and data)", () => {
         "offer.answered",
         "offer.expired",
         "offer.received",
+        "offer.received_team",
         "offer.viewed",
         "offer.withdrawn",
         "plan.activated",
@@ -163,6 +165,7 @@ describe("wording of the notifications (from type and data)", () => {
         "plan.refunded",
         "plan.withdrawn",
         "report.created",
+        "report.handled",
         "step.advanced",
         "visit.booked",
         "visit.cancelled",
@@ -195,6 +198,39 @@ describe("wording of the notifications (from type and data)", () => {
     expect(team.detail?.replace(/[\u00A0\u202F]/g, " ")).toBe(
       "338 000 € · LK-0042 · Savigny-sur-Orge",
     );
+    // 2026-11-21: an offer received on such a sale, for the team: no buyer either.
+    const received = describeNotification(
+      view({
+        type: "offer.received_team",
+        data: {
+          price_cents: 33_800_000,
+          listing_reference: "LK-0042",
+          city: "Savigny-sur-Orge",
+          buyer_first_name: "Chloé",
+        },
+      }),
+    );
+    expect(received.title).toBe("Offre reçue sur une vente avec conseiller");
+    expect(received.detail?.replace(/[\u00A0\u202F]/g, " ")).toBe(
+      "338 000 € · LK-0042 · Savigny-sur-Orge",
+    );
+    // A proof of financing checked (never « validé »), a report handled.
+    const checked = describeNotification(
+      view({ type: "financing.checked", data: { document_type: "accord_principe" } }),
+    );
+    expect(checked).toMatchObject({
+      title: "Votre justificatif de financement est vérifié",
+      tone: "success",
+    });
+    expect(`${checked.title} ${checked.detail}`).not.toMatch(/validé/i);
+    expect(
+      describeNotification(
+        view({ type: "report.handled", data: { listing_title: "Maison 5 pièces", reason: "x" } }),
+      ),
+    ).toMatchObject({
+      title: "Votre signalement a été traité",
+      detail: "Conversation à propos de «\u00A0Maison 5 pièces\u00A0»",
+    });
     // L1-34: the adviser to the seller; a seller to the team, its reference first.
     expect(
       describeNotification(view({ type: "advisor.message", data: { excerpt: "Bonjour" } })),

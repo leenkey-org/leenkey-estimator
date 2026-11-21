@@ -156,12 +156,14 @@ test("un acquéreur déclare son projet ; son vendeur voit le statut, pas les mo
     });
     await proof.getByRole("button", { name: "Déposer le justificatif" }).click();
     await expect(buyer.locator(":focus")).toHaveText(
-      "Votre justificatif est déposé. Votre dossier passe à « Justificatif fourni ».",
+      "Votre justificatif est déposé. Votre dossier passe à « Justificatif fourni ». Nous le contrôlons sous 48 h.",
     );
     await expect(
       proof.getByText("Simulation ou offre bancaire nominative", { exact: true }),
     ).toBeVisible();
-    await expect(proof.getByText(/^Justificatif fourni\. Nous le contrôlons/)).toBeVisible();
+    await expect(
+      proof.getByText(/^Justificatif fourni\. Nous le contrôlons sous 48\sh/),
+    ).toBeVisible();
     await expect(
       buyer.getByRole("status").getByText("Justificatif fourni", { exact: true }),
     ).toBeVisible();
@@ -208,8 +210,14 @@ test("un acquéreur déclare son projet ; son vendeur voit le statut, pas les mo
       .getByLabel("Note interne")
       .fill("Simulation au nom de David, cohérente avec son projet.");
     await proof.getByRole("button", { name: "Marquer le justificatif comme vérifié" }).click();
-    await expect(admin.locator(":focus")).toHaveText("Justificatif marqué comme vérifié.");
+    await expect(admin.locator(":focus")).toHaveText(
+      "Justificatif marqué comme vérifié. Son fichier est supprimé et l'acquéreur est prévenu.",
+    );
     await expect(proof.getByText(/^Contrôlé le .* par /)).toBeVisible();
+    // Its file is deleted once checked (answer of Cédric of 2026-11-19): no link, no file.
+    await expect(proof.getByText(/^Fichier supprimé après contrôle le /)).toBeVisible();
+    await expect(proof.getByRole("link", { name: "Ouvrir le fichier" })).toHaveCount(0);
+    expect((await admin.request.get(documentHref)).status()).toBe(404);
     await expect(
       proof.getByText("Simulation au nom de David, cohérente avec son projet."),
     ).toBeVisible();
@@ -224,6 +232,9 @@ test("un acquéreur déclare son projet ; son vendeur voit le statut, pas les mo
     await buyer.reload();
     const proof = buyer.getByRole("region", { name: "Justificatif de financement" });
     await expect(proof.getByText(/^Contrôlé par Leenkey le /)).toBeVisible();
+    await expect(proof.getByText("Fichier supprimé après notre contrôle.")).toBeVisible();
+    await expect(proof.getByRole("link", { name: "Voir le document (PDF)" })).toHaveCount(0);
+    expect((await buyer.request.get(documentHref)).status()).toBe(404);
     await expect(
       buyer.getByRole("status").getByText("Justificatif vérifié", { exact: true }),
     ).toBeVisible();

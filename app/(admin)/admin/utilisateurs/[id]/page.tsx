@@ -337,7 +337,11 @@ export default async function AdminUserPage({ params }: Props) {
                           </p>
                         ) : null}
                       </div>
-                      {document.removedAt ? null : (
+                      {document.fileDeletedAt ? (
+                        <p className="text-lk-caption text-lk-ink-3">
+                          {f.fileDeleted(formatDateShort(document.fileDeletedAt, now))}
+                        </p>
+                      ) : document.removedAt ? null : (
                         <a
                           href={`/documents/financement/${document.id}`}
                           target="_blank"

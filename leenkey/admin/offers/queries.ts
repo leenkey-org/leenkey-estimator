@@ -4,6 +4,7 @@ import { requireAdmin } from "@/core/auth/session";
 import { hasEntitlement } from "@/leenkey/billing/entitlements";
 import { isUuid } from "@/leenkey/messaging/queries";
 import { OFFER_COLUMNS, readOffer, readPropertySnapshot } from "@/leenkey/offers/content";
+import { offerAddressLine } from "@/leenkey/offers/queries";
 import { offerEvents, type OfferEvent, type SellerOffer } from "@/leenkey/offers/seller";
 import { createClient } from "@/lib/supabase/server";
 import type { AdminOffersQuery } from "@/lib/validations/admin";
@@ -166,7 +167,11 @@ export const adminOffer = cache(
         .maybeSingle();
       if (error) throw new Error(`offers: ${error.code} ${error.message}`);
       if (!row) return { ok: true, data: null };
-      const property = readPropertySnapshot(row.property_snapshot);
+      // The team reads the address frozen with the offer.
+      const property = readPropertySnapshot(
+        row.property_snapshot,
+        (await offerAddressLine(row.id)) ?? "",
+      );
       if (!property) return { ok: true, data: null };
 
       const [listing, people, proof, events] = await Promise.all([

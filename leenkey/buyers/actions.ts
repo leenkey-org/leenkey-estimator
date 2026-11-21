@@ -183,6 +183,7 @@ export async function addFinancingDocument(form: FormData): Promise<AddFinancing
         documentDate: parsed.data.documentDate,
         isPdf: read.data.kind === "pdf",
         createdAt: new Date().toISOString(),
+        fileDeleted: false,
       },
       financingStatus: "document_provided",
     },

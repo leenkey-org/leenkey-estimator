@@ -8,7 +8,7 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { KeyFactsTable } from "@/components/shared/key-facts-table";
 import { isUuid } from "@/leenkey/messaging/queries";
 import { OfferAcceptForm } from "@/leenkey/offers/components/offer-seller-actions";
-import { formatNumericDateTime, fullName } from "@/leenkey/offers/document";
+import { acceptanceConditions, formatNumericDateTime, fullName } from "@/leenkey/offers/document";
 import { offerPath } from "@/leenkey/offers/paths";
 import { advisorLink, sellerOffer } from "@/leenkey/offers/seller";
 import { CreationBody } from "@/leenkey/properties/components/creation-page";
@@ -40,6 +40,7 @@ export default async function OfferAcceptPage({ params }: Props) {
   if (offer.status !== "submitted" && offer.status !== "viewed") redirect(offerPath(id));
   const advisor = await advisorLink(found.data.propertyId);
   const buyers = [offer.buyer, ...offer.coBuyers].map(fullName).join(", ");
+  const conditions = acceptanceConditions(offer);
   return (
     <>
       <AppHeader
@@ -79,6 +80,20 @@ export default async function OfferAcceptPage({ params }: Props) {
                 value: offer.validityUntil
                   ? t.until(formatNumericDateTime(offer.validityUntil))
                   : "",
+              },
+              {
+                label: t.conditions,
+                value:
+                  conditions.length > 0 ? (
+                    <span className="flex flex-col gap-1 text-pretty break-words">
+                      {conditions.map((line) => (
+                        <span key={line}>{line}</span>
+                      ))}
+                    </span>
+                  ) : (
+                    t.noCondition
+                  ),
+                tone: conditions.length > 0 ? "default" : "muted",
               },
             ]}
           />

@@ -42,7 +42,11 @@ export function FinancingCheck({
         console.error("[admin] financing check request failed", error);
       }
       if (result?.ok) {
-        report({ tone: "success", text: t.done });
+        report(
+          result.data.fileDeleted
+            ? { tone: "success", text: t.done }
+            : { tone: "warning", text: t.doneFileKept },
+        );
         return;
       }
       // Removed, replaced or already checked since the page was shown.

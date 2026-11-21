@@ -23,7 +23,7 @@ import {
   formatNumericDay,
 } from "@/leenkey/offers/document";
 import { offerPdfPath } from "@/leenkey/offers/paths";
-import { withdrawalPeriodEnd } from "@/leenkey/offers/withdrawal";
+import { showsWithdrawalPeriod, withdrawalPeriodEnd } from "@/leenkey/offers/withdrawal";
 import { frAdminOffers } from "@/lib/i18n/sections/adminOffers";
 import { frOffer } from "@/lib/i18n/sections/offer";
 import { adminOffersHref } from "@/lib/validations/admin";
@@ -134,9 +134,10 @@ export default async function AdminOfferPage({ params }: Props) {
       : []),
   ];
   const accepted = offer.status === "accepted" && item.answeredAt !== null;
-  const periodEnd = item.withdrawalPeriodStart
-    ? withdrawalPeriodEnd(item.withdrawalPeriodStart)
-    : null;
+  // No period for an acquisition by an SCI (answer of Cédric of 2026-11-19).
+  const period = showsWithdrawalPeriod(offer.acquisitionMode);
+  const periodStart = period ? item.withdrawalPeriodStart : null;
+  const periodEnd = periodStart ? withdrawalPeriodEnd(periodStart) : null;
 
   return (
     <AdminPage title={d.summaryTitle(offer.reference)} titleOnMobile back={backLink}>
@@ -187,9 +188,7 @@ export default async function AdminOfferPage({ params }: Props) {
                 <p className="font-semibold text-lk-ink">
                   {p.signedOn(formatNumericDay(item.precontractSignedAt))}
                 </p>
-                {item.withdrawalPeriodStart ? (
-                  <p>{p.notifiedOn(formatNumericDay(item.withdrawalPeriodStart))}</p>
-                ) : null}
+                {periodStart ? <p>{p.notifiedOn(formatNumericDay(periodStart))}</p> : null}
                 {periodEnd ? (
                   <p>
                     {p.periodEnd(formatNumericDay(periodEnd))} {t.precontract.indicative}
@@ -199,15 +198,17 @@ export default async function AdminOfferPage({ params }: Props) {
             ) : (
               <p className="text-lk-secondary text-lk-ink-2">{t.precontract.none}</p>
             )}
+            {!period ? <p className="text-lk-secondary text-lk-ink-2">{p.noPeriod}</p> : null}
             {precontractByTeam && item.answeredAt ? (
               <>
                 <p className="text-lk-caption text-lk-ink-3">{t.precontract.intro}</p>
                 <OfferPrecontractForm
                   offerId={offer.id}
                   signedAt={item.precontractSignedAt}
-                  notifiedAt={item.withdrawalPeriodStart}
+                  notifiedAt={periodStart}
                   minDay={parisDay(item.answeredAt)}
                   maxDay={parisDay(now)}
+                  withdrawalPeriod={period}
                 />
               </>
             ) : null}

@@ -17,6 +17,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Ajouté : bornes de coût sur 24 heures glissantes (40 documents envoyés par bien, 60 par propriétaire, 500 pour le site), documents retirés compris.
 - Modifié : l'affichage des faits sur l'annonce (`public_facts_approved_at`) ne s'écrit plus par une mise à jour directe du vendeur mais par `document_public_facts_set` ; politiques restrictives de plus sur `ai_conversations` et `ai_messages` (un compte n'écrit pas dans le journal d'une tâche planifiée : analyses de documents et résumés d'annonce).
 - Migration : 20261121120000_document_analysis.sql
+### 2026-11-21 · Ajustements de l'offre d'achat (réponses de Cédric) · PR #119
+- Ajouté : l'adresse exacte du bien dans l'offre et son PDF, figée à l'envoi ; lue par le vendeur, l'équipe et l'acquéreur dont une visite du bien est confirmée ou faite (sinon la commune, et une phrase qui le dit).
+- Ajouté : précisions obligatoires quand l'acquéreur coche « Obtention d'une autorisation particulière » ; ligne « Conditions de l'offre » dans le récapitulatif d'acceptation du vendeur.
+- Ajouté : l'équipe est prévenue dès qu'une offre est reçue sur une vente dont la formule comprend un conseiller (`offer.received_team`, cloche et email groupé) ; l'acquéreur est prévenu quand son justificatif de financement est contrôlé (`financing.checked`) ; l'auteur d'un signalement quand il est clos (`report.handled`).
+- Modifié : justificatif de financement contrôlé « sous 48 h » ; son fichier est supprimé après le contrôle (le statut, le type et la date du contrôle restent) ; aucun délai de rétractation affiché pour une acquisition en SCI ; l'aide de l'avant-contrat dit qu'après une signature électronique le délai court à compter du lendemain (calcul inchangé).
+- Migration : 20261121160000_offer_adjustments.sql (table `offer_property_addresses`, fonctions `offer_property_address` et `financing_document_file_removed`, colonne `financing_documents.file_deleted_at`, politique de stockage `documents_financing_delete_checked`)
 
 ### 2026-11-21 · L3-06 · PR #116 · Alertes acheteur
 - Ajouté : « Créer une alerte » sur la recherche (à côté de « Filtres » et dans l'état vide, dès qu'il y a un critère) : nom proposé depuis les critères, confirmation avec le lien vers les alertes ; un visiteur se connecte puis revient à sa recherche.

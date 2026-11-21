@@ -31,6 +31,7 @@ import {
 import {
   buyerDraft,
   offerAccess,
+  offerAddressLine,
   offerListing,
   offerPrefill,
   type OfferListing,
@@ -105,6 +106,12 @@ export default async function NewOfferPage({ searchParams }: Props) {
     );
   }
   const offer = draft.data;
+  // The exact address of the property: for a buyer whose visit is confirmed
+  // (SPEC-V2 14); the town only otherwise, the seller reading it in any case.
+  const property: OfferListing = {
+    ...listing.data,
+    addressLine: offer ? await offerAddressLine(offer.id) : null,
+  };
   const first = firstStepToFill(offer);
   const open: OfferFormStep = first === 8 ? "review" : (first as OfferFormStep);
   const requested = readOfferFormStep(typeof params.etape === "string" ? params.etape : undefined);
@@ -161,7 +168,7 @@ export default async function NewOfferPage({ searchParams }: Props) {
       <>
         <OfferHeader step={2} back={previous(2)} />
         <CreationBody>
-          <PropertyStep listing={listing.data} listingId={listingId} />
+          <PropertyStep listing={property} listingId={listingId} />
         </CreationBody>
       </>
     );
@@ -300,7 +307,7 @@ export default async function NewOfferPage({ searchParams }: Props) {
     <>
       <OfferHeader step="review" back={previous("review")} />
       <CreationBody>
-        <Review offer={offer} listing={listing.data} />
+        <Review offer={offer} listing={property} />
       </CreationBody>
     </>
   );
@@ -310,7 +317,12 @@ export default async function NewOfferPage({ searchParams }: Props) {
 function PropertyStep({ listing, listingId }: { listing: OfferListing; listingId: string }) {
   const labels = t.property;
   const rows: [string, string][] = [
-    [labels.address, `${listing.postalCode} ${listing.city}`.trim()],
+    [
+      labels.address,
+      [listing.addressLine ?? "", `${listing.postalCode} ${listing.city}`.trim()]
+        .filter((part) => part !== "")
+        .join(", "),
+    ],
     [labels.type, fr.propertyType[listing.type]],
     [labels.surface, formatSurface(listing.surfaceM2)],
     [
@@ -344,6 +356,9 @@ function PropertyStep({ listing, listingId }: { listing: OfferListing; listingId
             ))}
           </dl>
           <p className="text-lk-caption text-lk-ink-3">{labels.note}</p>
+          {listing.addressLine === null ? (
+            <p className="text-lk-caption text-lk-ink-3">{labels.addressWithheld}</p>
+          ) : null}
         </div>
       </div>
       <FormActionBar className="md:mt-3">

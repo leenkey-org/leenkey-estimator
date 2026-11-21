@@ -125,8 +125,11 @@ export function buildOfferDocument(offer: OfferContent, property: OfferProperty)
   }
 
   const labels = fr.offer.property;
+  const town = `${property.postalCode} ${property.city}`.trim();
   const propertyBlocks = rows([
-    [labels.address, `${property.postalCode} ${property.city}`.trim()],
+    // The exact address, for who may read it (the seller, the team, a buyer
+    // whose visit is confirmed); the town only otherwise.
+    [labels.address, [property.addressLine ?? "", town].filter((part) => part !== "").join(", ")],
     [labels.type, fr.propertyType[property.type]],
     [labels.surface, formatSurface(property.surfaceM2)],
     [
@@ -137,6 +140,9 @@ export function buildOfferDocument(offer: OfferContent, property: OfferProperty)
     ],
     [labels.reference, property.listingReference],
   ]);
+  if (property.addressLine === null) {
+    propertyBlocks.push({ kind: "text", text: t.addressWithheld });
+  }
 
   const price: DocumentBlock[] = [];
   if (offer.priceCents !== null) {
@@ -252,6 +258,34 @@ export function buildOfferDocument(offer: OfferContent, property: OfferProperty)
     notice: said.notice,
     footer: t.footer(offer.reference, offer.version),
   };
+}
+
+/**
+ * The conditions of an offer as its seller reads them on the acceptance
+ * screen (answer of Cédric of 2026-11-19): the suspensive condition of
+ * financing of an offer made with a loan, each box ticked, the details typed
+ * by the buyer. Empty when the offer carries none.
+ */
+export function acceptanceConditions(
+  offer: Pick<
+    OfferContent,
+    | "financingMode"
+    | "conditionPriorSale"
+    | "conditionAuthorization"
+    | "conditionOther"
+    | "conditionsDetails"
+  >,
+): string[] {
+  const labels = fr.offer.conditions;
+  const recap = fr.offer.seller.acceptScreen;
+  const details = offer.conditionsDetails.trim();
+  return [
+    offer.financingMode === "loan" ? recap.conditionLoan : null,
+    offer.conditionPriorSale ? labels.priorSale : null,
+    offer.conditionAuthorization ? labels.authorization : null,
+    offer.conditionOther ? labels.other : null,
+    details !== "" ? recap.conditionDetails(details) : null,
+  ].filter((line): line is string => line !== null);
 }
 
 /** Every text of a document, in its order (tests: what it must never say). */

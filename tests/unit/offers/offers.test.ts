@@ -1,6 +1,7 @@
 import { openSync } from "fontkit";
 import { describe, expect, it, vi } from "vitest";
 import {
+  conditionsNeedDetails,
   firstStepToFill,
   readIdentity,
   readOffer,
@@ -12,6 +13,7 @@ import {
   type OfferRow,
 } from "@/leenkey/offers/content";
 import {
+  acceptanceConditions,
   buildOfferDocument,
   documentTexts,
   formatNumericDateTime,
@@ -21,7 +23,11 @@ import { formatRate, gapLabel, offerBudget, offerGap } from "@/leenkey/offers/fi
 import { buyerOfferLines, type BuyerOfferRow } from "@/leenkey/offers/lines";
 import { offerFormPath, readOfferFormStep } from "@/leenkey/offers/paths";
 import { buildOfferSynthesis, remainingLabel } from "@/leenkey/offers/synthesis";
-import { frenchPublicHolidays, withdrawalPeriodEnd } from "@/leenkey/offers/withdrawal";
+import {
+  frenchPublicHolidays,
+  showsWithdrawalPeriod,
+  withdrawalPeriodEnd,
+} from "@/leenkey/offers/withdrawal";
 import { numberInWordsFr, priceInWordsFr } from "@/leenkey/offers/words";
 import { fr } from "@/lib/i18n/fr";
 import {
@@ -63,6 +69,8 @@ const NO_SCI = { name: "", status: null, siren: "", seatAddress: "", representat
 const PROPERTY: OfferProperty = {
   listingReference: "LK-00042",
   title: "Appartement 3 pièces lumineux",
+  // As a buyer without a confirmed visit reads it: the town only.
+  addressLine: null,
   postalCode: "91600",
   city: "Savigny-sur-Orge",
   type: "appartement",
@@ -301,6 +309,20 @@ describe("offer schemas", () => {
     const none = { priorSale: false, authorization: false, other: false, details: "" };
     expect(offerConditionsSchema.safeParse(none).success).toBe(true);
     expect(paths(offerConditionsSchema, { ...none, other: true })).toEqual(["details"]);
+    // Answer of Cédric of 2026-11-19: an authorization is said too.
+    expect(paths(offerConditionsSchema, { ...none, authorization: true })).toEqual(["details"]);
+    expect(paths(offerConditionsSchema, { ...none, authorization: true, details: "   " })).toEqual([
+      "details",
+    ]);
+    expect(
+      offerConditionsSchema.safeParse({
+        ...none,
+        authorization: true,
+        details: "Accord de la copropriété.",
+      }).success,
+    ).toBe(true);
+    // A prior sale alone asks for nothing more.
+    expect(offerConditionsSchema.safeParse({ ...none, priorSale: true }).success).toBe(true);
     expect(paths(offerConditionsSchema, { ...none, details: "a".repeat(501) })).toEqual([
       "details",
     ]);
@@ -402,6 +424,11 @@ describe("offer content", () => {
       phone: "",
     });
     expect(readPropertySnapshot(ROW.property_snapshot)).toEqual(PROPERTY);
+    // The exact address is never in the photograph: its reader gives it.
+    expect(readPropertySnapshot(ROW.property_snapshot, "8 rue des Lilas")).toEqual({
+      ...PROPERTY,
+      addressLine: "8 rue des Lilas",
+    });
     expect(readPropertySnapshot({})).toBeNull();
   });
 
@@ -422,6 +449,14 @@ describe("offer content", () => {
     expect(firstStepToFill({ ...draft, priceCents: 33_800_000 })).toBe(4);
     const financed = { ...draft, priceCents: 33_800_000, financingMode: "loan" as const };
     expect(firstStepToFill(financed)).toBe(6);
+    // An authorization or another situation without its details: back to step 5.
+    const unsaid = { ...financed, conditionsDetails: "  " };
+    expect(firstStepToFill({ ...unsaid, conditionAuthorization: true })).toBe(5);
+    expect(firstStepToFill({ ...unsaid, conditionOther: true })).toBe(5);
+    expect(firstStepToFill(unsaid)).toBe(6);
+    expect(conditionsNeedDetails({ conditionAuthorization: false, conditionOther: false })).toBe(
+      false,
+    );
     const valid = { ...financed, validityUntil: sent.validityUntil };
     expect(firstStepToFill(valid)).toBe(7);
     expect(firstStepToFill({ ...valid, visited: true })).toBe(7);
@@ -490,6 +525,53 @@ describe("offer document", () => {
     expect(texts).toContain("04/03/1988");
     expect(document.notice.title).toBe("Avant d'envoyer votre offre");
     expect(document.notice.paragraphs).toHaveLength(3);
+  });
+
+  it("writes the exact address for who may read it, the town only otherwise", () => {
+    const withheld = "L'adresse exacte du bien figure dans l'offre reçue par le vendeur.";
+    // A buyer without a confirmed visit: the town, and why.
+    expect(all).toContain(withheld);
+    expect(all).not.toContain("rue des Lilas");
+    // The seller, the team, a buyer whose visit is confirmed.
+    const exact = documentTexts(
+      buildOfferDocument(offer, { ...PROPERTY, addressLine: "8 rue des Lilas" }),
+    );
+    expect(exact).toContain("8 rue des Lilas, 91600 Savigny-sur-Orge");
+    expect(exact.join("\n")).not.toContain(withheld);
+    // No address known (an offer sent before it was kept): the town, nothing more.
+    const unknown = documentTexts(buildOfferDocument(offer, { ...PROPERTY, addressLine: "" }));
+    expect(unknown).toContain("91600 Savigny-sur-Orge");
+    expect(unknown.join("\n")).not.toContain(withheld);
+  });
+
+  it("lists the conditions of an offer for the acceptance screen of its seller", () => {
+    expect(acceptanceConditions(offer)).toEqual([
+      "Condition suspensive de financement (prêt immobilier)",
+      "Vente préalable d'un autre bien",
+      "Précisions : Vente de notre appartement en cours.",
+    ]);
+    expect(
+      acceptanceConditions({
+        ...offer,
+        financingMode: "no_loan",
+        conditionPriorSale: false,
+        conditionAuthorization: true,
+        conditionOther: true,
+        conditionsDetails: " Accord de la copropriété. ",
+      }),
+    ).toEqual([
+      "Obtention d'une autorisation particulière",
+      "Autre situation à préciser",
+      "Précisions : Accord de la copropriété.",
+    ]);
+    expect(
+      acceptanceConditions({
+        ...offer,
+        financingMode: "no_loan",
+        conditionPriorSale: false,
+        conditionsDetails: "",
+      }),
+    ).toEqual([]);
   });
 
   it("never carries a status of qualification, the gap, the asking price", () => {
@@ -733,6 +815,29 @@ describe("withdrawal period after an avant-contrat (indicative, L2-04b)", () => 
     expect(withdrawalPeriodEnd("2026-12-22")).toBe("2027-01-04");
     // Friday 8 May 2026, then the week-end: Monday the 11th.
     expect(withdrawalPeriodEnd("2026-04-28")).toBe("2026-05-11");
+  });
+
+  it("shows no withdrawal period for an acquisition by an SCI", () => {
+    // Answer of Cédric of 2026-11-19: none for an SCI or a company.
+    expect(showsWithdrawalPeriod("sci")).toBe(false);
+    expect(showsWithdrawalPeriod("own_name")).toBe(true);
+    expect(showsWithdrawalPeriod("joint")).toBe(true);
+    // « Autre » may be a company: the date stays, with a sentence about companies.
+    expect(showsWithdrawalPeriod("other")).toBe(true);
+    expect(fr.offer.followUp.precontract.companyNote).toMatch(/société/);
+    expect(fr.offer.followUp.precontract.noPeriod).toMatch(/SCI/);
+  });
+
+  it("says the period starts the day after an electronic signature", () => {
+    // The day of the signature is the day of the notification: the period
+    // starts the day after, its tenth day is that day plus ten.
+    expect(withdrawalPeriodEnd("2026-11-16")).toBe("2026-11-26");
+    expect(fr.offer.seller.precontract.notifiedAtHelp).toMatch(
+      /signé électroniquement, indiquez la date de sa signature : le délai court à compter du lendemain/,
+    );
+    expect(fr.offer.followUp.precontract.electronicStart).toMatch(
+      /signé électroniquement, ce délai court à compter du lendemain de la signature/,
+    );
   });
 
   it("says nothing of what is not a day", () => {

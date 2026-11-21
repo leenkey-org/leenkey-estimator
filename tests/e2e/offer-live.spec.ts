@@ -203,8 +203,13 @@ test("un acquéreur fait une offre en sept étapes et l'envoie ; son vendeur la 
     await expect(page.getByText("Offre formulée avec recours à un prêt immobilier.")).toBeVisible();
     await page.getByLabel("Autre situation à préciser").check();
     await next(page).click();
-    await expect(page.getByText("Précisez la situation.")).toBeVisible();
+    await expect(page.getByText("Précisez l'autorisation attendue ou la situation.")).toBeVisible();
     await page.getByLabel("Autre situation à préciser").uncheck();
+    // An authorization is said in the details too (answer of Cédric of 2026-11-19).
+    await page.getByLabel("Obtention d'une autorisation particulière").check();
+    await next(page).click();
+    await expect(page.getByText("Précisez l'autorisation attendue ou la situation.")).toBeVisible();
+    await page.getByLabel("Obtention d'une autorisation particulière").uncheck();
     await page.getByLabel("Vente préalable d'un autre bien").check();
     await page.getByLabel("Précisions").fill("Compromis signé sur notre appartement actuel.");
     await next(page).click();
@@ -395,6 +400,10 @@ test("un acquéreur fait une offre en sept étapes et l'envoie ; son vendeur la 
     await expect(recap).toContainText("150 000 €");
     await expect(recap).toContainText("Chloé Dubois, Marc Dubois");
     await expect(recap).toContainText("prêt + apport");
+    // The conditions of the offer, in the recap (answer of Cédric of 2026-11-19).
+    await expect(recap).toContainText("Condition suspensive de financement (prêt immobilier)");
+    await expect(recap).toContainText("Vente préalable d'un autre bien");
+    await expect(recap).toContainText("Précisions : Compromis signé sur notre appartement actuel.");
     await expect(recap).toContainText(/jusqu'au \d{2}\/\d{2}\/\d{4} à \d{2}:00/);
     await expect(
       seller.getByText(

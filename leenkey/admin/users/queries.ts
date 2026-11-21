@@ -360,6 +360,8 @@ export type AdminFinancingDocument = {
   note: string | null;
   /** The one in force for the buyer: the only one to check. */
   current: boolean;
+  /** When its file was deleted, after its check (DECISIONS.md 2026-11-21). */
+  fileDeletedAt: string | null;
 };
 
 /** The proofs of financing of a buyer, the most recent first (admin_financing_documents). */
@@ -387,6 +389,7 @@ export async function adminFinancingDocuments(
         checkedByName: (row.checked_by_name as string | null) ?? null,
         note: (row.check_note as string | null) ?? null,
         current: row.is_current,
+        fileDeletedAt: (row.file_deleted_at as string | null) ?? null,
       })),
     };
   } catch (error) {

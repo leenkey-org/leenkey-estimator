@@ -348,6 +348,38 @@ const CATALOG: Record<string, Entry> = {
       );
     },
   },
+  // 2026-11-21: an offer received on a property whose plan has an adviser, for
+  // the team: the listing and the price, never who the buyer is.
+  "offer.received_team": {
+    icon: FileSignature,
+    tone: "blue",
+    filters: [],
+    title: () => t.offerReceivedTeam.title,
+    detail: (data) => {
+      const price = amount(data.price_cents);
+      return t.offerReceivedTeam.detail(
+        price ? formatPrice(price) : null,
+        text(data.listing_reference),
+        text(data.city),
+      );
+    },
+  },
+  // 2026-11-21: a proof of financing checked, for its buyer; a report handled,
+  // for its author.
+  "financing.checked": {
+    icon: CircleCheck,
+    tone: "success",
+    filters: [],
+    title: () => t.financingChecked.title,
+    detail: () => t.financingChecked.detail,
+  },
+  "report.handled": {
+    icon: Flag,
+    tone: "stone",
+    filters: [],
+    title: () => t.reportHandled.title,
+    detail: (data) => t.reportHandled.detail(text(data.listing_title)),
+  },
   "offer.viewed": {
     icon: Eye,
     tone: "stone",

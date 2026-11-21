@@ -38,7 +38,7 @@ export type SellerOffer = {
 };
 
 const SELLER_COLUMNS =
-  `${OFFER_COLUMNS}, buyer_id, property_id, financing_status_at_submit, financing_checked_at, viewed_at, answered_at, withdrawn_at, precontract_signed_at, withdrawal_period_start` as const;
+  `${OFFER_COLUMNS}, buyer_id, property_id, property_address_line, financing_status_at_submit, financing_checked_at, viewed_at, answered_at, withdrawn_at, precontract_signed_at, withdrawal_period_start` as const;
 
 type Client = Awaited<ReturnType<typeof createClient>>;
 type SellerRow = NonNullable<Awaited<ReturnType<typeof readRows>>["data"]>[number];
@@ -61,7 +61,11 @@ function readSellerOffer(row: SellerRow): SellerOffer | null {
   ) {
     return null;
   }
-  const property = readPropertySnapshot(row.property_snapshot ?? undefined);
+  // Their own property: the address frozen with the offer, always.
+  const property = readPropertySnapshot(
+    row.property_snapshot ?? undefined,
+    row.property_address_line ?? "",
+  );
   if (!property) return null;
   return {
     offer: readOffer({

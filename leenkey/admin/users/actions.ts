@@ -59,11 +59,63 @@ export async function decideAccount(input: unknown): Promise<AccountDecisionResu
 // at the document (its presence, its type, its date, its apparent consistency
 // with what is declared) and marks it as checked. financing_document_check
 // verifies is_admin(), sets « Justificatif vérifié » with its date and writes
-// audit_log. Never « validé ». No service role.
+// audit_log; the buyer is told by the database (financing.checked, bell and
+// email). Never « validé ». The file is then deleted (answer of Cédric of
+// 2026-11-19): its storage object with the session of the admin (the storage
+// policy allows it for a checked document only), then the document says so
+// (financing_document_file_removed); the status, the type and the date of
+// the check stay. A deletion that fails is logged and said to the admin: the
+// check itself is recorded. No service role.
 
 export type FinancingCheckResult =
-  | { ok: true; data: { checked: true } }
+  | { ok: true; data: { checked: true; fileDeleted: boolean } }
   | { ok: false; error: ModerationError };
+
+type Client = Awaited<ReturnType<typeof createClient>>;
+
+/** Deletes the file of a checked proof; false when it could not be (logged). */
+async function deleteCheckedFile(
+  supabase: Client,
+  documentId: string,
+  adminId: string,
+): Promise<boolean> {
+  const found = await supabase
+    .from("financing_documents")
+    .select("storage_path")
+    .eq("id", documentId)
+    .maybeSingle();
+  const path = found.data?.storage_path;
+  if (found.error || !path) {
+    console.error("[admin] checked financing file not found", {
+      user_id: adminId,
+      entity_id: documentId,
+      code: found.error?.code,
+    });
+    return false;
+  }
+  const removed = await supabase.storage.from("documents").remove([path]);
+  if (removed.error) {
+    console.error("[admin] checked financing file not deleted", {
+      user_id: adminId,
+      entity_id: documentId,
+      error: removed.error.name,
+    });
+    return false;
+  }
+  // Refused by the database while the object is still stored.
+  const marked = await supabase.rpc("financing_document_file_removed", {
+    p_document_id: documentId,
+  });
+  if (marked.error) {
+    console.error("[admin] checked financing file not marked deleted", {
+      user_id: adminId,
+      entity_id: documentId,
+      code: marked.error.code,
+    });
+    return false;
+  }
+  return true;
+}
 
 export async function checkFinancingDocument(input: unknown): Promise<FinancingCheckResult> {
   const profile = await getProfile();
@@ -84,8 +136,9 @@ export async function checkFinancingDocument(input: unknown): Promise<FinancingC
     });
     return { ok: false, error: moderationError(error.code) };
   }
+  const fileDeleted = await deleteCheckedFile(supabase, command.documentId, profile.id);
   revalidatePath(`/admin/utilisateurs/${command.profileId}`);
   revalidatePath("/admin/utilisateurs");
   revalidatePath("/admin");
-  return { ok: true, data: { checked: true } };
+  return { ok: true, data: { checked: true, fileDeleted } };
 }
