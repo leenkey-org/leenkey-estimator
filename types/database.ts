@@ -540,6 +540,10 @@ export type Database = {
       documents: {
         Row: {
           analysis: Json | null
+          analysis_attempts: number
+          analysis_error: string | null
+          analysis_retried_at: string[]
+          analysis_started_at: string | null
           analyzed_at: string | null
           created_at: string
           deleted_at: string | null
@@ -560,6 +564,10 @@ export type Database = {
         }
         Insert: {
           analysis?: Json | null
+          analysis_attempts?: number
+          analysis_error?: string | null
+          analysis_retried_at?: string[]
+          analysis_started_at?: string | null
           analyzed_at?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -580,6 +588,10 @@ export type Database = {
         }
         Update: {
           analysis?: Json | null
+          analysis_attempts?: number
+          analysis_error?: string | null
+          analysis_retried_at?: string[]
+          analysis_started_at?: string | null
           analyzed_at?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -3137,9 +3149,54 @@ export type Database = {
         }
         Returns: string
       }
+      document_analyses: {
+        Args: { p_property: string }
+        Returns: {
+          document_id: string
+          status: string
+          error: string
+          analyzed_at: string
+          analysis: Json
+          public_facts_approved_at: string
+          retries_left: number
+        }[]
+      }
+      document_analysis_claim: {
+        Args: { p_limit?: number }
+        Returns: {
+          document_id: string
+          property_id: string
+          owner_id: string
+          type: Database["public"]["Enums"]["document_type"]
+          title: string
+          storage_path: string
+          mime_type: string
+          size_bytes: number
+          attempt: number
+          property_type: Database["public"]["Enums"]["property_type"]
+          surface_m2: number
+          carrez_m2: number
+        }[]
+      }
+      document_analysis_fail: {
+        Args: { p_document: string; p_error: string; p_final: boolean }
+        Returns: undefined
+      }
+      document_analysis_record: {
+        Args: { p_document: string; p_analysis: Json }
+        Returns: boolean
+      }
+      document_analysis_retry: {
+        Args: { p_document: string }
+        Returns: undefined
+      }
       document_of_mine: {
         Args: { p_document: string }
         Returns: boolean
+      }
+      document_public_facts_set: {
+        Args: { p_document: string; p_show: boolean }
+        Returns: undefined
       }
       document_share: {
         Args: { p_buyer: string; p_documents: string[] }
@@ -3658,6 +3715,13 @@ export type Database = {
           position: number
         }[]
       }
+      public_document_facts: {
+        Args: { p_listing_id: string }
+        Returns: {
+          type: Database["public"]["Enums"]["document_type"]
+          facts: Json
+        }[]
+      }
       public_listing_summary: {
         Args: { p_listing_id: string }
         Returns: string
@@ -3844,6 +3908,19 @@ export type Database = {
           reference: string
           slug: string
           id: string
+        }[]
+      }
+      shared_document_summaries: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          document_id: string
+          title: string
+          type: Database["public"]["Enums"]["document_type"]
+          type_detected: string
+          document_date: string
+          summary_buyer: string
+          key_facts: Json
+          points_of_attention: Json
         }[]
       }
       shared_documents: {

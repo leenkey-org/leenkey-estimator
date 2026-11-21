@@ -439,3 +439,71 @@ export async function requestDocumentAccess(propertyId: string): Promise<Request
   revalidatePath("/acquereur/documents");
   return { ok: true, data: null };
 }
+
+export type RetryAnalysisResult =
+  | { ok: true; data: null }
+  | { ok: false; error: "auth" | "invalid" | "limit" | "unavailable" };
+
+/**
+ * « Relancer l'analyse » of a document whose analysis failed (L3-05): it goes
+ * back to the queue of the scheduled task; three times a day per document
+ * (document_analysis_retry). The analysis itself is never written from here.
+ */
+export async function retryDocumentAnalysis(
+  propertyId: string,
+  documentId: string,
+): Promise<RetryAnalysisResult> {
+  const profile = await getProfile();
+  if (!profile) return { ok: false, error: "auth" };
+  if (!UUID.test(propertyId) || !UUID.test(documentId)) return { ok: false, error: "invalid" };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("document_analysis_retry", { p_document: documentId });
+  if (error) {
+    if (error.code === "54000") return { ok: false, error: "limit" };
+    if (error.code === "22023") return { ok: false, error: "invalid" };
+    if (error.code !== "42501") {
+      console.error("[sale-file] analysis not asked again", {
+        user_id: profile.id,
+        entity_id: documentId,
+        code: error.code,
+      });
+    }
+    return { ok: false, error: "unavailable" };
+  }
+  revalidateFile(propertyId);
+  return { ok: true, data: null };
+}
+
+/**
+ * « Afficher sur l'annonce » / « Retirer de l'annonce »: the public facts of
+ * an analysed document, shown on the listing once its seller says so.
+ */
+export async function setPublicFacts(
+  propertyId: string,
+  documentId: string,
+  show: boolean,
+): Promise<SimpleResult> {
+  const profile = await getProfile();
+  if (!profile) return { ok: false, error: "auth" };
+  if (!UUID.test(propertyId) || !UUID.test(documentId) || typeof show !== "boolean") {
+    return { ok: false, error: "invalid" };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("document_public_facts_set", {
+    p_document: documentId,
+    p_show: show,
+  });
+  if (error) {
+    if (error.code === "22023") return { ok: false, error: "invalid" };
+    if (error.code !== "42501") {
+      console.error("[sale-file] public facts not changed", {
+        user_id: profile.id,
+        entity_id: documentId,
+        code: error.code,
+      });
+    }
+    return { ok: false, error: "unavailable" };
+  }
+  revalidateFile(propertyId);
+  return { ok: true, data: null };
+}

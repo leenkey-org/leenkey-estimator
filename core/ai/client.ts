@@ -87,3 +87,16 @@ export const createModelMessage = (
 export function isBadRequest(error: unknown): boolean {
   return error instanceof Anthropic.BadRequestError;
 }
+
+/**
+ * Why the API refused a request that carries a file (L3-05), from its status
+ * alone and one word of its message (never logged: describeError): a PDF of
+ * too many pages, a request too heavy, a file it cannot read (protected by a
+ * password, damaged). Null for any other error (the network, a quota).
+ */
+export function fileRejection(error: unknown): "too_long" | "too_heavy" | "rejected" | null {
+  if (!(error instanceof Anthropic.APIError)) return null;
+  if (error.status === 413) return "too_heavy";
+  if (error.status !== 400) return null;
+  return /\bpages?\b/i.test(error.message) ? "too_long" : "rejected";
+}

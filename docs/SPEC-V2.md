@@ -1454,6 +1454,7 @@ Fonction unique `notify(profileId, type, payload)` dans `core/notifications/`. E
 | `visit.feedback_requested` | oui | oui | Ajouté en L3-03 : le lendemain d'une visite qui a eu lieu, une fois, à l'acquéreur et au vendeur |
 | `document.shared` | oui | oui | Un email par bien et par jour |
 | `document.access_requested` | oui | oui | — |
+| `document.needs_attention` | oui | oui | Ajouté en L3-05 : document illisible, incomplet ou du mauvais type ; un email par bien pour ceux relevés dans l'heure |
 | `case.created` (admin) | oui | oui | — |
 | `advisor.message` | oui | oui | Même regroupement que `message.new` |
 | `advisor.message_from_client` (admin) | oui | oui | — |
@@ -1920,6 +1921,8 @@ Consignes par type :
 
 Mention permanente sous chaque résumé : « Aide à la lecture générée automatiquement. Elle ne remplace ni le diagnostiqueur ni le notaire. »
 
+> **Mise en œuvre (L3-05, `DECISIONS.md` 2026-11-21).** L'analyse est écrite par une tâche planifiée (`/api/cron/analyze-documents`, toutes les 5 minutes, rôle de service), jamais par un client, et non par `after()` : un vendeur ne peut pas écrire une « analyse » lue par les acquéreurs. Le fichier est envoyé tel quel au modèle (PDF en bloc `document`, JPEG ou PNG en bloc `image`) : pas d'`unpdf`, `extracted_text` reste vide. Au JSON ci-dessus s'ajoutent `quality` (`ok`, `illegible`, `incomplete`, `wrong_type`) et `quality_note` ; `type_detected` est une valeur de `document_type` ; `public_facts` est une liste fermée de clés par type de document (`lib/validations/document-analysis.ts`), jamais la date ni le numéro d'un DPE. Trois tentatives, puis « Relancer l'analyse » (3 par jour et par document) ; 25 documents analysés au plus par bien. Lecture par fonctions : `document_analyses` (vendeur), `shared_document_summaries` (acquéreur, sur `/acquereur/documents`), `public_document_facts` (annonce en ligne, après « Afficher sur l'annonce »). Document « à vérifier » : notification et email `document.needs_attention`. Pièces « À actualiser » : durées de `lib/config/documents.ts` (provisoires, Q93). La revue Sérénité (« revue par Leenkey ») et l'outil `summarize_shared_documents` (L3-07) ne sont pas dans cette tâche.
+
 Côté acquéreur : résumé acquéreur des seuls documents partagés, sur la page annonce (connecté) et via l'outil `summarize_shared_documents`.
 
 Accès par formule : le dépôt, la checklist, le partage et le **résumé automatique par l'IA** sont ouverts aux trois formules (proposition en attente de confirmation, voir `DECISIONS.md` ; si Cédric réserve le résumé IA à Sérénité, il suffit de le conditionner à `deep_document_review`). En Sérénité, Leenkey peut en plus déposer des documents pour le vendeur (`sale_file_building`) et marquer chaque analyse « revue par Leenkey » avec une note (`deep_document_review`) ; ce marquage s'affiche au vendeur, jamais comme une garantie.
@@ -2022,6 +2025,7 @@ Gabarit commun (`docs/DESIGN.md` 14) : fond `#F4F4F1`, carte blanche 560 px rayo
 | Rappel de visite | cron J-1 | Idem |
 | Documents partagés | `document.shared` | Liste, lien |
 | Demande d'accès aux documents | `document.access_requested` | Acquéreur, statut financement, lien |
+| Document à vérifier (L3-05) | `document.needs_attention` | Nom du document, ce qui ne va pas (illisible, incomplet, mauvais type), lien |
 | Formule activée | `plan.activated` | Récapitulatif de la commande (L1-40) : formule, prix, bien, date, durée et échéance, début des prestations, prestations vendues, versions des CGU et CGV acceptées avec leurs liens, rétractation et formulaire type, médiateur ; sujet « Confirmation de votre souscription Leenkey · [formule] · [référence] » |
 | Accusé de réception d'une rétractation | « Renoncer au contrat » (L1-40) | Date et heure de la demande, formule, remboursement sous 14 jours |
 | Admin : rétractation à rembourser | `plan.withdrawn` (L1-40) | Formule, bien, montant, date ; plusieurs en moins de 20 minutes : un seul email |
@@ -2050,6 +2054,7 @@ Voir `CLAUDE.md` section 13. Détail :
 | `/api/cron/visit-feedback` | `0 8 * * *` | Demandes de retour J+1. Depuis L3-03 (`DECISIONS.md` 2026-11-21) : tâche `visit-feedback` de `pg_cron`, en SQL (`visits_ask_feedback`), sans route |
 | `/api/cron/send-notification-emails` | `*/5 * * * *` | Envoi des emails de notification en attente (regroupement) |
 | `/api/cron/listing-summaries` | `*/5 * * * *` | Résumés d'annonce demandés (L2-05) : 6 annonces au plus par passage, un appel du modèle rapide chacune |
+| `/api/cron/analyze-documents` | `*/5 * * * *` | Analyse des documents du dossier de vente en attente (L3-05) : 3 à la fois, 12 au plus par passage, un appel de `MODELS.smart` chacun (deux si la réponse n'est pas le JSON demandé) |
 | `/api/cron/anonymize-deleted` | `0 2 * * 0` | Anonymisation des comptes supprimés depuis plus de 30 jours |
 | *(en base, sans route)* `subscriptions-daily` | `23 7 * * *` | Formules (L1-40) : `subscriptions_daily()` remet la vente d'un bien dont la formule est échue sur la formule en vigueur (Autonomie) et prévient une fois le propriétaire d'une formule qui se termine dans 30 jours (`plan.ending`, email par le job des notifications) |
 | *(en base, sans route)* `purge-estimations` | `53 3 * * *` | Analyses de valeur faites sans compte : `estimations_purge()` supprime celles qui ont plus de 12 mois et ne sont rattachées ni à un compte ni à un bien (politique de confidentialité, `DECISIONS.md` 2026-11-09) |

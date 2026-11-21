@@ -7,6 +7,7 @@ import { requireProfile } from "@/core/auth/session";
 import { conversationTitle } from "@/leenkey/messaging/presentation";
 import { listConversations } from "@/leenkey/messaging/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
+import { BuyerDocumentSummary } from "@/leenkey/sale-file/components/document-analysis";
 import { RequestAccessButton } from "@/leenkey/sale-file/components/request-access-button";
 import { buyerAccessByProperty, buyerSharedDocuments } from "@/leenkey/sale-file/queries";
 import { formatDateShort } from "@/lib/format";
@@ -25,7 +26,8 @@ const card = "rounded-lk-xl border border-lk-line bg-lk-surface p-4";
 // L3-04: the documents sellers shared with the buyer (SPEC-V2 15), grouped
 // by property, each opened through a signed URL of 10 minutes; and, for the
 // properties the buyer is in contact with and that shared nothing yet, the
-// request of access to their documents.
+// request of access to their documents. L3-05: under a document analysed,
+// the summary meant for a buyer, with its permanent mention.
 export default async function BuyerDocumentsPage() {
   const profile = await requireProfile();
   const [shared, conversations] = await Promise.all([buyerSharedDocuments(), listConversations()]);
@@ -92,32 +94,34 @@ export default async function BuyerDocumentsPage() {
                 </div>
                 <ul className={`${card} flex flex-col divide-y divide-lk-line py-1`}>
                   {group.documents.map((document) => (
-                    <li
-                      key={document.id}
-                      className="flex min-h-13 items-center justify-between gap-3 py-2"
-                    >
-                      <div className="flex min-w-0 flex-col">
-                        <span className="truncate text-lk-secondary font-medium text-lk-ink">
-                          {document.title}
-                        </span>
-                        <span className="text-lk-caption text-lk-ink-3 tabular">
-                          {fr.saleFile.types[document.type]}
-                          {" · "}
-                          {fr.saleFile.size(document.sizeBytes)}
-                          {" · "}
-                          {t.sharedOn(formatDateShort(document.sharedAt, now))}
-                        </span>
+                    <li key={document.id} className="flex flex-col gap-2 py-2">
+                      <div className="flex min-h-13 items-center justify-between gap-3">
+                        <div className="flex min-w-0 flex-col">
+                          <span className="truncate text-lk-secondary font-medium text-lk-ink">
+                            {document.title}
+                          </span>
+                          <span className="text-lk-caption text-lk-ink-3 tabular">
+                            {fr.saleFile.types[document.type]}
+                            {" · "}
+                            {fr.saleFile.size(document.sizeBytes)}
+                            {" · "}
+                            {t.sharedOn(formatDateShort(document.sharedAt, now))}
+                          </span>
+                        </div>
+                        <Button asChild variant="secondary" size="sm" className="shrink-0">
+                          <a
+                            href={`/documents/vente/${document.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={t.openAbout(document.title)}
+                          >
+                            {t.open}
+                          </a>
+                        </Button>
                       </div>
-                      <Button asChild variant="secondary" size="sm" className="shrink-0">
-                        <a
-                          href={`/documents/vente/${document.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={t.openAbout(document.title)}
-                        >
-                          {t.open}
-                        </a>
-                      </Button>
+                      {document.summary ? (
+                        <BuyerDocumentSummary summary={document.summary} />
+                      ) : null}
                     </li>
                   ))}
                 </ul>

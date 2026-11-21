@@ -150,6 +150,97 @@ export const frSaleFile = {
     },
     errors: { generic: "Ça n'a pas fonctionné. Réessayez." },
   },
+  // L3-05 (SPEC-V2 15, « Analyse IA »): the reading aid written by the
+  // assistant from a document. Never a word on the validity of a document,
+  // never an advice: what the document says, to be checked with a
+  // professional. The mention stays under every summary.
+  analysis: {
+    mention:
+      "Aide à la lecture générée automatiquement. Elle ne remplace ni le diagnostiqueur ni le notaire.",
+    notice:
+      "Les documents déposés sont lus par notre assistant (modèle d'Anthropic, États-Unis) pour produire une aide à la lecture. Elle ne remplace ni le diagnostiqueur ni le notaire.",
+    title: "Aide à la lecture",
+    pending: "Analyse en cours… Elle s'affiche ici dans quelques minutes.",
+    failed: {
+      unavailable: "L'analyse de ce document n'a pas pu être faite.",
+      invalid: "L'analyse de ce document n'a pas pu être faite.",
+      refused: "Notre assistant n'a pas analysé ce document.",
+      unreadable:
+        "Notre assistant n'a pas pu lire ce fichier. Vérifiez qu'il s'ouvre sans mot de passe.",
+      too_long: "Ce document dépasse 100 pages : il n'est pas analysé.",
+      too_heavy: "Ce fichier est trop lourd pour être analysé.",
+      limit: "25 documents de ce bien sont déjà analysés : celui-ci ne l'est pas.",
+    },
+    retry: "Relancer l'analyse",
+    retryAbout: (title: string) => `Relancer l'analyse : ${title}`,
+    retryErrors: {
+      auth: "Votre session a expiré. Reconnectez-vous.",
+      invalid: "Ça n'a pas fonctionné. Réessayez.",
+      limit: "Vous avez déjà relancé cette analyse 3 fois en 24 heures. Réessayez demain.",
+      unavailable: "Ça n'a pas fonctionné. Réessayez.",
+    },
+    documentDate: (date: string) => `Document daté du ${date}`,
+    facts: "Points clés",
+    points: "Points d'attention",
+    levels: { info: "À noter", attention: "Attention" },
+    quality: {
+      illegible: "Document à vérifier : illisible.",
+      incomplete: "Document à vérifier : incomplet.",
+      wrong_type: (label: string) =>
+        `Document à vérifier : il ne semble pas correspondre au type «\u00A0${label}\u00A0».`,
+      help: "Vérifiez le fichier, puis retirez-le et déposez-le à nouveau si besoin.",
+    },
+    buyerSummary: "Ce que lit un acquéreur avec qui vous partagez ce document",
+    publicFacts: {
+      title: "Informations affichables sur votre annonce",
+      help: "Vous décidez : ces informations n'apparaissent sur votre annonce que si vous le choisissez. Relisez-les avant de les afficher.",
+      show: "Afficher sur l'annonce",
+      showAbout: (title: string) => `Afficher sur l'annonce : ${title}`,
+      hide: "Retirer de l'annonce",
+      hideAbout: (title: string) => `Retirer de l'annonce : ${title}`,
+      shown: "Affiché sur votre annonce",
+      error: "Ça n'a pas fonctionné. Réessayez.",
+      labels: {
+        classe_energie: "Classe énergie (DPE)",
+        classe_ges: "Classe climat (GES)",
+        amiante: "Amiante",
+        plomb: "Plomb",
+        termites: "Termites",
+        electricite: "Installation électrique",
+        gaz: "Installation de gaz",
+        assainissement: "Assainissement",
+        risques: "Risques recensés",
+        surface_carrez: "Surface Carrez",
+        travaux_votes: "Travaux votés en copropriété",
+        procedures: "Procédures de la copropriété",
+        charges: "Charges de copropriété",
+        fonds_travaux: "Fonds de travaux",
+        taxe_fonciere: "Taxe foncière",
+        destination: "Destination de l'immeuble",
+        restrictions_usage: "Restrictions d'usage",
+        servitudes: "Servitudes",
+        travaux_realises: "Travaux réalisés",
+      },
+    },
+    refresh: {
+      state: "À actualiser",
+      text: (date: string, age: string, diagnostic: boolean) =>
+        `Document daté du ${date}, soit plus de ${age} : à vérifier avec votre ${diagnostic ? "diagnostiqueur" : "notaire"}.`,
+      age: (months: number) =>
+        months % 12 === 0
+          ? months === 12
+            ? "1\u00A0an"
+            : `${months / 12}\u00A0ans`
+          : `${months}\u00A0mois`,
+    },
+    // The public page of a listing: the facts its seller chose to show.
+    listing: {
+      title: "D'après les documents du vendeur",
+      intro:
+        "Informations relevées par notre assistant dans des documents du dossier de vente, affichées à la demande du vendeur.",
+      source: (label: string) => `Source : ${label}`,
+    },
+  },
   buyer: {
     metaTitle: "Documents partagés",
     title: "Documents partagés",

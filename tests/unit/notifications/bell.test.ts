@@ -145,6 +145,7 @@ describe("wording of the notifications (from type and data)", () => {
         "advisor.message_from_client",
         "case.created",
         "document.access_requested",
+        "document.needs_attention",
         "document.shared",
         "listing.pending",
         "listing.published",

@@ -11,6 +11,7 @@ import {
   Eye,
   FileSignature,
   FileText,
+  FileWarning,
   Flag,
   Folder,
   FolderOpen,
@@ -108,6 +109,12 @@ function amount(value: unknown): number | null {
 /** How many documents a statement shared; null when the facts do not say. */
 function documentCount(value: unknown): number | null {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
+}
+
+/** What is wrong with a document, in a few words; null when the facts do not say. */
+function documentProblem(value: unknown): string | null {
+  const problems: Record<string, string> = t.documentNeedsAttention.problems;
+  return typeof value === "string" ? (problems[value] ?? null) : null;
 }
 
 /** The town, unless the title of the listing carries it already. */
@@ -457,6 +464,17 @@ const CATALOG: Record<string, Entry> = {
     filters: ["offersVisits"],
     title: (data) => t.documentAccessRequested.title(text(data.buyer_first_name)),
     detail: (data) => t.documentAccessRequested.detail(text(data.title)),
+  },
+  // L3-05: a document the assistant read as illegible, incomplete or not what
+  // its type says, for its seller. What the assistant wrote about it is read
+  // on the tab, never here.
+  "document.needs_attention": {
+    icon: FileWarning,
+    tone: "warning",
+    filters: [],
+    title: () => t.documentNeedsAttention.title,
+    detail: (data) =>
+      t.documentNeedsAttention.detail(text(data.document_title), documentProblem(data.quality)),
   },
   "step.advanced": {
     icon: Flag,

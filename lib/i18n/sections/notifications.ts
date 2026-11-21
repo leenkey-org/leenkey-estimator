@@ -222,6 +222,19 @@ export const frNotifications = {
           : "Un acquéreur demande l'accès à vos documents",
       detail: (title: string | null) => (title ? `«\u00A0${title}\u00A0»` : null),
     },
+    // L3-05: a document of the sale file the assistant could not read as what
+    // it should be, for its seller (the name is the one the seller gave it).
+    documentNeedsAttention: {
+      title: "Un document de votre dossier est à vérifier",
+      problems: {
+        illegible: "illisible",
+        incomplete: "incomplet",
+        wrong_type: "ne semble pas correspondre au type choisi",
+      },
+      detail: (document: string | null, problem: string | null) =>
+        [document ? `«\u00A0${document}\u00A0»` : null, problem].filter(Boolean).join(" : ") ||
+        null,
+    },
     // L1-23: the sale reaches a step (SPEC-V2 section 9).
     stepAdvanced: {
       title: (step: string | null) =>

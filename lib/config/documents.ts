@@ -119,6 +119,40 @@ export const DIAGNOSTIC_TYPES = (Object.keys(DOCUMENT_CATEGORY) as DocumentType[
   (type) => DOCUMENT_CATEGORY[type] === "diagnostics",
 );
 
+/**
+ * After how many months a document is shown « À actualiser » (L3-05, asked by
+ * Cédric on 2026-11-20), counted from the date the analysis read in it.
+ * Provisional values, to be confirmed by Cédric (DECISIONS.md, Q93); no
+ * entry: the document does not age. A help only: Leenkey never says a
+ * diagnostic is valid or not, the seller checks with a professional.
+ */
+export const DOCUMENT_VALIDITY_MONTHS: Partial<Record<DocumentType, number>> = {
+  dpe: 120,
+  electricite: 36,
+  gaz: 36,
+  assainissement: 36,
+  plomb: 12,
+  termites: 6,
+  erp: 6,
+  pre_etat_date: 1,
+};
+
+/**
+ * Whether a document dated `date` (YYYY-MM-DD) is older than the validity of
+ * its type on `now`; false for a type that does not age or a date that is none.
+ */
+export function documentToRefresh(type: DocumentType, date: string | null, now: Date): boolean {
+  const months = DOCUMENT_VALIDITY_MONTHS[type];
+  if (months === undefined || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+  const end = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(end.getTime())) return false;
+  end.setUTCMonth(end.getUTCMonth() + months);
+  return end.getTime() < now.getTime();
+}
+
+/** Analysed documents per property at most (cost; also in document_analysis_claim). */
+export const ANALYSED_DOCUMENTS_MAX = 25;
+
 export const SALE_FILE_MAX_BYTES = 20 * 1024 * 1024;
 export const SALE_FILE_EXTENSIONS = {
   "application/pdf": "pdf",

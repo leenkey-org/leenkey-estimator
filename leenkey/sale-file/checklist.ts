@@ -1,6 +1,8 @@
 import {
   DOCUMENT_CATEGORIES,
   DOCUMENT_CATEGORY,
+  DOCUMENT_VALIDITY_MONTHS,
+  documentToRefresh,
   EXEMPTIBLE_DOCUMENTS,
   REQUIRED_DOCUMENTS,
   type DocumentCategory,
@@ -12,9 +14,18 @@ import {
 // from the type of the property, its documents and its « Non concerné », the
 // lines by category, the count « Dossier notaire : 12 / 15 pièces » and
 // whether the notary file is complete. A document « Non concerné » counts as
-// present.
+// present. A line whose most recent dated document is older than the
+// validity of its type reads « À actualiser » (L3-05): it still counts as
+// present, and nothing is said of its legal validity.
 
-export type FiledDocument = { id: string; type: DocumentType; title: string; createdAt: string };
+export type FiledDocument = {
+  id: string;
+  type: DocumentType;
+  title: string;
+  createdAt: string;
+  /** The date the analysis read in the document (YYYY-MM-DD), when it read one. */
+  documentDate?: string | null;
+};
 export type Exemption = { type: DocumentType; reason: string };
 
 export type ChecklistLine = {
@@ -25,6 +36,12 @@ export type ChecklistLine = {
   state: "filed" | "exempt" | "missing";
   documents: FiledDocument[];
   reason: string | null;
+  /**
+   * « À actualiser »: the most recent date read in the documents of the line
+   * and the validity of its type in months, when that date is older; null
+   * otherwise (no date read, a type that does not age, a recent document).
+   */
+  toRefresh: { date: string; months: number } | null;
 };
 
 export type ChecklistGroup = { category: DocumentCategory; lines: ChecklistLine[] };
@@ -43,6 +60,7 @@ export function buildChecklist(
   exemptions: readonly Exemption[],
   /** The property is not subject to the DPE (L1-65): its reason; the DPE counts as « Non concerné ». */
   dpeExemption: string | null = null,
+  now: Date = new Date(),
 ): Checklist {
   const required = REQUIRED_DOCUMENTS[propertyType ?? "autre"];
   const reasonOf = new Map(exemptions.map((exemption) => [exemption.type, exemption.reason]));
@@ -59,6 +77,13 @@ export function buildChecklist(
         : exemptible
           ? (reasonOf.get(type) ?? null)
           : null;
+    // The most recent date read: one recent document is enough for the line.
+    const latest = filed
+      .map((document) => document.documentDate ?? null)
+      .filter((date): date is string => date !== null)
+      .sort()
+      .at(-1);
+    const months = DOCUMENT_VALIDITY_MONTHS[type];
     return {
       type,
       required: required.includes(type),
@@ -67,6 +92,10 @@ export function buildChecklist(
       state: filed.length > 0 ? "filed" : reason !== null ? "exempt" : "missing",
       documents: filed,
       reason,
+      toRefresh:
+        latest !== undefined && months !== undefined && documentToRefresh(type, latest, now)
+          ? { date: latest, months }
+          : null,
     };
   });
   const mandatory = lines.filter((line) => line.required);

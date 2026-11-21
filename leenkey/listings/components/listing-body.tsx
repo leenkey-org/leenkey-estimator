@@ -107,6 +107,7 @@ export function ListingBody({
   galleryTopRight,
   aside,
   map,
+  documentFacts,
   note,
   inlinePrice = false,
   level = 1,
@@ -122,6 +123,8 @@ export function ListingBody({
   aside: ReactNode;
   /** The map of the area (L1-16), on the public page. */
   map?: ReactNode;
+  /** The facts read in documents of the sale file its seller chose to show (L3-05). */
+  documentFacts?: ReactNode;
   /** The summary of the assistant (L2-05), under 1024 px; beside the price above. */
   note?: ReactNode;
   /** The price under the facts line under 1024 px: the preview, without the bar of the page. */
@@ -252,6 +255,7 @@ export function ListingBody({
               <KeyFactsGrid items={facts} headingLevel={factsHeading} />
             )}
             <RegulatoryMentions listing={listing} />
+            {documentFacts}
           </Block>
 
           {map ? (

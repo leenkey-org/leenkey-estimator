@@ -47,6 +47,20 @@ export const SUGGESTION_SETTINGS = {
 } as const;
 
 /**
+ * A file read by the model (L3-05: the documents of a sale): one call of
+ * MODELS.smart, not streamed, adaptive thinking at medium effort (a document
+ * of a hundred pages is read whole, its facts copied exactly). 8 000 tokens
+ * at most, thinking included: an analysis is about 1 000. Nobody waits for
+ * it on a screen: two minutes, no retry (the scheduled task takes it again).
+ */
+export const ATTACHMENT_SETTINGS = {
+  effort: "medium",
+  maxTokens: 8_000,
+  timeoutMs: 120_000,
+  maxRetries: 0,
+} as const;
+
+/**
  * Prices of the models in dollars per million tokens (input, output), as
  * verified on 2026-10-15 (SPEC-V2 section 3, DECISIONS.md): the cost of the
  * back office (/admin/assistant, L1-30d) is shown from them, an indication
