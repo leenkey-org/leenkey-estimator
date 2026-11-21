@@ -44,6 +44,10 @@ vi.mock("@/lib/supabase/server", () => ({
       const chain = {
         select: () => chain,
         eq: () => chain,
+        // L3-09: the visits that took place, the documents of the sale file.
+        in: () => chain,
+        lt: () => chain,
+        is: () => chain,
         not: () => Promise.resolve(result(table, rows[table])),
         maybeSingle: () => Promise.resolve(result(table, rows[table])),
         then: (resolve: (value: unknown) => void) => resolve(result(table, null, 1)),

@@ -2,6 +2,7 @@ import "server-only";
 import { allPlans } from "@/core/billing/plans";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { propertyOffers } from "@/leenkey/offers/seller";
+import { buildChecklist } from "@/leenkey/sale-file/checklist";
 import { paidPlansOrderable } from "@/lib/config/sales";
 import { formatPrice } from "@/lib/format";
 import { frUpgrade } from "@/lib/i18n/sections/upgrade";
@@ -29,6 +30,40 @@ export type UpgradePromptView = {
   action: { label: string; href: string };
 };
 
+/**
+ * The mandatory documents of the sale file neither filed nor « Non concerné »
+ * (L3-04, lib/config/documents.ts); null when they could not be read.
+ */
+async function missingDocuments(propertyId: string): Promise<number | null> {
+  const supabase = await createClient();
+  const [property, documents, exemptions] = await Promise.all([
+    supabase
+      .from("properties")
+      .select("type, dpe_exemption_reason")
+      .eq("id", propertyId)
+      .maybeSingle(),
+    supabase
+      .from("documents")
+      .select("id, type, title, created_at")
+      .eq("property_id", propertyId)
+      .is("deleted_at", null),
+    supabase.from("document_exemptions").select("type, reason").eq("property_id", propertyId),
+  ]);
+  if (property.error || !property.data || documents.error || exemptions.error) return null;
+  const checklist = buildChecklist(
+    property.data.type,
+    documents.data.map((row) => ({
+      id: row.id,
+      type: row.type,
+      title: row.title,
+      createdAt: row.created_at,
+    })),
+    exemptions.data,
+    property.data.dpe_exemption_reason,
+  );
+  return checklist.total - checklist.done;
+}
+
 export async function propertyUpgradePrompt(
   propertyId: string,
   place: UpgradePlace,
@@ -38,31 +73,40 @@ export async function propertyUpgradePrompt(
   try {
     const supabase = await createClient();
     const withOffers = place.kind === "dashboard" || place.kind === "offer";
-    const [plans, current, listing, sale, contacts, dismissed, offers] = await Promise.all([
-      allPlans(),
-      supabase.rpc("property_current_plan", { p: propertyId }),
-      supabase
-        .from("listings")
-        .select("status, published_at")
-        .eq("property_id", propertyId)
-        .maybeSingle(),
-      supabase
-        .from("sale_progress")
-        .select("current_step_code")
-        .eq("property_id", propertyId)
-        .maybeSingle(),
-      supabase
-        .from("conversations")
-        .select("id", { count: "exact", head: true })
-        .eq("property_id", propertyId)
-        .eq("kind", "listing"),
-      supabase
-        .from("upgrade_prompts")
-        .select("trigger_code, subject_id")
-        .eq("property_id", propertyId)
-        .not("dismissed_at", "is", null),
-      withOffers ? propertyOffers(propertyId) : Promise.resolve(null),
-    ]);
+    const [plans, current, listing, sale, contacts, dismissed, offers, visits, missing] =
+      await Promise.all([
+        allPlans(),
+        supabase.rpc("property_current_plan", { p: propertyId }),
+        supabase
+          .from("listings")
+          .select("status, published_at")
+          .eq("property_id", propertyId)
+          .maybeSingle(),
+        supabase
+          .from("sale_progress")
+          .select("current_step_code")
+          .eq("property_id", propertyId)
+          .maybeSingle(),
+        supabase
+          .from("conversations")
+          .select("id", { count: "exact", head: true })
+          .eq("property_id", propertyId)
+          .eq("kind", "listing"),
+        supabase
+          .from("upgrade_prompts")
+          .select("trigger_code, subject_id")
+          .eq("property_id", propertyId)
+          .not("dismissed_at", "is", null),
+        withOffers ? propertyOffers(propertyId) : Promise.resolve(null),
+        // L3-09: the visits that took place (not cancelled, their slot over).
+        supabase
+          .from("visits")
+          .select("id, visit_slots!inner(ends_at)", { count: "exact", head: true })
+          .eq("property_id", propertyId)
+          .in("status", ["confirmed", "done"])
+          .lt("visit_slots.ends_at", now.toISOString()),
+        missingDocuments(propertyId),
+      ]);
     const failed = [current, listing, sale, contacts, dismissed].find((result) => result.error);
     if (!plans || failed || (offers && !offers.ok)) {
       console.error("[billing] upgrade prompt not read", {
@@ -92,9 +136,9 @@ export async function propertyUpgradePrompt(
       listingStatus: listing.data?.status ?? null,
       publishedAt: listing.data?.published_at ?? null,
       contacts: contacts.count ?? 0,
-      // Not counted before the visits and the sale file (lot 3).
-      visits: null,
-      missingDocuments: null,
+      // L3-09: null when not read, and the prompt that needs it stays silent.
+      visits: visits.error ? null : (visits.count ?? 0),
+      missingDocuments: missing,
       offers: sent,
       fromValuation: place.kind === "price" && place.fromValuation,
       stepCode: sale.data?.current_step_code ?? null,
