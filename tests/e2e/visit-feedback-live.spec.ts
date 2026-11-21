@@ -32,6 +32,7 @@ test.skip(
 /** LK-0001 and buyer_c (supabase/seed/05_demo_data.sql). */
 const PROPERTY = "5eed1000-0000-4000-8000-000000000001";
 const BUYER = "5eed0000-0000-4000-8000-00000000000c";
+const SELLER = "5eed0000-0000-4000-8000-00000000000a";
 const COMMENT = "Belle lumière au séjour, la toiture reste à vérifier.";
 const NOTE = "Visite ponctuelle, questions sur les charges.";
 
@@ -46,8 +47,11 @@ function sql(statement: string): string {
 }
 
 let visitId = "";
+/** When the spec started, by the clock of the base: what it wrote since is undone at the end. */
+let startedAt = "";
 
 test.beforeAll(() => {
+  startedAt = sql("select now()");
   // A visit that ended 20 hours ago, written without the triggers of a booking.
   visitId = sql(`
     set session_replication_role = replica;
@@ -60,9 +64,21 @@ test.beforeAll(() => {
   expect(visitId).toMatch(/^[0-9a-f-]{36}$/);
 });
 
+// visits_ask_feedback() works on the whole base: besides the visit of the
+// spec, the requests it sent about other visits of yesterday, their mark, the
+// task « Première visite effectuée » it ticked and the step that followed are
+// undone, so that the other specs find the seed as it was.
 test.afterAll(() => {
-  if (!visitId) return;
+  if (!visitId || !startedAt) return;
   sql(`
+    delete from public.sale_task_status st using public.sale_step_tasks t
+     where t.id = st.task_id and t.auto_trigger = 'visit.done' and st.done_at >= '${startedAt}';
+    update public.visits set feedback_requested_at = null
+     where feedback_requested_at >= '${startedAt}' and id <> '${visitId}';
+    delete from public.notifications
+     where created_at >= '${startedAt}'
+       and (type = 'visit.feedback_requested'
+            or (type = 'step.advanced' and profile_id = '${SELLER}'));
     delete from public.notifications where data->>'visit_id' = '${visitId}';
     with gone as (delete from public.visits where id = '${visitId}' returning slot_id)
     delete from public.visit_slots where id in (select slot_id from gone);`);
@@ -83,7 +99,11 @@ async function openBrowser(browser: Browser, baseURL: string, phone: boolean): P
   return context.newPage();
 }
 
-async function signIn(page: Page, account: "seller_a" | "buyer_c", path: string) {
+async function signIn(
+  page: Page,
+  account: "seller_a" | "seller_b" | "buyer_c" | "buyer_d",
+  path: string,
+) {
   await page.goto(`/connexion?next=${encodeURIComponent(path)}`);
   await page.getByLabel("Email").fill(`${account}@test.leenkey.fr`);
   await page.getByLabel("Mot de passe").fill(SEED_PASSWORD ?? "");
@@ -127,9 +147,14 @@ test("retour de visite : demande du lendemain, retour de l'acquéreur, note du v
   const visitPath = `/visites/${visitId}`;
 
   await test.step("le lendemain, les deux parties sont sollicitées une fois", async () => {
+    // The function of the cron, twice: the visit of the spec is asked about once.
     sql("select public.visits_ask_feedback()");
     sql("select public.visits_ask_feedback()");
     expect(unreadRequests()).toBe("2");
+    expect(
+      sql(`select count(*) from public.notifications
+            where type = 'visit.feedback_requested' and data->>'visit_id' = '${visitId}'`),
+    ).toBe("2");
     expect(
       sql(`select string_agg(distinct link, ',') from public.notifications
             where type = 'visit.feedback_requested' and data->>'visit_id' = '${visitId}'`),
@@ -150,7 +175,7 @@ test("retour de visite : demande du lendemain, retour de l'acquéreur, note du v
     await buyer.getByRole("button", { name: "Envoyer mon retour" }).click();
     await expect(buyer.getByText("Votre retour est enregistré.")).toBeVisible();
     await expect(buyer.getByRole("button", { name: "Modifier mon retour" })).toBeVisible();
-    await expect(buyer.getByText(/^Modifiable jusqu'au /)).toBeVisible();
+    await expect(buyer.getByText(/^Modifiable jusqu'au .+ à \d{1,2}\sh/)).toBeVisible();
     // The request of the buyer is answered: read, its email does not leave.
     expect(unreadRequests()).toBe("1");
   });
@@ -203,7 +228,22 @@ test("retour de visite : demande du lendemain, retour de l'acquéreur, note du v
     await expect(seller.getByRole("textbox", { name: /^Note/ })).toHaveValue(NOTE);
   });
 
-  await test.step("un autre compte ne lit pas la visite", async () => {
+  await test.step("un autre compte ne lit ni la visite, ni le retour, ni la note", async () => {
+    for (const account of ["seller_b", "buyer_d"] as const) {
+      const other = await openBrowser(browser, base, false);
+      await signIn(other, account, visitPath);
+      await expect(other.getByRole("heading", { name: "Retour de l'acquéreur" })).toHaveCount(0);
+      await expect(other.getByRole("heading", { name: "Votre retour sur la visite" })).toHaveCount(
+        0,
+      );
+      const page = await other.content();
+      expect(page).not.toContain(COMMENT);
+      expect(page).not.toContain(NOTE);
+      expect(page).not.toContain("Intérêt 5 / 5");
+      const response = await other.request.get(`${visitPath}/ics`, { maxRedirects: 0 });
+      expect(response.status()).toBe(404);
+      await other.context().close();
+    }
     const anonymous = await browser.newContext({ baseURL: base });
     const response = await anonymous.request.get(visitPath, { maxRedirects: 0 });
     expect([302, 307, 401, 404]).toContain(response.status());

@@ -263,6 +263,7 @@ Le schéma complet des tables est dans `docs/SPEC-V2.md`, section 4 (référence
 - Une offre envoyée est figée : trigger `offers_freeze_after_submit` en base. Ne jamais le contourner ni le désactiver dans une migration.
 - `buyer_profiles.financing_status` est lisible par le vendeur uniquement pour les acquéreurs qui l'ont contacté ou ont fait une offre sur son bien, via `buyer_summary_for_seller()`. Le justificatif et les montants du profil ne lui sont jamais exposés.
 - L'admin (`'admin' = any(profiles.roles)`, via `is_admin()`) a un accès en lecture global et des droits d'écriture limités aux actions de modération : statuts d'annonce, suspension, dossiers, base de connaissances.
+- `visits` se lit par colonne (L3-03) : la note du vendeur (`seller_feedback`) n'est pas lisible par un client ; toute nouvelle colonne de `visits` reçoit son propre `grant select (colonne)` dans sa migration, sans quoi personne ne la lit.
 - Aucune politique `using (true)` en écriture. Jamais.
 
 Chaque migration qui touche aux permissions est accompagnée d'un test dans `supabase/tests/` qui vérifie, avec les cinq comptes de seed (`seller_a`, `seller_b`, `buyer_c`, `buyer_d`, `admin`) et un visiteur anonyme, qu'un utilisateur ne voit pas ce qu'il ne doit pas voir. Ne pas fusionner sans ce test.

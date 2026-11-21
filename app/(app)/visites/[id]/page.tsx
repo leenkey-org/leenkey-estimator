@@ -12,7 +12,7 @@ import { BuyerFeedback } from "@/leenkey/visits/components/buyer-feedback";
 import { CancelVisitButton } from "@/leenkey/visits/components/cancel-visit-button";
 import { BuyerFeedbackForm, SellerNoteForm } from "@/leenkey/visits/components/feedback-forms";
 import { VisitStatusBadge } from "@/leenkey/visits/components/visit-status-badge";
-import { canCancel, visitDateTime, visitDay, visitRange } from "@/leenkey/visits/dates";
+import { canCancel, visitDateTime, visitRange } from "@/leenkey/visits/dates";
 import { feedbackDeadline, feedbackWindow } from "@/leenkey/visits/feedback";
 import { visitDetail } from "@/leenkey/visits/queries";
 import { frVisits } from "@/lib/i18n/sections/visits";
@@ -65,7 +65,8 @@ export default async function VisitPage({ params, searchParams }: Props) {
   const confirmed = visit.status === "confirmed";
   const cancellable = confirmed && canCancel(visit.startsAt, visit.role, now);
   const feedback = feedbackWindow(visit.status, visit.endsAt, now);
-  const until = f.until(visitDay(feedbackDeadline(visit.endsAt), now));
+  // With its hour: the deadline falls in the middle of a day.
+  const until = f.until(visitDateTime(feedbackDeadline(visit.endsAt), now));
   return (
     <SpacePage title={t.title} roles={profile.roles} profileId={profile.id} back={back}>
       <div className="mt-4 flex flex-col gap-5">

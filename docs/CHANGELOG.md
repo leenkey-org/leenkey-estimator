@@ -19,9 +19,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Ajouté : préférence « Alertes de recherche » dans `/compte/notifications` ; outil `create_alert` de l'assistant acquéreur (confirmation obligatoire) ; les deux emails dans `/design/emails`.
 - Modifié : phrase de l'état vide de la recherche (« …ou créez une alerte pour être prévenu. »).
 - Migration : 20261121100000_buyer_alerts_digest.sql (fonctions `alert_digest_queue`, `alert_digest_claim`, `alert_digest_release` et `alert_similar_queue`, table `alert_similar_sent`, tâche planifiée)
-### 2026-11-21 · L3-03 · PR #117 · Retours de visite
+### 2026-11-21 · L3-03 et L3-09 · PR #117 · Retours de visite, déclencheurs de montée en gamme du lot 3
 - Ajouté : le lendemain d'une visite qui a eu lieu, l'acquéreur et le vendeur sont sollicités une fois (cloche et email, `visit.feedback_requested`) ; sur la page de la visite, l'acquéreur donne son intérêt de 1 à 5 et un commentaire, le vendeur écrit une note pour lui-même, chacun pendant 7 jours.
 - Ajouté : le vendeur lit le retour de l'acquéreur tel qu'il est donné (« Intérêt 4 / 5 » et le commentaire, ou « Retour non donné ») sur la page de la visite et dans les visites passées de l'onglet « Visites ». Ni moyenne ni classement.
+- Ajouté (L3-09) : les propositions de montée en gamme `visits_no_offer` et `file_incomplete` comptent les visites passées du bien et les pièces obligatoires manquantes du dossier de vente.
+- Ajouté : les tâches « Créneaux de visite ouverts » et « Première visite effectuée » de l'étape 3 se cochent seules (premier créneau ouvert, première visite qui a eu lieu), y compris pour les créneaux et visites déjà en base.
 - Modifié : la note du vendeur n'est plus lisible par l'acquéreur (droits par colonne sur `visits`, export du compte compris) ; l'anonymisation d'un compte efface aussi l'intérêt donné.
 - Migration : 20261121140000_visit_feedback.sql
 

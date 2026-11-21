@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { useId, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
@@ -39,6 +39,9 @@ export function BuyerFeedbackForm({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pending, start] = useTransition();
+  const errorId = useId();
+  // The error about the interest belongs to the picker: said with it.
+  const interestError = error === t.errors.interest;
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -70,7 +73,12 @@ export function BuyerFeedbackForm({
         <SegmentedPicker
           label={t.buyer.interest}
           value={interest === null ? "" : String(interest)}
-          onValueChange={(value) => setInterest(interestOf(Number(value)))}
+          onValueChange={(value) => {
+            setInterest(interestOf(Number(value)));
+            if (interestError) setError(null);
+          }}
+          aria-invalid={interestError ? true : undefined}
+          aria-describedby={interestError ? errorId : undefined}
           options={VISIT_INTERESTS.map((value) => ({
             value: String(value),
             label: String(value),
@@ -89,7 +97,11 @@ export function BuyerFeedbackForm({
         maxLength={VISIT_FEEDBACK_MAX}
         onChange={(event) => setComment(event.target.value)}
       />
-      {error ? <InlineAlert tone="danger">{error}</InlineAlert> : null}
+      {error ? (
+        <div id={errorId}>
+          <InlineAlert tone="danger">{error}</InlineAlert>
+        </div>
+      ) : null}
       {saved ? <InlineAlert tone="success">{t.buyer.saved}</InlineAlert> : null}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <Button type="submit" loading={pending}>

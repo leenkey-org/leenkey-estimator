@@ -186,6 +186,7 @@ export const frVisits = {
       5: "Très intéressé",
     },
     none: "Retour non donné",
+    /** « Modifiable jusqu'au samedi 28 novembre à 10 h 30. » */
     until: (date: string) => `Modifiable jusqu'au ${date}.`,
     buyer: {
       title: "Votre retour sur la visite",

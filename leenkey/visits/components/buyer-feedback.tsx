@@ -16,12 +16,15 @@ export function BuyerFeedback({
   interest,
   comment,
   none = t.none,
+  clamp = false,
   className,
 }: {
   interest: VisitInterest | null;
   comment: string | null;
   /** What is said while the buyer gave nothing. */
   none?: string;
+  /** In a list: three lines of the comment at most (its page shows it whole). */
+  clamp?: boolean;
   className?: string;
 }) {
   if (interest === null) {
@@ -34,7 +37,12 @@ export function BuyerFeedback({
         <span className="font-normal text-lk-ink-2"> · {t.interestLabels[interest]}</span>
       </p>
       {comment ? (
-        <p className="text-lk-secondary text-pretty break-words whitespace-pre-line text-lk-ink-2">
+        <p
+          className={cn(
+            "text-lk-secondary text-pretty break-words whitespace-pre-line text-lk-ink-2",
+            clamp && "line-clamp-3",
+          )}
+        >
           {comment}
         </p>
       ) : null}

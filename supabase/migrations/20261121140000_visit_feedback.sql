@@ -96,6 +96,8 @@ $$;
 -- The request, the day after: once per visit, to each party who has not
 -- given their feedback yet (and whose account is open). Run every day at
 -- 8 h UTC: a visit ended between 12 and 60 hours ago is asked about once.
+-- It is also where the database learns that a visit took place: the event
+-- visit.done of the sale (supabase/seed/02_sale_steps.sql).
 -- ---------------------------------------------------------------------------
 create function public.visits_ask_feedback(p_now timestamptz default now()) returns int
 language plpgsql security definer set search_path = '' as $$
@@ -133,6 +135,9 @@ begin
         '/visites/' || v.id, 'visit-feedback:' || v.id, p_now);
     end if;
     update public.visits set feedback_requested_at = p_now where id = v.id;
+    -- The sale: « Première visite effectuée » is ticked by the first visit
+    -- that took place (once per visit here; a task done stays done).
+    perform public.sale_emit_event(v.property_id, 'visit.done');
     n := n + 1;
   end loop;
   return n;
@@ -211,13 +216,17 @@ language sql stable security invoker set search_path = '' as $$
     'notifications', (select coalesce(jsonb_agg(to_jsonb(n) order by n.created_at), '[]')
                         from public.notifications n, me where n.profile_id = me.id),
     -- Lot 3: visits, the sale file (the columns the person reads), alerts.
-    -- L3-03: the note of the seller of a visit, for the seller only.
+    -- L3-03: the note of the seller of a visit, for the seller only (not
+    -- for an admin who was the buyer of the visit).
     'visits', (select coalesce(jsonb_agg(jsonb_build_object(
                    'id', v.id, 'slot_id', v.slot_id, 'property_id', v.property_id,
                    'buyer_id', v.buyer_id, 'status', v.status,
                    'buyer_interest', v.buyer_interest, 'buyer_feedback', v.buyer_feedback,
-                   'seller_feedback', public.visit_seller_note(v.id),
+                   'seller_feedback', case when public.owns_property(v.property_id)
+                                           then public.visit_seller_note(v.id) end,
                    'cancelled_at', v.cancelled_at, 'cancelled_by', v.cancelled_by,
+                   'reminder_sent_at', v.reminder_sent_at,
+                   'feedback_requested_at', v.feedback_requested_at,
                    'created_at', v.created_at, 'updated_at', v.updated_at) order by v.created_at), '[]')
                  from public.visits v, me
                 where v.buyer_id = me.id or v.property_id in (select id from my_properties)),
@@ -307,5 +316,56 @@ begin
   update public.visits set buyer_feedback = null, buyer_interest = null where buyer_id = p_profile;
   update public.visits set seller_feedback = null
    where property_id in (select id from public.properties where owner_id = p_profile);
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- The sale (L1-23): « Créneaux de visite ouverts » is ticked by the first
+-- slot. visit_slot_add of L3-01 (20261117120000), with its event: the only
+-- line added. Nothing emitted visit_slot.created nor visit.done since L3-02.
+-- ---------------------------------------------------------------------------
+create or replace function public.visit_slot_add(p_property uuid, p_starts_at timestamptz, p_minutes int)
+returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_id uuid;
+  v_end timestamptz := p_starts_at + make_interval(mins => p_minutes);
+begin
+  if not public.is_active_user() or not public.property_is_editable(p_property) then
+    raise exception 'not a property of yours' using errcode = '42501';
+  end if;
+  if not public.property_visitable(p_property) then
+    raise exception 'the listing is not online' using errcode = '22023';
+  end if;
+  if p_minutes not in (30, 45, 60) then
+    raise exception 'a slot lasts 30, 45 or 60 minutes' using errcode = '22023';
+  end if;
+  if p_starts_at < now() + interval '1 hour' or p_starts_at > now() + interval '90 days' then
+    raise exception 'a slot starts between in one hour and in 90 days' using errcode = '22023';
+  end if;
+  -- One check at a time per property: two slots added together never overlap.
+  perform 1 from public.properties where id = p_property for update;
+  if exists (select 1 from public.visit_slots s
+              where s.property_id = p_property and s.removed_at is null
+                and tstzrange(s.starts_at, s.ends_at) && tstzrange(p_starts_at, v_end)) then
+    raise exception 'the slot overlaps another one' using errcode = '23P01';
+  end if;
+  insert into public.visit_slots (property_id, starts_at, ends_at)
+  values (p_property, p_starts_at, v_end)
+  returning id into v_id;
+  perform public.sale_emit_event(p_property, 'visit_slot.created');
+  return v_id;
+end;
+$$;
+
+-- The slots opened and the visits that took place before this migration.
+do $$
+begin
+  perform public.sale_emit_event(s.property_id, 'visit_slot.created')
+     from (select distinct property_id from public.visit_slots) s;
+  perform public.sale_emit_event(v.property_id, 'visit.done')
+     from (select distinct vi.property_id
+             from public.visits vi join public.visit_slots vs on vs.id = vi.slot_id
+            where vi.status in ('confirmed', 'done') and vs.ends_at <= now()) v;
 end;
 $$;

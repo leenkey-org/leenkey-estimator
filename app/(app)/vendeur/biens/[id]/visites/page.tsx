@@ -206,6 +206,7 @@ export default async function PropertyVisitsPage({ params }: Props) {
                         <BuyerFeedback
                           interest={visit.buyerInterest}
                           comment={visit.buyerFeedback}
+                          clamp
                           className="mt-2"
                         />
                         <Link

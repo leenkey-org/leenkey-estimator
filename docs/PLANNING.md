@@ -140,7 +140,7 @@ Lot 2 :
 - [ ] **L3-05** Analyse IA des documents (extraction, prompts par type, JSON validé), affichage vendeur, publication des… · PR : · Testé en préprod : ☐
 - [x] **L3-06** Alertes : création, gestion, cron digest, biens similaires après vente, outil `create_alert` · PR : #116 · Testé en préprod : ☐
 - [ ] **L3-07** `summarize_shared_documents`, tâches L3 dans le moteur d'étapes · PR : · Testé en préprod : ☐
-- [ ] **L3-09** Déclencheurs de montée en gamme `visits_no_offer` et `file_incomplete` · PR : · Testé en préprod : ☐
+- [x] **L3-09** Déclencheurs de montée en gamme `visits_no_offer` et `file_incomplete` · PR : #117 · Testé en préprod : ☐
 - [ ] **L3-08** Recette lot 3 · PR : · Testé en préprod : ☐
 
 ## S10 · semaine du 14 déc. · Préprod validée → livraison ven. 18 déc.
