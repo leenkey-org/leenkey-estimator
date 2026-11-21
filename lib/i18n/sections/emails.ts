@@ -336,6 +336,43 @@ export const frEmails = {
       action: "Répondre à la demande",
     },
   },
+  // L3-06: the daily digest of the alerts of a buyer (SPEC-V2 16 and 18), and
+  // the listings similar to one sold. Public facts of the listings only.
+  alerts: {
+    why: "Vous recevez cet email parce que vous avez créé une alerte sur Leenkey.",
+    listingFacts: (surface: string | null, rooms: number | null) =>
+      [surface, rooms ? (rooms > 1 ? `${rooms}\u00A0pièces` : "1\u00A0pièce") : null]
+        .filter(Boolean)
+        .join(" · "),
+    seeListing: "Voir l'annonce",
+    manage: "Gérer mes alertes",
+    digest: {
+      subject: (count: number) =>
+        count > 1
+          ? `${count}\u00A0nouveaux biens correspondent à vos alertes`
+          : "Un nouveau bien correspond à vos alertes",
+      title: (count: number) =>
+        count > 1 ? "De nouveaux biens pour vos alertes" : "Un nouveau bien pour vos alertes",
+      text: (count: number) =>
+        count > 1
+          ? `${count}\u00A0biens publiés depuis votre dernier email correspondent à vos alertes.`
+          : "Un bien publié depuis votre dernier email correspond à vos alertes.",
+      more: (shown: number) =>
+        `Voici les ${shown} plus récents. Les autres vous attendent dans vos recherches.`,
+      searches: "Vos recherches",
+      alertCount: (name: string, count: number) =>
+        count > 1 ? `${name} (${count}\u00A0nouveaux biens)` : `${name} (1\u00A0nouveau bien)`,
+      actionSearch: "Voir tous les biens",
+      actionAlerts: "Voir mes alertes",
+    },
+    similar: {
+      subject: (city: string) => `Des biens similaires à ${city}`,
+      title: "Des biens similaires sont en vente",
+      text: (title: string | null, city: string) =>
+        `${title ? `Le bien «\u00A0${title}\u00A0»` : "Un bien"} à ${city}, que vous avez suivi, est vendu. Voici des biens proches, dans la même ville et pour un budget comparable.`,
+      action: "Voir les biens à vendre",
+    },
+  },
   // L1-40: a plan ending within 30 days, to its owner.
   planEnding: {
     subject: (plan: string, date: string) => `Votre formule ${plan} se termine le ${date}`,
