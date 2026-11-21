@@ -25,6 +25,7 @@ import {
   composeDigest,
   freshListings,
   groupByBuyer,
+  rotateByRun,
   similarListings,
   similarSqlFilters,
   type AlertMatch,
@@ -35,7 +36,9 @@ import {
 const fr = { emails: frEmails } as const;
 
 // The daily run of the buyer alerts (L3-06, SPEC-V2 16 and 19), called by
-// /api/cron/buyer-alerts with the service role client of the cron.
+// /api/cron/buyer-alerts with the service role client of the cron, four
+// times ten minutes apart: a run sends for a bounded time, the next one
+// takes the buyers left.
 //
 // The digest: each active alert is run through search_listings, the SQL
 // function of the search page, the most recent first; its listings
@@ -43,18 +46,23 @@ const fr = { emails: frEmails } as const;
 // their alerts. `alert.match` has no notification in the application (SPEC
 // 10) and notification_add always writes one: the email leaves from here,
 // with the sendEmail of the other emails (outside production: the test
-// inbox only). Idempotent: the alerts of a buyer are claimed before their
-// email leaves (last_sent_at, compared with the value read), so that two
-// runs at once send one email; an email that fails gives them back, and the
-// next run tells of the same listings.
+// inbox only). Idempotent: the alerts of a buyer are claimed together
+// before their email leaves (alert_digest_claim: all of them still as they
+// were read, or none), so that two runs at once send one email; an email
+// that fails gives them back (alert_digest_release), and the next run tells
+// of the same listings. An alert whose search fails is left out of the
+// claim: it keeps its date, the others go on.
 //
 // Similar listings after a sale: once per buyer and listing sold
-// (alert_similar_sent, claimed by its primary key before the email leaves).
+// (alert_similar_sent, claimed by its primary key before the email leaves),
+// on a time budget of their own, so that the digests never starve them.
 
-/** Between two emails: Resend takes 2 requests a second by default. */
+/** Between two emails that left: Resend takes 2 requests a second by default. */
 const PACE_MS = 600;
-/** No new email after this time: the next run sends the rest (function of 60 s). */
-const BUDGET_MS = 40_000;
+/** No new digest after this time: the next run sends the rest (function of 60 s). */
+const DIGEST_BUDGET_MS = 25_000;
+/** The similar listings have their own time, after the digests. */
+const SIMILAR_BUDGET_MS = 15_000;
 
 type Client = SupabaseClient<Database>;
 type SearchRow = Database["public"]["Functions"]["search_listings"]["Returns"][number];
@@ -133,7 +141,7 @@ function emailListing(listing: DigestListing): AlertEmailListing {
   return {
     // The words of a seller: never a link made by a mail client.
     title: emailSafeText(listing.title),
-    city: listing.city,
+    city: emailSafeText(listing.city),
     price: formatPrice(listing.priceCents),
     facts: fr.emails.alerts.listingFacts(
       listing.surfaceM2 ? formatSurface(listing.surfaceM2) : null,
@@ -143,9 +151,14 @@ function emailListing(listing: DigestListing): AlertEmailListing {
   };
 }
 
-async function send(to: string, subject: string, element: ReactElement): Promise<boolean> {
+async function send(
+  to: string,
+  subject: string,
+  element: ReactElement,
+  idempotencyKey: string,
+): Promise<boolean> {
   const [html, text] = await Promise.all([render(element), render(element, EMAIL_PLAIN_TEXT)]);
-  return (await sendEmail({ to, subject, html, text })) !== "failed";
+  return (await sendEmail({ to, subject, html, text, idempotencyKey })) !== "failed";
 }
 
 type QueuedAlert = {
@@ -159,39 +172,31 @@ type QueuedAlert = {
   firstName: string | null;
 };
 
-/** Dates the alerts still as they were read; those this run now holds. */
+const claimArgs = (alerts: readonly QueuedAlert[], claimedAt: string) => ({
+  p_alert_ids: alerts.map((alert) => alert.alertId),
+  // Null for an alert never sent (the generated types say an array of strings).
+  p_read: alerts.map((alert) => alert.lastSentAt) as string[],
+  p_claimed_at: claimedAt,
+});
+
+/**
+ * Dates the alerts of a buyer together, if all of them are still as they
+ * were read; false when another run, or the buyer, changed one meanwhile.
+ */
 async function claim(supabase: Client, alerts: readonly QueuedAlert[], claimedAt: string) {
-  const claimed = new Set<string>();
-  for (const alert of alerts) {
-    const update = supabase
-      .from("alerts")
-      .update({ last_sent_at: claimedAt })
-      .eq("id", alert.alertId);
-    const { data, error } = await (
-      alert.lastSentAt === null
-        ? update.is("last_sent_at", null)
-        : update.eq("last_sent_at", alert.lastSentAt)
-    ).select("id");
-    if (error) throw new Error(`alerts claim: ${error.code} ${error.message}`);
-    if (data.length > 0) claimed.add(alert.alertId);
-  }
-  return claimed;
+  const { data, error } = await supabase.rpc("alert_digest_claim", claimArgs(alerts, claimedAt));
+  if (error) throw new Error(`alert_digest_claim: ${error.code} ${error.message}`);
+  return data === true;
 }
 
 /** Gives back the alerts of a digest that did not leave: the next run reads the same listings. */
 async function release(supabase: Client, alerts: readonly QueuedAlert[], claimedAt: string) {
-  for (const alert of alerts) {
-    const { error } = await supabase
-      .from("alerts")
-      .update({ last_sent_at: alert.lastSentAt })
-      .eq("id", alert.alertId)
-      .eq("last_sent_at", claimedAt);
-    if (error) {
-      console.error("[alerts] alert not given back", {
-        entity_id: alert.alertId,
-        code: error.code,
-      });
-    }
+  const { error } = await supabase.rpc("alert_digest_release", claimArgs(alerts, claimedAt));
+  if (error) {
+    console.error("[alerts] alerts not given back", {
+      user_id: alerts[0]?.buyerId,
+      code: error.code,
+    });
   }
 }
 
@@ -204,34 +209,46 @@ async function digestOf(
 ): Promise<Outcome> {
   const buyer = alerts[0];
   if (!buyer) return "taken";
-  const found = await Promise.all(
+  const read = await Promise.all(
     alerts.map(async (alert) => {
       const criteria = readAlertCriteria(alert.criteria);
       // Criteria the site no longer knows match nothing; the page says so to the buyer.
-      const listings = criteria ? await search(supabase, toSqlFilters(criteria)) : [];
-      return { alert, criteria, listings };
+      if (!criteria) return { alert, criteria, listings: [] as DigestListing[] };
+      try {
+        return { alert, criteria, listings: await search(supabase, toSqlFilters(criteria)) };
+      } catch (error) {
+        // One search that fails never stops the other alerts of the buyer:
+        // this alert keeps its date and is read again by the next run.
+        console.error("[alerts] search of an alert failed", {
+          type: "alert.match",
+          entity_id: alert.alertId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return null;
+      }
     }),
   );
+  const found = read.filter((entry) => entry !== null);
+  if (found.length === 0) return "failed";
   const own = await ownListings(
     supabase,
     buyer.buyerId,
     found.flatMap(({ listings }) => listings.map((listing) => listing.id)),
   );
-  // Claimed first: a run that started meanwhile leaves these alerts out.
+  // Claimed first, all together: a run that started meanwhile leaves this buyer out.
   const claimedAt = now.toISOString();
-  const claimed = await claim(supabase, alerts, claimedAt);
-  const kept = found.filter(({ alert }) => claimed.has(alert.alertId));
-  if (kept.length === 0) return "taken";
-  const matches: AlertMatch[] = kept.map(({ alert, criteria, listings }) => ({
-    alertId: alert.alertId,
-    name: alert.name,
-    href: criteria ? searchHref({ filters: criteria }) : ROUTES.search,
-    listings: freshListings(listings, alert.since, now, own),
-  }));
-  const digest = composeDigest(matches);
-  if (!digest) return "quiet";
+  const held = found.map(({ alert }) => alert);
+  if (!(await claim(supabase, held, claimedAt))) return "taken";
   let sent = false;
   try {
+    const matches: AlertMatch[] = found.map(({ alert, criteria, listings }) => ({
+      alertId: alert.alertId,
+      name: alert.name,
+      href: criteria ? searchHref({ filters: criteria }) : ROUTES.search,
+      listings: freshListings(listings, alert.since, now, own),
+    }));
+    const digest = composeDigest(matches);
+    if (!digest) return "quiet";
     sent = await send(
       buyer.email,
       alertDigestSubject(digest.total),
@@ -247,6 +264,8 @@ async function digestOf(
         alertsUrl: absoluteUrl(ROUTES.buyerAlerts),
         siteUrl: siteUrl(),
       }),
+      // The same digest sent again after an answer lost on the way leaves once.
+      `alert-digest/${buyer.buyerId}/${claimedAt}`,
     );
   } catch (error) {
     console.error("[alerts] digest not rendered", {
@@ -255,11 +274,7 @@ async function digestOf(
     });
   }
   if (sent) return "sent";
-  await release(
-    supabase,
-    kept.map(({ alert }) => alert),
-    claimedAt,
-  );
+  await release(supabase, held, claimedAt);
   return "failed";
 }
 
@@ -291,18 +306,21 @@ async function similarOf(
   if (listings.length === 0) return "none";
   let sent = false;
   try {
+    // The name of a commune is typed by a seller: never a link made by a mail client.
+    const city = emailSafeText(row.city);
     sent = await send(
       row.email,
-      similarListingsSubject(row.city),
+      similarListingsSubject(city),
       SimilarListingsEmail({
         firstName: emailSafeText((row as { first_name: string | null }).first_name),
         soldTitle: emailSafeText(row.title),
-        city: row.city,
+        city,
         listings: listings.map(emailListing),
         searchUrl: absoluteUrl(searchHref({ filters: { location: slugify(row.city) } })),
         alertsUrl: absoluteUrl(ROUTES.buyerAlerts),
         siteUrl: siteUrl(),
       }),
+      `alert-similar/${row.buyer_id}/${row.listing_id}`,
     );
   } catch (error) {
     console.error("[alerts] similar listings not rendered", {
@@ -329,28 +347,32 @@ const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function sendAlertDigests(
   supabase: Client,
   now = new Date(),
-  { paceMs = PACE_MS, budgetMs = BUDGET_MS } = {},
+  { paceMs = PACE_MS, digestBudgetMs = DIGEST_BUDGET_MS, similarBudgetMs = SIMILAR_BUDGET_MS } = {},
 ): Promise<AlertsSummary> {
-  const started = Date.now();
-  const spent = () => Date.now() - started > budgetMs;
   const queue = await supabase.rpc("alert_digest_queue");
   if (queue.error) {
     throw new Error(`alert_digest_queue: ${queue.error.code} ${queue.error.message}`);
   }
-  const groups = groupByBuyer(
-    queue.data.map(
-      (row): QueuedAlert => ({
-        alertId: row.alert_id,
-        buyerId: row.buyer_id,
-        name: row.name,
-        criteria: row.criteria,
-        // Null for an alert never sent (the generated types say never null).
-        lastSentAt: (row as { last_sent_at: string | null }).last_sent_at,
-        since: row.since,
-        email: row.email,
-        firstName: (row as { first_name: string | null }).first_name,
-      }),
+  // Each run of the day starts further in the queue: a buyer whose email
+  // keeps failing stays at its head (their alerts keep their old date) and
+  // must not stand before the same buyers at every run.
+  const groups = rotateByRun(
+    groupByBuyer(
+      queue.data.map(
+        (row): QueuedAlert => ({
+          alertId: row.alert_id,
+          buyerId: row.buyer_id,
+          name: row.name,
+          criteria: row.criteria,
+          // Null for an alert never sent (the generated types say never null).
+          lastSentAt: (row as { last_sent_at: string | null }).last_sent_at,
+          since: row.since,
+          email: row.email,
+          firstName: (row as { first_name: string | null }).first_name,
+        }),
+      ),
     ),
+    now,
   );
   const summary: AlertsSummary = {
     alerts: queue.data.length,
@@ -361,8 +383,9 @@ export async function sendAlertDigests(
     postponed: 0,
     similar: { due: 0, sent: 0, none: 0, failed: 0, postponed: 0 },
   };
+  const digestsStarted = Date.now();
   for (const [index, alerts] of groups.entries()) {
-    if (spent()) {
+    if (Date.now() - digestsStarted > digestBudgetMs) {
       // Their alerts keep their date: the next run reads the same listings.
       summary.postponed += groups.length - index;
       break;
@@ -371,9 +394,8 @@ export async function sendAlertDigests(
       const outcome = await digestOf(supabase, alerts, now);
       if (outcome === "taken") summary.postponed += 1;
       else summary[outcome] += 1;
-      if (outcome === "sent" || outcome === "failed") {
-        await pause(paceMs);
-      }
+      // Only after an email that left: a failure costs the next buyers no wait.
+      if (outcome === "sent") await pause(paceMs);
     } catch (error) {
       summary.failed += 1;
       console.error("[alerts] digest failed", {
@@ -390,8 +412,9 @@ export async function sendAlertDigests(
   summary.similar.due = similar.data.length;
   // One search per listing sold, whatever the number of its buyers.
   const searches = new Map<string, DigestListing[]>();
+  const similarStarted = Date.now();
   for (const [index, row] of similar.data.entries()) {
-    if (spent()) {
+    if (Date.now() - similarStarted > similarBudgetMs) {
       summary.similar.postponed += similar.data.length - index;
       break;
     }
@@ -411,9 +434,7 @@ export async function sendAlertDigests(
       const outcome = await similarOf(supabase, row, candidates);
       if (outcome === "taken") summary.similar.postponed += 1;
       else summary.similar[outcome] += 1;
-      if (outcome === "sent" || outcome === "failed") {
-        await pause(paceMs);
-      }
+      if (outcome === "sent") await pause(paceMs);
     } catch (error) {
       summary.similar.failed += 1;
       console.error("[alerts] similar listings failed", {

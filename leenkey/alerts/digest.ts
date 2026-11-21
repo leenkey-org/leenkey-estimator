@@ -99,6 +99,22 @@ export function groupByBuyer<T extends { buyerId: string }>(rows: readonly T[]):
   return [...groups.values()];
 }
 
+/** Runs of the day (the task `buyer-alerts`: minutes 0, 10, 20 and 30). */
+export const DAILY_RUNS = 4;
+
+/**
+ * The queue as a run takes it: each run of the day starts a quarter further
+ * (by the ten minutes of its hour), the order kept. A buyer whose email keeps
+ * failing stays at the head of the queue: they then stand before different
+ * buyers at each run, never before everyone at all of them.
+ */
+export function rotateByRun<T>(groups: readonly T[], now: Date): T[] {
+  if (groups.length === 0) return [];
+  const run = Math.floor(now.getUTCMinutes() / 10) % DAILY_RUNS;
+  const start = Math.floor((groups.length * run) / DAILY_RUNS);
+  return [...groups.slice(start), ...groups.slice(0, start)];
+}
+
 export type SoldListing = { city: string; priceCents: number; rooms: number | null };
 
 /** Same commune, price within 20 %, rooms within 1 (a plot has no room: not compared). */

@@ -5,6 +5,7 @@ import {
   freshListings,
   groupByBuyer,
   isSimilar,
+  rotateByRun,
   similarListings,
   similarSqlFilters,
   type DigestListing,
@@ -117,6 +118,19 @@ describe("groupByBuyer", () => {
       ["2"],
     ]);
     expect(groupByBuyer([])).toEqual([]);
+  });
+});
+
+describe("rotateByRun", () => {
+  it("each run of the day starts a quarter further in the queue, the order kept", () => {
+    const queue = ["a", "b", "c", "d", "e", "f", "g", "h"];
+    const at = (minutes: number) => new Date(Date.UTC(2026, 10, 21, 5, minutes));
+    expect(rotateByRun(queue, at(0))).toEqual(queue);
+    expect(rotateByRun(queue, at(10))).toEqual(["c", "d", "e", "f", "g", "h", "a", "b"]);
+    expect(rotateByRun(queue, at(20))[0]).toBe("e");
+    expect(rotateByRun(queue, at(31))[0]).toBe("g");
+    expect(rotateByRun(["a"], at(30))).toEqual(["a"]);
+    expect(rotateByRun([], at(10))).toEqual([]);
   });
 });
 

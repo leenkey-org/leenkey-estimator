@@ -34,10 +34,13 @@ vi.mock("@/lib/supabase/server", () => ({
         };
       },
       delete: () => ({
-        eq: async (_column: string, id: string) => {
-          mocks.writes.push({ name: `delete:${table}`, args: id });
-          return { error: null };
-        },
+        eq: (_id: string, id: string) => ({
+          // The alert just created, and only an alert of this buyer.
+          eq: async (_buyer: string, buyerId: string) => {
+            mocks.writes.push({ name: `delete:${table}`, args: { id, buyerId } });
+            return { error: null };
+          },
+        }),
       }),
     }),
   }),
@@ -175,6 +178,9 @@ describe("create_alert", () => {
   it("a call answered meanwhile takes its alert back: one alert per confirmation", async () => {
     mocks.logError = { code: "23505" };
     expect(await tool.execute(input, { ...ctx, call })).toEqual({ created: false, answered: true });
-    expect(mocks.writes.at(-1)).toEqual({ name: "delete:alerts", args: "alert-1" });
+    expect(mocks.writes.at(-1)).toEqual({
+      name: "delete:alerts",
+      args: { id: "alert-1", buyerId: BUYER },
+    });
   });
 });

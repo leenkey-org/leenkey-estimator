@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 // The daily digest of the buyer alerts and the similar listings after a sale
 // (L3-06, SPEC-V2 sections 16 and 19): every day at 5:00 UTC, called by
-// pg_cron through pg_net with « Authorization: Bearer <CRON_SECRET> »
+// pg_cron (four runs ten minutes apart) through pg_net with « Authorization: Bearer <CRON_SECRET> »
 // (public.cron_call). Idempotent: the alerts of a buyer are claimed before
 // their email leaves, a listing sold is told once per buyer. Its summary
 // goes to the log.
