@@ -1,6 +1,7 @@
 import "server-only";
 import type { AiContext, AnyAiTool } from "@/core/ai/tools/types";
 import { contactAdvisorTool } from "./contact-advisor";
+import { createAlertTool } from "./create-alert";
 import { createBuyerCaseTool, createCaseTool } from "./create-case";
 import { draftListingDescriptionTool } from "./draft-listing-description";
 import { getListingPublicTool } from "./get-listing-public";
@@ -23,8 +24,9 @@ import { updateListingPriceTool } from "./update-listing-price";
 // model of the conversation: the whole FAQ is in its prompt (Q69, option a).
 // The buyer (L2-06): search_listings, get_listing_public, prefill_offer and
 // its own create_case (two tools of the same name, one per context). The
-// visits (L3-02): propose_visit_slot, for the seller. To come with their
-// tasks: summarize_shared_documents and create_alert (L3).
+// visits (L3-02): propose_visit_slot, for the seller. The alerts (L3-06):
+// create_alert, for the buyer. To come with its task:
+// summarize_shared_documents (L3).
 
 const TOOLS: readonly AnyAiTool[] = [
   getMyPropertiesTool,
@@ -43,6 +45,7 @@ const TOOLS: readonly AnyAiTool[] = [
   searchListingsTool,
   getListingPublicTool,
   prefillOfferTool,
+  createAlertTool,
   createBuyerCaseTool,
 ];
 

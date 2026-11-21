@@ -15,7 +15,7 @@ const t = fr.notifications.preferences;
 
 /**
  * The email preferences of the account (L1-22): the new messages, the offers
- * (L2-04a); the alerts come with their emails. The emails of the listing
+ * (L2-04a), the digest of the alerts (L3-06). The emails of the listing
  * always leave (a line says so to a seller).
  */
 export function NotificationPreferencesForm({
@@ -28,6 +28,7 @@ export function NotificationPreferencesForm({
 }) {
   const [messages, setMessages] = useState(initial.email_messages);
   const [offers, setOffers] = useState(initial.email_offers);
+  const [alerts, setAlerts] = useState(initial.email_alerts);
   const [result, setResult] = useState<"saved" | "error" | null>(null);
   const [saving, startSaving] = useTransition();
 
@@ -41,6 +42,7 @@ export function NotificationPreferencesForm({
           const saved = await updateNotificationPreferences({
             email_messages: messages,
             email_offers: offers,
+            email_alerts: alerts,
           }).catch(() => null);
           setResult(saved?.ok ? "saved" : "error");
         });
@@ -74,6 +76,20 @@ export function NotificationPreferencesForm({
               <span className="flex flex-col gap-0.5">
                 <span className="font-semibold text-lk-ink">{t.offers.label}</span>
                 <span>{t.offers.hint}</span>
+              </span>
+            }
+          />
+          <Checkbox
+            name="email_alerts"
+            checked={alerts}
+            onChange={(event) => {
+              setAlerts(event.target.checked);
+              setResult(null);
+            }}
+            label={
+              <span className="flex flex-col gap-0.5">
+                <span className="font-semibold text-lk-ink">{t.alerts.label}</span>
+                <span>{t.alerts.hint}</span>
               </span>
             }
           />

@@ -5,7 +5,7 @@
 
 export const frAlerts = {
   /** « 3 / 5 ». */
-  count: (count: number, max: number) => `${count} / ${max}`,
+  count: (count: number, max: number) => `${count}\u00A0/\u00A0${max}`,
   countLabel: (count: number, max: number) =>
     count === 0
       ? `Aucune alerte sur ${max} possibles`
@@ -54,11 +54,9 @@ export const frAlerts = {
     criteriaUnknown: "Critères à redéfinir",
     see: "Voir les biens",
     seeAbout: (name: string) => `Voir les biens de l'alerte ${name}`,
-    active: "Alerte active",
     activeAbout: (name: string) => `Alerte active : ${name}`,
     on: "Active",
     off: "En pause",
-    lastSent: (date: string) => `Dernier envoi vérifié le ${date}`,
     rename: "Renommer",
     renameAbout: (name: string) => `Renommer l'alerte ${name}`,
     renameTitle: "Renommer l'alerte",

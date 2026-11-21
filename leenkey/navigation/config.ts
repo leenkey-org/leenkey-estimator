@@ -158,8 +158,11 @@ export function notificationBell(space: Space): {
       emptyText: t.emptySeller,
       emptyAction: { href: ROUTES.sellerFile, label: t.completeListing },
     },
-    // DESIGN.md 10.7; the buyer's « Créer une alerte » comes with the alerts (L3-06).
-    buyer: { emptyText: t.emptyBuyer },
+    // DESIGN.md 10.7: the alerts of the buyer, created from a search (L3-06).
+    buyer: {
+      emptyText: t.emptyBuyer,
+      emptyAction: { href: ROUTES.buyerAlerts, label: t.createAlert },
+    },
     admin: {
       emptyText: t.emptyAdmin,
       emptyAction: { href: ROUTES.adminListingsToReview, label: t.reviewListings },

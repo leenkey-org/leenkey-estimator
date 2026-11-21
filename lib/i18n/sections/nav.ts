@@ -65,6 +65,7 @@ export const frNav = {
     emptySeller:
       "Nous vous prévenons ici des messages, des visites et des offres reçus pour votre bien.",
     completeListing: "Compléter mon annonce",
+    createAlert: "Créer une alerte",
     emptyBuyer:
       "Nous vous prévenons ici des réponses des vendeurs et des nouveaux biens de vos recherches.",
     emptyAdmin: "Nous vous prévenons ici des annonces envoyées en relecture.",

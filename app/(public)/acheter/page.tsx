@@ -9,6 +9,7 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { BOTTOM_NAV_OFFSET } from "@/components/shared/nav-items";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { getProfile } from "@/core/auth/session";
+import { CreateAlertButton } from "@/leenkey/alerts/components/create-alert-button";
 import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
 import { bottomTabs } from "@/leenkey/navigation/config";
 import { FiltersDialog } from "@/leenkey/search/components/filters-dialog";
@@ -40,7 +41,8 @@ const fr = { nav: frNav, search: frSearch } as const;
 // L1-15: search of the published listings (SPEC-V2 8.4, docs/DESIGN.md 12.5,
 // 12.6). Server-rendered from the URL; the controls change the URL.
 // The map (L1-16): beside the list from 1024 px, the whole width of the page;
-// full screen from « Carte » below. « Créer une alerte » (L3-06) comes later. Navigation
+// full screen from « Carte » below. « Créer une alerte » (L3-06): beside
+// « Filtres » and in the empty state, once the search has a criterion. Navigation
 // (L1-10): TopNav from 768 px, buyer tabs below for every visitor (the
 // middleware sends a signed-out visitor from Favoris, Messages or Compte to
 // the login page; « Vendre » opens the landing page for the sellers),
@@ -116,9 +118,12 @@ export default async function SearchPage({ searchParams }: Props) {
         action={
           filtered ? (
             // The filters button of the header stays the one primary action.
-            <Button asChild variant="outline-ink">
-              <Link href={SEARCH_PATH}>{t.empty.action}</Link>
-            </Button>
+            <div className="flex flex-wrap justify-center gap-2.5">
+              <CreateAlertButton signedIn={Boolean(profile)} display="button" />
+              <Button asChild variant="outline-ink">
+                <Link href={SEARCH_PATH}>{t.empty.action}</Link>
+              </Button>
+            </div>
           ) : undefined
         }
       />
@@ -161,7 +166,7 @@ export default async function SearchPage({ searchParams }: Props) {
         placeLabel={place?.label ?? null}
         radiusAvailable={Boolean(place?.centre)}
       >
-        <SearchHeader />
+        <SearchHeader signedIn={Boolean(profile)} />
         <MapSyncProvider>
           {/* From 1 536 px, the list takes three fifths and three cards a row (L1-56). */}
           <div className="flex-1 lg:grid lg:grid-cols-[620px_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">

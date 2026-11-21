@@ -79,6 +79,13 @@ export const visitInvitationPreview = z.object({
   replacesInvitation: z.boolean(),
 });
 
+/** create_alert (L3-06): the name of the alert and its criteria, as the search shows them. */
+export const alertCreationPreview = z.object({
+  kind: z.literal("alert_creation"),
+  name: z.string(),
+  criteria: z.array(z.string()).max(20),
+});
+
 export const actionPreview = z.discriminatedUnion("kind", [
   descriptionPreview,
   pricePreview,
@@ -86,6 +93,7 @@ export const actionPreview = z.discriminatedUnion("kind", [
   casePreview,
   offerPrefillPreview,
   visitInvitationPreview,
+  alertCreationPreview,
 ]);
 
 export type DescriptionPreview = z.infer<typeof descriptionPreview>;
@@ -94,6 +102,7 @@ export type HandoffPreview = z.infer<typeof handoffPreview>;
 export type CasePreview = z.infer<typeof casePreview>;
 export type OfferPrefillPreview = z.infer<typeof offerPrefillPreview>;
 export type VisitInvitationPreview = z.infer<typeof visitInvitationPreview>;
+export type AlertCreationPreview = z.infer<typeof alertCreationPreview>;
 export type ActionPreview = z.infer<typeof actionPreview>;
 
 /** The gap of a price to a reference (the analysis of value, the price of a listing), in %, one decimal; null without one. */

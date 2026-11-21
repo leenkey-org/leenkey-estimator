@@ -76,6 +76,23 @@ export const frAssistant = {
         error: "Votre offre n'a pas pu être préparée.",
       },
     },
+    // create_alert (L3-06): a search kept as an alert, its new listings by email.
+    alert: {
+      title: "Créer une alerte",
+      // The alert cannot be read again (the conversation opened later).
+      unknown: "L'assistant propose de créer une alerte à partir de votre recherche.",
+      name: "Nom de l'alerte",
+      criteria: "Critères",
+      note: "Nous vous envoyons par email, une fois par jour au plus, les nouveaux biens qui correspondent. Vous gérez vos alertes depuis votre espace.",
+      confirm: "Créer l'alerte",
+      open: "Voir mes alertes",
+      states: {
+        confirmed: "Votre alerte est créée : vous recevrez les nouveaux biens par email.",
+        declined: "Alerte annulée : rien n'a été créé.",
+        superseded: "Proposition non confirmée : rien n'a été créé.",
+        error: "L'alerte n'a pas pu être créée.",
+      },
+    },
     // propose_visit_slot (L3-02): a buyer invited to visit, on the slots of the seller.
     visit: {
       title: (firstName: string) => `Inviter ${firstName} à visiter`,

@@ -1930,6 +1930,8 @@ Accès par formule : le dépôt, la checklist, le partage et le **résumé autom
 - Cron quotidien à 7 h : pour chaque alerte active, annonces publiées depuis `last_sent_at` correspondant aux critères (même fonction SQL que la recherche) → un email digest par acquéreur (toutes alertes confondues), 6 biens max, lien vers la recherche.
 - Bien vendu : les acquéreurs ayant eu une conversation ou une offre sur ce bien reçoivent, s'ils ont au moins une alerte active, les biens similaires (même ville, ±20 % de prix, ±1 pièce). Pas d'email s'ils n'ont pas d'alerte (RGPD).
 
+> **Mise en œuvre (L3-06, `DECISIONS.md` 2026-11-21).** « Créer une alerte » sur `/acheter` dès que la recherche a un critère (bouton rond à côté de « Filtres », son libellé à partir de 1 280 px ; bouton dans l'état vide) : nom proposé depuis les critères, 80 caractères au plus ; un visiteur passe par la connexion et revient à sa recherche. `/acquereur/alertes` : nom, critères, « Voir les biens », interrupteur, renommer, supprimer, « x / 5 ». Route `/api/cron/buyer-alerts` à 5 h UTC (7 h à Paris en été, 6 h en hiver) : chaque alerte active passe par `search_listings` (les 20 biens les plus récents), on garde ceux publiés depuis `coalesce(last_sent_at, created_at)` ; un email par acquéreur, 6 biens au plus, jamais un bien de l'acquéreur ; `last_sent_at` est écrit pour chaque alerte traitée, avec ou sans bien. `alert.match` n'a pas de ligne dans `notifications` : l'email part de la route (`sendEmail`, boîte de test hors production). Biens similaires : annonces vendues depuis moins de 7 jours, acquéreurs ayant une conversation ou une offre envoyée sur le bien (sauf celui dont l'offre est acceptée), une fois par acquéreur et par annonce (table `alert_similar_sent`). Préférence « Alertes de recherche » dans `/compte/notifications`. Outil `create_alert` : mêmes champs que `search_listings` et un nom, confirmation avec le nom et les critères.
+
 ---
 
 ## 17. Back office
@@ -2040,7 +2042,7 @@ Voir `CLAUDE.md` section 13. Détail :
 | `/api/cron/ping-db` | `0 3 * * *` | Requête légère pour éviter la mise en pause du projet Supabase gratuit |
 | `/api/cron/reset-ai-quotas` | `0 22 * * *` | Remise à zéro de `ai_messages_today`. Filet de sécurité : le compteur est aussi remis à zéro à la lecture si sa date (`ai_messages_date`, en `Europe/Paris`) n'est pas celle du jour, ce qui couvre le passage à l'heure d'hiver |
 | `/api/cron/expire-offers` | `0 5 * * *` | Offres `submitted`/`viewed` dont `validity_until` est passée → `expired`. Depuis L2-04b (`DECISIONS.md` 2026-11-13) : tâche `expire-offers` de `pg_cron`, en SQL (`offers_expire_due`), sans route, **toutes les heures** (`4 * * * *`) |
-| `/api/cron/buyer-alerts` | `0 5 * * *` | Digest d'alertes (7 h Paris) |
+| `/api/cron/buyer-alerts` | `0 5 * * *` | Digest d'alertes (7 h Paris en été, 6 h en hiver) et biens similaires après une vente (L3-06) ; un passage envoie pendant 40 secondes au plus, les acquéreurs restants gardent leur date et passent au passage suivant |
 | `/api/cron/visit-reminders` | `0 6 * * *` | Rappels J-1 |
 | `/api/cron/visit-feedback` | `0 8 * * *` | Demandes de retour J+1 |
 | `/api/cron/send-notification-emails` | `*/5 * * * *` | Envoi des emails de notification en attente (regroupement) |

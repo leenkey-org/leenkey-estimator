@@ -5,6 +5,12 @@ import { notFound } from "next/navigation";
 import { render } from "@react-email/components";
 import { FacadeRoot } from "@/components/shared/facade-root";
 import { AccountSuspendedEmail, accountSuspendedSubject } from "@/emails/account-suspended";
+import {
+  AlertDigestEmail,
+  SimilarListingsEmail,
+  alertDigestSubject,
+  similarListingsSubject,
+} from "@/emails/alert-digest";
 import { ListingDecisionEmail, listingDecisionSubject } from "@/emails/listing-decision";
 import {
   ListingReceivedEmail,
@@ -26,7 +32,7 @@ import { PlanPurchasedEmail, planPurchasedSubject } from "@/emails/plan-purchase
 import { ReportsToReviewEmail, reportsToReviewSubject } from "@/emails/reports-to-review";
 import { AccountsCreatedEmail, accountsCreatedSubject } from "@/emails/accounts-created";
 import { UserWarnedEmail, userWarnedSubject } from "@/emails/user-warned";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatSurface } from "@/lib/format";
 import { isProduction } from "@/lib/env";
 import { frEmails } from "@/lib/i18n/sections/emails";
 import { frLegal } from "@/lib/i18n/sections/legal";
@@ -52,6 +58,30 @@ function previews(): Preview[] {
   const site = siteUrl();
   const s = t.sample;
   const price = formatPrice(48_900_000);
+  // L3-06: the listings of the emails of the alerts.
+  const alertListings = [
+    { title: s.title, city: "Savigny-sur-Orge", priceCents: 48_900_000, surface: 124, rooms: 5 },
+    {
+      title: s.alertTitles[0],
+      city: "Savigny-sur-Orge",
+      priceCents: 41_500_000,
+      surface: 98,
+      rooms: 4,
+    },
+    {
+      title: s.alertTitles[1],
+      city: "Épinay-sur-Orge",
+      priceCents: 39_900_000,
+      surface: 105,
+      rooms: 5,
+    },
+  ].map((item, index) => ({
+    title: item.title,
+    city: item.city,
+    price: formatPrice(item.priceCents),
+    facts: fr.emails.alerts.listingFacts(formatSurface(item.surface), item.rooms),
+    url: `${site}/annonce/maison-lk004${index + 2}`,
+  }));
   const decision = {
     firstName: s.seller,
     title: s.title,
@@ -289,6 +319,38 @@ function previews(): Preview[] {
       name: t.names.messageLink,
       subject: newMessagesSubject(s.buyer, 1),
       element: NewMessagesEmail({ ...message, excerpt: null, excerptHidden: true }),
+    },
+    {
+      name: t.names.alertDigest,
+      subject: alertDigestSubject(8),
+      element: AlertDigestEmail({
+        firstName: s.buyer,
+        listings: alertListings,
+        total: 8,
+        alerts: [
+          {
+            name: s.alerts[0],
+            count: 5,
+            url: `${site}/acheter?ville=savigny-sur-orge&type=maison`,
+          },
+          { name: s.alerts[1], count: 4, url: `${site}/acheter?ville=epinay-sur-orge&rayon=5` },
+        ],
+        alertsUrl: `${site}/acquereur/alertes`,
+        siteUrl: site,
+      }),
+    },
+    {
+      name: t.names.similarListings,
+      subject: similarListingsSubject("Savigny-sur-Orge"),
+      element: SimilarListingsEmail({
+        firstName: s.buyer,
+        soldTitle: s.title,
+        city: "Savigny-sur-Orge",
+        listings: alertListings.slice(0, 2),
+        searchUrl: `${site}/acheter?ville=savigny-sur-orge`,
+        alertsUrl: `${site}/acquereur/alertes`,
+        siteUrl: site,
+      }),
     },
   ];
 }

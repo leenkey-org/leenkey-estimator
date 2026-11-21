@@ -158,9 +158,8 @@ export const frSearch = {
   },
   empty: {
     title: "Aucun bien ne correspond.",
-    // SPEC 8.4 ends with « ou créez une alerte pour être prévenu » : alerts
-    // come with L3-06, the sentence is completed then.
-    text: "Élargissez le rayon ou le budget.",
+    // SPEC 8.4, whole since the alerts exist (L3-06).
+    text: "Élargissez le rayon ou le budget, ou créez une alerte pour être prévenu.",
     action: "Effacer les filtres",
     noListingTitle: "Aucun bien en vente pour le moment.",
   },

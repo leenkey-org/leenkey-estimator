@@ -228,7 +228,6 @@ export const frNotifications = {
     title: "Notifications",
     lead: "Choisissez les emails que vous recevez. Dans l'application, la cloche vous prévient de tout.",
     legend: "Emails",
-    // The alerts (L3) add theirs with their emails.
     messages: {
       label: "Nouveaux messages",
       hint: "Quand un acquéreur ou un vendeur vous écrit : au plus un email toutes les 15\u00A0minutes par conversation, aucun si vous l'avez déjà lue.",
@@ -236,6 +235,11 @@ export const frNotifications = {
     offers: {
       label: "Offres d'achat",
       hint: "Quand vous recevez une offre sur votre bien, ou quand le vendeur répond à la vôtre.",
+    },
+    // L3-06: the daily digest of the alerts, and the similar listings after a sale.
+    alerts: {
+      label: "Alertes de recherche",
+      hint: "Les nouveaux biens qui correspondent à vos alertes : un email par jour au plus, et des biens similaires quand un bien que vous avez suivi est vendu.",
     },
     always:
       "Les emails sur votre annonce (relecture, mise en ligne, corrections) partent toujours.",

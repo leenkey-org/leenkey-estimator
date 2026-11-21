@@ -16,7 +16,7 @@ export type ChatItem =
       state: ActionState;
       /** Before and after, read when the action waits for the person; null once answered. */
       preview: ActionPreview | null;
-      /** Where a confirmed action leads (prefill_offer: the form of the offer). */
+      /** Where a confirmed action leads (prefill_offer: the form of the offer; create_alert: the alerts). */
       href?: string;
     }
   /** The listings of a search of the assistant (search_listings), as cards. */

@@ -12,6 +12,14 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-21 · L3-06 · PR #116 · Alertes acheteur
+- Ajouté : « Créer une alerte » sur la recherche (à côté de « Filtres » et dans l'état vide, dès qu'il y a un critère) : nom proposé depuis les critères, confirmation avec le lien vers les alertes ; un visiteur se connecte puis revient à sa recherche.
+- Ajouté : page « Mes alertes » (`/acquereur/alertes`) : nom, critères, « Voir les biens », interrupteur actif / en pause, renommer, supprimer avec confirmation, compteur « x / 5 » ; lien depuis l'accueil acquéreur et depuis la cloche vide.
+- Ajouté : envoi quotidien `/api/cron/buyer-alerts` (tâche `buyer-alerts`, `0 5 * * *`) : un email par acquéreur pour toutes ses alertes, 6 biens au plus ; biens similaires après une vente (même ville, ±20 % de prix, ±1 pièce), une fois par acquéreur et par bien vendu, seulement s'il a une alerte active.
+- Ajouté : préférence « Alertes de recherche » dans `/compte/notifications` ; outil `create_alert` de l'assistant acquéreur (confirmation obligatoire) ; les deux emails dans `/design/emails`.
+- Modifié : phrase de l'état vide de la recherche (« …ou créez une alerte pour être prévenu. »).
+- Migration : 20261121100000_buyer_alerts_digest.sql (fonctions `alert_digest_queue` et `alert_similar_queue`, table `alert_similar_sent`, tâche planifiée)
+
 ### 2026-11-21 · Préparation de la production (P-05b) · PR #115
 - Ajouté : `docs/MISE-EN-LIGNE.md` (procédure de la bascule et retour arrière) ; `npm run db:seed:reference:prod` (formules et étapes de vente seulement) ; `STRIPE_TAX_RATE`, facultative : TVA de 20 % incluse, affichée sur le reçu et la facture de Stripe.
 - Corrigé : le parcours E2E du dossier de vente ne dépend plus de l'ordre des tests.

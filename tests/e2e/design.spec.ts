@@ -106,7 +106,12 @@ test.describe("catalogue /design", () => {
     await page.getByRole("link", { name: "Aperçu des emails" }).click();
     await expect(page).toHaveURL("/design/emails");
     await expect(page.getByRole("heading", { level: 1, name: "Emails" })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(19);
+    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(21);
+    // L3-06: the daily digest of the alerts, the similar listings after a sale.
+    await expect(
+      page.getByText("Sujet : 8\u00A0nouveaux biens correspondent à vos alertes"),
+    ).toBeVisible();
+    await expect(page.getByText("Sujet : Des biens similaires à Savigny-sur-Orge")).toBeVisible();
     // L2-07: an offer accepted on a sale with an adviser, for the team.
     await expect(
       page.getByText("Sujet : Offre acceptée sur une vente avec conseiller (LK-0042)"),

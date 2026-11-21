@@ -25,6 +25,7 @@ import { ROUTES } from "@/leenkey/navigation/spaces";
 import { toPropertyCard } from "@/leenkey/search/cards";
 import { BuyerVisitsList } from "@/leenkey/visits/components/buyer-visits-list";
 import { buyerUpcomingVisits } from "@/leenkey/visits/queries";
+import { frAlerts } from "@/lib/i18n/sections/alerts";
 import { frBuyerSpace } from "@/lib/i18n/sections/buyerSpace";
 import { frFavorites } from "@/lib/i18n/sections/favorites";
 import { frOffer } from "@/lib/i18n/sections/offer";
@@ -35,6 +36,7 @@ import { frSpaces } from "@/lib/i18n/sections/spaces";
 
 // The texts this module shows (lib/i18n/sections, P-06).
 const fr = {
+  alerts: frAlerts,
   buyerSpace: frBuyerSpace,
   favorites: frFavorites,
   offer: frOffer,
@@ -148,8 +150,8 @@ function FileBlock({ file, status }: { file: BuyerFile; status: FinancingStatus 
 // the brand panel, the last search of this browser over its bottom edge,
 // the file of the buyer first while it is not complete, their favourites,
 // their offers once they made one (L2-04b), their conversations, the
-// services; a complete file goes to the end. The visits and the alerts (L3)
-// and the assistant (L2-08) come with their tasks.
+// services; a complete file goes to the end. The alerts (L3-06) have their
+// page, linked beside the documents.
 export default async function BuyerHomePage() {
   const profile = await requireProfile();
   // Before the reads: a heart changed since then wins (favorite-store.ts).
@@ -219,12 +221,19 @@ export default async function BuyerHomePage() {
         ) : null}
 
         {/* The documents sellers shared, and the requests of access (L3-04). */}
-        <p>
+        <p className="flex flex-wrap gap-x-6">
           <Link
             href="/acquereur/documents"
             className="inline-flex min-h-11 items-center text-lk-secondary font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
           >
             {fr.saleFile.buyer.homeLink}
+          </Link>
+          {/* The searches kept, their new listings sent by email (L3-06). */}
+          <Link
+            href={ROUTES.buyerAlerts}
+            className="inline-flex min-h-11 items-center text-lk-secondary font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
+          >
+            {fr.alerts.page.homeLink}
           </Link>
         </p>
 

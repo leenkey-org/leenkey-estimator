@@ -378,7 +378,15 @@ test.describe("recherche /acheter (base de seed)", () => {
   test("aucun résultat : état vide, puis « Effacer les filtres »", async ({ page }) => {
     await page.goto("/acheter?budget_max=1");
     await expect(page.getByRole("heading", { name: "Aucun bien ne correspond." })).toBeVisible();
-    await expect(page.getByText("Élargissez le rayon ou le budget.")).toBeVisible();
+    // The sentence of SPEC 8.4, whole since the alerts exist (L3-06).
+    await expect(
+      page.getByText("Élargissez le rayon ou le budget, ou créez une alerte pour être prévenu."),
+    ).toBeVisible();
+    // A visitor signs in first, and comes back to this search.
+    await expect(page.getByRole("link", { name: "Créer une alerte" }).first()).toHaveAttribute(
+      "href",
+      /^\/connexion\?next=/,
+    );
     await page.getByRole("link", { name: "Effacer les filtres" }).click();
     await expect(page).toHaveURL(/\/acheter$/);
     expect(await resultCount(page)).toBeGreaterThan(0);

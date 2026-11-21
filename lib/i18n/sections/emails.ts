@@ -360,6 +360,8 @@ export const frEmails = {
       more: (shown: number) =>
         `Voici les ${shown} plus récents. Les autres vous attendent dans vos recherches.`,
       searches: "Vos recherches",
+      // The name of an alert that a mail client would turn into a link.
+      unnamed: "Votre recherche",
       alertCount: (name: string, count: number) =>
         count > 1 ? `${name} (${count}\u00A0nouveaux biens)` : `${name} (1\u00A0nouveau bien)`,
       actionSearch: "Voir tous les biens",

@@ -1017,12 +1017,16 @@ export const emails = {
     messageSeller: "Nouveau message (vendeur)",
     messagesBuyer: "Nouveaux messages (acquéreur)",
     messageLink: "Nouveau message avec un lien (vendeur)",
+    alertDigest: "Nouveaux biens des alertes, envoi quotidien (acquéreur)",
+    similarListings: "Biens similaires après une vente (acquéreur)",
   },
   sample: {
     seller: "Alice",
     buyer: "Chloé",
     title: "Maison 5 pièces avec jardin",
     reference: "LK-0042",
+    alertTitles: ["Maison 4 pièces proche de la gare", "Maison familiale avec garage"],
+    alerts: ["Savigny-sur-Orge · Maisons", "Épinay-sur-Orge · 5 km"],
     place: "Savigny-sur-Orge (91600)",
     reason:
       "La description est trop courte pour être publiée : précisez l'étage, l'exposition, les pièces et les charges, puis renvoyez l'annonce.",

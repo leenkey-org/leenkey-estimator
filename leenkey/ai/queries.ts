@@ -2,6 +2,7 @@ import "server-only";
 import { displayItems } from "@/core/ai/conversation";
 import { lastConversation, readLog } from "@/core/ai/log";
 import type { AiContext } from "@/core/ai/tools/types";
+import { ROUTES } from "@/leenkey/navigation/spaces";
 import { offerFormPath } from "@/leenkey/offers/paths";
 import { createClient } from "@/lib/supabase/server";
 import { actionPreview } from "./previews";
@@ -17,8 +18,12 @@ import type { ActionState, AssistantConversation, ChatItem } from "./types";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Where a confirmed action leads: the form of the offer prepared (prefill_offer). */
+/**
+ * Where a confirmed action leads: the form of the offer prepared
+ * (prefill_offer), the alerts of the buyer (create_alert, L3-06).
+ */
 export function actionHref(name: string, input: Record<string, unknown>): string | undefined {
+  if (name === "create_alert") return ROUTES.buyerAlerts;
   if (name !== "prefill_offer") return undefined;
   const listingId = input.listingId;
   return typeof listingId === "string" && UUID.test(listingId)
@@ -102,7 +107,7 @@ export async function assistantConversation(
  * The output of a tool that writes, when nothing was written: { updated:
  * false } (the listing), { sent: false } (contact_advisor, create_case),
  * { prefilled: false } (prefill_offer, L2-06), { invited: false }
- * (propose_visit_slot, L3-02).
+ * (propose_visit_slot, L3-02), { created: false } (create_alert, L3-06).
  */
 export function isFailure(result: unknown): boolean {
   if (typeof result !== "object" || result === null) return false;
@@ -110,6 +115,7 @@ export function isFailure(result: unknown): boolean {
     ("updated" in result && result.updated === false) ||
     ("sent" in result && result.sent === false) ||
     ("prefilled" in result && result.prefilled === false) ||
-    ("invited" in result && result.invited === false)
+    ("invited" in result && result.invited === false) ||
+    ("created" in result && result.created === false)
   );
 }
