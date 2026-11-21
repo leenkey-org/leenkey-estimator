@@ -95,6 +95,40 @@ export type Database = {
           },
         ]
       }
+      alert_similar_sent: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          listing_id: string
+          listings_count: number
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          listing_id: string
+          listings_count: number
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          listing_id?: string
+          listings_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_similar_sent_buyer_id_fkey"
+            columns: ["buyer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_similar_sent_listing_id_fkey"
+            columns: ["listing_id"]
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerts: {
         Row: {
           active: boolean
@@ -2958,6 +2992,32 @@ export type Database = {
       ai_visitor_server: {
         Args: { p_key: string }
         Returns: undefined
+      }
+      alert_digest_queue: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          buyer_id: string
+          alert_id: string
+          criteria: Json
+          first_name: string
+          email: string
+          since: string
+          last_sent_at: string
+        }[]
+      }
+      alert_similar_queue: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          first_name: string
+          listing_id: string
+          title: string
+          price_cents: number
+          city: string
+          email: string
+          buyer_id: string
+          rooms: number
+        }[]
       }
       audit: {
         Args: {
