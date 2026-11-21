@@ -25,7 +25,7 @@ export async function updateNotificationPreferences(
   const profile = await getProfile();
   if (!profile) return { ok: false, error: "auth" };
   const supabase = await createClient();
-  // The preferences the form does not show (offers, alerts) stay as they are.
+  // A preference the form does not send stays as it is.
   const current = await notificationPreferences(supabase, profile.id);
   if (!current) return { ok: false, error: "unavailable" };
   const next = { ...current, ...parsed.data };

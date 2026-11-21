@@ -65,8 +65,10 @@ export const frNav = {
     emptySeller:
       "Nous vous prévenons ici des messages, des visites et des offres reçus pour votre bien.",
     completeListing: "Compléter mon annonce",
+    createAlert: "Créer une alerte",
+    // The new listings of an alert have no notification here (SPEC-V2 10): an email.
     emptyBuyer:
-      "Nous vous prévenons ici des réponses des vendeurs et des nouveaux biens de vos recherches.",
+      "Nous vous prévenons ici des réponses des vendeurs. Les nouveaux biens de vos alertes vous arrivent par email.",
     emptyAdmin: "Nous vous prévenons ici des annonces envoyées en relecture.",
     reviewListings: "Voir les annonces à valider",
   },

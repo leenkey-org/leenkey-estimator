@@ -39,6 +39,8 @@ export const ROUTES = {
   accountEmail: "/compte/email",
   accountPassword: "/compte/mot-de-passe",
   notificationSettings: "/compte/notifications",
+  /** The alerts of a buyer (L3-06). */
+  buyerAlerts: "/acquereur/alertes",
   /** The data of the account, as a JSON file (L2-10, route handler). */
   accountExport: "/compte/export",
   accountDeletion: "/compte/supprimer",

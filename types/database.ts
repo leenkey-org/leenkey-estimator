@@ -95,6 +95,40 @@ export type Database = {
           },
         ]
       }
+      alert_similar_sent: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          listing_id: string
+          listings_count: number
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          listing_id: string
+          listings_count: number
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          listing_id?: string
+          listings_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_similar_sent_buyer_id_fkey"
+            columns: ["buyer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_similar_sent_listing_id_fkey"
+            columns: ["listing_id"]
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerts: {
         Row: {
           active: boolean
@@ -2958,6 +2992,40 @@ export type Database = {
       ai_visitor_server: {
         Args: { p_key: string }
         Returns: undefined
+      }
+      alert_digest_claim: {
+        Args: { p_alert_ids: string[]; p_claimed_at: string; p_read: string[] }
+        Returns: boolean
+      }
+      alert_digest_queue: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          buyer_id: string
+          name: string
+          criteria: Json
+          last_sent_at: string
+          since: string
+          first_name: string
+          email: string
+          alert_id: string
+        }[]
+      }
+      alert_digest_release: {
+        Args: { p_alert_ids: string[]; p_read: string[]; p_claimed_at: string }
+        Returns: number
+      }
+      alert_similar_queue: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          title: string
+          price_cents: number
+          rooms: number
+          first_name: string
+          email: string
+          buyer_id: string
+          listing_id: string
+          city: string
+        }[]
       }
       audit: {
         Args: {

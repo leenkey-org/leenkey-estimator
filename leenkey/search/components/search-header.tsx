@@ -6,6 +6,7 @@ import { FilterBar } from "./filter-bar";
 import { LocationField } from "./location-field";
 import { SearchCategories } from "./search-categories";
 import { useSearch } from "./search-context";
+import { CreateAlertButton } from "@/leenkey/alerts/components/create-alert-button";
 import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
 import { countActiveFilters } from "@/lib/validations/search";
@@ -35,8 +36,10 @@ function Count({ value }: { value: number }) {
  * rounded bar, « Où ? » then type, budget and rooms, each opening its panel,
  * and « Filtres » for the rest. Under them at every width, the row of
  * categories; on a phone, the active filters the categories do not show.
+ * After « Filtres », « Créer une alerte » once the search has a criterion
+ * (L3-06): a round button, its label from 1 280 px.
  */
-export function SearchHeader() {
+export function SearchHeader({ signedIn }: { signedIn: boolean }) {
   const { query, openFilters, applyFilters } = useSearch();
   const active = countActiveFilters(query.filters);
   return (
@@ -73,6 +76,7 @@ export function SearchHeader() {
                 is read in its name « Filtres, 2 filtres actifs » (WCAG 2.5.3). */}{" "}
             <Count value={active} />
           </button>
+          <CreateAlertButton signedIn={signedIn} display="bar" />
         </div>
         <SearchCategories
           filters={query.filters}

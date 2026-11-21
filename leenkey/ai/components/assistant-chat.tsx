@@ -54,6 +54,20 @@ function ActionContent({ preview, unknown }: { preview: ActionPreview | null; un
       </>
     );
   }
+  if (preview.kind === "alert_creation") {
+    const alert = t.action.alert;
+    return (
+      <>
+        <ChangeBlock label={alert.name} tone="before">
+          {preview.name}
+        </ChangeBlock>
+        <ChangeBlock label={alert.criteria} tone="after">
+          {preview.criteria.join(" · ")}
+        </ChangeBlock>
+        <p className="text-lk-caption text-lk-ink-3">{alert.note}</p>
+      </>
+    );
+  }
   if (preview.kind === "offer_prefill") {
     const offer = t.action.offer;
     return (
@@ -525,14 +539,20 @@ export function AssistantChat({
                     ? t.action.offer
                     : item.name === "propose_visit_slot"
                       ? t.action.visit
-                      : null;
+                      : item.name === "create_alert"
+                        ? t.action.alert
+                        : null;
             const href =
-              item.name === "prefill_offer" && item.state === "confirmed"
-                ? (item.href ??
-                  (item.preview?.kind === "offer_prefill"
-                    ? offerFormPath(item.preview.listingId)
-                    : undefined))
-                : undefined;
+              item.state !== "confirmed"
+                ? undefined
+                : item.name === "prefill_offer"
+                  ? (item.href ??
+                    (item.preview?.kind === "offer_prefill"
+                      ? offerFormPath(item.preview.listingId)
+                      : undefined))
+                  : item.name === "create_alert"
+                    ? ROUTES.buyerAlerts
+                    : undefined;
             const title = handoff
               ? typeof handoff.title === "string"
                 ? handoff.title
@@ -555,15 +575,20 @@ export function AssistantChat({
                 onConfirm={() => void answer(item.toolCallId, true)}
                 onCancel={() => void answer(item.toolCallId, false)}
                 // A price is never confirmed unseen (the listing went off line since).
-                // Nor an invitation, without who is invited and on which slots.
+                // Nor an invitation, without who is invited and on which slots; nor an
+                // alert, without its criteria.
                 confirmDisabled={
-                  (item.name === "prefill_offer" || item.name === "propose_visit_slot") &&
+                  (item.name === "prefill_offer" ||
+                    item.name === "propose_visit_slot" ||
+                    item.name === "create_alert") &&
                   item.preview === null
                 }
                 after={
                   href ? (
                     <Button asChild variant="secondary" size="sm">
-                      <Link href={href}>{t.action.offer.open}</Link>
+                      <Link href={href}>
+                        {item.name === "create_alert" ? t.action.alert.open : t.action.offer.open}
+                      </Link>
                     </Button>
                   ) : undefined
                 }

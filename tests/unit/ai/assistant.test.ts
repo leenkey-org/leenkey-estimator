@@ -628,7 +628,13 @@ describe("the tools of the seller", () => {
       toolsFor("buyer")
         .map((item) => item.name)
         .sort(),
-    ).toEqual(["create_case", "get_listing_public", "prefill_offer", "search_listings"]);
+    ).toEqual([
+      "create_alert",
+      "create_case",
+      "get_listing_public",
+      "prefill_offer",
+      "search_listings",
+    ]);
     expect(toolsFor("admin")).toEqual([]);
     for (const item of ALL_TOOLS) {
       const schema = item.inputSchema;
@@ -647,6 +653,7 @@ describe("the tools of the seller", () => {
         item.name.startsWith("update_") ||
         item.name === "contact_advisor" ||
         item.name === "create_case" ||
+        item.name === "create_alert" ||
         item.name === "prefill_offer" ||
         item.name === "propose_visit_slot";
       expect(item.requiresConfirmation, item.name).toBe(writes);
