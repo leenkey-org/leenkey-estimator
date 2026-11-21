@@ -21,6 +21,12 @@ export type OutgoingEmail = {
   replyTo?: string;
   /** Files sent with it (a calendar file): their name and their content in base64. */
   attachments?: readonly EmailAttachment[];
+  /**
+   * Names this email for Resend (header « Idempotency-Key », kept 24 hours): a
+   * request sent again with the same key, after an answer lost on the way,
+   * does not leave twice. ASCII, 256 characters at most.
+   */
+  idempotencyKey?: string;
 };
 
 export type EmailAttachment = { filename: string; content: string };
@@ -56,7 +62,11 @@ export async function sendEmail(email: OutgoingEmail): Promise<EmailDelivery> {
   try {
     const response = await fetch(RESEND_URL, {
       method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        ...(email.idempotencyKey ? { "Idempotency-Key": email.idempotencyKey } : {}),
+      },
       body: JSON.stringify({
         from: process.env.EMAIL_FROM || DEFAULT_FROM,
         to: route.to,

@@ -26,7 +26,9 @@ export const frAlerts = {
     manage: "Gérer mes alertes",
     errors: {
       auth: "Votre session a expiré. Reconnectez-vous.",
-      invalid: "Donnez un nom à votre alerte (80 caractères au plus).",
+      // The name or the criteria: the action answers « invalid » for both.
+      invalid: (max: number) =>
+        `Vérifiez le nom de l'alerte (${max} caractères au plus) et les critères de votre recherche.`,
       limit: (max: number) =>
         `Vous avez déjà ${max} alertes. Supprimez-en une depuis « Mes alertes » pour en créer une nouvelle.`,
       unavailable: "Ça n'a pas fonctionné. Réessayez.",
@@ -54,7 +56,6 @@ export const frAlerts = {
     criteriaUnknown: "Critères à redéfinir",
     see: "Voir les biens",
     seeAbout: (name: string) => `Voir les biens de l'alerte ${name}`,
-    activeAbout: (name: string) => `Alerte active : ${name}`,
     on: "Active",
     off: "En pause",
     rename: "Renommer",
@@ -70,7 +71,7 @@ export const frAlerts = {
     deleteConfirm: "Supprimer l'alerte",
     errors: {
       auth: "Votre session a expiré. Reconnectez-vous.",
-      invalid: "Donnez un nom à votre alerte (80 caractères au plus).",
+      invalid: (max: number) => `Donnez un nom à votre alerte (${max} caractères au plus).`,
       not_found: "Cette alerte n'existe plus. Rechargez la page.",
       unavailable: "Ça n'a pas fonctionné. Réessayez.",
     },

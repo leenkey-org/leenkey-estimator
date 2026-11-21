@@ -13,17 +13,30 @@ export type SwitchProps = Omit<ComponentProps<"button">, "role" | "onChange" | "
 /**
  * Switch (docs/DESIGN.md 12 « lignes d'alerte avec interrupteur », L3-06): a
  * button of role switch, 44 × 24 px with a touch target of 44 px, blue when
- * on. Its state is read by its role, never by its colour alone: the caller
- * writes it beside (« Active », « En pause »).
+ * on. Its name is what it switches (the name of an alert); its state is read
+ * by its role, never by its colour alone: the caller writes it beside
+ * (« Active », « En pause »).
  */
-export function Switch({ checked, onCheckedChange, className, disabled, ...props }: SwitchProps) {
+export function Switch({
+  checked,
+  onCheckedChange,
+  onClick,
+  className,
+  disabled,
+  ...props
+}: SwitchProps) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      {...props}
       disabled={disabled}
-      onClick={() => onCheckedChange(!checked)}
+      // The click of the caller first; it may prevent the change.
+      onClick={(event) => {
+        onClick?.(event);
+        if (!event.defaultPrevented) onCheckedChange(!checked);
+      }}
       className={cn(
         "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-140 ease-out-lk",
         // 44 px touch target (DESIGN.md 15).
@@ -33,7 +46,6 @@ export function Switch({ checked, onCheckedChange, className, disabled, ...props
         checked ? "bg-lk-blue" : "bg-lk-ink-3",
         className,
       )}
-      {...props}
     >
       <span
         aria-hidden="true"

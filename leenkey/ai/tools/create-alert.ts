@@ -117,7 +117,18 @@ export const createAlertTool: AiTool<Input, Output, AlertCreationPreview> = {
     });
     // Answered meanwhile (another tab at the same moment): one alert, the one of the log.
     if (logged === "duplicate") {
-      await supabase.from("alerts").delete().eq("id", data.id);
+      const removed = await supabase
+        .from("alerts")
+        .delete()
+        .eq("id", data.id)
+        .eq("buyer_id", ctx.profileId);
+      if (removed.error) {
+        console.error("[ai] duplicate alert not removed", {
+          user_id: ctx.profileId,
+          entity_id: data.id,
+          code: removed.error.code,
+        });
+      }
       return { created: false, answered: true };
     }
     if (logged === "failed") {

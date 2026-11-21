@@ -2993,30 +2993,38 @@ export type Database = {
         Args: { p_key: string }
         Returns: undefined
       }
+      alert_digest_claim: {
+        Args: { p_alert_ids: string[]; p_claimed_at: string; p_read: string[] }
+        Returns: boolean
+      }
       alert_digest_queue: {
         Args: Record<PropertyKey, never>
         Returns: {
-          name: string
           buyer_id: string
-          alert_id: string
+          name: string
           criteria: Json
+          last_sent_at: string
+          since: string
           first_name: string
           email: string
-          since: string
-          last_sent_at: string
+          alert_id: string
         }[]
+      }
+      alert_digest_release: {
+        Args: { p_alert_ids: string[]; p_read: string[]; p_claimed_at: string }
+        Returns: number
       }
       alert_similar_queue: {
         Args: Record<PropertyKey, never>
         Returns: {
-          first_name: string
-          listing_id: string
           title: string
           price_cents: number
-          city: string
+          rooms: number
+          first_name: string
           email: string
           buyer_id: string
-          rooms: number
+          listing_id: string
+          city: string
         }[]
       }
       audit: {

@@ -16,7 +16,8 @@ const t = fr.emails.alerts;
 export type AlertEmailListing = {
   /** Null when the words of the seller cannot go in an email (a link). */
   title: string | null;
-  city: string;
+  /** Null when its name cannot go in an email. */
+  city: string | null;
   /** « 350 000 € » */
   price: string;
   /** « 82 m² · 4 pièces » */
@@ -119,14 +120,14 @@ export type SimilarListingsEmailProps = {
   firstName: string | null;
   /** The listing sold: its title (null when it cannot go in an email) and its commune. */
   soldTitle: string | null;
-  city: string;
+  city: string | null;
   listings: readonly AlertEmailListing[];
   searchUrl: string;
   alertsUrl: string;
   siteUrl: string;
 };
 
-export const similarListingsSubject = (city: string) => t.similar.subject(city);
+export const similarListingsSubject = (city: string | null) => t.similar.subject(city);
 
 export function SimilarListingsEmail({
   firstName,

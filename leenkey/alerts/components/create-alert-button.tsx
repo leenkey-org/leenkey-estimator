@@ -96,7 +96,13 @@ export function CreateAlertButton({
       const result = await createAlert({ name, criteria: query.filters }).catch(() => null);
       if (result?.ok) return setCreated(result.data.name);
       const code = result?.error ?? "unavailable";
-      setError(code === "limit" ? t.errors.limit(ALERTS_MAX) : t.errors[code]);
+      setError(
+        code === "limit"
+          ? t.errors.limit(ALERTS_MAX)
+          : code === "invalid"
+            ? t.errors.invalid(ALERT_NAME_MAX)
+            : t.errors[code],
+      );
     });
   };
 

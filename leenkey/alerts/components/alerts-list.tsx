@@ -19,6 +19,12 @@ const fr = { alerts: frAlerts } as const;
 const t = fr.alerts.page;
 
 type Asked = { kind: "rename" | "delete"; alert: Alert };
+type ErrorCode = keyof typeof t.errors;
+
+const errorText = (code: ErrorCode | undefined) => {
+  const text = t.errors[code ?? "unavailable"];
+  return typeof text === "function" ? text(ALERT_NAME_MAX) : text;
+};
 
 /**
  * The alerts of a buyer (L3-06, SPEC-V2 16, docs/DESIGN.md 12 « lignes
@@ -35,15 +41,19 @@ export function AlertsList({ alerts }: { alerts: Alert[] }) {
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [working, start] = useTransition();
+  // The alert whose switch is being saved: it waits for the answer.
+  const [saving, setSaving] = useState<string | null>(null);
 
   const toggle = (alert: Alert, next: boolean) => {
     setError(null);
     setActive((current) => ({ ...current, [alert.id]: next }));
+    setSaving(alert.id);
     start(async () => {
       const result = await setAlertActive({ id: alert.id, active: next }).catch(() => null);
+      setSaving(null);
       if (!result?.ok) {
         setActive((current) => ({ ...current, [alert.id]: !next }));
-        setError(t.errors[result?.error ?? "unavailable"]);
+        setError(errorText(result?.error));
         return;
       }
       router.refresh();
@@ -59,7 +69,7 @@ export function AlertsList({ alerts }: { alerts: Alert[] }) {
           ? renameAlert({ id: asked.alert.id, name })
           : deleteAlert(asked.alert.id)
       ).catch(() => null);
-      if (!result?.ok) return setDialogError(t.errors[result?.error ?? "unavailable"]);
+      if (!result?.ok) return setDialogError(errorText(result?.error));
       setAsked(null);
       router.refresh();
     });
@@ -91,7 +101,9 @@ export function AlertsList({ alerts }: { alerts: Alert[] }) {
                 </div>
                 <Switch
                   checked={on}
-                  aria-label={t.activeAbout(alert.name)}
+                  // Its name is the alert it switches; « Active » or « En pause » beside.
+                  aria-label={alert.name}
+                  disabled={saving === alert.id}
                   onCheckedChange={(next) => toggle(alert, next)}
                   className="mt-0.5"
                 />

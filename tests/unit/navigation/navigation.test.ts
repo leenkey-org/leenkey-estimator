@@ -398,9 +398,9 @@ describe("bell and account menu", () => {
       emptyAction: { href: "/vendeur/dossier", label: "Compléter mon annonce" },
       settingsHref: "/compte/notifications",
     });
-    // « Créer une alerte » (DESIGN.md 10.7, L3-06): the alerts, created from a search.
+    // « Créer une alerte » (DESIGN.md 10.7, L3-06): an alert is created from a search.
     expect(notificationBell("buyer").emptyAction).toEqual({
-      href: "/acquereur/alertes",
+      href: "/acheter",
       label: "Créer une alerte",
     });
     expect(notificationBell("buyer").emptyText).toBe(fr.nav.notifications.emptyBuyer);
