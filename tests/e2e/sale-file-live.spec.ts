@@ -132,9 +132,12 @@ test("dossier de vente : dépôt, non concerné, demande d'accès, partage, ouve
     ).toBeVisible();
     await expect(buyer.getByRole("link", { name: "Ouvrir DPE" })).toHaveCount(0);
     await expectNoSeriousViolation(buyer);
+    // The property of this test by its title: in the full suite, buyer_c is
+    // in contact with other properties too.
     await buyer
-      .getByRole("button", { name: /^Demander l'accès aux documents/ })
-      .first()
+      .getByRole("button", {
+        name: "Demander l'accès aux documents : Appartement 3 pièces avec balcon, proche gare",
+      })
       .click();
     await expect(buyer.getByText("Votre demande est envoyée au vendeur.")).toBeVisible();
   });
