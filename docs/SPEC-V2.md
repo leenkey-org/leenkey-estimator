@@ -1451,6 +1451,7 @@ Fonction unique `notify(profileId, type, payload)` dans `core/notifications/`. E
 | `visit.booked` | oui | oui | — |
 | `visit.reminder` | oui (L3-02, `DECISIONS.md` 2026-11-18) | oui | J-1 à partir de 8 h, heure de Paris |
 | `visit.cancelled` | oui | oui | Ajouté en L3-02 : à la partie qui n'a pas annulé |
+| `visit.feedback_requested` | oui | oui | Ajouté en L3-03 : le lendemain d'une visite qui a eu lieu, une fois, à l'acquéreur et au vendeur |
 | `document.shared` | oui | oui | Un email par bien et par jour |
 | `document.access_requested` | oui | oui | — |
 | `case.created` (admin) | oui | oui | — |
@@ -1858,6 +1859,8 @@ Personne ne réserve une visite sans y avoir été invité par le vendeur. Le ve
 
 > **Mise en œuvre (L3-02, `DECISIONS.md` 2026-11-18).** Onglet « Visites » de la fiche du bien (`/vendeur/biens/[id]/visites`) ; invitation depuis le bouton calendrier de la conversation, la liste des contacts ou l'assistant ; message `visit_invite` avec « Réserver un créneau » (acquéreur) ou « Gérer les créneaux » (vendeur) ; page de la visite `/visites/[id]` et son fichier `/visites/[id]/ics` ; un créneau se réserve au plus tard 2 h avant son début ; `visit.cancelled` prévient l'autre partie. Les retours de visite (J+1) : L3-03.
 
+> **Mise en œuvre (L3-03, `DECISIONS.md` 2026-11-21).** Le lendemain d'une visite qui a eu lieu (non annulée, créneau terminé), l'acquéreur et le vendeur sont sollicités une fois (`visit.feedback_requested`, cloche et email, tâche `visit-feedback` de `pg_cron`). Sur `/visites/[id]`, pendant 7 jours après la visite : l'acquéreur donne son intérêt de 1 à 5 et un commentaire ; le vendeur les lit tels quels (page de la visite, visites passées de l'onglet « Visites ») et écrit une note que l'acquéreur ne lit jamais (`visit_seller_note`, droits par colonne). Ni moyenne ni classement.
+
 ### Adresse
 
 L'adresse exacte n'est communiquée qu'à l'acquéreur qui a une visite confirmée : dans l'email de confirmation et sur la page de la visite. Jamais ailleurs.
@@ -2044,7 +2047,7 @@ Voir `CLAUDE.md` section 13. Détail :
 | `/api/cron/expire-offers` | `0 5 * * *` | Offres `submitted`/`viewed` dont `validity_until` est passée → `expired`. Depuis L2-04b (`DECISIONS.md` 2026-11-13) : tâche `expire-offers` de `pg_cron`, en SQL (`offers_expire_due`), sans route, **toutes les heures** (`4 * * * *`) |
 | `/api/cron/buyer-alerts` | `0,10,20,30 5 * * *` | Digest d'alertes (7 h Paris en été, 6 h en hiver) et biens similaires après une vente (L3-06) ; un passage envoie les alertes pendant 25 secondes au plus, puis les biens similaires pendant 15 secondes ; les acquéreurs restants gardent leur date et passent au passage suivant |
 | `/api/cron/visit-reminders` | `0 6 * * *` | Rappels J-1 |
-| `/api/cron/visit-feedback` | `0 8 * * *` | Demandes de retour J+1 |
+| `/api/cron/visit-feedback` | `0 8 * * *` | Demandes de retour J+1. Depuis L3-03 (`DECISIONS.md` 2026-11-21) : tâche `visit-feedback` de `pg_cron`, en SQL (`visits_ask_feedback`), sans route |
 | `/api/cron/send-notification-emails` | `*/5 * * * *` | Envoi des emails de notification en attente (regroupement) |
 | `/api/cron/listing-summaries` | `*/5 * * * *` | Résumés d'annonce demandés (L2-05) : 6 annonces au plus par passage, un appel du modèle rapide chacune |
 | `/api/cron/anonymize-deleted` | `0 2 * * 0` | Anonymisation des comptes supprimés depuis plus de 30 jours |

@@ -1,14 +1,17 @@
 import "server-only";
 import type { FinancingStatus } from "@/components/shared/financing-badge";
 import { createClient } from "@/lib/supabase/server";
-import { VISIT_TOKEN } from "@/lib/validations/visit";
+import { VISIT_TOKEN, type VisitInterest } from "@/lib/validations/visit";
 import type { Database } from "@/types/database";
+import { interestOf } from "./feedback";
 
 // Visits as their parties read them (L3-02, SPEC-V2 14), with the session of
 // the user (RLS): the seller the slots, the invitations and the visits of
 // their property; the buyer their own visits and, with the token of an
 // invitation, the free slots. The exact address only through visit_address
-// (the buyer of a confirmed visit, the seller).
+// (the buyer of a confirmed visit, the seller). The columns of visits are
+// named: the note of the seller is not readable by a buyer (L3-03), a read
+// of every column is refused.
 
 export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavailable" };
 export type VisitStatus = Database["public"]["Enums"]["visit_status"];
@@ -30,6 +33,9 @@ export type SellerVisit = {
   buyerId: string;
   buyerFirstName: string | null;
   financingStatus: FinancingStatus;
+  /** What the buyer said after the visit (L3-03), as given: 1 to 5, a comment. */
+  buyerInterest: VisitInterest | null;
+  buyerFeedback: string | null;
 };
 
 export type Contact = {
@@ -58,7 +64,9 @@ export async function sellerVisits(propertyId: string): Promise<QueryResult<Sell
       .order("starts_at"),
     supabase
       .from("visits")
-      .select("id, status, buyer_id, slot_id, slot:visit_slots!inner(starts_at, ends_at)")
+      .select(
+        "id, status, buyer_id, slot_id, buyer_interest, buyer_feedback, slot:visit_slots!inner(starts_at, ends_at)",
+      )
       .eq("property_id", propertyId)
       .order("created_at", { ascending: false })
       .limit(200),
@@ -88,6 +96,8 @@ export async function sellerVisits(propertyId: string): Promise<QueryResult<Sell
     buyerId: row.buyer_id,
     buyerFirstName: buyerOf.get(row.buyer_id)?.first_name ?? null,
     financingStatus: buyerOf.get(row.buyer_id)?.financing_status ?? "not_provided",
+    buyerInterest: interestOf(row.buyer_interest),
+    buyerFeedback: row.buyer_feedback,
   }));
   const upcoming = visitRows.filter(
     (visit) => visit.status === "confirmed" && Date.parse(visit.startsAt) > Date.now(),
@@ -201,6 +211,11 @@ export type VisitDetail = {
   listing: VisitListing | null;
   /** The exact address: the buyer of a confirmed visit, the seller. */
   address: { line: string; postalCode: string; city: string } | null;
+  /** What the buyer said after the visit (L3-03): both parties read it. */
+  buyerInterest: VisitInterest | null;
+  buyerFeedback: string | null;
+  /** The note of the seller: always null for the buyer (visit_seller_note). */
+  sellerNote: string | null;
 };
 
 /** A visit as one of its two parties reads it; null when it is not theirs. */
@@ -211,7 +226,9 @@ export async function visitDetail(
   const supabase = await createClient();
   const { data: visit, error } = await supabase
     .from("visits")
-    .select("id, property_id, buyer_id, status, slot:visit_slots!inner(starts_at, ends_at)")
+    .select(
+      "id, property_id, buyer_id, status, buyer_interest, buyer_feedback, slot:visit_slots!inner(starts_at, ends_at)",
+    )
     .eq("id", visitId)
     .maybeSingle();
   if (error) {
@@ -224,12 +241,23 @@ export async function visitDetail(
   }
   if (!visit) return { ok: true, data: null };
   const role = visit.buyer_id === profileId ? "buyer" : "seller";
-  const [address, listing] = await Promise.all([
+  const [address, listing, note] = await Promise.all([
     role === "seller" || visit.status === "confirmed"
       ? supabase.rpc("visit_address", { p_visit: visitId })
       : Promise.resolve({ data: null, error: null }),
     supabase.rpc("visit_listing", { p_property: visit.property_id }),
+    role === "seller"
+      ? supabase.rpc("visit_seller_note", { p_visit: visitId })
+      : Promise.resolve({ data: null, error: null }),
   ]);
+  if (note.error) {
+    console.error("[visits] seller note read failed", {
+      user_id: profileId,
+      entity_id: visitId,
+      code: note.error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
   const place = address.data?.[0] ?? null;
   // Neither its buyer nor the seller of the property (an admin reads the row): not their page.
   if (role === "seller" && !listing.data?.[0]) return { ok: true, data: null };
@@ -246,6 +274,9 @@ export async function visitDetail(
       address: place
         ? { line: place.address_line, postalCode: place.postal_code, city: place.city }
         : null,
+      buyerInterest: interestOf(visit.buyer_interest),
+      buyerFeedback: visit.buyer_feedback,
+      sellerNote: note.data ?? null,
     },
   };
 }

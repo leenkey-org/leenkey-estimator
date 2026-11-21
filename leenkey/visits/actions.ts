@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { getProfile } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { visitBookSchema, visitInviteSchema, visitSlotSchema } from "@/lib/validations/visit";
+import {
+  visitBookSchema,
+  visitBuyerFeedbackSchema,
+  visitInviteSchema,
+  visitSellerFeedbackSchema,
+  visitSlotSchema,
+} from "@/lib/validations/visit";
 import { parisInstant } from "./dates";
 
 // What a seller and a buyer do about a visit (L3-02, SPEC-V2 14). The
@@ -234,5 +240,68 @@ export async function cancelVisit(visitId: string, propertyId?: string): Promise
     return { ok: false, error: "unavailable" };
   }
   revalidateVisits(propertyId && UUID.test(propertyId) ? propertyId : undefined);
+  return { ok: true, data: null };
+}
+
+export type FeedbackError = "auth" | "invalid" | "notYet" | "closed" | "unavailable";
+export type FeedbackResult = { ok: true; data: null } | { ok: false; error: FeedbackError };
+
+/** What visit_feedback_buyer and visit_feedback_seller refuse, in the words of the form. */
+function feedbackError(
+  error: { code: string; message: string },
+  context: { user_id: string; entity_id: string },
+): FeedbackError {
+  if (error.code === "22023") {
+    return error.message.includes("did not take place")
+      ? "notYet"
+      : error.message.includes("too late")
+        ? "closed"
+        : "invalid";
+  }
+  if (error.code !== "42501") {
+    console.error("[visits] feedback not saved", { ...context, code: error.code });
+  }
+  return "unavailable";
+}
+
+/**
+ * The feedback of the buyer after their visit (L3-03, SPEC-V2 14): an interest
+ * from 1 to 5 and a comment, written or changed for 7 days after the visit.
+ */
+export async function giveBuyerFeedback(input: unknown): Promise<FeedbackResult> {
+  const profile = await getProfile();
+  if (!profile) return { ok: false, error: "auth" };
+  const parsed = visitBuyerFeedbackSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const { visitId, interest, comment } = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("visit_feedback_buyer", {
+    p_visit: visitId,
+    p_interest: interest,
+    p_comment: comment,
+  });
+  if (error) {
+    return { ok: false, error: feedbackError(error, { user_id: profile.id, entity_id: visitId }) };
+  }
+  revalidateVisits();
+  return { ok: true, data: null };
+}
+
+/** The note of the seller about a visit of their property: never shown to the buyer. */
+export async function giveSellerFeedback(input: unknown): Promise<FeedbackResult> {
+  const profile = await getProfile();
+  if (!profile) return { ok: false, error: "auth" };
+  const parsed = visitSellerFeedbackSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const { visitId, comment } = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("visit_feedback_seller", {
+    p_visit: visitId,
+    p_comment: comment,
+  });
+  if (error) {
+    return { ok: false, error: feedbackError(error, { user_id: profile.id, entity_id: visitId }) };
+  }
+  revalidateVisits();
   return { ok: true, data: null };
 }

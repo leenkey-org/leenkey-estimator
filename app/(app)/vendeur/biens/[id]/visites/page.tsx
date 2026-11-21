@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import { FinancingBadge, FinancingMention } from "@/components/shared/financing-badge";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { propertyForSheet } from "@/leenkey/properties/load";
+import Link from "next/link";
+import { BuyerFeedback } from "@/leenkey/visits/components/buyer-feedback";
 import { CancelVisitButton } from "@/leenkey/visits/components/cancel-visit-button";
 import { InviteButton, RemoveSlotButton } from "@/leenkey/visits/components/seller-buttons";
 import { SlotForm } from "@/leenkey/visits/components/slot-form";
 import { VisitStatusBadge } from "@/leenkey/visits/components/visit-status-badge";
 import { parisDayKey, visitDateTime, visitRange } from "@/leenkey/visits/dates";
+import { visitTookPlace } from "@/leenkey/visits/feedback";
 import { sellerVisits } from "@/leenkey/visits/queries";
 import { formatDate } from "@/lib/format";
 import { frVisits } from "@/lib/i18n/sections/visits";
@@ -26,7 +29,9 @@ const heading = "text-lk-h3 font-bold text-wide text-lk-ink";
 // L3-02: the tab « Visites » of a property (SPEC-V2 14): the slots of the
 // seller (one at a time, no series), the buyers they may invite (those who
 // wrote or sent an offer, with their financing status), the visits to come
-// and past. Nobody books without an invitation.
+// and past. Nobody books without an invitation. L3-03: a past visit shows
+// what its buyer said of it, as given (« Intérêt 4 / 5 » and the comment, or
+// « Retour non donné »), and opens its page, where the seller writes a note.
 export default async function PropertyVisitsPage({ params }: Props) {
   const { id } = await params;
   const property = await propertyForSheet(id);
@@ -184,20 +189,39 @@ export default async function PropertyVisitsPage({ params }: Props) {
             {t.visits.past}
           </h3>
           <ul className={`${card} flex flex-col divide-y divide-lk-line py-1`}>
-            {others.map((visit) => (
-              <li key={visit.id} className="flex min-h-13 items-center justify-between gap-3 py-2">
-                <div className="flex min-w-0 flex-col">
-                  <span className="text-lk-secondary font-medium text-lk-ink first-letter:uppercase">
-                    {visitDateTime(visit.startsAt, now)}
-                  </span>
-                  <span className="text-lk-caption text-lk-ink-3">
-                    {t.visits.with(visit.buyerFirstName)}
-                  </span>
-                  <FinancingBadge status={visit.financingStatus} className="mt-1 self-start" />
-                </div>
-                <VisitStatusBadge status={visit.status} past={new Date(visit.startsAt) <= now} />
-              </li>
-            ))}
+            {others.map((visit) => {
+              const tookPlace = visitTookPlace(visit.status, visit.endsAt, now);
+              return (
+                <li key={visit.id} className="flex min-h-13 items-start justify-between gap-3 py-3">
+                  <div className="flex min-w-0 flex-col">
+                    <span className="text-lk-secondary font-medium text-lk-ink first-letter:uppercase">
+                      {visitDateTime(visit.startsAt, now)}
+                    </span>
+                    <span className="text-lk-caption text-lk-ink-3">
+                      {t.visits.with(visit.buyerFirstName)}
+                    </span>
+                    <FinancingBadge status={visit.financingStatus} className="mt-1 self-start" />
+                    {tookPlace ? (
+                      <>
+                        <BuyerFeedback
+                          interest={visit.buyerInterest}
+                          comment={visit.buyerFeedback}
+                          className="mt-2"
+                        />
+                        <Link
+                          href={`/visites/${visit.id}`}
+                          aria-label={t.visits.openAbout(visitDateTime(visit.startsAt, now))}
+                          className="mt-1 inline-flex min-h-11 items-center self-start text-lk-label font-semibold text-lk-blue underline-offset-2 hover:underline"
+                        >
+                          {t.visits.open}
+                        </Link>
+                      </>
+                    ) : null}
+                  </div>
+                  <VisitStatusBadge status={visit.status} past={new Date(visit.startsAt) <= now} />
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : null}

@@ -24,6 +24,7 @@ import { OfferWithdrawnEmail, offerWithdrawnSubject } from "@/emails/offer-withd
 import { ReportsToReviewEmail, reportsToReviewSubject } from "@/emails/reports-to-review";
 import { VisitBookedEmail, visitBookedSubject } from "@/emails/visit-booked";
 import { VisitCancelledEmail, visitCancelledSubject } from "@/emails/visit-cancelled";
+import { VisitFeedbackEmail, visitFeedbackSubject } from "@/emails/visit-feedback";
 import { VisitInvitedEmail, visitInvitedSubject } from "@/emails/visit-invited";
 import { VisitReminderEmail, visitReminderSubject } from "@/emails/visit-reminder";
 import { formatAmount, formatHour, formatPrice } from "@/lib/format";
@@ -92,6 +93,13 @@ const POLICIES: Record<string, EmailPolicy> = {
   "visit.booked": { audience: "recipient", throttleMinutes: 0 },
   "visit.cancelled": { audience: "recipient", throttleMinutes: 0 },
   "visit.reminder": { audience: "recipient", throttleMinutes: 0 },
+  // L3-03: the request for feedback the day after a visit: once, unless the account turned
+  // the emails of its conversations off (as the invitation: it is about the other party).
+  "visit.feedback_requested": {
+    audience: "recipient",
+    preference: "email_messages",
+    throttleMinutes: 0,
+  },
   // L3-04: documents shared (the buyer): « un email par bien et par jour », the shares that
   // come meanwhile go together in the next one; a request to read the documents (the seller):
   // at once. Both follow the preference of the messages: they come from the other party.
@@ -683,6 +691,26 @@ async function visitReminder(
   return { ...content, attachments: [visitAttachment(last, visit, seller, url)] };
 }
 
+/** The request for feedback (L3-03), the day after a visit, to each party: no address. */
+async function visitFeedbackRequested(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  const startsAt = instant(last?.data.starts_at);
+  if (!last || !startsAt) return null;
+  const seller = last.data.role === "seller";
+  return rendered(
+    visitFeedbackSubject(seller),
+    VisitFeedbackEmail({
+      firstName: email.firstName,
+      seller,
+      buyerFirstName: emailSafeText(last.data.buyer_first_name),
+      property: emailSafeText(last.data.title),
+      date: visitDateTime(startsAt),
+      visitUrl: absoluteUrl(last.link ?? (seller ? "/vendeur" : "/acquereur")),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
 /**
  * Documents shared (L3-04), to the buyer: one email per property and per day,
  * with the number shared by every row it covers. Never the name of a document.
@@ -779,6 +807,8 @@ export function renderNotificationEmail(
       return visitCancelled(email);
     case "visit.reminder":
       return visitReminder(email, supabase);
+    case "visit.feedback_requested":
+      return visitFeedbackRequested(email);
     case "document.shared":
       return documentsShared(email);
     case "document.access_requested":

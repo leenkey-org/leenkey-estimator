@@ -165,6 +165,7 @@ describe("wording of the notifications (from type and data)", () => {
         "step.advanced",
         "visit.booked",
         "visit.cancelled",
+        "visit.feedback_requested",
         "visit.invited",
         "visit.reminder",
       ].sort(),
