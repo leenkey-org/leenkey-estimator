@@ -1,10 +1,10 @@
-# MISE EN LIGNE · procédure de la bascule du 25 novembre 2026
+# MISE EN LIGNE · procédure de la bascule du dimanche 22 novembre 2026
 
-Procédure de P-05b (SPEC-V2 section 23), à jouer une fois en répétition (P-05, lundi 23) puis le 25. Elle complète `docs/SECURITE.md` (checklist) et `docs/RECETTE.md` (sauvegarde). Règles permanentes : rien n'est jamais poussé ni fusionné dans `main` ; la bascule se fait en changeant la branche de production du projet Vercel de leenkey.fr, sur go explicite de Younes ; aucun secret n'est collé dans une conversation, un commit ou un journal.
+Procédure de P-05b (SPEC-V2 section 23), avancée au dimanche 22 par Younes (`DECISIONS.md` 2026-11-21) ; la bascule tient lieu de répétition, le retour à la V1 reste possible à tout moment (section 7). Elle complète `docs/SECURITE.md` (checklist) et `docs/RECETTE.md` (sauvegarde). Règles permanentes : rien n'est jamais poussé ni fusionné dans `main` ; la bascule se fait en changeant la branche de production du projet Vercel de leenkey.fr, sur go explicite de Younes ; aucun secret n'est collé dans une conversation, un commit ou un journal.
 
 Qui : **Y** = Younes (tableaux de bord, secrets), **C** = Cédric (comptes de Leenkey), **CC** = Claude Code (dépôt, vérifications).
 
-## 0. Ce qui conditionne la vente des formules le 25
+## 0. Ce qui conditionne la vente des formules
 
 | Élément | Qui | Effet s'il manque |
 |---|---|---|
@@ -14,9 +14,9 @@ Qui : **Y** = Younes (tableaux de bord, secrets), **C** = Cédric (comptes de Le
 
 Sans les deux premiers, la bascule reste possible : le site ouvre avec la formule Autonomie, les formules payantes s'ouvrent ensuite par un simple déploiement (étape 6).
 
-## 1. Comptes et accès (avant lundi 23)
+## 1. Comptes et accès
 
-- [ ] **Supabase** (compte Nebula Creativ, Leenkey invité) : projet `leenkey-prod`, région `eu-west-3` (Paris), offre Pro (sauvegarde quotidienne). Y, ou CC par le connecteur Supabase sur go de Younes (création facturée).
+- [ ] **Supabase** (compte Nebula Creativ, Leenkey invité) : projet `leenkey-prod`, région `eu-west-3` (Paris), créé par CC le 2026-11-21 sur l'offre gratuite. **Passage à l'offre Pro (sauvegarde quotidienne) : Y**, avant les premières données réelles.
 - [ ] **Stripe** (compte Leenkey, Nebula invité), mode réel :
   - trois prix en paiement unique, en euros, TTC : Accompagné 990 €, Sérénité 1 500 €, passage d'Accompagné à Sérénité 510 € ;
   - un taux de taxe « TVA 20 % », **inclus dans le prix** (inclusive) : son identifiant `txr_…` va dans `STRIPE_TAX_RATE` ;
@@ -46,7 +46,7 @@ Depuis le dépôt, avec un fichier `.env.prod.local` jamais commité (`PROD_DATA
 
 ## 3. Variables du projet Vercel `leenkey-estimator-main` (onglet Production)
 
-À saisir par Younes ; les valeurs ne passent jamais par une conversation. Aucune valeur de la préprod n'est reprise.
+À saisir par Younes ; les valeurs ne passent jamais par une conversation. **Démarrage du 22 (décision de Younes, risque accepté)** : Stripe (mode test), Anthropic, Resend et Google Maps reprennent les clés de la préprod le temps des tests ; les trois variables Supabase sont celles de `leenkey-prod`, jamais celles de la préprod ; `CRON_SECRET` est propre à la production. Le tableau ci-dessous décrit la cible, à atteindre avant toute vente.
 
 | Variable | Valeur |
 |---|---|
@@ -67,9 +67,9 @@ Depuis le dépôt, avec un fichier `.env.prod.local` jamais commité (`PROD_DATA
 
 Les variables de la V1 encore présentes sur ce projet (clés de l'estimateur V1) restent en place jusqu'à la bascule : elles servent au retour arrière.
 
-## 4. La bascule (mercredi 25, sur go de Younes)
+## 4. La bascule (dimanche 22, sur go de Younes)
 
-1. [ ] **Branche de production de la V2** : créée depuis le commit de `v2` validé le 24 (nom proposé : `production`). CC ne pousse sur aucune autre branche que la sienne sans autorisation : Younes la crée dans GitHub, ou donne son go pour que CC la pousse.
+1. [ ] **Branche de production de la V2** : `production`, créée depuis le dernier commit de `v2` et poussée par CC (accord de Younes du 2026-11-21). Rien n'est poussé dans `main`.
 2. [ ] **Vercel `leenkey-estimator-main` → Settings → Environments → Production → Branch Tracking** : `main` devient `production`. Le dépôt contient `vercel.json` (`"framework": "nextjs"`) : le réglage « Vite » du projet n'a pas à être changé à la main, à vérifier sur le premier build.
 3. [ ] **Premier déploiement** : attendre l'état *Ready*, vérifier qu'il porte le domaine `leenkey.fr`.
 4. [ ] **GitHub** : secrets `PROD_DATABASE_URL` (session pooler) et `BACKUP_PASSPHRASE` ; branche par défaut du dépôt = `v2` (les tâches planifiées de GitHub ne tournent que sur elle) ; lancer « Backup » une fois à la main et vérifier l'artefact (`docs/RECETTE.md`).
@@ -105,4 +105,4 @@ Les variables de la V1 encore présentes sur ce projet (clés de l'estimateur V1
 
 - Corrections urgentes : PR vers `v2`, vérification en préprod, cherry-pick sur la branche de production, sur go de Younes.
 - La préprod garde sa protection, ses clés de test et ses données de test.
-- La production part de `v2` tel que validé le 24 (`DECISIONS.md`, « Périmètre du 25 novembre ») ; ce qui est fusionné ensuite n'y arrive qu'après vérification en préprod, par cherry-pick.
+- La production part de `v2` tel qu'il est au moment de la bascule ; ce qui est fusionné ensuite n'y arrive qu'après vérification en préprod, par cherry-pick.

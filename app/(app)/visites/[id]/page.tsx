@@ -8,9 +8,12 @@ import { requireProfile } from "@/core/auth/session";
 import { isUuid } from "@/leenkey/messaging/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { sheetHref } from "@/leenkey/properties/sheet";
+import { BuyerFeedback } from "@/leenkey/visits/components/buyer-feedback";
 import { CancelVisitButton } from "@/leenkey/visits/components/cancel-visit-button";
+import { BuyerFeedbackForm, SellerNoteForm } from "@/leenkey/visits/components/feedback-forms";
 import { VisitStatusBadge } from "@/leenkey/visits/components/visit-status-badge";
 import { canCancel, visitDateTime, visitRange } from "@/leenkey/visits/dates";
+import { feedbackDeadline, feedbackWindow } from "@/leenkey/visits/feedback";
 import { visitDetail } from "@/leenkey/visits/queries";
 import { frVisits } from "@/lib/i18n/sections/visits";
 import { SpacePage } from "../../_components/space-page";
@@ -19,6 +22,10 @@ import { SpacePage } from "../../_components/space-page";
 const fr = { visits: frVisits } as const;
 
 const t = fr.visits.visit;
+const f = fr.visits.feedback;
+
+const panel = "flex flex-col gap-4 rounded-lk-xl border border-lk-line bg-lk-surface p-5";
+const panelTitle = "text-lk-body font-semibold text-lk-ink";
 
 export const metadata: Metadata = { title: t.metaTitle };
 
@@ -31,7 +38,9 @@ type Props = {
 // of the property; anyone else: a 404. The exact address is shown to the
 // buyer only while the visit is confirmed (« dans l'email de confirmation et
 // sur la page de la visite. Jamais ailleurs. »). The buyer cancels until 2
-// hours before, the seller until it starts.
+// hours before, the seller until it starts. L3-03: once the visit is over,
+// the buyer gives an interest and a comment, the seller reads them and writes
+// a note for themselves (never shown to the buyer), each for 7 days.
 export default async function VisitPage({ params, searchParams }: Props) {
   const [{ id }, query, profile] = await Promise.all([params, searchParams, requireProfile()]);
   if (!isUuid(id)) notFound();
@@ -55,6 +64,9 @@ export default async function VisitPage({ params, searchParams }: Props) {
   const past = new Date(visit.startsAt) <= now;
   const confirmed = visit.status === "confirmed";
   const cancellable = confirmed && canCancel(visit.startsAt, visit.role, now);
+  const feedback = feedbackWindow(visit.status, visit.endsAt, now);
+  // With its hour: the deadline falls in the middle of a day.
+  const until = f.until(visitDateTime(feedbackDeadline(visit.endsAt), now));
   return (
     <SpacePage title={t.title} roles={profile.roles} profileId={profile.id} back={back}>
       <div className="mt-4 flex flex-col gap-5">
@@ -131,6 +143,69 @@ export default async function VisitPage({ params, searchParams }: Props) {
               <p className="text-lk-secondary text-lk-ink-2">{t.cancelTooLate}</p>
             )}
           </div>
+        ) : null}
+        {feedback !== "none" && visit.role === "buyer" ? (
+          <section aria-labelledby="visit-feedback" className={panel}>
+            <div className="flex flex-col gap-1">
+              <h2 id="visit-feedback" className={panelTitle}>
+                {f.buyer.title}
+              </h2>
+              {feedback === "open" ? (
+                <p className="text-lk-secondary text-lk-ink-2">{f.buyer.intro}</p>
+              ) : null}
+            </div>
+            {feedback === "open" ? (
+              <BuyerFeedbackForm
+                visitId={visit.id}
+                until={until}
+                interest={visit.buyerInterest}
+                comment={visit.buyerFeedback}
+              />
+            ) : (
+              <>
+                <BuyerFeedback interest={visit.buyerInterest} comment={visit.buyerFeedback} />
+                <p className="text-lk-caption text-lk-ink-3">
+                  {visit.buyerInterest === null ? f.buyer.closed : f.buyer.closedGiven}
+                </p>
+              </>
+            )}
+          </section>
+        ) : null}
+        {feedback !== "none" && visit.role === "seller" ? (
+          <>
+            <section aria-labelledby="visit-buyer-feedback" className={panel}>
+              <h2 id="visit-buyer-feedback" className={panelTitle}>
+                {f.seller.buyerTitle}
+              </h2>
+              <BuyerFeedback
+                interest={visit.buyerInterest}
+                comment={visit.buyerFeedback}
+                none={feedback === "open" ? f.seller.buyerPending : f.none}
+              />
+            </section>
+            <section aria-labelledby="visit-note" className={panel}>
+              <div className="flex flex-col gap-1">
+                <h2 id="visit-note" className={panelTitle}>
+                  {f.seller.title}
+                </h2>
+                <p className="text-lk-secondary text-lk-ink-2">{f.seller.intro}</p>
+              </div>
+              {feedback === "open" ? (
+                <SellerNoteForm visitId={visit.id} until={until} note={visit.sellerNote} />
+              ) : (
+                <>
+                  {visit.sellerNote ? (
+                    <p className="text-lk-secondary text-pretty break-words whitespace-pre-line text-lk-ink">
+                      {visit.sellerNote}
+                    </p>
+                  ) : null}
+                  <p className="text-lk-caption text-lk-ink-3">
+                    {visit.sellerNote ? f.seller.closedGiven : f.seller.closed}
+                  </p>
+                </>
+              )}
+            </section>
+          </>
         ) : null}
       </div>
     </SpacePage>

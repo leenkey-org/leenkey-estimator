@@ -194,6 +194,14 @@ export const frNotifications = {
       detail: (date: string | null, title: string | null) =>
         [date, title ? `«\u00A0${title}\u00A0»` : null].filter(Boolean).join(" · ") || null,
     },
+    // L3-03: the request for feedback, the day after a visit (both parties).
+    visitFeedbackRequested: {
+      buyer: "Donnez votre retour sur votre visite",
+      seller: (buyer: string | null) =>
+        buyer ? `Visite de ${buyer} : votre note` : "Visite passée : votre note",
+      detail: (date: string | null, title: string | null) =>
+        [date, title ? `«\u00A0${title}\u00A0»` : null].filter(Boolean).join(" · ") || null,
+    },
     // L3-04: the sale file (SPEC-V2 15). Documents shared, for the buyer (the
     // number shared at once; the seller is not named); a request to read the
     // documents, for the seller. Never the name of a document.

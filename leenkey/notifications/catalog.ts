@@ -427,6 +427,17 @@ const CATALOG: Record<string, Entry> = {
     title: () => t.visitReminder.title,
     detail: (data) => t.visitReminder.detail(dateTime(data.starts_at), text(data.title)),
   },
+  // L3-03: the day after a visit that took place, both parties are asked once.
+  "visit.feedback_requested": {
+    icon: PencilLine,
+    tone: "blue",
+    filters: ["visitsOffers", "offersVisits"],
+    title: (data) =>
+      data.role === "seller"
+        ? t.visitFeedbackRequested.seller(text(data.buyer_first_name))
+        : t.visitFeedbackRequested.buyer,
+    detail: (data) => t.visitFeedbackRequested.detail(dateTime(data.starts_at), text(data.title)),
+  },
   // L3-04: the sale file. Documents shared, for the buyer; a request to read
   // the documents, for the seller of the property. No name of a document, no
   // amount: the financing status of the request is read on its page.

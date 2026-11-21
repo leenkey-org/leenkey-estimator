@@ -301,6 +301,23 @@ export const frEmails = {
       buyerAction: "Voir ma visite",
       sellerAction: "Voir mes visites",
     },
+    // L3-03: the request for feedback, the day after a visit that took place.
+    feedback: {
+      buyerSubject: "Votre retour sur votre visite",
+      sellerSubject: "Votre note sur la visite de votre bien",
+      title: "Comment s'est passée la visite ?",
+      buyerText: (property: string, date: string) => `Vous avez visité ${property} ${date}.`,
+      buyerNext:
+        "Dites au vendeur votre intérêt pour ce bien, de 1 à 5, avec un commentaire si vous le souhaitez. Il lit votre retour tel que vous l'écrivez.",
+      sellerText: (buyer: string | null, property: string, date: string) =>
+        `${buyer ?? "Un acquéreur"} a visité ${property} ${date}.`,
+      sellerNext:
+        "Vous pouvez écrire une note sur cette visite : elle reste privée, l'acquéreur ne la lit pas. Son retour s'affiche sur la même page dès qu'il le donne.",
+      delay: "Cette page reste ouverte 7 jours après la visite.",
+      buyerAction: "Donner mon retour",
+      sellerAction: "Voir la visite",
+      buyerWhy: "Vous recevez cet email parce que vous avez visité un bien avec Leenkey.",
+    },
   },
   // L3-04: the emails of the sale file (SPEC-V2 10, 15 and 18). Documents
   // shared, to the buyer: one email per property and per day, with the number

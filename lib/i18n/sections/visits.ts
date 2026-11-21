@@ -66,6 +66,9 @@ export const frVisits = {
       with: (name: string | null) => (name ? `Avec ${name}` : "Avec un acquéreur"),
       cancel: "Annuler la visite",
       cancelAbout: (label: string) => `Annuler la visite du ${label}`,
+      // L3-03: what the buyer said of a past visit, as given (never a score).
+      open: "Voir la visite",
+      openAbout: (label: string) => `Voir la visite du ${label}`,
     },
   },
   status: {
@@ -169,6 +172,57 @@ export const frVisits = {
     icsSummary: (title: string) => `Visite : ${title}`,
     icsDescription: "Visite organisée avec Leenkey.",
     property: "le bien",
+  },
+  // L3-03: the feedback after a visit (SPEC-V2 14). The buyer: an interest
+  // from 1 to 5 and a comment, read by the seller as given. The seller: a
+  // note for themselves. Each for 7 days after the visit.
+  feedback: {
+    interestValue: (interest: number) => `Intérêt ${interest} / 5`,
+    interestLabels: {
+      1: "Pas intéressé",
+      2: "Peu intéressé",
+      3: "À réfléchir",
+      4: "Intéressé",
+      5: "Très intéressé",
+    },
+    none: "Retour non donné",
+    /** « Modifiable jusqu'au samedi 28 novembre à 10 h 30. » */
+    until: (date: string) => `Modifiable jusqu'au ${date}.`,
+    buyer: {
+      title: "Votre retour sur la visite",
+      intro: "Le vendeur lit votre retour tel que vous l'écrivez.",
+      interest: "Votre intérêt pour ce bien",
+      option: (interest: number, label: string) => `${interest} sur 5 : ${label}`,
+      scale: "De 1 (pas intéressé) à 5 (très intéressé).",
+      comment: "Commentaire",
+      commentHelp: "Ce qui vous a plu, ce qui vous retient. 2 000 caractères au plus.",
+      submit: "Envoyer mon retour",
+      update: "Modifier mon retour",
+      saved: "Votre retour est enregistré.",
+      closed: "Le délai de 7 jours pour donner votre retour sur cette visite est passé.",
+      closedGiven: "Votre retour ne peut plus être modifié : 7 jours ont passé depuis la visite.",
+    },
+    seller: {
+      buyerTitle: "Retour de l'acquéreur",
+      buyerPending: "L'acquéreur n'a pas encore donné son retour.",
+      title: "Votre note sur la visite",
+      intro: "Cette note reste privée : l'acquéreur ne la lit pas.",
+      comment: "Note",
+      commentHelp: "2 000 caractères au plus.",
+      submit: "Enregistrer ma note",
+      saved: "Votre note est enregistrée.",
+      closed: "Le délai de 7 jours pour écrire une note sur cette visite est passé.",
+      closedGiven: "Votre note ne peut plus être modifiée : 7 jours ont passé depuis la visite.",
+    },
+    errors: {
+      auth: "Votre session a expiré. Reconnectez-vous.",
+      interest: "Choisissez votre intérêt, de 1 à 5.",
+      note: "Écrivez votre note.",
+      invalid: "Vérifiez votre retour : 2 000 caractères au plus.",
+      notYet: "Le retour se donne une fois la visite terminée.",
+      closed: "Le délai de 7 jours après la visite est passé.",
+      unavailable: "Ça n'a pas fonctionné. Réessayez.",
+    },
   },
   home: {
     title: "Vos visites",

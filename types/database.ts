@@ -2164,6 +2164,7 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           created_at: string
+          feedback_requested_at: string | null
           id: string
           property_id: string
           reminder_sent_at: string | null
@@ -2179,6 +2180,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           created_at?: string
+          feedback_requested_at?: string | null
           id?: string
           property_id: string
           reminder_sent_at?: string | null
@@ -2194,6 +2196,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           created_at?: string
+          feedback_requested_at?: string | null
           id?: string
           property_id?: string
           reminder_sent_at?: string | null
@@ -3946,6 +3949,14 @@ export type Database = {
         Args: { p_buyer: string; p_property: string }
         Returns: Json
       }
+      visit_feedback_buyer: {
+        Args: { p_comment: string; p_interest: number; p_visit: string }
+        Returns: undefined
+      }
+      visit_feedback_seller: {
+        Args: { p_comment: string; p_visit: string }
+        Returns: undefined
+      }
       visit_invitation_of: {
         Args: { p_token: string }
         Returns: {
@@ -3991,6 +4002,10 @@ export type Database = {
           ends_at: string
         }[]
       }
+      visit_seller_note: {
+        Args: { p_visit: string }
+        Returns: string
+      }
       visit_slot_add: {
         Args: { p_minutes: number; p_property: string; p_starts_at: string }
         Returns: string
@@ -3998,6 +4013,10 @@ export type Database = {
       visit_slot_remove: {
         Args: { p_slot: string }
         Returns: undefined
+      }
+      visits_ask_feedback: {
+        Args: { p_now?: string }
+        Returns: number
       }
       visits_remind: {
         Args: { p_now?: string }
