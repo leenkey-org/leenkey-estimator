@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-21 · Préparation de la production (P-05b) · PR #115
+- Ajouté : `docs/MISE-EN-LIGNE.md` (procédure de la bascule et retour arrière) ; `npm run db:seed:reference:prod` (formules et étapes de vente seulement) ; `STRIPE_TAX_RATE`, facultative : TVA de 20 % incluse, affichée sur le reçu et la facture de Stripe.
+- Corrigé : le parcours E2E du dossier de vente ne dépend plus de l'ordre des tests.
+
 ### 2026-11-20 · Tri du code : restes du modèle Lovable · PR #114
 - Retiré : 39 composants `components/ui` jamais importés (il en reste 7 : badge, button, input, label, radio-group, textarea, toggle), 26 dépendances qui ne servaient qu'à eux, le dossier `.lovable/`. Aucun changement visible.
 

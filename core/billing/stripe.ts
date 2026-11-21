@@ -104,6 +104,23 @@ export async function retrievePrice(priceId: string): Promise<PriceInfo> {
   };
 }
 
+/**
+ * The line of an order. With STRIPE_TAX_RATE (the id of a Stripe tax rate,
+ * « txr_… », created as inclusive: 20 % VAT in France), the price stays the
+ * one displayed, all taxes included, and the receipt and the invoice of
+ * Stripe show the VAT it holds (Cédric, 2026-11-19: Leenkey charges VAT).
+ * Without it, as before: no tax line.
+ */
+export function checkoutLineItem(
+  priceId: string,
+  taxRateId: string | undefined,
+): { price: string; quantity: number; tax_rates?: string[] } {
+  const rate = taxRateId?.trim();
+  return rate
+    ? { price: priceId, quantity: 1, tax_rates: [rate] }
+    : { price: priceId, quantity: 1 };
+}
+
 export async function createCheckoutSession(input: CheckoutInput): Promise<CheckoutSession> {
   if (stripeMocked()) {
     const match = MOCK_PRICE.exec(input.priceId);
@@ -123,7 +140,7 @@ export async function createCheckoutSession(input: CheckoutInput): Promise<Check
   const session = await stripe().checkout.sessions.create(
     {
       mode: "payment",
-      line_items: [{ price: input.priceId, quantity: 1 }],
+      line_items: [checkoutLineItem(input.priceId, process.env.STRIPE_TAX_RATE)],
       // « Paiement sécurisé par carte via Stripe » (SPEC 8.8): the card only.
       allowed_payment_method_types: ["card"],
       customer_email: input.customerEmail,

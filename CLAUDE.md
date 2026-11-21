@@ -159,6 +159,7 @@ STRIPE_WEBHOOK_SECRET=
 STRIPE_PRICE_ACCOMPAGNE=
 STRIPE_PRICE_SERENITE=
 STRIPE_PRICE_UPGRADE=           # Accompagné → Sérénité, 510 €
+STRIPE_TAX_RATE=                # facultatif : identifiant du taux de TVA Stripe (20 %, inclus dans le prix), affiché sur le reçu et la facture (DECISIONS.md 2026-11-21)
 ADMIN_NOTIFICATION_EMAIL=       # facultatif : une boîte de plus ; les emails de l'équipe partent à tous les comptes admin (DECISIONS.md 2026-11-08)
 EMAIL_TEST_INBOX=               # destinataire unique des emails hors prod
 EMAIL_FROM=                     # facultatif : expéditeur des emails (Leenkey <bonjour@leenkey.fr> par défaut)
@@ -345,6 +346,7 @@ npm run db:migrate:local # applique les migrations en local
 npm run db:migrate:staging
 npm run db:migrate:prod  # demande une confirmation explicite
 npm run db:seed          # charge supabase/seed/ en local (npm run db:seed:staging pour la préprod ; refuse la prod)
+npm run db:seed:reference:prod # formules et étapes de vente seulement (ni comptes ni démo), avec confirmation ; :staging pour la préprod
 npm run kb:import        # fiches de supabase/seed/knowledge/ puis leurs embeddings (Edge Function embed, en admin) ; kb:import:staging
 npm run kb:eval          # pertinence de la recherche dans la FAQ (questions de test, fiche attendue parmi les 5)
 npm run ai:eval-search   # les 10 recherches en langage naturel contre le vrai modèle (L2-06 ; ANTHROPIC_API_KEY requise, facturé, hors CI)
