@@ -22,7 +22,7 @@ Trois lots contractuels. **Le périmètre à construire est celui de `docs/SPEC-
 - **Lot 1 (S1 à S5)** : reprise de l'existant en Next.js (estimateur, pages marketing, endpoints), comptes, bien, annonce, recherche, messagerie, dashboard vendeur avec moteur d'étapes, Stripe, assistant IA vendeur + admin, back office. La conversation conseiller (`kind = 'advisor'`) est placée en fin de lot 1.
 - **Lot 2 (S6 à S7)** : offre d'achat structurée (modèle client, SPEC-V2 section 13) avec synthèse automatique par gabarits, co-acquéreurs et SCI, qualification acquéreur, assistant IA acquéreur.
 - **Lot 3 (S8 à S9)** : visites sur invitation (créneaux ponctuels uniquement), dossier de vente et partage sélectif, analyse IA des documents, alertes acheteur.
-- **Mise en ligne** : la V2 remplace la V1 sur leenkey.fr **le 25 novembre 2026** (décision du 2026-11-17 ; au plus tard le 30 novembre, décision du 2026-10-15), en changeant la branche de production du projet Vercel de leenkey.fr, **jamais par une fusion dans `main`**. Les lots 2 et 3 sont mis en ligne après validation en préprod (SPEC-V2 P-05b).
+- **Mise en ligne** : la V2 remplace la V1 sur leenkey.fr **le dimanche 22 novembre 2026** (décision du 2026-11-21, qui avance la date du 25 ; au plus tard le 30 novembre, décision du 2026-10-15), en changeant la branche de production du projet Vercel de leenkey.fr, **jamais par une fusion dans `main`**. Les lots 2 et 3 sont mis en ligne après validation en préprod (SPEC-V2 P-05b).
 - **S10** : recette globale ; le 18 décembre 2026 = livraison de la préprod validée.
 - **Garantie** : c'est le contrat qui fait foi : 60 jours pour les bugs majeurs, 30 jours pour les anomalies mineures, à compter de la mise en production.
 
@@ -209,7 +209,7 @@ Les tests manuels se font sur la préprod **après fusion** dans `v2`, pas sur l
 feature/<id>-<slug>  →  PR vers v2  →  CI (lint, typecheck, test, build)  →  review + merge
 v2                   →  déploiement leenkey-v2.vercel.app automatique  →  test manuel en préprod
 v2                   →  branche de production de la V2, mise à jour sur go de Younes après validation en préprod
-                        (lancement le 25 novembre 2026 : le projet Vercel de leenkey.fr bascule sur cette branche)
+                        (lancement le 22 novembre 2026 : le projet Vercel de leenkey.fr bascule sur cette branche)
 main                 →  V1 gelée : rien n'y est jamais poussé ni fusionné
 ```
 
