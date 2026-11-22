@@ -210,17 +210,18 @@ test("mise en conformité demandée, puis suppression par l'équipe après le d�
   });
 
   await test.step("le délai passé sans modification, l'équipe supprime l'annonce", async () => {
-    // The deadline moved back as the owner of the tables: 7 days do not pass
-    // in a test. The listing was made and sent now: its sending and the last
-    // change of its property moved before the request too, as they would be.
-    sql(`update public.listings
-            set compliance_requested_at = now() - interval '8 days',
-                compliance_due_at = now() - interval '1 day',
-                submitted_at = now() - interval '10 days',
-                published_at = now() - interval '10 days'
-          where id = '${listing}';
-         update public.properties set updated_at = now() - interval '10 days'
-          where id = '${property}';`);
+    // Only the deadline moved back, as the owner of the tables: 7 days do not
+    // pass in a test. The request stays where it was, after the sending of
+    // the listing and the last change of its property: nothing changed since.
+    sql(`update public.listings set compliance_due_at = now() - interval '1 minute'
+          where id = '${listing}';`);
+    // The seller reads that the deadline passed.
+    await seller.reload();
+    await expect(
+      seller
+        .getByRole("main")
+        .getByText("Le délai est passé : notre équipe peut supprimer l'annonce."),
+    ).toBeVisible();
     await admin.goto(adminPath);
     await expect(admin.getByText("Le délai est écoulé sans modification")).toBeVisible();
     const group = admin.getByRole("group", {

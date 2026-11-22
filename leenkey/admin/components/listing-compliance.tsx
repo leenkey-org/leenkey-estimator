@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/shared/button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -43,6 +43,7 @@ const ERRORS: Record<ComplianceError, string> = {
   changed: c.errors.changed,
   offers_waiting: c.errors.offersWaiting,
   offer_accepted: c.errors.offerAccepted,
+  withdrawal_open: c.errors.withdrawalOpen,
 };
 
 export function ListingCompliance({

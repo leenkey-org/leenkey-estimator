@@ -276,6 +276,8 @@ export const frAdminListings = {
         "Des offres attendent la réponse du vendeur : l'annonce ne peut pas être supprimée avant leur réponse ou leur expiration.",
       offerAccepted:
         "Une offre est acceptée : la vente est en cours, l'annonce ne peut pas être supprimée.",
+      withdrawalOpen:
+        "Le vendeur peut encore renoncer à la formule payée pour ce bien : l'annonce pourra être supprimée après sa demande de renonciation ou après ce délai.",
     },
   },
   result: {

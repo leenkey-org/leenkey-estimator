@@ -6,15 +6,17 @@
 --    conformité »): when it was made, its deadline, its reason (written by
 --    the team, read by the seller as the motive of a refusal or a
 --    suspension) and when its reminder left. Read by the owner and the team
---    (RLS of listings unchanged, a select grant per column); written only by
---    the functions below.
+--    (RLS of listings and its table-wide SELECT grant, unchanged); written
+--    only by the functions below (no UPDATE grant on them).
 -- 2. listing_delete(listing): the seller deletes their listing and its
 --    property, softly (deleted_at): a draft, a listing sent for review,
 --    rejected, online or paused. Refused while an offer is accepted (the
 --    sale is under way), while offers wait for an answer (the seller answers
 --    them first, or they expire), for a suspended listing (only the team acts
 --    on it) and for a sold one. The visits to come are cancelled (their
---    buyers told, as a cancellation by the seller); the conversations stay.
+--    buyers told, as a cancellation by the seller); the documents shared
+--    with buyers are no longer shared, the requests to read them still
+--    waiting are dropped; the conversations stay.
 -- 3. listing_compliance_request(listing, reason): the team asks the seller to
 --    bring an online, paused or rejected listing into line within
 --    listing_compliance_delay() (7 days, the one place of this delay); bell
@@ -24,9 +26,16 @@
 --    the request (once: compliance_reminded_at).
 -- 5. listing_admin_delete(listing): after the deadline, a listing unchanged
 --    since the request is deleted by the team, by hand (never automatically),
---    with the same refusals as the seller's deletion; the seller gets a
+--    whatever its status but sold (a suspended one too), with the same
+--    refusals for the offers as the seller's deletion; the seller gets a
 --    final notice. listing_compliance_changed(listing) says whether the
---    listing changed since the request (the page of the back office).
+--    listing changed since the request (the team, and its seller).
+--
+-- The withdrawal period of a paid plan (L1-40) is checked by the server
+-- actions before a deletion (its exact last day is computed in code,
+-- leenkey/billing/withdrawal.ts): a deletion waits until the seller has
+-- renounced it or the period is over, so that « Renoncer au contrat » stays
+-- reachable (DECISIONS.md 2026-11-22).
 -- 6. account_anonymize: the reason of the request, written about the closed
 --    seller's listing, goes with the other free texts of their listings.
 --
@@ -46,10 +55,9 @@ alter table public.listings
 comment on column public.listings.compliance_reason is
   'Request of the team to bring the listing into line: the reason, read by the seller (DECISIONS.md 2026-11-22).';
 
--- The SELECT of listings is granted column by column (L1-04): the new ones
--- too, or no client reads them (and a select * fails).
-grant select (compliance_requested_at, compliance_due_at, compliance_reason,
-              compliance_reminded_at) on public.listings to authenticated;
+-- No grant: authenticated reads listings with a table-wide SELECT (rows
+-- filtered by its RLS: the owner and the team) and updates only title,
+-- description and price.
 
 create index listings_compliance_due_idx on public.listings (compliance_due_at)
   where compliance_due_at is not null and deleted_at is null;
@@ -76,24 +84,36 @@ language sql stable security definer set search_path = '' as $$
                   where p.id = p_listing.property_id and p.updated_at > p_since);
 $$;
 
--- The deletion itself, after the checks of who deletes: internal. Locked
--- listing (for update by the callers).
+-- The deletion itself, after the checks of who deletes: internal.
 create function public.listing_delete_apply(p_listing public.listings, p_meta jsonb)
 returns void
 language plpgsql security definer set search_path = '' as $$
+declare
+  l public.listings;
 begin
-  if p_listing.status = 'sold' then
-    perform public.listing_bad_transition(p_listing.status, 'delete');
+  -- Locked again here, whoever calls, and read as it is now: deleted
+  -- meanwhile, nothing more to do.
+  select * into l from public.listings where id = p_listing.id and deleted_at is null for update;
+  if l.id is null then
+    raise exception 'listing not found' using errcode = 'P0002';
   end if;
+  if l.status = 'sold' then
+    perform public.listing_bad_transition(l.status, 'delete');
+  end if;
+  -- Its offers locked: an offer sent or answered at the same moment
+  -- (offer_submit, offer_answer lock their offer first) is either seen
+  -- below, or waits for this deletion and then finds the listing gone
+  -- (offer_can_draft).
+  perform 1 from public.offers o where o.listing_id = l.id for update;
   -- An accepted offer: the sale is under way, the team handles it.
   if exists (select 1 from public.offers o
-              where o.listing_id = p_listing.id and o.status = 'accepted') then
+              where o.listing_id = l.id and o.status = 'accepted') then
     raise exception 'an offer is accepted on this listing' using errcode = '55000';
   end if;
   -- Offers waiting for an answer: answered first, or left to expire (their
   -- validity is short); never closed behind the back of their buyers.
   if exists (select 1 from public.offers o
-              where o.listing_id = p_listing.id and o.status in ('submitted', 'viewed')
+              where o.listing_id = l.id and o.status in ('submitted', 'viewed')
                 and o.validity_until > now()) then
     raise exception 'offers wait for an answer on this listing' using errcode = '55000';
   end if;
@@ -104,24 +124,33 @@ begin
   update public.visits v
      set status = 'cancelled', cancelled_at = now(), cancelled_by = auth.uid()
     from public.visit_slots s
-   where s.id = v.slot_id and v.property_id = p_listing.property_id
+   where s.id = v.slot_id and v.property_id = l.property_id
      and v.status = 'confirmed' and s.starts_at > now();
+
+  -- The sale file: the buyers no longer read its documents (nor their
+  -- files: the storage policies read document_shares), the requests still
+  -- waiting go; those answered stay as history.
+  delete from public.document_shares ds
+   using public.documents d
+   where d.id = ds.document_id and d.property_id = l.property_id;
+  delete from public.document_access_requests
+   where property_id = l.property_id and status = 'pending';
 
   -- The team has nothing left to review (as listings_notify does).
   update public.notifications
      set read_at = now()
    where type = 'listing.pending' and read_at is null
-     and data->>'listing_id' = p_listing.id::text;
+     and data->>'listing_id' = l.id::text;
 
   update public.listings
      set deleted_at = now(), summary_requested_at = null
-   where id = p_listing.id;
+   where id = l.id;
   update public.properties
      set deleted_at = now()
-   where id = p_listing.property_id and deleted_at is null;
+   where id = l.property_id and deleted_at is null;
 
-  perform public.audit('listing.delete', 'listing', p_listing.id,
-    p_meta || jsonb_build_object('from', p_listing.status));
+  perform public.audit('listing.delete', 'listing', l.id,
+    p_meta || jsonb_build_object('from', l.status));
 end;
 $$;
 
@@ -202,17 +231,18 @@ begin
 end;
 $$;
 
--- For the page of the back office: changed since the request? null without one.
+-- Changed since the request? For the team and the seller of the listing
+-- (whose notice goes once it changed); null without a request.
 create function public.listing_compliance_changed(p_listing_id uuid)
 returns boolean
 language plpgsql stable security definer set search_path = '' as $$
 declare
   l public.listings;
 begin
-  if not public.is_admin() then
-    raise exception 'admin only' using errcode = '42501';
-  end if;
   select * into l from public.listings where id = p_listing_id and deleted_at is null;
+  if not public.is_admin() and (l.id is null or not public.owns_property(l.property_id)) then
+    raise exception 'listing not found' using errcode = '42501';
+  end if;
   if l.id is null or l.compliance_requested_at is null then
     return null;
   end if;

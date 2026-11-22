@@ -31,7 +31,7 @@ type Feedback = { tone: "success" | "danger"; text: string };
 type Dialog = "sold" | "delete" | "remove" | null;
 
 /** The answer of an accepted offer names the address of the team: said with it. */
-const ERRORS: Record<Exclude<StatusError, "offer_accepted">, string> = {
+const ERRORS: Record<Exclude<StatusError, "offer_accepted" | "withdrawal_open">, string> = {
   auth: t.errors.signedOut,
   invalid: t.errors.unavailable,
   not_found: t.errors.notFound,
@@ -54,8 +54,9 @@ function soldPrice(text: string): number | null | undefined {
  * SPEC-V2 8.3): resume or delete a draft, correct a rejected listing, pause
  * an online one or put it back, mark it as sold (confirmation, final price
  * optional), delete a listing sent, to correct, online or paused
- * (confirmation, DECISIONS.md 2026-11-22). The SQL functions decide (status-actions.ts); the outcome is
- * read in the region under the buttons, and the page is read again.
+ * (confirmation, DECISIONS.md 2026-11-22). The SQL functions decide
+ * (status-actions.ts); the outcome is read in the region under the
+ * buttons, and the page is read again.
  */
 export function ListingStatusActions({
   propertyId,
@@ -64,6 +65,7 @@ export function ListingStatusActions({
   resumeHref,
   publicHref,
   paidPlan = false,
+  withdrawalUntil = null,
   contactEmail,
 }: {
   propertyId: string;
@@ -75,6 +77,12 @@ export function ListingStatusActions({
   publicHref: string | null;
   /** A paid plan in force on the property: its deletion says it is not refunded. */
   paidPlan?: boolean;
+  /**
+   * The last day a paid plan of the property may still be renounced, written
+   * out (« 6 décembre 2026 »): the deletion waits for it (DECISIONS.md
+   * 2026-11-22).
+   */
+  withdrawalUntil?: string | null;
   /** The address of the team (lib/i18n legal texts stay on the server). */
   contactEmail: string;
 }) {
@@ -104,6 +112,7 @@ export function ListingStatusActions({
   const failed = (error: StatusError | null) => {
     if (error === "conflict" || error === "suspended" || error === "not_found") router.refresh();
     if (error === "offer_accepted") return t.errors.offerAccepted(contactEmail);
+    if (error === "withdrawal_open") return t.errors.withdrawalOpen(withdrawalUntil);
     return error ? ERRORS[error] : t.errors.unavailable;
   };
 
@@ -154,6 +163,10 @@ export function ListingStatusActions({
   };
 
   const confirmDelete = () => {
+    if (dialog === "remove" && !listingId) {
+      setDialogError(t.errors.notFound);
+      return;
+    }
     startTransition(async () => {
       const result = await (
         dialog === "remove" && listingId
@@ -305,7 +318,17 @@ export function ListingStatusActions({
           if (opener.current?.isConnected) opener.current.focus();
         }}
       >
-        {paidPlan ? (
+        {withdrawalUntil ? (
+          <p className="text-lk-secondary text-lk-ink-2">
+            {t.removeDialog.withdrawal(withdrawalUntil)}{" "}
+            <Link
+              href={`/vendeur/formule?bien=${propertyId}`}
+              className="font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
+            >
+              {t.removeDialog.withdrawalLink}
+            </Link>
+          </p>
+        ) : paidPlan ? (
           <p className="text-lk-secondary text-lk-ink-2">{t.removeDialog.paidPlan}</p>
         ) : null}
       </ConfirmDialog>

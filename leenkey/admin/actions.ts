@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { EmailDelivery } from "@/core/notifications/email";
 import { getProfile } from "@/core/auth/session";
+import { openWithdrawal } from "@/leenkey/billing/withdrawal-open";
 import { createClient } from "@/lib/supabase/server";
 import type { SuggestionResult } from "@/leenkey/ai/types";
 import {
@@ -106,7 +107,9 @@ export type ComplianceError =
   | "changed"
   /** Offers wait for an answer, or one is accepted: not deleted. */
   | "offers_waiting"
-  | "offer_accepted";
+  | "offer_accepted"
+  /** A paid plan of the property may still be renounced (L1-40): the deletion waits. */
+  | "withdrawal_open";
 
 export type ComplianceResult =
   | { ok: true; data: { action: ComplianceAction } }
@@ -137,6 +140,31 @@ export async function listingComplianceAction(input: unknown): Promise<Complianc
   if (!parsed.success) return { ok: false, error: "invalid" };
   const command = parsed.data;
   const supabase = await createClient();
+  if (command.action === "delete") {
+    // « Renoncer au contrat » lives on the page of the plan of a property that
+    // is not deleted: the deletion waits for the end of the withdrawal period
+    // of L1-40, or the seller's request (DECISIONS.md 2026-11-22).
+    try {
+      const { data: listing, error } = await supabase
+        .from("listings")
+        .select("property_id")
+        .eq("id", command.listingId)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (error) throw new Error(`listings: ${error.code}`);
+      if (!listing) return { ok: false, error: "not_found" };
+      if (await openWithdrawal(supabase, listing.property_id)) {
+        return { ok: false, error: "withdrawal_open" };
+      }
+    } catch (error) {
+      console.error("[admin] compliance check failed", {
+        user_id: profile.id,
+        entity_id: command.listingId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return { ok: false, error: "unavailable" };
+    }
+  }
   const { error } =
     command.action === "request"
       ? await supabase.rpc("listing_compliance_request", {
@@ -157,5 +185,6 @@ export async function listingComplianceAction(input: unknown): Promise<Complianc
   }
   revalidatePath("/admin/annonces");
   revalidatePath(`/admin/annonces/${command.listingId}`);
+  if (command.action === "delete") revalidatePath("/sitemap.xml");
   return { ok: true, data: { action: command.action } };
 }

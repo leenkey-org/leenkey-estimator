@@ -190,11 +190,30 @@ const mocks = vi.hoisted(() => ({
   profile: { id: "a11ce000-0000-4000-8000-000000000001" } as { id: string } | null,
   rpc: vi.fn(),
   revalidatePath: vi.fn(),
+  /** The rows the reads return, by table (deleteListing reads its listing and the plans). */
+  rows: {} as Record<string, unknown>,
 }));
 
+/** A query of the client: its filters ignored, its rows those of `mocks.rows`. */
+function query(table: string) {
+  const answer = () => ({ data: mocks.rows[table] ?? null, error: null });
+  const chain = {
+    select: () => chain,
+    eq: () => chain,
+    is: () => chain,
+    gt: () => chain,
+    maybeSingle: async () => answer(),
+    then: (resolve: (value: ReturnType<typeof answer>) => unknown) => resolve(answer()),
+  };
+  return chain;
+}
+
+vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("@/core/auth/session", () => ({ getProfile: async () => mocks.profile }));
-vi.mock("@/lib/supabase/server", () => ({ createClient: async () => ({ rpc: mocks.rpc }) }));
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: async () => ({ rpc: mocks.rpc, from: query }),
+}));
 
 describe("server actions of the status (status-actions.ts)", () => {
   const listingId = listing.id;
@@ -260,6 +279,35 @@ describe("server actions of the status (status-actions.ts)", () => {
     expect(await pauseListing({ listingId })).toEqual({ ok: false, error: "auth" });
     expect(await deleteDraft({ propertyId: id })).toEqual({ ok: false, error: "auth" });
     expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("deletes a listing through listing_delete, and says what holds it back", async () => {
+    const { deleteListing } = await import("@/leenkey/properties/status-actions");
+    mocks.rows = { listings: { property_id: id }, subscriptions: [] };
+    mocks.rpc.mockResolvedValueOnce({ data: null, error: null });
+    expect(await deleteListing({ listingId })).toEqual({ ok: true, data: null });
+    expect(mocks.rpc).toHaveBeenLastCalledWith("listing_delete", { p_listing_id: listingId });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/sitemap.xml");
+    const refuse = (message: string) =>
+      mocks.rpc.mockResolvedValueOnce({ data: null, error: { code: "55000", message } });
+    refuse("offers wait for an answer on this listing");
+    expect(await deleteListing({ listingId })).toEqual({ ok: false, error: "offers_waiting" });
+    refuse("an offer is accepted on this listing");
+    expect(await deleteListing({ listingId })).toEqual({ ok: false, error: "offer_accepted" });
+  });
+
+  it("waits for the withdrawal period of a paid plan, never calls listing_delete then", async () => {
+    const { deleteListing } = await import("@/leenkey/properties/status-actions");
+    // Ordered yesterday: inside its 14 days (L1-40).
+    const yesterday = new Date(Date.now() - 86_400_000).toISOString();
+    mocks.rows = { listings: { property_id: id }, subscriptions: [{ activated_at: yesterday }] };
+    expect(await deleteListing({ listingId })).toEqual({ ok: false, error: "withdrawal_open" });
+    // Ordered two months ago: the period is over.
+    const old = new Date(Date.now() - 60 * 86_400_000).toISOString();
+    mocks.rows = { listings: { property_id: id }, subscriptions: [{ activated_at: old }] };
+    mocks.rpc.mockResolvedValueOnce({ data: null, error: null });
+    expect(await deleteListing({ listingId })).toEqual({ ok: true, data: null });
+    expect(mocks.rpc).toHaveBeenCalledTimes(1);
   });
 
   it("deletes a draft through property_soft_delete", async () => {

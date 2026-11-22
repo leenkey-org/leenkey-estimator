@@ -360,9 +360,13 @@ export const frProperties = {
     // DECISIONS.md 2026-11-22: a listing sent, to correct, online or paused.
     removeDialog: {
       title: "Supprimer votre annonce ?",
-      text: "Votre annonce et votre bien disparaissent des recherches et de votre espace : vous ne pourrez pas les récupérer. Vos conversations restent lisibles ; nous annulons les visites à venir et prévenons les acquéreurs.",
+      text: "Votre annonce et votre bien disparaissent des recherches et de votre espace : vous ne pourrez pas les récupérer. Vos conversations restent lisibles ; nous annulons les visites à venir en prévenant les acquéreurs, et cessons de partager vos documents.",
       paidPlan:
-        "La formule payée pour ce bien reste acquise : la suppression de l'annonce ne donne pas lieu à un remboursement.",
+        "La suppression de l'annonce n'entraîne pas le remboursement de la formule payée pour ce bien.",
+      // L1-40: a paid plan that may still be renounced holds the deletion back.
+      withdrawal: (date: string) =>
+        `Vous pouvez encore renoncer à la formule payée pour ce bien, jusqu'au ${date} inclus. Si vous le souhaitez, faites-le d'abord depuis la page de votre formule : la suppression de l'annonce sera possible après votre demande, ou après cette date.`,
+      withdrawalLink: "Renoncer au contrat",
       confirm: "Supprimer l'annonce",
     },
     // DECISIONS.md 2026-11-22: the request of the team to bring the listing into line.
@@ -371,6 +375,7 @@ export const frProperties = {
       reason: (reason: string) => `Notre remarque : ${reason}`,
       deadline: (date: string) =>
         `Modifiez-la avant le ${date}. Sans modification de votre part à cette date, nous pourrons la supprimer.`,
+      overdue: "Le délai est passé : notre équipe peut supprimer l'annonce.",
     },
     soldDialog: {
       title: "Marquer votre bien comme vendu ?",
@@ -402,6 +407,8 @@ export const frProperties = {
         "Des offres attendent votre réponse : répondez-y depuis l'onglet Offres avant de supprimer l'annonce.",
       offerAccepted: (email: string) =>
         `Vous avez accepté une offre : la vente est en cours. Pour retirer l'annonce, écrivez-nous à ${email}.`,
+      withdrawalOpen: (date: string | null) =>
+        `Vous pouvez encore renoncer à la formule payée pour ce bien${date ? `, jusqu'au ${date} inclus` : ""} : la suppression de l'annonce sera possible après votre demande de renonciation (page de votre formule), ou après ce délai.`,
     },
     infos: {
       address: "Adresse",

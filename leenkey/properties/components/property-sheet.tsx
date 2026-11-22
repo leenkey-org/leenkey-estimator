@@ -7,6 +7,7 @@ import { LinkTabs } from "@/components/shared/link-tabs";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { formatDate, formatDateTime, formatPrice } from "@/lib/format";
+import { legalDate } from "@/leenkey/billing/withdrawal";
 import { frLegal } from "@/lib/i18n/sections/legal";
 import { frProperties } from "@/lib/i18n/sections/properties";
 import type { ListingDeletionFacts, SellerProperty } from "../queries";
@@ -91,15 +92,24 @@ function StatusNotice({ property }: { property: SellerProperty }) {
  */
 function ComplianceNotice({ compliance }: { compliance: { reason: string; dueAt: string } }) {
   const c = t.compliance;
+  // The deadline passed: the team may delete it (by hand, DECISIONS.md 2026-11-22).
+  const overdue = new Date(compliance.dueAt).getTime() <= Date.now();
   return (
-    <InlineAlert tone="warning" live={false}>
+    <InlineAlert tone={overdue ? "danger" : "warning"} live={false}>
       <span className="block font-semibold">{c.title}</span>
       {/* The reason on its own line: the team writes it without a full stop. */}
       <span className="block">{c.reason(compliance.reason)}</span>
-      <span>{c.deadline(formatDateTime(compliance.dueAt))}</span>
+      <span>{overdue ? c.overdue : c.deadline(formatDateTime(compliance.dueAt))}</span>
     </InlineAlert>
   );
 }
+
+/** What the seller can still change: the request of the team is shown then only. */
+const COMPLIANCE_STATUSES: readonly SellerProperty["listingStatus"][] = [
+  "published",
+  "paused",
+  "rejected",
+];
 
 /**
  * Top of the page of a property (L1-14, G9 with Tabs, docs/DESIGN.md 13.1):
@@ -147,7 +157,9 @@ export function PropertySheetHeader({
       </div>
       {figures.length > 0 ? <KeyFigures items={figures} /> : null}
       <StatusNotice property={property} />
-      {deletion?.compliance ? <ComplianceNotice compliance={deletion.compliance} /> : null}
+      {deletion?.compliance && COMPLIANCE_STATUSES.includes(property.listingStatus) ? (
+        <ComplianceNotice compliance={deletion.compliance} />
+      ) : null}
       <ListingStatusActions
         propertyId={property.id}
         listingId={listing?.id ?? null}
@@ -155,6 +167,7 @@ export function PropertySheetHeader({
         resumeHref={creationHref(property)}
         publicHref={listing?.status === "published" ? `/annonce/${listing.slug}` : null}
         paidPlan={deletion?.paidPlan ?? false}
+        withdrawalUntil={deletion?.withdrawalUntil ? legalDate(deletion.withdrawalUntil) : null}
         contactEmail={fr.legal.contactEmail}
       />
       <LinkTabs label={t.tabs.label} tabs={sheetTabs(property.id)} className="mt-2" />

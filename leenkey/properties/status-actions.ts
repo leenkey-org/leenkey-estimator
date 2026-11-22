@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getProfile } from "@/core/auth/session";
+import { openWithdrawal } from "@/leenkey/billing/withdrawal-open";
 import { createClient } from "@/lib/supabase/server";
 import {
   deleteDraftSchema,
@@ -27,13 +28,15 @@ export type StatusError =
   | "unavailable"
   /** Deletion (listing_delete): offers wait for an answer, or one is accepted. */
   | "offers_waiting"
-  | "offer_accepted";
+  | "offer_accepted"
+  /** A paid plan of the property may still be renounced (L1-40): the deletion waits. */
+  | "withdrawal_open";
 
 export type StatusActionResult =
   | { ok: true; data: { status: ListingStatus } }
   | { ok: false; error: StatusError };
 
-export type DeleteDraftResult = { ok: true; data: null } | { ok: false; error: StatusError };
+export type DeleteResult = { ok: true; data: null } | { ok: false; error: StatusError };
 
 /**
  * Errors of the SQL functions: 42501 for a listing that is not the seller's
@@ -102,7 +105,7 @@ export async function markListingSold(input: unknown): Promise<StatusActionResul
 }
 
 /** « Supprimer le brouillon » (SPEC-V2 8.3): the property, its photos and its draft, softly. */
-export async function deleteDraft(input: unknown): Promise<DeleteDraftResult> {
+export async function deleteDraft(input: unknown): Promise<DeleteResult> {
   const profile = await getProfile();
   if (!profile) return { ok: false, error: "auth" };
   const parsed = deleteDraftSchema.safeParse(input);
@@ -124,20 +127,46 @@ export async function deleteDraft(input: unknown): Promise<DeleteDraftResult> {
  * correct, online or paused, and its property, softly; its visits to come
  * cancelled (their buyers told). listing_delete refuses it while offers wait
  * for an answer or one is accepted, and for a listing suspended by Leenkey.
+ * A paid plan still inside its withdrawal period, not renounced, holds it
+ * back (DECISIONS.md 2026-11-22): « Renoncer au contrat » is on the page of
+ * the plan of a property that is not deleted.
  */
-export async function deleteListing(input: unknown): Promise<DeleteDraftResult> {
+export async function deleteListing(input: unknown): Promise<DeleteResult> {
   const profile = await getProfile();
   if (!profile) return { ok: false, error: "auth" };
   const parsed = deleteListingSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
+  const { listingId } = parsed.data;
   const supabase = await createClient();
-  const { error } = await supabase.rpc("listing_delete", { p_listing_id: parsed.data.listingId });
+  try {
+    const { data: listing, error } = await supabase
+      .from("listings")
+      .select("property_id")
+      .eq("id", listingId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (error) throw new Error(`listings: ${error.code}`);
+    if (!listing) return { ok: false, error: "not_found" };
+    if (await openWithdrawal(supabase, listing.property_id)) {
+      return { ok: false, error: "withdrawal_open" };
+    }
+  } catch (error) {
+    logFailure(
+      "listing_delete",
+      profile.id,
+      listingId,
+      error instanceof Error ? error.message : "",
+    );
+    return { ok: false, error: "unavailable" };
+  }
+  const { error } = await supabase.rpc("listing_delete", { p_listing_id: listingId });
   if (error) {
-    logFailure("listing_delete", profile.id, parsed.data.listingId, error.code);
+    logFailure("listing_delete", profile.id, listingId, error.code);
     return { ok: false, error: errorOf(error) };
   }
   // The search and the public page read the base at each request (as after
-  // a pause): the listing has left them already.
+  // a pause): the listing has left them already; the sitemap is cached.
   revalidatePath("/vendeur", "layout");
+  revalidatePath("/sitemap.xml");
   return { ok: true, data: null };
 }
