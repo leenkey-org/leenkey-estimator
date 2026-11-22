@@ -148,6 +148,9 @@ describe("wording of the notifications (from type and data)", () => {
         "document.needs_attention",
         "document.shared",
         "financing.checked",
+        "listing.compliance_reminder",
+        "listing.compliance_requested",
+        "listing.deleted",
         "listing.pending",
         "listing.published",
         "listing.rejected",
@@ -338,6 +341,27 @@ describe("wording of the notifications (from type and data)", () => {
     expect(
       describeNotification(view({ type: "listing.rejected", data: { title: "Maison" } })),
     ).toMatchObject({ title: t.listingRejected.title, tone: "warning" });
+    // DECISIONS.md 2026-11-22: a request to bring a listing into line, its reminder, its deletion.
+    const request = describeNotification(
+      view({
+        type: "listing.compliance_requested",
+        data: { title: "Maison", due_at: "2026-11-29T13:05:00Z" },
+      }),
+    );
+    expect(request).toMatchObject({
+      title: t.listingComplianceRequested.title,
+      tone: "warning",
+    });
+    // No-break spaces around the title and in the date: \s matches them.
+    expect(request.detail).toMatch(
+      /^«\sMaison\s» : modifiez-la avant le 29\snov\.\sà\s14\sh\s05\.$/,
+    );
+    expect(
+      describeNotification(view({ type: "listing.compliance_reminder", data: {} })).detail,
+    ).toBe("Sans modification, nous pourrons la supprimer.");
+    expect(
+      describeNotification(view({ type: "listing.deleted", data: { title: "Maison" } })),
+    ).toMatchObject({ title: t.listingDeleted.title, tone: "warning" });
     // L1-23, the facts written by sale_refresh_progress.
     expect(
       describeNotification(

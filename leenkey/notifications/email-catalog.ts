@@ -131,6 +131,11 @@ const POLICIES: Record<string, EmailPolicy> = {
   // seller: the first at once, those found in the hour that follows together (a seller
   // files several documents in a row).
   "document.needs_attention": { audience: "recipient", throttleMinutes: 60 },
+  // DECISIONS.md 2026-11-22: a request to bring a listing into line, its reminder, the
+  // deletion once the deadline passed: at once, always sent (it is about their listing).
+  "listing.compliance_requested": { audience: "recipient", throttleMinutes: 0 },
+  "listing.compliance_reminder": { audience: "recipient", throttleMinutes: 0 },
+  "listing.deleted": { audience: "recipient", throttleMinutes: 0 },
 };
 
 export function emailPolicy(type: string): EmailPolicy | null {
@@ -450,6 +455,50 @@ async function reportHandled(email: PlannedEmail): Promise<RenderedEmail | null>
       why: t.why,
       siteUrl: siteUrl(),
     }),
+  );
+}
+
+/**
+ * The request to bring a listing into line, its reminder, the deletion once
+ * the deadline passed (DECISIONS.md 2026-11-22), to its seller: the reason of
+ * the team, the deadline, a link; an answer goes to Leenkey.
+ */
+async function listingCompliance(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  const reference = text(last?.data.reference);
+  if (!last || !reference) return null;
+  const t = fr.emails.listingCompliance;
+  // Written by the seller: made safe for a mail client.
+  const listing = t.listing(emailSafeText(last.data.title));
+  const reason = text(last.data.reason);
+  const dueAt = text(last.data.due_at);
+  const due = dueAt && !Number.isNaN(Date.parse(dueAt)) ? legalDateTime(dueAt) : null;
+  const deleted = email.type === "listing.deleted";
+  const kind = deleted
+    ? t.deleted
+    : email.type === "listing.compliance_reminder"
+      ? t.reminder
+      : t.requested;
+  if (!deleted && !due) return null;
+  const first = deleted
+    ? t.deleted.text(listing)
+    : kind === t.reminder
+      ? t.reminder.text(listing, due ?? "")
+      : t.requested.text(listing, due ?? "");
+  return rendered(
+    kind.subject(reference),
+    AccountNoticeEmail({
+      firstName: email.firstName,
+      title: kind.title,
+      paragraphs: [first, ...(reason ? [t.reason(reason)] : []), kind.next],
+      action: {
+        href: absoluteUrl(last.link ?? "/vendeur"),
+        label: kind.action,
+      },
+      why: t.why,
+      siteUrl: siteUrl(),
+    }),
+    fr.legal.contactEmail,
   );
 }
 
@@ -928,6 +977,10 @@ export function renderNotificationEmail(
       return documentAccessRequested(email);
     case "document.needs_attention":
       return documentsNeedAttention(email);
+    case "listing.compliance_requested":
+    case "listing.compliance_reminder":
+    case "listing.deleted":
+      return listingCompliance(email);
     default:
       return Promise.resolve(null);
   }

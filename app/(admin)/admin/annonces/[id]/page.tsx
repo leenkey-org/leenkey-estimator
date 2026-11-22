@@ -12,6 +12,8 @@ import { PriceBlock } from "@/components/shared/price-block";
 import { SectionTitle } from "@/components/shared/section-title";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { requireAdmin } from "@/core/auth/session";
+import { listingCompliance } from "@/leenkey/admin/compliance";
+import { ListingCompliance } from "@/leenkey/admin/components/listing-compliance";
 import {
   ListingModeration,
   ModerationFeedback,
@@ -92,6 +94,9 @@ export default async function AdminListingPage({ params }: Props) {
     ? await listingRevisions(listing.id)
     : null;
   const now = new Date();
+  // The request to bring it into line (DECISIONS.md 2026-11-22).
+  const compliance = await listingCompliance(listing.id);
+  const request = compliance.ok ? compliance.data : null;
   const reason =
     detail.status === "rejected"
       ? { label: t.detail.rejection, text: detail.rejectionReason }
@@ -193,6 +198,31 @@ export default async function AdminListingPage({ params }: Props) {
               </Link>
             ) : null}
           </div>
+          {compliance.ok ? (
+            <ListingCompliance
+              listingId={listing.id}
+              reference={listing.reference}
+              canRequest={["published", "paused", "rejected"].includes(detail.status)}
+              compliance={
+                request
+                  ? {
+                      reason: request.reason,
+                      requestedAt: formatDateTime(request.requestedAt, now),
+                      dueAt: formatDateTime(request.dueAt, now),
+                      remindedAt: request.remindedAt
+                        ? formatDateTime(request.remindedAt, now)
+                        : null,
+                      changed: request.changed,
+                      deletable: !request.changed && new Date(request.dueAt) <= now,
+                    }
+                  : null
+              }
+            />
+          ) : (
+            <InlineAlert tone="danger" live={false}>
+              {t.compliance.error}
+            </InlineAlert>
+          )}
         </section>
 
         <section aria-labelledby="pre-analyse" className="flex flex-col gap-4">

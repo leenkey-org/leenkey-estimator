@@ -12,5 +12,11 @@ export const markSoldSchema = z.object({
   soldPriceEuros: z.number().int().positive().max(LISTING_PRICE_MAX_EUROS).nullable(),
 });
 
+/**
+ * « Supprimer l'annonce » (DECISIONS.md 2026-11-22): sent, rejected, online
+ * or paused; listing_delete says what blocks it.
+ */
+export const deleteListingSchema = listingActionSchema;
+
 /** « Supprimer le brouillon » (SPEC-V2 8.3): a draft only. */
 export const deleteDraftSchema = z.object({ propertyId: z.string().uuid() });

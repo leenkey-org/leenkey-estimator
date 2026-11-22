@@ -620,6 +620,54 @@ describe("emails of an offer (L2-04a)", () => {
     expect(text).not.toMatch(/averti|téléphone|\bon\b/i);
   });
 
+  it("asks the seller to bring a listing into line, reminds them, tells them of its deletion", async () => {
+    const { renderNotificationEmail, emailPolicy } =
+      await import("@/leenkey/notifications/email-catalog");
+    const notice = (type: string, link: string) =>
+      queued({
+        type,
+        groupKey: `${type}:l1`,
+        link,
+        data: {
+          listing_id: "l1",
+          reference: "LK-0042",
+          title: "Maison 5 pièces",
+          reason: "Photos floues : à remplacer",
+          due_at: "2026-11-29T13:05:00Z",
+        },
+      });
+    for (const type of [
+      "listing.compliance_requested",
+      "listing.compliance_reminder",
+      "listing.deleted",
+    ]) {
+      expect(emailPolicy(type)).toEqual({ audience: "recipient", throttleMinutes: 0 });
+    }
+    const request = await renderNotificationEmail(
+      planned([notice("listing.compliance_requested", "/vendeur/biens/p1")]),
+    );
+    const text = (request?.text ?? "").replace(/[\u00A0\u202F]/g, " ");
+    expect(request?.subject).toBe("Votre annonce LK-0042 est à mettre en conformité");
+    expect(text).toContain("Nous avons relu votre annonce « Maison 5 pièces »");
+    // In Paris: 14:05 (legalDateTime).
+    expect(text).toMatch(/avant le 29 novembre 2026 à 14\D05/);
+    expect(text).toContain("Notre remarque : Photos floues : à remplacer");
+    expect(request?.html).toContain("https://leenkey-v2.vercel.app/vendeur/biens/p1");
+    expect(request?.replyTo).toBe("contact@leenkey.fr");
+    expect(text).not.toMatch(/\bon\b|estimation/i);
+
+    const reminder = await renderNotificationEmail(
+      planned([notice("listing.compliance_reminder", "/vendeur/biens/p1")]),
+    );
+    expect(reminder?.subject).toBe("Rappel : votre annonce LK-0042 est à mettre en conformité");
+
+    const deleted = await renderNotificationEmail(planned([notice("listing.deleted", "/vendeur")]));
+    const deletedText = (deleted?.text ?? "").replace(/[\u00A0\u202F]/g, " ");
+    expect(deleted?.subject).toBe("Votre annonce LK-0042 a été supprimée");
+    expect(deletedText).toContain("nous l'avons supprimée");
+    expect(deletedText).toContain("Notre remarque : Photos floues : à remplacer");
+  });
+
   it("tells the buyer the answer of the seller, with its message", async () => {
     const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
     const declined = await renderNotificationEmail(

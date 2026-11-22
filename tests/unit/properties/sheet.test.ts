@@ -87,13 +87,16 @@ describe("actions of the status (SPEC-V2 8.3)", () => {
   it("by status, as the SQL functions allow them", () => {
     expect(statusActions(null)).toEqual(["resume", "delete"]);
     expect(statusActions("draft")).toEqual(["resume", "delete"]);
-    expect(statusActions("rejected")).toEqual(["fix"]);
-    expect(statusActions("published")).toEqual(["view", "pause", "sold"]);
-    expect(statusActions("paused")).toEqual(["publish", "sold"]);
+    expect(statusActions("rejected")).toEqual(["fix", "remove"]);
+    expect(statusActions("published")).toEqual(["view", "pause", "sold", "remove"]);
+    expect(statusActions("paused")).toEqual(["publish", "sold", "remove"]);
   });
 
-  it("nothing while Leenkey reviews it, once suspended, once sold", () => {
-    expect(statusActions("pending")).toEqual([]);
+  it("while Leenkey reviews it, only its deletion (DECISIONS.md 2026-11-22)", () => {
+    expect(statusActions("pending")).toEqual(["remove"]);
+  });
+
+  it("nothing once suspended, once sold", () => {
     expect(statusActions("suspended")).toEqual([]);
     expect(statusActions("sold")).toEqual([]);
   });

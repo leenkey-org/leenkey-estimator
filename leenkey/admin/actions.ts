@@ -6,8 +6,10 @@ import { getProfile } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { SuggestionResult } from "@/leenkey/ai/types";
 import {
+  complianceSchema,
   moderationSchema,
   rejectionDraftSchema,
+  type ComplianceAction,
   type ModerationAction,
 } from "@/lib/validations/admin";
 import type { Database } from "@/types/database";
@@ -95,4 +97,65 @@ export async function draftRejectionAction(input: unknown): Promise<SuggestionRe
   const parsed = rejectionDraftSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
   return draftRejectionReason(profile, parsed.data.listingId, parsed.data.notes);
+}
+
+export type ComplianceError =
+  | ModerationError
+  /** The deadline has not passed, or the listing changed since the request. */
+  | "deadline"
+  | "changed"
+  /** Offers wait for an answer, or one is accepted: not deleted. */
+  | "offers_waiting"
+  | "offer_accepted";
+
+export type ComplianceResult =
+  | { ok: true; data: { action: ComplianceAction } }
+  | { ok: false; error: ComplianceError };
+
+/** The refusals of the SQL functions (55000), by their message. */
+function complianceError(error: { code: string; message: string }): ComplianceError {
+  if (error.code !== "55000") return moderationError(error.code);
+  if (/deadline/.test(error.message)) return "deadline";
+  if (/changed since/.test(error.message)) return "changed";
+  if (/accepted/.test(error.message)) return "offer_accepted";
+  if (/wait for an answer/.test(error.message)) return "offers_waiting";
+  // No request any more: lifted meanwhile.
+  return "conflict";
+}
+
+/**
+ * « Demander une mise en conformité », « Lever la demande », « Supprimer
+ * l'annonce » after the deadline (DECISIONS.md 2026-11-22). The SQL functions
+ * check is_admin(), the status, the deadline and the changes, write
+ * audit_log and the notifications of the seller (bell, and email through the
+ * cron of the notifications). No service role.
+ */
+export async function listingComplianceAction(input: unknown): Promise<ComplianceResult> {
+  const profile = await getProfile();
+  if (!profile?.roles.includes("admin")) return { ok: false, error: "forbidden" };
+  const parsed = complianceSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const command = parsed.data;
+  const supabase = await createClient();
+  const { error } =
+    command.action === "request"
+      ? await supabase.rpc("listing_compliance_request", {
+          p_listing_id: command.listingId,
+          p_reason: command.reason,
+        })
+      : command.action === "clear"
+        ? await supabase.rpc("listing_compliance_clear", { p_listing_id: command.listingId })
+        : await supabase.rpc("listing_admin_delete", { p_listing_id: command.listingId });
+  if (error) {
+    console.error("[admin] compliance failed", {
+      user_id: profile.id,
+      entity_id: command.listingId,
+      action: command.action,
+      code: error.code,
+    });
+    return { ok: false, error: complianceError(error) };
+  }
+  revalidatePath("/admin/annonces");
+  revalidatePath(`/admin/annonces/${command.listingId}`);
+  return { ok: true, data: { action: command.action } };
 }

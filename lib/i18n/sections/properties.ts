@@ -355,6 +355,22 @@ export const frProperties = {
       publish: "Remettre en ligne",
       sold: "Marquer comme vendu",
       delete: "Supprimer le brouillon",
+      remove: "Supprimer l'annonce",
+    },
+    // DECISIONS.md 2026-11-22: a listing sent, to correct, online or paused.
+    removeDialog: {
+      title: "Supprimer votre annonce ?",
+      text: "Votre annonce et votre bien disparaissent des recherches et de votre espace : vous ne pourrez pas les récupérer. Vos conversations restent lisibles ; nous annulons les visites à venir et prévenons les acquéreurs.",
+      paidPlan:
+        "La formule payée pour ce bien reste acquise : la suppression de l'annonce ne donne pas lieu à un remboursement.",
+      confirm: "Supprimer l'annonce",
+    },
+    // DECISIONS.md 2026-11-22: the request of the team to bring the listing into line.
+    compliance: {
+      title: "Nous vous demandons de mettre votre annonce en conformité",
+      reason: (reason: string) => `Notre remarque : ${reason}`,
+      deadline: (date: string) =>
+        `Modifiez-la avant le ${date}. Sans modification de votre part à cette date, nous pourrons la supprimer.`,
     },
     soldDialog: {
       title: "Marquer votre bien comme vendu ?",
@@ -382,6 +398,10 @@ export const frProperties = {
       unavailable: "Votre demande n'a pas pu être enregistrée. Réessayez dans un instant.",
       signedOut: "Votre session a pris fin : reconnectez-vous, puis réessayez.",
       price: "Indiquez un prix en euros, sans centimes, ou laissez le champ vide.",
+      offersWaiting:
+        "Des offres attendent votre réponse : répondez-y depuis l'onglet Offres avant de supprimer l'annonce.",
+      offerAccepted: (email: string) =>
+        `Vous avez accepté une offre : la vente est en cours. Pour retirer l'annonce, écrivez-nous à ${email}.`,
     },
     infos: {
       address: "Adresse",

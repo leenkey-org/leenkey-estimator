@@ -5,6 +5,7 @@ import { getProfile } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import {
   deleteDraftSchema,
+  deleteListingSchema,
   listingActionSchema,
   markSoldSchema,
 } from "@/lib/validations/listing-status";
@@ -23,7 +24,10 @@ export type StatusError =
   | "not_found"
   | "suspended"
   | "conflict"
-  | "unavailable";
+  | "unavailable"
+  /** Deletion (listing_delete): offers wait for an answer, or one is accepted. */
+  | "offers_waiting"
+  | "offer_accepted";
 
 export type StatusActionResult =
   | { ok: true; data: { status: ListingStatus } }
@@ -34,11 +38,14 @@ export type DeleteDraftResult = { ok: true; data: null } | { ok: false; error: S
 /**
  * Errors of the SQL functions: 42501 for a listing that is not the seller's
  * or that Leenkey suspended, 22023 for a transition its status does not
- * allow (it changed meanwhile).
+ * allow (it changed meanwhile), 55000 for the offers that block a deletion.
  */
 function errorOf(error: { code: string; message: string }): StatusError {
   if (error.code === "42501") return /suspended/i.test(error.message) ? "suspended" : "not_found";
   if (error.code === "22023") return "conflict";
+  if (error.code === "55000") {
+    return /accepted/i.test(error.message) ? "offer_accepted" : "offers_waiting";
+  }
   return "unavailable";
 }
 
@@ -108,6 +115,29 @@ export async function deleteDraft(input: unknown): Promise<DeleteDraftResult> {
     logFailure("property_soft_delete", profile.id, parsed.data.propertyId, error.code);
     return { ok: false, error: errorOf(error) };
   }
+  revalidatePath("/vendeur", "layout");
+  return { ok: true, data: null };
+}
+
+/**
+ * « Supprimer l'annonce » (DECISIONS.md 2026-11-22): a listing sent, to
+ * correct, online or paused, and its property, softly; its visits to come
+ * cancelled (their buyers told). listing_delete refuses it while offers wait
+ * for an answer or one is accepted, and for a listing suspended by Leenkey.
+ */
+export async function deleteListing(input: unknown): Promise<DeleteDraftResult> {
+  const profile = await getProfile();
+  if (!profile) return { ok: false, error: "auth" };
+  const parsed = deleteListingSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("listing_delete", { p_listing_id: parsed.data.listingId });
+  if (error) {
+    logFailure("listing_delete", profile.id, parsed.data.listingId, error.code);
+    return { ok: false, error: errorOf(error) };
+  }
+  // The search and the public page read the base at each request (as after
+  // a pause): the listing has left them already.
   revalidatePath("/vendeur", "layout");
   return { ok: true, data: null };
 }

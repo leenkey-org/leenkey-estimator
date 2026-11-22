@@ -211,3 +211,56 @@ export async function sellerPhotos(propertyId: string): Promise<QueryResult<Sell
   await requireProfile();
   return readPhotos(await createClient(), propertyId);
 }
+
+/** What the page of a property says about deleting its listing (DECISIONS.md 2026-11-22). */
+export type ListingDeletionFacts = {
+  /** A paid plan in force on the property: deleting does not refund it. */
+  paidPlan: boolean;
+  /** The request of the team to bring the listing into line, while it stands. */
+  compliance: { reason: string; dueAt: string } | null;
+};
+
+/**
+ * The request to bring the listing into line and the paid plan of a property
+ * of the seller; null when they could not be read (the page then says
+ * nothing of them).
+ */
+export async function listingDeletionFacts(
+  propertyId: string,
+  listingId: string,
+): Promise<ListingDeletionFacts | null> {
+  const profile = await requireProfile();
+  try {
+    const supabase = await createClient();
+    const [listing, subscription] = await Promise.all([
+      supabase
+        .from("listings")
+        .select("compliance_reason, compliance_due_at")
+        .eq("id", listingId)
+        .maybeSingle(),
+      supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("property_id", propertyId)
+        .is("refunded_at", null)
+        .gt("amount_paid_cents", 0)
+        .gt("ends_at", new Date().toISOString())
+        .limit(1),
+    ]);
+    if (listing.error) throw new Error(`listings: ${listing.error.code}`);
+    if (subscription.error) throw new Error(`subscriptions: ${subscription.error.code}`);
+    const reason = listing.data?.compliance_reason ?? null;
+    const dueAt = listing.data?.compliance_due_at ?? null;
+    return {
+      paidPlan: subscription.data.length > 0,
+      compliance: reason && dueAt ? { reason, dueAt } : null,
+    };
+  } catch (error) {
+    console.error("[properties] deletion facts read failed", {
+      user_id: profile.id,
+      entity_id: propertyId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}

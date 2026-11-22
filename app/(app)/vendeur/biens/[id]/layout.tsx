@@ -5,6 +5,7 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { requireProfile } from "@/core/auth/session";
 import { PropertySheetHeader } from "@/leenkey/properties/components/property-sheet";
 import { propertyForSheet } from "@/leenkey/properties/load";
+import { listingDeletionFacts } from "@/leenkey/properties/queries";
 import { sheetHref } from "@/leenkey/properties/sheet";
 import { frProperties } from "@/lib/i18n/sections/properties";
 
@@ -21,11 +22,20 @@ type Props = { children: ReactNode; params: Promise<{ id: string }> };
 export default async function PropertySheetLayout({ children, params }: Props) {
   const [{ id }, profile] = await Promise.all([params, requireProfile()]);
   const property = await propertyForSheet(id);
+  // The request of the team and the paid plan (DECISIONS.md 2026-11-22).
+  const deletion = property?.listing
+    ? await listingDeletionFacts(property.id, property.listing.id)
+    : null;
   return (
     <div className="mx-auto w-full max-w-lk-settings px-5 py-6 md:px-10 md:py-10">
       {property ? (
         <>
-          <PropertySheetHeader property={property} roles={profile.roles} profileId={profile.id} />
+          <PropertySheetHeader
+            property={property}
+            roles={profile.roles}
+            profileId={profile.id}
+            deletion={deletion}
+          />
           <div className="mt-6">{children}</div>
         </>
       ) : (

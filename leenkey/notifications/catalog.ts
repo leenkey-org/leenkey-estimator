@@ -26,7 +26,7 @@ import type { NotificationView } from "@/core/notifications/types";
 import type { Space } from "@/leenkey/navigation/spaces";
 import { legalDate } from "@/leenkey/billing/withdrawal";
 import { visitDateTime } from "@/leenkey/visits/dates";
-import { formatAmount, formatPrice } from "@/lib/format";
+import { formatAmount, formatDateTime, formatPrice } from "@/lib/format";
 import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { frNotifications } from "@/lib/i18n/sections/notifications";
 
@@ -129,6 +129,12 @@ function dateTime(value: unknown): string | null {
   return iso && !Number.isNaN(Date.parse(iso)) ? visitDateTime(iso) : null;
 }
 
+/** « 29 nov. à 14 h 05 », the deadline of a request; null when it is none. */
+function dueDate(value: unknown): string | null {
+  const iso = text(value);
+  return iso && !Number.isNaN(Date.parse(iso)) ? formatDateTime(iso) : null;
+}
+
 const CATALOG: Record<string, Entry> = {
   "message.new": {
     icon: MessageCircle,
@@ -226,6 +232,29 @@ const CATALOG: Record<string, Entry> = {
       const title = text(data.title);
       return title ? t.listingRejected.detail(title) : null;
     },
+  },
+  // DECISIONS.md 2026-11-22: the request of the team to bring a listing into
+  // line, its reminder, the deletion once the deadline passed (the seller).
+  "listing.compliance_requested": {
+    icon: FileWarning,
+    tone: "warning",
+    filters: [],
+    title: () => t.listingComplianceRequested.title,
+    detail: (data) => t.listingComplianceRequested.detail(text(data.title), dueDate(data.due_at)),
+  },
+  "listing.compliance_reminder": {
+    icon: FileWarning,
+    tone: "warning",
+    filters: [],
+    title: () => t.listingComplianceReminder.title,
+    detail: (data) => t.listingComplianceReminder.detail(text(data.title), dueDate(data.due_at)),
+  },
+  "listing.deleted": {
+    icon: CircleAlert,
+    tone: "warning",
+    filters: [],
+    title: () => t.listingDeleted.title,
+    detail: (data) => t.listingDeleted.detail(text(data.title)),
   },
   // L1-40: a plan ending within 30 days (the seller), a withdrawal to refund (the team).
   "plan.ending": {
