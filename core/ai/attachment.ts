@@ -1,6 +1,6 @@
 import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
-import { describeError, fileRejection, type ModelRequest } from "./client";
+import { describeError, modelErrorKind, type ModelRequest } from "./client";
 import { textOf, type TextCall } from "./generate";
 import { ATTACHMENT_SETTINGS } from "./models";
 
@@ -14,13 +14,13 @@ import { ATTACHMENT_SETTINGS } from "./models";
 
 export type AttachmentMediaType = "application/pdf" | "image/jpeg" | "image/png";
 
-export type Attachment = { mediaType: AttachmentMediaType; data: Uint8Array };
+/** A file ready to leave: encoded once, whatever the number of requests that carry it. */
+export type Attachment = { mediaType: AttachmentMediaType; base64: string };
 
 /**
- * What a request may carry. A PDF: 20 MB (26.7 MB once in base64, under the
- * 32 MB of a request) and 100 pages, counted by the API, which refuses a
- * longer one. An image: 3.75 MB (5 MB once in base64, the most the API takes
- * for one image).
+ * What we send, our own limits (the API has its own, which its errors tell:
+ * modelErrorKind). A PDF: 20 MB (the most a document of a sale weighs) and
+ * 100 pages. An image: 3.75 MB. A longer or heavier file is never sent.
  */
 export const ATTACHMENT_LIMITS = {
   pdfBytes: 20 * 1024 * 1024,
@@ -28,12 +28,27 @@ export const ATTACHMENT_LIMITS = {
   imageBytes: 3_750_000,
 } as const;
 
-/** A file heavier than a request may carry: never sent. */
+/** A file heavier than we send. */
 export function attachmentTooHeavy(mediaType: AttachmentMediaType, sizeBytes: number): boolean {
   return (
     sizeBytes >
     (mediaType === "application/pdf" ? ATTACHMENT_LIMITS.pdfBytes : ATTACHMENT_LIMITS.imageBytes)
   );
+}
+
+/**
+ * The pages of a PDF, counted from its page objects (« /Type /Page »); null
+ * when they cannot be counted this way (page objects kept in compressed
+ * streams): the file is then sent, and the API says if it is too long.
+ */
+export function pdfPageCount(data: Uint8Array): number | null {
+  const text = new TextDecoder("latin1").decode(data);
+  const pages = text.match(/\/Type\s*\/Page(?![A-Za-z])/g)?.length ?? 0;
+  return pages > 0 ? pages : null;
+}
+
+export function encodeAttachment(mediaType: AttachmentMediaType, data: Uint8Array): Attachment {
+  return { mediaType, base64: Buffer.from(data).toString("base64") };
 }
 
 /** The request of a text about a file: its rules (system), the file, then what to write. */
@@ -43,7 +58,7 @@ export function attachmentRequest(
   attachment: Attachment,
   prompt: string,
 ): ModelRequest {
-  const data = Buffer.from(attachment.data).toString("base64");
+  const data = attachment.base64;
   const file: Anthropic.ContentBlockParam =
     attachment.mediaType === "application/pdf"
       ? { type: "document", source: { type: "base64", media_type: "application/pdf", data } }
@@ -60,13 +75,15 @@ export function attachmentRequest(
 }
 
 export type AttachmentError =
-  /** The model could not be reached: to try again later. */
+  /** No answer (a timeout, the network): to try again later. */
   | "unavailable"
+  /** The model cannot be asked for now (key, quota, service): the caller stops, nothing was read. */
+  | "blocked"
   /** The model declined to answer. */
   | "refused"
   /** Nothing written, or an answer cut off by its length. */
   | "empty"
-  /** Refused by the API as sent: too many pages, too heavy, not readable. */
+  /** Refused by the API as sent: does not fit the context, too heavy, not accepted as written. */
   | "too_long"
   | "too_heavy"
   | "rejected";
@@ -90,7 +107,7 @@ export async function generateFromAttachment(
       kind: log.kind,
       error: describeError(error),
     });
-    return { ok: false, error: fileRejection(error) ?? "unavailable", message: null };
+    return { ok: false, error: modelErrorKind(error) ?? "unavailable", message: null };
   }
   if (message.stop_reason === "refusal") return { ok: false, error: "refused", message };
   const text = textOf(message);

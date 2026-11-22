@@ -6,4 +6,4 @@ Ne recopie ni le nom des parties, ni le prix d'acquisition, ni les références 
 
 Points d'attention : les servitudes, l'usufruit, l'indivision, les conditions particulières, tels qu'écrits. Tu ne dis pas ce qu'ils impliquent pour la vente : c'est le rôle du notaire.
 
-`public_facts`, clé permise : `servitudes` (« Aucune mentionnée » si le document le dit).
+`public_facts` : aucun, rends `{}`.

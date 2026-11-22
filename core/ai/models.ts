@@ -49,15 +49,17 @@ export const SUGGESTION_SETTINGS = {
 /**
  * A file read by the model (L3-05: the documents of a sale): one call of
  * MODELS.smart, not streamed, adaptive thinking at medium effort (a document
- * of a hundred pages is read whole, its facts copied exactly). 8 000 tokens
- * at most, thinking included: an analysis is about 1 000. Nobody waits for
- * it on a screen: two minutes, no retry (the scheduled task takes it again).
+ * is read whole, its facts copied exactly). 16 000 tokens at most, thinking
+ * included: an analysis is about 1 500, the rest is room to think about a
+ * long document without the answer being cut off. Nobody waits for it on a
+ * screen: 45 seconds per try, and the retries of the SDK (a quota, the
+ * service busy) within the time the caller has.
  */
 export const ATTACHMENT_SETTINGS = {
   effort: "medium",
-  maxTokens: 8_000,
-  timeoutMs: 120_000,
-  maxRetries: 0,
+  maxTokens: 16_000,
+  timeoutMs: 45_000,
+  maxRetries: 2,
 } as const;
 
 /**

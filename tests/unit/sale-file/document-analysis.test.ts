@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type Anthropic from "@anthropic-ai/sdk";
+import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PlannedEmail, QueuedNotification } from "@/core/notifications/batch";
@@ -11,6 +11,8 @@ import {
   parseDocumentAnalysis,
   PUBLIC_FACT_KEYS,
   PUBLIC_FACTS_BY_TYPE,
+  readPublicFacts,
+  redactContacts,
   storedDocumentAnalysis,
 } from "@/lib/validations/document-analysis";
 import { Constants, type Database } from "@/types/database";
@@ -24,34 +26,38 @@ import { Constants, type Database } from "@/types/database";
 const mocks = vi.hoisted(() => ({ configured: true, mock: false }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/core/ai/client", () => ({
+// The real classification of the errors and their description; never the real model.
+vi.mock("@/core/ai/client", async (original) => ({
+  ...(await original<typeof import("@/core/ai/client")>()),
   isAiConfigured: () => mocks.configured,
   isAiMock: () => mocks.mock,
   createModelMessage: vi.fn(async () => {
     throw new Error("the real model is never called by a test");
   }),
-  describeError: (error: unknown) => String(error),
-  fileRejection: (error: unknown) =>
-    typeof error === "object" && error !== null && "rejection" in error ? error.rejection : null,
 }));
 
 const { analysisPrompt, analysisPromptName, analysisSystemPrompt, analyzeDocuments } =
   await import("@/leenkey/sale-file/analysis");
 const { mockAnalysis, mockDocumentAnalysis } = await import("@/leenkey/sale-file/analysis-mock");
-const { buyerSummary, publicFactLines, sellerAnalysis } =
+const { buyerSummary, publicFactLines, sellerAnalysis, PENDING_DELAY_MS } =
   await import("@/leenkey/sale-file/analysis-view");
 const { buildChecklist } = await import("@/leenkey/sale-file/checklist");
-const { MODELS } = await import("@/core/ai/models");
-const { attachmentTooHeavy, ATTACHMENT_LIMITS } = await import("@/core/ai/attachment");
+const { MODELS, ATTACHMENT_SETTINGS } = await import("@/core/ai/models");
+const { modelErrorKind } = await import("@/core/ai/client");
+const { attachmentTooHeavy, ATTACHMENT_LIMITS, pdfPageCount } =
+  await import("@/core/ai/attachment");
 
 const valid = {
-  type_detected: "pv_ag",
+  type_detected: "appel_charges",
   date: "2026-03-14",
-  key_facts: [{ label: "Travaux votés", value: "Ravalement de façade, 42 000 €, appel en 2027" }],
-  points_of_attention: [{ level: "attention", text: "Une procédure en cours contre un tiers." }],
-  summary_seller: "Le procès-verbal vote un ravalement.",
-  summary_buyer: "L'assemblée a voté un ravalement.",
-  public_facts: { travaux_votes: "Ravalement 2027", procedures: "Aucune mentionnée" },
+  key_facts: [{ label: "Montant appelé", value: "450 € par trimestre" }],
+  points_of_attention: [{ level: "attention", text: "Un appel exceptionnel pour travaux." }],
+  summary_seller: "L'appel de charges du premier trimestre.",
+  summary_buyer: "Les charges appelées pour un trimestre.",
+  public_facts: {
+    charges: { montant: 450, periode: "trimestre" },
+    fonds_travaux: { montant: 60, periode: "trimestre" },
+  },
   quality: "ok",
   quality_note: null,
 };
@@ -65,13 +71,13 @@ beforeEach(() => {
 describe("what the model must write (Zod)", () => {
   it("accepts the shape of the SPEC with the quality of the file", () => {
     expect(documentAnalysisSchema.safeParse(valid).success).toBe(true);
-    expect(parseDocumentAnalysis(json(valid), "pv_ag")).toEqual(valid);
+    expect(parseDocumentAnalysis(json(valid), "appel_charges")).toEqual(valid);
   });
 
   it("reads the object out of a code fence or a sentence", () => {
-    expect(parseDocumentAnalysis(`Voici :\n\`\`\`json\n${json(valid)}\n\`\`\``, "pv_ag")).toEqual(
-      valid,
-    );
+    expect(
+      parseDocumentAnalysis(`Voici :\n\`\`\`json\n${json(valid)}\n\`\`\``, "appel_charges"),
+    ).toEqual(valid);
   });
 
   it.each([
@@ -86,8 +92,9 @@ describe("what the model must write (Zod)", () => {
     ["a date in words", json({ ...valid, date: "14 mars 2026" })],
     ["no summary for the buyer", json({ ...valid, summary_buyer: "" })],
     ["a field missing", json({ ...valid, key_facts: undefined })],
+    ["public facts that are a text", json({ ...valid, public_facts: "Charges : 450 €" })],
   ])("refuses %s", (_name, text) => {
-    expect(parseDocumentAnalysis(text, "pv_ag")).toBeNull();
+    expect(parseDocumentAnalysis(text, "appel_charges")).toBeNull();
   });
 
   it("shortens what is only too long, never more", () => {
@@ -100,7 +107,7 @@ describe("what the model must write (Zod)", () => {
       })),
       summary_seller: "s".repeat(2_000),
     };
-    const parsed = parseDocumentAnalysis(json(long), "pv_ag");
+    const parsed = parseDocumentAnalysis(json(long), "appel_charges");
     expect(parsed?.key_facts).toHaveLength(ANALYSIS_LIMITS.facts);
     expect(parsed?.points_of_attention).toHaveLength(ANALYSIS_LIMITS.points);
     expect(parsed?.points_of_attention[0].text).toHaveLength(ANALYSIS_LIMITS.point);
@@ -110,58 +117,128 @@ describe("what the model must write (Zod)", () => {
   it("a type the list does not know reads « autre », an empty date none", () => {
     const parsed = parseDocumentAnalysis(
       json({ ...valid, type_detected: "bail", date: "" }),
-      "pv_ag",
+      "appel_charges",
     );
     expect(parsed).toMatchObject({ type_detected: "autre", date: null });
   });
 
-  it("keeps only the public facts of the declared type, and only what may be public", () => {
+  it("the texts a buyer reads carry no link, email, phone number or bare domain", () => {
+    const parsed = parseDocumentAnalysis(
+      json({
+        ...valid,
+        summary_buyer: "Écrivez à syndic@exemple.fr ou appelez le 06 12 34 56 78.",
+        key_facts: [{ label: "Site", value: "Voir https://exemple.fr/x et cabinet-dupont.fr" }],
+        points_of_attention: [{ level: "info", text: "Détails sur www.exemple.com" }],
+      }),
+      "appel_charges",
+    );
+    const text = JSON.stringify([
+      parsed?.summary_buyer,
+      parsed?.key_facts,
+      parsed?.points_of_attention,
+    ]);
+    for (const leak of ["exemple.fr", "06 12", "cabinet-dupont", "www.", "https://"]) {
+      expect(text).not.toContain(leak);
+    }
+    expect(redactContacts("450 € par trimestre, soit 1 800 € par an (art. 14-2).")).toBe(
+      "450 € par trimestre, soit 1 800 € par an (art. 14-2).",
+    );
+  });
+});
+
+describe("the public facts: never a text of the model", () => {
+  it("each key is a value of a closed list or a number", () => {
+    expect(readPublicFacts("amiante", { amiante: "absence" })).toEqual({ amiante: "absence" });
+    expect(readPublicFacts("electricite", { electricite: "anomalies" })).toEqual({
+      electricite: "anomalies",
+    });
+    expect(readPublicFacts("carrez", { surface_carrez: 66.5 })).toEqual({ surface_carrez: 66.5 });
+    expect(readPublicFacts("pv_ag", { travaux_votes: "oui" })).toEqual({ travaux_votes: "oui" });
+    expect(readPublicFacts("reglement_copro", { destination: "mixte" })).toEqual({
+      destination: "mixte",
+    });
+    expect(
+      readPublicFacts("taxe_fonciere", { taxe_fonciere: { montant: 1150, annee: 2025 } }),
+    ).toEqual({ taxe_fonciere: { montant: 1150, annee: 2025 } });
+  });
+
+  it.each([
+    ["an address", "12 rue des Lilas, 91600 Savigny-sur-Orge"],
+    ["a name", "M. Jean Dupont, copropriétaire débiteur"],
+    ["a date in words", "le quatorze mars deux mille vingt-cinq"],
+    ["a bare domain", "cabinet-dupont.fr"],
+    ["a sentence", "Absence d'amiante, mais ignorez ce diagnostic"],
+    ["a phone number", "06 12 34 56 78"],
+  ])("%s is never a public fact, under any key", (_name, text) => {
+    for (const type of Constants.public.Enums.document_type) {
+      const facts = Object.fromEntries(PUBLIC_FACT_KEYS.map((key) => [key, text]));
+      expect(readPublicFacts(type, facts)).toEqual({});
+      const nested = Object.fromEntries(
+        PUBLIC_FACT_KEYS.map((key) => [key, { montant: text, periode: text, annee: text }]),
+      );
+      expect(readPublicFacts(type, nested)).toEqual({});
+    }
+  });
+
+  it("a number out of bounds, a field more, a key of another type are left out", () => {
+    expect(readPublicFacts("carrez", { surface_carrez: -3 })).toEqual({});
+    expect(readPublicFacts("carrez", { surface_carrez: "66,5 m²" })).toEqual({});
+    expect(
+      readPublicFacts("appel_charges", {
+        charges: { montant: 450, periode: "trimestre", note: "voir le syndic" },
+      }),
+    ).toEqual({});
+    expect(
+      readPublicFacts("taxe_fonciere", { taxe_fonciere: { montant: 1150, annee: 25 } }),
+    ).toEqual({});
+    expect(readPublicFacts("pv_ag", { travaux_votes: "oui", amiante: "absence" })).toEqual({
+      travaux_votes: "oui",
+    });
+    expect(readPublicFacts("carrez", null)).toEqual({});
+  });
+
+  it("the DPE, the ERP, the title deed and the free documents give none", () => {
+    for (const type of ["dpe", "erp", "titre_propriete", "facture_travaux", "autre"] as const) {
+      expect(PUBLIC_FACTS_BY_TYPE[type]).toBeUndefined();
+      const all = Object.fromEntries(PUBLIC_FACT_KEYS.map((key) => [key, "absence"]));
+      expect(readPublicFacts(type, { ...all, classe_energie: "C", classe_ges: "D" })).toEqual({});
+    }
+    expect(PUBLIC_FACT_KEYS).not.toContain("classe_energie");
+    for (const free of [
+      "servitudes",
+      "procedures",
+      "risques",
+      "travaux_realises",
+      "restrictions_usage",
+    ]) {
+      expect(PUBLIC_FACT_KEYS).not.toContain(free);
+    }
+  });
+
+  it("an analysis keeps only the facts of the declared type; a document to check keeps none", () => {
     const parsed = parseDocumentAnalysis(
       json({
         ...valid,
         public_facts: {
-          travaux_votes: "Ravalement 2027",
-          procedures: "Voir www.exemple.fr",
-          classe_energie: "C",
+          charges: { montant: 450, periode: "trimestre" },
+          fonds_travaux: "60 € par trimestre",
+          amiante: "absence",
           nom_du_syndic: "Cabinet Dupont",
         },
       }),
-      "pv_ag",
+      "appel_charges",
     );
-    expect(parsed?.public_facts).toEqual({ travaux_votes: "Ravalement 2027" });
-    // The number and the date of a DPE give its address: never public.
-    const dpe = parseDocumentAnalysis(
-      json({
-        ...valid,
-        type_detected: "dpe",
-        public_facts: {
-          classe_energie: "C",
-          classe_ges: "DPE n° 2591E0123456X du 14/03/2025",
-        },
-      }),
-      "dpe",
-    );
-    expect(dpe?.public_facts).toEqual({ classe_energie: "C" });
-    expect(PUBLIC_FACTS_BY_TYPE.dpe).toEqual(["classe_energie", "classe_ges"]);
-  });
-
-  it.each(["06 12 34 56 78", "contact@exemple.fr", "https://exemple.fr", "2025-03-14", "1234567"])(
-    "a public fact never holds « %s »",
-    (value) => {
-      const parsed = parseDocumentAnalysis(
-        json({ ...valid, public_facts: { travaux_votes: `Ravalement ${value}` } }),
-        "pv_ag",
-      );
-      expect(parsed?.public_facts).toEqual({});
-    },
-  );
-
-  it("a document to check shows no public fact", () => {
-    const parsed = parseDocumentAnalysis(
-      json({ ...valid, quality: "wrong_type", quality_note: "Ce n'est pas un procès-verbal." }),
-      "pv_ag",
-    );
-    expect(parsed).toMatchObject({ quality: "wrong_type", public_facts: {} });
+    expect(parsed?.public_facts).toEqual({ charges: { montant: 450, periode: "trimestre" } });
+    expect(
+      parseDocumentAnalysis(
+        json({
+          ...valid,
+          quality: "wrong_type",
+          quality_note: "Ce n'est pas un appel de charges.",
+        }),
+        "appel_charges",
+      ),
+    ).toMatchObject({ quality: "wrong_type", public_facts: {} });
   });
 
   it("every type that gives public facts gives keys of the list", () => {
@@ -170,10 +247,17 @@ describe("what the model must write (Zod)", () => {
     }
   });
 
-  it("what the database returns is checked again", () => {
-    expect(storedDocumentAnalysis(valid)).toEqual(valid);
-    expect(storedDocumentAnalysis({ quality: "ok" })).toBeNull();
-    expect(storedDocumentAnalysis(null)).toBeNull();
+  it("what the database returns is checked again, against the type of the document", () => {
+    expect(storedDocumentAnalysis(valid, "appel_charges")).toEqual(valid);
+    expect(storedDocumentAnalysis(valid, "dpe")).toEqual({ ...valid, public_facts: {} });
+    expect(
+      storedDocumentAnalysis(
+        { ...valid, public_facts: { charges: "Appelez le 06 12 34 56 78" } },
+        "appel_charges",
+      ),
+    ).toEqual({ ...valid, public_facts: {} });
+    expect(storedDocumentAnalysis({ quality: "ok" }, "dpe")).toBeNull();
+    expect(storedDocumentAnalysis(null, "dpe")).toBeNull();
   });
 });
 
@@ -260,20 +344,18 @@ describe("the rules given to the model", () => {
 
 describe("the model of the tests (AI_MOCK=1)", () => {
   it("gives the same valid analysis for the same type and title", async () => {
-    const analysis = mockAnalysis("dpe", "DPE 2025");
-    expect(analysis).toEqual(mockAnalysis("dpe", "DPE 2025"));
+    const analysis = mockAnalysis("carrez", "Mesurage 2025");
+    expect(analysis).toEqual(mockAnalysis("carrez", "Mesurage 2025"));
     expect(documentAnalysisSchema.safeParse(analysis).success).toBe(true);
-    expect(analysis).toMatchObject({
-      quality: "ok",
-      public_facts: { classe_energie: "C", classe_ges: "D" },
-    });
-    const message = await mockDocumentAnalysis({ type: "dpe", title: "DPE 2025" })({
+    expect(analysis).toMatchObject({ quality: "ok", public_facts: { surface_carrez: 66.5 } });
+    expect(mockAnalysis("dpe", "DPE 2025").public_facts).toEqual({});
+    const message = await mockDocumentAnalysis({ type: "carrez", title: "Mesurage 2025" })({
       model: "mock",
       max_tokens: 1,
       messages: [],
     });
     const text = message.content.flatMap((block) => (block.type === "text" ? [block.text] : []))[0];
-    expect(parseDocumentAnalysis(text, "dpe")).toEqual(analysis);
+    expect(parseDocumentAnalysis(text, "carrez")).toEqual(analysis);
   });
 
   it("every type gives an analysis the schema accepts", () => {
@@ -293,19 +375,90 @@ describe("the model of the tests (AI_MOCK=1)", () => {
   });
 });
 
+describe("what an error of the API means (status and type, not its words)", () => {
+  const apiError = (status: number, type: string, message: string) =>
+    Anthropic.APIError.generate(
+      status,
+      { type: "error", error: { type, message } },
+      message,
+      new Headers(),
+    );
+
+  it("a request too large, a context that does not fit, a request refused as written", () => {
+    expect(
+      modelErrorKind(apiError(413, "request_too_large", "Request exceeds the maximum size")),
+    ).toBe("too_heavy");
+    expect(
+      modelErrorKind(
+        apiError(
+          400,
+          "invalid_request_error",
+          "prompt is too long: 1203456 tokens > 1000000 maximum",
+        ),
+      ),
+    ).toBe("too_long");
+    // A message that only speaks of pages is not taken for a file too long.
+    expect(
+      modelErrorKind(apiError(400, "invalid_request_error", "messages.0.content.0: invalid pages")),
+    ).toBe("rejected");
+    // A setting of ours the API does not accept looks the same: never final.
+    expect(
+      modelErrorKind(apiError(400, "invalid_request_error", "max_tokens: 999999 > 128000")),
+    ).toBe("rejected");
+  });
+
+  it.each([
+    [401, "authentication_error"],
+    [402, "billing_error"],
+    [403, "permission_error"],
+    [404, "not_found_error"],
+    [429, "rate_limit_error"],
+    [500, "api_error"],
+    [529, "overloaded_error"],
+  ])("%i %s: the model cannot be asked for now", (status, type) => {
+    expect(modelErrorKind(apiError(status, type, "x"))).toBe("blocked");
+  });
+
+  it("no answer at all (a timeout, the network, an abort) is none of them", () => {
+    expect(modelErrorKind(new Anthropic.APIConnectionTimeoutError())).toBeNull();
+    expect(modelErrorKind(new Anthropic.APIUserAbortError())).toBeNull();
+    expect(modelErrorKind(new Error("socket hang up"))).toBeNull();
+  });
+
+  it("the pages of a PDF are counted from its page objects, when they can be", () => {
+    const pdf = (pages: number) =>
+      new TextEncoder().encode(
+        `%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type /Pages/Count ${pages}>>endobj\n` +
+          Array.from(
+            { length: pages },
+            (_, index) => `${index + 3} 0 obj<</Type /Page/Parent 2 0 R>>endobj`,
+          ).join("\n"),
+      );
+    expect(pdfPageCount(pdf(1))).toBe(1);
+    expect(pdfPageCount(pdf(101))).toBe(101);
+    // Page objects in compressed streams: not counted, the API decides.
+    expect(
+      pdfPageCount(new TextEncoder().encode("%PDF-1.7\n1 0 obj<</Type/ObjStm>>stream…")),
+    ).toBeNull();
+  });
+});
+
 type Claimed = Database["public"]["Functions"]["document_analysis_claim"]["Returns"][number];
 
 const PROPERTY = "11111111-1111-4111-8111-111111111111";
+// Generated types declare the columns of a function result as never null.
+const NONE = null as unknown as string;
 const claimed = (overrides: Partial<Claimed> = {}): Claimed => ({
   document_id: "d1",
   property_id: PROPERTY,
   owner_id: "owner",
-  type: "pv_ag",
-  title: "PV 2026",
+  type: "appel_charges",
+  title: "Appel 2026",
   storage_path: `${PROPERTY}/sale/22222222-2222-4222-8222-222222222222.pdf`,
   mime_type: "application/pdf",
   size_bytes: 4,
   attempt: 1,
+  last_error: NONE,
   property_type: "appartement",
   surface_m2: 68,
   carrez_m2: 66.5,
@@ -325,11 +478,14 @@ function answer(text: string, stop: Anthropic.StopReason = "end_turn"): Anthropi
   } as unknown as Anthropic.Message;
 }
 
+const BYTES = new Uint8Array([37, 80, 68, 70]);
+
 /** The service client of the task: its queue, the file, and what it writes. */
-function fakeAdmin(queue: Claimed[], { file = new Uint8Array([37, 80, 68, 70]) } = {}) {
+function fakeAdmin(queue: Claimed[], { file = BYTES } = {}) {
   const calls: { name: string; args: Record<string, unknown> }[] = [];
   const downloads: string[] = [];
   const logged: { table: string; row: Record<string, unknown> }[] = [];
+  const updates: { table: string; row: Record<string, unknown>; id: unknown }[] = [];
   const client = {
     rpc: async (name: string, args: Record<string, unknown>) => {
       calls.push({ name, args });
@@ -354,6 +510,12 @@ function fakeAdmin(queue: Claimed[], { file = new Uint8Array([37, 80, 68, 70]) }
           then: (resolve: (value: { error: null }) => void) => resolve({ error: null }),
         };
       },
+      update: (row: Record<string, unknown>) => ({
+        eq: async (_column: string, id: unknown) => {
+          updates.push({ table, row, id });
+          return { error: null };
+        },
+      }),
     }),
   };
   return {
@@ -361,6 +523,8 @@ function fakeAdmin(queue: Claimed[], { file = new Uint8Array([37, 80, 68, 70]) }
     calls,
     downloads,
     logged,
+    updates,
+    claims: () => calls.filter((call) => call.name === "document_analysis_claim"),
     closed: () => calls.filter((call) => call.name !== "document_analysis_claim"),
   };
 }
@@ -373,6 +537,7 @@ describe("the scheduled task", () => {
       analysed: 0,
       failed: 0,
       left: 0,
+      released: 0,
       skipped: "not_configured",
     });
     expect(admin.calls).toEqual([]);
@@ -387,21 +552,23 @@ describe("the scheduled task", () => {
         return answer(json(valid));
       },
     });
-    expect(run).toEqual({ analysed: 1, failed: 0, left: 0 });
+    expect(run).toEqual({ analysed: 1, failed: 0, left: 0, released: 0 });
     expect(admin.downloads).toEqual([
       `documents:${PROPERTY}/sale/22222222-2222-4222-8222-222222222222.pdf`,
     ]);
     expect(requests).toHaveLength(1);
     const [request] = requests;
     expect(request.model).toBe(MODELS.smart);
+    expect(request.max_tokens).toBe(16_000);
     expect(request.output_config).toEqual({ effort: "medium" });
+    expect(ATTACHMENT_SETTINGS).toMatchObject({ maxRetries: 2, timeoutMs: 45_000 });
     const content = request.messages[0].content;
     expect(Array.isArray(content) && content[0]).toEqual({
       type: "document",
       source: {
         type: "base64",
         media_type: "application/pdf",
-        data: Buffer.from([37, 80, 68, 70]).toString("base64"),
+        data: Buffer.from(BYTES).toString("base64"),
       },
     });
     expect(Array.isArray(content) && content[1]).toMatchObject({ type: "text" });
@@ -425,7 +592,7 @@ describe("the scheduled task", () => {
       output_tokens: 700,
     });
     expect(JSON.stringify(admin.logged[1].row)).not.toContain(
-      Buffer.from([37, 80, 68, 70]).toString("base64"),
+      Buffer.from(BYTES).toString("base64"),
     );
   });
 
@@ -447,52 +614,75 @@ describe("the scheduled task", () => {
     expect(block).toMatchObject({ type: "image", source: { media_type: "image/jpeg" } });
   });
 
-  it("an answer that is not the JSON asked for is asked once more", async () => {
-    const admin = fakeAdmin([claimed()]);
-    const prompts: string[] = [];
-    const answers = [
-      answer("Voici mon analyse : le document est un procès-verbal."),
-      answer(json(valid)),
-    ];
-    const run = await analyzeDocuments(admin.client, {
-      call: async (request) => {
-        const content = request.messages[0].content;
-        const text = Array.isArray(content) ? content[1] : null;
-        prompts.push(text && text.type === "text" ? text.text : "");
-        return answers.shift() ?? answer("");
-      },
-    });
-    expect(run).toEqual({ analysed: 1, failed: 0, left: 0 });
-    expect(prompts).toHaveLength(2);
-    expect(prompts[0]).not.toContain("réponse précédente");
-    expect(prompts[1]).toContain("Ta réponse précédente n'était pas l'objet JSON demandé");
-    expect(admin.closed()[0].name).toBe("document_analysis_record");
-    // Both calls are billed: both are logged.
-    expect(admin.logged.filter((entry) => entry.table === "ai_conversations")).toHaveLength(2);
+  it("one batch of three a run, each document called once", async () => {
+    const admin = fakeAdmin(
+      Array.from({ length: 5 }, (_, index) => claimed({ document_id: `d${index}` })),
+    );
+    const call = vi.fn(async () => answer(json(valid)));
+    const run = await analyzeDocuments(admin.client, { call });
+    expect(run.analysed).toBe(3);
+    expect(call).toHaveBeenCalledTimes(3);
+    expect(admin.claims()).toEqual([{ name: "document_analysis_claim", args: { p_limit: 3 } }]);
   });
 
-  it("invalid twice: the document is closed without an analysis, with its error", async () => {
+  it("an answer that is not the JSON asked for: left for a later run, never asked twice in one", async () => {
     const admin = fakeAdmin([claimed()]);
-    const call = vi.fn(async () => answer("{ pas du JSON"));
+    const call = vi.fn(async () => answer("Voici mon analyse : c'est un appel de charges."));
     const run = await analyzeDocuments(admin.client, { call });
-    expect(call).toHaveBeenCalledTimes(2);
-    expect(run).toEqual({ analysed: 0, failed: 1, left: 0 });
+    expect(call).toHaveBeenCalledTimes(1);
+    expect(admin.claims()).toHaveLength(1);
+    expect(run).toEqual({ analysed: 0, failed: 0, left: 1, released: 0 });
     expect(admin.closed()).toEqual([
       {
         name: "document_analysis_fail",
-        args: { p_document: "d1", p_error: "invalid", p_final: true },
+        args: { p_document: "d1", p_error: "invalid", p_final: false },
       },
     ]);
   });
 
-  it("the model not reached: left for a next run, not closed", async () => {
+  it("the later run says so to the model; invalid again, the document is closed with its error", async () => {
+    const prompts: string[] = [];
+    const read = (request: Anthropic.MessageCreateParamsNonStreaming) => {
+      const content = request.messages[0].content;
+      const text = Array.isArray(content) ? content[1] : null;
+      prompts.push(text && text.type === "text" ? text.text : "");
+    };
+    const first = fakeAdmin([claimed()]);
+    await analyzeDocuments(first.client, {
+      call: async (request) => {
+        read(request);
+        return answer(json(valid));
+      },
+    });
+    const second = fakeAdmin([claimed({ attempt: 2, last_error: "invalid" })]);
+    const run = await analyzeDocuments(second.client, {
+      call: async (request) => {
+        read(request);
+        return answer("{ pas du JSON");
+      },
+    });
+    expect(prompts[0]).not.toContain("réponse précédente");
+    expect(prompts[1]).toContain("Ta réponse précédente n'était pas l'objet JSON demandé");
+    expect(run).toEqual({ analysed: 0, failed: 1, left: 0, released: 0 });
+    expect(second.closed()[0].args).toEqual({
+      p_document: "d1",
+      p_error: "invalid",
+      p_final: true,
+    });
+    // An answer cut off by its length is not one either.
+    const cut = fakeAdmin([claimed({ attempt: 2, last_error: "invalid" })]);
+    await analyzeDocuments(cut.client, { call: async () => answer("{", "max_tokens") });
+    expect(cut.closed()[0].args).toMatchObject({ p_error: "invalid", p_final: true });
+  });
+
+  it("no answer in time: counted, left for a later run, not closed", async () => {
     const admin = fakeAdmin([claimed()]);
     const run = await analyzeDocuments(admin.client, {
       call: async () => {
-        throw new Error("timeout");
+        throw new Anthropic.APIConnectionTimeoutError();
       },
     });
-    expect(run).toEqual({ analysed: 0, failed: 0, left: 1 });
+    expect(run).toEqual({ analysed: 0, failed: 0, left: 1, released: 0 });
     expect(admin.closed()).toEqual([
       {
         name: "document_analysis_fail",
@@ -501,19 +691,60 @@ describe("the scheduled task", () => {
     ]);
   });
 
+  const apiError = (status: number, type: string, message: string) =>
+    Anthropic.APIError.generate(
+      status,
+      { type: "error", error: { type, message } },
+      message,
+      new Headers(),
+    );
+
   it.each([
-    ["too_long", "too_long"],
-    ["too_heavy", "too_heavy"],
-    ["rejected", "unreadable"],
-  ])("a file the API refuses (%s) is closed as %s", async (rejection, error) => {
-    const admin = fakeAdmin([claimed()]);
-    const run = await analyzeDocuments(admin.client, {
-      call: async () => {
-        throw Object.assign(new Error("400"), { rejection });
-      },
+    [401, "authentication_error"],
+    [403, "permission_error"],
+    [429, "rate_limit_error"],
+    [500, "api_error"],
+    [529, "overloaded_error"],
+  ])(
+    "%i: the documents are given back with their attempt, none is closed",
+    async (status, type) => {
+      const admin = fakeAdmin([claimed(), claimed({ document_id: "d2" })]);
+      const run = await analyzeDocuments(admin.client, {
+        call: async () => {
+          throw apiError(status, type, "x");
+        },
+      });
+      expect(run).toEqual({ analysed: 0, failed: 0, left: 0, released: 2 });
+      expect(admin.closed()).toEqual([
+        { name: "document_analysis_release", args: { p_document: "d1" } },
+        { name: "document_analysis_release", args: { p_document: "d2" } },
+      ]);
+      expect(admin.logged).toEqual([]);
+    },
+  );
+
+  it("only what the API says of the file itself closes a document", async () => {
+    const outcome = async (error: unknown) => {
+      const admin = fakeAdmin([claimed()]);
+      await analyzeDocuments(admin.client, {
+        call: async () => {
+          throw error;
+        },
+      });
+      return admin.closed()[0].args;
+    };
+    expect(await outcome(apiError(413, "request_too_large", "too large"))).toEqual({
+      p_document: "d1",
+      p_error: "too_heavy",
+      p_final: true,
     });
-    expect(run.failed).toBe(1);
-    expect(admin.closed()[0].args).toEqual({ p_document: "d1", p_error: error, p_final: true });
+    expect(
+      await outcome(apiError(400, "invalid_request_error", "prompt is too long: 1200000 tokens")),
+    ).toEqual({ p_document: "d1", p_error: "too_long", p_final: true });
+    // A 400 we do not recognise (a damaged file, or a setting of ours): never final.
+    expect(
+      await outcome(apiError(400, "invalid_request_error", "output_config.effort: invalid value")),
+    ).toEqual({ p_document: "d1", p_error: "unreadable", p_final: false });
   });
 
   it("a refusal of the model closes the document", async () => {
@@ -522,7 +753,7 @@ describe("the scheduled task", () => {
     expect(admin.closed()[0].args).toMatchObject({ p_error: "refused", p_final: true });
   });
 
-  it("a file too heavy for a request is never sent", async () => {
+  it("a file heavier than we send is never sent", async () => {
     expect(attachmentTooHeavy("image/png", ATTACHMENT_LIMITS.imageBytes + 1)).toBe(true);
     expect(attachmentTooHeavy("application/pdf", ATTACHMENT_LIMITS.imageBytes + 1)).toBe(false);
     const admin = fakeAdmin([
@@ -537,6 +768,28 @@ describe("the scheduled task", () => {
     expect(call).not.toHaveBeenCalled();
     expect(admin.downloads).toEqual([]);
     expect(admin.closed()[0].args).toMatchObject({ p_error: "too_heavy", p_final: true });
+  });
+
+  it("a PDF of more than 100 pages is not sent: our limit, kept with its count", async () => {
+    const pages = (count: number) =>
+      new TextEncoder().encode(
+        "%PDF-1.4\n" +
+          Array.from({ length: count }, () => "1 0 obj<</Type /Page>>endobj").join("\n"),
+      );
+    const long = fakeAdmin([claimed()], { file: pages(101) });
+    const call = vi.fn(async () => answer(json(valid)));
+    await analyzeDocuments(long.client, { call });
+    expect(call).not.toHaveBeenCalled();
+    expect(long.updates).toEqual([{ table: "documents", row: { page_count: 101 }, id: "d1" }]);
+    expect(long.closed()[0].args).toEqual({
+      p_document: "d1",
+      p_error: "too_long",
+      p_final: true,
+    });
+    const short = fakeAdmin([claimed()], { file: pages(100) });
+    await analyzeDocuments(short.client, { call });
+    expect(call).toHaveBeenCalledTimes(1);
+    expect(short.closed()[0].name).toBe("document_analysis_record");
   });
 
   it.each([
@@ -554,105 +807,156 @@ describe("the scheduled task", () => {
 
   it("with AI_MOCK the analysis is the one of the tests, « illisible » included", async () => {
     mocks.mock = true;
-    const admin = fakeAdmin([claimed({ title: "PV illisible" })]);
-    expect(await analyzeDocuments(admin.client)).toEqual({ analysed: 1, failed: 0, left: 0 });
+    const admin = fakeAdmin([claimed({ title: "Appel illisible" })]);
+    expect(await analyzeDocuments(admin.client)).toMatchObject({ analysed: 1 });
     expect(admin.closed()[0].args.p_analysis).toMatchObject({ quality: "illegible" });
-  });
-
-  it("takes the documents a few at a time until none waits", async () => {
-    const admin = fakeAdmin(
-      Array.from({ length: 5 }, (_, index) => claimed({ document_id: `d${index}` })),
-    );
-    const run = await analyzeDocuments(admin.client, { call: async () => answer(json(valid)) });
-    expect(run.analysed).toBe(5);
-    expect(admin.calls.filter((call) => call.name === "document_analysis_claim")).toHaveLength(3);
   });
 });
 
 describe("what the screens show", () => {
+  const now = new Date("2026-11-21T10:00:00Z");
   const row = {
     status: "done",
     error: null,
     analysis: valid,
     public_facts_approved_at: null,
     retries_left: 3,
+    waiting_since: "2026-11-21T09:55:00Z",
   };
 
   it("the seller: an analysis written, being written, or why there is none", () => {
-    expect(sellerAnalysis(row)).toEqual({
+    expect(sellerAnalysis(row, "appel_charges", now)).toEqual({
       status: "done",
       error: null,
       analysis: valid,
       publicFactsShown: false,
       retriesLeft: 0,
+      delayed: false,
     });
     expect(
-      sellerAnalysis({ ...row, public_facts_approved_at: "2026-11-21T10:00:00Z" }),
-    ).toMatchObject({
-      publicFactsShown: true,
-    });
-    expect(sellerAnalysis({ ...row, status: "pending", analysis: null })).toMatchObject({
-      status: "pending",
-      error: null,
-      analysis: null,
-    });
+      sellerAnalysis(
+        { ...row, public_facts_approved_at: "2026-11-21T10:00:00Z" },
+        "appel_charges",
+        now,
+      ),
+    ).toMatchObject({ publicFactsShown: true });
     expect(
-      sellerAnalysis({
-        ...row,
-        status: "failed",
-        error: "too_long",
-        analysis: null,
-        retries_left: 2,
-      }),
+      sellerAnalysis({ ...row, status: "pending", analysis: null }, "appel_charges", now),
+    ).toMatchObject({ status: "pending", error: null, analysis: null, delayed: false });
+    expect(
+      sellerAnalysis(
+        { ...row, status: "failed", error: "unreadable", analysis: null, retries_left: 2 },
+        "appel_charges",
+        now,
+      ),
     ).toEqual({
       status: "failed",
-      error: "too_long",
+      error: "unreadable",
       analysis: null,
       publicFactsShown: false,
       retriesLeft: 2,
+      delayed: false,
     });
     // An error the screen does not know reads as the generic one.
     expect(
-      sellerAnalysis({ ...row, status: "failed", error: "autre chose", analysis: null }).error,
+      sellerAnalysis({ ...row, status: "failed", error: "autre", analysis: null }, "dpe", now)
+        .error,
     ).toBe("unavailable");
     // Stored, but not an analysis: never half shown.
-    expect(sellerAnalysis({ ...row, analysis: { quality: "ok" } })).toMatchObject({
+    expect(sellerAnalysis({ ...row, analysis: { quality: "ok" } }, "dpe", now)).toMatchObject({
       status: "failed",
       error: "invalid",
       analysis: null,
     });
   });
 
-  it("the public facts as lines: the keys of the type only, in the order of the list", () => {
+  it("an analysis that waits too long reads « indisponible pour le moment »", () => {
+    const pending = { ...row, status: "pending", analysis: null };
+    const since = (ms: number) => new Date(now.getTime() - ms).toISOString();
     expect(
-      publicFactLines("pv_ag", {
-        procedures: "Aucune mentionnée",
-        travaux_votes: " Ravalement 2027 ",
-        classe_energie: "C",
-        autre: "x",
-      }),
-    ).toEqual([
-      { key: "travaux_votes", value: "Ravalement 2027" },
-      { key: "procedures", value: "Aucune mentionnée" },
-    ]);
-    expect(publicFactLines("autre", { travaux_votes: "x" })).toEqual([]);
-    expect(publicFactLines("dpe", null)).toEqual([]);
-    expect(publicFactLines("dpe", { classe_energie: 3 })).toEqual([]);
+      sellerAnalysis({ ...pending, waiting_since: since(PENDING_DELAY_MS - 1_000) }, "dpe", now)
+        .delayed,
+    ).toBe(false);
+    expect(
+      sellerAnalysis({ ...pending, waiting_since: since(PENDING_DELAY_MS + 1_000) }, "dpe", now)
+        .delayed,
+    ).toBe(true);
+    expect(
+      sellerAnalysis({ ...row, waiting_since: since(PENDING_DELAY_MS * 2) }, "dpe", now).delayed,
+    ).toBe(false);
   });
 
-  it("a buyer: the summary meant for them, never the one of the seller", () => {
+  it.each(["too_long", "too_heavy", "limit"])(
+    "no « Relancer l'analyse » for %s: sending the file again changes nothing",
+    (error) => {
+      expect(
+        sellerAnalysis({ ...row, status: "failed", error, analysis: null }, "dpe", now).retriesLeft,
+      ).toBe(0);
+    },
+  );
+
+  it("a document never read can be started", () => {
+    expect(
+      sellerAnalysis(
+        { ...row, status: "failed", error: "not_started", analysis: null },
+        "dpe",
+        now,
+      ),
+    ).toMatchObject({ status: "failed", error: "not_started", retriesLeft: 3 });
+  });
+
+  it("the public facts as lines, in our words, checked again when read", () => {
+    const plain = (lines: { label: string; value: string }[]) =>
+      lines.map((line) =>
+        `${line.label} : ${line.value}`.replaceAll(String.fromCharCode(0xa0), " "),
+      );
+    expect(
+      plain(
+        publicFactLines("appel_charges", {
+          fonds_travaux: { montant: 60, periode: "trimestre" },
+          charges: { montant: 1450.5, periode: "an" },
+          amiante: "absence",
+          autre: "x",
+        }),
+      ),
+    ).toEqual([
+      "Charges de copropriété appelées : 1 450,5 € par an".replace(
+        "1 450",
+        `1${String.fromCharCode(0x202f)}450`,
+      ),
+      "Fonds de travaux appelé : 60 € par trimestre",
+    ]);
+    expect(plain(publicFactLines("amiante", { amiante: "absence" }))).toEqual([
+      "Amiante : Absence indiquée par le diagnostic",
+    ]);
+    expect(plain(publicFactLines("carrez", { surface_carrez: 66.5 }))).toEqual([
+      "Surface Carrez : 66,5 m²",
+    ]);
+    expect(
+      plain(publicFactLines("taxe_fonciere", { taxe_fonciere: { montant: 980, annee: 2025 } })),
+    ).toEqual(["Taxe foncière : 980 € (2025)"]);
+    // A text stored by mistake, or by an older version, shows nothing.
+    expect(publicFactLines("amiante", { amiante: "Absence. Appelez le 06 12 34 56 78" })).toEqual(
+      [],
+    );
+    expect(publicFactLines("dpe", { classe_energie: "C" })).toEqual([]);
+    expect(publicFactLines("autre", { travaux_votes: "oui" })).toEqual([]);
+    expect(publicFactLines("carrez", null)).toEqual([]);
+  });
+
+  it("a buyer: the summary meant for them, never the one of the seller, no contact detail", () => {
     const summary = buyerSummary({
       document_id: "d1",
-      summary_buyer: "L'assemblée a voté un ravalement.",
+      summary_buyer: "Les charges appelées. Contact : syndic@exemple.fr",
       summary_seller: "À ne pas montrer.",
       document_date: "2026-03-14",
-      key_facts: valid.key_facts,
+      key_facts: [{ label: "Syndic", value: "06 12 34 56 78" }],
       points_of_attention: valid.points_of_attention,
     });
     expect(summary).toEqual({
-      summary: "L'assemblée a voté un ravalement.",
+      summary: "Les charges appelées. Contact : [coordonnées retirées]",
       date: "2026-03-14",
-      keyFacts: valid.key_facts,
+      keyFacts: [{ label: "Syndic", value: "[coordonnées retirées]" }],
       points: valid.points_of_attention,
     });
     expect(JSON.stringify(summary)).not.toContain("À ne pas montrer");

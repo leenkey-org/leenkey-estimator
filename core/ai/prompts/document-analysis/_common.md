@@ -32,7 +32,7 @@ Rends uniquement un objet JSON, sans texte avant ni après, sans bloc de code :
   "points_of_attention": [{"level": "info ou attention", "text": "un constat neutre"}],
   "summary_seller": "résumé pour le vendeur",
   "summary_buyer": "résumé pour un acquéreur à qui le document est partagé",
-  "public_facts": {"cle": "valeur courte"},
+  "public_facts": {"cle": "valeur d'une liste fermée, ou nombre"},
   "quality": "ok, illegible, incomplete ou wrong_type",
   "quality_note": "une phrase, ou null"
 }
@@ -40,4 +40,4 @@ Rends uniquement un objet JSON, sans texte avant ni après, sans bloc de code :
 - `key_facts` : 12 au plus, les faits demandés pour ce type de document, chacun en une ligne (libellé de 80 caractères au plus, valeur de 300 au plus).
 - `points_of_attention` : 8 au plus, 400 caractères chacun. `attention` pour ce que le document signale lui-même comme une anomalie, un risque, une procédure, un impayé ou une échéance ; `info` pour le reste. Aucun quand il n'y a rien à signaler.
 - `summary_seller` et `summary_buyer` : 900 caractères au plus chacun, trois à six phrases. Le même contenu factuel, adressé à chacun ; le résumé de l'acquéreur ne contient aucune information sur le vendeur.
-- `public_facts` : uniquement les clés indiquées pour ce type de document, chacune avec une valeur de 160 caractères au plus, reprise du document. Ces faits peuvent être affichés sur l'annonce publique si le vendeur le décide : jamais de nom, d'adresse, de date complète, de numéro (numéro de DPE, de lot, de parcelle, de dossier), de coordonnées. Omets une clé quand le document ne donne pas l'information.
+- `public_facts` : uniquement les clés indiquées pour ce type de document, chacune avec exactement l'une des valeurs permises (un mot d'une liste fermée, ou un nombre), jamais une phrase ni un texte libre. Ces faits peuvent être affichés sur l'annonce publique si le vendeur le décide. Omets une clé quand le document ne donne pas l'information sans ambiguïté ; rends `{}` quand aucune clé n'est indiquée pour ce type de document.

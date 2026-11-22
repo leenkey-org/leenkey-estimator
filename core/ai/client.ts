@@ -80,7 +80,7 @@ export const streamModel: ModelCall = async (request, { onText, signal }) => {
 /** One call of the model, not streamed: the whole message at once (suggestions, L1-29). */
 export const createModelMessage = (
   request: ModelRequest,
-  options?: { timeout?: number; maxRetries?: number },
+  options?: { timeout?: number; maxRetries?: number; signal?: AbortSignal },
 ): Promise<Anthropic.Message> => anthropic().messages.create(request, options);
 
 /** A request refused as written (400): the history replayed is not accepted. */
@@ -89,14 +89,26 @@ export function isBadRequest(error: unknown): boolean {
 }
 
 /**
- * Why the API refused a request that carries a file (L3-05), from its status
- * alone and one word of its message (never logged: describeError): a PDF of
- * too many pages, a request too heavy, a file it cannot read (protected by a
- * password, damaged). Null for any other error (the network, a quota).
+ * What an error of a call that carries a file means for its caller (L3-05),
+ * from its status and its type, never from a guess on its words (the one
+ * exception is the sentence the API uses for a context that does not fit):
+ * - `too_heavy`: the request is too large (413 request_too_large);
+ * - `too_long`: the file does not fit the context of the model (400, « prompt
+ *   is too long »);
+ * - `rejected`: the request is refused as written (any other 400): a file the
+ *   API cannot read, or a setting of ours it does not accept;
+ * - `blocked`: nothing was read and nothing will be for now (401 the key, 402
+ *   the billing, 403 a permission, 404 the model, 429 the quota, 5xx and 529
+ *   the service, after the retries of the SDK): the caller stops;
+ * - null: no answer (a timeout, the network): to try again.
  */
-export function fileRejection(error: unknown): "too_long" | "too_heavy" | "rejected" | null {
-  if (!(error instanceof Anthropic.APIError)) return null;
+export type ModelErrorKind = "too_heavy" | "too_long" | "rejected" | "blocked";
+
+export function modelErrorKind(error: unknown): ModelErrorKind | null {
+  if (!(error instanceof Anthropic.APIError) || typeof error.status !== "number") return null;
   if (error.status === 413) return "too_heavy";
-  if (error.status !== 400) return null;
-  return /\bpages?\b/i.test(error.message) ? "too_long" : "rejected";
+  if (error.status === 400) {
+    return /prompt is too long/i.test(error.message) ? "too_long" : "rejected";
+  }
+  return "blocked";
 }

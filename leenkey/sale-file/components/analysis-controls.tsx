@@ -26,15 +26,18 @@ export function AnalysisRefresher() {
   return null;
 }
 
-/** « Relancer l'analyse » of a document whose analysis failed. */
+/** « Relancer l'analyse » of a document whose analysis failed, « Lancer l'analyse » of one never read. */
 export function RetryAnalysisButton({
   propertyId,
   documentId,
   title,
+  first = false,
 }: {
   propertyId: string;
   documentId: string;
   title: string;
+  /** Never analysed (filed before the analysis existed): « Lancer l'analyse ». */
+  first?: boolean;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +49,7 @@ export function RetryAnalysisButton({
         variant="secondary"
         size="sm"
         loading={pending}
-        aria-label={t.retryAbout(title)}
+        aria-label={first ? t.startAbout(title) : t.retryAbout(title)}
         onClick={() =>
           start(async () => {
             setError(null);
@@ -56,7 +59,7 @@ export function RetryAnalysisButton({
           })
         }
       >
-        {t.retry}
+        {first ? t.start : t.retry}
       </Button>
       {error ? (
         <span role="alert" className="text-lk-caption text-lk-danger">

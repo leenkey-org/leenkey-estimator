@@ -4,4 +4,4 @@
 
 Points d'attention : les risques pour lesquels le document indique que le bien est concerné, les prescriptions de travaux mentionnées, les sinistres déclarés.
 
-`public_facts`, clé permise : `risques` (la liste courte des risques pour lesquels le bien est concerné, ou « Aucun risque recensé » si le document le dit).
+`public_facts` : aucun, rends `{}`.

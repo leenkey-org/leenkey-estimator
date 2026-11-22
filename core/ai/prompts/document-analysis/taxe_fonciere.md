@@ -4,4 +4,4 @@
 
 Ne recopie ni le nom du redevable, ni son numéro fiscal, ni la référence de l'avis, ni l'adresse.
 
-`public_facts`, clé permise : `taxe_fonciere` (montant et année).
+`public_facts`, clé permise : `taxe_fonciere`, de la forme `{"montant": 1150, "annee": 2025}` : le montant total en euros (un nombre) et l'année de l'avis.

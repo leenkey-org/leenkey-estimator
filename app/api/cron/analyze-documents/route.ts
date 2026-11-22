@@ -7,12 +7,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // SPEC-V2 15 and 19): every 5 minutes, called by pg_cron through pg_net with
 // « Authorization: Bearer <CRON_SECRET> » (public.cron_call). Idempotent: a
 // document is claimed before it is read (never two runs on the same one),
-// and closed with its analysis or with why it has none. pg_net stops waiting
-// after 55 seconds; the run goes on to its end (a long PDF takes the model
-// more than a minute), hence the 5 minutes. Its count goes to the log.
+// and closed with its analysis or with why it has none. Three documents a
+// run, read together, within the minute of the route (and the 55 seconds
+// pg_net waits): a document the model did not finish in time is taken again
+// by a later run. Its count goes to the log.
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 async function run(request: NextRequest) {
   if (!isCronRequest(request.headers.get("authorization"))) {

@@ -3,7 +3,7 @@ import type { TextCall } from "@/core/ai/generate";
 import { mockAnswer } from "@/leenkey/ai/mock";
 import type { DocumentType } from "@/lib/config/documents";
 import {
-  PUBLIC_FACTS_BY_TYPE,
+  readPublicFacts,
   type DocumentAnalysis,
   type DocumentQuality,
 } from "@/lib/validations/document-analysis";
@@ -31,10 +31,25 @@ const NOTES: Record<Exclude<DocumentQuality, "ok">, string> = {
   wrong_type: "Le fichier de test ne correspond pas au type annoncé.",
 };
 
+/** A value for every public fact: the model of the tests keeps those of the type. */
+const MOCK_PUBLIC_FACTS = {
+  amiante: "absence",
+  plomb: "absence",
+  termites: "absence",
+  electricite: "anomalies",
+  gaz: "sans_anomalie",
+  assainissement: "sans_anomalie",
+  surface_carrez: 66.5,
+  travaux_votes: "oui",
+  destination: "habitation",
+  charges: { montant: 450, periode: "trimestre" },
+  fonds_travaux: { montant: 60, periode: "trimestre" },
+  taxe_fonciere: { montant: 1150, annee: 2025 },
+} as const;
+
 /** The analysis the model of the tests writes for a document. */
 export function mockAnalysis(type: DocumentType, title: string): DocumentAnalysis {
   const quality = mockQuality(title);
-  const keys = quality === "ok" ? (PUBLIC_FACTS_BY_TYPE[type] ?? []) : [];
   return {
     type_detected: quality === "wrong_type" ? "autre" : type,
     date: plain(title).includes("ancien") ? "2012-01-10" : "2025-03-14",
@@ -46,12 +61,7 @@ export function mockAnalysis(type: DocumentType, title: string): DocumentAnalysi
       quality === "ok" ? [{ level: "info", text: "Point relevé par l'assistant de test." }] : [],
     summary_seller: `Résumé de l'assistant de test pour le vendeur (${type}).`,
     summary_buyer: `Résumé de l'assistant de test pour l'acquéreur (${type}).`,
-    public_facts: Object.fromEntries(
-      keys.map((key) => [
-        key,
-        key === "classe_energie" ? "C" : key === "classe_ges" ? "D" : `Relevé de test (${key})`,
-      ]),
-    ),
+    public_facts: quality === "ok" ? readPublicFacts(type, MOCK_PUBLIC_FACTS) : {},
     quality,
     quality_note: quality === "ok" ? null : NOTES[quality],
   };

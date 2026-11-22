@@ -11,7 +11,7 @@ import {
   type SellerAnalysis,
 } from "../analysis-view";
 import type { PublicDocumentFacts as PublicFacts } from "../public-facts";
-import { AnalysisRefresher, PublicFactsButton, RetryAnalysisButton } from "./analysis-controls";
+import { PublicFactsButton, RetryAnalysisButton } from "./analysis-controls";
 
 // The texts this module shows (lib/i18n/sections, P-06).
 const fr = { saleFile: frSaleFile } as const;
@@ -97,7 +97,7 @@ function FactLines({ lines }: { lines: readonly PublicFactLine[] }) {
     <dl className="flex flex-col gap-1 text-lk-caption">
       {lines.map((line) => (
         <div key={line.key} className="flex flex-col sm:flex-row sm:gap-2">
-          <dt className="shrink-0 text-lk-ink-3 sm:w-2/5">{t.publicFacts.labels[line.key]}</dt>
+          <dt className="shrink-0 text-lk-ink-3 sm:w-2/5">{line.label}</dt>
           <dd className="min-w-0 text-lk-ink">{line.value}</dd>
         </div>
       ))}
@@ -116,17 +116,14 @@ export function SellerDocumentAnalysis({
   const state = document.analysis;
   if (!state) return null;
   if (state.status === "pending") {
-    return (
-      <p role="status" className={caption}>
-        {t.pending}
-        <AnalysisRefresher />
-      </p>
-    );
+    // The page reads itself again while an analysis is being written (one
+    // AnalysisRefresher for the whole tab); after a while, it says so plainly.
+    return <p className={caption}>{state.delayed ? t.delayed : t.pending}</p>;
   }
   if (state.status === "failed" || !state.analysis) {
     return (
       <InlineAlert
-        tone="warning"
+        tone={state.error === "not_started" ? "info" : "warning"}
         live={false}
         action={
           state.retriesLeft > 0 ? (
@@ -134,6 +131,7 @@ export function SellerDocumentAnalysis({
               propertyId={propertyId}
               documentId={document.id}
               title={document.title}
+              first={state.error === "not_started"}
             />
           ) : null
         }

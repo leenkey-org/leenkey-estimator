@@ -4,4 +4,4 @@
 
 Points d'attention : les travaux votés non encore appelés, les procédures, les impayés, les sujets reportés. Ne nomme aucun copropriétaire, y compris débiteur ou partie à une procédure : écris « un copropriétaire ».
 
-`public_facts`, clés permises : `travaux_votes` (nature et échéance, sans le détail des montants par lot) et `procedures` (« Aucune mentionnée » si le document n'en signale pas).
+`public_facts`, clé permise : `travaux_votes`, `"oui"` si l'assemblée a voté des travaux, `"non"` si le procès-verbal n'en vote aucun.

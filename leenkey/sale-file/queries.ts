@@ -97,8 +97,12 @@ export async function sellerSaleFile(
       code: analyses.error.code,
     });
   }
+  const typeOf = new Map((documents.data ?? []).map((row) => [row.id, row.type]));
   const analysisOf = new Map(
-    (analyses.data ?? []).map((row) => [row.document_id, sellerAnalysis(row)]),
+    (analyses.data ?? []).flatMap((row) => {
+      const type = typeOf.get(row.document_id);
+      return type ? [[row.document_id, sellerAnalysis(row, type)] as const] : [];
+    }),
   );
   const rows: SellerDocument[] = (documents.data ?? []).map((row) => ({
     id: row.id,

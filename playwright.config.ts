@@ -11,12 +11,17 @@ const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH;
 // the seed while they change it. They also need E2E_MUTATE=1 and a local
 // stack (see each file). `--no-deps` runs one of them alone.
 const MUTATING =
-  /(account-live|account-deletion-live|admin-assistant-live|advisor-live|admin-cases|admin-listings|admin-users|assistant-live|billing|assistant-suggestions|buyer-assistant-live|buyer-profile-live|case-request-live|journeys-live|messaging-live|notifications-live|offer-live|property-creation|property-edit|property-from-estimation|property-photos|property-status|upgrade-prompts-live|sale-file-live|document-analysis-live|visit-feedback-live|visits-live|alerts-live)\.spec\.ts$/;
+  /(account-live|account-deletion-live|admin-assistant-live|advisor-live|admin-cases|admin-listings|admin-users|assistant-live|billing|assistant-suggestions|buyer-assistant-live|buyer-profile-live|case-request-live|journeys-live|messaging-live|notifications-live|offer-live|property-creation|property-edit|property-from-estimation|property-photos|property-status|upgrade-prompts-live|sale-file-live|visit-feedback-live|visits-live|alerts-live)\.spec\.ts$/;
 // The offers of the back office (L2-07) move the sale of LK-0008, whose case
 // tests/e2e/admin-cases.spec.ts works on, and add an accepted offer to the
 // bell of buyer_c, which tests/e2e/offer-live.spec.ts reads: after all the
 // other specs that change the seed, in its own project.
 const AFTER_MUTATIONS = /admin-offers-live\.spec\.ts$/;
+// The analysis of the documents (L3-05) files documents on LK-0001, whose
+// sale file tests/e2e/sale-file-live.spec.ts counts, and runs the scheduled
+// task that reads the documents that wait: after the specs that change the
+// seed, in its own project, never beside them.
+const AFTER_SALE_FILE = /document-analysis-live\.spec\.ts$/;
 const desktop = { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } };
 
 // Cookie consent already answered (refused) so that the banner of L1-37
@@ -65,10 +70,14 @@ export default defineConfig({
   projects: [
     {
       name: "mobile",
-      testIgnore: [MUTATING, AFTER_MUTATIONS],
+      testIgnore: [MUTATING, AFTER_MUTATIONS, AFTER_SALE_FILE],
       use: { ...devices["Pixel 7"], viewport: { width: 390, height: 844 } },
     },
-    { name: "desktop", testIgnore: [MUTATING, AFTER_MUTATIONS], use: desktop },
+    {
+      name: "desktop",
+      testIgnore: [MUTATING, AFTER_MUTATIONS, AFTER_SALE_FILE],
+      use: desktop,
+    },
     {
       name: "seed-mutations",
       testMatch: MUTATING,
@@ -78,6 +87,12 @@ export default defineConfig({
     {
       name: "seed-offers",
       testMatch: AFTER_MUTATIONS,
+      dependencies: ["seed-mutations"],
+      use: desktop,
+    },
+    {
+      name: "seed-documents",
+      testMatch: AFTER_SALE_FILE,
       dependencies: ["seed-mutations"],
       use: desktop,
     },

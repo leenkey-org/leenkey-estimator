@@ -435,6 +435,30 @@ export type Database = {
           },
         ]
       }
+      document_analysis_attempts: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: number
+          owner_id: string
+          property_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: never
+          owner_id: string
+          property_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: never
+          owner_id?: string
+          property_id?: string
+        }
+        Relationships: []
+      }
       document_access_requests: {
         Row: {
           answered_at: string | null
@@ -2955,6 +2979,10 @@ export type Database = {
           used: number
         }[]
       }
+      ai_conversation_of_a_task: {
+        Args: { p_conversation: string }
+        Returns: boolean
+      }
       ai_visitor_answer: {
         Args: {
           p_visitor: string
@@ -3159,6 +3187,7 @@ export type Database = {
           analysis: Json
           public_facts_approved_at: string
           retries_left: number
+          waiting_since: string
         }[]
       }
       document_analysis_claim: {
@@ -3173,6 +3202,7 @@ export type Database = {
           mime_type: string
           size_bytes: number
           attempt: number
+          last_error: string
           property_type: Database["public"]["Enums"]["property_type"]
           surface_m2: number
           carrez_m2: number
@@ -3185,6 +3215,10 @@ export type Database = {
       document_analysis_record: {
         Args: { p_document: string; p_analysis: Json }
         Returns: boolean
+      }
+      document_analysis_release: {
+        Args: { p_document: string }
+        Returns: undefined
       }
       document_analysis_retry: {
         Args: { p_document: string }

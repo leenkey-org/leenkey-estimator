@@ -4,4 +4,4 @@
 
 Points d'attention : un solde débiteur, un appel exceptionnel, une régularisation. Ne nomme pas le titulaire du compte.
 
-`public_facts`, clés permises : `charges` (montant et périodicité) et `fonds_travaux`.
+`public_facts`, clés permises : `charges` et `fonds_travaux`, chacune de la forme `{"montant": 450, "periode": "trimestre"}` : le montant appelé en euros (un nombre) et sa périodicité, `"mois"`, `"trimestre"` ou `"an"`.

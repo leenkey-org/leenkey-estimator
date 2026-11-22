@@ -4,4 +4,4 @@
 
 Points d'attention : les clauses qui restreignent l'usage des lots, telles qu'écrites. Tu ne dis pas si une clause est valable ou opposable.
 
-`public_facts`, clés permises : `destination` et `restrictions_usage`.
+`public_facts`, clé permise : `destination`, `"habitation"`, `"mixte"` ou `"professionnelle"`.

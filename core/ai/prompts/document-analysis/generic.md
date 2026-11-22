@@ -6,4 +6,4 @@ Le message indique le type annoncé par le vendeur (certificat d'urbanisme ou bo
 
 Points d'attention : ce que le document signale lui-même comme une réserve, une échéance ou un impayé.
 
-`public_facts` : pour une facture de travaux, la clé `travaux_realises` (nature et année des travaux, sans montant ni nom d'entreprise) ; pour tout autre document, aucun.
+`public_facts` : aucun, rends `{}`.

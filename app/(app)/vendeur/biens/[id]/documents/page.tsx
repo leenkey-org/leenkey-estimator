@@ -4,6 +4,7 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { ProgressBar } from "@/components/shared/progress-bar";
 import { pillClassName } from "@/components/shared/status-badge";
 import { propertyForSheet } from "@/leenkey/properties/load";
+import { AnalysisRefresher } from "@/leenkey/sale-file/components/analysis-controls";
 import { SellerDocumentAnalysis } from "@/leenkey/sale-file/components/document-analysis";
 import {
   ExemptionButton,
@@ -74,8 +75,14 @@ export default async function PropertyDocumentsPage({ params }: Props) {
     .filter((document) => DOCUMENT_CATEGORY[document.type] === "diagnostics")
     .map((document) => document.id);
 
+  // An analysis is being written: the tab reads itself again, once for all of them.
+  const analysing = documents.some(
+    (document) => document.analysis?.status === "pending" && !document.analysis.delayed,
+  );
+
   return (
     <div className="flex flex-col gap-8">
+      {analysing ? <AnalysisRefresher /> : null}
       <div className="flex flex-col gap-3">
         <h2 className="text-lk-h3 font-bold text-wide text-lk-ink">{t.title}</h2>
         <p className="text-lk-secondary text-pretty text-lk-ink-2">{t.intro}</p>
@@ -167,7 +174,11 @@ export default async function PropertyDocumentsPage({ params }: Props) {
                     {fr.saleFile.analysis.refresh.text(
                       formatDay(line.toRefresh.date),
                       fr.saleFile.analysis.refresh.age(line.toRefresh.months),
-                      DOCUMENT_CATEGORY[line.type] === "diagnostics",
+                      DOCUMENT_CATEGORY[line.type] === "diagnostics"
+                        ? "diagnostiqueur"
+                        : line.type === "pre_etat_date"
+                          ? "syndic"
+                          : "notaire",
                     )}
                   </p>
                 ) : null}

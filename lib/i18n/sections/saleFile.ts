@@ -161,18 +161,23 @@ export const frSaleFile = {
       "Les documents déposés sont lus par notre assistant (modèle d'Anthropic, États-Unis) pour produire une aide à la lecture. Elle ne remplace ni le diagnostiqueur ni le notaire.",
     title: "Aide à la lecture",
     pending: "Analyse en cours… Elle s'affiche ici dans quelques minutes.",
+    delayed:
+      "L'analyse de ce document est indisponible pour le moment. Elle reprendra dès que possible.",
     failed: {
+      not_started: "Ce document n'a pas encore été lu par notre assistant.",
       unavailable: "L'analyse de ce document n'a pas pu être faite.",
       invalid: "L'analyse de ce document n'a pas pu être faite.",
       refused: "Notre assistant n'a pas analysé ce document.",
       unreadable:
         "Notre assistant n'a pas pu lire ce fichier. Vérifiez qu'il s'ouvre sans mot de passe.",
-      too_long: "Ce document dépasse 100 pages : il n'est pas analysé.",
+      too_long: "Ce document est trop long pour être analysé : notre limite est de 100 pages.",
       too_heavy: "Ce fichier est trop lourd pour être analysé.",
       limit: "25 documents de ce bien sont déjà analysés : celui-ci ne l'est pas.",
     },
     retry: "Relancer l'analyse",
     retryAbout: (title: string) => `Relancer l'analyse : ${title}`,
+    start: "Lancer l'analyse",
+    startAbout: (title: string) => `Lancer l'analyse : ${title}`,
     retryErrors: {
       auth: "Votre session a expiré. Reconnectez-vous.",
       invalid: "Ça n'a pas fonctionné. Réessayez.",
@@ -201,31 +206,45 @@ export const frSaleFile = {
       shown: "Affiché sur votre annonce",
       error: "Ça n'a pas fonctionné. Réessayez.",
       labels: {
-        classe_energie: "Classe énergie (DPE)",
-        classe_ges: "Classe climat (GES)",
         amiante: "Amiante",
         plomb: "Plomb",
         termites: "Termites",
         electricite: "Installation électrique",
         gaz: "Installation de gaz",
         assainissement: "Assainissement",
-        risques: "Risques recensés",
         surface_carrez: "Surface Carrez",
-        travaux_votes: "Travaux votés en copropriété",
-        procedures: "Procédures de la copropriété",
-        charges: "Charges de copropriété",
-        fonds_travaux: "Fonds de travaux",
-        taxe_fonciere: "Taxe foncière",
+        travaux_votes: "Travaux votés par la dernière assemblée lue",
         destination: "Destination de l'immeuble",
-        restrictions_usage: "Restrictions d'usage",
-        servitudes: "Servitudes",
-        travaux_realises: "Travaux réalisés",
+        charges: "Charges de copropriété appelées",
+        fonds_travaux: "Fonds de travaux appelé",
+        taxe_fonciere: "Taxe foncière",
+      },
+      // Our own words for each value: a public fact is never a text of the assistant.
+      values: {
+        presence: {
+          presence: "Présence indiquée par le diagnostic",
+          absence: "Absence indiquée par le diagnostic",
+        },
+        anomalies: {
+          anomalies: "Anomalies indiquées par le diagnostic",
+          sans_anomalie: "Aucune anomalie indiquée par le diagnostic",
+        },
+        yesNo: { oui: "Oui", non: "Non" },
+        destination: {
+          habitation: "Habitation",
+          mixte: "Mixte (habitation et activités)",
+          professionnelle: "Professionnelle",
+        },
+        periods: { mois: "mois", trimestre: "trimestre", an: "an" },
+        surface: (value: string) => `${value}\u00A0m²`,
+        recurring: (amount: string, period: string) => `${amount}\u00A0€ par ${period}`,
+        yearly: (amount: string, year: number) => `${amount}\u00A0€ (${year})`,
       },
     },
     refresh: {
       state: "À actualiser",
-      text: (date: string, age: string, diagnostic: boolean) =>
-        `Document daté du ${date}, soit plus de ${age} : à vérifier avec votre ${diagnostic ? "diagnostiqueur" : "notaire"}.`,
+      text: (date: string, age: string, who: "diagnostiqueur" | "syndic" | "notaire") =>
+        `Document daté du ${date}, soit plus de ${age} : à vérifier avec votre ${who}.`,
       age: (months: number) =>
         months % 12 === 0
           ? months === 12

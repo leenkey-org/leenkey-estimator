@@ -2,18 +2,15 @@ import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  ATTACHMENT_LIMITS,
   attachmentRequest,
   attachmentTooHeavy,
+  encodeAttachment,
   generateFromAttachment,
+  pdfPageCount,
   type AttachmentMediaType,
 } from "@/core/ai/attachment";
-import {
-  createModelMessage,
-  describeError,
-  isAiConfigured,
-  isAiMock,
-  type ModelRequest,
-} from "@/core/ai/client";
+import { createModelMessage, describeError, isAiConfigured, isAiMock } from "@/core/ai/client";
 import { toStoredBlocks } from "@/core/ai/conversation";
 import type { TextCall } from "@/core/ai/generate";
 import { answerRow } from "@/core/ai/log";
@@ -37,10 +34,16 @@ const fr = { saleFile: frSaleFile } as const;
 // file in the private bucket and gives it to the model as it is (a PDF or an
 // image, read natively: no text is extracted on our side), then records the
 // analysis, or why there is none. With the service role: never the seller,
-// who could otherwise type an « analysis » that buyers read. One call of
-// MODELS.smart per document (a second one when the answer is not the JSON
-// asked for), logged with its tokens under the kind 'document_analysis', in
-// the name of the owner of the property; it counts for no quota.
+// who could otherwise type an « analysis » that buyers read.
+//
+// One run takes three documents at most, read together, one call of
+// MODELS.smart each, within the minute of its route. A document whose call
+// gave nothing usable keeps its claim: it is taken again by a later run (10
+// minutes), never by this one. When the model cannot be asked at all (its
+// key, its quota, its service), the documents are given back with their
+// attempt: nothing was read. Each call is logged with its tokens under the
+// kind 'document_analysis', in the name of the owner of the property; it
+// counts for no quota of the assistant (the queue has its own limits).
 //
 // Only the sale file is read (public.documents, files under
 // {property}/sale/): never a financing document, never an identity document.
@@ -50,20 +53,14 @@ type Admin = SupabaseClient<Database>;
 type Claimed = Database["public"]["Functions"]["document_analysis_claim"]["Returns"][number];
 
 const BUCKET = "documents";
-/** Documents read together: each one is a file of up to 20 MB held in memory. */
-export const ANALYSIS_PARALLEL = 3;
-/** Documents analysed by one run at most. */
-export const ANALYSIS_RUN_MAX = 12;
+/** Documents of one run, read together: each one is a file of up to 20 MB held in memory. */
+export const ANALYSIS_BATCH = 3;
 /**
- * No new documents after this long in a run: a call lasts 2 minutes at most
- * and may be made twice, so the last ones end before the 5 minutes of the
- * route.
+ * Every call of a run ends within this long, its retries included (a quota,
+ * the service busy): the route has a minute, the claim and the files come
+ * first, the records after.
  */
-const RUN_BUDGET_MS = 50_000;
-const CALL = {
-  timeout: ATTACHMENT_SETTINGS.timeoutMs,
-  maxRetries: ATTACHMENT_SETTINGS.maxRetries,
-} as const;
+const RUN_DEADLINE_MS = 48_000;
 
 /** Why a document has no analysis (documents.analysis_error). */
 export type AnalysisFailure =
@@ -140,82 +137,78 @@ const AGAIN =
 export type AnalysisRun = {
   /** Analyses recorded. */
   analysed: number;
-  /** Documents closed without an analysis (a file the model cannot read, an answer not usable). */
+  /** Documents closed without an analysis (a file that cannot be read, a second answer not usable). */
   failed: number;
-  /** Documents left for a next run (the storage or the model could not be reached). */
+  /** Documents left for a later run (no answer, a first answer not usable). */
   left: number;
+  /** Documents given back untouched: the model could not be asked (key, quota, service). */
+  released: number;
   skipped?: "not_configured";
 };
 
 export type AnalysisOptions = {
   /** The model (the scripted one of the tests). */
   call?: TextCall;
-  now?: () => number;
 };
 
-/**
- * Analyses the documents that wait, the new ones first, a few at a time,
- * each claimed just before it is read.
- */
+type Outcome =
+  | { kind: "analysed"; analysis: DocumentAnalysis }
+  /** `final`: not sent again by itself. */
+  | { kind: "failed"; error: AnalysisFailure; final: boolean }
+  | { kind: "released" };
+
+/** Analyses the documents that wait, the new ones first: one batch, each claimed before it is read. */
 export async function analyzeDocuments(
   admin: Admin,
   options: AnalysisOptions = {},
 ): Promise<AnalysisRun> {
-  const run: AnalysisRun = { analysed: 0, failed: 0, left: 0 };
+  const run: AnalysisRun = { analysed: 0, failed: 0, left: 0, released: 0 };
   if (!options.call && !isAiConfigured()) return { ...run, skipped: "not_configured" };
-  const now = options.now ?? Date.now;
-  const started = now();
 
-  let taken = 0;
-  while (taken < ANALYSIS_RUN_MAX && now() - started <= RUN_BUDGET_MS) {
-    const claim = await admin.rpc("document_analysis_claim", {
-      p_limit: Math.min(ANALYSIS_PARALLEL, ANALYSIS_RUN_MAX - taken),
-    });
-    if (claim.error) throw new Error(`document_analysis_claim: ${claim.error.code}`);
-    if (claim.data.length === 0) break;
-    taken += claim.data.length;
-    const outcomes = await Promise.all(
-      claim.data.map(async (document) => ({
-        document,
-        // A document that throws does not take the others of its run with it:
-        // its claim ends by itself, a next run takes it again.
-        outcome: await analyzeOne(admin, document, options.call).catch((error: unknown) => {
-          console.error("[sale-file] analysis failed", {
-            entity_id: document.document_id,
-            error: describeError(error),
-          });
-          return null;
-        }),
-      })),
-    );
-    for (const { document, outcome } of outcomes) {
-      if (outcome === null) run.left += 1;
-      else if (await close(admin, document.document_id, outcome)) {
-        if (outcome.ok) run.analysed += 1;
-        else if (outcome.error === "unavailable") run.left += 1;
-        else run.failed += 1;
-      } else {
-        run.left += 1;
-      }
-    }
+  const claim = await admin.rpc("document_analysis_claim", { p_limit: ANALYSIS_BATCH });
+  if (claim.error) throw new Error(`document_analysis_claim: ${claim.error.code}`);
+  if (claim.data.length === 0) return run;
+
+  const signal = AbortSignal.timeout(RUN_DEADLINE_MS);
+  const outcomes = await Promise.all(
+    claim.data.map(async (document) => ({
+      document,
+      // A document that throws does not take the others of its run with it:
+      // it keeps its claim, a later run takes it again.
+      outcome: await analyzeOne(admin, document, options.call, signal).catch((error: unknown) => {
+        console.error("[sale-file] analysis failed", {
+          entity_id: document.document_id,
+          error: describeError(error),
+        });
+        return null;
+      }),
+    })),
+  );
+  for (const { document, outcome } of outcomes) {
+    if (outcome === null || !(await close(admin, document.document_id, outcome))) run.left += 1;
+    else if (outcome.kind === "analysed") run.analysed += 1;
+    else if (outcome.kind === "released") run.released += 1;
+    else if (outcome.final) run.failed += 1;
+    else run.left += 1;
   }
   return run;
 }
 
-/** Records the analysis of a document, or why it has none; false when the record failed. */
+/** Records what came of a document; false when the record failed. */
 async function close(admin: Admin, documentId: string, outcome: Outcome): Promise<boolean> {
-  // The storage or the model did not answer: tried again by a next run,
-  // three times in all. Anything else is not sent again by itself.
-  const { error } = outcome.ok
-    ? await admin.rpc("document_analysis_record", {
-        p_document: documentId,
-        p_analysis: outcome.analysis,
-      })
-    : await admin.rpc("document_analysis_fail", {
-        p_document: documentId,
-        p_error: outcome.error,
-        p_final: outcome.error !== "unavailable",
-      });
+  const { error } =
+    outcome.kind === "analysed"
+      ? await admin.rpc("document_analysis_record", {
+          p_document: documentId,
+          p_analysis: outcome.analysis,
+        })
+      : outcome.kind === "released"
+        ? await admin.rpc("document_analysis_release", { p_document: documentId })
+        : await admin.rpc("document_analysis_fail", {
+            p_document: documentId,
+            p_error: outcome.error,
+            p_final: outcome.final,
+          });
   if (error) {
     console.error("[sale-file] analysis not recorded", { entity_id: documentId, code: error.code });
     return false;
@@ -223,14 +216,18 @@ async function close(admin: Admin, documentId: string, outcome: Outcome): Promis
   return true;
 }
 
-type Outcome = { ok: true; analysis: DocumentAnalysis } | { ok: false; error: AnalysisFailure };
-
 const MEDIA_TYPES: readonly AttachmentMediaType[] = ["application/pdf", "image/jpeg", "image/png"];
+const failed = (error: AnalysisFailure, final: boolean): Outcome => ({
+  kind: "failed",
+  error,
+  final,
+});
 
 async function analyzeOne(
   admin: Admin,
   document: Claimed,
   scripted: TextCall | undefined,
+  signal: AbortSignal,
 ): Promise<Outcome> {
   const mediaType = MEDIA_TYPES.find((candidate) => candidate === document.mime_type);
   // A file of the sale file of this property, and nothing else, whatever the row says.
@@ -239,9 +236,9 @@ async function analyzeOne(
     !SALE_FILE_PATH.test(document.storage_path) ||
     !document.storage_path.startsWith(`${document.property_id}/sale/`)
   ) {
-    return { ok: false, error: "unreadable" };
+    return failed("unreadable", true);
   }
-  if (attachmentTooHeavy(mediaType, document.size_bytes)) return { ok: false, error: "too_heavy" };
+  if (attachmentTooHeavy(mediaType, document.size_bytes)) return failed("too_heavy", true);
 
   const file = await admin.storage.from(BUCKET).download(document.storage_path);
   if (file.error || !file.data) {
@@ -249,51 +246,82 @@ async function analyzeOne(
       entity_id: document.document_id,
       error: file.error?.name,
     });
-    return { ok: false, error: "unavailable" };
+    return failed("unavailable", false);
   }
   const data = new Uint8Array(await file.data.arrayBuffer());
-  if (data.byteLength === 0) return { ok: false, error: "unreadable" };
-  if (attachmentTooHeavy(mediaType, data.byteLength)) return { ok: false, error: "too_heavy" };
+  if (data.byteLength === 0) return failed("unreadable", true);
+  if (attachmentTooHeavy(mediaType, data.byteLength)) return failed("too_heavy", true);
+  if (mediaType === "application/pdf") {
+    // Our own limit, checked before anything is sent, when the pages can be counted.
+    const pages = pdfPageCount(data);
+    if (pages !== null) {
+      const { error } = await admin
+        .from("documents")
+        .update({ page_count: pages })
+        .eq("id", document.document_id);
+      if (error) {
+        console.error("[sale-file] page count not kept", {
+          entity_id: document.document_id,
+          code: error.code,
+        });
+      }
+      if (pages > ATTACHMENT_LIMITS.pdfPages) return failed("too_long", true);
+    }
+  }
 
   const call: TextCall =
     scripted ??
-    (isAiMock() ? mockDocumentAnalysis(document) : (request) => createModelMessage(request, CALL));
+    (isAiMock()
+      ? mockDocumentAnalysis(document)
+      : (request) =>
+          createModelMessage(request, {
+            timeout: ATTACHMENT_SETTINGS.timeoutMs,
+            maxRetries: ATTACHMENT_SETTINGS.maxRetries,
+            signal,
+          }));
+  // The last answer was not the JSON asked for: said to the model this time.
+  const again = document.last_error === "invalid";
   const prompt = analysisPrompt(document);
-  const system = analysisSystemPrompt(document.type);
-  const log = {
-    userId: document.owner_id,
-    entityId: document.document_id,
-    kind: "document_analysis",
-  };
-
-  // The JSON asked for, or one more call; then no analysis.
-  for (const attempt of [0, 1]) {
-    const request: ModelRequest = attachmentRequest(
+  const generation = await generateFromAttachment(
+    call,
+    attachmentRequest(
       MODELS.smart,
-      system,
-      { mediaType, data },
-      attempt === 0 ? prompt : `${prompt}\n\n${AGAIN}`,
-    );
-    const generation = await generateFromAttachment(call, request, log);
-    // Its tokens are billed whatever came of it: logged, in the name of the owner.
-    if (generation.message) {
-      await logAnalysis(admin, document, prompt, generation.message);
-    }
-    if (!generation.ok) {
-      if (generation.error === "empty") continue;
-      return {
-        ok: false,
-        error: generation.error === "rejected" ? "unreadable" : generation.error,
-      };
-    }
+      analysisSystemPrompt(document.type),
+      encodeAttachment(mediaType, data),
+      again ? `${prompt}\n\n${AGAIN}` : prompt,
+    ),
+    { userId: document.owner_id, entityId: document.document_id, kind: "document_analysis" },
+  );
+  // Its tokens are billed whatever came of it: logged, in the name of the owner.
+  if (generation.message) await logAnalysis(admin, document, prompt, generation.message);
+
+  if (generation.ok) {
     const analysis = parseDocumentAnalysis(generation.text, document.type);
-    if (analysis) return { ok: true, analysis };
-    console.error("[sale-file] analysis not usable", {
-      entity_id: document.document_id,
-      attempt,
-    });
+    if (analysis) return { kind: "analysed", analysis };
+    console.error("[sale-file] analysis not usable", { entity_id: document.document_id });
+    // Asked once more by a later run, then closed.
+    return failed("invalid", again);
   }
-  return { ok: false, error: "invalid" };
+  switch (generation.error) {
+    // Nothing was read, and nothing will be for now: the attempt is given back.
+    case "blocked":
+      return { kind: "released" };
+    case "empty":
+      return failed("invalid", again);
+    // No answer in time: a later run, three attempts in all.
+    case "unavailable":
+      return failed("unavailable", false);
+    // Refused as written: the file, most likely (damaged, protected by a
+    // password), but a setting of ours would look the same: not final, so
+    // that a mistake of ours does not close every document at once.
+    case "rejected":
+      return failed("unreadable", false);
+    // What the API says of the file itself, or a refusal of the model: sending it again changes nothing.
+    case "too_long":
+    case "too_heavy":
+    case "refused":
+      return failed(generation.error, true);
+  }
 }
 
 /** The call in the log of the assistant: what went with the file, what was written, its tokens. */

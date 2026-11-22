@@ -4,10 +4,19 @@ import { Constants, type Database } from "@/types/database";
 // L3-05 (SPEC-V2 15, « Analyse IA »): the analysis of a document of the sale
 // file as the model must write it, checked before it is stored: the shape of
 // the SPEC, plus what the document is worth as a file (`quality`). Sizes are
-// bounded. The public facts are a closed list of keys per type of document:
-// what may appear on a listing is never a label the model made up, never a
-// date nor a number that would give the address away (the number and the
-// date of a DPE are not public, CLAUDE.md section 2).
+// bounded.
+//
+// The public facts may appear on a listing, read by anyone: none of them is
+// a text of the model. Each is a value of a closed list (presence or
+// absence, anomalies or none…) or a number with its unit, for a closed list
+// of keys per type of document, and is checked again each time it is read.
+// The DPE gives none: the listing already shows the classes its seller
+// declared, and a second source could contradict them (its number and its
+// date are never public anyway, CLAUDE.md section 2).
+//
+// The texts a buyer reads (summary, facts, points) are words of the model
+// about a file of the seller: a link, an email or a phone number found in
+// them is taken out, when stored and again when read.
 
 type DocumentType = Database["public"]["Enums"]["document_type"];
 
@@ -19,53 +28,86 @@ export const ANALYSIS_LIMITS = {
   value: 300,
   point: 400,
   note: 200,
-  publicValue: 160,
 } as const;
 
 export const DOCUMENT_QUALITIES = ["ok", "illegible", "incomplete", "wrong_type"] as const;
 export type DocumentQuality = (typeof DOCUMENT_QUALITIES)[number];
 
-export const PUBLIC_FACT_KEYS = [
-  "classe_energie",
-  "classe_ges",
-  "amiante",
-  "plomb",
-  "termites",
-  "electricite",
-  "gaz",
-  "assainissement",
-  "risques",
-  "surface_carrez",
-  "travaux_votes",
-  "procedures",
-  "charges",
-  "fonds_travaux",
-  "taxe_fonciere",
-  "destination",
-  "restrictions_usage",
-  "servitudes",
-  "travaux_realises",
-] as const;
-export type PublicFactKey = (typeof PUBLIC_FACT_KEYS)[number];
+const presence = z.enum(["presence", "absence"]);
+const anomalies = z.enum(["anomalies", "sans_anomalie"]);
+const euros = z.number().finite().positive().max(1_000_000);
+const recurring = z
+  .object({ montant: euros, periode: z.enum(["mois", "trimestre", "an"]) })
+  .strict();
 
-/** The public facts a type of document may give; none for a type not listed. */
+/** What each public fact is: a value of a closed list, or a number with its unit. Never a text. */
+export const PUBLIC_FACT_SCHEMAS = {
+  amiante: presence,
+  plomb: presence,
+  termites: presence,
+  electricite: anomalies,
+  gaz: anomalies,
+  assainissement: anomalies,
+  surface_carrez: z.number().finite().positive().max(10_000),
+  travaux_votes: z.enum(["oui", "non"]),
+  destination: z.enum(["habitation", "mixte", "professionnelle"]),
+  charges: recurring,
+  fonds_travaux: recurring,
+  taxe_fonciere: z.object({ montant: euros, annee: z.number().int().min(1990).max(2100) }).strict(),
+} as const;
+
+export type PublicFactKey = keyof typeof PUBLIC_FACT_SCHEMAS;
+export const PUBLIC_FACT_KEYS = Object.keys(PUBLIC_FACT_SCHEMAS) as PublicFactKey[];
+export type PublicFacts = {
+  [Key in PublicFactKey]?: z.infer<(typeof PUBLIC_FACT_SCHEMAS)[Key]>;
+};
+
+/** The public facts a type of document may give; none for a type not listed (the DPE among them). */
 export const PUBLIC_FACTS_BY_TYPE: Partial<Record<DocumentType, readonly PublicFactKey[]>> = {
-  dpe: ["classe_energie", "classe_ges"],
   amiante: ["amiante"],
   plomb: ["plomb"],
   termites: ["termites"],
   electricite: ["electricite"],
   gaz: ["gaz"],
   assainissement: ["assainissement"],
-  erp: ["risques"],
   carrez: ["surface_carrez"],
-  pv_ag: ["travaux_votes", "procedures"],
-  reglement_copro: ["destination", "restrictions_usage"],
+  pv_ag: ["travaux_votes"],
+  reglement_copro: ["destination"],
   appel_charges: ["charges", "fonds_travaux"],
   taxe_fonciere: ["taxe_fonciere"],
-  titre_propriete: ["servitudes"],
-  facture_travaux: ["travaux_realises"],
 };
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+/**
+ * The public facts of a document of this type, from whatever is given (the
+ * answer of the model, a row of the database): the keys its type may give,
+ * each with a value of its kind; anything else is left out. Run when an
+ * analysis is stored and again each time its facts are shown.
+ */
+export function readPublicFacts(type: DocumentType, value: unknown): PublicFacts {
+  if (!isRecord(value)) return {};
+  const facts: Record<string, unknown> = {};
+  for (const key of PUBLIC_FACTS_BY_TYPE[type] ?? []) {
+    const parsed = PUBLIC_FACT_SCHEMAS[key].safeParse(value[key]);
+    if (parsed.success) facts[key] = parsed.data;
+  }
+  return facts as PublicFacts;
+}
+
+const CONTACTS: readonly RegExp[] = [
+  /(?:https?:\/\/|www\.)\S+/gi,
+  /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g,
+  /(?:\+33\s*|\b0)[1-9](?:[\s.-]*\d{2}){4}\b/g,
+  /\b[\p{L}\d-]+(?:\.[\p{L}\d-]+)*\.(?:fr|com|net|org|eu|io|info|immo|biz)\b(?:\/\S*)?/giu,
+];
+const REDACTED = "[coordonnées retirées]";
+
+/** A text of the model without the links, the emails and the phone numbers it may carry. */
+export function redactContacts(text: string): string {
+  return CONTACTS.reduce((kept, pattern) => kept.replace(pattern, REDACTED), text);
+}
 
 const isoDate = z
   .string()
@@ -88,44 +130,29 @@ export const documentAnalysisSchema = z.object({
     .max(ANALYSIS_LIMITS.points),
   summary_seller: line(ANALYSIS_LIMITS.summary),
   summary_buyer: line(ANALYSIS_LIMITS.summary),
-  public_facts: z.record(z.enum(PUBLIC_FACT_KEYS), line(ANALYSIS_LIMITS.publicValue)),
+  public_facts: z.object(PUBLIC_FACT_SCHEMAS).partial().strict(),
   quality: z.enum(DOCUMENT_QUALITIES),
   quality_note: line(ANALYSIS_LIMITS.note).nullable(),
 });
 
 export type DocumentAnalysis = z.infer<typeof documentAnalysisSchema>;
 
-/**
- * What a public fact never holds, whatever the document says: a link, an
- * email, a phone number, a long number (the 13 digits of a DPE, a cadastral
- * or lot reference), a date written in full (the date of a DPE gives its
- * address through the register).
- */
-const NOT_PUBLIC: readonly RegExp[] = [
-  /(?:https?:\/\/|www\.)\S+/i,
-  /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/,
-  /(?:\+33\s*|\b0)[1-9](?:[\s.-]*\d{2}){4}\b/,
-  /\d{7,}/,
-  /\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b/,
-  /\b\d{4}-\d{2}-\d{2}\b/,
-];
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-const cut = (value: unknown, max: number): unknown =>
-  typeof value === "string" ? Array.from(value.trim()).slice(0, max).join("") : value;
+/** A text of the model as it is kept: no contact detail, its length bounded. */
+const text = (value: unknown, max: number): unknown =>
+  typeof value === "string"
+    ? Array.from(redactContacts(value.trim())).slice(0, max).join("")
+    : value;
 
 /**
  * The object of an answer of the model: the first « { » to the last « } »
  * (a model may wrap its JSON in a code fence, or say a word before it).
  */
-function jsonObject(text: string): unknown {
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
+function jsonObject(answer: string): unknown {
+  const start = answer.indexOf("{");
+  const end = answer.lastIndexOf("}");
   if (start === -1 || end <= start) return undefined;
   try {
-    return JSON.parse(text.slice(start, end + 1));
+    return JSON.parse(answer.slice(start, end + 1));
   } catch {
     return undefined;
   }
@@ -137,33 +164,19 @@ function jsonObject(text: string): unknown {
  * shortened, never refused: lists to their first entries, texts to their
  * length. A type of document the list does not know reads « autre », an
  * empty date none. Of the public facts, only the keys of the declared type
- * are kept, and only values that may be public.
+ * with a value of their kind are kept; none for a document « à vérifier ».
  */
 export function parseDocumentAnalysis(
-  text: string,
+  answer: string,
   declared: DocumentType,
 ): DocumentAnalysis | null {
-  const raw = jsonObject(text);
+  const raw = jsonObject(answer);
   if (!isRecord(raw)) return null;
   const known: readonly string[] = Constants.public.Enums.document_type;
-  const allowed: readonly string[] = PUBLIC_FACTS_BY_TYPE[declared] ?? [];
   const items = (value: unknown, max: number, shape: (item: Record<string, unknown>) => unknown) =>
     Array.isArray(value)
       ? value.slice(0, max).map((item) => (isRecord(item) ? shape(item) : item))
       : value;
-  const facts = isRecord(raw.public_facts)
-    ? Object.fromEntries(
-        Object.entries(raw.public_facts)
-          .map(([key, value]) => [key, cut(value, ANALYSIS_LIMITS.publicValue)] as const)
-          .filter(
-            ([key, value]) =>
-              allowed.includes(key) &&
-              typeof value === "string" &&
-              value !== "" &&
-              !NOT_PUBLIC.some((pattern) => pattern.test(value)),
-          ),
-      )
-    : raw.public_facts;
   const candidate = {
     type_detected:
       typeof raw.type_detected === "string" && !known.includes(raw.type_detected)
@@ -171,30 +184,44 @@ export function parseDocumentAnalysis(
         : raw.type_detected,
     date: raw.date === "" || raw.date === undefined ? null : raw.date,
     key_facts: items(raw.key_facts, ANALYSIS_LIMITS.facts, (item) => ({
-      label: cut(item.label, ANALYSIS_LIMITS.label),
-      value: cut(item.value, ANALYSIS_LIMITS.value),
+      label: text(item.label, ANALYSIS_LIMITS.label),
+      value: text(item.value, ANALYSIS_LIMITS.value),
     })),
     points_of_attention: items(raw.points_of_attention, ANALYSIS_LIMITS.points, (item) => ({
       level: item.level,
-      text: cut(item.text, ANALYSIS_LIMITS.point),
+      text: text(item.text, ANALYSIS_LIMITS.point),
     })),
-    summary_seller: cut(raw.summary_seller, ANALYSIS_LIMITS.summary),
-    summary_buyer: cut(raw.summary_buyer, ANALYSIS_LIMITS.summary),
-    public_facts: facts,
+    summary_seller: text(raw.summary_seller, ANALYSIS_LIMITS.summary),
+    summary_buyer: text(raw.summary_buyer, ANALYSIS_LIMITS.summary),
+    public_facts:
+      raw.public_facts === undefined || raw.public_facts === null || isRecord(raw.public_facts)
+        ? raw.quality === "ok"
+          ? readPublicFacts(declared, raw.public_facts)
+          : {}
+        : raw.public_facts,
     quality: raw.quality,
     quality_note:
       raw.quality_note === "" || raw.quality_note === undefined
         ? null
-        : cut(raw.quality_note, ANALYSIS_LIMITS.note),
+        : text(raw.quality_note, ANALYSIS_LIMITS.note),
   };
   const parsed = documentAnalysisSchema.safeParse(candidate);
-  if (!parsed.success) return null;
-  // A document that is not read as what it should be shows nothing on a listing.
-  return parsed.data.quality === "ok" ? parsed.data : { ...parsed.data, public_facts: {} };
+  return parsed.success ? parsed.data : null;
 }
 
-/** An analysis read back from the database (written by the server): null when it is not one. */
-export function storedDocumentAnalysis(value: unknown): DocumentAnalysis | null {
-  const parsed = documentAnalysisSchema.safeParse(value);
+/**
+ * An analysis read back from the database (written by the server) for a
+ * document of this type: null when it is not one; its public facts are
+ * checked again against the type.
+ */
+export function storedDocumentAnalysis(
+  value: unknown,
+  type: DocumentType,
+): DocumentAnalysis | null {
+  if (!isRecord(value)) return null;
+  const parsed = documentAnalysisSchema.safeParse({
+    ...value,
+    public_facts: value.quality === "ok" ? readPublicFacts(type, value.public_facts) : {},
+  });
   return parsed.success ? parsed.data : null;
 }
