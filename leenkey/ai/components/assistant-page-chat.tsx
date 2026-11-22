@@ -24,6 +24,7 @@ export function AssistantPageChat({
   initial,
   propertyId,
   listingId = null,
+  topic = null,
   back,
 }: {
   context: AssistantContext;
@@ -31,6 +32,8 @@ export function AssistantPageChat({
   propertyId: string | null;
   /** The listing a buyer came from. */
   listingId?: string | null;
+  /** What the buyer came to ask about: the documents shared with them (L3-07). */
+  topic?: "documents" | null;
   back?: { href: string; label: string };
 }) {
   const [start, setStart] = useState({ key: 0, conversation: initial });
@@ -63,6 +66,7 @@ export function AssistantPageChat({
         context={context}
         propertyId={propertyId}
         listingId={listingId}
+        topic={topic}
         initial={start.conversation}
         className="bg-lk-bg"
       />

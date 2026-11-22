@@ -6,7 +6,7 @@ import { ROUTES } from "@/leenkey/navigation/spaces";
 import { offerFormPath } from "@/leenkey/offers/paths";
 import { createClient } from "@/lib/supabase/server";
 import { actionPreview } from "./previews";
-import { shownListings } from "./shown";
+import { shownDocuments, shownListings, sourcesAfterAnswer } from "./shown";
 import { toolsFor } from "./tools";
 import type { ActionState, AssistantConversation, ChatItem } from "./types";
 
@@ -14,7 +14,8 @@ import type { ActionState, AssistantConversation, ChatItem } from "./types";
 // again when they open it (L1-28): their messages, the answers, and the
 // actions proposed with what became of them; those still waiting read their
 // before and after again (the listing may have changed meanwhile); the
-// listings a search showed (L2-06), read again from the log and checked.
+// listings a search showed (L2-06) and the documents an answer was written
+// from (L3-07), read again from the log and checked.
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -61,7 +62,9 @@ export async function assistantConversation(
             shown = null;
           }
           const listings = shownListings.safeParse(shown);
-          return listings.success ? { id, kind: "listings", data: listings.data } : null;
+          if (listings.success) return { id, kind: "listings", data: listings.data };
+          const documents = shownDocuments.safeParse(shown);
+          return documents.success ? { id, kind: "documents", data: documents.data } : null;
         }
         if (item.kind !== "action") return { id, ...item };
         // An action that ran and failed reads as an error, as one refused.
@@ -99,7 +102,8 @@ export async function assistantConversation(
       },
     ),
   );
-  const items = read.filter((item): item is ChatItem => item !== null);
+  // The documents read for an answer show under it, as when it streamed.
+  const items = sourcesAfterAnswer(read.filter((item): item is ChatItem => item !== null));
   return { ok: true, data: { conversationId: conversation.data.id, items } };
 }
 

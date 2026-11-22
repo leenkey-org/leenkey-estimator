@@ -18,9 +18,10 @@ import { cn } from "@/lib/utils";
 import { ASSISTANT_MESSAGE_MAX, type AssistantContext } from "@/lib/validations/assistant";
 import { assistantHelp, confirmToolCall, declineToolCall, type AssistantHelp } from "../actions";
 import { actionPreview, type ActionPreview } from "../previews";
-import { shownListings } from "../shown";
+import { SHOWN_DOCUMENTS_MAX, shownDocuments, shownListings, type ShownDocuments } from "../shown";
 import { readEvents, type StreamEvent } from "../stream-events";
 import { AssistantListings } from "./assistant-listings";
+import { AssistantSources } from "./assistant-sources";
 import { CaseRequestForm } from "./case-request-form";
 import type { ActionState, AssistantConversation, ChatItem } from "../types";
 
@@ -200,6 +201,7 @@ export function AssistantChat({
   context,
   propertyId,
   listingId = null,
+  topic = null,
   initial,
   layout,
   className,
@@ -209,6 +211,8 @@ export function AssistantChat({
   propertyId: string | null;
   /** The listing the buyer is reading (the page the assistant is opened from). */
   listingId?: string | null;
+  /** What the buyer came to ask about: the documents shared with them (L3-07). */
+  topic?: "documents" | null;
   initial: AssistantConversation;
   /**
    * panel: the thread scrolls inside the panel, and the page behind is read
@@ -224,6 +228,8 @@ export function AssistantChat({
   const [draft, setDraft] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [reading, setReading] = useState(false);
+  /** The tool being run, for what « reading » says (the documents shared, L3-07). */
+  const [readingTool, setReadingTool] = useState<string | null>(null);
   const [error, setError] = useState<ChatError | null>(null);
   const [answering, setAnswering] = useState<string | null>(null);
   /** « Écrire à l'équipe Leenkey », at the daily limit: the request written by the person. */
@@ -244,6 +250,14 @@ export function AssistantChat({
   const pending = useRef<AbortController | null>(null);
   /** What the stream of this turn wrote, removed when the model declines. */
   const written = useRef<string[]>([]);
+  /**
+   * The documents read for the answer being written, of every read of the
+   * turn: shown under it, once it is whole. `answered`: a text followed the
+   * last read.
+   */
+  const sources = useRef<{ data: ShownDocuments; answered: boolean } | null>(null);
+  /** The turn stopped on a change to confirm: it goes on once the person answered. */
+  const awaiting = useRef(false);
 
   const newId = () => `local-${(next.current += 1)}`;
 
@@ -307,10 +321,12 @@ export function AssistantChat({
         const created = newId();
         writing.current = created;
         written.current.push(created);
+        if (sources.current) sources.current.answered = true;
         setItems((current) => [...current, { id: created, kind: "assistant", text: event.delta }]);
       }
     } else if (event.type === "tool") {
       writing.current = null;
+      setReadingTool(event.name);
       setReading(true);
     } else if (event.type === "shown") {
       // The listings of a search: cards in the conversation, before the sentence that follows.
@@ -319,7 +335,20 @@ export function AssistantChat({
         writing.current = null;
         setItems((current) => [...current, { id: newId(), kind: "listings", data: listings.data }]);
       }
+      // The documents an answer is written from: kept for the end of the answer.
+      const documents = shownDocuments.safeParse(event.data);
+      if (documents.success) {
+        // Several reads in one turn: one list, each document once.
+        const kept = sources.current?.data.items ?? [];
+        const known = new Set(kept.map((item) => item.id));
+        const items = [...kept, ...documents.data.items.filter((item) => !known.has(item.id))];
+        sources.current = {
+          data: { kind: "documents", items: items.slice(0, SHOWN_DOCUMENTS_MAX) },
+          answered: false,
+        };
+      }
     } else if (event.type === "confirm") {
+      awaiting.current = true;
       writing.current = null;
       setReading(false);
       const preview = actionPreview.safeParse(event.preview);
@@ -341,8 +370,23 @@ export function AssistantChat({
         // The text written before the model declined is not an answer.
         const dropped = new Set(written.current);
         setItems((current) => current.filter((item) => !dropped.has(item.id)));
+        sources.current = null;
       }
       setError(event.error === "refused" ? "refused" : "unavailable");
+    }
+  }
+
+  /**
+   * Under the answer, the documents it was written from; none without an
+   * answer after them. A turn stopped on a change to confirm is not over:
+   * they are kept, and shown when it ends after the person answered.
+   */
+  function showSources() {
+    const read = sources.current;
+    if (awaiting.current) return;
+    sources.current = null;
+    if (read?.answered) {
+      setItems((current) => [...current, { id: newId(), kind: "documents", data: read.data }]);
     }
   }
 
@@ -352,6 +396,9 @@ export function AssistantChat({
     setError(null);
     writing.current = null;
     written.current = [];
+    // The turn that goes on after a confirmation keeps the documents it read.
+    if (body.resume !== true) sources.current = null;
+    awaiting.current = false;
     const controller = new AbortController();
     pending.current = controller;
     let ended = false;
@@ -388,6 +435,7 @@ export function AssistantChat({
       if (!controller.signal.aborted) setError("unavailable");
       return "streamed";
     } finally {
+      showSources();
       writing.current = null;
       setReading(false);
       setStreaming(false);
@@ -472,9 +520,11 @@ export function AssistantChat({
     : null;
   const intro = buyer ? t.buyer.intro : t.intro;
   const suggestions = buyer
-    ? listingId
-      ? t.buyer.listingSuggestions
-      : t.buyer.suggestions
+    ? topic === "documents"
+      ? t.buyer.documentSuggestions
+      : listingId
+        ? t.buyer.listingSuggestions
+        : t.buyer.suggestions
     : t.suggestions;
 
   return (
@@ -527,6 +577,9 @@ export function AssistantChat({
             }
             if (item.kind === "listings") {
               return <AssistantListings key={item.id} data={item.data} />;
+            }
+            if (item.kind === "documents") {
+              return <AssistantSources key={item.id} data={item.data} />;
             }
             // Sent to a person (the adviser of the plan, the team) or prepared
             // for the person (the draft of an offer): its own words.
@@ -605,7 +658,13 @@ export function AssistantChat({
           })
         )}
         {reading ? (
-          <p className="text-lk-caption text-lk-ink-3">{buyer ? t.buyer.reading : t.reading}</p>
+          <p className="text-lk-caption text-lk-ink-3">
+            {buyer
+              ? readingTool === "summarize_shared_documents"
+                ? t.buyer.readingDocuments
+                : t.buyer.reading
+              : t.reading}
+          </p>
         ) : null}
         {streaming && !reading && items.at(-1)?.kind !== "assistant" ? (
           <p className="text-lk-caption text-lk-ink-3">{t.writing}</p>

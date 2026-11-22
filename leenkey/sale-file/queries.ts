@@ -155,6 +155,8 @@ export type SharedDocument = {
 
 export type SharedProperty = {
   propertyId: string;
+  /** Its listing, once one of its documents has a summary (the assistant answers about it, L3-07). */
+  listingId: string | null;
   listingTitle: string | null;
   listingSlug: string | null;
   city: string;
@@ -166,7 +168,8 @@ export async function buyerSharedDocuments(): Promise<QueryResult<SharedProperty
   const supabase = await createClient();
   const [{ data, error }, summaries] = await Promise.all([
     supabase.rpc("shared_documents"),
-    supabase.rpc("shared_document_summaries"),
+    // The summaries of L3-05 with the listing of their property (L3-07).
+    supabase.rpc("shared_document_answers"),
   ]);
   if (error) {
     console.error("[sale-file] shared documents read failed", { code: error.code });
@@ -174,15 +177,25 @@ export async function buyerSharedDocuments(): Promise<QueryResult<SharedProperty
   }
   // Without the summaries the documents still show.
   if (summaries.error) {
-    console.error("[sale-file] shared summaries read failed", { code: summaries.error.code });
+    console.error("[sale-file] shared summaries read failed", {
+      rpc: "shared_document_answers",
+      code: summaries.error.code,
+      message: summaries.error.message,
+    });
   }
   const summaryOf = new Map(
     (summaries.data ?? []).map((row) => [row.document_id, buyerSummary(row)]),
+  );
+  const listingOf = new Map(
+    (summaries.data ?? [])
+      .filter((row) => summaryOf.get(row.document_id))
+      .map((row) => [row.property_id, row.listing_id]),
   );
   const groups = new Map<string, SharedProperty>();
   for (const row of data) {
     const group = groups.get(row.property_id) ?? {
       propertyId: row.property_id,
+      listingId: listingOf.get(row.property_id) ?? null,
       listingTitle: row.listing_title,
       listingSlug: row.listing_slug,
       city: row.city,
@@ -200,6 +213,64 @@ export async function buyerSharedDocuments(): Promise<QueryResult<SharedProperty
     groups.set(row.property_id, group);
   }
   return { ok: true, data: [...groups.values()] };
+}
+
+export type SharedDocumentAnswer = {
+  documentId: string;
+  type: DocumentType;
+  /** The name its seller gave it. */
+  title: string;
+  propertyId: string;
+  listingId: string | null;
+  listingTitle: string | null;
+  city: string;
+  sharedAt: string;
+  summary: BuyerSummary;
+};
+
+/**
+ * What the assistant of a buyer answers from (L3-07): the summaries meant
+ * for a buyer of the documents shared with the caller, of the property of a
+ * listing or of all (null), the last share first. Read with the session of
+ * the caller through shared_document_answers: never a document that is not
+ * shared with them, never the summary of the seller, never a file.
+ */
+export async function sharedDocumentAnswers(
+  listingId: string | null,
+): Promise<QueryResult<SharedDocumentAnswer[]>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc(
+    "shared_document_answers",
+    listingId ? { p_listing: listingId } : {},
+  );
+  if (error) {
+    console.error("[sale-file] shared answers read failed", {
+      entity_id: listingId,
+      code: error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  return {
+    ok: true,
+    data: data.flatMap((row) => {
+      const summary = buyerSummary(row);
+      return summary
+        ? [
+            {
+              documentId: row.document_id,
+              type: row.type,
+              title: row.title,
+              propertyId: row.property_id,
+              listingId: row.listing_id,
+              listingTitle: row.listing_title,
+              city: row.city,
+              sharedAt: row.shared_at,
+              summary,
+            },
+          ]
+        : [];
+    }),
+  };
 }
 
 export type BuyerAccess = "none" | "pending" | "granted" | "declined";

@@ -12,7 +12,7 @@ import type { TextCall } from "@/core/ai/generate";
 // less), « visite » (invites the first contact of the property, or the one
 // named after « visite à », on a new slot when the message gives « le
 // 2026-12-05 à 10:30 »), anything else (one sentence). The buyer (L2-06) has its own
-// scenarios (mockBuyerModel). The suggestions (L1-29) give one fixed text
+// scenarios (mockBuyerModel), with the documents shared with them (L3-07). The suggestions (L1-29) give one fixed text
 // each.
 
 /** The motive of a refusal drafted for the team (L1-30d). */
@@ -204,11 +204,41 @@ export function mockSearchRequest(asked: string) {
   };
 }
 
+// The French sentences of this file are fixtures of the tests, never texts of the site.
+const mockSharedDocuments = z.object({
+  total: z.number(),
+  documents: z.array(z.object({ title: z.string(), summaryForBuyer: z.string() })),
+});
+
+/** What the model of the tests says of the documents read: each fact with its document. */
+export function mockDocumentsAnswer(content: string): string {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    parsed = null;
+  }
+  const read = mockSharedDocuments.safeParse(parsed);
+  if (!read.success) return "Les documents n'ont pas pu être lus.";
+  if (read.data.documents.length === 0) {
+    return (
+      "Aucun document analysé n'est partagé avec vous pour ce bien. Vous pouvez demander " +
+      "l'accès au vendeur depuis vos documents partagés ou dans la messagerie."
+    );
+  }
+  const cited = read.data.documents.map(
+    (document) => `D'après le document « ${document.title} » : ${document.summaryForBuyer}`,
+  );
+  return `${cited.join(" ")} Cette réponse ne certifie rien : le document fait foi.`;
+}
+
 /**
  * The assistant of the buyer in the tests (L2-06): « cherche » (a search of
  * the listings), « offre » with an amount (the draft of an offer on the
- * listing being read), « équipe » (a request to the team), « bien » or
- * « annonce » (the listing being read), anything else (one sentence).
+ * listing being read), « équipe » (a request to the team), « document »
+ * (the documents shared with them, of the listing being read or of all,
+ * L3-07), « bien » or « annonce » (the listing being read), anything else
+ * (one sentence).
  */
 const mockBuyerModel: ModelCall = async (request, { onText }) => {
   const { text: asked, file, after } = currentTurn(request.messages);
@@ -254,6 +284,16 @@ const mockBuyerModel: ModelCall = async (request, { onText }) => {
       return say("Renseignez d'abord votre projet d'achat.");
     }
     return say("Votre offre n'a pas pu être préparée.");
+  }
+
+  if (/\bdocuments?\b/i.test(asked)) {
+    if (!result) {
+      return message(
+        [call("summarize_shared_documents", { listingId: listingId ?? "" })],
+        "tool_use",
+      );
+    }
+    return say(mockDocumentsAnswer(result.content));
   }
 
   if (/cherche/i.test(asked)) {

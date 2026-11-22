@@ -15,6 +15,14 @@ export function buyerAssistantHref(listingId?: string | null): string {
 }
 
 /**
+ * The same page, to ask about the documents shared with the buyer (L3-07):
+ * those of a listing online, or all of them.
+ */
+export function buyerDocumentsAssistantHref(listingId?: string | null): string {
+  return `${buyerAssistantHref(listingId)}&sujet=documents`;
+}
+
+/**
  * On the page of a listing, for a buyer signed in (L2-06, SPEC-V2 section
  * 12: « page annonce »): « Une question sur ce bien ? Demander à
  * l'assistant », to the page of the assistant about this listing.

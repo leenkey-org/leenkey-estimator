@@ -22,6 +22,10 @@ const AFTER_MUTATIONS = /admin-offers-live\.spec\.ts$/;
 // task that reads the documents that wait: after the specs that change the
 // seed, in its own project, never beside them.
 const AFTER_SALE_FILE = /document-analysis-live\.spec\.ts$/;
+// The answers from the shared documents (L3-07) file and share a document on
+// LK-0001 too, with buyer_c, whose shared summaries the spec above counts:
+// after it, in its own project.
+const AFTER_DOCUMENT_ANALYSIS = /shared-documents-answers-live\.spec\.ts$/;
 const desktop = { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } };
 
 // Cookie consent already answered (refused) so that the banner of L1-37
@@ -70,12 +74,12 @@ export default defineConfig({
   projects: [
     {
       name: "mobile",
-      testIgnore: [MUTATING, AFTER_MUTATIONS, AFTER_SALE_FILE],
+      testIgnore: [MUTATING, AFTER_MUTATIONS, AFTER_SALE_FILE, AFTER_DOCUMENT_ANALYSIS],
       use: { ...devices["Pixel 7"], viewport: { width: 390, height: 844 } },
     },
     {
       name: "desktop",
-      testIgnore: [MUTATING, AFTER_MUTATIONS, AFTER_SALE_FILE],
+      testIgnore: [MUTATING, AFTER_MUTATIONS, AFTER_SALE_FILE, AFTER_DOCUMENT_ANALYSIS],
       use: desktop,
     },
     {
@@ -94,6 +98,12 @@ export default defineConfig({
       name: "seed-documents",
       testMatch: AFTER_SALE_FILE,
       dependencies: ["seed-mutations"],
+      use: desktop,
+    },
+    {
+      name: "seed-document-answers",
+      testMatch: AFTER_DOCUMENT_ANALYSIS,
+      dependencies: ["seed-documents"],
       use: desktop,
     },
   ],
