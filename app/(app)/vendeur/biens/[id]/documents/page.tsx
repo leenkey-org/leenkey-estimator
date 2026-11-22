@@ -4,6 +4,8 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { ProgressBar } from "@/components/shared/progress-bar";
 import { pillClassName } from "@/components/shared/status-badge";
 import { propertyForSheet } from "@/leenkey/properties/load";
+import { AnalysisRefresher } from "@/leenkey/sale-file/components/analysis-controls";
+import { SellerDocumentAnalysis } from "@/leenkey/sale-file/components/document-analysis";
 import {
   ExemptionButton,
   RemoveDocumentButton,
@@ -13,7 +15,7 @@ import {
 import { UploadForm } from "@/leenkey/sale-file/components/upload-form";
 import { sellerSaleFile } from "@/leenkey/sale-file/queries";
 import { DOCUMENT_CATEGORY, REQUIRED_DOCUMENTS, type DocumentType } from "@/lib/config/documents";
-import { formatDateShort } from "@/lib/format";
+import { formatDateShort, formatDay } from "@/lib/format";
 import { frSaleFile } from "@/lib/i18n/sections/saleFile";
 import { cn } from "@/lib/utils";
 import { Constants } from "@/types/database";
@@ -38,7 +40,10 @@ const stateTone = {
 // L3-04: the tab « Documents » of a property (SPEC-V2 15): the checklist of
 // the sale file by category, the deposit, « Dossier notaire : 12 / 15
 // pièces », the access requests of buyers (first), and what is shared with
-// each buyer in relation with the property. Open to the three plans.
+// each buyer in relation with the property. Open to the three plans. L3-05:
+// under each document, its reading aid by the assistant (being written,
+// written, or why there is none), the facts the seller may show on the
+// listing, and « À actualiser » on a line whose document is old for its type.
 export default async function PropertyDocumentsPage({ params }: Props) {
   const { id } = await params;
   const property = await propertyForSheet(id);
@@ -64,13 +69,20 @@ export default async function PropertyDocumentsPage({ params }: Props) {
     ...required,
     ...Constants.public.Enums.document_type.filter((type) => !required.includes(type)),
   ];
+  const analysisOf = new Map(documents.map((document) => [document.id, document]));
   const allIds = documents.map((document) => document.id);
   const diagnosticIds = documents
     .filter((document) => DOCUMENT_CATEGORY[document.type] === "diagnostics")
     .map((document) => document.id);
 
+  // An analysis is being written: the tab reads itself again, once for all of them.
+  const analysing = documents.some(
+    (document) => document.analysis?.status === "pending" && !document.analysis.delayed,
+  );
+
   return (
     <div className="flex flex-col gap-8">
+      {analysing ? <AnalysisRefresher /> : null}
       <div className="flex flex-col gap-3">
         <h2 className="text-lk-h3 font-bold text-wide text-lk-ink">{t.title}</h2>
         <p className="text-lk-secondary text-pretty text-lk-ink-2">{t.intro}</p>
@@ -110,8 +122,9 @@ export default async function PropertyDocumentsPage({ params }: Props) {
         </section>
       ) : null}
 
-      <div className={card}>
+      <div className={cn(card, "flex flex-col gap-3")}>
         <UploadForm propertyId={property.id} types={types} />
+        <p className="text-lk-caption text-pretty text-lk-ink-3">{fr.saleFile.analysis.notice}</p>
       </div>
 
       {checklist.groups.map((group) => (
@@ -133,41 +146,70 @@ export default async function PropertyDocumentsPage({ params }: Props) {
                   <p className="min-w-0 text-lk-secondary font-medium text-lk-ink">
                     {fr.saleFile.types[line.type]}
                   </p>
-                  <span
-                    className={cn(
-                      pillClassName,
-                      "px-2.5 py-1.25 text-lk-micro font-semibold",
-                      stateTone[line.state],
-                    )}
-                  >
-                    {t.states[line.state]}
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    {line.toRefresh ? (
+                      <span
+                        className={cn(
+                          pillClassName,
+                          "px-2.5 py-1.25 text-lk-micro font-semibold",
+                          stateTone.missing,
+                        )}
+                      >
+                        {fr.saleFile.analysis.refresh.state}
+                      </span>
+                    ) : null}
+                    <span
+                      className={cn(
+                        pillClassName,
+                        "px-2.5 py-1.25 text-lk-micro font-semibold",
+                        stateTone[line.state],
+                      )}
+                    >
+                      {t.states[line.state]}
+                    </span>
                   </span>
                 </div>
+                {line.toRefresh ? (
+                  <p className="text-lk-caption text-pretty text-lk-ink-2">
+                    {fr.saleFile.analysis.refresh.text(
+                      formatDay(line.toRefresh.date),
+                      fr.saleFile.analysis.refresh.age(line.toRefresh.months),
+                      DOCUMENT_CATEGORY[line.type] === "diagnostics"
+                        ? "diagnostiqueur"
+                        : line.type === "pre_etat_date"
+                          ? "syndic"
+                          : "notaire",
+                    )}
+                  </p>
+                ) : null}
                 {!line.required ? (
                   <p className="text-lk-caption text-lk-ink-3">{t.optional}</p>
                 ) : null}
                 {line.documents.map((document) => (
-                  <div
-                    key={document.id}
-                    className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
-                  >
-                    <div className="flex min-w-0 flex-col">
-                      <a
-                        href={`/documents/vente/${document.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="truncate text-lk-secondary font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
-                      >
-                        {document.title}
-                      </a>
-                      <span className="text-lk-caption text-lk-ink-3">
-                        {t.filedOn(formatDateShort(document.createdAt, now))}
-                      </span>
+                  <div key={document.id} className="flex flex-col gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                      <div className="flex min-w-0 flex-col">
+                        <a
+                          href={`/documents/vente/${document.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="truncate text-lk-secondary font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
+                        >
+                          {document.title}
+                        </a>
+                        <span className="text-lk-caption text-lk-ink-3">
+                          {t.filedOn(formatDateShort(document.createdAt, now))}
+                        </span>
+                      </div>
+                      <RemoveDocumentButton
+                        propertyId={property.id}
+                        documentId={document.id}
+                        title={document.title}
+                      />
                     </div>
-                    <RemoveDocumentButton
+                    <SellerDocumentAnalysis
                       propertyId={property.id}
-                      documentId={document.id}
-                      title={document.title}
+                      document={analysisOf.get(document.id) ?? { ...document, analysis: null }}
                     />
                   </div>
                 ))}

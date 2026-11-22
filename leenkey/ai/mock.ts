@@ -477,6 +477,11 @@ export const MOCK_LISTING_DESCRIPTION =
   "et de chambres réparties de part et d'autre d'un dégagement.\n\nLes caractéristiques indiquées par le " +
   "vendeur sont reprises sans rien ajouter : surface, nombre de pièces, étage, chauffage et classes du DPE.";
 
+/** An answer of the model of the tests holding one text (the analysis of a document, L3-05). */
+export function mockAnswer(value: string): Anthropic.Message {
+  return message([text(value)], "end_turn");
+}
+
 /** The suggestions of the tests: the same text for the same kind, no call to the API. */
 export function mockText(
   kind:

@@ -352,6 +352,32 @@ export const frEmails = {
         "Vous choisissez : accorder l'accès partage vos documents avec cet acquéreur, refuser ne partage rien.",
       action: "Répondre à la demande",
     },
+    // L3-05: documents the assistant could not read as what they should be,
+    // to their seller: one email per property for those found together.
+    needsAttention: {
+      subject: (count: number) =>
+        count > 1
+          ? `${count}\u00A0documents de votre dossier sont à vérifier`
+          : "Un document de votre dossier est à vérifier",
+      title: (count: number) => (count > 1 ? "Documents à vérifier" : "Document à vérifier"),
+      text: (count: number, title: string | null) => {
+        const property = title ? ` de votre bien «\u00A0${title}\u00A0»` : "";
+        return count > 1
+          ? `En lisant les documents du dossier de vente${property}, notre assistant en a relevé ${count} à vérifier.`
+          : `En lisant un document du dossier de vente${property}, notre assistant a relevé qu'il est à vérifier.`;
+      },
+      line: (document: string, problem: string) => `${document} : ${problem}`,
+      unnamed: "Un document",
+      problems: {
+        illegible: "illisible",
+        incomplete: "incomplet",
+        wrong_type: "ne semble pas correspondre au type choisi",
+      },
+      help: "Ouvrez le fichier pour le vérifier. Si besoin, retirez-le de votre dossier et déposez-le à nouveau.",
+      mention:
+        "Aide à la lecture générée automatiquement. Elle ne remplace ni le diagnostiqueur ni le notaire.",
+      action: "Voir mes documents",
+    },
   },
   // L3-06: the daily digest of the alerts of a buyer (SPEC-V2 16 and 18), and
   // the listings similar to one sold. Public facts of the listings only.

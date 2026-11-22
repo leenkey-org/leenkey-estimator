@@ -27,6 +27,8 @@ import {
 } from "@/leenkey/listings/presentation";
 import { getPublicListing } from "@/leenkey/listings/queries";
 import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
+import { PublicDocumentFacts } from "@/leenkey/sale-file/components/document-analysis";
+import { publicDocumentFacts } from "@/leenkey/sale-file/public-facts";
 import { frListing } from "@/lib/i18n/sections/listing";
 import { absoluteUrl } from "@/lib/site";
 
@@ -91,7 +93,12 @@ export default async function ListingPage({ params }: Props) {
   const signUpHref = buyerSignUpHref(listing.slug);
   // Before the read: a heart changed since then wins (favorite-store.ts).
   const checkedAt = Date.now();
-  const [favorite, profile] = await Promise.all([favoriteState(listing.id), getProfile()]);
+  const [favorite, profile, documentFacts] = await Promise.all([
+    favoriteState(listing.id),
+    getProfile(),
+    // What the seller chose to show from the documents of the sale file (L3-05).
+    publicDocumentFacts(listing.id),
+  ]);
   const links = contactLinks(listing, profile !== null);
   const heart = (variant: "white-float" | "text") => (
     <FavoriteButton
@@ -152,6 +159,7 @@ export default async function ListingPage({ params }: Props) {
             </div>
           }
           aside={<PriceColumn listing={listing} links={links} note={note} />}
+          documentFacts={<PublicDocumentFacts groups={documentFacts} />}
           note={note}
           map={
             listing.location ? (

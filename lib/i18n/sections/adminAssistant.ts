@@ -94,6 +94,7 @@ export const frAdminAssistant = {
       listing_description: "Description d'annonce",
       rejection_reason: "Motif de refus",
       listing_summary: "Résumé d'annonce",
+      document_analysis: "Analyse de document",
       case_summary: "Synthèse avant appel",
     } as Record<string, string>,
     search: {

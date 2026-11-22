@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-21 · L3-05 · Analyse des documents par l'assistant · PR #118
+- Ajouté : chaque document déposé dans le dossier de vente est lu par l'assistant (tâche planifiée `/api/cron/analyze-documents`, toutes les 5 minutes, 3 documents par passage, modèle `MODELS.smart`, PDF et images lus tels quels, 100 pages au plus) : résumé pour le vendeur, points clés, points d'attention, résumé pour l'acquéreur à qui le document est partagé (`/acquereur/documents`), avec la mention « Aide à la lecture générée automatiquement. Elle ne remplace ni le diagnostiqueur ni le notaire. » ; « Lancer » ou « Relancer l'analyse » (3 par jour et par document ; les documents déjà déposés ne sont lus que sur demande) ; alerte « Document à vérifier » (illisible, incomplet, mauvais type), notification et email `document.needs_attention` ; pièces « À actualiser » d'après la date lue (durées provisoires, Q93) ; « Afficher sur l'annonce » : des faits choisis par le vendeur, jamais un texte de l'assistant (valeurs de listes fermées et nombres), apparaissent dans « Ce que vous savez avant de visiter ».
+- Ajouté : bornes de coût sur 24 heures glissantes (40 documents envoyés par bien, 60 par propriétaire, 500 pour le site), documents retirés compris.
+- Modifié : l'affichage des faits sur l'annonce (`public_facts_approved_at`) ne s'écrit plus par une mise à jour directe du vendeur mais par `document_public_facts_set` ; politiques restrictives de plus sur `ai_conversations` et `ai_messages` (un compte n'écrit pas dans le journal d'une tâche planifiée : analyses de documents et résumés d'annonce).
+- Migration : 20261121120000_document_analysis.sql
+
 ### 2026-11-21 · L3-06 · PR #116 · Alertes acheteur
 - Ajouté : « Créer une alerte » sur la recherche (à côté de « Filtres » et dans l'état vide, dès qu'il y a un critère) : nom proposé depuis les critères, confirmation avec le lien vers les alertes ; un visiteur se connecte puis revient à sa recherche.
 - Ajouté : page « Mes alertes » (`/acquereur/alertes`) : nom, critères, « Voir les biens », interrupteur actif / en pause, renommer, supprimer avec confirmation, compteur « x / 5 » ; lien depuis l'accueil acquéreur ; la cloche vide de l'acquéreur mène à la recherche (« Créer une alerte »).

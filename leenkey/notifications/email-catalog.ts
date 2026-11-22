@@ -12,6 +12,10 @@ import {
   DocumentAccessRequestedEmail,
   documentAccessRequestedSubject,
 } from "@/emails/document-access-requested";
+import {
+  DocumentNeedsAttentionEmail,
+  documentNeedsAttentionSubject,
+} from "@/emails/document-needs-attention";
 import { DocumentsSharedEmail, documentsSharedSubject } from "@/emails/documents-shared";
 import { OffersAcceptedEmail, offersAcceptedSubject } from "@/emails/offers-accepted";
 import { ListingToReviewEmail, listingToReviewSubject } from "@/emails/listing-submitted";
@@ -111,6 +115,10 @@ const POLICIES: Record<string, EmailPolicy> = {
     preference: "email_messages",
     throttleMinutes: 0,
   },
+  // L3-05: a document to check (illegible, incomplete, not what its type says), to its
+  // seller: the first at once, those found in the hour that follows together (a seller
+  // files several documents in a row).
+  "document.needs_attention": { audience: "recipient", throttleMinutes: 60 },
 };
 
 export function emailPolicy(type: string): EmailPolicy | null {
@@ -763,6 +771,32 @@ async function documentAccessRequested(email: PlannedEmail): Promise<RenderedEma
 }
 
 /**
+ * Documents to check (L3-05), to their seller: each by the name the seller gave it (when it
+ * can go in an email) and what is wrong in fixed words. Never what the assistant wrote about
+ * it: read from a file, it does not go in an email.
+ */
+async function documentsNeedAttention(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  if (!last) return null;
+  const problems: Record<string, string> = fr.emails.documents.needsAttention.problems;
+  const documents = email.items.flatMap((item) => {
+    const problem = typeof item.data.quality === "string" ? problems[item.data.quality] : null;
+    return problem ? [{ title: emailSafeText(item.data.document_title), problem }] : [];
+  });
+  if (documents.length === 0) return null;
+  return rendered(
+    documentNeedsAttentionSubject(documents.length),
+    DocumentNeedsAttentionEmail({
+      firstName: email.firstName,
+      property: emailSafeText(last.data.title),
+      documents,
+      documentsUrl: absoluteUrl(last.link ?? "/vendeur"),
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
+/**
  * The email of a group, ready to leave; null when its type has none. The
  * emails of a visit read it when they leave (its address, whether it is still
  * confirmed): they need the client of the cron, and send nothing without it.
@@ -813,6 +847,8 @@ export function renderNotificationEmail(
       return documentsShared(email);
     case "document.access_requested":
       return documentAccessRequested(email);
+    case "document.needs_attention":
+      return documentsNeedAttention(email);
     default:
       return Promise.resolve(null);
   }

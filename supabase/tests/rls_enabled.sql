@@ -36,7 +36,7 @@ select is((select coalesce(string_agg(distinct p.proname, ', ' order by p.pronam
               and has_function_privilege('anon', p.oid, 'execute')),
           'ai_visitor_answer, ai_visitor_ask, ai_visitor_history, estimation_record, '
           || 'knowledge_cards_visitor, listing_view_increment, photo_file_readable, '
-          || 'public_listing_dpe, public_listing_energy, public_listing_photos, '
+          || 'public_document_facts, public_listing_dpe, public_listing_energy, public_listing_photos, '
           || 'public_listing_summary, public_listings_details, public_listings_rows, '
           || 'rate_limit_hit, search_listings',
           'the security definer functions a visitor may call are the known ones');
