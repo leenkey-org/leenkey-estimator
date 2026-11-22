@@ -12,7 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-11-22 · Suppression d'une annonce et mise en conformité (demande de Cédric) · PR #121
+### 2026-11-22 · Suppression d'une annonce et mise en conformité (demande de Cédric) · PR #122
 - Ajouté : « Supprimer l'annonce » sur la fiche du bien (annonce en relecture, à corriger, en ligne ou en pause), après confirmation : l'annonce et le bien quittent la recherche et l'espace du vendeur, les visites à venir sont annulées (acquéreurs prévenus), les conversations restent ; refusée pour une annonce suspendue, vendue, avec une offre acceptée ou des offres en attente de réponse ; elle attend la fin du délai de renonciation d'une formule payante non renoncée (la confirmation mène à « Renoncer au contrat ») ; les documents partagés ne le sont plus ; la formule payée n'est pas remboursée (dit dans la confirmation).
 - Ajouté : back office, « Demander une mise en conformité » avec un motif sur la fiche d'une annonce : date limite à 7 jours, vendeur prévenu (cloche et email), demande affichée sur la fiche de son bien, rappel 2 jours avant la date limite (tâche `listing-compliance-reminders`) ; « Lever la demande », « Renouveler la demande » ; après la date limite et sans modification de l'annonce, « Supprimer l'annonce » (à la main, confirmation, une annonce suspendue aussi), dernier avis au vendeur. Tout est écrit dans `audit_log`.
 - Modifié : une tâche faite des étapes de la vente est cochée en vert sans être barrée (`TaskList`).
