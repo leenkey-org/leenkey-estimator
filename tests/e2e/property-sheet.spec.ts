@@ -144,12 +144,18 @@ test("une annonce en ligne : statut, chiffres clés, actions et onglets @a11y", 
   expect(await seriousViolations(page)).toEqual([]);
 });
 
-test("en relecture : ce que fait Leenkey, sans action", async ({ page }) => {
+test("en relecture : ce que fait Leenkey, et la seule action : supprimer l'annonce", async ({
+  page,
+}) => {
   await signIn(page, "seller_a", sheet(6));
   const main = page.getByRole("main");
   await expect(main.getByText("Nous relisons votre annonce")).toBeVisible();
   await expect(main.getByText("En attente de validation", { exact: true })).toBeVisible();
-  await expect(main.getByRole("group", { name: "Actions sur votre annonce" })).toHaveCount(0);
+  // A listing in review is not changed, paused nor sold; its seller may
+  // still delete it (DECISIONS.md 2026-11-22).
+  const actions = main.getByRole("group", { name: "Actions sur votre annonce" });
+  await expect(actions.getByRole("button")).toHaveCount(1);
+  await expect(actions.getByRole("button", { name: "Supprimer l'annonce" })).toBeVisible();
 });
 
 test("à corriger : la remarque de Leenkey et « Corriger mon annonce »", async ({ page }) => {
