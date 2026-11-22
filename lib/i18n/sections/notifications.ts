@@ -171,7 +171,8 @@ export const frNotifications = {
     // « Vérifié », never « validé ».
     financingChecked: {
       title: "Votre justificatif de financement est vérifié",
-      detail: "Votre dossier affiche « Justificatif vérifié ». Nous avons supprimé le fichier.",
+      detail:
+        "Votre dossier affiche « Justificatif vérifié ». Nous supprimons le fichier après ce contrôle.",
     },
     // 2026-11-21: a report handled by the team, for its author. Never what was decided.
     reportHandled: {

@@ -19,11 +19,15 @@
 -- 5. A report: its author is told when it is handled (closed).
 -- 6. offer_record_precontract: no start of a withdrawal period kept for an
 --    acquisition by an SCI (none is shown to a company).
+-- 7. account_anonymize: the frozen addresses of the offers received by a
+--    closed seller go with the address of their properties.
 --
 -- No enum value. One table, with its RLS; one storage policy added (delete of
 -- a checked proof by the team); no existing policy changed.
 
 -- 1. ---------------------------------------------------------------------------
+-- One row per offer sent, written once: its key is the offer (no id of its
+-- own), and it has no updated_at since it is never updated.
 create table public.offer_property_addresses (
   offer_id uuid primary key references public.offers(id) on delete cascade,
   address_line text not null check (char_length(address_line) <= 200),
@@ -40,6 +44,27 @@ create policy offer_property_addresses_select_admin on public.offer_property_add
 
 revoke all on public.offer_property_addresses from anon, authenticated;
 grant select on public.offer_property_addresses to authenticated;
+
+-- Never changed; deleted only with the account of the seller of the offer,
+-- once closed (account_anonymize): the address of their property is erased
+-- everywhere then. Holds for the owner of the table and the service role too.
+create function public.offer_property_addresses_immutable() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if tg_op = 'DELETE' and exists (
+       select 1 from public.offers o join public.profiles pr on pr.id = o.seller_id
+        where o.id = old.offer_id and pr.deleted_at is not null) then
+    return old;
+  end if;
+  raise exception 'the address frozen with an offer is never changed' using errcode = '42501';
+end;
+$$;
+
+create trigger offer_property_addresses_immutable
+  before update or delete on public.offer_property_addresses
+  for each row execute function public.offer_property_addresses_immutable();
+
+revoke execute on function public.offer_property_addresses_immutable() from public, anon, authenticated;
 
 -- The offers already sent: the address of their property as it is today.
 insert into public.offer_property_addresses (offer_id, address_line)
@@ -418,10 +443,12 @@ create trigger financing_documents_notify after update of checked_at on public.f
 
 -- The file of a checked proof is deleted by the team (answer of Cédric of
 -- 2026-11-19): the admin action removes the storage object with the session
--- of the admin, this policy allows it for a checked document only.
+-- of the admin, this policy allows it for a checked document only (the
+-- function says no to anyone who is not of the team).
 create function public.financing_file_checked(p_name text) returns boolean
 language sql stable security definer set search_path = '' as $$
-  select exists (select 1 from public.financing_documents d
+  select public.is_admin()
+     and exists (select 1 from public.financing_documents d
                   where d.storage_path = p_name and d.checked_at is not null);
 $$;
 
@@ -579,5 +606,77 @@ begin
     perform public.audit('offer.precontract', 'offer', o.id,
       jsonb_build_object('signed_at', p_signed_at, 'withdrawal_start', p_withdrawal_start));
   end if;
+end;
+$$;
+
+-- 7. ---------------------------------------------------------------------------
+-- account_anonymize of L3-03 (20261121140000), with the addresses frozen with
+-- the offers received by the closed seller, erased with the address of their
+-- properties: the only change.
+create or replace function public.account_anonymize(p_profile uuid, p_now timestamptz default now())
+returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not exists (
+    select 1 from public.profiles
+     where id = p_profile and deleted_at is not null
+       and deleted_at <= p_now - interval '30 days') then
+    raise exception 'not an account closed 30 days ago' using errcode = '22023';
+  end if;
+
+  update public.profiles
+     set first_name = null, last_name = null, phone = null, avatar_path = null,
+         suspension_reason = null,
+         notification_prefs = '{"email_alerts": false, "email_offers": false, "email_messages": false}'::jsonb
+   where id = p_profile;
+  delete from public.buyer_profiles where profile_id = p_profile;
+  delete from public.offers where buyer_id = p_profile and status = 'draft';
+  -- A document an offer sent refers to keeps its row (type, date), never its file.
+  update public.financing_documents set storage_path = ''
+   where buyer_id = p_profile
+     and id in (select financing_document_id from public.offers where financing_document_id is not null);
+  delete from public.financing_documents
+   where buyer_id = p_profile
+     and id not in (select financing_document_id from public.offers where financing_document_id is not null);
+  delete from public.photos
+   where property_id in (select id from public.properties where owner_id = p_profile);
+  -- The address, what finds it (the DPE number gives it, through the
+  -- register of the ADEME), the free texts of the seller and their history;
+  -- the characteristics and the prices stay (city, surface, rooms).
+  update public.properties
+     set address_line = 'Adresse effacée', location = null, public_location = null,
+         district = null, dpe_number = null, dpe_date = null, dpe_exemption_reason = null,
+         estimation_id = null
+   where owner_id = p_profile;
+  -- The same address, frozen with the offers received on these properties.
+  delete from public.offer_property_addresses a
+   using public.offers o
+   where o.id = a.offer_id and o.seller_id = p_profile;
+  update public.listings l
+     set title = 'Annonce supprimée', description = '', summary = null,
+         rejection_reason = null, suspension_reason = null
+    from public.properties p
+   where p.id = l.property_id and p.owner_id = p_profile;
+  delete from public.listing_revisions r
+   using public.listings l, public.properties p
+   where l.id = r.listing_id and p.id = l.property_id and p.owner_id = p_profile;
+  delete from public.ai_conversations where profile_id = p_profile;
+  delete from public.notifications where profile_id = p_profile;
+  delete from public.favorites where buyer_id = p_profile;
+  delete from public.estimations where profile_id = p_profile;
+  -- Lot 3: the sale file (its shares go with it), the alerts, the
+  -- invitations and requests of the buyer, the free texts of the visits.
+  delete from public.documents
+   where property_id in (select id from public.properties where owner_id = p_profile);
+  delete from public.alerts where buyer_id = p_profile;
+  delete from public.visit_invitations where buyer_id = p_profile;
+  delete from public.document_access_requests where buyer_id = p_profile;
+  delete from public.document_shares where buyer_id = p_profile;
+  -- L3-04: the reasons written for « Non concerné » (free text of the seller).
+  delete from public.document_exemptions
+   where property_id in (select id from public.properties where owner_id = p_profile);
+  update public.visits set buyer_feedback = null, buyer_interest = null where buyer_id = p_profile;
+  update public.visits set seller_feedback = null
+   where property_id in (select id from public.properties where owner_id = p_profile);
 end;
 $$;

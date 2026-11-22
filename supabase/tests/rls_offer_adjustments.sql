@@ -6,12 +6,14 @@
 -- told when an offer is received on a sale with an adviser, never under the
 -- free plan. A proof of financing checked: its buyer is told, the team alone
 -- deletes its file, once checked only. A report closed: its author is told.
--- An acquisition by an SCI keeps no start of a withdrawal period.
+-- An acquisition by an SCI keeps no start of a withdrawal period. The frozen
+-- address is never changed, and goes only with the closed account of its
+-- seller (account_anonymize).
 -- Fixtures in postal code 99988: the file passes on an empty and on a seeded
 -- database.
 begin;
 \ir _helpers.psql
-select plan(50);
+select plan(76);
 \ir _plan.psql
 -- The storage service deletes a file this way (storage.protect_delete): as
 -- the user, under the RLS.
@@ -87,6 +89,12 @@ update offers
        declarations = '{"accuracy":true,"price_and_financing_checked":true,
                         "legal_effects_understood":true,"info_read":true}'
  where id in (:'offer_paid', :'offer_free');
+\set who buyer_d
+\ir _as.psql
+insert into offers (listing_id, buyer_id, price_cents) values (:'listing_paid', tests.uid('buyer_d'), 34000000)
+returning id as draft_d \gset
+\set who buyer_c
+\ir _as.psql
 -- The offer on the listing of seller_b is made by an SCI.
 update offers
    set acquisition_mode = 'sci',
@@ -123,6 +131,12 @@ select is(offer_property_address(:'offer_paid'), null,
 \ir _as.psql
 select throws_ok(format($$select offer_property_address(%L)$$, :'offer_paid'), '42501', null,
                  'anon: does not call the function');
+select throws_ok($$select count(*) from offer_property_addresses$$, '42501', null,
+                 'anon: does not read the table of the frozen addresses');
+\set who admin
+\ir _as.psql
+select is(offer_property_address(:'offer_paid'), '12 rue des Ajustements',
+          'admin: the address of the property of a draft, as it is');
 
 -- ===========================================================================
 -- Sent: the address is frozen; the team is told under a plan with an adviser
@@ -248,10 +262,91 @@ alter table visits enable trigger user;
 select is(offer_property_address(:'offer_paid'), '12 rue des Ajustements',
           'buyer_c: a visit done too');
 
+-- A draft: the address of the property as it is, once a visit is confirmed.
+\set who buyer_d
+\ir _as.psql
+select is(offer_property_address(:'draft_d'), null,
+          'buyer_d: no address of the property of its draft before a visit');
+reset role;
+insert into visit_slots (property_id, starts_at, ends_at) values
+  (:'prop_paid', now() + interval '3 days', now() + interval '3 days 30 minutes')
+returning id as slot_d \gset
+insert into visits (slot_id, property_id, buyer_id) values (:'slot_d', :'prop_paid', tests.uid('buyer_d'));
+\set who buyer_d
+\ir _as.psql
+select is(offer_property_address(:'draft_d'), '99 avenue Nouvelle',
+          'buyer_d: a confirmed visit gives the address of the property of its draft, as it is today');
+select is(offer_property_address(:'offer_paid'), null,
+          'never the address of the offer of another buyer');
+
 -- The freeze of an offer sent still holds, even for the owner of the table.
 reset role;
 select throws_ok(format($$update offers set conditions_details = 'Autre' where id = %L$$, :'offer_paid'),
                  '42501', null, 'an offer sent is still frozen');
+
+-- ===========================================================================
+-- A new offer replaces the one in progress: its own address, the team told
+-- ===========================================================================
+\set who buyer_c
+\ir _as.psql
+insert into offers (listing_id, buyer_id, price_cents) values (:'listing_paid', tests.uid('buyer_c'), 34500000)
+returning id as offer_new \gset
+update offers
+   set buyer_identity = '{"last_name":"Martin","first_name":"Chloé","birth_date":"1990-04-12",
+                          "address":{"line":"3 rue Verte","postal_code":"75011","city":"Paris"},
+                          "email":"chloe@example.test","phone":"0600000000"}',
+       financing_mode = 'no_loan',
+       validity_until = now() + interval '5 days', visited = true,
+       declarations = '{"accuracy":true,"price_and_financing_checked":true,
+                        "legal_effects_understood":true,"info_read":true}'
+ where id = :'offer_new';
+select lives_ok(format($$select offer_submit(%L)$$, :'offer_new'),
+                'buyer_c: sends a new offer on the same listing');
+select is(offer_property_address(:'offer_new'), '99 avenue Nouvelle',
+          'the new offer is frozen with the address of the property when it is sent');
+select is(offer_property_address(:'offer_paid'), '12 rue des Ajustements',
+          'the offer it replaces keeps the address it was sent with');
+reset role;
+select is((select row(status, superseded_by)::text from offers where id = :'offer_paid'),
+          row('superseded', :'offer_new')::text, 'the offer in progress is superseded');
+select is((select count(*)::int from notifications
+            where type = 'offer.received_team' and data->>'offer_id' = :'offer_new'),
+          (select count(*)::int from profiles
+            where 'admin' = any(roles) and deleted_at is null and suspended_at is null),
+          'the team is told of the new offer too');
+
+-- ===========================================================================
+-- The frozen address is never changed, even by the owner of the table
+-- ===========================================================================
+select throws_ok(format($$update offer_property_addresses set address_line = 'x' where offer_id = %L$$,
+                        :'offer_paid'),
+                 '42501', null, 'the frozen address is never updated');
+select throws_ok(format($$delete from offer_property_addresses where offer_id = %L$$, :'offer_paid'),
+                 '42501', null, 'nor deleted while the account of its seller is open');
+
+-- An offer sent before the address was kept (none frozen): the town only,
+-- until the migration gives it the address of its property (its statement,
+-- played again here).
+alter table offer_property_addresses disable trigger user;
+delete from offer_property_addresses where offer_id = :'offer_paid';
+alter table offer_property_addresses enable trigger user;
+\set who seller_a
+\ir _as.psql
+select is(offer_property_address(:'offer_paid'), '',
+          'seller_a: an offer without a frozen address reads none, never the one of today');
+reset role;
+insert into public.offer_property_addresses (offer_id, address_line)
+select o.id, p.address_line
+  from public.offers o
+  join public.listings l on l.id = o.listing_id
+  join public.properties p on p.id = l.property_id
+ where o.submitted_at is not null
+on conflict (offer_id) do nothing;
+select is((select address_line from offer_property_addresses where offer_id = :'offer_paid'),
+          '99 avenue Nouvelle', 'the backfill gives it the address of its property as it is');
+select is((select count(*)::int from offer_property_addresses
+            where offer_id in (:'offer_paid', :'offer_new', :'offer_free', :'draft_d')), 3,
+          'one address per offer sent, none for a draft');
 \set who buyer_c
 \ir _as.psql
 
@@ -278,9 +373,31 @@ delete from storage.objects where bucket_id = 'documents' and name = :'path_c';
 \set who seller_a
 \ir _as.psql
 delete from storage.objects where bucket_id = 'documents' and name = :'path_c';
+\set who buyer_c
+\ir _as.psql
+delete from storage.objects where bucket_id = 'documents' and name = :'path_c';
+select is(financing_file_checked(:'path_c'), false,
+          'buyer_c: the function that opens the deletion says no to who is not of the team');
+\set who anon
+\ir _as.psql
+select set_config('tests.path', :'path_c', true) \gset
+-- With or without the right to delete in the bucket, the file stays.
+do $$
+begin
+  delete from storage.objects where bucket_id = 'documents' and name = current_setting('tests.path');
+exception when insufficient_privilege then null;
+end;
+$$;
+select throws_ok(format($$select financing_file_checked(%L)$$, :'path_c'), '42501', null,
+                 'anon: does not ask whether a proof is checked');
+select throws_ok(format($$select financing_document_file_removed(%L)$$, :'doc'), '42501', null,
+                 'anon: does not say a file deleted');
 reset role;
 select is((select count(*)::int from storage.objects where bucket_id = 'documents' and name = :'path_c'), 1,
-          'another buyer and a seller never delete the file of a checked proof');
+          'its buyer, another buyer, a seller and a visitor never delete the file of a checked proof');
+\set who admin
+\ir _as.psql
+select is(financing_file_checked(:'path_c'), true, 'admin: the proof is checked, its file may go');
 \set who buyer_c
 \ir _as.psql
 select throws_ok(format($$select financing_document_file_removed(%L)$$, :'doc'), '42501', null,
@@ -295,6 +412,11 @@ select is((select count(*)::int from storage.objects where bucket_id = 'document
 \ir _as.psql
 select lives_ok(format($$select financing_document_file_removed(%L)$$, :'doc'),
                 'admin: the document says its file is deleted');
+select file_deleted_at as deleted_at from financing_documents where id = :'doc' \gset
+select lives_ok(format($$select financing_document_file_removed(%L)$$, :'doc'),
+                'admin: said again (« Supprimer le fichier » tried twice), nothing breaks');
+select is((select file_deleted_at from financing_documents where id = :'doc'), :'deleted_at'::timestamptz,
+          'the date of the deletion is written once');
 \set who buyer_c
 \ir _as.psql
 select is((select row(checked_at is not null, file_deleted_at is not null)::text
@@ -310,7 +432,7 @@ select is((select row(profile_id, link, email_after is not null, data->>'documen
 select is((select count(*)::int from audit_log
             where action = 'financing.file_deleted' and entity_id = :'doc'
               and actor_id = tests.uid('admin')), 1,
-          'and the audit log says who deleted the file');
+          'and the audit log says who deleted the file, once');
 \set who admin
 \ir _as.psql
 select is((select file_deleted_at is not null from admin_financing_documents(tests.uid('buyer_c'))
@@ -350,8 +472,8 @@ select is((select count(*)::int from notifications
 \set who seller_a
 \ir _as.psql
 \o /dev/null
-select offer_answer(:'offer_paid', true, true);
-select offer_record_precontract(:'offer_paid', (now() at time zone 'Europe/Paris')::date,
+select offer_answer(:'offer_new', true, true);
+select offer_record_precontract(:'offer_new', (now() at time zone 'Europe/Paris')::date,
                                 (now() at time zone 'Europe/Paris')::date);
 \o
 \set who seller_b
@@ -366,8 +488,46 @@ reset role;
 select is((select row(precontract_signed_at is not null, withdrawal_period_start is null)::text
              from offers where id = :'offer_free'),
           row(true, true)::text, 'an SCI: the avant-contrat is dated, no start of a withdrawal period is kept');
-select is((select withdrawal_period_start is not null from offers where id = :'offer_paid'),
+select is((select withdrawal_period_start is not null from offers where id = :'offer_new'),
           true, 'a buyer in their own name: the start of the period is kept, as before');
+
+-- ===========================================================================
+-- A seller closes their account: the frozen address goes with the others
+-- ===========================================================================
+-- Its sale is over (an account is not closed during a sale in progress):
+-- the listing is sold, written here as the owner of the table.
+reset role;
+alter table listings disable trigger user;
+update listings set status = 'sold', sold_at = now() where id = :'listing_free';
+alter table listings enable trigger user;
+\set who seller_b
+\ir _as.psql
+\o /dev/null
+select account_close();
+\o
+-- 30 days later (date simulated), the scheduled task, which has no session.
+\set who anon
+\ir _as.psql
+reset role;
+select tests.uid('seller_b') as seller_b \gset
+set local role service_role;
+select lives_ok(format($$select account_anonymize(%L, now() + interval '31 days')$$, :'seller_b'),
+                'the account of seller_b, closed 30 days ago, is anonymised');
+reset role;
+select is((select row(p.address_line,
+                      (select count(*) from offer_property_addresses a where a.offer_id = :'offer_free'))::text
+             from properties p where p.id = :'prop_free'),
+          row('Adresse effacée', 0)::text,
+          'the address of its property is erased, and the one frozen with the offer it received');
+select is((select count(*)::int from offers where id = :'offer_free' and status = 'accepted'), 1,
+          'the offer itself stays');
+select is((select count(*)::int from offer_property_addresses
+            where offer_id in (:'offer_paid', :'offer_new')), 2,
+          'the addresses of the offers of another seller are untouched');
+\set who admin
+\ir _as.psql
+select is(offer_property_address(:'offer_free'), '',
+          'admin: the offer of the closed seller reads no address any more');
 
 select * from finish();
 rollback;

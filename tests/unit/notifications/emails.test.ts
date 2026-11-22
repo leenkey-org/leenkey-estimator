@@ -580,7 +580,9 @@ describe("emails of an offer (L2-04a)", () => {
     expect(text).toContain(
       "Nous avons contrôlé votre justificatif de financement (Accord de principe bancaire) : votre dossier affiche désormais « Justificatif vérifié ».",
     );
-    expect(text).toContain("Nous avons supprimé le fichier après ce contrôle.");
+    // Sent when the check is recorded: the deletion follows, it is not claimed done.
+    expect(text).toContain("Nous supprimons le fichier après ce contrôle.");
+    expect(text).not.toMatch(/avons supprimé/);
     expect(text).toContain("il ne garantit pas l'obtention de votre financement");
     expect(email?.html).toContain("https://leenkey-v2.vercel.app/acquereur/profil");
     expect(text).not.toMatch(/validé|\bon\b/i);
@@ -610,9 +612,10 @@ describe("emails of an offer (L2-04a)", () => {
     const text = (email?.text ?? "").replace(/[\u00A0\u202F]/g, " ");
     expect(email?.subject).toBe("Votre signalement a été traité");
     expect(text).toContain(
-      "Notre équipe a examiné la conversation que vous avez signalée, à propos de « Maison 5 pièces », et a pris les mesures qu'elle a jugées nécessaires.",
+      "Notre équipe a examiné votre signalement, à propos de « Maison 5 pièces », et l'a clos.",
     );
-    expect(text).toContain("Nous ne détaillons pas ces mesures.");
+    expect(text).toContain("Nous ne détaillons pas la suite donnée.");
+    expect(text).not.toMatch(/mesures/);
     expect(email?.html).toContain("https://leenkey-v2.vercel.app/messages/c1");
     expect(text).not.toMatch(/averti|téléphone|\bon\b/i);
   });

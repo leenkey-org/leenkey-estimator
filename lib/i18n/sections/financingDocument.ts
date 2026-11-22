@@ -90,7 +90,13 @@ export const frFinancingDocument = {
     done: "Justificatif marqué comme vérifié. Son fichier est supprimé et l'acquéreur est prévenu.",
     // The check is recorded, the deletion of the file failed.
     doneFileKept:
-      "Justificatif marqué comme vérifié et acquéreur prévenu, mais son fichier n'a pas pu être supprimé. Signalez-le à l'équipe technique.",
+      "Justificatif marqué comme vérifié et acquéreur prévenu, mais son fichier n'a pas pu être supprimé. Utilisez « Supprimer le fichier » sur sa ligne.",
+    // A proof checked whose file is still stored (a deletion that failed, a
+    // proof checked before 2026-11-21): the team deletes it from its line.
+    fileKept: "Justificatif contrôlé : son fichier n'est pas encore supprimé.",
+    deleteFile: "Supprimer le fichier",
+    fileDeletedDone: "Fichier du justificatif supprimé.",
+    fileDeleteFailed: "Le fichier n'a pas pu être supprimé. Réessayez dans un instant.",
     stale: "Ce justificatif n'est plus à contrôler. La fiche est à jour.",
     failed: "Le contrôle n'a pas pu être enregistré. Réessayez dans un instant.",
   },

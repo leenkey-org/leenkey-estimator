@@ -222,7 +222,8 @@ describe("wording of the notifications (from type and data)", () => {
       title: "Votre justificatif de financement est vérifié",
       tone: "success",
     });
-    expect(`${checked.title} ${checked.detail}`).not.toMatch(/validé/i);
+    expect(`${checked.title} ${checked.detail}`).not.toMatch(/validé|avons supprimé/i);
+    expect(checked.detail).toContain("Nous supprimons le fichier après ce contrôle.");
     expect(
       describeNotification(
         view({ type: "report.handled", data: { listing_title: "Maison 5 pièces", reason: "x" } }),

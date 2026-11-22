@@ -824,7 +824,11 @@ describe("withdrawal period after an avant-contrat (indicative, L2-04b)", () => 
     expect(showsWithdrawalPeriod("joint")).toBe(true);
     // « Autre » may be a company: the date stays, with a sentence about companies.
     expect(showsWithdrawalPeriod("other")).toBe(true);
-    expect(fr.offer.followUp.precontract.companyNote).toMatch(/société/);
+    // Never a legal conclusion: « peut ne pas concerner », the notary says.
+    expect(fr.offer.followUp.precontract.companyNote).toBe(
+      "Ce délai peut ne pas concerner une acquisition faite par une société : votre notaire vous le confirme.",
+    );
+    expect(fr.offer.seller.precontract.companyNote).toBe(fr.offer.followUp.precontract.companyNote);
     expect(fr.offer.followUp.precontract.noPeriod).toMatch(/SCI/);
   });
 
@@ -835,9 +839,8 @@ describe("withdrawal period after an avant-contrat (indicative, L2-04b)", () => 
     expect(fr.offer.seller.precontract.notifiedAtHelp).toMatch(
       /signé électroniquement, indiquez la date de sa signature : le délai court à compter du lendemain/,
     );
-    expect(fr.offer.followUp.precontract.electronicStart).toMatch(
-      /signé électroniquement, ce délai court à compter du lendemain de la signature/,
-    );
+    // The buyer reads the sentence of the SPEC only: no legal conclusion for them.
+    expect(JSON.stringify(fr.offer.followUp.precontract)).not.toMatch(/électroniquement/);
   });
 
   it("says nothing of what is not a day", () => {

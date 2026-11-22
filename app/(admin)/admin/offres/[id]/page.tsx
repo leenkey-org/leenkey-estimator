@@ -198,7 +198,9 @@ export default async function AdminOfferPage({ params }: Props) {
             ) : (
               <p className="text-lk-secondary text-lk-ink-2">{t.precontract.none}</p>
             )}
-            {!period ? <p className="text-lk-secondary text-lk-ink-2">{p.noPeriod}</p> : null}
+            {!period ? (
+              <p className="text-lk-secondary text-lk-ink-2">{t.precontract.noPeriod}</p>
+            ) : null}
             {precontractByTeam && item.answeredAt ? (
               <>
                 <p className="text-lk-caption text-lk-ink-3">{t.precontract.intro}</p>

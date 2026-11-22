@@ -321,10 +321,7 @@ function BuyerPrecontract({
             {acquisitionMode === "other" ? <p>{f.precontract.companyNote}</p> : null}
           </>
         ) : (
-          <>
-            <p>{f.precontract.unknownStart}</p>
-            <p>{f.precontract.electronicStart}</p>
-          </>
+          <p>{f.precontract.unknownStart}</p>
         )}
       </InfoNote>
     </section>

@@ -4,7 +4,11 @@ import { revalidatePath } from "next/cache";
 import { getProfile } from "@/core/auth/session";
 import type { EmailDelivery } from "@/core/notifications/email";
 import { createClient } from "@/lib/supabase/server";
-import { accountDecisionSchema, financingCheckSchema } from "@/lib/validations/admin";
+import {
+  accountDecisionSchema,
+  financingCheckSchema,
+  financingFileDeleteSchema,
+} from "@/lib/validations/admin";
 import { moderationError, type ModerationError } from "../moderation";
 import { emailAccountSuspended } from "./emails";
 
@@ -73,7 +77,13 @@ export type FinancingCheckResult =
 
 type Client = Awaited<ReturnType<typeof createClient>>;
 
-/** Deletes the file of a checked proof; false when it could not be (logged). */
+/**
+ * Deletes the file of a checked proof; false when it could not be (logged).
+ * May be called again: an object already gone is no error, and the document
+ * is marked, and written in the audit log, once
+ * (financing_document_file_removed). A proof not checked keeps its file: the
+ * storage policy leaves the object, and the database then refuses the mark.
+ */
 async function deleteCheckedFile(
   supabase: Client,
   documentId: string,
@@ -141,4 +151,29 @@ export async function checkFinancingDocument(input: unknown): Promise<FinancingC
   revalidatePath("/admin/utilisateurs");
   revalidatePath("/admin");
   return { ok: true, data: { checked: true, fileDeleted } };
+}
+
+// « Supprimer le fichier » (2026-11-21): the file of a proof already checked
+// that is still stored, because its deletion failed after the check or
+// because it was checked before files were deleted. The same deletion as
+// after a check, with the session of the admin; written in audit_log by the
+// database (financing.file_deleted). No service role.
+
+export type FinancingFileDeleteResult =
+  | { ok: true; data: { fileDeleted: true } }
+  | { ok: false; error: ModerationError };
+
+export async function deleteCheckedFinancingFile(
+  input: unknown,
+): Promise<FinancingFileDeleteResult> {
+  const profile = await getProfile();
+  if (!profile?.roles.includes("admin")) return { ok: false, error: "forbidden" };
+  const parsed = financingFileDeleteSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const command = parsed.data;
+  const supabase = await createClient();
+  const deleted = await deleteCheckedFile(supabase, command.documentId, profile.id);
+  revalidatePath(`/admin/utilisateurs/${command.profileId}`);
+  if (!deleted) return { ok: false, error: "unavailable" };
+  return { ok: true, data: { fileDeleted: true } };
 }

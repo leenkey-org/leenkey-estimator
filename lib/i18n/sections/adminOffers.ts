@@ -92,5 +92,8 @@ export const frAdminOffers = {
       "La formule de ce bien comprend le suivi jusqu'à la signature : vous pouvez enregistrer les dates de l'avant-contrat à la place du vendeur. La saisie est tracée.",
     none: "Aucun avant-contrat enregistré pour cette offre.",
     indicative: "Date indicative : le notaire fait foi.",
+    // An acquisition by an SCI (answer of Cédric of 2026-11-19): said to the team, plainly.
+    noPeriod:
+      "Acquisition par une SCI : aucun délai de rétractation n'est affiché, ni au vendeur ni à l'acquéreur.",
   },
 } as const;

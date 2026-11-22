@@ -530,7 +530,7 @@ export const frEmails = {
     title: "Votre justificatif est vérifié",
     text: (type: string | null) =>
       `Nous avons contrôlé votre justificatif de financement${type ? ` (${type})` : ""} : votre dossier affiche désormais « Justificatif vérifié ».`,
-    next: "Les vendeurs voient ce statut, le type du document et la date de notre contrôle, jamais le document. Nous avons supprimé le fichier après ce contrôle.",
+    next: "Les vendeurs voient ce statut, le type du document et la date de notre contrôle, jamais le document. Nous supprimons le fichier après ce contrôle.",
     scope:
       "Ce contrôle porte sur la présence du document et sa cohérence apparente avec votre projet : il ne garantit pas l'obtention de votre financement.",
     action: "Voir mon projet d'achat",
@@ -541,8 +541,8 @@ export const frEmails = {
     subject: "Votre signalement a été traité",
     title: "Votre signalement a été traité",
     text: (listing: string | null) =>
-      `Notre équipe a examiné la conversation que vous avez signalée${listing ? `, à propos de «\u00A0${listing}\u00A0»,` : ""} et a pris les mesures qu'elle a jugées nécessaires.`,
-    next: "Nous ne détaillons pas ces mesures. Si le problème continue, signalez de nouveau la conversation.",
+      `Notre équipe a examiné votre signalement${listing ? `, à propos de «\u00A0${listing}\u00A0»,` : ""} et l'a clos.`,
+    next: "Nous ne détaillons pas la suite donnée. Si le problème continue, signalez de nouveau la conversation.",
     action: "Ouvrir la conversation",
     why: "Vous recevez cet email parce que vous avez signalé une conversation sur Leenkey.",
   },

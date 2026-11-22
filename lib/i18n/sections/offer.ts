@@ -312,15 +312,12 @@ export const frOffer = {
       indicative: "Date indicative. Votre notaire fait foi.",
       unknownStart:
         "Le point de départ de votre délai de rétractation dépend de la date de notification ou de remise de l'avant-contrat. Votre notaire peut vous l'indiquer.",
-      // Answer of Cédric of 2026-11-19, beside the sentence of the SPEC.
-      electronicStart:
-        "Pour un avant-contrat signé électroniquement, ce délai court à compter du lendemain de la signature.",
       // An acquisition by an SCI: no period shown (answer of Cédric of 2026-11-19).
       noPeriod:
         "Votre acquisition est faite par une SCI : aucun délai de rétractation n'est affiché. Votre notaire vous confirme ce qui s'applique à votre situation.",
       // An acquisition « Autre », which may be a company.
       companyNote:
-        "Ce délai ne concerne pas une acquisition faite par une société : votre notaire vous le confirme.",
+        "Ce délai peut ne pas concerner une acquisition faite par une société : votre notaire vous le confirme.",
     },
     errors: {
       generic: "Votre demande n'a pas pu être enregistrée. Réessayez.",
@@ -522,7 +519,7 @@ export const frOffer = {
         "Acquisition par une SCI : aucun délai de rétractation n'est affiché. Votre notaire vous confirme ce qui s'applique.",
       // An acquisition « Autre », which may be a company.
       companyNote:
-        "Ce délai ne concerne pas une acquisition faite par une société : votre notaire vous le confirme.",
+        "Ce délai peut ne pas concerner une acquisition faite par une société : votre notaire vous le confirme.",
       save: "Enregistrer",
       edit: "Modifier",
       cancel: "Annuler",
