@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { requireProfile } from "@/core/auth/session";
+import { buyerDocumentsAssistantHref } from "@/leenkey/ai/components/assistant-ask-link";
+import { sharedDocumentAnchor } from "@/leenkey/ai/components/assistant-sources";
 import { conversationTitle } from "@/leenkey/messaging/presentation";
 import { listConversations } from "@/leenkey/messaging/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
@@ -27,7 +30,9 @@ const card = "rounded-lk-xl border border-lk-line bg-lk-surface p-4";
 // by property, each opened through a signed URL of 10 minutes; and, for the
 // properties the buyer is in contact with and that shared nothing yet, the
 // request of access to their documents. L3-05: under a document analysed,
-// the summary meant for a buyer, with its permanent mention.
+// the summary meant for a buyer, with its permanent mention. L3-07: under
+// the documents of a property that has such a summary, « Poser une question
+// sur les documents »: the assistant, about the listing when it is online.
 export default async function BuyerDocumentsPage() {
   const profile = await requireProfile();
   const [shared, conversations] = await Promise.all([buyerSharedDocuments(), listConversations()]);
@@ -94,7 +99,11 @@ export default async function BuyerDocumentsPage() {
                 </div>
                 <ul className={`${card} flex flex-col divide-y divide-lk-line py-1`}>
                   {group.documents.map((document) => (
-                    <li key={document.id} className="flex flex-col gap-2 py-2">
+                    <li
+                      key={document.id}
+                      id={sharedDocumentAnchor(document.id)}
+                      className="flex scroll-mt-24 flex-col gap-2 py-2"
+                    >
                       <div className="flex min-h-13 items-center justify-between gap-3">
                         <div className="flex min-w-0 flex-col">
                           <span className="truncate text-lk-secondary font-medium text-lk-ink">
@@ -125,6 +134,17 @@ export default async function BuyerDocumentsPage() {
                     </li>
                   ))}
                 </ul>
+                {group.documents.some((document) => document.summary) ? (
+                  <Button asChild variant="secondary" className="self-start">
+                    <Link
+                      href={buyerDocumentsAssistantHref(group.listingSlug ? group.listingId : null)}
+                      aria-label={t.questionAbout(heading)}
+                    >
+                      <Sparkles aria-hidden="true" className="size-4 shrink-0" />
+                      {t.question}
+                    </Link>
+                  </Button>
+                ) : null}
               </section>
             );
           })}

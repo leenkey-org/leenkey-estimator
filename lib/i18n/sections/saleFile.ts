@@ -276,6 +276,9 @@ export const frSaleFile = {
     open: "Ouvrir",
     openAbout: (title: string) => `Ouvrir ${title}`,
     listing: "Voir l'annonce",
+    // To the assistant, about the documents of this property (L3-07).
+    question: "Poser une question sur les documents",
+    questionAbout: (title: string) => `Poser une question sur les documents : ${title}`,
     ask: {
       title: "Demander des documents",
       intro:

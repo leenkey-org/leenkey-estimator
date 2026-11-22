@@ -1,5 +1,5 @@
 import type { ActionPreview } from "./previews";
-import type { ShownListings } from "./shown";
+import type { ShownDocuments, ShownListings } from "./shown";
 
 // The conversation with the assistant as the browser shows it (L1-28).
 
@@ -20,7 +20,9 @@ export type ChatItem =
       href?: string;
     }
   /** The listings of a search of the assistant (search_listings), as cards. */
-  | { id: string; kind: "listings"; data: ShownListings };
+  | { id: string; kind: "listings"; data: ShownListings }
+  /** The documents an answer was written from (summarize_shared_documents), under it. */
+  | { id: string; kind: "documents"; data: ShownDocuments };
 
 export type AssistantConversation = { conversationId: string | null; items: ChatItem[] };
 

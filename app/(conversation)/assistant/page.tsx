@@ -20,7 +20,9 @@ const t = fr.assistant;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Param = string | string[] | undefined;
-type Props = { searchParams: Promise<{ bien?: Param; annonce?: Param; contexte?: Param }> };
+type Props = {
+  searchParams: Promise<{ bien?: Param; annonce?: Param; contexte?: Param; sujet?: Param }>;
+};
 
 const uuid = (value: Param) => (typeof value === "string" && UUID.test(value) ? value : null);
 
@@ -33,7 +35,9 @@ const uuid = (value: Param) => (typeof value === "string" && UUID.test(value) ? 
 // reading) or ?contexte=acquereur, for an account that buys; otherwise the
 // seller's for an account that sells (?bien=: the property a new
 // conversation is about), the buyer's for one that only buys. An account
-// with neither role has no assistant here.
+// with neither role has no assistant here. ?sujet=documents (L3-07, from
+// « Documents partagés »): the buyer comes to ask about the documents shared
+// with them, the questions suggested are about them.
 export default async function AssistantPage({ searchParams }: Props) {
   const profile = await requireProfile();
   const params = await searchParams;
@@ -54,9 +58,11 @@ export default async function AssistantPage({ searchParams }: Props) {
   const viewed = listing?.ok ? listing.data : null;
   const back =
     context === "buyer"
-      ? viewed
-        ? { href: `${ROUTES.listing}/${viewed.slug}`, label: t.buyer.backToListing }
-        : { href: ROUTES.buyer, label: t.buyer.back }
+      ? params.sujet === "documents"
+        ? { href: ROUTES.buyerDocuments, label: t.buyer.backToDocuments }
+        : viewed
+          ? { href: `${ROUTES.listing}/${viewed.slug}`, label: t.buyer.backToListing }
+          : { href: ROUTES.buyer, label: t.buyer.back }
       : undefined;
 
   return (
@@ -67,6 +73,7 @@ export default async function AssistantPage({ searchParams }: Props) {
           initial={read.data}
           propertyId={context === "seller" ? uuid(params.bien) : null}
           listingId={viewed?.listingId ?? null}
+          topic={context === "buyer" && params.sujet === "documents" ? "documents" : null}
           back={back}
         />
       ) : (

@@ -197,9 +197,17 @@ export const frAssistant = {
       "Comment faire une offre sur ce bien ?",
       "Quelles questions poser au vendeur ?",
     ],
+    // Opened from « Documents partagés » (L3-07): about the documents shared with the buyer.
+    documentSuggestions: [
+      "Que disent les documents partagés sur ce bien ?",
+      "Y a-t-il des points d'attention dans les documents ?",
+      "Quelle est la surface indiquée dans les documents ?",
+    ],
     reading: "L'assistant consulte les annonces…",
+    readingDocuments: "L'assistant consulte les documents partagés…",
     back: "Retour à mon espace",
     backToListing: "Retour à l'annonce",
+    backToDocuments: "Retour aux documents partagés",
     // On the page of a listing, for a buyer signed in.
     ask: "Une question sur ce bien ?",
     askAction: "Demander à l'assistant",
@@ -211,6 +219,11 @@ export const frAssistant = {
     count: (total: number) => (total > 1 ? `${total}\u00A0biens trouvés` : "1\u00A0bien trouvé"),
     all: (total: number) => `Voir les ${total}\u00A0biens`,
     search: "Ouvrir la recherche",
+  },
+  // The documents an answer was written from (summarize_shared_documents, L3-07).
+  sources: {
+    title: "Documents consultés pour cette réponse",
+    note: "Réponse rédigée automatiquement à partir des documents que le vendeur a partagés avec vous. Elle ne certifie rien et ne remplace ni le diagnostiqueur ni le notaire.",
   },
   unavailable:
     "Votre conversation avec l'assistant n'a pas pu être lue. Réessayez dans quelques instants.",

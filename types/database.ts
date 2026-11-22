@@ -3994,6 +3994,24 @@ export type Database = {
           id: string
         }[]
       }
+      shared_document_answers: {
+        Args: { p_listing?: string }
+        Returns: {
+          document_id: string
+          property_id: string
+          listing_id: string
+          listing_title: string
+          city: string
+          title: string
+          type: Database["public"]["Enums"]["document_type"]
+          type_detected: string
+          document_date: string
+          summary_buyer: string
+          key_facts: Json
+          points_of_attention: Json
+          shared_at: string
+        }[]
+      }
       shared_document_summaries: {
         Args: Record<PropertyKey, never>
         Returns: {

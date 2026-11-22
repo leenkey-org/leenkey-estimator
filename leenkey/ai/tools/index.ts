@@ -15,6 +15,7 @@ import { proposeVisitSlotTool } from "./propose-visit-slot";
 import { searchListingsTool } from "./search-listings";
 import { summarizeContactsTool } from "./summarize-contacts";
 import { summarizeOfferTool } from "./summarize-offer";
+import { summarizeSharedDocumentsTool } from "./summarize-shared-documents";
 import { updateListingDescriptionTool } from "./update-listing-description";
 import { updateListingPriceTool } from "./update-listing-price";
 
@@ -25,8 +26,8 @@ import { updateListingPriceTool } from "./update-listing-price";
 // The buyer (L2-06): search_listings, get_listing_public, prefill_offer and
 // its own create_case (two tools of the same name, one per context). The
 // visits (L3-02): propose_visit_slot, for the seller. The alerts (L3-06):
-// create_alert, for the buyer. To come with its task:
-// summarize_shared_documents (L3).
+// create_alert, for the buyer. The documents shared with a buyer (L3-07):
+// summarize_shared_documents.
 
 const TOOLS: readonly AnyAiTool[] = [
   getMyPropertiesTool,
@@ -46,6 +47,7 @@ const TOOLS: readonly AnyAiTool[] = [
   getListingPublicTool,
   prefillOfferTool,
   createAlertTool,
+  summarizeSharedDocumentsTool,
   createBuyerCaseTool,
 ];
 

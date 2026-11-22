@@ -634,6 +634,7 @@ describe("the tools of the seller", () => {
       "get_listing_public",
       "prefill_offer",
       "search_listings",
+      "summarize_shared_documents",
     ]);
     expect(toolsFor("admin")).toEqual([]);
     for (const item of ALL_TOOLS) {
