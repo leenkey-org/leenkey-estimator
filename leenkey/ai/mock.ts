@@ -204,6 +204,7 @@ export function mockSearchRequest(asked: string) {
   };
 }
 
+// The French sentences of this file are fixtures of the tests, never texts of the site.
 const mockSharedDocuments = z.object({
   total: z.number(),
   documents: z.array(z.object({ title: z.string(), summaryForBuyer: z.string() })),
@@ -225,9 +226,9 @@ export function mockDocumentsAnswer(content: string): string {
       "l'accès au vendeur depuis vos documents partagés ou dans la messagerie."
     );
   }
-  const cited = read.data.documents
-    .slice(0, 3)
-    .map((document) => `D'après le document « ${document.title} » : ${document.summaryForBuyer}`);
+  const cited = read.data.documents.map(
+    (document) => `D'après le document « ${document.title} » : ${document.summaryForBuyer}`,
+  );
   return `${cited.join(" ")} Cette réponse ne certifie rien : le document fait foi.`;
 }
 

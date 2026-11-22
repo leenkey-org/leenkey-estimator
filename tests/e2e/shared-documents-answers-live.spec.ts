@@ -22,7 +22,10 @@ import {
 // seller_a and its conversation with buyer_c, as
 // tests/e2e/document-analysis-live.spec.ts, which files and shares on the
 // same property and counts what buyer_c reads: this spec runs after it, in
-// its own project (« seed-document-answers »), never beside it.
+// its own project (« seed-document-answers »), never beside it. The whole
+// file is shared (the tab has no share of one document): what is read of the
+// buyer is looked for in the line of the document of this spec, named with
+// the time of the run; what an earlier run left is removed first.
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
@@ -46,7 +49,9 @@ test.skip(
 const PROPERTY = "5eed1000-0000-4000-8000-000000000001";
 const TAB = `/vendeur/biens/${PROPERTY}/documents`;
 const TASK = "/api/cron/analyze-documents";
-const TITLE = "Mesurage test réponses";
+const LISTING = "/annonce/appartement-3-pieces-savigny-sur-orge-lk0001";
+const TITLE_START = "Mesurage test réponses";
+const TITLE = `${TITLE_START} ${Date.now()}`;
 const SUMMARY = "Résumé de l'assistant de test pour l'acquéreur (carrez).";
 const QUESTION = "Que disent les documents partagés sur ce bien ?";
 const NOTHING = /^Aucun document analysé n'est partagé avec vous pour ce bien\./;
@@ -120,6 +125,30 @@ async function runTask(request: APIRequestContext) {
 
 const thread = (page: Page) => page.getByRole("log", { name: "Conversation avec l'assistant" });
 const sources = (page: Page) => page.getByRole("region", { name: SOURCES });
+/** The line of the document of this spec on « Documents partagés ». */
+const sharedLine = (page: Page) => page.locator('li[id^="document-"]').filter({ hasText: TITLE });
+
+/**
+ * The sources are under the answer: the bubble of the answer (not the text
+ * node found in it) comes before the block of the sources in the thread.
+ */
+async function sourcesFollow(page: Page, text: string) {
+  const answer = thread(page).getByText(text, { exact: false });
+  await expect(answer).toBeVisible();
+  return answer.evaluate((node, label) => {
+    const region = document.querySelector(`section[aria-label="${label}"]`);
+    if (!region) return false;
+    // The bubble: the ancestor of the text that stands beside the sources.
+    let bubble: Element = node;
+    while (bubble.parentElement && !bubble.parentElement.contains(region)) {
+      bubble = bubble.parentElement;
+    }
+    return (
+      !bubble.contains(region) &&
+      Boolean(bubble.compareDocumentPosition(region) & Node.DOCUMENT_POSITION_FOLLOWING)
+    );
+  }, SOURCES);
+}
 
 /** A new conversation, then the question suggested about the documents. */
 async function askAboutDocuments(page: Page) {
@@ -148,6 +177,13 @@ test("réponses à partir des documents partagés : rien sans partage, le docume
   await test.step("le vendeur dépose un mesurage, lu par l'assistant, pas encore partagé", async () => {
     await signIn(seller, "seller_a", TAB);
     await expect(seller.getByRole("heading", { name: "Documents", level: 2 })).toBeVisible();
+    // What a run that stopped early left behind.
+    const leftovers = seller.getByRole("button", { name: new RegExp(`^Retirer ${TITLE_START}`) });
+    for (let count = await leftovers.count(); count > 0; count -= 1) {
+      await leftovers.first().click();
+      await seller.getByRole("dialog").getByRole("button", { name: "Retirer le document" }).click();
+      await expect(leftovers).toHaveCount(count - 1);
+    }
     await seller
       .getByLabel("Fichier")
       .setInputFiles({ name: "mesurage.pdf", mimeType: "application/pdf", buffer: PDF });
@@ -167,16 +203,28 @@ test("réponses à partir des documents partagés : rien sans partage, le docume
     }).toPass({ timeout: 60_000 });
   });
 
-  await test.step("sans partage, l'assistant de l'acquéreur ne sait rien du document et le dit", async () => {
-    await signIn(buyer, "buyer_c", "/assistant?contexte=acquereur&sujet=documents");
+  let listingId = "";
+  await test.step("sans partage, l'assistant de l'acquéreur, ouvert sur l'annonce, ne sait rien du document et le dit", async () => {
+    // The assistant about this listing from the start: the documents of this property only.
+    await signIn(buyer, "buyer_c", LISTING);
+    const ask = buyer
+      .getByRole("link", { name: "Demander à l'assistant" })
+      .locator("visible=true")
+      .first();
+    listingId =
+      new URL((await ask.getAttribute("href")) ?? "", base).searchParams.get("annonce") ?? "";
+    expect(listingId).toMatch(/^[0-9a-f-]{36}$/);
+    await buyer.goto(`/assistant?annonce=${listingId}&sujet=documents`);
     await expect(
-      buyer.getByRole("link", { name: "Retour aux documents partagés" }).locator("visible=true"),
+      buyer
+        .getByRole("link", { name: "Retour aux documents partagés" })
+        .locator("visible=true")
+        .first(),
     ).toHaveAttribute("href", "/acquereur/documents");
     await askAboutDocuments(buyer);
     await expect(thread(buyer).getByText(NOTHING)).toBeVisible();
     await expect(thread(buyer).getByText(/demander l'accès au vendeur/)).toBeVisible();
     await expect(buyer.getByText(TITLE)).toHaveCount(0);
-    await expect(buyer.getByText(/Résumé de l'assistant de test/)).toHaveCount(0);
     // No document read: no source under the answer.
     await expect(sources(buyer)).toHaveCount(0);
   });
@@ -185,14 +233,13 @@ test("réponses à partir des documents partagés : rien sans partage, le docume
     await seller.getByRole("button", { name: "Partager tout le dossier avec Chloé" }).click();
     await expect(seller.getByText(/documents? partagés? avec Chloé\./).first()).toBeVisible();
     await buyer.goto("/acquereur/documents");
-    await expect(buyer.getByRole("link", { name: `Ouvrir ${TITLE}` })).toBeVisible();
-    await expect(buyer.getByText(SUMMARY).first()).toBeVisible();
-    const entry = buyer.getByRole("link", { name: /^Poser une question sur les documents/ });
+    await expect(sharedLine(buyer)).toHaveCount(1);
+    await expect(sharedLine(buyer).getByRole("link", { name: `Ouvrir ${TITLE}` })).toBeVisible();
+    await expect(sharedLine(buyer).getByText(SUMMARY)).toBeVisible();
+    // The entry of this property: it opens the assistant about its listing.
+    const entry = buyer.locator(`a[href="/assistant?annonce=${listingId}&sujet=documents"]`);
     await expect(entry).toHaveCount(1);
-    await expect(entry).toHaveAttribute(
-      "href",
-      /^\/assistant\?annonce=[0-9a-f-]{36}&sujet=documents$/,
-    );
+    await expect(entry).toHaveAccessibleName(/^Poser une question sur les documents/);
     await expectNoSeriousViolation(buyer);
     await shots(buyer, "shared-documents-question");
     await entry.click();
@@ -222,13 +269,7 @@ test("réponses à partir des documents partagés : rien sans partage, le docume
       ),
     ).toBeVisible();
     // The sources are under the answer, not before it.
-    const after = await answer.evaluate((node, label) => {
-      const region = document.querySelector(`section[aria-label="${label}"]`);
-      return region
-        ? Boolean(node.compareDocumentPosition(region) & Node.DOCUMENT_POSITION_FOLLOWING)
-        : false;
-    }, SOURCES);
-    expect(after).toBe(true);
+    expect(await sourcesFollow(buyer, `D'après le document « ${TITLE} »`)).toBe(true);
     await expectNoSeriousViolation(buyer);
     await shots(buyer, "assistant-document-sources");
   });
@@ -242,20 +283,14 @@ test("réponses à partir des documents partagés : rien sans partage, le docume
       "href",
       documentHref,
     );
-    const after = await answer.evaluate((node, label) => {
-      const region = document.querySelector(`section[aria-label="${label}"]`);
-      return region
-        ? Boolean(node.compareDocumentPosition(region) & Node.DOCUMENT_POSITION_FOLLOWING)
-        : false;
-    }, SOURCES);
-    expect(after).toBe(true);
+    expect(await sourcesFollow(buyer, `D'après le document « ${TITLE} »`)).toBe(true);
   });
 
   await test.step("une source ramène au document, sur « Documents partagés »", async () => {
     await sources(buyer).getByRole("link", { name: TITLE, exact: true }).click();
     await buyer.waitForURL((address) => address.pathname === "/acquereur/documents");
     expect(new URL(buyer.url()).hash).toBe(documentHref.slice(documentHref.indexOf("#")));
-    await expect(buyer.getByRole("link", { name: `Ouvrir ${TITLE}` })).toBeVisible();
+    await expect(sharedLine(buyer).getByRole("link", { name: `Ouvrir ${TITLE}` })).toBeVisible();
     await expect(buyer.locator(new URL(buyer.url()).hash)).toContainText(TITLE);
   });
 
@@ -264,13 +299,14 @@ test("réponses à partir des documents partagés : rien sans partage, le docume
     await seller.getByRole("dialog").getByRole("button", { name: "Retirer le document" }).click();
     await expect(seller.getByRole("link", { name: TITLE, exact: true })).toHaveCount(0);
     await buyer.reload();
-    await expect(buyer.getByText(/Résumé de l'assistant de test/)).toHaveCount(0);
-    await expect(
-      buyer.getByRole("link", { name: /^Poser une question sur les documents/ }),
-    ).toHaveCount(0);
-    await buyer.goto("/assistant?contexte=acquereur&sujet=documents");
+    await expect(sharedLine(buyer)).toHaveCount(0);
+    await buyer.goto(`/assistant?annonce=${listingId}&sujet=documents`);
     await askAboutDocuments(buyer);
-    await expect(thread(buyer).getByText(NOTHING)).toBeVisible();
-    await expect(sources(buyer)).toHaveCount(0);
+    // The answer is whole; the document removed is no longer one it is written from.
+    await expect(
+      thread(buyer).getByText(/^(Aucun document analysé n'est partagé|D'après le document)/),
+    ).toBeVisible();
+    await expect(thread(buyer).getByText(TITLE)).toHaveCount(0);
+    await expect(sources(buyer).getByRole("link", { name: TITLE, exact: true })).toHaveCount(0);
   });
 });

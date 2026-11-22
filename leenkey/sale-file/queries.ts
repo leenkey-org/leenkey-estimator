@@ -177,7 +177,11 @@ export async function buyerSharedDocuments(): Promise<QueryResult<SharedProperty
   }
   // Without the summaries the documents still show.
   if (summaries.error) {
-    console.error("[sale-file] shared summaries read failed", { code: summaries.error.code });
+    console.error("[sale-file] shared summaries read failed", {
+      rpc: "shared_document_answers",
+      code: summaries.error.code,
+      message: summaries.error.message,
+    });
   }
   const summaryOf = new Map(
     (summaries.data ?? []).map((row) => [row.document_id, buyerSummary(row)]),

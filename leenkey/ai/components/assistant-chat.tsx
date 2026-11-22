@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { ASSISTANT_MESSAGE_MAX, type AssistantContext } from "@/lib/validations/assistant";
 import { assistantHelp, confirmToolCall, declineToolCall, type AssistantHelp } from "../actions";
 import { actionPreview, type ActionPreview } from "../previews";
-import { shownDocuments, shownListings, type ShownDocuments } from "../shown";
+import { SHOWN_DOCUMENTS_MAX, shownDocuments, shownListings, type ShownDocuments } from "../shown";
 import { readEvents, type StreamEvent } from "../stream-events";
 import { AssistantListings } from "./assistant-listings";
 import { AssistantSources } from "./assistant-sources";
@@ -250,8 +250,14 @@ export function AssistantChat({
   const pending = useRef<AbortController | null>(null);
   /** What the stream of this turn wrote, removed when the model declines. */
   const written = useRef<string[]>([]);
-  /** The documents read for the answer being written: shown under it, once it is whole. */
-  const sources = useRef<{ data: ShownDocuments; after: number } | null>(null);
+  /**
+   * The documents read for the answer being written, of every read of the
+   * turn: shown under it, once it is whole. `answered`: a text followed the
+   * last read.
+   */
+  const sources = useRef<{ data: ShownDocuments; answered: boolean } | null>(null);
+  /** The turn stopped on a change to confirm: it goes on once the person answered. */
+  const awaiting = useRef(false);
 
   const newId = () => `local-${(next.current += 1)}`;
 
@@ -315,6 +321,7 @@ export function AssistantChat({
         const created = newId();
         writing.current = created;
         written.current.push(created);
+        if (sources.current) sources.current.answered = true;
         setItems((current) => [...current, { id: created, kind: "assistant", text: event.delta }]);
       }
     } else if (event.type === "tool") {
@@ -331,9 +338,17 @@ export function AssistantChat({
       // The documents an answer is written from: kept for the end of the answer.
       const documents = shownDocuments.safeParse(event.data);
       if (documents.success) {
-        sources.current = { data: documents.data, after: written.current.length };
+        // Several reads in one turn: one list, each document once.
+        const kept = sources.current?.data.items ?? [];
+        const known = new Set(kept.map((item) => item.id));
+        const items = [...kept, ...documents.data.items.filter((item) => !known.has(item.id))];
+        sources.current = {
+          data: { kind: "documents", items: items.slice(0, SHOWN_DOCUMENTS_MAX) },
+          answered: false,
+        };
       }
     } else if (event.type === "confirm") {
+      awaiting.current = true;
       writing.current = null;
       setReading(false);
       const preview = actionPreview.safeParse(event.preview);
@@ -361,11 +376,16 @@ export function AssistantChat({
     }
   }
 
-  /** Under the answer, the documents it was written from; none without an answer after them. */
+  /**
+   * Under the answer, the documents it was written from; none without an
+   * answer after them. A turn stopped on a change to confirm is not over:
+   * they are kept, and shown when it ends after the person answered.
+   */
   function showSources() {
     const read = sources.current;
+    if (awaiting.current) return;
     sources.current = null;
-    if (read && written.current.length > read.after) {
+    if (read?.answered) {
       setItems((current) => [...current, { id: newId(), kind: "documents", data: read.data }]);
     }
   }
@@ -376,7 +396,9 @@ export function AssistantChat({
     setError(null);
     writing.current = null;
     written.current = [];
-    sources.current = null;
+    // The turn that goes on after a confirmation keeps the documents it read.
+    if (body.resume !== true) sources.current = null;
+    awaiting.current = false;
     const controller = new AbortController();
     pending.current = controller;
     let ended = false;

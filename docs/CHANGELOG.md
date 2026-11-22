@@ -19,6 +19,8 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Ajouté : sur `/acquereur/documents`, « Poser une question sur les documents » sous les documents d'un bien qui ont un résumé : l'assistant s'ouvre sur l'annonce, avec trois questions suggérées (`?sujet=documents`).
 - Modifié : `/acquereur/documents` lit `shared_document_answers` (les résumés de L3-05, avec l'annonce du bien) ; pendant la lecture, l'assistant indique « L'assistant consulte les documents partagés… ».
 - Tests : parcours E2E `shared-documents-answers-live` dans un projet Playwright à part (« seed-document-answers », après « seed-documents »).
+- Relecture : l'annonce d'un bien n'est nommée que si elle est en ligne ; au-delà de 25 documents, l'outil dit au modèle qu'il n'a que les 25 derniers partagés ; les noms donnés par le vendeur sont lus sans lien, email ni téléphone ; quand les documents viennent de plusieurs biens, la réponse nomme le bien de chacun ; les documents consultés restent affichés après une action confirmée dans le même échange.
+- Non fait : la seconde moitié de la ligne L3-07 du plan (« tâches L3 dans le moteur d'étapes ») n'est pas dans cette PR ; elle reste à faire sous L3-07b dans `PLANNING.md` (à décider).
 - Migration : 20261122100000_shared_documents_answers.sql (fonction `shared_document_answers`)
 
 ### 2026-11-21 · L3-05 · Analyse des documents par l'assistant · PR #118

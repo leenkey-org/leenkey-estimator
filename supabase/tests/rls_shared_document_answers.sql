@@ -2,12 +2,14 @@
 -- summarize_shared_documents). shared_document_answers(listing) gives the
 -- caller the summaries meant for a buyer of the documents of a sale file
 -- shared with them, read without a reserve, of one property or of all:
--- never a document that is not shared, never the summary of the seller,
--- never a financing document, nothing to another buyer, to a seller, to the
--- team or to a visitor. Fixtures in postal code 99988.
+-- never a document that is not shared (or shared with another buyer),
+-- never one that is not analysed, never the summary of the seller, never a
+-- financing document, nothing to a seller, to the team or to a visitor;
+-- the listing is named only while it is online, and nothing is read of a
+-- property removed. Fixtures in postal code 99988.
 begin;
 \ir _helpers.psql
-select plan(27);
+select plan(33);
 \ir _plan.psql
 
 -- Two properties, one per seller, each with its listing online.
@@ -26,14 +28,18 @@ select listing_submit(:'listing1');
 \o
 select :'prop1' || '/sale/' || gen_random_uuid() || '.pdf' as path1,
        :'prop1' || '/sale/' || gen_random_uuid() || '.pdf' as path2,
-       :'prop1' || '/sale/' || gen_random_uuid() || '.pdf' as path3 \gset
+       :'prop1' || '/sale/' || gen_random_uuid() || '.pdf' as path3,
+       :'prop1' || '/sale/' || gen_random_uuid() || '.pdf' as path5 \gset
 insert into storage.objects (bucket_id, name, owner, metadata) values
   ('documents', :'path1', tests.uid('seller_a'), '{"mimetype": "application/pdf", "size": 1000}'),
   ('documents', :'path2', tests.uid('seller_a'), '{"mimetype": "application/pdf", "size": 1000}'),
-  ('documents', :'path3', tests.uid('seller_a'), '{"mimetype": "application/pdf", "size": 1000}');
+  ('documents', :'path3', tests.uid('seller_a'), '{"mimetype": "application/pdf", "size": 1000}'),
+  ('documents', :'path5', tests.uid('seller_a'), '{"mimetype": "application/pdf", "size": 1000}');
 select document_add(:'prop1', 'carrez', 'Mesurage 2025', :'path1') as doc1 \gset
 select document_add(:'prop1', 'pv_ag', 'PV illisible', :'path2') as doc2 \gset
 select document_add(:'prop1', 'erp', 'ERP gardé', :'path3') as doc3 \gset
+-- Never analysed.
+select document_add(:'prop1', 'taxe_fonciere', 'Taxe pas encore lue', :'path5') as doc5 \gset
 
 \set who seller_b
 \ir _as.psql
@@ -94,6 +100,10 @@ reset role;
 -- ===========================================================================
 -- Nothing without a share, nothing to a visitor
 -- ===========================================================================
+select is(has_function_privilege('anon', 'public.shared_document_answers(uuid)', 'execute'), false,
+          'anon has no right to execute the function');
+select is(has_function_privilege('authenticated', 'public.shared_document_answers(uuid)', 'execute'), true,
+          'an account has');
 \set who anon
 \ir _as.psql
 select throws_ok('select * from shared_document_answers()', '42501', null, 'anon: cannot execute it');
@@ -108,8 +118,11 @@ select is((select count(*)::int from shared_document_answers(:'listing1')), 0,
 \set who seller_a
 \ir _as.psql
 \o /dev/null
-select document_share(array[:'doc1', :'doc2']::uuid[], tests.uid('buyer_c'));
+select document_share(array[:'doc1', :'doc2', :'doc5']::uuid[], tests.uid('buyer_c'));
 \o
+-- doc3: shared with buyer_d only.
+reset role;
+insert into document_shares (document_id, buyer_id) values (:'doc3', tests.uid('buyer_d'));
 \set who seller_b
 \ir _as.psql
 \o /dev/null
@@ -137,7 +150,9 @@ select is((select key_facts->0->>'value' || '|' || (points_of_attention->0->>'te
 select is((select string_agg(title, ',') from shared_document_answers(:'listing2')), 'Taxe foncière 2026',
           'buyer_c: the other listing, the other document');
 select is((select count(*)::int from shared_document_answers() where document_id = :'doc3'), 0,
-          'buyer_c: never a document that is not shared, even analysed');
+          'buyer_c: never a document shared with buyer_d only, even analysed');
+select is((select count(*)::int from shared_document_answers() where document_id = :'doc5'), 0,
+          'buyer_c: never a document that is not analysed, even shared');
 select is((select count(*)::int from shared_document_answers() where document_id = :'doc2'), 0,
           'buyer_c: never a document « à vérifier », even shared');
 select is((select count(*)::int from shared_document_answers() s where to_jsonb(s)::text like '%vendeur%'), 0,
@@ -148,26 +163,18 @@ select is(pg_get_function_result('public.shared_document_answers(uuid)'::regproc
           'nor for the file, the address or the owner');
 select is((select count(*)::int from shared_document_answers(gen_random_uuid())), 0,
           'buyer_c: a listing that does not exist reads as one that shares nothing');
-reset role;
-select is((select count(*)::int from financing_documents f where f.buyer_id = tests.uid('buyer_c')) > 0, true,
-          'buyer_c has a financing document');
-\set who buyer_c
-\ir _as.psql
-select is((select count(*)::int from shared_document_answers() s
-            where s.type::text = 'accord_principe' or s.title ilike '%financ%'), 0,
-          'buyer_c: their financing document is never one of the documents read');
-reset role;
-select is((select count(*)::int from documents d
-            join financing_documents f on f.id = d.id or f.storage_path = d.storage_path), 0,
-          'a financing document is no row of the sale file, the only table the function reads');
+select is((select array_agg(document_id order by document_id) from shared_document_answers()),
+          (select array_agg(id order by id) from unnest(array[:'doc1', :'doc4']::uuid[]) id),
+          'buyer_c, who has a financing document: the two documents shared and analysed, and no other row');
 
 -- ===========================================================================
 -- Nobody else
 -- ===========================================================================
 \set who buyer_d
 \ir _as.psql
-select is((select count(*)::int from shared_document_answers()), 0, 'buyer_d: nothing, no share');
-select is((select count(*)::int from shared_document_answers(:'listing1')), 0, 'buyer_d: nor by naming the listing');
+select is((select string_agg(title, ',') from shared_document_answers()), 'ERP gardé',
+          'buyer_d: the document shared with them, none of those of buyer_c');
+select is((select count(*)::int from shared_document_answers(:'listing2')), 0, 'buyer_d: nothing by naming another listing');
 \set who seller_b
 \ir _as.psql
 select is((select count(*)::int from shared_document_answers(:'listing1')), 0, 'seller_b: nothing of the property of seller_a');
@@ -181,7 +188,26 @@ select is((select count(*)::int from shared_document_answers(:'listing2')), 0, '
 select is((select count(*)::int from shared_document_answers()), 0, 'admin: nothing through the function of a buyer');
 
 -- ===========================================================================
--- Lost with the share, with the document
+-- The listing is named while it is online only
+-- ===========================================================================
+reset role;
+update listings set status = 'paused' where id = :'listing2';
+\set who buyer_c
+\ir _as.psql
+select is((select listing_id is null and listing_title is null from shared_document_answers()
+            where document_id = :'doc4'), true,
+          'buyer_c: a listing that is no longer online is not named, the document still reads');
+reset role;
+update listings set status = 'published', deleted_at = now() where id = :'listing2';
+\set who buyer_c
+\ir _as.psql
+select is((select count(*)::int from shared_document_answers(:'listing2')), 0,
+          'buyer_c: a listing removed reads as one that does not exist');
+select is((select listing_id is null and listing_title is null from shared_document_answers()
+            where document_id = :'doc4'), true, 'buyer_c: nor is it named beside the document');
+
+-- ===========================================================================
+-- Lost with the share, with the property, with the document
 -- ===========================================================================
 \set who seller_a
 \ir _as.psql
@@ -193,6 +219,16 @@ select document_unshare(:'doc1', tests.uid('buyer_c'));
 select is((select count(*)::int from shared_document_answers(:'listing1')), 0, 'buyer_c: lost with the share');
 select is((select string_agg(title, ',') from shared_document_answers()), 'Taxe foncière 2026',
           'buyer_c: the share of the other seller stays');
+reset role;
+update properties set deleted_at = now() where id = :'prop2';
+\set who buyer_c
+\ir _as.psql
+select is((select count(*)::int from shared_document_answers()), 0, 'buyer_c: lost with the property removed');
+reset role;
+update properties set deleted_at = null where id = :'prop2';
+\set who buyer_c
+\ir _as.psql
+select is((select count(*)::int from shared_document_answers()), 1, 'buyer_c: back with it');
 reset role;
 update documents set deleted_at = now() where id = :'doc4';
 \set who buyer_c
