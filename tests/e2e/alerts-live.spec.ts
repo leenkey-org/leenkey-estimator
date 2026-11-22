@@ -86,10 +86,14 @@ async function removeLeftovers(page: Page) {
   for (let left = 0; left < 5; left += 1) {
     const stale = page.getByRole("button", { name: /^Supprimer l'alerte Alerte E2E / }).first();
     if ((await stale.count()) === 0) return;
+    const label = (await stale.getAttribute("aria-label")) ?? "";
     await stale.click();
     const remove = page.getByRole("dialog", { name: "Supprimer cette alerte ?" });
     await remove.getByRole("button", { name: "Supprimer l'alerte" }).click();
     await expect(remove).toBeHidden();
+    // The row leaves once the server answered: the next turn must not click
+    // a button that is going away.
+    await expect(page.getByRole("button", { name: label, exact: true })).toHaveCount(0);
   }
 }
 
@@ -162,12 +166,22 @@ test("alertes : création depuis la recherche, pause, nouveau nom, suppression",
   // The switch is named by the alert it pauses.
   const toggle = row.getByRole("switch", { name, exact: true });
   await expect(toggle).toBeChecked();
-  await toggle.click();
+  // The switch answers before the server: wait for the answer of the action
+  // before reading the page again (a reload would cancel a request in flight).
+  const saved = () =>
+    buyer.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" && new URL(response.url()).pathname === ALERTS,
+    );
+  await Promise.all([saved(), toggle.click()]);
   await expect(toggle).not.toBeChecked();
   await expect(row).toContainText("En pause");
   await buyer.reload();
   await expect(row.getByRole("switch")).not.toBeChecked();
-  await row.getByRole("switch").click();
+  await Promise.all([saved(), row.getByRole("switch").click()]);
+  await expect(row.getByRole("switch")).toBeChecked();
+  // The digest below reads the base: the alert is active there too.
+  await buyer.reload();
   await expect(row.getByRole("switch")).toBeChecked();
 
   // The route of the digest: closed without the secret; with it, its summary.

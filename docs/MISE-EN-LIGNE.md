@@ -25,23 +25,23 @@ Sans les deux premiers, la bascule reste possible : le site ouvre avec la formul
 - [ ] **Anthropic** (compte Leenkey) : une clé de production, plafond de dépense mensuel.
 - [ ] **Resend** (compte Leenkey) : domaine `leenkey.fr` vérifié (déjà le cas pour la V1 ; DNS chez IONOS), une clé pour le site et une clé dédiée au SMTP de Supabase Auth.
 - [ ] **Google Cloud** (compte Leenkey) : une clé Maps JavaScript API restreinte aux référents `https://leenkey.fr/*`, quota journalier et budget fixés.
-- [ ] **IONOS** (Cédric) : `contact@leenkey.fr` et `bonjour@leenkey.fr` (expéditeur des emails) créées ou renvoyées.
+- [ ] **IONOS** (Cédric) : `contact@leenkey.fr` (expéditeur des emails et adresse de réponse) créée ou renvoyée.
 
 ## 2. Base de production (Supabase `leenkey-prod`)
 
 Depuis le dépôt, avec un fichier `.env.prod.local` jamais commité (`PROD_DATABASE_URL`, `PROD_SUPABASE_URL`, `PROD_SUPABASE_ANON_KEY`) : `set -a; . ./.env.prod.local; set +a`.
 
-1. [ ] **Migrations** : `npm run db:migrate:prod` (demande de taper `leenkey-prod`). Toutes les migrations de `supabase/migrations/` ont été jouées en préprod.
-2. [ ] **Données de référence** : `npm run db:seed:reference:prod` → « 3 plans, 14 entitlements, 18 sale steps, 74 tasks ». Ni comptes de test ni biens de démonstration.
+1. [x] **Migrations** : jouées le 2026-11-21 et le 2026-11-22 par le connecteur Supabase, fichier par fichier, dans l'ordre (61 migrations, jusqu'à `shared_documents_answers`). **Attention** : le connecteur enregistre ses propres numéros de version, pas ceux des fichiers. `npm run db:migrate:prod` (`supabase db push`) croirait donc toutes les migrations non jouées et échouerait : tant que l'historique n'est pas réaligné (`supabase migration repair`), une migration de production passe par le connecteur, après la préprod.
+2. [x] **Données de référence** : chargées le 2026-11-22 par le connecteur (accord de Younes) : 3 formules, 14 droits, 18 étapes, 74 tâches. Ni comptes de test ni biens de démonstration.
 3. [ ] **Coffre (Integrations → Vault)** : `site_url` = `https://leenkey.fr` ; `cron_secret` = la même valeur que `CRON_SECRET` de Vercel (64 caractères, `openssl rand -hex 32`, différente de la préprod). Sans eux, les tâches planifiées ne font rien.
-4. [ ] **Edge Function** : `npx supabase functions deploy embed --project-ref <ref de leenkey-prod>`, « Verify JWT » activé.
+4. [x] **Edge Function** `embed` : déployée le 2026-11-22 par le connecteur, « Verify JWT » activé.
 5. [ ] **Authentication** :
    - URL Configuration : *Site URL* `https://leenkey.fr`, *Redirect URLs* `https://leenkey.fr/**` ;
    - Emails → Templates : les quatre fichiers de `supabase/templates/` (confirmation, recovery, email-change, password-changed), sujets **sans** `[PREPROD]` ;
-   - SMTP : Resend (`smtp.resend.com`, port 465, utilisateur `resend`, clé dédiée, expéditeur `bonjour@leenkey.fr`) ;
+   - SMTP : Resend (`smtp.resend.com`, port 465, utilisateur `resend`, clé dédiée, expéditeur `contact@leenkey.fr`, choix de Younes du 2026-11-22) ;
    - Providers → Email : *Confirm email* et *Secure email change* activés ; protection contre les mots de passe divulgués activée (`docs/SECURITE.md`).
 6. [ ] **Comptes de l'équipe** : après la bascule, Younes (Nebula Creativ) et Cédric (contact.leenkey) créent leur compte sur leenkey.fr, puis, dans l'éditeur SQL du projet : `update public.profiles set roles = '{admin}' where id in (select id from auth.users where email in ('<adresse 1>', '<adresse 2>'));`. Les demandes de validation et les emails de l'équipe partent aux deux comptes.
-7. [ ] **Base de connaissances** : `scripts/kb-import.sh prod` avec `KB_ADMIN_EMAIL` et `KB_ADMIN_PASSWORD` d'un compte admin (donc après l'étape 6), ou, sans script : importer les fiches puis « Calculer les fiches manquantes » dans `/admin/assistant`. Attendu : 73 fiches, 73 avec leur index.
+7. [ ] **Base de connaissances** : les 73 fiches sont chargées (2026-11-22, connecteur) ; leur index reste à calculer : un compte admin (donc après l'étape 6) clique « Calculer les fiches manquantes » dans `/admin/assistant`. Attendu : 73 fiches, 73 avec leur index.
 8. [ ] **Contrôle** : dans l'éditeur SQL, `select count(*) from cron.job;` (les tâches planifiées existent) et les avis de sécurité du projet (Advisors) sans alerte critique.
 
 ## 3. Variables du projet Vercel `leenkey-estimator-main` (onglet Production)
@@ -61,6 +61,7 @@ Depuis le dépôt, avec un fichier `.env.prod.local` jamais commité (`PROD_DATA
 | `ANTHROPIC_API_KEY` | clé de production |
 | `RESEND_API_KEY` | clé de production |
 | `CRON_SECRET` | la valeur du coffre `cron_secret` |
+| `EMAIL_FROM` | `Leenkey <contact@leenkey.fr>` (choix de Younes du 2026-11-22 ; sans elle, l'expéditeur est `bonjour@leenkey.fr`) |
 | `ADMIN_NOTIFICATION_EMAIL` | facultatif |
 
 **À ne pas définir en production** : `PREPROD_USER`, `PREPROD_PASSWORD` (sinon le site demande un mot de passe), `EMAIL_TEST_INBOX` (sinon aucun client ne reçoit d'email), `AI_MOCK`, `STRIPE_MOCK`, `GEOCODER`, `DPE_REGISTRY`, `E2E_SEED`, `E2E_MUTATE`, `SEED_PASSWORD`.
