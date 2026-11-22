@@ -734,7 +734,8 @@ create table offers (
 -- l'envoi (contrainte offers_complete_when_sent et offer_submit) ; updated_at ajouté ;
 -- buyer_identity.address = { line, postal_code, city } ; financing_document_id sans FK avant L2-02.
 -- price_in_words est écrit par la base à l'envoi (price_in_words_fr), jamais par le client ;
--- property_snapshot.address = { postal_code, city } (Q82) ; le gel couvre aussi l'historique
+-- property_snapshot.address = { postal_code, city } (Q82) ; l'adresse exacte est figée à l'envoi dans
+-- offer_property_addresses (2026-11-21), lue par offer_property_address() ; le gel couvre aussi l'historique
 -- (graphe des statuts, dates écrites une fois, journal jamais modifié).
 -- Fonctions : offer_can_draft, offer_submit, offer_mark_viewed, offer_answer, offer_withdraw,
 -- offer_record_precontract, offers_expire_due (cron) ; vue offer_for_seller.
@@ -1447,6 +1448,9 @@ Fonction unique `notify(profileId, type, payload)` dans `core/notifications/`. E
 | `offer.received` | oui | oui | — |
 | `offer.answered` | oui | oui | — |
 | `offer.expired` | oui | oui | — |
+| `offer.received_team` (admin) | oui | oui | Ajouté le 2026-11-21 : offre reçue sur une vente dont la formule comprend un conseiller, emails groupés |
+| `financing.checked` | oui | oui | Ajouté le 2026-11-21 : à l'acquéreur, quand son justificatif est contrôlé |
+| `report.handled` | oui | oui | Ajouté le 2026-11-21 : à l'auteur d'un signalement, quand il est clos |
 | `visit.invited` | oui | oui | — |
 | `visit.booked` | oui | oui | — |
 | `visit.reminder` | oui (L3-02, `DECISIONS.md` 2026-11-18) | oui | J-1 à partir de 8 h, heure de Paris |
@@ -1802,7 +1806,7 @@ Jamais d'acceptation en un clic. « Accepter l'offre » ouvre l'écran `/offres/
 
 Case obligatoire « J'ai lu l'intégralité de l'offre et souhaite confirmer mon acceptation. », puis bouton « Confirmer mon acceptation ». Le lien « conseiller Leenkey » ouvre la conversation conseiller si la formule le permet, sinon la page des formules. Enregistrement dans `seller_acceptance` et `offer_events`. Contrôle serveur : refus si l'offre est expirée, retirée ou remplacée au moment du clic.
 
-Après acceptation : tâche cochée, `UpgradePrompt` `offer_accepted`, notification au conseiller si formule payante. Les autres offres en cours restent visibles ; le vendeur est invité à y répondre.
+Après acceptation : tâche cochée, `UpgradePrompt` `offer_accepted`, notification au conseiller si formule payante (aussi dès la réception de l'offre depuis le 2026-11-21, `offer.received_team`). Le récapitulatif d'acceptation montre les conditions de l'offre (condition suspensive de financement, cases cochées, précisions). Les autres offres en cours restent visibles ; le vendeur est invité à y répondre.
 
 Avant-contrat : le vendeur (ou Leenkey en Sérénité, depuis le back office) enregistre la date de signature de l'avant-contrat et, s'il la connaît, la date de départ du délai légal de rétractation (`withdrawal_period_start`). Saisie côté vendeur et côté admin (Q7). Leenkey n'affiche une date de fin de délai que si `withdrawal_period_start` est renseignée, avec la mention « Date indicative calculée à partir de la date que vous avez renseignée. Votre notaire fait foi. »
 

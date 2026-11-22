@@ -909,7 +909,10 @@ export function ConditionsStep({
           <Checkbox
             label={labels.authorization}
             checked={authorization}
-            onChange={(event) => setAuthorization(event.target.checked)}
+            onChange={(event) => {
+              setAuthorization(event.target.checked);
+              step.clear("details");
+            }}
           />
           <Checkbox
             label={labels.other}
@@ -922,9 +925,10 @@ export function ConditionsStep({
         </fieldset>
         <Textarea
           label={labels.details}
-          optional={!other}
+          // « Autorisation particulière » and « Autre situation » are said here.
+          optional={!(authorization || other)}
           rows={4}
-          help={labels.count(formatInteger(count), formatInteger(OFFER_DETAILS_MAX))}
+          help={`${labels.detailsHelp} ${labels.count(formatInteger(count), formatInteger(OFFER_DETAILS_MAX))}`}
           value={details}
           error={
             step.errors.details || (count > OFFER_DETAILS_MAX ? labels.errors.tooLong : undefined)

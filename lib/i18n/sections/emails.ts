@@ -502,6 +502,50 @@ export const frEmails = {
     next: "La suite revient au vendeur et à son notaire ; la formule de la vente prévoit l'accompagnement d'un conseiller.",
     action: (count: number) => (count > 1 ? "Voir les offres" : "Ouvrir l'offre"),
   },
+  // 2026-11-21: the offers received on sales with an adviser since the last
+  // email, to the team (answer of Cédric of 2026-11-19; cron of L1-22, grouped).
+  offersReceived: {
+    subject: (count: number, reference: string | null) =>
+      count > 1
+        ? `${count}\u00A0offres reçues sur des ventes avec conseiller`
+        : reference
+          ? `Offre reçue sur une vente avec conseiller (${reference})`
+          : "Offre reçue sur une vente avec conseiller",
+    title: (count: number) => (count > 1 ? "Des offres reçues" : "Une offre reçue"),
+    text: (count: number) =>
+      count > 1
+        ? `${count}\u00A0offres d'achat ont été reçues sur des ventes avec conseiller.`
+        : "Une offre d'achat a été reçue sur une vente avec conseiller.",
+    item: (reference: string, property: string | null) =>
+      property ? `Offre ${reference} · ${property}` : `Offre ${reference}`,
+    price: (price: string) => `Prix proposé : ${price}`,
+    noPrice: "Offre à lire dans le back office.",
+    next: "Le vendeur n'a pas encore répondu ; la formule de la vente prévoit l'accompagnement d'un conseiller.",
+    action: (count: number) => (count > 1 ? "Voir les offres" : "Ouvrir l'offre"),
+  },
+  // 2026-11-21: a proof of financing checked by the team, to its buyer.
+  // « Vérifié », never « validé »; the check guarantees nothing.
+  financingChecked: {
+    subject: "Votre justificatif de financement est vérifié",
+    title: "Votre justificatif est vérifié",
+    text: (type: string | null) =>
+      `Nous avons contrôlé votre justificatif de financement${type ? ` (${type})` : ""} : votre dossier affiche désormais « Justificatif vérifié ».`,
+    next: "Les vendeurs voient ce statut, le type du document et la date de notre contrôle, jamais le document. Nous supprimons le fichier après ce contrôle.",
+    scope:
+      "Ce contrôle porte sur la présence du document et sa cohérence apparente avec votre projet : il ne garantit pas l'obtention de votre financement.",
+    action: "Voir mon projet d'achat",
+    why: "Vous recevez cet email parce que vous avez déposé un justificatif de financement sur Leenkey.",
+  },
+  // 2026-11-21: a report handled by the team, to its author. Never what was decided.
+  reportHandled: {
+    subject: "Votre signalement a été traité",
+    title: "Votre signalement a été traité",
+    text: (listing: string | null) =>
+      `Notre équipe a examiné votre signalement${listing ? `, à propos de «\u00A0${listing}\u00A0»,` : ""} et l'a clos.`,
+    next: "Nous ne détaillons pas la suite donnée. Si le problème continue, signalez de nouveau la conversation.",
+    action: "Ouvrir la conversation",
+    why: "Vous recevez cet email parce que vous avez signalé une conversation sur Leenkey.",
+  },
   // L1-31: the requests written to the team since the last email (cron of L1-22, grouped).
   caseRequests: {
     subject: (count: number, reference: string | null) =>

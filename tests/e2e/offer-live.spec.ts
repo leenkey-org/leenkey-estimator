@@ -203,8 +203,13 @@ test("un acquéreur fait une offre en sept étapes et l'envoie ; son vendeur la 
     await expect(page.getByText("Offre formulée avec recours à un prêt immobilier.")).toBeVisible();
     await page.getByLabel("Autre situation à préciser").check();
     await next(page).click();
-    await expect(page.getByText("Précisez la situation.")).toBeVisible();
+    await expect(page.getByText("Précisez l'autorisation attendue ou la situation.")).toBeVisible();
     await page.getByLabel("Autre situation à préciser").uncheck();
+    // An authorization is said in the details too (answer of Cédric of 2026-11-19).
+    await page.getByLabel("Obtention d'une autorisation particulière").check();
+    await next(page).click();
+    await expect(page.getByText("Précisez l'autorisation attendue ou la situation.")).toBeVisible();
+    await page.getByLabel("Obtention d'une autorisation particulière").uncheck();
     await page.getByLabel("Vente préalable d'un autre bien").check();
     await page.getByLabel("Précisions").fill("Compromis signé sur notre appartement actuel.");
     await next(page).click();
@@ -277,6 +282,12 @@ test("un acquéreur fait une offre en sept étapes et l'envoie ; son vendeur la 
       /Date et heure d'émission : \d{2}\/\d{2}\/\d{4} à \d{2}:\d{2}/,
     );
     await expect(page.getByRole("article")).toContainText(/Déclarations acceptées le/);
+    // No confirmed visit: the town, and the sentence that says where the address is.
+    await expect(page.getByRole("article")).toContainText("91390 Morsang-sur-Orge");
+    await expect(page.getByRole("article")).toContainText(
+      "L'adresse exacte du bien figure dans l'offre reçue par le vendeur.",
+    );
+    await expect(page.getByRole("article")).not.toContainText("4 place du Marché");
     expect(await seriousViolations(page)).toEqual([]);
     await expect(page.getByRole("link", { name: "Télécharger le PDF" })).toHaveAttribute(
       "href",
@@ -352,6 +363,9 @@ test("un acquéreur fait une offre en sept étapes et l'envoie ; son vendeur la 
     const document = seller.getByRole("article").filter({ hasText: "OFFRE D'ACHAT LEENKEY" });
     await expect(document).toContainText("Dubois");
     await expect(document).toContainText("Savigny-sur-Orge");
+    // Their own property: its exact address, frozen with the offer (seed: property 3).
+    await expect(document).toContainText("4 place du Marché, 91390 Morsang-sur-Orge");
+    await expect(document).not.toContainText("L'adresse exacte du bien figure");
     await expect(document).not.toContainText(
       /buyer_c@test\.leenkey\.fr|marc\.dubois@example\.fr|06 12 34 56 78|8 rue des Écoles|15\/06\/1990/,
     );
@@ -395,6 +409,10 @@ test("un acquéreur fait une offre en sept étapes et l'envoie ; son vendeur la 
     await expect(recap).toContainText("150 000 €");
     await expect(recap).toContainText("Chloé Dubois, Marc Dubois");
     await expect(recap).toContainText("prêt + apport");
+    // The conditions of the offer, in the recap (answer of Cédric of 2026-11-19).
+    await expect(recap).toContainText("Condition suspensive de financement (prêt immobilier)");
+    await expect(recap).toContainText("Vente préalable d'un autre bien");
+    await expect(recap).toContainText("Précisions : Compromis signé sur notre appartement actuel.");
     await expect(recap).toContainText(/jusqu'au \d{2}\/\d{2}\/\d{4} à \d{2}:00/);
     await expect(
       seller.getByText(

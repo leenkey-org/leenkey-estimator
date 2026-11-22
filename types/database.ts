@@ -798,6 +798,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           document_date: string
+          file_deleted_at: string | null
           id: string
           mime_type: string
           size_bytes: number
@@ -812,6 +813,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           document_date: string
+          file_deleted_at?: string | null
           id?: string
           mime_type: string
           size_bytes: number
@@ -826,6 +828,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           document_date?: string
+          file_deleted_at?: string | null
           id?: string
           mime_type?: string
           size_bytes?: number
@@ -1223,6 +1226,37 @@ export type Database = {
           },
           {
             foreignKeyName: "offer_events_offer_id_fkey"
+            columns: ["offer_id"]
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_property_addresses: {
+        Row: {
+          address_line: string
+          created_at: string
+          offer_id: string
+        }
+        Insert: {
+          address_line: string
+          created_at?: string
+          offer_id: string
+        }
+        Update: {
+          address_line?: string
+          created_at?: string
+          offer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_property_addresses_offer_id_fkey"
+            columns: ["offer_id"]
+            referencedRelation: "offer_for_seller"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_property_addresses_offer_id_fkey"
             columns: ["offer_id"]
             referencedRelation: "offers"
             referencedColumns: ["id"]
@@ -2311,6 +2345,7 @@ export type Database = {
           precontract_signed_at: string | null
           price_cents: number | null
           price_in_words: string | null
+          property_address_line: string | null
           property_id: string | null
           property_snapshot: Json | null
           reference: string | null
@@ -2366,6 +2401,7 @@ export type Database = {
           precontract_signed_at?: string | null
           price_cents?: number | null
           price_in_words?: string | null
+          property_address_line?: never
           property_id?: never
           property_snapshot?: Json | null
           reference?: string | null
@@ -2421,6 +2457,7 @@ export type Database = {
           precontract_signed_at?: string | null
           price_cents?: number | null
           price_in_words?: string | null
+          property_address_line?: never
           property_id?: never
           property_snapshot?: Json | null
           reference?: string | null
@@ -2700,6 +2737,7 @@ export type Database = {
           checked_by_name: string
           type: Database["public"]["Enums"]["financing_document_type"]
           document_date: string
+          file_deleted_at: string
           mime_type: string
           deleted_at: string
           created_at: string
@@ -3294,6 +3332,10 @@ export type Database = {
         Args: { p_document_id: string; p_note?: string }
         Returns: undefined
       }
+      financing_document_file_removed: {
+        Args: { p_document_id: string }
+        Returns: undefined
+      }
       financing_document_remove: {
         Args: { p_document_id: string }
         Returns: undefined
@@ -3301,6 +3343,10 @@ export type Database = {
       financing_file_buyer: {
         Args: { p_name: string }
         Returns: string
+      }
+      financing_file_checked: {
+        Args: { p_name: string }
+        Returns: boolean
       }
       financing_file_in_use: {
         Args: { p_name: string }
@@ -3636,6 +3682,10 @@ export type Database = {
           p_sender: string
         }
         Returns: undefined
+      }
+      offer_property_address: {
+        Args: { p_offer: string }
+        Returns: string
       }
       offer_record_precontract: {
         Args: {

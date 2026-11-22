@@ -86,7 +86,7 @@ export const frAdminReports = {
   ],
   resolveDialog: {
     title: "Clore le signalement",
-    text: "Indiquez la suite donnée : elle reste dans l'historique. Personne n'est prévenu.",
+    text: "Indiquez la suite donnée : elle reste dans l'historique. L'auteur du signalement est prévenu qu'il a été traité, jamais de la suite donnée.",
     reason: "Suite donnée",
     hint: "Au moins 3\u00A0caractères, gardé dans l'historique.",
     confirm: "Clore le signalement",

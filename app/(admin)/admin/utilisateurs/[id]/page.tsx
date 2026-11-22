@@ -9,7 +9,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { requireAdmin } from "@/core/auth/session";
 import { AccountModeration } from "@/leenkey/admin/components/account-moderation";
 import { AccountStatusBadge, RoleBadges } from "@/leenkey/admin/components/account-badges";
-import { FinancingCheck } from "@/leenkey/admin/components/financing-check";
+import { FinancingCheck, FinancingFileDelete } from "@/leenkey/admin/components/financing-check";
 import { ModerationFeedback } from "@/leenkey/admin/components/listing-moderation";
 import {
   adminFinancingDocuments,
@@ -337,7 +337,11 @@ export default async function AdminUserPage({ params }: Props) {
                           </p>
                         ) : null}
                       </div>
-                      {document.removedAt ? null : (
+                      {document.fileDeletedAt ? (
+                        <p className="text-lk-caption text-lk-ink-3">
+                          {f.fileDeleted(formatDateShort(document.fileDeletedAt, now))}
+                        </p>
+                      ) : document.removedAt ? null : (
                         <a
                           href={`/documents/financement/${document.id}`}
                           target="_blank"
@@ -349,6 +353,10 @@ export default async function AdminUserPage({ params }: Props) {
                       )}
                       {toCheck ? (
                         <FinancingCheck documentId={document.id} profileId={user.id} />
+                      ) : null}
+                      {/* Checked, its file still stored: the deletion, tried again. */}
+                      {document.checkedAt && !document.fileDeletedAt ? (
+                        <FinancingFileDelete documentId={document.id} profileId={user.id} />
                       ) : null}
                     </li>
                   );

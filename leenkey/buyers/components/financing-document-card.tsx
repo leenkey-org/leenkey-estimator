@@ -34,7 +34,8 @@ const t = fr.financingDocument;
 
 // The proof of financing of the buyer, on its project page (L2-02, SPEC-V2
 // 8.9): the document in force (its type, its date, « Voir le document », its
-// check by Leenkey), « Remplacer » and « Retirer »; else the form: type, date
+// check by Leenkey; once checked its file is deleted: no link), « Remplacer »
+// and « Retirer »; else the form: type, date
 // of the document, a PDF or an image. A document older than three months is
 // said so, never refused. The server keeps the state (the status of the
 // file is read again by the page).
@@ -214,21 +215,27 @@ export function FinancingDocumentCard({
               <p className="text-lk-secondary text-lk-ink-2">
                 {checked ? t.checked(formatDay(parisDay(checked))) : t.provided}
               </p>
+              {document.fileDeleted ? (
+                <p className="text-lk-caption text-lk-ink-3">{t.fileDeleted}</p>
+              ) : null}
             </div>
           </div>
           {!checked && isFinancingDocumentOld(document.documentDate, now) ? (
             <InlineAlert tone="warning">{t.old}</InlineAlert>
           ) : null}
           <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="secondary" size="sm">
-              <a
-                href={`/documents/financement/${document.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {document.isPdf ? t.openPdf : t.open}
-              </a>
-            </Button>
+            {/* Its file is deleted once checked: nothing to open then. */}
+            {document.fileDeleted ? null : (
+              <Button asChild variant="secondary" size="sm">
+                <a
+                  href={`/documents/financement/${document.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {document.isPdf ? t.openPdf : t.open}
+                </a>
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"

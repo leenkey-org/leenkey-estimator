@@ -8,7 +8,7 @@ export const frFinancingDocument = {
   accepted:
     "Justificatifs acceptés : accord de principe bancaire, attestation d'un courtier, simulation ou offre bancaire nominative de moins de 3 mois environ, preuve de fonds propres (attestation bancaire) en cas d'achat comptant total ou partiel.",
   privacy:
-    "Seule l'équipe Leenkey lit votre justificatif. Le vendeur voit son statut, son type et la date de notre contrôle, jamais le document.",
+    "Seule l'équipe Leenkey lit votre justificatif. Le vendeur voit son statut, son type et la date de notre contrôle, jamais le document. Une fois le contrôle fait, nous supprimons le fichier.",
   undeclared:
     "Renseignez d'abord votre projet, votre budget, votre apport et votre besoin de prêt ci-dessus : nous comparons votre justificatif à ces informations.",
   types: {
@@ -31,13 +31,17 @@ export const frFinancingDocument = {
   open: "Voir le document",
   openPdf: "Voir le document (PDF)",
   documentDate: (date: string) => `Document du ${date}`,
-  // No delay promised: none is decided (DECISIONS.md Q83).
-  provided: "Justificatif fourni. Nous le contrôlons : le résultat s'affichera ici.",
+  // « Sous 48 h », and the buyer is told (answers of Cédric of 2026-11-19, Q83).
+  provided:
+    "Justificatif fourni. Nous le contrôlons sous 48\u00A0h : le résultat s'affichera ici et nous vous préviendrons.",
   checked: (date: string) => `Contrôlé par Leenkey le ${date}`,
+  // The file is deleted once checked: its type and the date of the check stay.
+  fileDeleted: "Fichier supprimé après notre contrôle.",
   replaceChecked:
     "Votre justificatif actuel a été contrôlé. Un nouveau justificatif le remplace et sera contrôlé à son tour.",
   old: "Ce document a plus de 3 mois. Vous pouvez le déposer ; un document plus récent rassure davantage un vendeur.",
-  added: "Votre justificatif est déposé. Votre dossier passe à « Justificatif fourni ».",
+  added:
+    "Votre justificatif est déposé. Votre dossier passe à « Justificatif fourni ». Nous le contrôlons sous 48\u00A0h.",
   removed: "Votre justificatif est retiré.",
   removeDialog: {
     title: "Retirer votre justificatif ?",
@@ -72,6 +76,7 @@ export const frFinancingDocument = {
     documentDate: (date: string) => `Document du ${date}`,
     old: "Document de plus de 3 mois",
     open: "Ouvrir le fichier",
+    fileDeleted: (date: string) => `Fichier supprimé après contrôle le ${date}`,
     notChecked: "À contrôler",
     checked: (date: string, by: string | null) =>
       by ? `Contrôlé le ${date} par ${by}` : `Contrôlé le ${date}`,
@@ -81,8 +86,17 @@ export const frFinancingDocument = {
     // SPEC-V2 13: never « Valider le financement ».
     check: "Marquer le justificatif comme vérifié",
     checkHelp:
-      "Vous contrôlez la présence du document, son type, sa date et sa cohérence apparente avec les informations déclarées.",
-    done: "Justificatif marqué comme vérifié.",
+      "Vous contrôlez la présence du document, son type, sa date et sa cohérence apparente avec les informations déclarées. Le fichier est supprimé dès le contrôle enregistré, et l'acquéreur est prévenu : ouvrez-le avant.",
+    done: "Justificatif marqué comme vérifié. Son fichier est supprimé et l'acquéreur est prévenu.",
+    // The check is recorded, the deletion of the file failed.
+    doneFileKept:
+      "Justificatif marqué comme vérifié et acquéreur prévenu, mais son fichier n'a pas pu être supprimé. Utilisez « Supprimer le fichier » sur sa ligne.",
+    // A proof checked whose file is still stored (a deletion that failed, a
+    // proof checked before 2026-11-21): the team deletes it from its line.
+    fileKept: "Justificatif contrôlé : son fichier n'est pas encore supprimé.",
+    deleteFile: "Supprimer le fichier",
+    fileDeletedDone: "Fichier du justificatif supprimé.",
+    fileDeleteFailed: "Le fichier n'a pas pu être supprimé. Réessayez dans un instant.",
     stale: "Ce justificatif n'est plus à contrôler. La fiche est à jour.",
     failed: "Le contrôle n'a pas pu être enregistré. Réessayez dans un instant.",
   },

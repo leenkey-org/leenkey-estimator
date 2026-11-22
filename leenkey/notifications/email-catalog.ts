@@ -6,6 +6,7 @@ import type { EmailPolicy, PlannedEmail, QueuedNotification } from "@/core/notif
 import type { EmailAttachment } from "@/core/notifications/email";
 import { emailSafeText } from "@/core/notifications/user-text";
 import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
+import { AccountNoticeEmail } from "@/emails/account-notice";
 import { AccountsCreatedEmail, accountsCreatedSubject } from "@/emails/accounts-created";
 import { CaseRequestsEmail, caseRequestsSubject } from "@/emails/case-requests";
 import {
@@ -17,7 +18,11 @@ import {
   documentNeedsAttentionSubject,
 } from "@/emails/document-needs-attention";
 import { DocumentsSharedEmail, documentsSharedSubject } from "@/emails/documents-shared";
-import { OffersAcceptedEmail, offersAcceptedSubject } from "@/emails/offers-accepted";
+import {
+  OffersAcceptedEmail,
+  offersAcceptedSubject,
+  offersReceivedSubject,
+} from "@/emails/offers-accepted";
 import { ListingToReviewEmail, listingToReviewSubject } from "@/emails/listing-submitted";
 import { ListingsToReviewEmail, listingsToReviewSubject } from "@/emails/listings-to-review";
 import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
@@ -44,6 +49,7 @@ import { visitDateTime } from "@/leenkey/visits/dates";
 import { visitIcs } from "@/leenkey/visits/ics";
 import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { frEmails } from "@/lib/i18n/sections/emails";
+import { frFinancingDocument } from "@/lib/i18n/sections/financingDocument";
 import { frFinancingStatus } from "@/lib/i18n/sections/financingStatus";
 import { frLegal } from "@/lib/i18n/sections/legal";
 import { roleLabels } from "./catalog";
@@ -89,6 +95,12 @@ const POLICIES: Record<string, EmailPolicy> = {
   // L2-07: an offer accepted on a sale with an adviser, to the team: the first at once, the
   // next ones together.
   "offer.accepted_team": { audience: "team", throttleMinutes: 20 },
+  // 2026-11-21 (answers of Cédric of 2026-11-19): an offer received on a sale with an adviser,
+  // to the team, grouped as the offers accepted; a proof of financing checked (its buyer) and
+  // a report handled (its author): at once, always sent, the account asked for them.
+  "offer.received_team": { audience: "team", throttleMinutes: 20 },
+  "financing.checked": { audience: "recipient", throttleMinutes: 0 },
+  "report.handled": { audience: "recipient", throttleMinutes: 0 },
   // L3-02: an invitation to visit (the buyer), at once, unless the account turned the emails
   // of its conversations off: the invitation is also a notice of the conversation.
   "visit.invited": { audience: "recipient", preference: "email_messages", throttleMinutes: 0 },
@@ -352,8 +364,14 @@ async function caseRequests(email: PlannedEmail): Promise<RenderedEmail | null> 
   );
 }
 
-/** Offers accepted on sales with an adviser (L2-07), to the team: one line each. */
-async function offersAccepted(email: PlannedEmail): Promise<RenderedEmail | null> {
+/**
+ * Offers accepted on sales with an adviser (L2-07), to the team: one line
+ * each. The same for the offers received on such sales (`received`).
+ */
+async function offersAccepted(
+  email: PlannedEmail,
+  received = false,
+): Promise<RenderedEmail | null> {
   const [first] = email.items;
   if (!first) return null;
   const count = email.items.length;
@@ -368,13 +386,68 @@ async function offersAccepted(email: PlannedEmail): Promise<RenderedEmail | null
       price: Number.isFinite(price) && price > 0 ? formatAmount(price) : null,
     };
   });
+  const reference = text(first.data.listing_reference);
   return rendered(
-    offersAcceptedSubject(count, text(first.data.listing_reference)),
+    received ? offersReceivedSubject(count, reference) : offersAcceptedSubject(count, reference),
     OffersAcceptedEmail({
       items,
       url: absoluteUrl(
-        count > 1 ? "/admin/offres?statut=acceptees" : (first.link ?? "/admin/offres"),
+        count > 1
+          ? received
+            ? "/admin/offres?statut=en-attente"
+            : "/admin/offres?statut=acceptees"
+          : (first.link ?? "/admin/offres"),
       ),
+      siteUrl: siteUrl(),
+      received,
+    }),
+  );
+}
+
+const isFinancingDocumentType = (value: unknown): value is keyof typeof frFinancingDocument.types =>
+  typeof value === "string" && value in frFinancingDocument.types;
+
+/**
+ * A proof of financing checked by the team, to its buyer: « vérifié », never
+ * « validé »; what a seller sees of it, the file deleted, what the check does
+ * not guarantee.
+ */
+async function financingChecked(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  if (!last) return null;
+  const t = fr.emails.financingChecked;
+  const type = last.data.document_type;
+  return rendered(
+    t.subject,
+    AccountNoticeEmail({
+      firstName: email.firstName,
+      title: t.title,
+      paragraphs: [
+        t.text(isFinancingDocumentType(type) ? frFinancingDocument.types[type] : null),
+        t.next,
+        t.scope,
+      ],
+      action: { href: absoluteUrl(last.link ?? "/acquereur/profil"), label: t.action },
+      why: t.why,
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
+/** A report handled by the team, to its author: never what was decided, nor its note. */
+async function reportHandled(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  if (!last) return null;
+  const t = fr.emails.reportHandled;
+  return rendered(
+    t.subject,
+    AccountNoticeEmail({
+      firstName: email.firstName,
+      title: t.title,
+      // Written by a seller: made safe for a mail client.
+      paragraphs: [t.text(emailSafeText(last.data.listing_title)), t.next],
+      action: { href: absoluteUrl(last.link ?? "/messages"), label: t.action },
+      why: t.why,
       siteUrl: siteUrl(),
     }),
   );
@@ -833,6 +906,12 @@ export function renderNotificationEmail(
       return offerExpired(email);
     case "offer.accepted_team":
       return offersAccepted(email);
+    case "offer.received_team":
+      return offersAccepted(email, true);
+    case "financing.checked":
+      return financingChecked(email);
+    case "report.handled":
+      return reportHandled(email);
     case "visit.invited":
       return visitInvited(email);
     case "visit.booked":

@@ -26,10 +26,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const supabase = await createClient();
   const document = await supabase
     .from("financing_documents")
-    .select("storage_path")
+    .select("storage_path, file_deleted_at")
     .eq("id", id)
     .maybeSingle();
-  if (document.error || !document.data) return notFound();
+  // Deleted once the team has checked the document: nothing left to open.
+  if (document.error || !document.data || document.data.file_deleted_at) return notFound();
   const signed = await supabase.storage
     .from("documents")
     .createSignedUrl(document.data.storage_path, SIGNED_SECONDS);

@@ -25,6 +25,7 @@ export function OfferPrecontractForm({
   notifiedAt,
   minDay,
   maxDay,
+  withdrawalPeriod = true,
 }: {
   offerId: string;
   /** « YYYY-MM-DD », as recorded; null before the first recording. */
@@ -33,6 +34,8 @@ export function OfferPrecontractForm({
   /** The day of the acceptance and today, in Paris. */
   minDay: string;
   maxDay: string;
+  /** False for an acquisition by an SCI: no withdrawal period, no day to type for it. */
+  withdrawalPeriod?: boolean;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(signedAt === null);
@@ -49,7 +52,7 @@ export function OfferPrecontractForm({
     setError(null);
     const found: typeof errors = {};
     if (signed === "" || signed < minDay || signed > maxDay) found.signedAt = t.errors.signedAt;
-    else if (notified !== "" && (notified < signed || notified > maxDay)) {
+    else if (withdrawalPeriod && notified !== "" && (notified < signed || notified > maxDay)) {
       found.notifiedAt = t.errors.notifiedAt;
     }
     setErrors(found);
@@ -62,7 +65,11 @@ export function OfferPrecontractForm({
     startTransition(async () => {
       let result: RecordPrecontractResult | null = null;
       try {
-        result = await recordPrecontract({ offerId, signedAt: signed, notifiedAt: notified });
+        result = await recordPrecontract({
+          offerId,
+          signedAt: signed,
+          notifiedAt: withdrawalPeriod ? notified : "",
+        });
       } catch (caught) {
         console.error("[offers] avant-contrat failed", caught);
       }
@@ -127,21 +134,23 @@ export function OfferPrecontractForm({
           setErrors({});
         }}
       />
-      <Input
-        id="precontract-notified"
-        type="date"
-        label={t.notifiedAt}
-        optional
-        help={t.notifiedAtHelp}
-        value={notified}
-        min={signed || minDay}
-        max={maxDay}
-        error={errors.notifiedAt}
-        onChange={(event) => {
-          setNotified(event.target.value);
-          setErrors({});
-        }}
-      />
+      {withdrawalPeriod ? (
+        <Input
+          id="precontract-notified"
+          type="date"
+          label={t.notifiedAt}
+          optional
+          help={t.notifiedAtHelp}
+          value={notified}
+          min={signed || minDay}
+          max={maxDay}
+          error={errors.notifiedAt}
+          onChange={(event) => {
+            setNotified(event.target.value);
+            setErrors({});
+          }}
+        />
+      ) : null}
       {error ? <InlineAlert tone="danger">{error}</InlineAlert> : null}
       <div className="flex flex-wrap gap-2.5">
         <Button type="submit" loading={working}>

@@ -6,7 +6,12 @@ import { Button } from "@/components/shared/button";
 import { Textarea } from "@/components/shared/textarea";
 import { frFinancingDocument } from "@/lib/i18n/sections/financingDocument";
 import { FINANCING_NOTE_MAX } from "@/lib/validations/admin";
-import { checkFinancingDocument, type FinancingCheckResult } from "../users/actions";
+import {
+  checkFinancingDocument,
+  deleteCheckedFinancingFile,
+  type FinancingCheckResult,
+  type FinancingFileDeleteResult,
+} from "../users/actions";
 import { useModerationFeedback } from "./listing-moderation";
 
 // The texts this module shows (lib/i18n/sections, P-06).
@@ -42,7 +47,11 @@ export function FinancingCheck({
         console.error("[admin] financing check request failed", error);
       }
       if (result?.ok) {
-        report({ tone: "success", text: t.done });
+        report(
+          result.data.fileDeleted
+            ? { tone: "success", text: t.done }
+            : { tone: "warning", text: t.doneFileKept },
+        );
         return;
       }
       // Removed, replaced or already checked since the page was shown.
@@ -74,6 +83,47 @@ export function FinancingCheck({
           {t.check}
         </Button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * « Supprimer le fichier », on the line of a proof already checked whose file
+ * is still stored (2026-11-21): the deletion that follows a check, tried
+ * again. The outcome shows at the top of the sheet.
+ */
+export function FinancingFileDelete({
+  documentId,
+  profileId,
+}: {
+  documentId: string;
+  profileId: string;
+}) {
+  const report = useModerationFeedback();
+  const [working, startTransition] = useTransition();
+
+  const remove = () => {
+    startTransition(async () => {
+      let result: FinancingFileDeleteResult | null = null;
+      try {
+        result = await deleteCheckedFinancingFile({ documentId, profileId });
+      } catch (error) {
+        console.error("[admin] financing file deletion request failed", error);
+      }
+      report(
+        result?.ok
+          ? { tone: "success", text: t.fileDeletedDone }
+          : { tone: "danger", text: t.fileDeleteFailed, reload: result === null },
+      );
+    });
+  };
+
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <p className="text-lk-caption text-lk-ink-3">{t.fileKept}</p>
+      <Button variant="secondary" size="sm" onClick={remove} loading={working}>
+        {t.deleteFile}
+      </Button>
     </div>
   );
 }

@@ -160,6 +160,26 @@ export const frNotifications = {
       detail: (price: string | null, reference: string | null, city: string | null) =>
         [price, [reference, city].filter(Boolean).join(" · ")].filter(Boolean).join(" · ") || null,
     },
+    // 2026-11-21: for the team, an offer received on a property whose plan has
+    // an adviser (answer of Cédric of 2026-11-19).
+    offerReceivedTeam: {
+      title: "Offre reçue sur une vente avec conseiller",
+      detail: (price: string | null, reference: string | null, city: string | null) =>
+        [price, [reference, city].filter(Boolean).join(" · ")].filter(Boolean).join(" · ") || null,
+    },
+    // 2026-11-21: a proof of financing checked by the team, for its buyer.
+    // « Vérifié », never « validé ».
+    financingChecked: {
+      title: "Votre justificatif de financement est vérifié",
+      detail:
+        "Votre dossier affiche « Justificatif vérifié ». Nous supprimons le fichier après ce contrôle.",
+    },
+    // 2026-11-21: a report handled by the team, for its author. Never what was decided.
+    reportHandled: {
+      title: "Votre signalement a été traité",
+      detail: (title: string | null) =>
+        title ? `Conversation à propos de «\u00A0${title}\u00A0»` : null,
+    },
     offerExpired: {
       buyer: "Votre offre d'achat a expiré",
       seller: "Une offre d'achat reçue a expiré",

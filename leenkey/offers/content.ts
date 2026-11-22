@@ -43,6 +43,13 @@ export type OfferAnnex = (typeof OFFER_ANNEXES)[number];
 export type OfferProperty = {
   listingReference: string;
   title: string;
+  /**
+   * The exact address (number and street), frozen with the offer when it is
+   * sent (DECISIONS.md 2026-11-21). Null when its reader may not read it: a
+   * buyer without a confirmed visit of the property (SPEC-V2 14), who reads
+   * the town only. An empty text when none is known.
+   */
+  addressLine: string | null;
   postalCode: string;
   city: string;
   type: Database["public"]["Enums"]["property_type"];
@@ -164,8 +171,16 @@ export function readDeclarations(json: Json | undefined): OfferDeclarations {
   };
 }
 
-/** The photograph of the property taken by offer_submit; null when it is empty (a draft). */
-export function readPropertySnapshot(json: Json | undefined): OfferProperty | null {
+/**
+ * The photograph of the property taken by offer_submit; null when it is empty
+ * (a draft). The exact address is not in it (a buyer reads their own row):
+ * the reader gives it when they may read it (offer_property_address, the view
+ * of the seller), null otherwise.
+ */
+export function readPropertySnapshot(
+  json: Json | undefined,
+  addressLine: string | null = null,
+): OfferProperty | null {
   if (!isObject(json) || typeof json.listing_reference !== "string") return null;
   const address = isObject(json.address) ? json.address : {};
   const annexes = Array.isArray(json.annexes) ? json.annexes : [];
@@ -173,6 +188,7 @@ export function readPropertySnapshot(json: Json | undefined): OfferProperty | nu
   return {
     listingReference: json.listing_reference,
     title: text(json.title),
+    addressLine,
     postalCode: text(address.postal_code),
     city: text(address.city),
     type:
@@ -274,6 +290,18 @@ export function isIdentityComplete(identity: OfferIdentity): boolean {
   );
 }
 
+/**
+ * « Obtention d'une autorisation particulière » and « Autre situation à
+ * préciser » are said in the details (answer of Cédric of 2026-11-19), as
+ * offer_submit checks it in the database.
+ */
+export function conditionsNeedDetails(conditions: {
+  conditionAuthorization: boolean;
+  conditionOther: boolean;
+}): boolean {
+  return conditions.conditionAuthorization || conditions.conditionOther;
+}
+
 /** An identity nothing was typed in: a draft the assistant prepared with its price only (L2-06). */
 export function isIdentityBlank(identity: OfferIdentity): boolean {
   return Object.values(identity).every((value) => value.trim() === "");
@@ -287,7 +315,9 @@ export function firstStepToFill(offer: OfferContent | null): number {
   if (!offer || !isIdentityComplete(offer.buyer)) return 1;
   if (offer.priceCents === null) return 3;
   if (offer.financingMode === null) return 4;
-  // Step 5 has no required field: the validity is the next one to fill.
+  // Step 5 asks for details only with « autorisation particulière » or « autre
+  // situation » (a draft made from an older offer may lack them).
+  if (conditionsNeedDetails(offer) && offer.conditionsDetails.trim() === "") return 5;
   if (offer.validityUntil === null) return 6;
   const said = offer.declarations;
   if (

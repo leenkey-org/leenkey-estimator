@@ -68,6 +68,8 @@ export async function offerListing(listingId: string): Promise<QueryResult<Offer
         slug: row.slug,
         listingReference: row.reference,
         title: row.title ?? "",
+        // Not public: read with the draft, for who may (offerAddressLine).
+        addressLine: null,
         postalCode: row.postal_code ?? "",
         city: row.city,
         type: row.type,
@@ -168,6 +170,22 @@ export async function buyerDraft(
   return { ok: true, data: data ? readOffer(data) : null };
 }
 
+/**
+ * The exact address of the property of an offer (DECISIONS.md 2026-11-21),
+ * for who may read it: the team, the seller of an offer sent, its buyer once
+ * one of their visits of the property is confirmed or done (SPEC-V2 14). Null
+ * for anyone else, and when it cannot be read: the offer shows the town only.
+ */
+export async function offerAddressLine(offerId: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("offer_property_address", { p_offer: offerId });
+  if (error) {
+    console.error("[offers] address read failed", { entity_id: offerId, code: error.code });
+    return null;
+  }
+  return typeof data === "string" ? data : null;
+}
+
 /** What happened to an offer once sent, as its buyer reads it. */
 export type OfferFollowUp = {
   answeredAt: string | null;
@@ -190,13 +208,16 @@ export async function buyerOffer(
   offerId: string,
 ): Promise<QueryResult<BuyerOffer | null>> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("offers")
-    .select(
-      `${OFFER_COLUMNS}, buyer_id, answered_at, withdrawn_at, precontract_signed_at, withdrawal_period_start`,
-    )
-    .eq("id", offerId)
-    .maybeSingle();
+  const [{ data, error }, addressLine] = await Promise.all([
+    supabase
+      .from("offers")
+      .select(
+        `${OFFER_COLUMNS}, buyer_id, answered_at, withdrawn_at, precontract_signed_at, withdrawal_period_start`,
+      )
+      .eq("id", offerId)
+      .maybeSingle(),
+    offerAddressLine(offerId),
+  ]);
   if (error) {
     console.error("[offers] offer read failed", {
       user_id: profileId,
@@ -210,7 +231,7 @@ export async function buyerOffer(
     ok: true,
     data: {
       offer: readOffer(data),
-      snapshot: readPropertySnapshot(data.property_snapshot),
+      snapshot: readPropertySnapshot(data.property_snapshot, addressLine),
       isBuyer: data.buyer_id === profileId,
       followUp: {
         answeredAt: data.answered_at,

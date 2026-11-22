@@ -153,6 +153,12 @@ export const financingCheckSchema = z.object({
 
 export type FinancingCheckInput = z.infer<typeof financingCheckSchema>;
 
+/** « Supprimer le fichier » of a checked proof: the document and the sheet it is shown on. */
+export const financingFileDeleteSchema = financingCheckSchema.pick({
+  documentId: true,
+  profileId: true,
+});
+
 // L1-30c: the cases and the reports of the back office (SPEC-V2 section 17).
 
 type CaseStatus = Database["public"]["Enums"]["case_status"];

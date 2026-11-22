@@ -203,8 +203,11 @@ export const offerConditionsSchema = z
     other: z.boolean(),
     details: optionalText(OFFER_DETAILS_MAX),
   })
-  // « Autre situation à préciser »: said in the details.
-  .refine((value) => !value.other || value.details !== "", { path: ["details"] });
+  // « Obtention d'une autorisation particulière » (answer of Cédric of
+  // 2026-11-19) and « Autre situation à préciser »: said in the details.
+  .refine((value) => !(value.authorization || value.other) || value.details !== "", {
+    path: ["details"],
+  });
 export type OfferConditionsInput = z.infer<typeof offerConditionsSchema>;
 
 /**

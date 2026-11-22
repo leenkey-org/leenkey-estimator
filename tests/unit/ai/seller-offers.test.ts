@@ -98,6 +98,7 @@ function sellerOffer(overrides: Partial<SellerOffer> = {}): SellerOffer {
     property: {
       listingReference: "LK-00042",
       title: "Appartement 3 pièces lumineux",
+      addressLine: "8 rue des Lilas",
       postalCode: "91600",
       city: "Savigny-sur-Orge",
       type: "appartement",

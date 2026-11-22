@@ -34,7 +34,7 @@ import {
 } from "@/leenkey/offers/seller";
 import { UpgradePromptSlot } from "@/leenkey/billing/components/upgrade-prompt-slot";
 import { propertyUpgradePrompt } from "@/leenkey/billing/upgrade-queries";
-import { withdrawalPeriodEnd } from "@/leenkey/offers/withdrawal";
+import { showsWithdrawalPeriod, withdrawalPeriodEnd } from "@/leenkey/offers/withdrawal";
 import { sheetHref } from "@/leenkey/properties/sheet";
 import { frOffer } from "@/lib/i18n/sections/offer";
 
@@ -193,6 +193,7 @@ async function BuyerView({
             <BuyerPrecontract
               signedAt={followUp.precontractSignedAt}
               notifiedAt={followUp.withdrawalPeriodStart}
+              acquisitionMode={offer.acquisitionMode}
             />
           ) : (
             // Accepted: no button to withdraw, no legal conclusion (SPEC 13).
@@ -290,16 +291,20 @@ async function SellerView({ profile, item }: { profile: SessionProfile; item: Se
  * The avant-contrat as its buyer reads it (SPEC-V2 13, « Avant-contrat
  * signé »): its date; the end of the legal withdrawal period only when the
  * seller recorded the day it was notified or handed, never counted from the
- * signature; always « Votre notaire fait foi ».
+ * signature; always « Votre notaire fait foi ». No period for an acquisition
+ * by an SCI (answer of Cédric of 2026-11-19).
  */
 function BuyerPrecontract({
   signedAt,
   notifiedAt,
+  acquisitionMode,
 }: {
   signedAt: string;
   notifiedAt: string | null;
+  acquisitionMode: string;
 }) {
-  const end = notifiedAt ? withdrawalPeriodEnd(notifiedAt) : null;
+  const period = showsWithdrawalPeriod(acquisitionMode);
+  const end = period && notifiedAt ? withdrawalPeriodEnd(notifiedAt) : null;
   return (
     <section aria-labelledby="avant-contrat" className="flex flex-col gap-3">
       <h2 id="avant-contrat" className="text-lk-h3 font-bold text-wide text-lk-ink">
@@ -307,10 +312,13 @@ function BuyerPrecontract({
       </h2>
       <InfoNote>
         <p className="font-semibold">{f.precontract.signedOn(formatNumericDay(signedAt))}</p>
-        {end ? (
+        {!period ? (
+          <p>{f.precontract.noPeriod}</p>
+        ) : end ? (
           <>
             <p>{f.precontract.periodEnd(formatNumericDay(end))}</p>
             <p>{f.precontract.indicative}</p>
+            {acquisitionMode === "other" ? <p>{f.precontract.companyNote}</p> : null}
           </>
         ) : (
           <p>{f.precontract.unknownStart}</p>
@@ -323,7 +331,10 @@ function BuyerPrecontract({
 /** The avant-contrat of an accepted offer, recorded and corrected by its seller. */
 function SellerPrecontract({ item, answeredAt }: { item: SellerOffer; answeredAt: string }) {
   const labels = s.precontract;
-  const end = item.withdrawalPeriodStart ? withdrawalPeriodEnd(item.withdrawalPeriodStart) : null;
+  // No period for an acquisition by an SCI (answer of Cédric of 2026-11-19).
+  const period = showsWithdrawalPeriod(item.offer.acquisitionMode);
+  const start = period ? item.withdrawalPeriodStart : null;
+  const end = start ? withdrawalPeriodEnd(start) : null;
   return (
     <section aria-labelledby="avant-contrat" className="flex flex-col gap-3">
       <h2 id="avant-contrat" className="text-lk-h3 font-bold text-wide text-lk-ink">
@@ -334,24 +345,25 @@ function SellerPrecontract({ item, answeredAt }: { item: SellerOffer; answeredAt
           <p className="font-semibold text-lk-ink">
             {labels.signedOn(formatNumericDay(item.precontractSignedAt))}
           </p>
-          {item.withdrawalPeriodStart ? (
-            <p>{labels.notifiedOn(formatNumericDay(item.withdrawalPeriodStart))}</p>
-          ) : null}
+          {start ? <p>{labels.notifiedOn(formatNumericDay(start))}</p> : null}
           {end ? (
             <p>
               {labels.periodEnd(formatNumericDay(end))} {labels.indicative}
             </p>
           ) : null}
+          {end && item.offer.acquisitionMode === "other" ? <p>{labels.companyNote}</p> : null}
         </div>
       ) : (
         <p className="text-lk-secondary text-lk-ink-2">{labels.intro}</p>
       )}
+      {!period ? <p className="text-lk-secondary text-lk-ink-2">{labels.noPeriod}</p> : null}
       <OfferPrecontractForm
         offerId={item.offer.id}
         signedAt={item.precontractSignedAt}
-        notifiedAt={item.withdrawalPeriodStart}
+        notifiedAt={start}
         minDay={parisDay(answeredAt)}
         maxDay={parisDay(new Date())}
+        withdrawalPeriod={period}
       />
     </section>
   );

@@ -106,6 +106,9 @@ export const frOffer = {
   property: {
     title: "Le bien concerné",
     note: "Repris de l'annonce, non modifiable",
+    // The exact address goes to a buyer once a visit is confirmed (SPEC-V2 14).
+    addressWithheld:
+      "L'adresse exacte du bien figure dans l'offre que reçoit le vendeur. Elle vous est communiquée dès qu'une visite du bien est confirmée.",
     address: "Adresse",
     type: "Type",
     surface: "Surface déclarée",
@@ -195,9 +198,11 @@ export const frOffer = {
     authorization: "Obtention d'une autorisation particulière",
     other: "Autre situation à préciser",
     details: "Précisions",
+    detailsHelp:
+      "À renseigner si vous cochez « Obtention d'une autorisation particulière » ou « Autre situation à préciser ».",
     count: (count: string, max: string) => `${count} / ${max}`,
     errors: {
-      details: "Précisez la situation.",
+      details: "Précisez l'autorisation attendue ou la situation.",
       tooLong: "Vos précisions dépassent 500 caractères.",
     },
   },
@@ -307,6 +312,12 @@ export const frOffer = {
       indicative: "Date indicative. Votre notaire fait foi.",
       unknownStart:
         "Le point de départ de votre délai de rétractation dépend de la date de notification ou de remise de l'avant-contrat. Votre notaire peut vous l'indiquer.",
+      // An acquisition by an SCI: no period shown (answer of Cédric of 2026-11-19).
+      noPeriod:
+        "Votre acquisition est faite par une SCI : aucun délai de rétractation n'est affiché. Votre notaire vous confirme ce qui s'applique à votre situation.",
+      // An acquisition « Autre », which may be a company.
+      companyNote:
+        "Ce délai peut ne pas concerner une acquisition faite par une société : votre notaire vous le confirme.",
     },
     errors: {
       generic: "Votre demande n'a pas pu être enregistrée. Réessayez.",
@@ -442,6 +453,11 @@ export const frOffer = {
       },
       validity: "Validité",
       until: (date: string) => `jusqu'au ${date}`,
+      // The conditions of the offer, in the recap (answer of Cédric of 2026-11-19).
+      conditions: "Conditions de l'offre",
+      conditionLoan: "Condition suspensive de financement (prêt immobilier)",
+      conditionDetails: (details: string) => `Précisions : ${details}`,
+      noCondition: "Aucune condition signalée",
       warning: [
         "L'acceptation d'une offre d'achat peut produire des conséquences juridiques. Prenez connaissance de l'intégralité de l'offre avant de confirmer.",
         "En cas de doute, contactez votre notaire ou un conseiller Leenkey avant de poursuivre.",
@@ -497,7 +513,13 @@ export const frOffer = {
       signedAt: "Date de signature de l'avant-contrat",
       notifiedAt: "Date de notification ou de remise de l'avant-contrat à l'acquéreur",
       notifiedAtHelp:
-        "Si vous la connaissez. Elle sert à indiquer une date indicative de fin du délai légal de rétractation de l'acquéreur.",
+        "Si vous la connaissez. Pour un avant-contrat signé électroniquement, indiquez la date de sa signature : le délai court à compter du lendemain. Cette date sert à indiquer une date indicative de fin du délai légal de rétractation de l'acquéreur.",
+      // An acquisition by an SCI: no period shown (answer of Cédric of 2026-11-19).
+      noPeriod:
+        "Acquisition par une SCI : aucun délai de rétractation n'est affiché. Votre notaire vous confirme ce qui s'applique.",
+      // An acquisition « Autre », which may be a company.
+      companyNote:
+        "Ce délai peut ne pas concerner une acquisition faite par une société : votre notaire vous le confirme.",
       save: "Enregistrer",
       edit: "Modifier",
       cancel: "Annuler",
@@ -566,6 +588,8 @@ export const frOffer = {
     years: (years: number) => `${years} ans`,
     progressOther: (text: string) => `Autre : ${text}`,
     noOther: "Aucun autre élément signalé.",
+    addressWithheld:
+      "L'adresse exacte du bien figure dans l'offre reçue par le vendeur. Elle est communiquée à l'acquéreur dès qu'une visite du bien est confirmée.",
     validUntil: (date: string) => `La présente offre est valable jusqu'au : ${date}`,
     acceptedAt: (date: string) => `Déclarations acceptées le ${date}.`,
     at: "à",

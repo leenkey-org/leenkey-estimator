@@ -1,12 +1,24 @@
 // The legal withdrawal period of a buyer after an avant-contrat (SPEC-V2 13,
 // « Avant-contrat signé »): ten calendar days from the day after the
-// avant-contrat was notified or handed to them; when its last day is a
+// avant-contrat was notified or handed to them (for an avant-contrat signed
+// electronically: the day of its signature, the period starting the day
+// after, answer of Cédric of 2026-11-19); when its last day is a
 // Saturday, a Sunday or a public holiday, it goes on to the next working day.
 // Indicative only, from the date the seller typed, never from the date of the
 // signature: every screen says « Votre notaire fait foi ». Days are plain
 // « YYYY-MM-DD », never a moment of a time zone.
 
 const DAY_MS = 86_400_000;
+
+/**
+ * Is a withdrawal period shown for this acquisition? Never for an SCI (answer
+ * of Cédric of 2026-11-19: no withdrawal period for an SCI or a company). An
+ * acquisition « Autre » may be a company too: its free text does not say, so
+ * the date stays, with a sentence about companies beside it.
+ */
+export function showsWithdrawalPeriod(acquisitionMode: string): boolean {
+  return acquisitionMode !== "sci";
+}
 export const WITHDRAWAL_PERIOD_DAYS = 10;
 
 const iso = (time: number) => new Date(time).toISOString().slice(0, 10);

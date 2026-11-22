@@ -18,6 +18,8 @@ export type FinancingDocumentView = {
   documentDate: string;
   isPdf: boolean;
   createdAt: string;
+  /** Its file is deleted once the team has checked it (DECISIONS.md 2026-11-21). */
+  fileDeleted: boolean;
 };
 
 export type BuyerProfile = {
@@ -43,7 +45,7 @@ export async function buyerProfile(profileId: string): Promise<QueryResult<Buyer
   const { data, error } = await supabase
     .from("buyer_profiles")
     .select(
-      "project, target_cities, budget_max_cents, down_payment_cents, loan_needed, loan_amount_cents, situation_note, financing_status, financing_checked_at, document:financing_documents!buyer_profiles_current_doc_fk(id, type, document_date, mime_type, created_at, deleted_at)",
+      "project, target_cities, budget_max_cents, down_payment_cents, loan_needed, loan_amount_cents, situation_note, financing_status, financing_checked_at, document:financing_documents!buyer_profiles_current_doc_fk(id, type, document_date, mime_type, created_at, deleted_at, file_deleted_at)",
     )
     .eq("profile_id", profileId)
     .maybeSingle();
@@ -71,6 +73,7 @@ export async function buyerProfile(profileId: string): Promise<QueryResult<Buyer
             documentDate: document.document_date,
             isPdf: document.mime_type === "application/pdf",
             createdAt: document.created_at,
+            fileDeleted: document.file_deleted_at !== null,
           }
         : null,
       financingCheckedAt: data.financing_checked_at,

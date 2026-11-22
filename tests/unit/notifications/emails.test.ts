@@ -512,6 +512,114 @@ describe("emails of an offer (L2-04a)", () => {
     expect(two?.html).toContain("https://leenkey-v2.vercel.app/admin/offres?statut=acceptees");
   });
 
+  it("tells the team an offer was received on a sale with an adviser, never who the buyer is", async () => {
+    const { renderNotificationEmail, emailPolicy } =
+      await import("@/leenkey/notifications/email-catalog");
+    expect(emailPolicy("offer.received_team")).toEqual({ audience: "team", throttleMinutes: 20 });
+    const received = (id: string, reference: string, price: number) =>
+      queued({
+        type: "offer.received_team",
+        profileId: "admin",
+        email: null,
+        firstName: null,
+        groupKey: "offers:received",
+        link: `/admin/offres/${id}`,
+        data: {
+          ...offer,
+          reference,
+          price_cents: price,
+          listing_reference: "LK-0042",
+          city: "Savigny-sur-Orge",
+          plan: "accompagne",
+          asking_price_cents: 35_000_000,
+          buyer_first_name: "Chloé",
+        },
+      });
+    const one = await renderNotificationEmail(
+      planned([received("o1", "LK-2026-00012", 33_800_000)], { audience: "team" }),
+    );
+    const text = (one?.text ?? "").replace(/[\u00A0\u202F]/g, " ");
+    expect(one?.subject).toBe("Offre reçue sur une vente avec conseiller (LK-0042)");
+    expect(text).toContain("Une offre d'achat a été reçue sur une vente avec conseiller.");
+    expect(text).toContain("Offre LK-2026-00012 · LK-0042 · Savigny-sur-Orge");
+    expect(text).toContain("Prix proposé : 338 000 €");
+    expect(text).toContain("Le vendeur n'a pas encore répondu");
+    expect(one?.html).toContain("https://leenkey-v2.vercel.app/admin/offres/o1");
+    expect(text).not.toMatch(/Chloé|validé|acceptée|\bon\b|@example/i);
+
+    const two = await renderNotificationEmail(
+      planned([received("o1", "LK-2026-00012", 33_800_000), received("o2", "LK-2026-00013", 0)], {
+        audience: "team",
+      }),
+    );
+    expect(two?.subject.replace(/[\u00A0\u202F]/g, " ")).toBe(
+      "2 offres reçues sur des ventes avec conseiller",
+    );
+    expect(two?.html).toContain("https://leenkey-v2.vercel.app/admin/offres?statut=en-attente");
+  });
+
+  it("tells a buyer their proof of financing is checked, and its file deleted", async () => {
+    const { renderNotificationEmail, emailPolicy } =
+      await import("@/leenkey/notifications/email-catalog");
+    expect(emailPolicy("financing.checked")).toEqual({ audience: "recipient", throttleMinutes: 0 });
+    const email = await renderNotificationEmail(
+      planned([
+        queued({
+          type: "financing.checked",
+          profileId: "buyer-c",
+          firstName: "Chloé",
+          groupKey: "financing:d1",
+          link: "/acquereur/profil",
+          data: { document_id: "d1", document_type: "accord_principe" },
+        }),
+      ]),
+    );
+    const text = (email?.text ?? "").replace(/[\u00A0\u202F]/g, " ");
+    expect(email?.subject).toBe("Votre justificatif de financement est vérifié");
+    expect(text).toContain("Bonjour Chloé,");
+    expect(text).toContain(
+      "Nous avons contrôlé votre justificatif de financement (Accord de principe bancaire) : votre dossier affiche désormais « Justificatif vérifié ».",
+    );
+    // Sent when the check is recorded: the deletion follows, it is not claimed done.
+    expect(text).toContain("Nous supprimons le fichier après ce contrôle.");
+    expect(text).not.toMatch(/avons supprimé/);
+    expect(text).toContain("il ne garantit pas l'obtention de votre financement");
+    expect(email?.html).toContain("https://leenkey-v2.vercel.app/acquereur/profil");
+    expect(text).not.toMatch(/validé|\bon\b/i);
+  });
+
+  it("tells the author of a report it was handled, never what was decided", async () => {
+    const { renderNotificationEmail, emailPolicy } =
+      await import("@/leenkey/notifications/email-catalog");
+    expect(emailPolicy("report.handled")).toEqual({ audience: "recipient", throttleMinutes: 0 });
+    const email = await renderNotificationEmail(
+      planned([
+        queued({
+          type: "report.handled",
+          profileId: "buyer-c",
+          firstName: "Chloé",
+          groupKey: "report:r1",
+          link: "/messages/c1",
+          data: {
+            report_id: "r1",
+            conversation_id: "c1",
+            listing_title: "Maison 5 pièces",
+            reason: "Vendeur averti par téléphone.",
+          },
+        }),
+      ]),
+    );
+    const text = (email?.text ?? "").replace(/[\u00A0\u202F]/g, " ");
+    expect(email?.subject).toBe("Votre signalement a été traité");
+    expect(text).toContain(
+      "Notre équipe a examiné votre signalement, à propos de « Maison 5 pièces », et l'a clos.",
+    );
+    expect(text).toContain("Nous ne détaillons pas la suite donnée.");
+    expect(text).not.toMatch(/mesures/);
+    expect(email?.html).toContain("https://leenkey-v2.vercel.app/messages/c1");
+    expect(text).not.toMatch(/averti|téléphone|\bon\b/i);
+  });
+
   it("tells the buyer the answer of the seller, with its message", async () => {
     const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
     const declined = await renderNotificationEmail(
