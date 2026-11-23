@@ -128,6 +128,23 @@ export const frNotifications = {
       detail: (title: string) =>
         `Nous avons relu «\u00A0${title}\u00A0» : voyez ce qu'il faut corriger.`,
     },
+    // DECISIONS.md 2026-11-22: a request to bring a listing into line, its
+    // reminder 2 days before the deadline, the deletion once it passed.
+    listingComplianceRequested: {
+      title: "Votre annonce est à mettre en conformité",
+      detail: (title: string | null, date: string | null) =>
+        `${title ? `«\u00A0${title}\u00A0» : modifiez-la` : "Modifiez votre annonce"}${date ? ` avant le ${date}` : ""}.`,
+    },
+    listingComplianceReminder: {
+      title: "Rappel : votre annonce est à mettre en conformité",
+      detail: (title: string | null, date: string | null) =>
+        `${title ? `«\u00A0${title}\u00A0» : sans` : "Sans"} modification${date ? ` avant le ${date}` : ""}, nous pourrons la supprimer.`,
+    },
+    listingDeleted: {
+      title: "Nous avons supprimé votre annonce",
+      detail: (title: string | null) =>
+        `${title ? `«\u00A0${title}\u00A0» n'a` : "Votre annonce n'a"} pas été mise en conformité dans le délai demandé.`,
+    },
     // L2-04a: an offer received by its seller, read and answered for its buyer.
     offerReceived: {
       title: (firstName: string | null) =>

@@ -691,7 +691,7 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 **NextActionCard** : étiquette « Prochaine action » 12 px 600 `--lk-blue` au-dessus ; carte blanche bordure `--lk-line` rayon 6 padding 16 : icône 40 × 40 fond `--lk-blue-tint` rayon 4, titre 15 px 600, détail 13 px `--lk-ink-3` ; deux boutons `md` (primary + secondary, flex 1).
 
-**TaskList** : carte unique rayon 6, lignes padding 14 séparées par `--lk-line`. Rond 22 px : fait = plein `--lk-success` + coche blanche, texte barré `--lk-ink-3` ; en cours = contour 2 px `--lk-blue` ; à venir = contour 2 px `--lk-line`. Titre 14 px 500, détail 12 px `--lk-ink-3`, chevron à droite si cliquable. En-tête « À faire » 16 px 600 + lien « Toutes les étapes » 13 px 600.
+**TaskList** : carte unique rayon 6, lignes padding 14 séparées par `--lk-line`. Rond 22 px : fait = plein `--lk-success` + coche blanche, texte `--lk-ink-2` non barré (la tâche se coche, elle ne se raye pas : demande de Cédric, `DECISIONS.md` 2026-11-22) ; en cours = contour 2 px `--lk-blue` ; à venir = contour 2 px `--lk-line`. Titre 14 px 500, détail 12 px `--lk-ink-3`, chevron à droite si cliquable. En-tête « À faire » 16 px 600 + lien « Toutes les étapes » 13 px 600.
 
 **PhotoUploader** : grille 4 colonnes de carrés (rayon 4), première photo marquée « Principale » (pastille blanche 10 px 600 en bas à gauche). Compteur « 4 / 15 ». Bouton « Ajouter des photos » 48 px, bordure 1,5 px pointillée `--lk-blue-line`, texte `--lk-blue`. Glisser pour réordonner (poignée visible au focus clavier, flèches gauche/droite pour déplacer).
 

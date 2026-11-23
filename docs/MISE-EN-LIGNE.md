@@ -68,7 +68,9 @@ Depuis le dépôt, avec un fichier `.env.prod.local` jamais commité (`PROD_DATA
 
 Les variables de la V1 encore présentes sur ce projet (clés de l'estimateur V1) restent en place jusqu'à la bascule : elles servent au retour arrière.
 
-## 4. La bascule (dimanche 22, sur go de Younes)
+## 4. La bascule (faite le dimanche 22 novembre 2026 : `DECISIONS.md`)
+
+Leçons du 22 : (a) les variables de production se saisissent dans `leenkey-estimator-main` **avant** le premier déploiement (celles de `leenkey-v2` ne servent qu'à la préprod) ; (b) Vercel n'accepte une branche dans *Branch Tracking* qu'après un premier déploiement de cette branche : pousser un commit sur `production`, puis enregistrer ; (c) vérifier tout de suite l'en-tête `X-Robots-Tag` et le journal des erreurs d'exécution.
 
 1. [ ] **Branche de production de la V2** : `production`, créée depuis le dernier commit de `v2` et poussée par CC (accord de Younes du 2026-11-21). Rien n'est poussé dans `main`.
 2. [ ] **Vercel `leenkey-estimator-main` → Settings → Environments → Production → Branch Tracking** : `main` devient `production`. Le dépôt contient `vercel.json` (`"framework": "nextjs"`) : le réglage « Vite » du projet n'a pas à être changé à la main, à vérifier sur le premier build.

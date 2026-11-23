@@ -1002,6 +1002,10 @@ export type Database = {
       }
       listings: {
         Row: {
+          compliance_due_at: string | null
+          compliance_reason: string | null
+          compliance_reminded_at: string | null
+          compliance_requested_at: string | null
           created_at: string
           deleted_at: string | null
           description: string
@@ -1026,6 +1030,10 @@ export type Database = {
           views_count: number
         }
         Insert: {
+          compliance_due_at?: string | null
+          compliance_reason?: string | null
+          compliance_reminded_at?: string | null
+          compliance_requested_at?: string | null
           created_at?: string
           deleted_at?: string | null
           description: string
@@ -1050,6 +1058,10 @@ export type Database = {
           views_count?: number
         }
         Update: {
+          compliance_due_at?: string | null
+          compliance_reason?: string | null
+          compliance_reminded_at?: string | null
+          compliance_requested_at?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string
@@ -3421,6 +3433,10 @@ export type Database = {
         Args: { p_version: string }
         Returns: boolean
       }
+      listing_admin_delete: {
+        Args: { p_listing_id: string }
+        Returns: undefined
+      }
       listing_bad_transition: {
         Args: {
           p_action: string
@@ -3432,9 +3448,45 @@ export type Database = {
         Args: { p_listing_id: string }
         Returns: Database["public"]["Enums"]["listing_status"]
       }
+      listing_changed_since: {
+        Args: { p_listing: Database["public"]["Tables"]["listings"]["Row"]; p_since: string }
+        Returns: boolean
+      }
+      listing_compliance_changed: {
+        Args: { p_listing_id: string }
+        Returns: boolean
+      }
+      listing_compliance_clear: {
+        Args: { p_listing_id: string }
+        Returns: undefined
+      }
+      listing_compliance_delay: {
+        Args: never
+        Returns: unknown
+      }
+      listing_compliance_facts: {
+        Args: { p_listing: Database["public"]["Tables"]["listings"]["Row"] }
+        Returns: Json
+      }
+      listing_compliance_request: {
+        Args: { p_listing_id: string; p_reason: string }
+        Returns: string
+      }
+      listing_delete: {
+        Args: { p_listing_id: string }
+        Returns: undefined
+      }
+      listing_delete_apply: {
+        Args: { p_listing: Database["public"]["Tables"]["listings"]["Row"]; p_meta: Json }
+        Returns: undefined
+      }
       listing_for_seller: {
         Args: { p_listing_id: string }
         Returns: {
+          compliance_due_at: string | null
+          compliance_reason: string | null
+          compliance_reminded_at: string | null
+          compliance_requested_at: string | null
           created_at: string
           deleted_at: string | null
           description: string
@@ -3481,6 +3533,10 @@ export type Database = {
       listing_require_admin: {
         Args: { p_listing_id: string }
         Returns: {
+          compliance_due_at: string | null
+          compliance_reason: string | null
+          compliance_reminded_at: string | null
+          compliance_requested_at: string | null
           created_at: string
           deleted_at: string | null
           description: string
@@ -3537,6 +3593,10 @@ export type Database = {
           | { p_listing_id: string }
           | { p_listing_id: string; p_server: string }
         Returns: undefined
+      }
+      listings_compliance_remind: {
+        Args: { p_now?: string }
+        Returns: number
       }
       notification_add: {
         Args: {

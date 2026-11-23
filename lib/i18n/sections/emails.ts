@@ -536,6 +536,39 @@ export const frEmails = {
     action: "Voir mon projet d'achat",
     why: "Vous recevez cet email parce que vous avez déposé un justificatif de financement sur Leenkey.",
   },
+  // DECISIONS.md 2026-11-22: the request of the team to bring a listing into
+  // line, its reminder 2 days before the deadline, the final notice of its
+  // deletion. To its seller; an answer goes to Leenkey.
+  listingCompliance: {
+    listing: (title: string | null) => (title ? ` «\u00A0${title}\u00A0»` : ""),
+    reason: (reason: string) => `Notre remarque : ${reason}`,
+    why: "Vous recevez cet email parce que vous avez publié une annonce sur Leenkey.",
+    requested: {
+      subject: (reference: string) => `Votre annonce ${reference} est à mettre en conformité`,
+      title: "Votre annonce est à mettre en conformité",
+      text: (listing: string, date: string) =>
+        `Nous avons relu votre annonce${listing} : elle est à modifier avant le ${date}.`,
+      next: "Sans modification de votre part à cette date, nous pourrons la supprimer. Pour en parler, répondez simplement à cet email.",
+      action: "Voir mon annonce",
+    },
+    reminder: {
+      subject: (reference: string) =>
+        `Rappel : votre annonce ${reference} est à mettre en conformité`,
+      title: "Rappel : votre annonce est à mettre en conformité",
+      text: (listing: string, date: string) =>
+        `Votre annonce${listing} n'a pas été modifiée depuis notre demande. Il vous reste jusqu'au ${date}.`,
+      next: "Sans modification de votre part à cette date, nous pourrons la supprimer. Pour en parler, répondez simplement à cet email.",
+      action: "Modifier mon annonce",
+    },
+    deleted: {
+      subject: (reference: string) => `Votre annonce ${reference} a été supprimée`,
+      title: "Nous avons supprimé votre annonce",
+      text: (listing: string) =>
+        `Votre annonce${listing} n'a pas été mise en conformité dans le délai demandé : nous l'avons supprimée. Elle n'est plus visible des acquéreurs.`,
+      next: "Vos conversations restent lisibles dans votre messagerie. Pour en parler, répondez simplement à cet email.",
+      action: "Ouvrir Ma vente",
+    },
+  },
   // 2026-11-21: a report handled by the team, to its author. Never what was decided.
   reportHandled: {
     subject: "Votre signalement a été traité",

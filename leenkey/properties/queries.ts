@@ -10,6 +10,7 @@ import {
 } from "@/lib/validations/property";
 import { DPE_CLASSES, PROPERTY_TYPES } from "@/lib/validations/search";
 import type { Database } from "@/types/database";
+import { openWithdrawal } from "@/leenkey/billing/withdrawal-open";
 import { readPhotos, type SellerPhoto } from "./photos";
 
 // Properties of the signed-in seller (L1-11), with their session: RLS only
@@ -210,4 +211,69 @@ export async function sellerProperties(profileId: string): Promise<QueryResult<S
 export async function sellerPhotos(propertyId: string): Promise<QueryResult<SellerPhoto[]>> {
   await requireProfile();
   return readPhotos(await createClient(), propertyId);
+}
+
+/** What the page of a property says about deleting its listing (DECISIONS.md 2026-11-22). */
+export type ListingDeletionFacts = {
+  /** A paid plan in force on the property: deleting does not refund it. */
+  paidPlan: boolean;
+  /**
+   * A paid plan still inside its withdrawal period, not renounced (L1-40):
+   * the deletion waits (DECISIONS.md 2026-11-22); its last day.
+   */
+  withdrawalUntil: Date | null;
+  /**
+   * The request of the team to bring the listing into line, while it stands
+   * and the listing has not changed since (then the team reads it again).
+   */
+  compliance: { reason: string; dueAt: string } | null;
+};
+
+/**
+ * The request to bring the listing into line and the paid plan of a property
+ * of the seller; null when they could not be read (the page then says
+ * nothing of them).
+ */
+export async function listingDeletionFacts(
+  propertyId: string,
+  listingId: string,
+): Promise<ListingDeletionFacts | null> {
+  const profile = await requireProfile();
+  try {
+    const supabase = await createClient();
+    const [listing, changed, subscription, withdrawal] = await Promise.all([
+      supabase
+        .from("listings")
+        .select("compliance_reason, compliance_due_at")
+        .eq("id", listingId)
+        .maybeSingle(),
+      supabase.rpc("listing_compliance_changed", { p_listing_id: listingId }),
+      supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("property_id", propertyId)
+        .is("refunded_at", null)
+        .gt("amount_paid_cents", 0)
+        .gt("ends_at", new Date().toISOString())
+        .limit(1),
+      openWithdrawal(supabase, propertyId),
+    ]);
+    if (listing.error) throw new Error(`listings: ${listing.error.code}`);
+    if (changed.error) throw new Error(`listing_compliance_changed: ${changed.error.code}`);
+    if (subscription.error) throw new Error(`subscriptions: ${subscription.error.code}`);
+    const reason = listing.data?.compliance_reason ?? null;
+    const dueAt = listing.data?.compliance_due_at ?? null;
+    return {
+      paidPlan: subscription.data.length > 0,
+      withdrawalUntil: withdrawal?.lastDay ?? null,
+      compliance: reason && dueAt && changed.data !== true ? { reason, dueAt } : null,
+    };
+  } catch (error) {
+    console.error("[properties] deletion facts read failed", {
+      user_id: profile.id,
+      entity_id: propertyId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
 }

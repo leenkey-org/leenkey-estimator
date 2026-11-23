@@ -424,6 +424,11 @@ create table listings (
   summary text,                         -- résumé de l'assistant (L2-05), régénéré à chaque modification
   summary_requested_at timestamptz,     -- demande de résumé posée par la base (mise en ligne, modification), close par la tâche planifiée
   views_count int not null default 0,
+  -- Mise en conformité demandée par l'équipe (DECISIONS.md 2026-11-22) : écrites par
+  -- listing_compliance_request / listing_compliance_clear seulement, lues par le vendeur et l'admin
+  compliance_requested_at timestamptz, compliance_due_at timestamptz,   -- date limite : demande + 7 jours
+  compliance_reason text,               -- motif de l'équipe, lu par le vendeur
+  compliance_reminded_at timestamptz,   -- rappel envoyé 2 jours avant la date limite
   created_at timestamptz not null default now(),
   updated_at timestamptz,
   deleted_at timestamptz
@@ -1244,7 +1249,7 @@ Sauvegarde automatique à chaque étape (statut `draft`). Bouton « Enregistrer 
 
 Fin : « Envoyer en validation » → statut `pending`, écran de fin sur `BrandPanel` : « C'est envoyé. Nous relisons votre annonce sous 24 h et vous prévenons par email. »
 
-Fiche du bien (après création) : onglets **Infos**, **Photos**, **Annonce**, **Documents** (L3), **Visites** (L3), **Offres** (L2). Récapitulatif en tête avec `KeyFigures` (surface, pièces, étage, prix/m²) et `StatusBadge`. Actions selon statut : modifier, mettre en pause, remettre en ligne, marquer vendu (confirmation), supprimer (brouillon uniquement). Toute modification d'une annonce publiée (prix, description, titre, photos) **la laisse en ligne** (décision client), enregistre une ligne dans `listing_revisions` et crée une notification admin « annonce modifiée » pour contrôle a posteriori. L'historique des modifications, notamment du prix, est visible par le vendeur (onglet Annonce) et par l'admin. Il n'est pas affiché publiquement en V2.
+Fiche du bien (après création) : onglets **Infos**, **Photos**, **Annonce**, **Documents** (L3), **Visites** (L3), **Offres** (L2). Récapitulatif en tête avec `KeyFigures` (surface, pièces, étage, prix/m²) et `StatusBadge`. Actions selon statut : modifier, mettre en pause, remettre en ligne, marquer vendu (confirmation), supprimer le brouillon ; **supprimer l'annonce** (DECISIONS.md 2026-11-22) en relecture, à corriger, en ligne ou en pause, après confirmation : fonction `listing_delete`, suppression logique de l'annonce et du bien, visites à venir annulées, documents du dossier de vente plus partagés et demandes d'accès en attente supprimées, conversations gardées, pas de remboursement ; refusée pour une annonce suspendue ou vendue, avec une offre acceptée ou des offres en attente de réponse ; elle attend la fin du délai de renonciation d'une formule payante non renoncée (L1-40), la confirmation menant à « Renoncer au contrat ». Une demande de mise en conformité de l'équipe (motif, date limite) est affichée en tête de la fiche. Toute modification d'une annonce publiée (prix, description, titre, photos) **la laisse en ligne** (décision client), enregistre une ligne dans `listing_revisions` et crée une notification admin « annonce modifiée » pour contrôle a posteriori. L'historique des modifications, notamment du prix, est visible par le vendeur (onglet Annonce) et par l'admin. Il n'est pas affiché publiquement en V2.
 
 ### 8.4 Recherche `/acheter`
 
@@ -1444,6 +1449,7 @@ Fonction unique `notify(profileId, type, payload)` dans `core/notifications/`. E
 | `message.new` | oui | oui | Un email maximum par conversation toutes les 15 min ; si l'utilisateur a lu entre-temps, pas d'email |
 | `listing.published` | oui | oui | — |
 | `listing.rejected` | oui | oui | — |
+| `listing.compliance_requested`, `listing.compliance_reminder`, `listing.deleted` (vendeur, DECISIONS.md 2026-11-22) | oui | oui | — |
 | `listing.pending` (admin) | oui | oui | Digest si > 3 en 1 h (au plus 3 emails par heure, les annonces en attente regroupées, L1-22) |
 | `offer.received` | oui | oui | — |
 | `offer.answered` | oui | oui | — |
@@ -1967,6 +1973,7 @@ Maquettes : `AdminAnnonces.dc.html`, `AdminDesktop.dc.html`. Conçu desktop d'ab
   - **Refuser avec motif** → `rejected`, motif obligatoire (modèles de motifs + texte libre, bouton « Rédiger avec l'assistant »), email au vendeur. Le vendeur corrige et renvoie.
   - **Suspendre** (motif obligatoire, email au vendeur) → `suspended` ; **Remettre en ligne** → `published`. Le vendeur voit l'annonce en lecture seule avec le motif et un lien vers la messagerie conseiller ou le formulaire de contact ; il ne peut pas la remettre en ligne lui-même.
   - **Modifier** (champs de l'annonce, traçé).
+  - **Demander une mise en conformité** (DECISIONS.md 2026-11-22 ; annonce en ligne, en pause ou à corriger) : motif obligatoire, date limite à 7 jours (`listing_compliance_delay()`), vendeur prévenu (`listing.compliance_requested`, cloche et email), rappel 2 jours avant (`listing.compliance_reminder`) si l'annonce n'a pas changé ; **Lever la demande**, **Renouveler la demande** ; après la date limite, l'annonce n'ayant pas changé depuis la demande (ni modification en ligne, ni nouvel envoi, ni modification du bien), **Supprimer l'annonce** à la main (`listing_admin_delete`, confirmation, dernier avis `listing.deleted` au vendeur), quel que soit son statut sauf vendue (une annonce suspendue aussi), avec les mêmes refus que la suppression par le vendeur (offres, délai de renonciation). Jamais de suppression automatique. Tout dans `audit_log`.
 - Mise en œuvre (L1-30d, `DECISIONS.md` 2026-11-12) : pré-analyse calculée en code à l'affichage (DPE, exemption, prix à plus de 10 % de l'analyse de valeur, moins de 6 photos, description de moins de 400 caractères ; « Conforme » ou « À vérifier », complétude sur 100), sans appel au modèle et sans stocker `review` ; colonne « Pré-analyse » ; export CSV de la liste filtrée ; « Rédiger avec l'assistant » du motif de refus journalisé sous le genre `rejection_reason`. « Modifier » arrive avec L1-35.
 
 ### Utilisateurs `/admin/utilisateurs`
@@ -2066,6 +2073,7 @@ Voir `CLAUDE.md` section 13. Détail :
 | *(en base, sans route)* `purge-estimations` | `53 3 * * *` | Analyses de valeur faites sans compte : `estimations_purge()` supprime celles qui ont plus de 12 mois et ne sont rattachées ni à un compte ni à un bien (politique de confidentialité, `DECISIONS.md` 2026-11-09) |
 | *(en base, sans route)* `purge-rate-limits` | `41 3 * * *` | Limites de débit (L1-38) : `rate_limits_purge()` supprime les compteurs des fenêtres de plus d'un jour |
 | *(en base, sans route)* `purge-visitor-assistant` | `17 3 * * *` | Assistant du site (`DECISIONS.md` 2026-11-07) : `ai_visitor_purge()` efface l'empreinte des adresses des jours passés et supprime les conversations des visiteurs de plus de 30 jours |
+| *(en base, sans route)* `listing-compliance-reminders` | `19 * * * *` | Mise en conformité d'une annonce (`DECISIONS.md` 2026-11-22) : `listings_compliance_remind()` prévient une fois, 2 jours avant la date limite et à partir de 8 h à Paris, le vendeur dont l'annonce n'a pas changé depuis la demande |
 
 Tous protégés par `CRON_SECRET` (la tâche en base n'appelle aucune route), idempotents, journalisés. **Déclenchement** (décision du 2026-10-08) : par Supabase `pg_cron` + `pg_net` (requête HTTPS vers la route avec l'en-tête `Authorization: Bearer <CRON_SECRET>`), pas par Vercel Cron, tant que l'équipe Vercel est en plan Hobby. Le secret est stocké dans Supabase Vault.
 

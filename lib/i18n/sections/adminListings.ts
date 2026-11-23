@@ -183,6 +183,10 @@ export const frAdminListings = {
       "listing.reject": "Refusée",
       "listing.suspend": "Suspendue",
       "listing.unsuspend": "Remise en ligne",
+      // DECISIONS.md 2026-11-22.
+      "listing.compliance_request": "Mise en conformité demandée",
+      "listing.compliance_clear": "Demande de mise en conformité levée",
+      "listing.delete": "Supprimée",
     } as Record<string, string>,
     other: "Modifiée",
     by: (name: string) => `par ${name}`,
@@ -228,6 +232,54 @@ export const frAdminListings = {
     "Le bien semble déjà vendu ou n'est plus disponible.",
     "Le contenu de l'annonce ne respecte pas nos conditions d'utilisation.",
   ],
+  // DECISIONS.md 2026-11-22: ask the seller to bring the listing into line,
+  // then delete it once the deadline passed without a change.
+  compliance: {
+    title: "Mise en conformité",
+    intro:
+      "Si l'annonce n'est pas conforme, demandez au vendeur de la modifier. Il reçoit votre motif dans son espace et par email, avec une date limite, et un rappel deux jours avant. Sans modification à cette date, vous pourrez supprimer l'annonce.",
+    request: "Demander une mise en conformité",
+    renew: "Renouveler la demande",
+    clear: "Lever la demande",
+    delete: "Supprimer l'annonce",
+    label: (reference: string) => `Mise en conformité de l'annonce ${reference}`,
+    reason: "Motif",
+    requestedAt: "Demandée le",
+    dueAt: "Date limite",
+    remindedAt: "Rappel envoyé le",
+    changed:
+      "Le vendeur a modifié son annonce depuis la demande : vérifiez-la, puis levez la demande ou renouvelez-la.",
+    waiting: (date: string) =>
+      `La suppression sera possible après le ${date}, si l'annonce n'est pas modifiée d'ici là.`,
+    ready: "Le délai est écoulé sans modification : vous pouvez supprimer l'annonce.",
+    error: "La demande de mise en conformité n'a pas pu être chargée.",
+    dialog: {
+      title: "Demander une mise en conformité",
+      text: "Le vendeur reçoit ce motif dans son espace et par email, avec une date limite pour modifier son annonce.",
+      reason: "Motif envoyé au vendeur",
+      confirm: "Envoyer la demande",
+    },
+    deleteDialog: {
+      title: "Supprimer l'annonce ?",
+      text: "L'annonce et le bien quittent les recherches et l'espace du vendeur, qui reçoit un dernier avis avec le motif de la demande. Les visites à venir sont annulées et leurs acquéreurs prévenus. Cette suppression est définitive.",
+      confirm: "Supprimer l'annonce",
+    },
+    result: {
+      requested: "Demande envoyée : le vendeur est prévenu dans son espace et par email.",
+      cleared: "Demande levée.",
+    },
+    errors: {
+      deadline: "Le délai n'est pas encore écoulé : l'annonce ne peut pas être supprimée.",
+      changed:
+        "L'annonce a été modifiée depuis la demande : elle ne peut pas être supprimée. Vérifiez-la, puis levez ou renouvelez la demande.",
+      offersWaiting:
+        "Des offres attendent la réponse du vendeur : l'annonce ne peut pas être supprimée avant leur réponse ou leur expiration.",
+      offerAccepted:
+        "Une offre est acceptée : la vente est en cours, l'annonce ne peut pas être supprimée.",
+      withdrawalOpen:
+        "Le vendeur peut encore renoncer à la formule payée pour ce bien : l'annonce pourra être supprimée après sa demande de renonciation ou après ce délai.",
+    },
+  },
   result: {
     published: "Annonce publiée.",
     rejected: "Annonce refusée.",

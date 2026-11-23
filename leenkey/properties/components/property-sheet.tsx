@@ -6,10 +6,11 @@ import { KeyFigures } from "@/components/shared/key-figures";
 import { LinkTabs } from "@/components/shared/link-tabs";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
-import { formatDate, formatPrice } from "@/lib/format";
+import { formatDate, formatDateTime, formatPrice } from "@/lib/format";
+import { legalDate } from "@/leenkey/billing/withdrawal";
 import { frLegal } from "@/lib/i18n/sections/legal";
 import { frProperties } from "@/lib/i18n/sections/properties";
-import type { SellerProperty } from "../queries";
+import type { ListingDeletionFacts, SellerProperty } from "../queries";
 import { creationHref, propertyName, sheetFigures, sheetTabs } from "../sheet";
 import { ListingStatusActions } from "./listing-status-actions";
 
@@ -86,6 +87,31 @@ function StatusNotice({ property }: { property: SellerProperty }) {
 }
 
 /**
+ * The request of the team to bring the listing into line (DECISIONS.md
+ * 2026-11-22): its reason, its deadline, what follows without a change.
+ */
+function ComplianceNotice({ compliance }: { compliance: { reason: string; dueAt: string } }) {
+  const c = t.compliance;
+  // The deadline passed: the team may delete it (by hand, DECISIONS.md 2026-11-22).
+  const overdue = new Date(compliance.dueAt).getTime() <= Date.now();
+  return (
+    <InlineAlert tone={overdue ? "danger" : "warning"} live={false}>
+      <span className="block font-semibold">{c.title}</span>
+      {/* The reason on its own line: the team writes it without a full stop. */}
+      <span className="block">{c.reason(compliance.reason)}</span>
+      <span>{overdue ? c.overdue : c.deadline(formatDateTime(compliance.dueAt))}</span>
+    </InlineAlert>
+  );
+}
+
+/** What the seller can still change: the request of the team is shown then only. */
+const COMPLIANCE_STATUSES: readonly SellerProperty["listingStatus"][] = [
+  "published",
+  "paused",
+  "rejected",
+];
+
+/**
  * Top of the page of a property (L1-14, G9 with Tabs, docs/DESIGN.md 13.1):
  * « Ma vente », the name of the property, its address and reference, its
  * status, its key figures (surface, rooms, floor, price per m²), what the
@@ -96,11 +122,14 @@ export function PropertySheetHeader({
   property,
   roles,
   profileId,
+  deletion = null,
 }: {
   property: SellerProperty;
   roles: readonly string[];
   /** The account the page is rendered for: its notifications. */
   profileId: string;
+  /** A request of the team, a paid plan: said around the deletion; null when unknown. */
+  deletion?: ListingDeletionFacts | null;
 }) {
   const { address, listing } = property;
   const figures = sheetFigures(property);
@@ -128,12 +157,18 @@ export function PropertySheetHeader({
       </div>
       {figures.length > 0 ? <KeyFigures items={figures} /> : null}
       <StatusNotice property={property} />
+      {deletion?.compliance && COMPLIANCE_STATUSES.includes(property.listingStatus) ? (
+        <ComplianceNotice compliance={deletion.compliance} />
+      ) : null}
       <ListingStatusActions
         propertyId={property.id}
         listingId={listing?.id ?? null}
         status={property.listingStatus}
         resumeHref={creationHref(property)}
         publicHref={listing?.status === "published" ? `/annonce/${listing.slug}` : null}
+        paidPlan={deletion?.paidPlan ?? false}
+        withdrawalUntil={deletion?.withdrawalUntil ? legalDate(deletion.withdrawalUntil) : null}
+        contactEmail={fr.legal.contactEmail}
       />
       <LinkTabs label={t.tabs.label} tabs={sheetTabs(property.id)} className="mt-2" />
     </div>

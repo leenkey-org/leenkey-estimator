@@ -91,6 +91,19 @@ export const moderationSchema = z.discriminatedUnion("action", [
 export type ModerationInput = z.infer<typeof moderationSchema>;
 export type ModerationAction = ModerationInput["action"];
 
+/**
+ * « Demander une mise en conformité », lift it, delete the listing once its
+ * deadline passed (DECISIONS.md 2026-11-22): the SQL functions decide.
+ */
+export const complianceSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("request"), listingId, reason }),
+  z.object({ action: z.literal("clear"), listingId }),
+  z.object({ action: z.literal("delete"), listingId }),
+]);
+
+export type ComplianceInput = z.infer<typeof complianceSchema>;
+export type ComplianceAction = ComplianceInput["action"];
+
 // L1-30a: the users of the back office (SPEC-V2 section 17).
 
 /** Filters of /admin/utilisateurs, in the order of the pills, with their URL value. */

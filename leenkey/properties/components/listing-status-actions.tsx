@@ -14,6 +14,7 @@ import type { Database } from "@/types/database";
 import { statusActions } from "../sheet";
 import {
   deleteDraft,
+  deleteListing,
   markListingSold,
   pauseListing,
   republishListing,
@@ -27,15 +28,17 @@ const t = fr.properties.sheet;
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
 type Feedback = { tone: "success" | "danger"; text: string };
-type Dialog = "sold" | "delete" | null;
+type Dialog = "sold" | "delete" | "remove" | null;
 
-const ERRORS: Record<StatusError, string> = {
+/** The answer of an accepted offer names the address of the team: said with it. */
+const ERRORS: Record<Exclude<StatusError, "offer_accepted" | "withdrawal_open">, string> = {
   auth: t.errors.signedOut,
   invalid: t.errors.unavailable,
   not_found: t.errors.notFound,
   suspended: t.errors.suspended,
   conflict: t.errors.conflict,
   unavailable: t.errors.unavailable,
+  offers_waiting: t.errors.offersWaiting,
 };
 
 /** Whole euros typed in the price field; null when empty, undefined when not a price. */
@@ -50,8 +53,10 @@ function soldPrice(text: string): number | null | undefined {
  * Actions of the status of a listing on the page of its property (L1-14,
  * SPEC-V2 8.3): resume or delete a draft, correct a rejected listing, pause
  * an online one or put it back, mark it as sold (confirmation, final price
- * optional). The SQL functions decide (status-actions.ts); the outcome is
- * read in the region under the buttons, and the page is read again.
+ * optional), delete a listing sent, to correct, online or paused
+ * (confirmation, DECISIONS.md 2026-11-22). The SQL functions decide
+ * (status-actions.ts); the outcome is read in the region under the
+ * buttons, and the page is read again.
  */
 export function ListingStatusActions({
   propertyId,
@@ -59,6 +64,9 @@ export function ListingStatusActions({
   status,
   resumeHref,
   publicHref,
+  paidPlan = false,
+  withdrawalUntil = null,
+  contactEmail,
 }: {
   propertyId: string;
   listingId: string | null;
@@ -67,6 +75,16 @@ export function ListingStatusActions({
   resumeHref: string;
   /** Public page of the listing, when online. */
   publicHref: string | null;
+  /** A paid plan in force on the property: its deletion says it is not refunded. */
+  paidPlan?: boolean;
+  /**
+   * The last day a paid plan of the property may still be renounced, written
+   * out (« 6 décembre 2026 »): the deletion waits for it (DECISIONS.md
+   * 2026-11-22).
+   */
+  withdrawalUntil?: string | null;
+  /** The address of the team (lib/i18n legal texts stay on the server). */
+  contactEmail: string;
 }) {
   const router = useRouter();
   const [working, startTransition] = useTransition();
@@ -93,6 +111,8 @@ export function ListingStatusActions({
 
   const failed = (error: StatusError | null) => {
     if (error === "conflict" || error === "suspended" || error === "not_found") router.refresh();
+    if (error === "offer_accepted") return t.errors.offerAccepted(contactEmail);
+    if (error === "withdrawal_open") return t.errors.withdrawalOpen(withdrawalUntil);
     return error ? ERRORS[error] : t.errors.unavailable;
   };
 
@@ -113,7 +133,7 @@ export function ListingStatusActions({
     });
   };
 
-  const open = (kind: "sold" | "delete", from: HTMLButtonElement) => {
+  const open = (kind: "sold" | "delete" | "remove", from: HTMLButtonElement) => {
     opener.current = from;
     setDialogError(null);
     setPrice("");
@@ -143,8 +163,16 @@ export function ListingStatusActions({
   };
 
   const confirmDelete = () => {
+    if (dialog === "remove" && !listingId) {
+      setDialogError(t.errors.notFound);
+      return;
+    }
     startTransition(async () => {
-      const result = await deleteDraft({ propertyId }).catch(() => null);
+      const result = await (
+        dialog === "remove" && listingId
+          ? deleteListing({ listingId })
+          : deleteDraft({ propertyId })
+      ).catch(() => null);
       if (result?.ok) {
         setDialog(null);
         router.replace("/vendeur");
@@ -203,14 +231,15 @@ export function ListingStatusActions({
                   </Button>
                 );
               case "delete":
+              case "remove":
                 return (
                   <Button
                     key={action}
                     variant="danger"
                     disabled={working}
-                    onClick={(event) => open("delete", event.currentTarget)}
+                    onClick={(event) => open(action, event.currentTarget)}
                   >
-                    {t.actions.delete}
+                    {t.actions[action]}
                   </Button>
                 );
             }
@@ -272,6 +301,37 @@ export function ListingStatusActions({
         onConfirm={confirmDelete}
         onClose={() => setDialog(null)}
       />
+      <ConfirmDialog
+        open={dialog === "remove"}
+        title={t.removeDialog.title}
+        description={t.removeDialog.text}
+        confirmLabel={t.removeDialog.confirm}
+        confirmVariant="danger"
+        labels={t.dialog}
+        working={working}
+        error={dialogError}
+        onConfirm={confirmDelete}
+        onClose={() => setDialog(null)}
+        onCloseAutoFocus={(event) => {
+          // Refused (offers waiting…): back to the button that opened it.
+          event.preventDefault();
+          if (opener.current?.isConnected) opener.current.focus();
+        }}
+      >
+        {withdrawalUntil ? (
+          <p className="text-lk-secondary text-lk-ink-2">
+            {t.removeDialog.withdrawal(withdrawalUntil)}{" "}
+            <Link
+              href={`/vendeur/formule?bien=${propertyId}`}
+              className="font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
+            >
+              {t.removeDialog.withdrawalLink}
+            </Link>
+          </p>
+        ) : paidPlan ? (
+          <p className="text-lk-secondary text-lk-ink-2">{t.removeDialog.paidPlan}</p>
+        ) : null}
+      </ConfirmDialog>
     </div>
   );
 }

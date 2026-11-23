@@ -84,10 +84,19 @@ export function photosEditable(status: ListingStatus | null): boolean {
  * What the seller can do from the page (SPEC-V2 8.3), by status: a draft
  * resumes or is deleted, a rejected listing is corrected through the steps
  * of the creation, an online one is paused or marked as sold, a paused one
- * goes back online or is sold. Sent for review, suspended by Leenkey or
- * sold: nothing (the SQL functions refuse it too).
+ * goes back online or is sold. Sent, to correct, online or paused, the
+ * listing is also deleted (« remove », DECISIONS.md 2026-11-22). Suspended
+ * by Leenkey or sold: nothing (the SQL functions refuse it too).
  */
-export type StatusAction = "resume" | "fix" | "view" | "pause" | "publish" | "sold" | "delete";
+export type StatusAction =
+  | "resume"
+  | "fix"
+  | "view"
+  | "pause"
+  | "publish"
+  | "sold"
+  | "delete"
+  | "remove";
 
 export function statusActions(status: ListingStatus | null): StatusAction[] {
   switch (status) {
@@ -95,12 +104,13 @@ export function statusActions(status: ListingStatus | null): StatusAction[] {
     case "draft":
       return ["resume", "delete"];
     case "rejected":
-      return ["fix"];
+      return ["fix", "remove"];
     case "published":
-      return ["view", "pause", "sold"];
+      return ["view", "pause", "sold", "remove"];
     case "paused":
-      return ["publish", "sold"];
+      return ["publish", "sold", "remove"];
     case "pending":
+      return ["remove"];
     case "suspended":
     case "sold":
       return [];

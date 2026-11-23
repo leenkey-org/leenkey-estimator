@@ -15,7 +15,11 @@ export type TaskItem = {
   control?: ReactNode;
 };
 
-/** The round of the state (DESIGN.md 10.4): full green with a tick, a blue ring, a grey ring. */
+/**
+ * The round of the state (DESIGN.md 10.4): full green with a tick, a blue
+ * ring, a grey ring. A done task is ticked, never struck through (Cédric,
+ * DECISIONS.md 2026-11-22): the green round says it, the title stays readable.
+ */
 function Mark({ state }: { state: TaskItem["state"] }) {
   return state === "done" ? (
     <span className="flex size-5.5 shrink-0 items-center justify-center rounded-full bg-lk-success text-white">
@@ -34,7 +38,8 @@ function Mark({ state }: { state: TaskItem["state"] }) {
 /**
  * The tasks of a step (docs/DESIGN.md 10.4 TaskList): one card, a line per
  * task, its state as a round (the state also said in words for screen
- * readers), a title struck through once done, a detail under it; a link to
+ * readers), a title kept readable once done (ticked, not struck through), a
+ * detail under it; a link to
  * where it is done, or a control to tick it by hand.
  */
 export function TaskList({
@@ -62,7 +67,7 @@ export function TaskList({
               <span
                 className={cn(
                   "text-lk-compact font-medium",
-                  item.state === "done" ? "text-lk-ink-3 line-through" : "text-lk-ink",
+                  item.state === "done" ? "text-lk-ink-2" : "text-lk-ink",
                 )}
               >
                 <span className="sr-only">{stateLabels[item.state]} : </span>
