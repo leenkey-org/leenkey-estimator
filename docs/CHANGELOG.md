@@ -12,12 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-11-23 · Emails à la charte de la V2 · PR #127
-- Modifié : tous les emails du site (gabarit commun `EmailLayout`) et les quatre modèles d'authentification de Supabase (`supabase/templates/` : confirmation, mot de passe oublié, changement d'adresse, mot de passe modifié) à la charte D : bandeau de tête nuit avec « Leenkey » en blanc, bouton en pilule au dégradé bleu-violet (bleu plein là où le dégradé n'est pas rendu), Sora avec repli Arial, carte au rayon de 16 px sur fond `#F1F5F9`. Textes, liens et sujets inchangés.
-- Corrigé : sur un écran étroit, le libellé long d'un bouton des modèles d'authentification passait sur deux lignes très écartées.
-- Inchangé : rapport PDF, PDF de l'offre, image de partage, emails de l'estimateur repris de la V1.
-- À faire à la main : coller les quatre modèles et leurs sujets dans Supabase (Authentication → Emails), en préprod et en production (`docs/MISE-EN-LIGNE.md`).
-### 2026-11-23 · Vérification d'identité avant visite (demande de Cédric) · PR #127
+### 2026-11-23 · Vérification d'identité avant visite (demande de Cédric) · PR #128
 - Ajouté : un acquéreur dépose une pièce d'identité (carte d'identité, passeport ou titre de séjour ; PDF ou image, mêmes limites que le justificatif de financement) depuis « Mon projet d'achat » (`/acquereur/profil#identite`) et depuis la réservation d'une visite quand elle manque. Statuts « Pièce d'identité non déposée », « Pièce d'identité déposée », « Identité vérifiée par Leenkey » (jamais « validé »). Une pièce en attente se remplace ou se retire ; rien n'est lu ni gardé de la pièce (ni numéro, ni date de naissance).
 - Ajouté : réserver un créneau demande une pièce déposée, sans attendre le contrôle de l'équipe (`visit_book`) ; la page de réservation affiche le dépôt à la place des créneaux tant qu'elle manque. Une visite déjà réservée n'est jamais annulée.
 - Ajouté : back office, section « Pièce d'identité » de la fiche d'un compte et entrée « Pièce d'identité à vérifier » du tableau de bord : fichier ouvert par une URL signée de 10 minutes, « Marquer comme vérifiée » ou « Refuser » avec un motif que l'acquéreur lit, note interne, chaque action dans `audit_log`. Le fichier est supprimé dès la décision (et dès qu'une pièce est retirée ou remplacée) ; « Supprimer le fichier » si la suppression a échoué.
@@ -31,6 +26,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Docs : `DECISIONS.md` (2026-11-23 et Q101), `SPEC-V2.md` (sections 4, 5, 14, 17, 19, 21), `DESIGN.md` (10.2), `CLAUDE.md` (section 7), `BACKLOG-V3.md`.
 - À faire après la fusion : appliquer la migration à la préprod (`npm run db:migrate:staging`), puis **rejouer le seed** (`npm run db:seed:staging`, idempotent) : sans la pièce vérifiée de `buyer_c`, ce compte de test ne peut plus réserver de visite (recette, `visits-live`). En production, rien à rejouer : il n'y a pas de compte de seed ; les acquéreurs déposent leur pièce avant leur prochaine réservation, les visites déjà réservées restent.
 
+### 2026-11-23 · Emails à la charte de la V2 · PR #127
+- Modifié : tous les emails du site (gabarit commun `EmailLayout`) et les quatre modèles d'authentification de Supabase (`supabase/templates/` : confirmation, mot de passe oublié, changement d'adresse, mot de passe modifié) à la charte D : bandeau de tête nuit avec « Leenkey » en blanc, bouton en pilule au dégradé bleu-violet (bleu plein là où le dégradé n'est pas rendu), Sora avec repli Arial, carte au rayon de 16 px sur fond `#F1F5F9`. Textes, liens et sujets inchangés.
+- Corrigé : sur un écran étroit, le libellé long d'un bouton des modèles d'authentification passait sur deux lignes très écartées.
+- Inchangé : rapport PDF, PDF de l'offre, image de partage, emails de l'estimateur repris de la V1.
+- À faire à la main : coller les quatre modèles et leurs sujets dans Supabase (Authentication → Emails), en préprod et en production (`docs/MISE-EN-LIGNE.md`).
 ### 2026-11-23 · Bandeau des cookies sur ordinateur · PR #126
 - Corrigé : à partir de 1 024 px, le bandeau des cookies du premier passage est une barre fine au bas de l'écran, sur toute la largeur ; il ne recouvre plus la carte de recherche de l'accueil (constat fait sur leenkey.fr après la mise en production). Textes et boutons inchangés ; téléphone, tablette et « Vos préférences » inchangés.
 - Modifié : `DECISIONS.md` (mise en production du 23 novembre : 63 migrations, branche `production` = `4045ca5`).
