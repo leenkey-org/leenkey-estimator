@@ -9,6 +9,70 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      advisor_interventions: {
+        Row: {
+          created_at: string
+          done_at: string | null
+          done_by: string | null
+          id: string
+          message: string | null
+          property_id: string
+          reason: Database["public"]["Enums"]["advisor_intervention_reason"]
+          requested_at: string
+          requested_by: string
+          status: Database["public"]["Enums"]["advisor_intervention_status"]
+          team_note: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          message?: string | null
+          property_id: string
+          reason: Database["public"]["Enums"]["advisor_intervention_reason"]
+          requested_at?: string
+          requested_by: string
+          status?: Database["public"]["Enums"]["advisor_intervention_status"]
+          team_note?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          message?: string | null
+          property_id?: string
+          reason?: Database["public"]["Enums"]["advisor_intervention_reason"]
+          requested_at?: string
+          requested_by?: string
+          status?: Database["public"]["Enums"]["advisor_intervention_status"]
+          team_note?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisor_interventions_done_by_fkey"
+            columns: ["done_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advisor_interventions_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advisor_interventions_requested_by_fkey"
+            columns: ["requested_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_conversations: {
         Row: {
           context: string
@@ -1539,6 +1603,7 @@ export type Database = {
       plans: {
         Row: {
           active: boolean
+          advisor_interventions: number | null
           code: Database["public"]["Enums"]["plan_code"]
           description: string
           features: string[]
@@ -1551,6 +1616,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          advisor_interventions?: number | null
           code: Database["public"]["Enums"]["plan_code"]
           description: string
           features: string[]
@@ -1563,6 +1629,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          advisor_interventions?: number | null
           code?: Database["public"]["Enums"]["plan_code"]
           description?: string
           features?: string[]
@@ -2632,6 +2699,49 @@ export type Database = {
           closed_at: string
         }[]
       }
+      admin_advisor_initial_meeting: {
+        Args: {
+          p_property: string
+          p_status: Database["public"]["Enums"]["advisor_intervention_status"]
+          p_note?: string
+        }
+        Returns: string
+      }
+      admin_advisor_intervention_set: {
+        Args: {
+          p_intervention: string
+          p_status: Database["public"]["Enums"]["advisor_intervention_status"]
+          p_note?: string
+        }
+        Returns: undefined
+      }
+      admin_advisor_interventions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          property_id: string
+          reason: Database["public"]["Enums"]["advisor_intervention_reason"]
+          message: string
+          status: Database["public"]["Enums"]["advisor_intervention_status"]
+          requested_at: string
+          done_at: string
+          done_by_first_name: string
+          team_note: string
+          seller_id: string
+          seller_first_name: string
+          seller_last_name: string
+          reference: string
+          listing_title: string
+          property_type: Database["public"]["Enums"]["property_type"]
+          rooms: number
+          city: string
+          cover_path: string
+          plan: Database["public"]["Enums"]["plan_code"]
+          quota: number
+          used: number
+          conversation_id: string
+        }[]
+      }
       admin_ai_conversations: {
         Args: { p_limit?: number; p_query?: string; p_context?: string }
         Returns: {
@@ -2973,6 +3083,49 @@ export type Database = {
         }[]
       }
       advisor_conversation_ensure: {
+        Args: { p_property: string }
+        Returns: string
+      }
+      advisor_initial_meeting_status: {
+        Args: { p_property: string }
+        Returns: Database["public"]["Enums"]["advisor_intervention_status"]
+      }
+      advisor_intervention_quota: {
+        Args: { p_property: string }
+        Returns: number
+      }
+      advisor_intervention_reason_label: {
+        Args: {
+          p_reason: Database["public"]["Enums"]["advisor_intervention_reason"]
+        }
+        Returns: string
+      }
+      advisor_intervention_request: {
+        Args: {
+          p_property: string
+          p_reason: Database["public"]["Enums"]["advisor_intervention_reason"]
+          p_message: string
+        }
+        Returns: string
+      }
+      advisor_intervention_summary: {
+        Args: { p_property: string }
+        Returns: {
+          quota: number
+          used: number
+          pending: number
+          initial_meeting: Database["public"]["Enums"]["advisor_intervention_status"]
+          plan_name: string
+          next_plan: Database["public"]["Enums"]["plan_code"]
+          next_plan_name: string
+          next_quota: number
+        }[]
+      }
+      advisor_interventions_used: {
+        Args: { p_property: string }
+        Returns: number
+      }
+      advisor_period_start: {
         Args: { p_property: string }
         Returns: string
       }
@@ -4268,6 +4421,19 @@ export type Database = {
     }
     Enums: {
       acquisition_mode: "own_name" | "joint" | "sci" | "other"
+      advisor_intervention_reason:
+        | "initial_meeting"
+        | "price_strategy"
+        | "listing"
+        | "visits"
+        | "offer"
+        | "documents"
+        | "other"
+      advisor_intervention_status:
+        | "requested"
+        | "scheduled"
+        | "done"
+        | "cancelled"
       buyer_project:
         | "residence_principale"
         | "residence_secondaire"
@@ -4476,6 +4642,21 @@ export const Constants = {
   public: {
     Enums: {
       acquisition_mode: ["own_name", "joint", "sci", "other"],
+      advisor_intervention_reason: [
+        "initial_meeting",
+        "price_strategy",
+        "listing",
+        "visits",
+        "offer",
+        "documents",
+        "other",
+      ],
+      advisor_intervention_status: [
+        "requested",
+        "scheduled",
+        "done",
+        "cancelled",
+      ],
       buyer_project: [
         "residence_principale",
         "residence_secondaire",

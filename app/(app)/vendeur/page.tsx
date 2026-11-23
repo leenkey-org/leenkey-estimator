@@ -13,6 +13,8 @@ import { requireProfile } from "@/core/auth/session";
 import { currentStep } from "@/core/steps/progress";
 import { SpaceNotificationBell } from "@/leenkey/navigation/components/space";
 import { ROUTES } from "@/leenkey/navigation/spaces";
+import { interventionsHref } from "@/leenkey/advisor/interventions";
+import { propertyInterventions } from "@/leenkey/advisor/queries";
 import { hasEntitlement } from "@/leenkey/billing/entitlements";
 import { UpgradePromptSlot } from "@/leenkey/billing/components/upgrade-prompt-slot";
 import { propertyUpgradePrompt } from "@/leenkey/billing/upgrade-queries";
@@ -286,6 +288,8 @@ export default async function SellerHomePage({ searchParams }: Props) {
     // The adviser (L1-34): the open conversation; without the right, the invitation.
     const advisor = data.data.advisor && !data.data.advisor.closed ? data.data.advisor : null;
     const advisorRight = advisor !== null || (await hasEntitlement(property.id, "advisor"));
+    // The interventions the plan sells (DECISIONS.md 2026-11-23); unread: the card without them.
+    const interventions = advisor ? await propertyInterventions(property.id) : null;
     // The offers that wait for an answer (L2-04a), each with its conversation.
     const offers = await propertyOffers(property.id);
     const awaiting = offers.ok ? awaitingAnswer(offers.data) : [];
@@ -362,6 +366,11 @@ export default async function SellerHomePage({ searchParams }: Props) {
           <AdvisorCard
             conversation={advisor}
             plansHref={`${ROUTES.plan}?bien=${property.id}`}
+            interventions={
+              interventions?.ok && interventions.data
+                ? { summary: interventions.data, href: interventionsHref(property.id) }
+                : null
+            }
             now={now}
           />
         ) : null}

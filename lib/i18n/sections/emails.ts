@@ -42,6 +42,12 @@ export const frEmails = {
     advisorTeamSubject: (name: string | null, reference: string | null, count: number) =>
       `${count > 1 ? `${count} messages` : "Message"} ${name ? of(name) : "d'un vendeur"} à son conseiller${reference ? ` (${reference})` : ""}`,
     advisorTeamReply: "Répondez depuis le back office : le vendeur voit votre prénom.",
+    // A request for an intervention of the adviser (DECISIONS.md 2026-11-23).
+    advisorTeamInterventionSubject: (name: string | null, reference: string | null) =>
+      `Demande d'intervention ${name ? of(name) : "d'un vendeur"}${reference ? ` (${reference})` : ""}`,
+    advisorTeamIntervention:
+      "Planifiez l'intervention avec le vendeur dans la conversation, puis marquez-la faite dans le back office : elle est alors comptée dans sa formule.",
+    advisorTeamInterventionAction: "Voir la demande",
   },
   // L1-22: several listings sent for review at once, in one email (SPEC-V2 10).
   listingsToReview: {

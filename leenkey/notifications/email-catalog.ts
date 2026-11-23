@@ -206,10 +206,14 @@ async function advisorMessages(email: PlannedEmail): Promise<RenderedEmail | nul
     ? emailSafeText(last.data.sender_first_name)
     : fr.emails.newMessages.advisorSender;
   const reference = text(last.data.reference);
+  // A request for an intervention of the adviser is a message of the seller
+  // (DECISIONS.md 2026-11-23): the email of the team says so.
+  const intervention = team && last.data.intervention === true;
+  const teamSubject = intervention
+    ? fr.emails.newMessages.advisorTeamInterventionSubject(senderName, reference)
+    : fr.emails.newMessages.advisorTeamSubject(senderName, reference, count);
   return rendered(
-    team
-      ? fr.emails.newMessages.advisorTeamSubject(senderName, reference, count)
-      : newMessagesSubject(senderName, count),
+    team ? teamSubject : newMessagesSubject(senderName, count),
     NewMessagesEmail({
       firstName: team ? null : email.firstName,
       senderName,
@@ -220,9 +224,8 @@ async function advisorMessages(email: PlannedEmail): Promise<RenderedEmail | nul
       recipient: team ? "team" : "seller",
       conversationUrl: absoluteUrl(last.link ?? "/messages"),
       siteUrl: siteUrl(),
-      subject: team
-        ? fr.emails.newMessages.advisorTeamSubject(senderName, reference, count)
-        : undefined,
+      subject: team ? teamSubject : undefined,
+      intervention,
     }),
     team ? undefined : fr.legal.contactEmail,
   );

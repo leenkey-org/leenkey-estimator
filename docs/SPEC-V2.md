@@ -207,6 +207,7 @@ Resend ◄────────── core/notifications (file notifications 
   /vendeur/biens/[id]/modifier/caracteristiques, /modifier/annonce   modification d'une annonce envoyée, en ligne ou en pause (L1-14b)
   /vendeur/dossier          dossier de vente : fiche du bien et documents (onglet « Dossier », L1-14a et L3-04)
   /vendeur/formule          choix et gestion de la formule
+  /vendeur/biens/[id]/intervention   demander une intervention du conseiller, compteur de la formule (2026-11-23)
   /acquereur                accueil acquéreur (favoris, conversations, visites, offres)
   /acquereur/favoris        biens sauvegardés (onglet « Favoris », L1-18)
   /acquereur/profil         projet et financement
@@ -227,6 +228,7 @@ Resend ◄────────── core/notifications (file notifications 
   /admin/utilisateurs/[id]
   /admin/dossiers
   /admin/messages           conversations conseiller avec les clients
+  /admin/messages/interventions   interventions du conseiller : demandes, rendez-vous initiaux, compteur (2026-11-23)
   /admin/dossiers/[id]
   /admin/offres
   /admin/signalements
@@ -263,6 +265,9 @@ create type financing_progress as enum ('not_presented','simulation_done','broke
 create type financing_document_type as enum ('accord_principe','attestation_courtier','simulation_bancaire','preuve_fonds_propres','autre');
 create type conversation_kind as enum ('listing','advisor');
 create type plan_feature as enum ('advisor','human_price_strategy','human_listing_review','human_offer_analysis','negotiation_support','sale_file_building','deep_document_review','notary_coordination','closing_follow_up');
+-- Interventions du conseiller (DECISIONS.md 2026-11-23)
+create type advisor_intervention_status as enum ('requested','scheduled','done','cancelled');
+create type advisor_intervention_reason as enum ('initial_meeting','price_strategy','listing','visits','offer','documents','other');
 create type buyer_project    as enum ('residence_principale','residence_secondaire','investissement');
 create type document_type    as enum ('dpe','amiante','plomb','electricite','gaz','termites','erp','carrez',
                                       'titre_propriete','taxe_fonciere','pv_ag','reglement_copro',
@@ -489,7 +494,8 @@ create table plans (
   description text not null,
   features text[] not null,             -- liste affichée sur la page formules
   position int not null,
-  active boolean not null default true
+  active boolean not null default true,
+  advisor_interventions int check (advisor_interventions > 0)  -- interventions du conseiller vendues par bien ; null : aucune (seed : 4, 6 ; DECISIONS.md 2026-11-23)
 );
 
 -- Règles du DPE (L1-66) : lues par property_dpe_issue et par le formulaire, modifiées en base par l'équipe
@@ -872,6 +878,25 @@ create table case_notes (
   created_at timestamptz not null default now()
 );
 
+-- Interventions du conseiller (DECISIONS.md 2026-11-23) : la demande d'un vendeur dont la formule en vend
+-- (plans.advisor_interventions), suivie par l'équipe. Compte : une intervention faite (status = 'done'),
+-- hors rendez-vous initial, depuis le début de la formule en vigueur. Écrite par fonctions seulement.
+create table advisor_interventions (
+  id uuid primary key default gen_random_uuid(),
+  property_id uuid not null references properties(id),
+  requested_by uuid not null references profiles(id),   -- le vendeur ; pour le rendez-vous initial, le propriétaire
+  reason advisor_intervention_reason not null,          -- 'initial_meeting' : écrit par l'équipe, jamais demandé
+  message text check (char_length(message) between 1 and 2000),   -- null : rendez-vous initial, compte anonymisé
+  status advisor_intervention_status not null default 'requested',
+  requested_at timestamptz not null default now(),
+  done_at timestamptz,
+  done_by uuid references profiles(id),
+  team_note text check (char_length(team_note) between 1 and 2000),  -- de l'équipe, jamais lue par le vendeur
+  created_at timestamptz not null default now(),
+  updated_at timestamptz,
+  check ((status = 'done') = (done_at is not null))
+);
+
 create table knowledge_base (
   id uuid primary key default gen_random_uuid(),
   audience text not null check (audience in ('seller','buyer','both')),
@@ -1021,6 +1046,7 @@ Matrice (L = lecture, E = écriture) :
 | `offer_events`, `listing_revisions` | — | L ses biens | L les siennes (`offer_events`) | L |
 | `plan_entitlements` | L | L | L | L/E |
 | `upgrade_prompts` | — | L/E ses biens | — | L |
+| `advisor_interventions` | — | L ses biens, sans `team_note` ni `done_by` (lecture par colonne) ; création par `advisor_intervention_request` | — | L tous par `admin_advisor_interventions` ; statut par `admin_advisor_intervention_set` et `admin_advisor_initial_meeting`, écrits dans `audit_log` |
 | `visit_slots` | — | L/E ses biens | L si invitation valide | L |
 | `visit_invitations` | — | L/E ses biens | L les siennes | L |
 | `visits` | — | L ses biens, E feedback | L/E les siennes | L |
@@ -1310,6 +1336,7 @@ Maquette : `Messagerie.dc.html`.
 - Côté Leenkey : `/admin/messages` (boîte partagée, non-lus en tête) et onglet « Messages » du dossier client. Tout admin peut répondre ; le message affiche le prénom de l'admin.
 - L'assistant IA du vendeur dispose de l'outil `contact_advisor` : il poste dans cette conversation un résumé de la question (type `assistant_handoff`) après confirmation du vendeur.
 - En Autonomie, pas de conversation conseiller : à la place, la carte du conseiller grisée, « Accessible avec la formule Accompagné », avec « Voir les formules » (décision du 2026-11-12).
+- Interventions du conseiller (`DECISIONS.md` 2026-11-23, section 11 bis) : avec une formule qui en vend, la carte « Mon conseiller Leenkey » de « Ma vente » et une ligne au-dessus du champ de la conversation disent « 2 interventions utilisées sur 4 » et mènent à « Demander une intervention » (`/vendeur/biens/[id]/intervention`) ; la demande est aussi un message du vendeur dans cette conversation (« Demande d'intervention : Prix et stratégie », puis ses mots). Écrire au conseiller n'est jamais une intervention et n'est jamais bloqué.
 - Mise en œuvre (L1-34, `DECISIONS.md` 2026-11-09) : ouverte par la base dès que la formule en vigueur comprend le droit `advisor` (déclencheur différé sur `subscriptions`, `advisor_conversation_ensure`), fermée en écriture sans ce droit ; accueil selon le démarrage immédiat (Q76) ; carte « Mon conseiller Leenkey » ou invitation « Échanger avec un conseiller Leenkey » sur le tableau de bord ; `/admin/messages` et `/admin/messages/[id]` (cadre de la messagerie), lien « Écrire au vendeur » depuis le dossier à la place d'un onglet ; `contact_advisor` passe par `ai_advisor_handoff`.
 
 ### 8.7 Dashboard vendeur `/vendeur`
@@ -1469,7 +1496,7 @@ Fonction unique `notify(profileId, type, payload)` dans `core/notifications/`. E
 | `document.needs_attention` | oui | oui | Ajouté en L3-05 : document illisible, incomplet ou du mauvais type ; un email par bien pour ceux relevés dans l'heure |
 | `case.created` (admin) | oui | oui | — |
 | `advisor.message` | oui | oui | Même regroupement que `message.new` |
-| `advisor.message_from_client` (admin) | oui | oui | — |
+| `advisor.message_from_client` (admin) | oui | oui | Aussi pour une demande d'intervention du conseiller (2026-11-23) : « Demande d'intervention de … », lien vers `/admin/messages/interventions` |
 | `offer.withdrawn` | oui | oui | — |
 | `offer.viewed` | oui | non | Ajouté en L2-04a : à l'acquéreur, à la première ouverture de son offre par le vendeur (SPEC 13) |
 | `listing.revised` (admin) | oui | non | — |
@@ -1579,6 +1606,17 @@ Libellés alignés sur les fiches du 2026-11-06.
 | `closing_follow_up` | | | ✓ | Rappels d'échéances, suivi des conditions suspensives |
 
 Tout le reste (annonce, messagerie acquéreurs, visites, offres, documents, checklist, assistant IA, résumé IA des documents) est ouvert aux trois formules.
+
+### Interventions du conseiller (demande, motif, compteur)
+
+Ajouté le 2026-11-23 (`DECISIONS.md`, demande de Cédric du 2026-11-19). Les formules payantes vendent un nombre d'interventions du conseiller par bien et un rendez-vous initial (textes des formules : « 1 rendez-vous initial de 30 minutes et 4 interventions personnalisées de 20 minutes », « 6 interventions […] au lieu de 4 »).
+
+- **D'où vient le nombre** : `plans.advisor_interventions` (4 pour Accompagné, 6 pour Sérénité, vide pour Autonomie), donnée de référence de `supabase/seed/01_plans.sql`, à côté des droits. Le code ne compare jamais un nom de formule : il lit `advisor_intervention_summary(bien)` (le droit `advisor` de la formule en vigueur et son nombre). Une formule sans nombre : ni compteur ni demande.
+- **Ce qui compte** : une intervention que l'équipe a marquée **faite**, depuis le début de la formule en vigueur (la première commande de la chaîne de ses passages, `subscriptions.replaced_by`). Une demande en attente, planifiée ou annulée ne compte pas ; le rendez-vous initial non plus. Après un passage à une formule supérieure, le nombre est celui de la nouvelle formule et les interventions déjà faites restent comptées ; une formule achetée de nouveau après son échéance repart de zéro.
+- **La demande** (`advisor_intervention_request`, `security definer`) : le bien est au vendeur, son compte actif, la formule a le droit `advisor` et vend des interventions, il en reste. Motif obligatoire (Prix et stratégie, Annonce, Visites, Offre reçue, Documents, Autre) et message de 10 à 2 000 caractères. Elle est aussi le message du vendeur dans la conversation conseiller, ce qui prévient tous les comptes admin (cloche et email groupé de l'équipe).
+- **À la limite** : la demande est refusée, la page dit « Les 4 interventions de votre formule sont utilisées. Vous pouvez toujours écrire à votre conseiller dans votre conversation. » avec « Écrire à mon conseiller » ; s'il existe une formule en vente, plus chère, qui vend plus d'interventions (lue dans `plans`), « La formule Sérénité en comprend 6. » et « Voir les formules » (le passage existant de `/vendeur/formule`). La messagerie n'est jamais fermée pour cela, aucune étape essentielle de la vente n'en dépend.
+- **Rendez-vous initial** : affiché à part (« Rendez-vous initial : à planifier / planifié / fait »), jamais compté ; l'équipe le planifie ou le marque fait depuis le back office (`admin_advisor_initial_meeting`).
+- **Écran du vendeur** `/vendeur/biens/[id]/intervention` (G5) : le compteur et sa barre, le rendez-vous initial, « Votre demande » (motif, message, « Envoyer ma demande », « Nous vous répondons sous 2 jours ouvrés, du lundi au vendredi »), « Vos demandes » (motif, message, « En attente », « Planifiée », « Faite », « Annulée »). La note interne de l'équipe n'est jamais montrée au vendeur.
 
 ### Déclencheurs de montée en gamme
 
@@ -1998,6 +2036,10 @@ Mise en œuvre (L1-30c, `DECISIONS.md` 2026-11-04) : « assigné » se lit « Su
 
 Boîte partagée des conversations conseiller (`advisor`) : non-lues en tête, filtre par formule, indicateur « en attente de réponse depuis plus de 24 h » en orange. Répondre depuis la liste ou depuis le dossier.
 
+### Interventions du conseiller `/admin/messages/interventions`
+
+Ajouté le 2026-11-23 (`DECISIONS.md`, section 11 bis). Onglet « Interventions » à côté de « Conversations » (avec le nombre de ce qui attend). Les demandes des vendeurs et, sans ligne en base tant qu'il n'est ni planifié ni fait, le rendez-vous initial de chaque formule en vigueur (« À planifier ») ; ce qui attend en premier, le plus ancien d'abord. Filtres « À traiter » (demandées et planifiées), « Faites », « Annulées », « Toutes ». Chaque entrée : le vendeur, le bien et sa référence, la formule et le compteur du bien (« 2 interventions utilisées sur 4 »), le motif, le message du vendeur, la note interne, « Écrire au vendeur » (sa conversation). Actions « Planifiée », « Faite », « Annulée », chacune confirmée dans un dialogue avec une note interne facultative (jamais lue par le vendeur), chacune écrite dans `audit_log` (`advisor_intervention.status`). Une erreur se corrige en choisissant un autre statut (une intervention marquée faite puis annulée n'est plus comptée) ; un rendez-vous initial annulé se planifie de nouveau depuis son entrée « À planifier ». L'équipe peut marquer faite une intervention au-delà du nombre de la formule (geste commercial) : le compteur le dit.
+
 ### Offres `/admin/offres`
 
 Lecture seule : toutes les offres et leur journal, filtres, accès à la synthèse et au PDF. Pour les biens en formule payante, bouton « Marquer comme analysée » (tâche « Offre analysée avec le conseiller »). Saisie des dates d'avant-contrat et de départ du délai de rétractation pour les biens en Sérénité.
@@ -2048,6 +2090,7 @@ Gabarit commun (`docs/DESIGN.md` 14) : fond `#F4F4F1`, carte blanche 560 px rayo
 | Admin : rétractation à rembourser | `plan.withdrawn` (L1-40) | Formule, bien, montant, date ; plusieurs en moins de 20 minutes : un seul email |
 | Formule qui se termine | `plan.ending`, 30 jours avant l'échéance (L1-40) | Date de fin, retour en Autonomie, renouvellement à demander par email |
 | Message du conseiller | `advisor.message` | Aperçu, lien |
+| Admin : demande d'intervention du conseiller | `advisor.message_from_client` d'une demande (2026-11-23) | « Demande d'intervention de … (LK-0001) », le motif et le message, lien vers `/admin/messages/interventions` ; groupé avec les messages de la conversation |
 | Offre retirée | `offer.withdrawn` | Date et heure du retrait |
 | Alertes | cron | Digest de biens |
 | Admin : nouveau compte | confirmation de l'adresse email (`account.created`) | Prénom et initiale, rôles, lien vers la fiche du compte ; plusieurs comptes en moins de 20 minutes : un seul email « N nouveaux comptes » (`DECISIONS.md` 2026-11-08) |

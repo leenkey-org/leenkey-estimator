@@ -161,10 +161,14 @@ const CATALOG: Record<string, Entry> = {
     icon: MessageCircle,
     tone: "blue",
     filters: [],
+    // A request for an intervention (advisor_intervention_request) is a message of
+    // the seller too: it says so, and leads to the list of the back office.
     title: (data) =>
-      data.handoff === true
-        ? t.advisorFromClient.handoff(text(data.sender_first_name))
-        : t.advisorFromClient.title(text(data.sender_first_name)),
+      data.intervention === true
+        ? t.advisorFromClient.intervention(text(data.sender_first_name))
+        : data.handoff === true
+          ? t.advisorFromClient.handoff(text(data.sender_first_name))
+          : t.advisorFromClient.title(text(data.sender_first_name)),
     detail: (data) =>
       t.advisorFromClient.detail(
         text(data.reference),

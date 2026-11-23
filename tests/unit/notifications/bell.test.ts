@@ -261,6 +261,28 @@ describe("wording of the notifications (from type and data)", () => {
         }),
       ).title,
     ).toBe("Question d'Alice transmise par l'assistant");
+    // A request for an intervention of the adviser (DECISIONS.md 2026-11-23): the
+    // message of the seller says so, and leads to the list of the back office.
+    expect(
+      describeNotification(
+        view({
+          type: "advisor.message_from_client",
+          link: "/admin/messages/interventions",
+          data: {
+            sender_first_name: "Alice",
+            reference: "LK-0001",
+            intervention: true,
+            reason: "price_strategy",
+            excerpt: "Demande d'intervention : Prix et stratégie Faut-il revoir mon prix ?",
+          },
+        }),
+      ),
+    ).toMatchObject({
+      title: "Demande d'intervention d'Alice",
+      detail:
+        "LK-0001 · «\u00A0Demande d'intervention : Prix et stratégie Faut-il revoir mon prix ?\u00A0»",
+      link: "/admin/messages/interventions",
+    });
     // L1-31: a request to the team (create_case): who asks, about what, for which property.
     expect(
       describeNotification(

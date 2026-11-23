@@ -34,6 +34,8 @@ export type NewMessagesEmailProps = {
   siteUrl: string;
   /** In place of « Nouveau message de … » (the team's email, L1-34). */
   subject?: string;
+  /** The team's email: the last message is a request for an intervention of the adviser. */
+  intervention?: boolean;
 };
 
 export function NewMessagesEmail({
@@ -47,6 +49,7 @@ export function NewMessagesEmail({
   conversationUrl,
   siteUrl,
   subject: subjectOverride,
+  intervention = false,
 }: NewMessagesEmailProps) {
   const copy = t.newMessages;
   const subject = subjectOverride ?? newMessagesSubject(senderName, count);
@@ -56,7 +59,10 @@ export function NewMessagesEmail({
       preview={excerpt ?? subject}
       title={subject}
       siteUrl={siteUrl}
-      action={{ href: conversationUrl, label: copy.action }}
+      action={{
+        href: conversationUrl,
+        label: intervention ? copy.advisorTeamInterventionAction : copy.action,
+      }}
       internal={recipient === "team"}
       why={recipient === "buyer" ? t.footer.whyBuyer : t.footer.why}
     >
@@ -65,7 +71,13 @@ export function NewMessagesEmail({
       {excerpt ? <Text style={emailQuote}>{excerpt}</Text> : null}
       {excerptHidden ? <Text style={emailText}>{copy.hidden}</Text> : null}
       {count > 1 ? <Text style={emailText}>{copy.more(count - 1)}</Text> : null}
-      <Text style={emailText}>{recipient === "team" ? copy.advisorTeamReply : copy.replyHint}</Text>
+      <Text style={emailText}>
+        {intervention
+          ? copy.advisorTeamIntervention
+          : recipient === "team"
+            ? copy.advisorTeamReply
+            : copy.replyHint}
+      </Text>
     </EmailLayout>
   );
 }

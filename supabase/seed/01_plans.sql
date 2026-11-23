@@ -3,8 +3,11 @@
 -- description: first line shown before the feature list (empty: none),
 -- following lines after it. The price stays in price_cents only.
 -- stripe_price_id is filled by L1-26 from STRIPE_PRICE_* (test or live).
+-- advisor_interventions: how many interventions of the adviser the plan sells
+-- per property (the counter of the seller and of the back office, DECISIONS.md
+-- 2026-11-23); it must say what the last line of its features says.
 
-insert into public.plans (code, name, tagline, price_cents, scope, description, features, position, active) values
+insert into public.plans (code, name, tagline, price_cents, scope, description, features, position, active, advisor_interventions) values
   ('autonomie', 'Autonomie', 'Tous les outils pour gérer votre vente vous-même.', 0, 'property',
    E'\nGratuit, sans carte bancaire et sans obligation de passer à une formule payante.',
    array[
@@ -16,7 +19,7 @@ insert into public.plans (code, name, tagline, price_cents, scope, description, 
      'Accès aux informations communiquées par les acquéreurs',
      'Assistant IA disponible pour vous guider à chaque étape',
      'Checklist et liste des documents à préparer'
-   ], 1, true),
+   ], 1, true, null),
   ('accompagne', 'Accompagné', 'Vous gérez votre vente, un conseiller vous accompagne à chaque étape.', 99000, 'property',
    E'Tout Autonomie, plus :\nForfait fixe par bien · 12 mois d''accompagnement',
    array[
@@ -29,7 +32,7 @@ insert into public.plans (code, name, tagline, price_cents, scope, description, 
      'Explications sur les offres reçues et les points à examiner',
      'Aide à la préparation et à l''organisation de vos documents',
      '1 rendez-vous initial de 30 minutes et 4 interventions personnalisées de 20 minutes'
-   ], 2, true),
+   ], 2, true, 4),
   ('serenite', 'Sérénité', 'Votre vente avance, nous vous accompagnons jusqu''à la signature.', 150000, 'property',
    E'Tout Accompagné, plus :\nForfait fixe par bien · 12 mois d''accompagnement',
    array[
@@ -38,11 +41,12 @@ insert into public.plans (code, name, tagline, price_cents, scope, description, 
      'Préparation de votre dossier de vente : organisation des documents, diagnostics et identification des pièces manquantes.',
      'Analyse des documents : lecture des pièces disponibles et signalement des éventuels points de vigilance.',
      'Suivi jusqu''à la signature : accompagnement dans les démarches après l''acceptation de l''offre, rappels des échéances importantes et aide à la préparation des échanges avec le notaire.'
-   ], 3, true)
+   ], 3, true, 6)
 on conflict (code) do update set
   name = excluded.name, tagline = excluded.tagline, price_cents = excluded.price_cents,
   scope = excluded.scope, description = excluded.description, features = excluded.features,
-  position = excluded.position, active = excluded.active;
+  position = excluded.position, active = excluded.active,
+  advisor_interventions = excluded.advisor_interventions;
 
 -- Entitlements: SPEC-V2 section 11 bis, "Droits (plan_entitlements)".
 create temporary table seed_entitlements on commit drop as

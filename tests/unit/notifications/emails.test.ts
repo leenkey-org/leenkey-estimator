@@ -200,6 +200,32 @@ describe("the conversation with the adviser (L1-34)", () => {
     expect(email?.text).not.toContain("Bonjour Alice");
     expect(email?.replyTo).toBeUndefined();
   });
+
+  it("to the team: a request for an intervention says so, and leads to the list", async () => {
+    const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
+    const item = queued({
+      type: "advisor.message_from_client",
+      profileId: "admin",
+      email: null,
+      firstName: null,
+      link: "/admin/messages/interventions",
+      data: {
+        ...advisorData,
+        sender_first_name: "Alice",
+        excerpt: "Demande d'intervention : Prix et stratégie Faut-il revoir mon prix ?",
+        intervention: true,
+        reason: "price_strategy",
+      },
+    });
+    const email = await renderNotificationEmail(planned([item], { audience: "team" }));
+    expect(email?.subject).toBe("Demande d'intervention d'Alice (LK-0001)");
+    expect(email?.text).toContain("https://leenkey-v2.vercel.app/admin/messages/interventions");
+    expect(email?.text).toContain("Voir la demande");
+    expect(email?.text).toContain("Prix et stratégie");
+    expect(email?.text).toContain("elle est alors comptée dans sa formule");
+    expect(email?.text).toContain("Notification interne du back office de Leenkey.");
+    expect(email?.replyTo).toBeUndefined();
+  });
 });
 
 describe("« Annonce à valider »", () => {

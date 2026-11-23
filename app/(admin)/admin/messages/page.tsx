@@ -3,21 +3,31 @@ import Link from "next/link";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FilterPills } from "@/components/shared/filter-pills";
 import { InlineAlert } from "@/components/shared/inline-alert";
+import { LinkTabs } from "@/components/shared/link-tabs";
 import { requireAdmin } from "@/core/auth/session";
 import { AdvisorInbox } from "@/leenkey/admin/components/advisor-inbox";
 import { InboxRefresh } from "@/leenkey/messaging/components/inbox-refresh";
 import { adminMetadata } from "@/leenkey/admin/metadata";
+import { adminInterventions } from "@/leenkey/admin/interventions/queries";
 import { adminAdvisorConversations, awaitingAnswer } from "@/leenkey/admin/messages/queries";
+import { isOpenIntervention } from "@/leenkey/advisor/interventions";
+import { ROUTES } from "@/leenkey/navigation/spaces";
 import { frAdminMessages } from "@/lib/i18n/sections/adminMessages";
+import { frAdvisorInterventions } from "@/lib/i18n/sections/advisorInterventions";
 import { frPlan } from "@/lib/i18n/sections/plan";
 import { adminMessagesHref, parseAdminMessagesQuery } from "@/lib/validations/admin";
 import { planCode } from "@/lib/validations/billing";
 import { AdminPage } from "../_components/admin-page";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { adminMessages: frAdminMessages, plan: frPlan } as const;
+const fr = {
+  adminMessages: frAdminMessages,
+  advisorInterventions: frAdvisorInterventions,
+  plan: frPlan,
+} as const;
 
 const t = fr.adminMessages;
+const tabs = fr.advisorInterventions.admin.tabs;
 
 export const generateMetadata = adminMetadata({ title: t.metaTitle });
 
@@ -31,7 +41,11 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 export default async function AdminMessagesPage({ searchParams }: Props) {
   const profile = await requireAdmin();
   const query = parseAdminMessagesQuery(await searchParams);
-  const list = await adminAdvisorConversations();
+  // The interventions that wait, said by their tab; unread: the tab without a number.
+  const [list, interventions] = await Promise.all([
+    adminAdvisorConversations(),
+    adminInterventions(),
+  ]);
   const now = new Date();
 
   const all = list.ok ? list.data : [];
@@ -92,8 +106,25 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
 
   return (
     <AdminPage title={t.title}>
+      {/* The interventions of the adviser, beside its conversations (DECISIONS.md 2026-11-23). */}
+      <LinkTabs
+        label={tabs.label}
+        tabs={[
+          { href: ROUTES.adminMessages, label: tabs.conversations },
+          {
+            href: ROUTES.adminInterventions,
+            label: tabs.interventions(
+              interventions.ok
+                ? interventions.data.filter((row) => isOpenIntervention(row.status)).length
+                : 0,
+            ),
+          },
+        ]}
+        current={ROUTES.adminMessages}
+        className="md:-mt-2"
+      />
       {list.ok ? (
-        <p className="text-lk-secondary text-lk-ink-3 md:-mt-4">
+        <p className="text-lk-secondary text-lk-ink-3">
           {[t.summary.unread(unread), t.summary.late(late)].join(" · ")}
         </p>
       ) : null}

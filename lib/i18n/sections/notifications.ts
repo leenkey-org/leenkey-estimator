@@ -96,6 +96,9 @@ export const frNotifications = {
         name
           ? `Question ${of(name)} transmise par l'assistant`
           : "Question transmise par l'assistant",
+      // A request for an intervention of the adviser (DECISIONS.md 2026-11-23).
+      intervention: (name: string | null) =>
+        name ? `Demande d'intervention ${of(name)}` : "Demande d'intervention d'un vendeur",
       detail: (reference: string | null, excerpt: string | null, truncated: boolean) =>
         [reference, excerpt ? `«\u00A0${excerpt}${truncated ? "…" : ""}\u00A0»` : null]
           .filter(Boolean)
