@@ -5,14 +5,21 @@ import { InlineAlert } from "@/components/shared/inline-alert";
 import { requireProfile } from "@/core/auth/session";
 import { BuyerProfileForm } from "@/leenkey/buyers/components/buyer-profile-form";
 import { FinancingDocumentCard } from "@/leenkey/buyers/components/financing-document-card";
+import { IdentityDocumentCard } from "@/leenkey/buyers/components/identity-document-card";
+import { buyerIdentity } from "@/leenkey/buyers/identity";
 import { buyerProfile, type BuyerProfile } from "@/leenkey/buyers/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { frBuyerSpace } from "@/lib/i18n/sections/buyerSpace";
+import { frIdentityDocument } from "@/lib/i18n/sections/identityDocument";
 import { frProperties } from "@/lib/i18n/sections/properties";
 import { SpacePage } from "../../_components/space-page";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { buyerSpace: frBuyerSpace, properties: frProperties } as const;
+const fr = {
+  buyerSpace: frBuyerSpace,
+  identityDocument: frIdentityDocument,
+  properties: frProperties,
+} as const;
 
 const t = fr.buyerSpace.profile;
 
@@ -33,10 +40,14 @@ const EMPTY: BuyerProfile = {
 };
 
 // The buying project of the buyer (L1-25, SPEC-V2 8.9): its status, what the
-// seller sees of it, the form, then the proof of financing (L2-02).
+// seller sees of it, the form, then the proof of financing (L2-02) and the
+// identity document asked before a visit (DECISIONS.md 2026-11-23).
 export default async function BuyerProfilePage() {
   const profile = await requireProfile();
-  const result = await buyerProfile(profile.id);
+  const [result, identity] = await Promise.all([
+    buyerProfile(profile.id),
+    buyerIdentity(profile.id),
+  ]);
   return (
     <SpacePage
       title={t.title}
@@ -52,6 +63,13 @@ export default async function BuyerProfilePage() {
             checkedAt={result.data?.financingCheckedAt ?? null}
             declared={(result.data?.financingStatus ?? "not_provided") !== "not_provided"}
           />
+          {identity.ok ? (
+            <IdentityDocumentCard initial={identity.data} className="mt-10" />
+          ) : (
+            <InlineAlert tone="danger" className="mt-10">
+              {fr.identityDocument.errors.loadError}
+            </InlineAlert>
+          )}
         </>
       ) : (
         <InlineAlert

@@ -1,5 +1,6 @@
 import "server-only";
 import type { FinancingStatus } from "@/components/shared/financing-badge";
+import type { IdentityStatus } from "@/components/shared/identity-label";
 import { createClient } from "@/lib/supabase/server";
 import { VISIT_TOKEN, type VisitInterest } from "@/lib/validations/visit";
 import type { Database } from "@/types/database";
@@ -11,7 +12,9 @@ import { interestOf } from "./feedback";
 // invitation, the free slots. The exact address only through visit_address
 // (the buyer of a confirmed visit, the seller). The columns of visits are
 // named: the note of the seller is not readable by a buyer (L3-03), a read
-// of every column is refused.
+// of every column is refused. The identity of a buyer (DECISIONS.md
+// 2026-11-23): the seller reads a status only, through
+// buyer_identity_for_seller, for the buyers they invited or who booked.
 
 export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavailable" };
 export type VisitStatus = Database["public"]["Enums"]["visit_status"];
@@ -33,6 +36,8 @@ export type SellerVisit = {
   buyerId: string;
   buyerFirstName: string | null;
   financingStatus: FinancingStatus;
+  /** Where the identity of the buyer stands: a label, never the document. */
+  identityStatus: IdentityStatus;
   /** What the buyer said after the visit (L3-03), as given: 1 to 5, a comment. */
   buyerInterest: VisitInterest | null;
   buyerFeedback: string | null;
@@ -42,6 +47,8 @@ export type Contact = {
   buyerId: string;
   firstName: string | null;
   financingStatus: FinancingStatus;
+  /** Where their identity stands, once invited or with a visit; null before. */
+  identityStatus: IdentityStatus | null;
   /** An invitation still valid: its end. */
   invitedUntil: string | null;
   /** A visit to come is booked. */
@@ -54,7 +61,7 @@ export type SellerVisits = { slots: SellerSlot[]; visits: SellerVisit[]; contact
 export async function sellerVisits(propertyId: string): Promise<QueryResult<SellerVisits>> {
   const supabase = await createClient();
   const now = new Date().toISOString();
-  const [slots, visits, buyers, invitations] = await Promise.all([
+  const [slots, visits, buyers, invitations, identities] = await Promise.all([
     supabase
       .from("visit_slots")
       .select("id, starts_at, ends_at")
@@ -76,8 +83,10 @@ export async function sellerVisits(propertyId: string): Promise<QueryResult<Sell
       .select("buyer_id, expires_at")
       .eq("property_id", propertyId)
       .gt("expires_at", now),
+    supabase.rpc("buyer_identity_for_seller", { p_property_id: propertyId }),
   ]);
-  const failed = slots.error ?? visits.error ?? buyers.error ?? invitations.error;
+  const failed =
+    slots.error ?? visits.error ?? buyers.error ?? invitations.error ?? identities.error;
   if (failed) {
     console.error("[visits] seller visits read failed", {
       entity_id: propertyId,
@@ -87,6 +96,9 @@ export async function sellerVisits(propertyId: string): Promise<QueryResult<Sell
   }
   const buyerOf = new Map((buyers.data ?? []).map((buyer) => [buyer.buyer_id, buyer]));
   const invited = new Map((invitations.data ?? []).map((row) => [row.buyer_id, row.expires_at]));
+  const identityOf = new Map(
+    (identities.data ?? []).map((row) => [row.buyer_id, row.identity_status]),
+  );
   const visitRows: SellerVisit[] = (visits.data ?? []).map((row) => ({
     id: row.id,
     slotId: row.slot_id,
@@ -96,6 +108,7 @@ export async function sellerVisits(propertyId: string): Promise<QueryResult<Sell
     buyerId: row.buyer_id,
     buyerFirstName: buyerOf.get(row.buyer_id)?.first_name ?? null,
     financingStatus: buyerOf.get(row.buyer_id)?.financing_status ?? "not_provided",
+    identityStatus: identityOf.get(row.buyer_id) ?? "not_provided",
     buyerInterest: interestOf(row.buyer_interest),
     buyerFeedback: row.buyer_feedback,
   }));
@@ -121,6 +134,7 @@ export async function sellerVisits(propertyId: string): Promise<QueryResult<Sell
         buyerId: buyer.buyer_id,
         firstName: buyer.first_name,
         financingStatus: buyer.financing_status,
+        identityStatus: identityOf.get(buyer.buyer_id) ?? null,
         invitedUntil: invited.get(buyer.buyer_id) ?? null,
         hasVisit: upcoming.some((visit) => visit.buyerId === buyer.buyer_id),
       })),

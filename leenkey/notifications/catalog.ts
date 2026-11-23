@@ -406,6 +406,22 @@ const CATALOG: Record<string, Entry> = {
     title: () => t.financingChecked.title,
     detail: () => t.financingChecked.detail,
   },
+  // 2026-11-23: the identity document of a buyer checked or refused by the
+  // team, for its buyer (the reason of a refusal is written for them).
+  "identity.checked": {
+    icon: CircleCheck,
+    tone: "success",
+    filters: [],
+    title: () => t.identityChecked.title,
+    detail: () => t.identityChecked.detail,
+  },
+  "identity.refused": {
+    icon: CircleAlert,
+    tone: "warning",
+    filters: [],
+    title: () => t.identityRefused.title,
+    detail: (data) => t.identityRefused.detail(text(data.reason)),
+  },
   "report.handled": {
     icon: Flag,
     tone: "stone",

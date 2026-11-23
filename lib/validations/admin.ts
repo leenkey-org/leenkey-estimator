@@ -172,6 +172,34 @@ export const financingFileDeleteSchema = financingCheckSchema.pick({
   profileId: true,
 });
 
+// The identity document of a buyer (DECISIONS.md 2026-11-23), on the sheet of
+// its account: « Marquer comme vérifiée », « Refuser » with a reason its
+// buyer reads, « Supprimer le fichier ».
+
+/** The internal note of the team on an identity document (identity_documents.team_note). */
+export const IDENTITY_NOTE_MAX = 1000;
+const identityNote = z.string().trim().max(IDENTITY_NOTE_MAX);
+
+export const identityCheckSchema = z.object({
+  documentId: z.string().uuid(),
+  profileId,
+  note: identityNote,
+});
+
+export const identityRefuseSchema = z.object({
+  documentId: z.string().uuid(),
+  profileId,
+  /** Read by the buyer: 3 to 1 000 characters, as the other reasons of the back office. */
+  reason,
+  note: identityNote,
+});
+
+/** « Supprimer le fichier » of a document checked, refused or withdrawn. */
+export const identityFileDeleteSchema = identityCheckSchema.pick({
+  documentId: true,
+  profileId: true,
+});
+
 // L1-30c: the cases and the reports of the back office (SPEC-V2 section 17).
 
 type CaseStatus = Database["public"]["Enums"]["case_status"];

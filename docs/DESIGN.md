@@ -607,6 +607,16 @@ Pour chaque composant : anatomie, dimensions, variantes, états. Les composants 
 
 Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/2026 » (12 px `--lk-ink-3`). La mention obligatoire de `SPEC-V2` s'affiche au survol (desktop) ou au toucher (mobile) d'une icône `Info` 14 px.
 
+**IdentityLabel** (`components/shared/identity-label.tsx`, ajouté le 2026-11-23, `DECISIONS.md`) : ce qu'un vendeur lit de l'identité d'un acquéreur invité ou ayant réservé une visite, sous le `FinancingBadge`. Une ligne de texte 12 px 600 avec une icône 14 px, et non une pastille : son libellé le plus long passe à la ligne sur téléphone. Jamais « validé », jamais le type de la pièce.
+
+| Statut | Libellé | Icône | Texte |
+|---|---|---|---|
+| `not_provided` | Pièce d'identité non déposée | `IdCard` | `--lk-ink-3` |
+| `provided` | Pièce d'identité déposée, en cours de vérification | `IdCard` | `--lk-ink-2` |
+| `checked` | Identité vérifiée par Leenkey | `ShieldCheck` | `--lk-success-fg` |
+
+`IdentityMention` (12 px `--lk-ink-3`), une fois par écran où ces libellés paraissent : « Vous voyez seulement si la pièce d'identité d'un acquéreur est déposée ou vérifiée : seule l'équipe Leenkey la consulte. » Côté acquéreur, la carte « Pièce d'identité » (`leenkey/buyers/components/identity-document-card.tsx`) reprend la structure de la carte du justificatif de financement : titre h2, phrase 14 px, `InfoNote` de confidentialité, puis la pièce (icône `IdCard` sur `--lk-blue-tint`, type, date de dépôt, statut, « Voir le document », « Remplacer », « Retirer ») ou le formulaire (`Select` du type, fichier, bouton primaire) ; un refus s'affiche en `InlineAlert warning` avec le motif de l'équipe.
+
 **KeyFigures** (chiffres clés) : 4 tuiles (mobile, `grid-cols-4`, écart 8) ou 6 tuiles (desktop, `grid-cols-6`, écart 10). Tuile : fond `--lk-blue-tint`, rayon 12 (pierre et rayon 4 jusqu'à L1-55, « pas de gris », Younes), padding 10 × 6 (mobile, centré) ou 12 (desktop, aligné à gauche). Valeur 15 px (mobile) / 17 px (desktop) 700 large tabulaire `--lk-blue-dark` ; libellé 11 px `--lk-ink-3`.
 
 **KeyFactsTable** (« Ce que vous savez avant de visiter ») : conteneur rayon 6, bordure 1 px `--lk-line`. Lignes padding 11–12 × 14 px, séparateur 1 px `--lk-line`, 13 px. Libellé `--lk-ink-3`, valeur 600 `--lk-ink` alignée à droite. Valeurs d'état colorées : « Complets » `--lk-success`, « Sur demande » ou « Demander l'accès » `--lk-blue` (lien). Garde sa forme de tableau sur la fiche du vendeur et dans le back office.

@@ -914,6 +914,73 @@ export type Database = {
           },
         ]
       }
+      identity_documents: {
+        Row: {
+          buyer_id: string
+          checked_at: string | null
+          created_at: string
+          decided_by: string | null
+          file_deleted_at: string | null
+          id: string
+          mime_type: string
+          refusal_reason: string | null
+          refused_at: string | null
+          size_bytes: number
+          storage_path: string
+          team_note: string | null
+          type: Database["public"]["Enums"]["identity_document_type"]
+          updated_at: string | null
+          withdrawn_at: string | null
+        }
+        Insert: {
+          buyer_id: string
+          checked_at?: string | null
+          created_at?: string
+          decided_by?: string | null
+          file_deleted_at?: string | null
+          id?: string
+          mime_type: string
+          refusal_reason?: string | null
+          refused_at?: string | null
+          size_bytes: number
+          storage_path: string
+          team_note?: string | null
+          type: Database["public"]["Enums"]["identity_document_type"]
+          updated_at?: string | null
+          withdrawn_at?: string | null
+        }
+        Update: {
+          buyer_id?: string
+          checked_at?: string | null
+          created_at?: string
+          decided_by?: string | null
+          file_deleted_at?: string | null
+          id?: string
+          mime_type?: string
+          refusal_reason?: string | null
+          refused_at?: string | null
+          size_bytes?: number
+          storage_path?: string
+          team_note?: string | null
+          type?: Database["public"]["Enums"]["identity_document_type"]
+          updated_at?: string | null
+          withdrawn_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identity_documents_buyer_id_fkey"
+            columns: ["buyer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "identity_documents_decided_by_fkey"
+            columns: ["decided_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_base: {
         Row: {
           answer: string
@@ -2875,6 +2942,23 @@ export type Database = {
           size_bytes: number
         }[]
       }
+      admin_identity_documents: {
+        Args: { p_buyer_id: string }
+        Returns: {
+          id: string
+          file_deleted_at: string
+          team_note: string
+          created_at: string
+          refused_at: string
+          refusal_reason: string
+          withdrawn_at: string
+          decided_by_name: string
+          mime_type: string
+          type: Database["public"]["Enums"]["identity_document_type"]
+          checked_at: string
+          size_bytes: number
+        }[]
+      }
       admin_knowledge_import: {
         Args: { p_source_file: string; p_cards: Json }
         Returns: {
@@ -3307,6 +3391,13 @@ export type Database = {
         Args: { p_property: string; p_buyer: string }
         Returns: boolean
       }
+      buyer_identity_for_seller: {
+        Args: { p_property_id: string }
+        Returns: {
+          identity_status: Database["public"]["Enums"]["identity_status"]
+          buyer_id: string
+        }[]
+      }
       buyer_summary_for_seller: {
         Args: { p_property_id: string }
         Returns: {
@@ -3552,6 +3643,65 @@ export type Database = {
           p_property: string
         }
         Returns: boolean
+      }
+      identity_document_add: {
+        Args: {
+          p_type: Database["public"]["Enums"]["identity_document_type"]
+          p_storage_path: string
+          p_size_bytes: number
+          p_mime_type: string
+        }
+        Returns: string
+      }
+      identity_document_check: {
+        Args: { p_note?: string; p_document_id: string }
+        Returns: undefined
+      }
+      identity_document_file_removed: {
+        Args: { p_document_id: string }
+        Returns: undefined
+      }
+      identity_document_opened: {
+        Args: { p_document_id: string }
+        Returns: undefined
+      }
+      identity_document_refuse: {
+        Args: { p_reason: string; p_document_id: string; p_note?: string }
+        Returns: undefined
+      }
+      identity_document_remove: {
+        Args: { p_document_id: string }
+        Returns: undefined
+      }
+      identity_file_buyer: {
+        Args: { p_name: string }
+        Returns: string
+      }
+      identity_file_ended: {
+        Args: { p_name: string }
+        Returns: boolean
+      }
+      identity_file_waiting: {
+        Args: { p_name: string }
+        Returns: boolean
+      }
+      identity_files_mark_swept: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      identity_files_room: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      identity_files_to_sweep: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          path: string
+        }[]
+      }
+      identity_status_of: {
+        Args: { p_buyer: string }
+        Returns: Database["public"]["Enums"]["identity_status"]
       }
       is_active_user: {
         Args: Record<PropertyKey, never>
@@ -4503,6 +4653,8 @@ export type Database = {
         | "declared"
         | "document_provided"
         | "document_checked"
+      identity_document_type: "carte_identite" | "passeport" | "titre_sejour"
+      identity_status: "not_provided" | "provided" | "checked"
       listing_status:
         | "draft"
         | "pending"
@@ -4731,6 +4883,8 @@ export const Constants = {
         "document_provided",
         "document_checked",
       ],
+      identity_document_type: ["carte_identite", "passeport", "titre_sejour"],
+      identity_status: ["not_provided", "provided", "checked"],
       listing_status: [
         "draft",
         "pending",

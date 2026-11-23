@@ -46,8 +46,13 @@ export function BookingForm({ token, groups }: { token: string; groups: BookingG
       }
       if (!result?.ok) {
         setError(t.errors[result?.error ?? "unavailable"]);
-        // A slot taken meanwhile leaves the grid.
-        if (result?.error === "full" || result?.error === "tooLate") {
+        // A slot taken meanwhile leaves the grid; an identity document refused
+        // or withdrawn meanwhile brings back its deposit (the page reads it again).
+        if (
+          result?.error === "full" ||
+          result?.error === "tooLate" ||
+          result?.error === "identity"
+        ) {
           setChosen(null);
           router.refresh();
         }

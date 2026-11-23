@@ -8,6 +8,9 @@ import {
   accountDecisionSchema,
   financingCheckSchema,
   financingFileDeleteSchema,
+  identityCheckSchema,
+  identityFileDeleteSchema,
+  identityRefuseSchema,
 } from "@/lib/validations/admin";
 import { moderationError, type ModerationError } from "../moderation";
 import { emailAccountSuspended } from "./emails";
@@ -173,6 +176,142 @@ export async function deleteCheckedFinancingFile(
   const command = parsed.data;
   const supabase = await createClient();
   const deleted = await deleteCheckedFile(supabase, command.documentId, profile.id);
+  revalidatePath(`/admin/utilisateurs/${command.profileId}`);
+  if (!deleted) return { ok: false, error: "unavailable" };
+  return { ok: true, data: { fileDeleted: true } };
+}
+
+// The identity document of a buyer (DECISIONS.md 2026-11-23): the team has
+// looked at it and marks it as checked (identity_document_check), or refuses
+// it with a reason its buyer reads (identity_document_refuse). Both verify
+// is_admin() and write audit_log; the buyer is told by the database
+// (identity.checked, identity.refused: bell and email). Never « validé ».
+// The file is then deleted, as the one of a proof of financing: its storage
+// object with the session of the admin (the storage policy allows it for a
+// document checked, refused or withdrawn only), then the document says so
+// (identity_document_file_removed). A deletion that fails is logged and said
+// to the admin: the decision itself is recorded. No service role; nothing is
+// read from the document.
+
+export type IdentityDecisionResult =
+  | { ok: true; data: { fileDeleted: boolean } }
+  | { ok: false; error: ModerationError };
+
+/**
+ * Deletes the file of an identity document that reached its end; false when
+ * it could not be (logged). May be called again: an object already gone is no
+ * error, and the document is marked, and written in the audit log, once.
+ */
+async function deleteIdentityFile(
+  supabase: Client,
+  documentId: string,
+  adminId: string,
+): Promise<boolean> {
+  const found = await supabase
+    .from("identity_documents")
+    .select("storage_path")
+    .eq("id", documentId)
+    .maybeSingle();
+  const path = found.data?.storage_path;
+  if (found.error || !path) {
+    console.error("[admin] identity file not found", {
+      user_id: adminId,
+      entity_id: documentId,
+      code: found.error?.code,
+    });
+    return false;
+  }
+  const removed = await supabase.storage.from("documents").remove([path]);
+  if (removed.error) {
+    console.error("[admin] identity file not deleted", {
+      user_id: adminId,
+      entity_id: documentId,
+      error: removed.error.name,
+    });
+    return false;
+  }
+  // Refused by the database while the object is still stored.
+  const marked = await supabase.rpc("identity_document_file_removed", {
+    p_document_id: documentId,
+  });
+  if (marked.error) {
+    console.error("[admin] identity file not marked deleted", {
+      user_id: adminId,
+      entity_id: documentId,
+      code: marked.error.code,
+    });
+    return false;
+  }
+  return true;
+}
+
+function revalidateIdentity(profileId: string) {
+  revalidatePath(`/admin/utilisateurs/${profileId}`);
+  revalidatePath("/admin");
+}
+
+export async function checkIdentityDocument(input: unknown): Promise<IdentityDecisionResult> {
+  const profile = await getProfile();
+  if (!profile?.roles.includes("admin")) return { ok: false, error: "forbidden" };
+  const parsed = identityCheckSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const command = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("identity_document_check", {
+    p_document_id: command.documentId,
+    p_note: command.note,
+  });
+  if (error) {
+    console.error("[admin] identity check failed", {
+      user_id: profile.id,
+      entity_id: command.documentId,
+      code: error.code,
+    });
+    return { ok: false, error: moderationError(error.code) };
+  }
+  const fileDeleted = await deleteIdentityFile(supabase, command.documentId, profile.id);
+  revalidateIdentity(command.profileId);
+  return { ok: true, data: { fileDeleted } };
+}
+
+export async function refuseIdentityDocument(input: unknown): Promise<IdentityDecisionResult> {
+  const profile = await getProfile();
+  if (!profile?.roles.includes("admin")) return { ok: false, error: "forbidden" };
+  const parsed = identityRefuseSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const command = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("identity_document_refuse", {
+    p_document_id: command.documentId,
+    p_reason: command.reason,
+    p_note: command.note,
+  });
+  if (error) {
+    console.error("[admin] identity refusal failed", {
+      user_id: profile.id,
+      entity_id: command.documentId,
+      code: error.code,
+    });
+    return { ok: false, error: moderationError(error.code) };
+  }
+  const fileDeleted = await deleteIdentityFile(supabase, command.documentId, profile.id);
+  revalidateIdentity(command.profileId);
+  return { ok: true, data: { fileDeleted } };
+}
+
+export type IdentityFileDeleteResult =
+  | { ok: true; data: { fileDeleted: true } }
+  | { ok: false; error: ModerationError };
+
+/** « Supprimer le fichier »: the deletion that follows a decision or a withdrawal, tried again. */
+export async function deleteEndedIdentityFile(input: unknown): Promise<IdentityFileDeleteResult> {
+  const profile = await getProfile();
+  if (!profile?.roles.includes("admin")) return { ok: false, error: "forbidden" };
+  const parsed = identityFileDeleteSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const command = parsed.data;
+  const supabase = await createClient();
+  const deleted = await deleteIdentityFile(supabase, command.documentId, profile.id);
   revalidatePath(`/admin/utilisateurs/${command.profileId}`);
   if (!deleted) return { ok: false, error: "unavailable" };
   return { ok: true, data: { fileDeleted: true } };

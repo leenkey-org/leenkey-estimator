@@ -6,6 +6,10 @@ begin;
 \ir _helpers.psql
 select plan(23);
 \ir _plan.psql
+-- buyer_c has deposited an identity document: a booking asks for it.
+\o /dev/null
+select tests.identity('buyer_c');
+\o
 
 \set who seller_a
 \ir _as.psql

@@ -6,6 +6,12 @@ begin;
 \ir _helpers.psql
 select plan(53);
 \ir _plan.psql
+-- Both buyers have deposited an identity document: a booking asks for it
+-- (rls_identity_documents.sql checks the refusal without one).
+\o /dev/null
+select tests.identity('buyer_c');
+select tests.identity('buyer_d');
+\o
 
 -- seller_a: a listing online, and a draft listing.
 \set who seller_a

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { FinancingBadge, FinancingMention } from "@/components/shared/financing-badge";
+import { IdentityLabel, IdentityMention } from "@/components/shared/identity-label";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { propertyForSheet } from "@/leenkey/properties/load";
 import Link from "next/link";
@@ -32,6 +33,9 @@ const heading = "text-lk-h3 font-bold text-wide text-lk-ink";
 // and past. Nobody books without an invitation. L3-03: a past visit shows
 // what its buyer said of it, as given (« Intérêt 4 / 5 » and the comment, or
 // « Retour non donné »), and opens its page, where the seller writes a note.
+// The identity of a buyer invited or with a visit (DECISIONS.md 2026-11-23):
+// a label only (« Identité vérifiée par Leenkey », « Pièce d'identité
+// déposée, en cours de vérification »), never the document nor its type.
 export default async function PropertyVisitsPage({ params }: Props) {
   const { id } = await params;
   const property = await propertyForSheet(id);
@@ -83,6 +87,7 @@ export default async function PropertyVisitsPage({ params }: Props) {
                       {t.visits.with(visit.buyerFirstName)}
                     </p>
                     <FinancingBadge status={visit.financingStatus} className="self-start" />
+                    <IdentityLabel status={visit.identityStatus} />
                   </div>
                   <CancelVisitButton
                     visitId={visit.id}
@@ -94,6 +99,7 @@ export default async function PropertyVisitsPage({ params }: Props) {
               ))}
             </ul>
             <FinancingMention />
+            <IdentityMention />
           </>
         )}
       </section>
@@ -157,6 +163,9 @@ export default async function PropertyVisitsPage({ params }: Props) {
                     <div className="flex min-w-0 flex-col gap-1">
                       <p className="text-lk-body font-semibold text-lk-ink">{name}</p>
                       <FinancingBadge status={contact.financingStatus} className="self-start" />
+                      {contact.identityStatus ? (
+                        <IdentityLabel status={contact.identityStatus} />
+                      ) : null}
                       {contact.hasVisit ? (
                         <p className="text-lk-caption text-lk-ink-3">{t.contacts.hasVisit}</p>
                       ) : contact.invitedUntil ? (
@@ -179,6 +188,10 @@ export default async function PropertyVisitsPage({ params }: Props) {
               })}
             </ul>
             <FinancingMention />
+            {/* Said once on the page: above, with the visits to come, when there are some. */}
+            {upcoming.length === 0 && contacts.some((contact) => contact.identityStatus) ? (
+              <IdentityMention />
+            ) : null}
           </>
         )}
       </section>

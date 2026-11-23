@@ -213,7 +213,11 @@ export async function addRole(role: unknown): Promise<AddRoleResult> {
  * The deletion of the account (L2-10, SPEC-V2 sections 19 and 21): the
  * password checked, then account_close (refused during a sale in progress
  * and for an admin account), then every session of the account closed. The
- * anonymisation follows 30 days later (/api/cron/anonymize-deleted).
+ * anonymisation follows 30 days later (/api/cron/anonymize-deleted). The
+ * identity document that waited for its check is withdrawn by account_close:
+ * its file is removed here, at once (DECISIONS.md 2026-11-23); a removal
+ * that fails is logged and taken by the scheduled task
+ * (leenkey/buyers/identity-sweep.ts).
  */
 export async function closeAccount(
   _previous: FormResult | null,
@@ -241,6 +245,15 @@ export async function closeAccount(
   if (check !== "ok") return { ok: false, error: check.error, values };
 
   const supabase = await createClient();
+  // Read before the closure, which withdraws it.
+  const identity = await supabase
+    .from("identity_documents")
+    .select("id, storage_path")
+    .eq("buyer_id", user.id)
+    .is("checked_at", null)
+    .is("refused_at", null)
+    .is("withdrawn_at", null)
+    .maybeSingle();
   const { error } = await supabase.rpc("account_close");
   if (error) {
     if (error.code === "55000") {
@@ -254,6 +267,24 @@ export async function closeAccount(
     return { ok: false, error: errors.generic, values };
   }
   console.info("[account] closed", { user_id: user.id });
+  if (identity.data) {
+    // Still with the session of the person: the storage policy lets an
+    // account remove its own identity file once the document is withdrawn.
+    const removed = await supabase.storage.from("documents").remove([identity.data.storage_path]);
+    const marked = removed.error
+      ? null
+      : await supabase.rpc("identity_document_file_removed", {
+          p_document_id: identity.data.id,
+        });
+    if (removed.error || marked?.error) {
+      console.error("[account] identity file not removed at closure", {
+        user_id: user.id,
+        entity_id: identity.data.id,
+        error: removed.error?.name,
+        code: marked?.error?.code,
+      });
+    }
+  }
   const { error: signOutError } = await supabase.auth.signOut({ scope: "global" });
   if (signOutError) {
     console.error("[account] global sign-out failed", {
