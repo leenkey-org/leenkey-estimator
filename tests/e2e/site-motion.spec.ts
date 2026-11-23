@@ -75,6 +75,33 @@ test.describe("mouvement des pages publiques", () => {
     await expect(page).toHaveURL("/faq");
   });
 
+  test("accueil : la carte « Exemple » monte en place une fois, sa jauge se remplit, puis la carte flotte", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "la carte est sur la photo à partir de 1 024 px");
+    await page.goto("/");
+    const card = page.getByRole("group", { name: "Exemple de valorisation" });
+    const gauge = card.locator(".lk-example-gauge");
+    const style = (locator: typeof card, property: "animationName" | "animationIterationCount") =>
+      locator.evaluate((element, name) => getComputedStyle(element)[name], property);
+    // Once into place, then up and down without end; the gauge once.
+    expect(await style(card, "animationName")).toBe("lk-rise, lk-float");
+    expect(await style(card, "animationIterationCount")).toBe("1, infinite");
+    expect(await style(gauge, "animationName")).toBe("lk-draw-x");
+    expect(await style(gauge, "animationIterationCount")).toBe("1");
+    // At the end the card is whole and the gauge full, and stays so.
+    await expect.poll(() => gauge.evaluate((element) => element.getAnimations().length)).toBe(0);
+    expect(await card.evaluate((element) => getComputedStyle(element).opacity)).toBe("1");
+    expect(
+      await gauge.evaluate(
+        (element) =>
+          element.getBoundingClientRect().width /
+          (element.parentElement?.getBoundingClientRect().width ?? 1),
+      ),
+    ).toBeCloseTo(1, 2);
+  });
+
   test("les chiffres défilent jusqu'à leur valeur ; jamais à 0 avec le mouvement réduit, ni imprimés", async ({
     page,
   }) => {
@@ -140,6 +167,19 @@ test.describe("moins de mouvement", () => {
     expect(await waiting(page)).toBe(0);
     await expect(page.locator("[data-reveal-pending]")).toHaveCount(0);
     expect(await opacity(page, "#questions")).toBe("1");
+    // The « Exemple » card of the hero (from 1 024 px): in place, its gauge full.
+    if ((page.viewportSize()?.width ?? 0) >= 1024) {
+      const card = page.getByRole("group", { name: "Exemple de valorisation" });
+      await expect(card).toBeVisible();
+      for (const part of [card, card.locator(".lk-example-gauge")]) {
+        expect(
+          await part.evaluate((element) => {
+            const { animationName, opacity, transform } = getComputedStyle(element);
+            return [animationName, opacity, transform];
+          }),
+        ).toEqual(["none", "1", "none"]);
+      }
+    }
   });
 });
 

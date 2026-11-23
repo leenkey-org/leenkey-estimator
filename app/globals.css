@@ -735,7 +735,8 @@ html {
   --text-lk-c-amount: 1.5rem; /* 24 px, the amount saved */
   --text-lk-c-amount--line-height: 1;
   --text-lk-c-amount-lg: 2.25rem; /* 36 px */
-  /* Redesign D (SPECS.md 1, Sora): title of the hero from 1 024 px, of the
+  /* Redesign D (SPECS.md 1, Sora): title of the hero of the charte (52 px;
+     the home page keeps 44 px in its left column since 2026-11-23), of the
      savings, of a section on a phone */
   --text-lk-d-hero-lg: 3.25rem; /* 52 px */
   --text-lk-d-hero-lg--line-height: 1.08;
@@ -1037,7 +1038,9 @@ html {
   .lk-drawing text,
   .lk-fill,
   .lk-step-done,
-  .lk-step-current {
+  .lk-step-current,
+  .lk-example-card,
+  .lk-example-gauge {
     animation: none !important;
   }
   [data-reveal-draw] path {
@@ -1183,6 +1186,25 @@ html {
   }
   @media (prefers-reduced-motion: reduce) {
     animation: none;
+  }
+}
+/* The « Exemple » card on the photo of the home page (DESIGN.md 9, DECISIONS
+   2026-11-23): it rises into place once (opacity and 20 px, 700 ms), the
+   gauge under its amount fills once from the left, then the card floats,
+   6 px up and down in 7 s. With reduced motion and in print, neither: the
+   card in place, the gauge full. */
+@utility lk-example-card {
+  --lk-float-distance: -6px;
+  @media (prefers-reduced-motion: no-preference) {
+    animation:
+      lk-rise 0.7s var(--ease-reveal-lk) 0.3s backwards,
+      lk-float 7s ease-in-out 1s infinite;
+  }
+}
+@utility lk-example-gauge {
+  transform-origin: left center;
+  @media (prefers-reduced-motion: no-preference) {
+    animation: lk-draw-x 1.2s var(--ease-reveal-lk) 0.8s backwards;
   }
 }
 /* Heavy titles: 700 in the charte D (SPECS.md 1), tightened. */

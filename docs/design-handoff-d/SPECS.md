@@ -57,7 +57,7 @@ Fichiers de référence :
 - **Halos** sur fond nuit : `radial-gradient(circle, rgba(59,130,246,.30), transparent 65%)` (bleu, en bas à gauche) et `radial-gradient(circle, rgba(139,92,246,.20), transparent 65%)` (violet, en haut), très grands (500–850 px), pulsation d'opacité lente (8 s).
 - **Trame de points** : `background-image: radial-gradient(rgba(255,255,255,.55) 1.3px, transparent 1.6px); background-size: 18px 18px` (version bleue `rgba(59,130,246,.45)` sur fond clair).
 - **Orbe** : disque `linear-gradient(135deg,#3B82F6,#8B5CF6)`, en grand flouté (`opacity .14; filter: blur(30px)`) ou en petit plein (46 px, `opacity .85`), flottement lent.
-- **Vague** : la photo du bandeau est découpée à gauche par une courbe (SVG `path d="M0 0 H100 C58 16 26 38 40 60 C52 80 34 93 0 100 Z"` en `#020D21`, `preserveAspectRatio="none"`, 240 px de large). Sur mobile : coin haut-gauche arrondi à 130 px.
+- **Vague** : la photo du bandeau est découpée à gauche par une courbe (SVG `path d="M0 0 H100 C58 16 26 38 40 60 C52 80 34 93 0 100 Z"` en `#020D21`, `preserveAspectRatio="none"`, 240 px de large). Sur mobile : coin haut-gauche arrondi à 130 px. *(Retirée le 2026-11-23 : sur ordinateur, le bandeau est en deux colonnes, la photo dans un cadre arrondi ; `docs/DESIGN.md` 13.1 fait foi, `DECISIONS.md` 2026-11-23.)*
 - **Animations** : flottement 10–13 s (±12–16 px), pulsation des halos 8 s, légère montée des boutons au survol. **Tout est coupé avec `prefers-reduced-motion: reduce`.**
 
 ### Typographie

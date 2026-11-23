@@ -27,13 +27,27 @@ const TABS: ReadonlyArray<{ value: Tab; icon: typeof House }> = [
 ];
 
 /**
+ * A panel of the card. From 1 024 px, the three of them in the same cell,
+ * the ones not chosen invisible in place (neither focused nor read).
+ */
+const PANEL = cn(
+  "pt-4 data-[state=inactive]:hidden md:pt-5.5",
+  "lg:col-start-1 lg:row-start-1 lg:min-w-0 lg:data-[state=inactive]:invisible lg:data-[state=inactive]:block",
+);
+
+/**
  * The search card of the home page (redesign D, docs/design-handoff-d/SPECS.md
- * 2, 3): set over the bottom of the night band, three tabs, « Valoriser mon
+ * 2, 3): set over the bottom of the photo below 1 024 px, in the left column
+ * of the hero from there (DECISIONS 2026-11-23); three tabs, « Valoriser mon
  * bien » open first; the tab open in ink, its icon in the gradient and an
  * indigo line under it. Valoriser: the address of the property, then the estimator with
  * it already chosen. Vendre: the address, then the creation of the listing
  * (the seller sign-up first when signed out). Acheter: the segmented bar, then
  * the search. Tabs of Radix (arrows between them, the panel after them).
+ *
+ * In the column (from 1 024 px), the field and its action one under the
+ * other, and the three panels in one cell: the card keeps the height of the
+ * tallest, so that the photo beside it does not move from a tab to another.
  */
 export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
   return (
@@ -70,61 +84,48 @@ export function HomeSearchCard({ signedIn }: { signedIn: boolean }) {
       </Tabs.List>
       {/* Kept mounted: an address typed stays when another tab is chosen. Out of
           the tab order: Tab goes from the tabs to the field of the panel. */}
-      <Tabs.Content
-        value="valuation"
-        forceMount
-        tabIndex={-1}
-        className="pt-4 data-[state=inactive]:hidden md:pt-5.5"
-      >
-        <AddressForm
-          label={t.valuation.label}
-          action={t.valuation.action}
-          target={(chosen) => valuationHref(chosen)}
-          suggest
-        />
-        <p className="mt-2.5 text-center text-lk-secondary text-lk-ink-2 md:hidden">
-          <Points points={t.valuation.pointsShort} />
-        </p>
-        <p className="mt-1 ml-6 hidden text-lk-compact text-lk-ink-2 md:block">
-          <Points points={t.valuation.points} />
-        </p>
-      </Tabs.Content>
-      <Tabs.Content
-        value="sell"
-        forceMount
-        tabIndex={-1}
-        className="pt-4 data-[state=inactive]:hidden md:pt-5.5"
-      >
-        <AddressForm
-          label={t.sell.label}
-          action={t.sell.action}
-          target={(_chosen, text) => sellHref(signedIn, text || null)}
-        />
-        <p className="mt-2.5 text-center text-lk-secondary text-lk-ink-2 md:mt-1 md:ml-6 md:text-left md:text-lk-compact">
-          {t.sell.note}
-        </p>
-      </Tabs.Content>
-      <Tabs.Content
-        value="buy"
-        forceMount
-        tabIndex={-1}
-        className="pt-4 data-[state=inactive]:hidden md:pt-5.5"
-      >
-        <BuySearchBar />
-        {/* Below 768 px, one button: the search page has the filters. */}
-        <Link
-          href={SEARCH_PATH}
-          className="flex min-h-15 items-center gap-3 rounded-full border border-lk-line-strong bg-lk-surface py-2 pr-2 pl-5 shadow-lk-d-field md:hidden"
-        >
-          <span className="min-w-0 flex-1">
-            <span className="block text-lk-body font-bold text-lk-ink">{t.buy.mobileTitle}</span>
-            <span className="block text-lk-secondary text-lk-ink-3">{t.buy.mobileText}</span>
-          </span>
-          <span className="lk-gradient flex size-11 shrink-0 items-center justify-center rounded-full text-white">
-            <Search aria-hidden="true" strokeWidth={2.4} className="size-5" />
-          </span>
-        </Link>
-      </Tabs.Content>
+      <div className="lg:grid">
+        <Tabs.Content value="valuation" forceMount tabIndex={-1} className={PANEL}>
+          <AddressForm
+            label={t.valuation.label}
+            action={t.valuation.action}
+            target={(chosen) => valuationHref(chosen)}
+            suggest
+          />
+          <p className="mt-2.5 text-center text-lk-secondary text-lk-ink-2 md:hidden">
+            <Points points={t.valuation.pointsShort} />
+          </p>
+          <p className="mt-1 ml-6 hidden text-lk-compact text-lk-ink-2 md:block lg:mt-3 lg:ml-0 lg:text-center">
+            <Points points={t.valuation.points} />
+          </p>
+        </Tabs.Content>
+        <Tabs.Content value="sell" forceMount tabIndex={-1} className={PANEL}>
+          <AddressForm
+            label={t.sell.label}
+            action={t.sell.action}
+            target={(_chosen, text) => sellHref(signedIn, text || null)}
+          />
+          <p className="mt-2.5 text-center text-lk-secondary text-lk-ink-2 md:mt-1 md:ml-6 md:text-left md:text-lk-compact lg:mt-3 lg:ml-0 lg:text-center">
+            {t.sell.note}
+          </p>
+        </Tabs.Content>
+        <Tabs.Content value="buy" forceMount tabIndex={-1} className={PANEL}>
+          <BuySearchBar />
+          {/* Below 768 px, one button: the search page has the filters. */}
+          <Link
+            href={SEARCH_PATH}
+            className="flex min-h-15 items-center gap-3 rounded-full border border-lk-line-strong bg-lk-surface py-2 pr-2 pl-5 shadow-lk-d-field md:hidden"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-lk-body font-bold text-lk-ink">{t.buy.mobileTitle}</span>
+              <span className="block text-lk-secondary text-lk-ink-3">{t.buy.mobileText}</span>
+            </span>
+            <span className="lk-gradient flex size-11 shrink-0 items-center justify-center rounded-full text-white">
+              <Search aria-hidden="true" strokeWidth={2.4} className="size-5" />
+            </span>
+          </Link>
+        </Tabs.Content>
+      </div>
     </Tabs.Root>
   );
 }
@@ -272,9 +273,9 @@ function AddressForm({
   return (
     <form
       onSubmit={submit}
-      className="flex flex-col gap-2.5 md:flex-row md:flex-wrap md:items-center md:gap-3"
+      className="flex flex-col gap-2.5 md:flex-row md:flex-wrap md:items-center md:gap-3 lg:flex-col lg:flex-nowrap lg:items-stretch"
     >
-      <div className="relative md:min-w-90 md:flex-1">
+      <div className="relative md:min-w-90 md:flex-1 lg:min-w-0 lg:flex-none">
         <label
           htmlFor={inputId}
           className="flex h-13.5 items-center gap-2.5 rounded-full border border-lk-line-strong bg-lk-surface px-4.5 shadow-lk-d-field focus-within:border-lk-blue has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-lk-brand-blue has-[input:focus-visible]:outline-solid md:h-15.5 md:gap-3 md:px-6"

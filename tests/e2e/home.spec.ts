@@ -1,8 +1,9 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 // The home page of direction C (docs/design-handoff/SPECS.md 3, DECISIONS
-// 2026-10-26), after L1-41 and L1-49. Two modes, like search.spec.ts:
+// 2026-10-26), after L1-41 and L1-49; its hero in two columns on a computer
+// since 2026-11-23 (DECISIONS, « piste A »). Two modes, like search.spec.ts:
 // - without a database (CI): the hero and its search card (the national
 //   address base simulated), the shortcuts, the steps, the questions, the
 //   last banner, the header and the footer; neither the listings, nor the
@@ -98,9 +99,9 @@ test.describe("accueil", () => {
     await expect(page.getByRole("tabpanel")).toContainText("2 minutes");
     // The invented figure of the V1 home is gone (« + 5,2 % vs prix agence »).
     await expect(page.getByText("vs prix agence")).toHaveCount(0);
-    // The example on the photo from 1 280 px, said to be one, its value from the engine (Q58).
+    // The example on the photo from 1 024 px, said to be one, its value from the engine (Q58).
     const example = page.getByRole("group", { name: "Exemple de valorisation" });
-    if ((page.viewportSize()?.width ?? 0) >= 1280) {
+    if ((page.viewportSize()?.width ?? 0) >= 1024) {
       await expect(example).toBeVisible();
       await expect(example).toContainText("Exemple");
       await expect(example).toContainText(/453\s000\s€/);
@@ -108,6 +109,79 @@ test.describe("accueil", () => {
       await expect(example).toBeHidden();
     }
   });
+
+  // « Piste A » (DECISIONS 2026-11-23): from 1 024 px, the text, the search
+  // card and the pills in the left column of the night, the photo in the right
+  // one, the « Exemple » card over its bottom left corner.
+  for (const [width, height] of [
+    [1024, 768],
+    [1280, 800],
+    [1440, 900],
+  ] as const) {
+    test(`hero à ${width} px : deux colonnes, la carte de recherche sous le texte à gauche de la photo`, async ({
+      page,
+      isMobile,
+    }) => {
+      test.skip(isMobile, "deux colonnes à partir de 1 024 px");
+      await page.setViewportSize({ width, height });
+      await page.goto("/");
+      await page.evaluate(() => document.fonts.ready);
+      const hero = page.getByRole("region", {
+        name: "Vendez votre bien autrement. Moins de frais, plus de contrôle.",
+      });
+      const box = async (locator: Locator) => {
+        const found = await locator.boundingBox();
+        if (!found) throw new Error("not on the page");
+        return { ...found, right: found.x + found.width, bottom: found.y + found.height };
+      };
+      const photo = hero.locator('img[src*="/images/accueil/maison-"]');
+      const card = hero.getByRole("tablist", { name: "Votre projet" }).locator("..");
+      const frames = async () => ({
+        hero: await box(hero),
+        lead: await box(hero.getByText(/^Leenkey vous donne les outils/)),
+        card: await box(card),
+        pills: await box(hero.getByRole("navigation", { name: "Accès directs" })),
+        photo: await box(photo),
+      });
+      const at = await frames();
+      // Under the text, left of the photo, inside the night: nothing set over its bottom.
+      expect(at.card.y).toBeGreaterThanOrEqual(at.lead.bottom);
+      expect(at.card.right).toBeLessThan(at.photo.x);
+      expect(at.card.bottom).toBeLessThan(at.hero.bottom);
+      // The pills under it, in the same column.
+      expect(at.pills.y).toBeGreaterThanOrEqual(at.card.bottom);
+      expect(at.pills.right).toBeLessThan(at.photo.x);
+      expect(at.pills.bottom).toBeLessThanOrEqual(at.hero.bottom);
+      // The photo as high as the column, its box held before it loads.
+      expect(at.photo.y).toBeLessThan(at.card.y);
+      expect(at.photo.bottom).toBeGreaterThan(at.card.bottom);
+      expect(at.photo.right).toBeLessThanOrEqual(width);
+      // The example over the bottom left corner of the photo.
+      const example = await box(page.getByRole("group", { name: "Exemple de valorisation" }));
+      expect(example.x).toBeLessThan(at.photo.x);
+      expect(example.right).toBeGreaterThan(at.photo.x);
+      expect(example.y).toBeLessThan(at.photo.bottom);
+      expect(example.bottom).toBeGreaterThan(at.photo.bottom);
+      expect(example.x).toBeGreaterThan(at.card.right);
+      expect(example.bottom).toBeLessThanOrEqual(at.hero.bottom);
+      // Its gauge says nothing: hidden from assistive technologies.
+      await expect(hero.locator(".lk-example-gauge")).toHaveCount(1);
+      await expect(hero.locator("[aria-hidden=true] .lk-example-gauge")).toHaveCount(1);
+      // No curve cut into the photo any more: its frame alone, rounded.
+      await expect(hero.locator("svg[preserveAspectRatio=none]")).toHaveCount(0);
+      // Nothing wider than the screen.
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        width,
+      );
+      // From a tab to another the card keeps its height: the photo does not move.
+      await page.getByRole("tab", { name: "Acheter" }).click();
+      await expect(page.getByRole("search")).toBeVisible();
+      await expect(page.getByRole("tabpanel")).toHaveCount(1);
+      const after = await frames();
+      expect(after.card).toEqual(at.card);
+      expect(after.photo).toEqual(at.photo);
+    });
+  }
 
   test("Valoriser : l'adresse choisie remplit l'étape « Localisation » de l'estimateur", async ({
     page,
