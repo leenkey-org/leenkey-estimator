@@ -40,10 +40,11 @@ const optionClassName =
 /**
  * The segmented bar of the « Acheter » tab, from 768 px (docs/design-handoff/
  * SPECS.md 2): « Où ? | Type de bien | Budget max » in one pill, then
- * « Rechercher ». The place suggests the communes of the launch zone (a
- * combobox: arrows, Enter, Escape); the type and the budget open a small
- * panel each. The search page takes them
- * over (its own filters for the rest).
+ * « Rechercher », in the pill too up to 1 024 px, under it from there (the
+ * card is in the left column of the hero, DECISIONS 2026-11-23). The place
+ * suggests the communes of the launch zone (a combobox: arrows, Enter,
+ * Escape); the type and the budget open a small panel each. The search page
+ * takes them over (its own filters for the rest).
  */
 export function BuySearchBar() {
   const router = useRouter();
@@ -105,141 +106,148 @@ export function BuySearchBar() {
         event.preventDefault();
         search();
       }}
-      className="hidden items-center rounded-full border border-lk-line-strong bg-lk-surface py-1.5 pr-1.5 shadow-lk-d-field md:flex"
+      className={cn(
+        "hidden items-center rounded-full border border-lk-line-strong bg-lk-surface py-1.5 pr-1.5 shadow-lk-d-field md:flex",
+        // From 1 024 px the pill is the three segments, the action under it.
+        "lg:flex-col lg:items-stretch lg:gap-3 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none",
+      )}
     >
-      <Popover.Root open={expanded} onOpenChange={setPlaceOpen}>
-        <Popover.Anchor asChild>
-          <label
-            htmlFor={`${id}-place`}
-            className="min-w-0 flex-[1.3] cursor-text rounded-full px-7 py-2.5 hover:bg-lk-sand has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-lk-brand-blue has-[input:focus-visible]:outline-solid"
-          >
-            <span className="block text-lk-label font-bold text-lk-ink">{t.where}</span>
-            <input
-              id={`${id}-place`}
-              value={place}
-              placeholder={t.wherePlaceholder}
-              autoComplete="off"
-              role="combobox"
-              aria-expanded={expanded}
-              aria-controls={listId}
-              aria-autocomplete="list"
-              aria-activedescendant={expanded && active >= 0 ? `${listId}-${active}` : undefined}
-              onKeyDown={onPlaceKeyDown}
-              onChange={(event) => {
-                setPlace(event.target.value);
-                setPlaceSlug(undefined);
-                setPlaceOpen(true);
-                setActive(-1);
-              }}
-              onFocus={() => setPlaceOpen(true)}
-              className="block w-full bg-transparent text-lk-body text-lk-ink outline-none placeholder:text-lk-ink-3"
-            />
-          </label>
-        </Popover.Anchor>
-        <Popover.Portal>
-          <Popover.Content
-            align="start"
-            sideOffset={10}
-            onOpenAutoFocus={(event) => event.preventDefault()}
-            className={cn(panelClassName, "w-80")}
-          >
-            <ul id={listId} role="listbox" aria-label={t.suggestions}>
-              {suggestions.map((commune, index) => (
-                <li
-                  key={commune.slug}
-                  id={`${listId}-${index}`}
-                  role="option"
-                  aria-selected={index === active}
-                  // Before the blur of the field, which would close the list.
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    choose(commune);
-                  }}
-                  className={cn(
-                    optionClassName,
-                    "cursor-pointer",
-                    index === active && "bg-lk-blue-tint",
-                  )}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="flex size-9 shrink-0 items-center justify-center rounded-lk-lg bg-lk-blue-tint text-lk-blue"
+      <div className="flex min-w-0 flex-1 items-center lg:flex-none lg:rounded-full lg:border lg:border-lk-line-strong lg:bg-lk-surface lg:py-1 lg:shadow-lk-d-field">
+        <Popover.Root open={expanded} onOpenChange={setPlaceOpen}>
+          <Popover.Anchor asChild>
+            <label
+              htmlFor={`${id}-place`}
+              className="min-w-0 flex-[1.3] cursor-text rounded-full px-7 py-2.5 hover:bg-lk-sand lg:px-6 has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-lk-brand-blue has-[input:focus-visible]:outline-solid"
+            >
+              <span className="block text-lk-label font-bold text-lk-ink">{t.where}</span>
+              <input
+                id={`${id}-place`}
+                value={place}
+                placeholder={t.wherePlaceholder}
+                autoComplete="off"
+                role="combobox"
+                aria-expanded={expanded}
+                aria-controls={listId}
+                aria-autocomplete="list"
+                aria-activedescendant={expanded && active >= 0 ? `${listId}-${active}` : undefined}
+                onKeyDown={onPlaceKeyDown}
+                onChange={(event) => {
+                  setPlace(event.target.value);
+                  setPlaceSlug(undefined);
+                  setPlaceOpen(true);
+                  setActive(-1);
+                }}
+                onFocus={() => setPlaceOpen(true)}
+                className="block w-full bg-transparent text-lk-body text-lk-ink outline-none placeholder:text-lk-ink-3"
+              />
+            </label>
+          </Popover.Anchor>
+          <Popover.Portal>
+            <Popover.Content
+              align="start"
+              sideOffset={10}
+              onOpenAutoFocus={(event) => event.preventDefault()}
+              className={cn(panelClassName, "w-80")}
+            >
+              <ul id={listId} role="listbox" aria-label={t.suggestions}>
+                {suggestions.map((commune, index) => (
+                  <li
+                    key={commune.slug}
+                    id={`${listId}-${index}`}
+                    role="option"
+                    aria-selected={index === active}
+                    // Before the blur of the field, which would close the list.
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      choose(commune);
+                    }}
+                    className={cn(
+                      optionClassName,
+                      "cursor-pointer",
+                      index === active && "bg-lk-blue-tint",
+                    )}
                   >
-                    <Search aria-hidden="true" className="size-4" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate font-semibold">{commune.name}</span>
-                    <span className="block text-lk-secondary text-lk-ink-3">
-                      {commune.postalCodes.join(", ")}
+                    <span
+                      aria-hidden="true"
+                      className="flex size-9 shrink-0 items-center justify-center rounded-lk-lg bg-lk-blue-tint text-lk-blue"
+                    >
+                      <Search aria-hidden="true" className="size-4" />
                     </span>
-                  </span>
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold">{commune.name}</span>
+                      <span className="block text-lk-secondary text-lk-ink-3">
+                        {commune.postalCodes.join(", ")}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
+        <Divider />
+        <Segment label={t.type} value={typeLabel} placeholder={t.typeAny}>
+          {(close) => (
+            <ul className="w-64">
+              {TYPES.map(({ value, label, icon: Icon }) => (
+                <li key={label}>
+                  <button
+                    type="button"
+                    aria-pressed={type === value}
+                    className={optionClassName}
+                    onClick={() => {
+                      setType(value);
+                      close();
+                    }}
+                  >
+                    <Icon aria-hidden="true" strokeWidth={1.8} className="size-5 text-lk-blue" />
+                    <span className="flex-1">{label}</span>
+                    {type === value ? (
+                      <Check aria-hidden="true" className="size-4 text-lk-blue" />
+                    ) : null}
+                  </button>
                 </li>
               ))}
             </ul>
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
-      <Divider />
-      <Segment label={t.type} value={typeLabel} placeholder={t.typeAny}>
-        {(close) => (
-          <ul className="w-64">
-            {TYPES.map(({ value, label, icon: Icon }) => (
-              <li key={label}>
-                <button
-                  type="button"
-                  aria-pressed={type === value}
-                  className={optionClassName}
-                  onClick={() => {
-                    setType(value);
-                    close();
-                  }}
-                >
-                  <Icon aria-hidden="true" strokeWidth={1.8} className="size-5 text-lk-blue" />
-                  <span className="flex-1">{label}</span>
-                  {type === value ? (
-                    <Check aria-hidden="true" className="size-4 text-lk-blue" />
-                  ) : null}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Segment>
-      <Divider />
-      <Segment
-        label={t.budget}
-        value={budget ? formatPrice(budget * 100) : undefined}
-        placeholder={t.budgetAny}
-      >
-        {(close) => (
-          <ul className="w-56">
-            {[...BUDGETS, null].map((value) => (
-              <li key={value ?? "none"}>
-                <button
-                  type="button"
-                  aria-pressed={budget === value}
-                  className={optionClassName}
-                  onClick={() => {
-                    setBudget(value);
-                    close();
-                  }}
-                >
-                  <span className="flex-1 tabular">
-                    {value ? formatPrice(value * 100) : t.budgetNone}
-                  </span>
-                  {budget === value ? (
-                    <Check aria-hidden="true" className="size-4 text-lk-blue" />
-                  ) : null}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Segment>
+          )}
+        </Segment>
+        <Divider />
+        <Segment
+          label={t.budget}
+          value={budget ? formatPrice(budget * 100) : undefined}
+          placeholder={t.budgetAny}
+        >
+          {(close) => (
+            <ul className="w-56">
+              {[...BUDGETS, null].map((value) => (
+                <li key={value ?? "none"}>
+                  <button
+                    type="button"
+                    aria-pressed={budget === value}
+                    className={optionClassName}
+                    onClick={() => {
+                      setBudget(value);
+                      close();
+                    }}
+                  >
+                    <span className="flex-1 tabular">
+                      {value ? formatPrice(value * 100) : t.budgetNone}
+                    </span>
+                    {budget === value ? (
+                      <Check aria-hidden="true" className="size-4 text-lk-blue" />
+                    ) : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Segment>
+      </div>
       <button
         type="submit"
         className={cn(
           "lk-gradient ml-1 flex h-13.5 shrink-0 items-center gap-2 rounded-full pr-6 pl-5 text-lk-title font-semibold text-white",
+          "lg:ml-0 lg:h-15.5 lg:justify-center lg:text-lk-body-lg lg:shadow-lk-cta",
           "transition-[filter] duration-140 ease-out-lk hover:brightness-108",
           "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
         )}
@@ -274,7 +282,7 @@ function Segment({
         <button
           type="button"
           className={cn(
-            "min-w-0 flex-1 rounded-full px-6 py-2.5 text-left hover:bg-lk-sand",
+            "min-w-0 flex-1 rounded-full px-6 py-2.5 text-left hover:bg-lk-sand lg:px-4 xl:px-5",
             "focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-lk-brand-blue focus-visible:outline-solid",
           )}
         >
