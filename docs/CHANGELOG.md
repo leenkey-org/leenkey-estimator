@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-23 · Bandeau des cookies sur ordinateur · PR #126
+- Corrigé : à partir de 1 024 px, le bandeau des cookies du premier passage est une barre fine au bas de l'écran, sur toute la largeur ; il ne recouvre plus la carte de recherche de l'accueil (constat fait sur leenkey.fr après la mise en production). Textes et boutons inchangés ; téléphone, tablette et « Vos préférences » inchangés.
+- Modifié : `DECISIONS.md` (mise en production du 23 novembre : 63 migrations, branche `production` = `4045ca5`).
+- Tests : `tests/e2e/consent.spec.ts` (à 1 024, 1 280 et 1 440 px : la barre tient toute la largeur, au bas de l'écran, 130 px au plus, sous l'action de l'accueil ; « Refuser » et « Accepter » de même taille).
+
 ### 2026-11-23 · Interventions du conseiller : demande, motif, compteur (demande de Cédric) · PR #125
 - Ajouté : « Demander une intervention » pour le vendeur d'un bien dont la formule comprend un conseiller et vend des interventions : page `/vendeur/biens/[id]/intervention` (compteur « 2 interventions utilisées sur 4 », « Rendez-vous initial : à planifier / planifié / fait » à part, motif obligatoire parmi six, message, « Vos demandes » avec leur statut), entrée depuis la carte « Mon conseiller Leenkey » de « Ma vente » et depuis la conversation avec le conseiller (ligne au-dessus du champ). La demande est aussi le message du vendeur dans cette conversation ; tous les comptes admin sont prévenus (cloche et email de l'équipe, « Demande d'intervention de … »).
 - Ajouté : le nombre d'interventions d'une formule est lu en base (`plans.advisor_interventions` : 4 pour Accompagné, 6 pour Sérénité, posé par le seed des formules), jamais déduit d'un nom de formule. Une intervention compte quand l'équipe la marque faite ; une demande en attente, planifiée ou annulée ne compte pas, le rendez-vous initial non plus ; une demande en cours retient l'une des interventions restantes (jamais plus de demandes en cours que d'interventions à donner). Après un passage à Sérénité : 6, les interventions déjà faites restent comptées.

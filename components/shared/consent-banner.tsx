@@ -27,8 +27,12 @@ export type ConsentBannerProps = {
 
 /**
  * Cookie consent (L1-37, docs/DESIGN.md 10.8): bottom sheet on mobile, card at
- * the bottom left from md. Refusing is as easy as accepting: same buttons,
- * side by side. Non-modal: the page stays usable behind it.
+ * the bottom left from md. From lg the banner of a first visit is a thin bar
+ * along the bottom of the screen: a card at the bottom left hid the search
+ * card of the home page, its main action (DECISIONS.md 2026-11-23). The panel
+ * of the preferences, opened by the visitor, stays a card. Refusing is as easy
+ * as accepting: same buttons, side by side. Non-modal: the page stays usable
+ * behind it.
  */
 export function ConsentBanner({
   view,
@@ -43,6 +47,8 @@ export function ConsentBanner({
   const titleId = useId();
   const titleRef = useRef<HTMLParagraphElement>(null);
   const [audience, setAudience] = useState(analytics);
+  // The bar of a first visit, from lg (never in the catalogue, shown in place).
+  const bar = view === "banner" && !inline;
 
   // Reopened from « Gérer mes cookies »: keyboard focus goes to the panel.
   useEffect(() => {
@@ -66,6 +72,8 @@ export function ConsentBanner({
               // The banner is there from the first paint; only the panel, opened later, slides in.
               view === "panel" &&
                 "duration-220 ease-out-lk motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-4",
+              bar &&
+                "lg:inset-x-0 lg:bottom-0 lg:w-auto lg:flex-row lg:items-center lg:gap-6 lg:rounded-none lg:border-x-0 lg:border-b-0 lg:px-8 lg:py-3 lg:pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:shadow-sheet",
             ],
         className,
       )}
@@ -78,7 +86,7 @@ export function ConsentBanner({
         role="heading"
         aria-level={2}
         tabIndex={-1}
-        className="text-lk-title font-semibold outline-none"
+        className={cn("text-lk-title font-semibold outline-none", bar && "lg:sr-only")}
       >
         {view === "panel" ? t.panelTitle : t.title}
       </p>
@@ -87,10 +95,18 @@ export function ConsentBanner({
         <>
           {/* Short paragraphs, not one block: the text of the banner is never the
               largest paint of a page, whose content shows first (P-06). */}
-          <div className="flex flex-col gap-1.5">
-            <p className="text-lk-secondary text-lk-ink-2">{t.text}</p>
-            <p className="text-lk-secondary text-lk-ink-2">{t.necessary}</p>
-            <p className="text-lk-secondary text-lk-ink-2">
+          {/* In the bar the three paragraphs read as one text, on two or three lines. */}
+          <div
+            className={cn(
+              "flex flex-col gap-1.5",
+              bar && "lg:block lg:min-w-0 lg:flex-1 lg:leading-5",
+            )}
+          >
+            <p className={cn("text-lk-secondary text-lk-ink-2", bar && "lg:inline")}>{t.text}</p>{" "}
+            <p className={cn("text-lk-secondary text-lk-ink-2", bar && "lg:inline")}>
+              {t.necessary}
+            </p>{" "}
+            <p className={cn("text-lk-secondary text-lk-ink-2", bar && "lg:inline")}>
               {t.textMore}{" "}
               <a
                 href="/cookies"
@@ -100,17 +116,24 @@ export function ConsentBanner({
               </a>
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2.5">
-            <Button variant="outline-ink" onClick={onRefuse}>
-              {t.refuse}
-            </Button>
-            <Button variant="outline-ink" onClick={onAccept}>
-              {t.accept}
+          <div
+            className={cn(
+              "flex flex-col gap-3.5",
+              bar && "lg:shrink-0 lg:flex-row lg:items-center lg:gap-2.5",
+            )}
+          >
+            <div className={cn("grid grid-cols-2 gap-2.5", bar && "lg:w-64")}>
+              <Button variant="outline-ink" onClick={onRefuse}>
+                {t.refuse}
+              </Button>
+              <Button variant="outline-ink" onClick={onAccept}>
+                {t.accept}
+              </Button>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onCustomize} className="self-center">
+              {t.customize}
             </Button>
           </div>
-          <Button variant="ghost" size="sm" onClick={onCustomize} className="self-center">
-            {t.customize}
-          </Button>
         </>
       ) : (
         <>
