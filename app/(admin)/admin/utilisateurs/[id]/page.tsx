@@ -558,8 +558,6 @@ export default async function AdminUserPage({ params }: Props) {
             </ol>
           )}
         </Section>
-
-        <p className="text-lk-caption text-lk-ink-3">{d.later}</p>
       </ModerationFeedback>
     </AdminPage>
   );

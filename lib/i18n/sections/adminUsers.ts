@@ -103,7 +103,6 @@ export const frAdminUsers = {
     self: "C'est votre compte : vous ne pouvez pas le suspendre.",
     team: "Un compte de l'équipe ne se suspend pas.",
     error: "La fiche de ce compte n'a pas pu être chargée.",
-    later: "Les offres s'ajouteront à cette fiche avec le lot 2.",
   },
   history: {
     actions: {

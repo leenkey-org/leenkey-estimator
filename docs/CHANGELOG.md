@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-23 · P-04 · Guide du back office · PR #129
+- Ajouté : `docs/GUIDE-BACK-OFFICE.md`, le guide de l'équipe pour le back office tel qu'il est en ligne : accès, menu, cloche et emails de l'équipe, tableau de bord, validation d'une annonce (pré-analyse, DPE, refus avec motif, suspension, mise en conformité et suppression), utilisateurs, dossiers et signalements, messages clients et interventions du conseiller, offres (lecture seule, cadre « loi Hoguet »), justificatifs de financement, pièces d'identité, formules et rétractations, assistant, export, limites et questions fréquentes. Libellés repris de l'interface.
+- Ajouté : `docs/GUIDE-BACK-OFFICE.pdf` (12 pages A4, charte D, Sora, sommaire cliquable, pages numérotées) et `npm run guide:pdf` (`scripts/guide-pdf.mjs`) qui le régénère depuis le Markdown avec le Chromium de Playwright, sans dépendance nouvelle (`PLAYWRIGHT_CHROMIUM_PATH` comme pour les tests E2E).
+- Corrigé : deux textes périmés du back office retirés (« Les offres en attente s'ajouteront ici », « Les offres s'ajouteront à cette fiche avec le lot 2 ») : les offres y sont depuis le lot 2.
+- Aucun changement de base.
+
 ### 2026-11-23 · Vérification d'identité avant visite (demande de Cédric) · PR #128
 - Ajouté : un acquéreur dépose une pièce d'identité (carte d'identité, passeport ou titre de séjour ; PDF ou image, mêmes limites que le justificatif de financement) depuis « Mon projet d'achat » (`/acquereur/profil#identite`) et depuis la réservation d'une visite quand elle manque. Statuts « Pièce d'identité non déposée », « Pièce d'identité déposée », « Identité vérifiée par Leenkey » (jamais « validé »). Une pièce en attente se remplace ou se retire ; rien n'est lu ni gardé de la pièce (ni numéro, ni date de naissance).
 - Ajouté : réserver un créneau demande une pièce déposée, sans attendre le contrôle de l'équipe (`visit_book`) ; la page de réservation affiche le dépôt à la place des créneaux tant qu'elle manque. Une visite déjà réservée n'est jamais annulée.
