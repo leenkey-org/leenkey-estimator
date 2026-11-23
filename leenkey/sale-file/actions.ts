@@ -166,7 +166,7 @@ async function fileChecked(
     title: string;
     covers?: DocumentType[];
   },
-): Promise<FileDocumentResult> {
+): Promise<FileDdtResult> {
   const { propertyId, path, type, title, covers } = document;
   if (!path.startsWith(`${propertyId}/sale/`)) return { ok: false, error: "invalid" };
   const supabase = await createClient();
@@ -196,6 +196,10 @@ async function fileChecked(
         error: error.message.includes("size_bytes") ? "too_heavy" : "unsupported",
       };
     }
+    // One DDT per property (the index documents_one_ddt).
+    if (error.code === "23505" && error.message.includes("documents_one_ddt")) {
+      return { ok: false, error: "already" };
+    }
     if (error.code !== "42501" && error.code !== "22023") {
       console.error("[sale-file] document not filed", {
         user_id: profileId,
@@ -216,8 +220,15 @@ export async function fileDocument(input: unknown): Promise<FileDocumentResult> 
   if (!profile) return { ok: false, error: "auth" };
   const parsed = fileDocumentSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
-  return fileChecked(profile.id, parsed.data);
+  const result = await fileChecked(profile.id, parsed.data);
+  // « already » is about a DDT only: never the answer of this deposit.
+  return !result.ok && result.error === "already" ? { ok: false, error: "unavailable" } : result;
 }
+
+export type FileDdtResult =
+  | FileDocumentResult
+  /** The property already has a DDT: removed first, then filed again. */
+  | { ok: false; error: "already" };
 
 /**
  * The diagnostic lines of a property, those a DDT may cover on it; null when
@@ -245,15 +256,33 @@ async function coverableDiagnostics(
  * diagnostics it covers, among the diagnostic lines of the property. Its
  * name is ours (« Dossier de diagnostics (DDT) »): what a buyer reads.
  */
-export async function fileDdt(input: unknown): Promise<FileDocumentResult> {
+export async function fileDdt(input: unknown): Promise<FileDdtResult> {
   const profile = await getProfile();
   if (!profile) return { ok: false, error: "auth" };
   const parsed = fileDdtSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
   const { propertyId, path, covers } = parsed.data;
-  const coverable = await coverableDiagnostics(await createClient(), propertyId);
-  if (!coverable) return { ok: false, error: "unavailable" };
-  if (!covers.every((type) => coverable.includes(type))) return { ok: false, error: "invalid" };
+  if (!path.startsWith(`${propertyId}/sale/`)) return { ok: false, error: "invalid" };
+  const supabase = await createClient();
+  // Refused from here on: the file the browser just sent is taken back (the
+  // storage policy decides: its owner, a file never filed).
+  const refuse = async (error: "invalid" | "unavailable" | "already"): Promise<FileDdtResult> => {
+    await removeFile(supabase, path, profile.id);
+    return { ok: false, error };
+  };
+  const coverable = await coverableDiagnostics(supabase, propertyId);
+  if (!coverable) return refuse("unavailable");
+  if (!covers.every((type) => coverable.includes(type))) return refuse("invalid");
+  // One DDT per property: said plainly before anything is filed (the
+  // database refuses it too).
+  const existing = await supabase
+    .from("documents")
+    .select("id", { count: "exact", head: true })
+    .eq("property_id", propertyId)
+    .eq("type", DDT_TYPE)
+    .is("deleted_at", null);
+  if (existing.error) return refuse("unavailable");
+  if ((existing.count ?? 0) > 0) return refuse("already");
   return fileChecked(profile.id, {
     propertyId,
     path,

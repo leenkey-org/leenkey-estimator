@@ -5,7 +5,7 @@
 -- DDT is ever shown on a listing. Fixtures in 99995.
 begin;
 \ir _helpers.psql
-select plan(27);
+select plan(32);
 \ir _plan.psql
 
 \set who seller_a
@@ -51,6 +51,12 @@ select throws_ok(format($$select document_add(%L, 'ddt', 'DDT', %L, array['dpe',
 select throws_ok(format($$select document_add(%L, 'erp', 'ERP', %L, array['erp']::document_type[])$$, :'prop', :'path_bad'),
                  '22023', null, 'only a DDT covers diagnostics');
 
+-- One DDT per property at a time.
+select throws_ok(format($$select document_add(%L, 'ddt', 'DDT', %L, array['gaz']::document_type[])$$, :'prop', :'path_bad'),
+                 '23505', null, 'a second DDT is refused while the first is there');
+select is((select account_export()->'documents' @> jsonb_build_array(jsonb_build_object('id', :'ddt', 'covers', array['dpe', 'amiante', 'plomb']))), true,
+          'seller_a: the export of the account gives what the DDT covers');
+
 -- No client writes the column, nor makes or unmakes a DDT by its type.
 select throws_ok(format($$update documents set covers = array['gaz']::document_type[] where id = %L$$, :'ddt'),
                  '42501', null, 'seller_a: the coverage is not a column a client writes');
@@ -83,6 +89,11 @@ select is((select count(*)::int from documents where id = :'ddt'), 0,
 \ir _as.psql
 select throws_ok(format($$select document_coverage_set(%L, array['dpe']::document_type[])$$, :'ddt'),
                  '42501', null, 'anon: no access');
+select throws_ok('select covers from documents', '42501', null, 'anon: the coverage is not a column a visitor reads');
+\set who admin
+\ir _as.psql
+select is((select covers from documents where id = :'ddt'), array['plomb', 'erp']::document_type[],
+          'admin: reads the coverage');
 
 -- A buyer reads the coverage only for a document shared with them.
 \set who buyer_c
@@ -138,6 +149,11 @@ select throws_ok(format($$select document_coverage_set(%L, array['dpe']::documen
 \ir _as.psql
 select is((select count(*)::int from documents where id = :'ddt') + (select count(*)::int from shared_documents()), 0,
           'buyer_c: a removed DDT is no longer read');
+-- Removed, the DDT leaves its place to a new one.
+\set who seller_a
+\ir _as.psql
+select lives_ok(format($$select document_add(%L, 'ddt', 'DDT', %L, array['gaz']::document_type[])$$, :'prop', :'path_bad'),
+                'seller_a: files a new DDT once the first is removed');
 
 select * from finish();
 rollback;

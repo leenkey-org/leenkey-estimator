@@ -15,7 +15,9 @@ import { devices, expect, test, type Browser, type Locator, type Page } from "@p
 // only (E2E_SEED=1, SEED_PASSWORD, E2E_MUTATE=1, project « seed-mutations »).
 // Seed used: LK-0002 of seller_a, a house outside a co-ownership (its sale
 // file is only read by tests/e2e/sale-file-live.spec.ts, as patterns), and
-// its conversation with buyer_c.
+// buyer_c. The seed has no contact between them: the test starts by making
+// one (buyer_c writes to the seller from the listing) unless another spec or
+// an earlier attempt already did, so that it runs alone on a stack just made.
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
@@ -30,6 +32,7 @@ test.skip(
 );
 
 const TAB = "/vendeur/biens/5eed1000-0000-4000-8000-000000000002/documents";
+const LISTING = "/annonce/maison-5-pieces-epinay-sur-orge-lk0002";
 const DDT = "Dossier de diagnostics (DDT)";
 // The diagnostic lines of a house outside a co-ownership, in their order.
 const DIAGNOSTICS = [
@@ -148,6 +151,8 @@ test("DDT déposé en une fois : dépôt, diagnostics cochés, comptes, partage,
   });
   // The lines of the test that were to file at the start: what the DDT adds to the counts.
   const toFile = new Set<Diagnostic>();
+  // The lines « Non concerné » at the start: not ticked at first in the deposit.
+  const notConcerned = new Set<Diagnostic>();
   const added = (covered: readonly Diagnostic[]) =>
     covered.filter((name) => toFile.has(name)).length;
   let filed = 0;
@@ -158,6 +163,20 @@ test("DDT déposé en une fois : dépôt, diagnostics cochés, comptes, partage,
     await expect(propertyCount).toHaveText(`${ofProperty + more} sur 11`);
     await expect(listingStage).toContainText(`${atListing + more} sur 9 pièces`);
   };
+
+  await test.step("l'acquéreur est en contact avec le vendeur du bien", async () => {
+    await signIn(buyer, "buyer_c", LISTING);
+    await buyer.getByRole("link", { name: "Contacter le vendeur" }).click();
+    await buyer.waitForURL((url) => url.pathname.startsWith("/messages/"));
+    // A first message opens the contact; with one already, the link leads to it.
+    if (new URL(buyer.url()).pathname === "/messages/nouveau") {
+      await buyer
+        .getByRole("textbox", { name: "Votre message" })
+        .fill("Bonjour, pourrais-je consulter les diagnostics de la maison ?");
+      await buyer.getByRole("button", { name: "Envoyer" }).click();
+    }
+    await expect(buyer).toHaveURL(/\/messages\/[0-9a-f-]{36}$/);
+  });
 
   await test.step("les diagnostics forment un groupe, avec le dépôt du DDT en premier", async () => {
     await signIn(seller, "seller_a", TAB);
@@ -186,6 +205,13 @@ test("DDT déposé en une fois : dépôt, diagnostics cochés, comptes, partage,
     for (const [index, name] of DIAGNOSTICS.entries()) {
       await expect(lines.nth(index).getByText(name, { exact: true })).toBeVisible();
       if ((await line(name).getByText("À déposer", { exact: true }).count()) > 0) toFile.add(name);
+      if (
+        (await line(name)
+          .getByRole("button", { name: /^Annuler « Non concerné »/ })
+          .count()) > 0
+      ) {
+        notConcerned.add(name);
+      }
     }
     // On a seed just made, every one of them is to file.
     expect(toFile.size).toBeGreaterThan(0);
@@ -204,9 +230,11 @@ test("DDT déposé en une fois : dépôt, diagnostics cochés, comptes, partage,
   await test.step("le vendeur dépose son DDT et coche les diagnostics qu'il contient", async () => {
     await deposit.click();
     const boxes = seller.getByRole("group", { name: "Diagnostics contenus dans ce fichier" });
-    // Every diagnostic line of the property, ticked at first.
+    // Every diagnostic line of the property, ticked at first but for those « Non concerné ».
     await expect(boxes.getByRole("checkbox")).toHaveCount(DIAGNOSTICS.length);
-    for (const name of DIAGNOSTICS) await expect(boxes.getByLabel(name)).toBeChecked();
+    for (const name of DIAGNOSTICS) {
+      await expect(boxes.getByLabel(name)).toBeChecked({ checked: !notConcerned.has(name) });
+    }
     await expectNoSeriousViolation(seller);
     const submit = seller.getByRole("button", { name: "Déposer mon DDT", exact: true });
     // A file is asked for, and one diagnostic at least.
@@ -290,7 +318,7 @@ test("DDT déposé en une fois : dépôt, diagnostics cochés, comptes, partage,
   await test.step("partagé avec les diagnostics, l'acquéreur lit un document et ce qu'il couvre", async () => {
     await seller.getByRole("button", { name: "Partager les diagnostics avec Chloé" }).click();
     await expect(seller.getByText("1 document partagé avec Chloé.")).toBeVisible();
-    await signIn(buyer, "buyer_c", "/acquereur/documents");
+    await buyer.goto("/acquereur/documents");
     await expect(
       buyer.getByRole("heading", { name: "Documents partagés", level: 1 }),
     ).toBeVisible();
@@ -299,7 +327,9 @@ test("DDT déposé en une fois : dépôt, diagnostics cochés, comptes, partage,
     });
     await expect(shared).toHaveCount(1);
     await expect(shared.getByText(DDT, { exact: true })).toBeVisible();
-    await expect(shared.getByText(`Diagnostics inclus : ${SECOND.join(", ")}`)).toBeVisible();
+    await expect(
+      shared.getByText(`Diagnostics indiqués par le vendeur : ${SECOND.join(", ")}`),
+    ).toBeVisible();
     // One document, not one per diagnostic.
     await expect(buyer.getByRole("link", { name: "Ouvrir DPE" })).toHaveCount(0);
     const href =

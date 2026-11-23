@@ -66,22 +66,26 @@ function CoverageBoxes({
 
 /**
  * « Déposer mon DDT (un seul fichier) »: the file, and the diagnostics it
- * holds (all ticked at first, one at least). Sent as every document of the
+ * holds (ticked at first, but for the lines « Non concerné »; one at least).
+ * Sent as every document of the
  * sale file: from the browser to the private bucket, then checked and filed
  * by the server.
  */
 export function DdtUploadForm({
   propertyId,
   diagnostics,
+  ticked,
 }: {
   propertyId: string;
   /** The diagnostic lines of the property, in their order. */
   diagnostics: readonly DocumentType[];
+  /** Those ticked at first: not the lines « Non concerné » (ddtInitialCoverage). */
+  ticked: readonly DocumentType[];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [covers, setCovers] = useState<DocumentType[]>([...diagnostics]);
+  const [covers, setCovers] = useState<DocumentType[]>([...ticked]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<DdtError | null>(null);
 
@@ -221,7 +225,12 @@ export function DdtCoverageEditor({
           const result = await setDdtCoverage({ propertyId, documentId, covers: chosen }).catch(
             () => null,
           );
-          if (!result?.ok) return setError(result?.error ?? "unavailable");
+          // Refused by the server: about the diagnostics, there is no file here.
+          if (!result?.ok) {
+            return setError(
+              result?.error === "invalid" ? "coverage" : (result?.error ?? "unavailable"),
+            );
+          }
           setOpen(false);
           setSaved(true);
           router.refresh();

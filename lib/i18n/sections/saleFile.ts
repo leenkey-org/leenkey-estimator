@@ -100,12 +100,12 @@ export const frSaleFile = {
       file: "Fichier de votre DDT",
       fileHelp: "PDF, JPEG ou PNG, 20 Mo au plus.",
       covers: "Diagnostics contenus dans ce fichier",
+      // The lines « Non concerné » are not ticked at first.
       coversHelp:
-        "Décochez ceux que votre DDT ne contient pas. Vous pourrez modifier ce choix plus tard.",
+        "Cochez les diagnostics que contient votre DDT, décochez les autres. Vous pourrez modifier ce choix plus tard.",
       submit: "Déposer mon DDT",
       cancel: "Annuler",
       sending: "Envoi du fichier…",
-      added: "DDT déposé. Les diagnostics cochés sont comptés comme fournis.",
       alone: "Vous pouvez aussi déposer un diagnostic seul, avec « Déposer un document ».",
       filedCovers: (names: readonly string[]) => `Diagnostics couverts : ${names.join(", ")}`,
       edit: "Modifier les diagnostics couverts",
@@ -116,11 +116,14 @@ export const frSaleFile = {
       // The name of the link holds what it shows (accessible name).
       openAbout: (label: string) => `Fourni dans votre DDT : ouvrir le fichier (${label})`,
       removeDescription:
-        "Il disparaît de votre dossier : les diagnostics qu'il couvrait repassent « À déposer », et les acquéreurs avec qui vous l'aviez partagé ne le voient plus.",
+        "Il disparaît de votre dossier : les diagnostics qu'il couvrait repassent « À déposer » ou « Non concerné », et les acquéreurs avec qui vous l'aviez partagé ne le voient plus.",
       errors: {
         auth: "Votre session a expiré. Reconnectez-vous.",
         invalid: "Choisissez le fichier de votre DDT et cochez au moins un diagnostic.",
         none: "Cochez au moins un diagnostic.",
+        // The coverage of a DDT filed, refused by the server.
+        coverage: "Cochez au moins un diagnostic, parmi ceux demandés pour ce bien.",
+        already: "Votre dossier contient déjà un DDT. Retirez-le pour en déposer un nouveau.",
         unsupported: "Ce fichier n'est pas un PDF, un JPEG ou un PNG lisible.",
         too_heavy: "Ce fichier dépasse 20 Mo.",
         unavailable: "Ça n'a pas fonctionné. Réessayez.",
@@ -287,6 +290,9 @@ export const frSaleFile = {
       wrong_type: (label: string) =>
         `Document à vérifier : il ne semble pas correspondre au type «\u00A0${label}\u00A0».`,
       help: "Vérifiez le fichier, puis retirez-le et déposez-le à nouveau si besoin.",
+      // A whole DDT filed on the line of one diagnostic.
+      ddtHint:
+        "S'il s'agit du fichier unique de votre diagnostiqueur, retirez-le et utilisez « Déposer mon DDT ».",
     },
     buyerSummary: "Ce que lit un acquéreur avec qui vous partagez ce document",
     publicFacts: {
@@ -367,7 +373,9 @@ export const frSaleFile = {
     offline: "Bien retiré",
     sharedOn: (date: string) => `Partagé le ${date}`,
     // Under a shared DDT: the diagnostics its seller says it holds.
-    covers: (names: readonly string[]) => `Diagnostics inclus : ${names.join(", ")}`,
+    // What its seller ticked: Leenkey does not check what the file holds.
+    covers: (names: readonly string[]) =>
+      `Diagnostics indiqués par le vendeur : ${names.join(", ")}`,
     open: "Ouvrir",
     openAbout: (title: string) => `Ouvrir ${title}`,
     listing: "Voir l'annonce",

@@ -195,6 +195,25 @@ export function buildChecklist(
   };
 }
 
+/**
+ * The diagnostics ticked at first in « Déposer mon DDT »: the diagnostic
+ * lines of the property, without those « Non concerné » (the reason of the
+ * seller, or a property not subject to the DPE): a DDT does not hold what
+ * does not apply. The seller can still tick them.
+ */
+export function ddtInitialCoverage(
+  checklist: Checklist,
+  diagnostics: readonly DocumentType[],
+): DocumentType[] {
+  const exempt = new Set(
+    checklist.groups
+      .flatMap((group) => group.lines)
+      .filter((line) => line.state === "exempt")
+      .map((line) => line.type),
+  );
+  return diagnostics.filter((type) => !exempt.has(type));
+}
+
 /** The first bytes of a file say what it is, whatever its name: null when it is none of the three. */
 export function sniffSaleFile(
   head: Uint8Array,

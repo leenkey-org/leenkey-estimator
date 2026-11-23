@@ -20,6 +20,7 @@ import { UploadForm } from "@/leenkey/sale-file/components/upload-form";
 import {
   checklistProgress,
   checklistProperty,
+  ddtInitialCoverage,
   type ChecklistLine,
 } from "@/leenkey/sale-file/checklist";
 import { sellerSaleFile } from "@/leenkey/sale-file/queries";
@@ -405,7 +406,11 @@ export default async function PropertyDocumentsPage({ params, searchParams }: Pr
                     <p className="text-lk-caption text-pretty text-lk-ink-3">{t.ddt.intro}</p>
                   </div>
                   {checklist.ddt.length === 0 ? (
-                    <DdtUploadForm propertyId={property.id} diagnostics={diagnostics} />
+                    <DdtUploadForm
+                      propertyId={property.id}
+                      diagnostics={diagnostics}
+                      ticked={ddtInitialCoverage(checklist, diagnostics)}
+                    />
                   ) : (
                     checklist.ddt.map((document) => (
                       <div

@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildChecklist, type Checklist, type FiledDocument } from "@/leenkey/sale-file/checklist";
+import {
+  buildChecklist,
+  ddtInitialCoverage,
+  type Checklist,
+  type FiledDocument,
+} from "@/leenkey/sale-file/checklist";
 import {
   DDT_TYPE,
   ddtDiagnostics,
@@ -233,6 +238,47 @@ describe("the checklist with a DDT", () => {
     expect(checklist.done).toBe(3);
     expect(line(checklist, "amiante")?.coveredBy).toEqual([first, second]);
     expect(checklist.ddt).toEqual([first, second]);
+  });
+});
+
+describe("the diagnostics ticked at first", () => {
+  it("every diagnostic line, but those « Non concerné » and a DPE the property is not subject to", () => {
+    expect(ddtInitialCoverage(buildChecklist(flat, [], []), FLAT_DIAGNOSTICS)).toEqual(
+      FLAT_DIAGNOSTICS,
+    );
+    const exemptions = [
+      { type: "gaz" as const, reason: "Pas d'installation de gaz" },
+      { type: "termites" as const, reason: "Commune hors zone" },
+    ];
+    expect(ddtInitialCoverage(buildChecklist(flat, [], exemptions), FLAT_DIAGNOSTICS)).toEqual([
+      "dpe",
+      "amiante",
+      "plomb",
+      "electricite",
+      "erp",
+      "carrez",
+    ]);
+    // Not subject to the DPE (L1-65): not ticked either.
+    const noDpe = buildChecklist(house, [], exemptions, "Bâtiment non chauffé");
+    expect(ddtInitialCoverage(noDpe, HOUSE_DIAGNOSTICS)).toEqual([
+      "amiante",
+      "plomb",
+      "electricite",
+      "erp",
+      "assainissement",
+    ]);
+    // A line with its own file is not « Non concerné »: ticked.
+    const own = buildChecklist(flat, [filed("gaz")], exemptions);
+    expect(ddtInitialCoverage(own, FLAT_DIAGNOSTICS)).toContain("gaz");
+    // Every diagnostic « Non concerné »: nothing ticked, the seller ticks.
+    const all = buildChecklist(
+      flat,
+      [],
+      FLAT_DIAGNOSTICS.map((type) => ({ type, reason: "Sans objet" })),
+      "Bâtiment non chauffé",
+    );
+    // The ERP is never « Non concerné ».
+    expect(ddtInitialCoverage(all, FLAT_DIAGNOSTICS)).toEqual(["erp"]);
   });
 });
 
