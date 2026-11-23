@@ -16,12 +16,16 @@ import {
   ShareButtons,
 } from "@/leenkey/sale-file/components/seller-controls";
 import { UploadForm } from "@/leenkey/sale-file/components/upload-form";
-import { checklistProgress, type ChecklistLine } from "@/leenkey/sale-file/checklist";
+import {
+  checklistProgress,
+  checklistProperty,
+  type ChecklistLine,
+} from "@/leenkey/sale-file/checklist";
 import { sellerSaleFile } from "@/leenkey/sale-file/queries";
 import {
   DIAGNOSTIC_TYPES,
   DOCUMENT_ORDER,
-  inCoOwnership,
+  NOTARY_FILE_STAGES,
   OPTIONAL_DOCUMENTS,
   requiredDocuments,
   type DocumentStage,
@@ -65,10 +69,8 @@ const stateTone = {
 /** « Facultatif »: offered, not asked for, and nothing filed. */
 const lineState = (line: ChecklistLine) =>
   !line.required && line.state === "missing" ? "optional" : line.state;
-// The name of a line (its own, or the one of its type) and its word of help.
-const lineNames: Partial<Record<DocumentType, string>> = t.lineNames;
+// The word of help of a line, when it has one.
 const lineHelps: Partial<Record<DocumentType, string>> = t.lineHelp;
-const lineName = (type: DocumentType): string => lineNames[type] ?? fr.saleFile.types[type];
 const lineHelp = (type: DocumentType): string | null => lineHelps[type] ?? null;
 
 // L3-04: the tab « Documents » of a property (SPEC-V2 15): « Dossier
@@ -87,15 +89,10 @@ export default async function PropertyDocumentsPage({ params, searchParams }: Pr
   const [{ id }, { etape }] = await Promise.all([params, searchParams]);
   const property = await propertyForSheet(id);
   if (!property) return null;
-  const propertyType = property.characteristics.type;
-  const coOwnership = inCoOwnership(
-    propertyType,
-    property.characteristics.coproLots,
-    property.characteristics.chargesMonthlyEuros,
-  );
+  const checked = checklistProperty(property.characteristics);
   const result = await sellerSaleFile(
     property.id,
-    { type: propertyType, coOwnership },
+    checked,
     property.characteristics.dpeExempt ? (property.characteristics.dpeExemptionReason ?? "") : null,
   );
   if (!result.ok) {
@@ -108,7 +105,7 @@ export default async function PropertyDocumentsPage({ params, searchParams }: Pr
   const { checklist, documents, contacts, requests } = result.data;
   const now = new Date();
   // The types of the checklist first, then every other one.
-  const required = requiredDocuments(propertyType, coOwnership);
+  const required = requiredDocuments(checked.type, checked.coOwnership);
   const types: DocumentType[] = [
     ...required,
     ...DOCUMENT_ORDER.filter((type) => !required.includes(type)),
@@ -144,7 +141,14 @@ export default async function PropertyDocumentsPage({ params, searchParams }: Pr
       return {
         id: item.stage,
         title: fr.saleFile.stages[item.stage],
-        detail: current ? t.stageMissing(progress, item.missing.map(lineName)) : progress,
+        // « maintenant » for what the notary file counts; the « état daté » comes later.
+        detail: current
+          ? t.stageMissing(
+              progress,
+              t.missingNames(item.missing.map((type) => fr.saleFile.types[type])),
+              NOTARY_FILE_STAGES.includes(item.stage),
+            )
+          : progress,
         state: item.done === item.total ? "done" : current ? "current" : "todo",
         href: stageHref(item.stage),
       };
@@ -247,11 +251,10 @@ export default async function PropertyDocumentsPage({ params, searchParams }: Pr
                   </p>
                 ) : null}
               </div>
-              {group.category === "property" ? (
+              {group.category === "property" &&
+              group.lines.some((line) => DIAGNOSTIC_TYPES.includes(line.type)) ? (
                 <p className="text-lk-caption text-pretty text-lk-ink-3">
-                  {group.lines.some((line) => DIAGNOSTIC_TYPES.includes(line.type))
-                    ? `${t.categoryHelp.property} ${t.disclaimer}`
-                    : t.disclaimer}
+                  {t.categoryHelp.property}
                 </p>
               ) : group.category === "coownership" ? (
                 <p className="text-lk-caption text-pretty text-lk-ink-3">
@@ -265,7 +268,7 @@ export default async function PropertyDocumentsPage({ params, searchParams }: Pr
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <p className="text-lk-secondary font-medium text-lk-ink">
-                        {lineName(line.type)}
+                        {fr.saleFile.types[line.type]}
                       </p>
                       <p className="text-lk-caption text-pretty text-lk-ink-3">
                         {[

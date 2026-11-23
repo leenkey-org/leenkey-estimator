@@ -2,8 +2,7 @@ import "server-only";
 import { allPlans } from "@/core/billing/plans";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { propertyOffers } from "@/leenkey/offers/seller";
-import { buildChecklist } from "@/leenkey/sale-file/checklist";
-import { inCoOwnership } from "@/lib/config/documents";
+import { buildChecklist, checklistProperty } from "@/leenkey/sale-file/checklist";
 import { paidPlansOrderable } from "@/lib/config/sales";
 import { formatPrice } from "@/lib/format";
 import { frUpgrade } from "@/lib/i18n/sections/upgrade";
@@ -41,7 +40,7 @@ async function missingDocuments(propertyId: string): Promise<number | null> {
   const [property, documents, exemptions] = await Promise.all([
     supabase
       .from("properties")
-      .select("type, copro_lots, charges_monthly_cents, dpe_exemption_reason")
+      .select("type, copro_lots, dpe_exempt, dpe_exemption_reason")
       .eq("id", propertyId)
       .maybeSingle(),
     supabase
@@ -53,14 +52,7 @@ async function missingDocuments(propertyId: string): Promise<number | null> {
   ]);
   if (property.error || !property.data || documents.error || exemptions.error) return null;
   const checklist = buildChecklist(
-    {
-      type: property.data.type,
-      coOwnership: inCoOwnership(
-        property.data.type,
-        property.data.copro_lots,
-        property.data.charges_monthly_cents,
-      ),
-    },
+    checklistProperty({ type: property.data.type, coproLots: property.data.copro_lots }),
     documents.data.map((row) => ({
       id: row.id,
       type: row.type,
@@ -68,7 +60,8 @@ async function missingDocuments(propertyId: string): Promise<number | null> {
       createdAt: row.created_at,
     })),
     exemptions.data,
-    property.data.dpe_exemption_reason,
+    // Not subject to the DPE (L1-65): its reason, as the tab and the notary file read it.
+    property.data.dpe_exempt ? (property.data.dpe_exemption_reason ?? "") : null,
   );
   return checklist.total - checklist.done;
 }

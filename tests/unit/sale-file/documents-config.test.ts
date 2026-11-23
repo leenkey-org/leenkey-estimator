@@ -110,6 +110,29 @@ describe("the documents of the sale file", () => {
     });
   });
 
+  it("the documents to file of a stage: three named at most, « maintenant » up to the agreement", () => {
+    const t = frSaleFile.seller;
+    expect(t.missingNames([])).toBe("");
+    expect(t.missingNames(["DPE"])).toBe("DPE");
+    expect(t.missingNames(["DPE", "Titre de propriété", "Taxe foncière"])).toBe(
+      "DPE, Titre de propriété, Taxe foncière",
+    );
+    expect(t.missingNames(["A", "B", "C", "D"])).toBe("A, B, C et 1 autre");
+    expect(t.missingNames(["A", "B", "C", "D", "E", "F"])).toBe("A, B, C et 3 autres");
+    expect(t.stageProgress(0, 1)).toBe("0 sur 1 pièce");
+    expect(t.stageProgress(3, 9)).toBe("3 sur 9 pièces");
+    expect(t.stageMissing("3 sur 9 pièces", "DPE", true)).toBe(
+      "3 sur 9 pièces · À déposer maintenant : DPE",
+    );
+    // Before the deed: the « état daté » comes after the agreement, not now.
+    expect(t.stageMissing("0 sur 1 pièce", frSaleFile.types.etat_date, false)).toBe(
+      "0 sur 1 pièce · À déposer : État daté fourni par le syndic",
+    );
+    // The line offered and the type of the deposit share one name; no identity document in it.
+    expect(frSaleFile.types.autre).toBe("Documents complémentaires");
+    expect(t.lineHelp.autre).toContain("(hors pièces d'identité)");
+  });
+
   it("every type of property has its list, of known types, each once", () => {
     expect(Object.keys(PROPERTY_DOCUMENTS).sort()).toEqual([...PROPERTY_TYPES].sort());
     for (const type of PROPERTY_TYPES) {
@@ -117,7 +140,7 @@ describe("the documents of the sale file", () => {
         const list = requiredDocuments(type, coOwnership);
         expect(new Set(list).size, type).toBe(list.length);
         for (const document of list) expect(TYPES, `${type}: ${document}`).toContain(document);
-        // « Autre document » is never asked for: it is offered.
+        // « Documents complémentaires » is never asked for: it is offered.
         expect(list, type).not.toContain("autre");
         // In the order of the checklist.
         expect(list).toEqual(DOCUMENT_ORDER.filter((document) => list.includes(document)));
@@ -127,15 +150,14 @@ describe("the documents of the sale file", () => {
     expect(PROPERTY_DOCUMENTS.autre).toEqual(PROPERTY_DOCUMENTS.maison);
   });
 
-  it("a flat is in a co-ownership; a house when its lots or charges say so; land never", () => {
-    expect(inCoOwnership("appartement", null, null)).toBe(true);
-    expect(inCoOwnership("maison", null, null)).toBe(false);
-    expect(inCoOwnership("maison", 0, 0)).toBe(false);
-    expect(inCoOwnership("maison", 12, null)).toBe(true);
-    expect(inCoOwnership("maison", null, 8_000)).toBe(true);
-    expect(inCoOwnership("autre", 4, null)).toBe(true);
-    expect(inCoOwnership(null, null, null)).toBe(false);
-    expect(inCoOwnership("terrain", 12, 8_000)).toBe(false);
+  it("a flat is in a co-ownership; a house when its sheet gives lots; land never", () => {
+    expect(inCoOwnership("appartement", null)).toBe(true);
+    expect(inCoOwnership("maison", null)).toBe(false);
+    expect(inCoOwnership("maison", 0)).toBe(false);
+    expect(inCoOwnership("maison", 12)).toBe(true);
+    expect(inCoOwnership("autre", 4)).toBe(true);
+    expect(inCoOwnership(null, null)).toBe(false);
+    expect(inCoOwnership("terrain", 12)).toBe(false);
 
     // A flat: 19 documents, the Carrez measurement and the co-ownership among them.
     expect(requiredDocuments("appartement")).toHaveLength(19);
@@ -261,7 +283,7 @@ describe("guessDocumentType", () => {
     expect(guessDocumentType("interphone.pdf")).toBeNull();
   });
 
-  it("only suggests types of the database, never « Autre document »", () => {
+  it("only suggests types of the database, never « Documents complémentaires »", () => {
     for (const [name] of cases) {
       const type = guessDocumentType(name);
       if (type !== null) expect(Constants.public.Enums.document_type).toContain(type);

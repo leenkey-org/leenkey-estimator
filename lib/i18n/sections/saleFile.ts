@@ -26,7 +26,7 @@ export const frSaleFile = {
     pre_etat_date: "Pré-état daté",
     etat_date: "État daté fourni par le syndic",
     facture_travaux: "Factures et justificatifs de travaux",
-    autre: "Autre document",
+    autre: "Documents complémentaires",
   },
   categories: {
     property: "Documents du bien",
@@ -55,9 +55,17 @@ export const frSaleFile = {
     stageStates: { done: "Complet", current: "En cours", todo: "À venir" },
     stageProgress: (done: number, total: number) =>
       `${done} sur ${total} ${total > 1 ? "pièces" : "pièce"}`,
-    stageMissing: (progress: string, names: readonly string[]) =>
-      `${progress} · À déposer maintenant : ${names.join(", ")}`,
-    stageAbout: (stage: string) => `Voir les pièces : ${stage}`,
+    // The documents to file of a stage, three named at most: « DPE,
+    // Diagnostic amiante, Diagnostic plomb et 4 autres ».
+    missingNames: (names: readonly string[]) => {
+      const more = names.length - 3;
+      return more > 0
+        ? `${names.slice(0, 3).join(", ")} et ${more} ${more > 1 ? "autres" : "autre"}`
+        : names.join(", ");
+    },
+    // « maintenant » up to the agreement only: the « état daté » comes after it.
+    stageMissing: (progress: string, names: string, now: boolean) =>
+      `${progress} · ${now ? "À déposer maintenant" : "À déposer"} : ${names}`,
     categoryProgress: (done: number, total: number) => `${done} sur ${total}`,
     filter: { label: "Filtrer les pièces par étape", all: "Toutes" },
     // Under the title of a category.
@@ -67,14 +75,12 @@ export const frSaleFile = {
       coownership:
         "Votre syndic vous remet la plupart de ces pièces. Si votre bien n'est pas en copropriété, indiquez « Non concerné ».",
     },
-    // The name of a line when it is not the one of its type.
-    lineNames: { autre: "Documents complémentaires" },
     // A word on a line, after the stage it is needed for.
     lineHelp: {
       carrez: "Pour un lot de copropriété.",
       plan_pluriannuel_travaux: "S'il existe.",
       appel_charges: "Vos appels de charges des 2 dernières années, par exemple.",
-      autre: "Ce que votre notaire vous demande en plus.",
+      autre: "Ce que votre notaire vous demande en plus (hors pièces d'identité).",
     },
     // Never filed on Leenkey: an information, no deposit (DECISIONS.md 2026-11-23).
     identity: {

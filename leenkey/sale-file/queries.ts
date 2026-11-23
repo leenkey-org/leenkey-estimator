@@ -60,7 +60,7 @@ export type SellerSaleFile = {
 
 export async function sellerSaleFile(
   propertyId: string,
-  /** Its type, and whether it is in a co-ownership (inCoOwnership). */
+  /** Its type, and whether it is in a co-ownership (checklistProperty). */
   property: ChecklistProperty,
   /** Not subject to the DPE (L1-65): its reason. */
   dpeExemption: string | null = null,

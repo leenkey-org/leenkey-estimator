@@ -151,17 +151,14 @@ export const OPTIONAL_DOCUMENTS: readonly DocumentType[] = ["autre"];
 /**
  * Whether the documents of a co-ownership are asked for: always for a flat
  * (one that is not in a co-ownership marks them « Non concerné »), for a
- * house or another property when its lots or its charges say so, never for
- * land.
+ * house or another property when its sheet gives a number of lots, never
+ * for land. Its charges say nothing: the field is « Charges », and a house
+ * outside a co-ownership may have some.
  */
-export function inCoOwnership(
-  type: PropertyType | null,
-  coproLots: number | null,
-  chargesMonthly: number | null,
-): boolean {
+export function inCoOwnership(type: PropertyType | null, coproLots: number | null): boolean {
   if (type === "appartement") return true;
   if (type === "terrain") return false;
-  return (coproLots ?? 0) > 0 || (chargesMonthly ?? 0) > 0;
+  return (coproLots ?? 0) > 0;
 }
 
 /** The documents asked for a property, in the order of the checklist. */

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildChecklist,
   checklistProgress,
+  checklistProperty,
   sniffSaleFile,
   type Exemption,
   type FiledDocument,
@@ -58,6 +59,25 @@ describe("buildChecklist", () => {
     // No list of its own, or no type yet: the one of a house.
     expect(buildChecklist("autre", [], []).total).toBe(11);
     expect(buildChecklist(null, [], []).total).toBe(11);
+  });
+
+  it("the property of a checklist: a house is in a co-ownership when its sheet gives lots", () => {
+    expect(checklistProperty({ type: "maison", coproLots: null })).toEqual(house);
+    expect(checklistProperty({ type: "maison", coproLots: 0 })).toEqual(house);
+    expect(checklistProperty({ type: "maison", coproLots: 12 })).toEqual(houseInCoOwnership);
+    expect(checklistProperty({ type: "appartement", coproLots: null })).toEqual({
+      type: "appartement",
+      coOwnership: true,
+    });
+    expect(checklistProperty({ type: "terrain", coproLots: 3 }).coOwnership).toBe(false);
+    expect(checklistProperty({ type: null, coproLots: null })).toEqual({
+      type: null,
+      coOwnership: false,
+    });
+    // A house with charges and no lots keeps its 11 documents.
+    expect(
+      buildChecklist(checklistProperty({ type: "maison", coproLots: null }), [], []).total,
+    ).toBe(11);
   });
 
   it("groups the lines in three categories, in the order of the list, each missing at first", () => {

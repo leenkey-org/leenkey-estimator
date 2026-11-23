@@ -7,6 +7,7 @@ import {
   DOCUMENT_VALIDITY_MONTHS,
   documentToRefresh,
   EXEMPTIBLE_DOCUMENTS,
+  inCoOwnership,
   NOTARY_FILE_STAGES,
   OPTIONAL_DOCUMENTS,
   requiredDocuments,
@@ -40,6 +41,14 @@ export type Exemption = { type: DocumentType; reason: string };
 
 /** The property of a checklist: a bare type reads « in a co-ownership when a flat ». */
 export type ChecklistProperty = { type: PropertyType | null; coOwnership: boolean };
+
+/** The property of a checklist, from its type and the lots of its sheet (inCoOwnership). */
+export function checklistProperty(property: {
+  type: PropertyType | null;
+  coproLots: number | null;
+}): ChecklistProperty {
+  return { type: property.type, coOwnership: inCoOwnership(property.type, property.coproLots) };
+}
 
 export type ChecklistLine = {
   type: DocumentType;
