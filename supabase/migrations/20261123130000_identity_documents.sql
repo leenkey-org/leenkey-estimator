@@ -24,14 +24,21 @@
 --    its delay must not block a visit). The only change of the function. A
 --    visit already booked is never cancelled.
 -- 5. buyer_identity_for_seller(): the seller of a property reads the status
---    (never the file, never the type) of the buyers they invited or who
---    booked a visit of it.
+--    (never the file, never the type) of the buyers who hold an invitation
+--    still valid or a visit not cancelled of it.
 -- 6. The account: account_export, account_anonymize and account_close of
 --    20261123110000_advisor_interventions.sql and account_files of
 --    20261117120300_account_deletion_lot3.sql, copied line by line, with
 --    only: the metadata of the identity documents in the export; their rows
 --    deleted by the anonymisation and their files listed for it; a document
---    still waiting for its check withdrawn when the account is closed.
+--    still waiting for its check withdrawn when the account is closed (the
+--    closing action then removes its file at once).
+-- 7. No file stays behind: identity_files_to_sweep() and
+--    identity_files_mark_swept(), for the scheduled task only (service
+--    role), list the files of the documents that reached their end and the
+--    files no document names, then mark the documents whose file is gone.
+--    The opening of a file by the team is written in audit_log
+--    (identity_document_opened).
 --
 -- NEVER sent to the AI: identity_documents is a table of its own, not
 -- `documents`. The analysis of the documents (L3-05) reads `documents` and
@@ -109,8 +116,10 @@ $$;
 -- The files: `{buyer_id}/identity/{uuid}.pdf|jpg`. Sent by the buyer (an
 -- active account), read by the buyer and the team, never replaced; removed by
 -- the buyer unless the file is the one of the document that waits for its
--- check; removed by the team once the document is checked, refused or
--- withdrawn.
+-- check (an account suspended or just closed may still remove its own files:
+-- removing never adds anything, and the closing action removes the file of
+-- the document it has just withdrawn); removed by the team once the document
+-- is checked, refused or withdrawn.
 create function public.identity_file_buyer(p_name text) returns uuid
 language sql immutable set search_path = '' as $$
   select case
@@ -159,7 +168,7 @@ create policy documents_identity_insert on storage.objects
 create policy documents_identity_delete on storage.objects
   for delete to authenticated
   using (bucket_id = 'documents' and public.identity_file_buyer(name) = auth.uid()
-         and public.is_active_user() and not public.identity_file_waiting(name));
+         and not public.identity_file_waiting(name));
 
 create policy documents_identity_delete_ended on storage.objects
   for delete to authenticated
@@ -179,7 +188,7 @@ language plpgsql security definer set search_path = '' as $$
 declare
   v_mime text := case when p_storage_path like '%.pdf' then 'application/pdf' else 'image/jpeg' end;
   file_meta jsonb;
-  v_size int := p_size_bytes;
+  v_size int;
   new_id uuid;
 begin
   if auth.uid() is null or not public.is_active_user() then
@@ -201,16 +210,16 @@ begin
   if not found then
     raise exception 'the file of the document is missing' using errcode = '22023';
   end if;
-  -- What the storage service knows of the file wins over what is declared: a
-  -- file sent directly, heavier or of another type than its name, is refused.
+  -- What the storage service knows of the file decides, never what is
+  -- declared: a file whose type or size it does not know, a file heavier or
+  -- of another type than its name, is refused.
   if p_mime_type is distinct from v_mime
-     or (file_meta ? 'mimetype' and file_meta->>'mimetype' <> v_mime)
-     or (file_meta ? 'size' and (file_meta->>'size')::bigint > 5242880) then
+     or file_meta is null or not (file_meta ? 'mimetype') or not (file_meta ? 'size')
+     or file_meta->>'mimetype' <> v_mime
+     or (file_meta->>'size')::bigint not between 1 and 5242880 then
     raise exception 'the file of the document is not accepted' using errcode = '22023';
   end if;
-  if file_meta ? 'size' then
-    v_size := (file_meta->>'size')::int;
-  end if;
+  v_size := (file_meta->>'size')::int;
   update public.identity_documents set withdrawn_at = now()
    where buyer_id = auth.uid() and refused_at is null and withdrawn_at is null;
   insert into public.identity_documents (buyer_id, type, storage_path, mime_type, size_bytes)
@@ -303,15 +312,16 @@ begin
      set refused_at = now(), refusal_reason = v_reason, decided_by = auth.uid(),
          team_note = nullif(btrim(p_note), '')
    where id = d.id;
-  perform public.audit('identity.refuse', 'identity_document', d.id,
-                       jsonb_build_object('buyer_id', d.buyer_id, 'reason', v_reason));
+  -- The document only: its reason is free text, and the log never expires.
+  perform public.audit('identity.refuse', 'identity_document', d.id);
 end;
 $$;
 
 -- Once the object is gone, the document says so (its buyer and the team no
 -- longer see a link to it). Said by the team (in the audit log) or by its
--- buyer (a document withdrawn or replaced). Refused while the document waits
--- for its check, and while the file is still in the bucket.
+-- buyer (a document withdrawn or replaced, an account just closed). Refused
+-- while the document waits for its check, and while the file is still in the
+-- bucket.
 create function public.identity_document_file_removed(p_document_id uuid) returns void
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -319,7 +329,7 @@ declare
   v_admin boolean := public.is_admin();
 begin
   select * into d from public.identity_documents where id = p_document_id for update;
-  if not found or not (v_admin or (d.buyer_id = auth.uid() and public.is_active_user())) then
+  if not found or not (v_admin or d.buyer_id = auth.uid()) then
     raise exception 'document not found' using errcode = '42501';
   end if;
   if num_nonnulls(d.checked_at, d.refused_at, d.withdrawn_at) = 0 then
@@ -392,17 +402,84 @@ end;
 $$;
 
 -- 5. ---------------------------------------------------------------------------
--- What a seller sees: the status of the identity of the buyers they invited
--- to visit this property, or who booked a visit of it. Never the file, never
--- the type, never a date.
+-- What a seller sees: the status of the identity of the buyers who hold an
+-- invitation still valid to visit this property, or a visit of it that is
+-- not cancelled. Never the file, never the type, never a date. An invitation
+-- that has expired or a visit cancelled no longer tells them anything.
 create function public.buyer_identity_for_seller(p_property_id uuid)
 returns table (buyer_id uuid, identity_status public.identity_status)
 language sql stable security definer set search_path = '' as $$
   select b.buyer_id, public.identity_status_of(b.buyer_id)
-    from (select i.buyer_id from public.visit_invitations i where i.property_id = p_property_id
+    from (select i.buyer_id from public.visit_invitations i
+           where i.property_id = p_property_id and i.expires_at > now()
           union
-          select v.buyer_id from public.visits v where v.property_id = p_property_id) b
+          select v.buyer_id from public.visits v
+           where v.property_id = p_property_id and v.status <> 'cancelled') b
    where public.owns_property(p_property_id);
+$$;
+
+-- 7. ---------------------------------------------------------------------------
+-- The team opens the file of a document: written in the audit log before the
+-- signed URL is issued (app/documents/identite/[id]/route.ts). The buyer who
+-- opens their own file does not call it.
+create function public.identity_document_opened(p_document_id uuid) returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_buyer uuid;
+begin
+  if not public.is_admin() then
+    raise exception 'admin only' using errcode = '42501';
+  end if;
+  select buyer_id into v_buyer from public.identity_documents where id = p_document_id;
+  if not found then
+    raise exception 'document not found' using errcode = '42501';
+  end if;
+  perform public.audit('identity.opened', 'identity_document', p_document_id,
+                       jsonb_build_object('buyer_id', v_buyer));
+end;
+$$;
+
+-- The files the scheduled task removes (/api/cron/anonymize-deleted, with the
+-- service role): those of the documents that reached their end (a deletion
+-- that failed after a decision, a withdrawal, a closure), and those no
+-- document names for more than an hour (an upload never declared).
+create function public.identity_files_to_sweep() returns table (path text)
+language sql stable security definer set search_path = '' as $$
+  select o.name
+    from storage.objects o
+   where o.bucket_id = 'documents' and o.name like '%/identity/%'
+     and public.identity_file_buyer(o.name) is not null
+     and (exists (select 1 from public.identity_documents d
+                   where d.storage_path = o.name
+                     and num_nonnulls(d.checked_at, d.refused_at, d.withdrawn_at) = 1)
+          or (o.created_at < now() - interval '1 hour'
+              and not exists (select 1 from public.identity_documents d
+                               where d.storage_path = o.name)));
+$$;
+
+-- Then the documents that reached their end and whose file is no longer in
+-- the bucket say so, each once, in the audit log (no actor: the task).
+create function public.identity_files_mark_swept() returns int
+language plpgsql security definer set search_path = '' as $$
+declare
+  d record;
+  v_count int := 0;
+begin
+  for d in
+    select x.id, x.buyer_id from public.identity_documents x
+     where x.file_deleted_at is null
+       and num_nonnulls(x.checked_at, x.refused_at, x.withdrawn_at) = 1
+       and not exists (select 1 from storage.objects o
+                        where o.bucket_id = 'documents' and o.name = x.storage_path)
+       for update
+  loop
+    update public.identity_documents set file_deleted_at = now() where id = d.id;
+    perform public.audit('identity.file_deleted', 'identity_document', d.id,
+                         jsonb_build_object('buyer_id', d.buyer_id, 'by', 'sweep'));
+    v_count := v_count + 1;
+  end loop;
+  return v_count;
+end;
 $$;
 
 revoke execute on function public.identity_status_of(uuid) from public, anon, authenticated;
@@ -429,6 +506,12 @@ grant execute on function public.identity_document_refuse(uuid, text, text) to a
 grant execute on function public.identity_document_file_removed(uuid) to authenticated;
 grant execute on function public.admin_identity_documents(uuid) to authenticated;
 grant execute on function public.buyer_identity_for_seller(uuid) to authenticated;
+revoke execute on function public.identity_document_opened(uuid) from public, anon;
+grant execute on function public.identity_document_opened(uuid) to authenticated;
+revoke execute on function public.identity_files_to_sweep() from public, anon, authenticated;
+revoke execute on function public.identity_files_mark_swept() from public, anon, authenticated;
+grant execute on function public.identity_files_to_sweep() to service_role;
+grant execute on function public.identity_files_mark_swept() to service_role;
 
 -- 4. ---------------------------------------------------------------------------
 -- visit_book of 20261117120000_visits.sql, with the identity document of the
@@ -728,7 +811,8 @@ begin
   perform public.advisor_interventions_cancel_open(p.id)
      from public.properties p where p.owner_id = v_me;
   -- Its identity document that still waits for its check: withdrawn, the team
-  -- no longer has it to check (its file goes with the account, account_files).
+  -- no longer has it to check; the closing action then removes its file at
+  -- once (the scheduled task takes it otherwise).
   update public.identity_documents set withdrawn_at = v_at
    where buyer_id = v_me and checked_at is null and refused_at is null and withdrawn_at is null;
   -- Its properties and their listings leave the site.

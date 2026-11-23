@@ -37,7 +37,7 @@ export type AdminActivity = {
 
 /** Something that waits for the admin, the oldest first. */
 export type AdminTodoItem = {
-  kind: "listing" | "case" | "report" | "financing" | "identity";
+  kind: "listing" | "case" | "report" | "financing" | "identity" | "identityFile";
   id: string;
   /** The listing (« Maison 5 pièces · LK-0006 »), the subject of a case, the motive of a report. */
   label: string;
@@ -146,14 +146,15 @@ export function mergeTodo(groups: readonly AdminTodoItem[][], limit: number = TO
 
 /**
  * « À traiter » (SPEC 17): the listings to review, the open cases, the open
- * reports, the proofs of financing to check (L2-02) and the identity
- * documents to check (DECISIONS.md 2026-11-23), the oldest first.
+ * reports, the proofs of financing to check (L2-02), the identity
+ * documents to check and the identity files still stored after their
+ * document reached its end (DECISIONS.md 2026-11-23), the oldest first.
  */
 export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult<AdminTodoItem[]>> {
   await requireAdmin();
   try {
     const supabase = await createClient();
-    const [listings, cases, reports, proofs, identities] = await Promise.all([
+    const [listings, cases, reports, proofs, identities, identityFiles] = await Promise.all([
       supabase
         .from("listings")
         .select(
@@ -197,12 +198,25 @@ export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult
         .is("withdrawn_at", null)
         .order("created_at", { ascending: true })
         .limit(limit),
+      // The identity documents checked, refused or withdrawn whose file is
+      // still stored (its deletion failed): « Supprimer le fichier » on the
+      // sheet of the account. The scheduled task removes them too.
+      supabase
+        .from("identity_documents")
+        .select(
+          "id, buyer_id, updated_at, created_at, buyer:profiles!identity_documents_buyer_id_fkey(first_name, last_name)",
+        )
+        .is("file_deleted_at", null)
+        .or("checked_at.not.is.null,refused_at.not.is.null,withdrawn_at.not.is.null")
+        .order("created_at", { ascending: true })
+        .limit(limit),
     ]);
     if (listings.error) throw new Error(`listings: ${listings.error.code}`);
     if (cases.error) throw new Error(`cases: ${cases.error.code}`);
     if (reports.error) throw new Error(`reports: ${reports.error.code}`);
     if (proofs.error) throw new Error(`financing: ${proofs.error.code}`);
     if (identities.error) throw new Error(`identity: ${identities.error.code}`);
+    if (identityFiles.error) throw new Error(`identity files: ${identityFiles.error.code}`);
     return {
       ok: true,
       data: mergeTodo(
@@ -248,6 +262,17 @@ export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult
                 fr.adminUsers.noName,
             ),
             since: row.created_at,
+            coverPath: null,
+          })),
+          identityFiles.data.map((row) => ({
+            kind: "identityFile" as const,
+            id: row.buyer_id,
+            label: shortLabel(
+              [row.buyer?.first_name, row.buyer?.last_name].filter(Boolean).join(" ") ||
+                fr.adminUsers.noName,
+            ),
+            // Since its document reached its end.
+            since: row.updated_at ?? row.created_at,
             coverPath: null,
           })),
         ],

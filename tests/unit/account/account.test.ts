@@ -16,6 +16,10 @@ const mocks = vi.hoisted(() => ({
   checkSignOuts: [] as unknown[],
   rpc: { data: ["buyer", "seller"] as unknown, error: null as { code: string } | null },
   rpcCalls: [] as string[],
+  /** The identity document that waits for its check, read before a closure. */
+  identity: { data: null as { id: string; storage_path: string } | null, error: null },
+  removed: [] as string[],
+  removeError: null as { name: string } | null,
   allowed: true,
   counted: 0,
   redirects: [] as string[],
@@ -50,15 +54,24 @@ vi.mock("@/lib/supabase/public", () => ({
 }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
-    from: () => {
+    from: (table: string) => {
       const self: Record<string, unknown> = {};
       self.update = (values: Record<string, unknown>) => {
         mocks.updates.push(values);
         return self;
       };
-      for (const name of ["eq", "select"]) self[name] = () => self;
-      self.maybeSingle = async () => mocks.update;
+      for (const name of ["eq", "is", "select"]) self[name] = () => self;
+      self.maybeSingle = async () =>
+        table === "identity_documents" ? mocks.identity : mocks.update;
       return self;
+    },
+    storage: {
+      from: () => ({
+        remove: async (paths: string[]) => {
+          if (!mocks.removeError) mocks.removed.push(...paths);
+          return { error: mocks.removeError };
+        },
+      }),
     },
     rpc: async (name: string) => {
       mocks.rpcCalls.push(name);
@@ -94,6 +107,9 @@ beforeEach(() => {
   mocks.checkSignOuts = [];
   mocks.rpc = { data: ["buyer", "seller"], error: null };
   mocks.rpcCalls = [];
+  mocks.identity = { data: null, error: null };
+  mocks.removed = [];
+  mocks.removeError = null;
   mocks.allowed = true;
   mocks.counted = 0;
   mocks.redirects = [];
@@ -324,5 +340,52 @@ describe("closeAccount (L2-10)", () => {
     expect(result).toMatchObject({ ok: false });
     expect(result.ok === false && result.error).toContain("Une vente est en cours");
     expect(mocks.signOuts).toEqual([]);
+  });
+
+  // DECISIONS.md 2026-11-23: the identity document that waited for its check
+  // is withdrawn by account_close; its file goes at once, not 30 days later.
+  const PENDING = { id: "doc-1", storage_path: "u1/identity/doc-1.pdf" };
+
+  it("removes the file of the identity document that waited, once the account is closed", async () => {
+    const { closeAccount } = await import("@/leenkey/account/actions");
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    mocks.rpc = { data: "2026-11-23T10:00:00Z", error: null };
+    mocks.identity = { data: PENDING, error: null };
+    await expect(closeAccount(null, form(filled))).rejects.toThrow(
+      "NEXT_REDIRECT /connexion?compte=ferme",
+    );
+    expect(mocks.removed).toEqual([PENDING.storage_path]);
+    // After the closure, and before the sessions are closed.
+    expect(mocks.rpcCalls).toEqual(["account_close", "identity_document_file_removed"]);
+    expect(mocks.signOuts).toEqual([{ scope: "global" }]);
+  });
+
+  it("keeps the file when the account stays open (a sale in progress)", async () => {
+    const { closeAccount } = await import("@/leenkey/account/actions");
+    mocks.rpc = { data: null, error: { code: "55000" } };
+    mocks.identity = { data: PENDING, error: null };
+    expect(await closeAccount(null, form(filled))).toMatchObject({ ok: false });
+    expect(mocks.removed).toEqual([]);
+    expect(mocks.rpcCalls).toEqual(["account_close"]);
+  });
+
+  it("a removal that fails does not stop the closure: the scheduled task takes the file", async () => {
+    const { closeAccount } = await import("@/leenkey/account/actions");
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.rpc = { data: "2026-11-23T10:00:00Z", error: null };
+    mocks.identity = { data: PENDING, error: null };
+    mocks.removeError = { name: "StorageApiError" };
+    await expect(closeAccount(null, form(filled))).rejects.toThrow(
+      "NEXT_REDIRECT /connexion?compte=ferme",
+    );
+    // Not said removed while it is still stored.
+    expect(mocks.rpcCalls).toEqual(["account_close"]);
+    expect(logged).toHaveBeenCalledWith(
+      "[account] identity file not removed at closure",
+      expect.objectContaining({ user_id: "u1", entity_id: "doc-1" }),
+    );
+    expect(mocks.signOuts).toEqual([{ scope: "global" }]);
+    logged.mockRestore();
   });
 });

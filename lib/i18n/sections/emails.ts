@@ -549,7 +549,7 @@ export const frEmails = {
     subject: "Votre identité est vérifiée",
     title: "Votre identité est vérifiée",
     text: "Nous avons vérifié la pièce d'identité que vous avez déposée : votre espace affiche désormais « Identité vérifiée par Leenkey ».",
-    next: "Les vendeurs dont vous visitez le bien voient cette mention, jamais le document. Nous supprimons le fichier après cette vérification et nous n'en gardons aucune information.",
+    next: "Les vendeurs dont vous visitez le bien voient cette mention, jamais le document. Nous supprimons le fichier après cette vérification. Nous ne gardons que le type de la pièce et les dates, jamais le fichier ni ce qu'il contient.",
     action: "Voir mon projet d'achat",
     why: "Vous recevez cet email parce que vous avez déposé une pièce d'identité sur Leenkey.",
   },

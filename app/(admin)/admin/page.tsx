@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { ClipboardList, FileCheck, Flag, Folder, IdCard, type LucideIcon } from "lucide-react";
+import {
+  ClipboardList,
+  FileCheck,
+  FileX,
+  Flag,
+  Folder,
+  IdCard,
+  type LucideIcon,
+} from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { PropertyThumb } from "@/components/shared/property-thumb";
@@ -42,13 +50,17 @@ const KIND: Record<AdminTodoItem["kind"], { icon: LucideIcon; label: string }> =
   report: { icon: Flag, label: t.todo.kinds.report },
   financing: { icon: FileCheck, label: t.todo.kinds.financing },
   identity: { icon: IdCard, label: t.todo.kinds.identity },
+  identityFile: { icon: FileX, label: t.todo.kinds.identityFile },
 };
 
 /** Where an item is dealt with: its own page (cases and reports since L1-30c). */
 function todoHref(item: AdminTodoItem): string {
   if (item.kind === "listing") return `/admin/annonces/${item.id}`;
   if (item.kind === "financing") return `/admin/utilisateurs/${item.id}#justificatif`;
-  if (item.kind === "identity") return `/admin/utilisateurs/${item.id}#identite`;
+  // The sheet of the account: « Marquer comme vérifiée », « Supprimer le fichier ».
+  if (item.kind === "identity" || item.kind === "identityFile") {
+    return `/admin/utilisateurs/${item.id}#identite`;
+  }
   return item.kind === "case"
     ? `${ROUTES.adminCases}/${item.id}`
     : `${ROUTES.adminReports}/${item.id}`;

@@ -1078,7 +1078,7 @@ Matrice (L = lecture, E = écriture) :
 | `plan_entitlements` | L | L | L | L/E |
 | `upgrade_prompts` | — | L/E ses biens | — | L |
 | `advisor_interventions` | — | L ses biens, sans `team_note` ni `done_by` (lecture par colonne) ; création par `advisor_intervention_request` | — | L tous par `admin_advisor_interventions` ; statut par `admin_advisor_intervention_set` et `admin_advisor_initial_meeting`, écrits dans `audit_log` |
-| `identity_documents` | — | — (statut seul, par `buyer_identity_for_seller`, pour les acquéreurs invités ou ayant réservé) | L les siennes, sans `team_note` ni `decided_by` (lecture par colonne) ; dépôt et retrait par `identity_document_add` et `identity_document_remove` | L toutes par `admin_identity_documents` ; décision par `identity_document_check` et `identity_document_refuse` (tracées) |
+| `identity_documents` | — | — (statut seul, par `buyer_identity_for_seller`, pour une invitation encore valable ou une visite non annulée) | L les siennes, sans `team_note` ni `decided_by` (lecture par colonne) ; dépôt et retrait par `identity_document_add` et `identity_document_remove` | L toutes par `admin_identity_documents` ; décision par `identity_document_check` et `identity_document_refuse` (tracées) |
 | `visit_slots` | — | L/E ses biens | L si invitation valide | L |
 | `visit_invitations` | — | L/E ses biens | L les siennes | L |
 | `visits` | — | L ses biens, E feedback | L/E les siennes | L |
@@ -1952,8 +1952,8 @@ Ajouté le 2026-11-23 (`DECISIONS.md`, règles provisoires, Q101).
 
 - **Dépôt** : l'acquéreur dépose une pièce d'identité (carte d'identité, passeport ou titre de séjour ; PDF ou image, limites du justificatif de financement) depuis « Mon projet d'achat » (`/acquereur/profil#identite`) ou depuis `/visites/reserver/[token]` quand elle manque. Statuts : « Pièce d'identité non déposée », « Pièce d'identité déposée », « Identité vérifiée par Leenkey » ; jamais « validé ».
 - **Réservation** : `visit_book` demande une pièce **déposée** (déposée ou vérifiée), jamais vérifiée : le délai de l'équipe ne bloque pas une visite. Sans pièce, la page de réservation affiche le dépôt à la place des créneaux. Une visite déjà réservée n'est jamais annulée. Aucun lien avec une formule.
-- **Contrôle** : dans le back office (section 17), « Marquer comme vérifiée » ou « Refuser » avec un motif lu par l'acquéreur ; il est prévenu par la cloche et par email. Le fichier est supprimé dès la décision ; restent le statut, le type et les dates. Rien n'est lu de la pièce.
-- **Vendeur** : dans l'onglet « Visites », un libellé pour les acquéreurs invités ou ayant réservé (« Identité vérifiée par Leenkey », « Pièce d'identité déposée, en cours de vérification », « Pièce d'identité non déposée »), jamais le fichier ni le type.
+- **Contrôle** : dans le back office (section 17), « Marquer comme vérifiée » ou « Refuser » avec un motif lu par l'acquéreur ; il est prévenu par la cloche et par email. Le fichier est supprimé dès la décision, dès le retrait ou le remplacement par l'acquéreur, et à la fermeture du compte ; restent le statut, le type et les dates. Rien n'est lu de la pièce. Aucun fichier ne reste derrière : dossier vidé avant chaque dépôt, entrée « À traiter » du back office, tâche planifiée (section 19).
+- **Vendeur** : dans l'onglet « Visites », un libellé pour les acquéreurs dont l'invitation est encore valable ou dont une visite n'est pas annulée (« Identité vérifiée par Leenkey », « Pièce d'identité déposée, en cours de vérification », « Pièce d'identité non déposée »), jamais le fichier ni le type.
 - **IA** : la pièce n'est jamais transmise à l'assistant ni à l'analyse des documents (sections 12 et 21).
 
 ### Adresse
@@ -2070,7 +2070,7 @@ Mise en œuvre (L1-30a, `DECISIONS.md` 2026-11-03) : recherche (prénom, nom, em
 
 Mise en œuvre (L2-02, `DECISIONS.md` 2026-11-13) : section « Justificatif de financement » de la fiche d'un acquéreur (historique des documents, celui en vigueur, alerte au-delà de 3 mois, « Ouvrir le fichier », note interne, « Marquer le justificatif comme vérifié ») ; ligne « Justificatif de financement à contrôler » dans « À traiter » du tableau de bord.
 
-Pièce d'identité (ajouté le 2026-11-23, `DECISIONS.md`, section 14) : section « Pièce d'identité » de la fiche d'un compte (historique des pièces, « À vérifier », « Ouvrir le fichier » par URL signée de 10 minutes, note interne, « Marquer comme vérifiée », « Refuser » avec un motif envoyé à l'acquéreur, « Supprimer le fichier » si la suppression qui suit la décision a échoué) ; entrée « Pièce d'identité à vérifier » dans « À traiter » du tableau de bord ; actions tracées dans `audit_log` (`identity.check`, `identity.refuse`, `identity.file_deleted`). Jamais « Valider l'identité ».
+Pièce d'identité (ajouté le 2026-11-23, `DECISIONS.md`, section 14) : section « Pièce d'identité » de la fiche d'un compte (historique des pièces, « À vérifier », « Ouvrir le fichier » par URL signée de 10 minutes, note interne, « Marquer comme vérifiée », « Refuser » avec un motif envoyé à l'acquéreur, « Supprimer le fichier » si la suppression qui suit la décision a échoué) ; entrée « Pièce d'identité à vérifier » dans « À traiter » du tableau de bord ; entrée « Fichier d'une pièce d'identité à supprimer » pour une pièce vérifiée, refusée ou retirée dont le fichier est encore stocké ; actions tracées dans `audit_log` (`identity.opened` à l'ouverture du fichier, `identity.check`, `identity.refuse` sans le motif, `identity.file_deleted`). Jamais « Valider l'identité ».
 
 ### Dossiers `/admin/dossiers`
 
@@ -2161,7 +2161,7 @@ Voir `CLAUDE.md` section 13. Détail :
 | `/api/cron/send-notification-emails` | `*/5 * * * *` | Envoi des emails de notification en attente (regroupement) |
 | `/api/cron/listing-summaries` | `*/5 * * * *` | Résumés d'annonce demandés (L2-05) : 6 annonces au plus par passage, un appel du modèle rapide chacune |
 | `/api/cron/analyze-documents` | `*/5 * * * *` | Analyse des documents du dossier de vente en attente (L3-05) : 3 documents par passage, un appel de `MODELS.smart` chacun ; bornes sur 24 h glissantes (40 par bien, 60 par propriétaire, 500 pour le site) |
-| `/api/cron/anonymize-deleted` | `0 2 * * 0` | Anonymisation des comptes supprimés depuis plus de 30 jours |
+| `/api/cron/anonymize-deleted` | `0 2 * * 0` | Anonymisation des comptes supprimés depuis plus de 30 jours ; au même passage, suppression des fichiers de pièces d'identité restés après la fin de leur pièce ou jamais déclarés depuis plus d'une heure (`DECISIONS.md` 2026-11-23) |
 | *(en base, sans route)* `subscriptions-daily` | `23 7 * * *` | Formules (L1-40) : `subscriptions_daily()` remet la vente d'un bien dont la formule est échue sur la formule en vigueur (Autonomie) et prévient une fois le propriétaire d'une formule qui se termine dans 30 jours (`plan.ending`, email par le job des notifications) |
 | *(en base, sans route)* `purge-estimations` | `53 3 * * *` | Analyses de valeur faites sans compte : `estimations_purge()` supprime celles qui ont plus de 12 mois et ne sont rattachées ni à un compte ni à un bien (politique de confidentialité, `DECISIONS.md` 2026-11-09) |
 | *(en base, sans route)* `purge-rate-limits` | `41 3 * * *` | Limites de débit (L1-38) : `rate_limits_purge()` supprime les compteurs des fenêtres de plus d'un jour |

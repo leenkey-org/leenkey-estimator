@@ -205,6 +205,7 @@ describe("the labels", () => {
       fr.notifications.types.identityRefused,
       fr.visits.booking.errors.identity,
       fr.adminDashboard.todo.kinds.identity,
+      fr.adminDashboard.todo.kinds.identityFile,
     ]);
     const called = [
       t.checked("24 novembre 2026"),
@@ -222,10 +223,19 @@ describe("the labels", () => {
     ].join(" ");
     expect(`${texts} ${called}`).not.toMatch(/valid[ée]|\bon\b|\bOn\b/);
     expect(t.booking.slots(0)).toBeNull();
-    // What the buyer is promised: who reads it, its deletion, nothing kept, never the AI.
+    // What the buyer is promised, and no more: who reads it, when its file
+    // goes, what stays (its type and the dates), never the AI.
     expect(t.privacy).toContain("Seule l'équipe Leenkey consulte votre pièce d'identité.");
-    expect(t.privacy).toContain("Nous supprimons le fichier dès la vérification faite");
-    expect(t.privacy).toContain("ni numéro, ni date de naissance");
+    expect(t.privacy).toContain(
+      "Nous supprimons le fichier une fois la vérification faite, ou dès que vous retirez la pièce.",
+    );
+    const kept =
+      "Nous ne gardons que le type de la pièce et les dates, jamais le fichier ni ce qu'il contient.";
+    expect(t.privacy).toContain(kept);
+    expect(fr.emails.identityChecked.next).toContain(kept);
+    expect(`${t.privacy} ${fr.emails.identityChecked.next}`).not.toMatch(
+      /aucune information|dès la vérification/,
+    );
     expect(t.privacy).toContain("jamais transmise à notre assistant");
     // The check of the team is never waited for.
     expect(t.intro).toContain("sans attendre notre vérification");
@@ -325,6 +335,38 @@ describe("the notices to the buyer", () => {
     expect(text).toContain("Vos visites déjà réservées sont conservées");
     expect(text).not.toMatch(/validé|\bon\b/i);
     expect(email?.html).toContain("https://leenkey-v2.vercel.app/acquereur/profil#identite");
+  });
+});
+
+describe("the files left behind", () => {
+  it("removes what the database lists, then marks the documents whose file is gone", async () => {
+    const { sweepIdentityFiles } = await import("@/leenkey/buyers/identity-sweep");
+    const paths = Array.from({ length: 130 }, (_, index) => ({
+      path: `buyer/identity/${index}.pdf`,
+    }));
+    const remove = vi.fn().mockResolvedValue({ error: null });
+    const rpc = vi.fn(async (name: string) =>
+      name === "identity_files_to_sweep" ? { data: paths, error: null } : { data: 3, error: null },
+    );
+    const admin = { rpc, storage: { from: vi.fn(() => ({ remove })) } };
+    const summary = await sweepIdentityFiles(admin as never);
+    expect(summary).toEqual({ removed: 130, marked: 3 });
+    expect(admin.storage.from).toHaveBeenCalledWith("documents");
+    // 100 paths a request at most.
+    expect(remove.mock.calls.map((call) => call[0].length)).toEqual([100, 30]);
+    expect(rpc.mock.calls.map((call) => call[0])).toEqual([
+      "identity_files_to_sweep",
+      "identity_files_mark_swept",
+    ]);
+  });
+
+  it("marks nothing when a removal fails: the next run starts again", async () => {
+    const { sweepIdentityFiles } = await import("@/leenkey/buyers/identity-sweep");
+    const rpc = vi.fn(async () => ({ data: [{ path: "buyer/identity/1.pdf" }], error: null }));
+    const remove = vi.fn().mockResolvedValue({ error: { message: "storage down" } });
+    const admin = { rpc, storage: { from: () => ({ remove }) } };
+    await expect(sweepIdentityFiles(admin as never)).rejects.toThrow("storage documents");
+    expect(rpc).toHaveBeenCalledTimes(1);
   });
 });
 

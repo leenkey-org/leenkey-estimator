@@ -19,8 +19,12 @@ import type { IdentityDocumentView } from "./identity-status";
 // private bucket `documents` with the session of the buyer (storage
 // policies), then declared by identity_document_add: « Pièce d'identité
 // déposée ». Nothing is read from the document. The file of a document
-// withdrawn or replaced is removed at once. No service role; never sent to
-// the assistant.
+// withdrawn or replaced is removed at once; before each deposit, every file
+// of the folder of the buyer that is not the one of the document that waits
+// goes (an upload never declared, a removal that failed): none stays behind,
+// none fills the folder. What a failure leaves is taken by the scheduled task
+// (leenkey/buyers/identity-sweep.ts). No service role; never sent to the
+// assistant.
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const BUCKET = "documents";
@@ -36,32 +40,58 @@ export type IdentityDocumentError =
 type Client = Awaited<ReturnType<typeof createClient>>;
 
 /**
- * Removes a file of the buyer, then says the document it was the file of has
- * none left (identity_document_file_removed). A failure is logged, never
- * shown: the document is already dealt with, the team deletes the file from
- * the sheet of the account.
+ * The documents of the buyer that reached their end and are not said without
+ * a file yet say so, when their file is gone (identity_document_file_removed
+ * refuses while it is still stored). A failure is logged, never shown.
  */
-async function removeFile(supabase: Client, path: string, userId: string, documentId?: string) {
-  const removed = await supabase.storage.from(BUCKET).remove([path]);
-  if (removed.error) {
-    console.error("[buyers] identity file not removed", {
+async function markFilesRemoved(supabase: Client, userId: string) {
+  const ended = await supabase
+    .from("identity_documents")
+    .select("id")
+    .eq("buyer_id", userId)
+    .is("file_deleted_at", null)
+    .or("checked_at.not.is.null,refused_at.not.is.null,withdrawn_at.not.is.null");
+  for (const document of ended.data ?? []) {
+    const marked = await supabase.rpc("identity_document_file_removed", {
+      p_document_id: document.id,
+    });
+    if (marked.error) {
+      console.error("[buyers] identity file not marked removed", {
+        user_id: userId,
+        entity_id: document.id,
+        code: marked.error.code,
+      });
+    }
+  }
+}
+
+/**
+ * Removes every file of the identity folder of the buyer but `keep` (the file
+ * of the document that waits for its check, which the storage policy protects
+ * anyway), then marks the documents whose file is gone. A failure is logged,
+ * never shown: the scheduled task removes what is left.
+ */
+async function clearFiles(supabase: Client, userId: string, keep: string | null) {
+  const folder = `${userId}/identity`;
+  const listed = await supabase.storage.from(BUCKET).list(folder, { limit: 100 });
+  if (listed.error) {
+    console.error("[buyers] identity folder not listed", {
       user_id: userId,
-      entity_id: documentId,
-      error: removed.error.name,
+      error: listed.error.name,
     });
     return;
   }
-  if (!documentId) return;
-  const marked = await supabase.rpc("identity_document_file_removed", {
-    p_document_id: documentId,
-  });
-  if (marked.error) {
-    console.error("[buyers] identity file not marked removed", {
-      user_id: userId,
-      entity_id: documentId,
-      code: marked.error.code,
-    });
+  const stray = listed.data.map((file) => `${folder}/${file.name}`).filter((path) => path !== keep);
+  if (stray.length > 0) {
+    const removed = await supabase.storage.from(BUCKET).remove(stray);
+    if (removed.error) {
+      console.error("[buyers] identity files not removed", {
+        user_id: userId,
+        error: removed.error.name,
+      });
+    }
   }
+  await markFilesRemoved(supabase, userId);
 }
 
 function revalidateIdentity() {
@@ -89,15 +119,26 @@ export async function addIdentityDocument(form: FormData): Promise<AddIdentityDo
   if (!read.ok) return { ok: false, error: read.error };
 
   const supabase = await createClient();
-  // The document that waits for its check gives way to the new one: its file goes with it.
-  const previous = await supabase
+  // The document that waits for its check, which the new one replaces.
+  const waiting = await supabase
     .from("identity_documents")
-    .select("id, storage_path")
+    .select("storage_path")
     .eq("buyer_id", profile.id)
     .is("checked_at", null)
     .is("refused_at", null)
     .is("withdrawn_at", null)
     .maybeSingle();
+  if (waiting.error) {
+    console.error("[buyers] identity document read failed", {
+      user_id: profile.id,
+      code: waiting.error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  // Nothing else stays in the folder: a file never declared, a file whose
+  // removal failed. Five files at most are accepted there (identity_files_room).
+  await clearFiles(supabase, profile.id, waiting.data?.storage_path ?? null);
+
   // Never the name of the file chosen: a new one (CLAUDE.md section 11).
   const path = `${profile.id}/identity/${randomUUID()}.${read.data.extension}`;
   const upload = await supabase.storage
@@ -117,20 +158,19 @@ export async function addIdentityDocument(form: FormData): Promise<AddIdentityDo
     p_size_bytes: read.data.data.length,
   });
   if (added.error) {
-    // The file is not declared: taken back (the storage policy allows it).
-    await removeFile(supabase, path, profile.id);
     console.error("[buyers] identity document failed", {
       user_id: profile.id,
       code: added.error.code,
     });
+    // The file is not declared: taken back (the storage policy allows it).
+    await clearFiles(supabase, profile.id, waiting.data?.storage_path ?? null);
     return {
       ok: false,
       error: added.error.message.includes("already checked") ? "checked" : "unavailable",
     };
   }
-  if (previous.data) {
-    await removeFile(supabase, previous.data.storage_path, profile.id, previous.data.id);
-  }
+  // The document replaced is withdrawn: its file goes, the new one stays.
+  await clearFiles(supabase, profile.id, path);
   revalidateIdentity();
   return {
     ok: true,
@@ -161,20 +201,6 @@ export async function removeIdentityDocument(
     return { ok: false, error: "invalid" };
   }
   const supabase = await createClient();
-  const found = await supabase
-    .from("identity_documents")
-    .select("id, storage_path")
-    .eq("id", documentId)
-    .eq("buyer_id", profile.id)
-    .maybeSingle();
-  if (found.error || !found.data) {
-    console.error("[buyers] identity document not found", {
-      user_id: profile.id,
-      entity_id: documentId,
-      code: found.error?.code,
-    });
-    return { ok: false, error: "unavailable" };
-  }
   const removed = await supabase.rpc("identity_document_remove", { p_document_id: documentId });
   if (removed.error) {
     console.error("[buyers] identity document removal failed", {
@@ -184,7 +210,8 @@ export async function removeIdentityDocument(
     });
     return { ok: false, error: "unavailable" };
   }
-  await removeFile(supabase, found.data.storage_path, profile.id, found.data.id);
+  // No document waits any more: the whole folder goes.
+  await clearFiles(supabase, profile.id, null);
   revalidateIdentity();
   return { ok: true, data: null };
 }

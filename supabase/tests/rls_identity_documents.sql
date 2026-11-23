@@ -9,7 +9,7 @@
 -- (metadata), closure, anonymisation. Fixtures in postal code 99988.
 begin;
 \ir _helpers.psql
-select plan(100);
+select plan(121);
 \ir _plan.psql
 -- The storage service deletes a file this way (storage.protect_delete): as
 -- the user, under the RLS.
@@ -85,7 +85,8 @@ select throws_ok(format($$insert into storage.objects (bucket_id, name, owner) v
 select throws_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('documents', %L, %L)$$,
                         tests.uid('buyer_c')::text || '/identity/' || gen_random_uuid()::text || '.exe', tests.uid('buyer_c')),
                  '42501', null, 'nor a file that is not a PDF or a JPEG');
-select lives_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('documents', %L, %L)$$,
+select lives_ok(format($$insert into storage.objects (bucket_id, name, owner, metadata)
+                          values ('documents', %L, %L, '{"mimetype":"application/pdf","size":250000}')$$,
                        :'path1', tests.uid('buyer_c')),
                 'buyer_c: sends the file of its document');
 select is((select count(*) from storage.objects where bucket_id = 'documents' and name = :'path1')::int, 1,
@@ -139,6 +140,13 @@ select throws_ok(format($$select identity_document_add('carte_identite', %L, 'im
 delete from storage.objects where bucket_id = 'documents' and name = :'path_png';
 select is((select count(*) from storage.objects where bucket_id = 'documents' and name = :'path_png')::int, 0,
           'a file never declared is taken back by its buyer');
+-- A file whose type and size the storage does not know: nothing declared is trusted.
+select tests.uid('buyer_c')::text || '/identity/' || gen_random_uuid()::text || '.pdf' as path_bare \gset
+insert into storage.objects (bucket_id, name, owner) values ('documents', :'path_bare', tests.uid('buyer_c'));
+select throws_ok(format($$select identity_document_add('carte_identite', %L, 'application/pdf', 1200)$$, :'path_bare'),
+                 '22023', 'the file of the document is not accepted',
+                 'a file whose type and size the storage does not know is refused');
+delete from storage.objects where bucket_id = 'documents' and name = :'path_bare';
 
 -- ===========================================================================
 -- Deposited, not checked: the booking goes through
@@ -173,6 +181,8 @@ select throws_ok(format($$select * from admin_identity_documents(%L)$$, tests.ui
                  '42501', null, 'not the view of the team');
 select throws_ok(format($$select identity_document_check(%L)$$, :'doc1'), '42501', null,
                  'seller_a: checks no document');
+select throws_ok(format($$select identity_document_opened(%L)$$, :'doc1'), '42501', null,
+                 'nor records the opening of a file');
 \o /dev/null
 select visit_invite(:'prop', tests.uid('buyer_d'));
 \o
@@ -199,7 +209,8 @@ select is((select count(*) from storage.objects where bucket_id = 'documents')::
 -- ===========================================================================
 \set who buyer_c
 \ir _as.psql
-insert into storage.objects (bucket_id, name, owner) values ('documents', :'path2', tests.uid('buyer_c'));
+insert into storage.objects (bucket_id, name, owner, metadata)
+values ('documents', :'path2', tests.uid('buyer_c'), '{"mimetype":"image/jpeg","size":900000}');
 select identity_document_add('carte_identite', :'path2', 'image/jpeg', 900000) as doc2 \gset
 select ok((select withdrawn_at is not null from identity_documents where id = :'doc1'),
           'a new document replaces the one that waited: withdrawn');
@@ -225,6 +236,17 @@ select is((select count(*) from storage.objects where bucket_id = 'documents' an
 delete from storage.objects where bucket_id = 'documents' and name = :'path2';
 select is((select count(*) from storage.objects where bucket_id = 'documents' and name = :'path2')::int, 1,
           'admin: does not delete the file of a document not yet decided');
+select lives_ok(format($$select identity_document_opened(%L)$$, :'doc2'),
+                'admin: the opening of the file is recorded');
+select throws_ok(format($$select identity_document_opened(%L)$$, gen_random_uuid()), '42501', null,
+                 'not of a document that does not exist');
+reset role;
+select is((select array[actor_id::text, meta->>'buyer_id'] from audit_log
+            where action = 'identity.opened' and entity_id = :'doc2'),
+          array[tests.uid('admin')::text, tests.uid('buyer_c')::text],
+          'in the audit log, with who opened it');
+\set who admin
+\ir _as.psql
 select throws_ok(format($$select identity_document_refuse(%L, 'x')$$, :'doc2'), '22023', null,
                  'a refusal asks for a reason');
 select throws_ok(format($$select identity_document_check(%L)$$, :'doc1'), '22023', null,
@@ -304,7 +326,8 @@ select is((select row(checked_at is not null, file_deleted_at is not null)::text
           row(true, true)::text, 'buyer_c: reads its identity checked, its file deleted');
 select throws_ok(format($$select identity_document_remove(%L)$$, :'doc2'), '42501', null,
                  'a checked identity is not withdrawn');
-insert into storage.objects (bucket_id, name, owner) values ('documents', :'path3', tests.uid('buyer_c'));
+insert into storage.objects (bucket_id, name, owner, metadata)
+values ('documents', :'path3', tests.uid('buyer_c'), '{"mimetype":"application/pdf","size":250000}');
 select throws_ok(format($$select identity_document_add('passeport', %L, 'application/pdf', 1000)$$, :'path3'),
                  '22023', 'the identity is already checked', 'nor deposited again');
 delete from storage.objects where bucket_id = 'documents' and name = :'path3';
@@ -315,7 +338,8 @@ delete from storage.objects where bucket_id = 'documents' and name = :'path3';
 \set who buyer_d
 \ir _as.psql
 select token as token_d from visit_invitations where property_id = :'prop' and buyer_id = tests.uid('buyer_d') \gset
-insert into storage.objects (bucket_id, name, owner) values ('documents', :'path_d', tests.uid('buyer_d'));
+insert into storage.objects (bucket_id, name, owner, metadata)
+values ('documents', :'path_d', tests.uid('buyer_d'), '{"mimetype":"application/pdf","size":250000}');
 select identity_document_add('titre_sejour', :'path_d', 'application/pdf', 1000) as doc_d \gset
 \set who admin
 \ir _as.psql
@@ -328,10 +352,13 @@ select identity_document_file_removed(:'doc_d');
 reset role;
 select is((select count(*)::int from storage.objects where bucket_id = 'documents' and name = :'path_d'), 0,
           'the file of a refused document is deleted by the team');
-select is((select array[actor_id::text, meta->>'reason'] from audit_log
+select is((select array[actor_id::text, coalesce(meta::text, '')] from audit_log
             where action = 'identity.refuse' and entity_id = :'doc_d'),
-          array[tests.uid('admin')::text, 'Le document est illisible : envoyez une photo nette.'],
-          'the refusal is in the audit log');
+          array[tests.uid('admin')::text, ''],
+          'the refusal is in the audit log: the document only, never its reason');
+select ok(not exists (select 1 from audit_log
+                       where entity_id = :'doc_d' and meta::text like '%illisible%'),
+          'the reason of a refusal is nowhere in the audit log');
 select is((select row(profile_id, data->>'reason', email_after is not null)::text
              from notifications where type = 'identity.refused' and data->>'document_id' = :'doc_d'),
           row(tests.uid('buyer_d'), 'Le document est illisible : envoyez une photo nette.', true)::text,
@@ -351,7 +378,8 @@ select is((select identity_status::text from buyer_identity_for_seller(:'prop') 
 \set who buyer_d
 \ir _as.psql
 select tests.uid('buyer_d')::text || '/identity/' || gen_random_uuid()::text || '.jpg' as path_d2 \gset
-insert into storage.objects (bucket_id, name, owner) values ('documents', :'path_d2', tests.uid('buyer_d'));
+insert into storage.objects (bucket_id, name, owner, metadata)
+values ('documents', :'path_d2', tests.uid('buyer_d'), '{"mimetype":"image/jpeg","size":900000}');
 select lives_ok(format($$select identity_document_add('titre_sejour', %L, 'image/jpeg', 1000)$$, :'path_d2'),
                 'buyer_d: deposits another document after a refusal');
 select lives_ok(format($$select visit_book(%L, %L)$$, :'token_d', :'slot2'), 'and books');
@@ -372,7 +400,8 @@ select throws_ok(format($$select identity_document_check(%L)$$, :'doc_d2'), '220
 \set who buyer_d
 \ir _as.psql
 select tests.uid('buyer_d')::text || '/identity/' || gen_random_uuid()::text || '.pdf' as path_d3 \gset
-insert into storage.objects (bucket_id, name, owner) values ('documents', :'path_d3', tests.uid('buyer_d'));
+insert into storage.objects (bucket_id, name, owner, metadata)
+values ('documents', :'path_d3', tests.uid('buyer_d'), '{"mimetype":"application/pdf","size":250000}');
 select identity_document_add('passeport', :'path_d3', 'application/pdf', 1000) as doc_d3 \gset
 reset role;
 update profiles set suspended_at = now() where id = tests.uid('buyer_d');
@@ -383,8 +412,30 @@ select throws_ok(format($$select identity_document_remove(%L)$$, :'doc_d3'), '42
 select throws_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('documents', %L, %L)$$,
                         tests.uid('buyer_d')::text || '/identity/' || gen_random_uuid()::text || '.pdf', tests.uid('buyer_d')),
                  '42501', null, 'nor sends a file');
+delete from storage.objects where bucket_id = 'documents' and name = :'path_d3';
 reset role;
+select is((select count(*)::int from storage.objects where bucket_id = 'documents' and name = :'path_d3'), 1,
+          'nor removes the file of its document that waits');
 update profiles set suspended_at = null where id = tests.uid('buyer_d');
+
+-- ===========================================================================
+-- What a seller no longer reads: an invitation expired, a visit cancelled
+-- ===========================================================================
+update visit_invitations set expires_at = now() - interval '1 day'
+ where property_id = :'prop' and buyer_id = tests.uid('buyer_c');
+\set who seller_a
+\ir _as.psql
+select is((select identity_status::text from buyer_identity_for_seller(:'prop') where buyer_id = tests.uid('buyer_c')),
+          'checked', 'seller_a: an invitation expired, a visit still booked: the status is read');
+reset role;
+update visits set status = 'cancelled', cancelled_at = now(), cancelled_by = tests.uid('buyer_c')
+ where property_id = :'prop' and buyer_id = tests.uid('buyer_c');
+\set who seller_a
+\ir _as.psql
+select is((select count(*)::int from buyer_identity_for_seller(:'prop') where buyer_id = tests.uid('buyer_c')), 0,
+          'seller_a: the invitation expired and the visit cancelled: nothing more about this buyer');
+select is((select count(*)::int from buyer_identity_for_seller(:'prop') where buyer_id = tests.uid('buyer_d')), 1,
+          'a buyer whose invitation is valid is still read');
 
 -- ===========================================================================
 -- The account: export, closure, anonymisation
@@ -415,13 +466,78 @@ reset role;
 set local role service_role;
 select is((select array_agg(path) from account_files(:'buyer_d', now() + interval '31 days')
             where bucket = 'documents'),
-          array[:'path_d3'], '30 days later: the cron lists the identity file still stored');
+          array[:'path_d3'], 'the anonymisation would list the identity file, were it still stored then');
+-- The closing action removes the file at once, with the session of the
+-- account it has just closed; the document then says so.
+\set who buyer_d
+\ir _as.psql
+delete from storage.objects where bucket_id = 'documents' and name = :'path_d3';
+select lives_ok(format($$select identity_document_file_removed(%L)$$, :'doc_d3'),
+                'buyer_d, account closed: says the file of its withdrawn document removed');
+reset role;
+select is((select count(*)::int from storage.objects where bucket_id = 'documents' and name = :'path_d3'), 0,
+          'the file of the document goes at the closure');
+select ok((select file_deleted_at is not null from identity_documents where id = :'doc_d3'),
+          'and the document says so');
+
+-- ===========================================================================
+-- The scheduled task: no file stays behind
+-- ===========================================================================
+-- A document of buyer_c that reached its end with its file still stored (a
+-- deletion that failed), a file never declared for two hours, one just sent.
+select tests.uid('buyer_c')::text || '/identity/' || gen_random_uuid()::text || '.pdf' as path_old \gset
+select tests.uid('buyer_c')::text || '/identity/' || gen_random_uuid()::text || '.pdf' as path_new \gset
+insert into storage.objects (bucket_id, name, owner)
+values ('documents', :'path3', tests.uid('buyer_c')), ('documents', :'path_old', tests.uid('buyer_c')),
+       ('documents', :'path_new', tests.uid('buyer_c'));
+update storage.objects set created_at = now() - interval '2 hours' where name = :'path_old';
+insert into identity_documents (buyer_id, type, storage_path, mime_type, size_bytes, withdrawn_at)
+values (tests.uid('buyer_c'), 'passeport', :'path3', 'application/pdf', 1000, now())
+returning id as doc_left \gset
+-- A document that waits, its file stored: never swept.
+select tests.uid('seller_b')::text || '/identity/' || gen_random_uuid()::text || '.pdf' as path_wait \gset
+insert into storage.objects (bucket_id, name, owner) values ('documents', :'path_wait', tests.uid('seller_b'));
+insert into identity_documents (buyer_id, type, storage_path, mime_type, size_bytes)
+values (tests.uid('seller_b'), 'passeport', :'path_wait', 'application/pdf', 1000);
+\set who admin
+\ir _as.psql
+select throws_ok('select * from identity_files_to_sweep()', '42501', null,
+                 'admin: the sweep is the scheduled task''s');
+select throws_ok('select identity_files_mark_swept()', '42501', null, 'nor its marking');
+reset role;
+-- The scheduled task: the service role, nobody signed in.
+\o /dev/null
+select set_config('request.jwt.claims', '{"role":"service_role"}', true),
+       set_config('request.jwt.claim.sub', '', true);
+\o
+set local role service_role;
+select is((select array_agg(path order by path) from identity_files_to_sweep()
+            where path in (:'path3', :'path_old', :'path_new', :'path_wait', :'path2')),
+          (select array_agg(x order by x) from unnest(array[:'path3', :'path_old']) as x),
+          'the task lists the file of an ended document and a file never declared for an hour, never a waiting file nor one just sent');
+select is(identity_files_mark_swept(), 1,
+          'before the files are removed, it marks only the document whose file is already gone (withdrawn by buyer_d earlier)');
+delete from storage.objects where bucket_id = 'documents' and name in (:'path3', :'path_old');
+select is(identity_files_mark_swept(), 1, 'the files removed, the ended document is marked');
+select is(identity_files_mark_swept(), 0, 'once');
+reset role;
+select is((select array[(file_deleted_at is not null)::text,
+                        (select count(*)::text from audit_log a
+                          where a.action = 'identity.file_deleted' and a.entity_id = d.id
+                            and a.actor_id is null and a.meta->>'by' = 'sweep')]
+             from identity_documents d where d.id = :'doc_left'),
+          array['true', '1'], 'the document says its file deleted, the audit log says the task did it');
+select is((select count(*)::int from storage.objects where bucket_id = 'documents'
+            and name in (:'path_new', :'path_wait')), 2,
+          'the waiting file and the file just sent are still there');
+
+set local role service_role;
 select lives_ok(format($$select account_anonymize(%L, now() + interval '31 days')$$, :'buyer_d'),
                 'the cron anonymises buyer_d');
 reset role;
 select is((select count(*)::int from identity_documents where buyer_id = tests.uid('buyer_d')), 0,
           'its identity documents are deleted with the account');
-select is((select count(*)::int from identity_documents where buyer_id = tests.uid('buyer_c')), 2,
+select is((select count(*)::int from identity_documents where buyer_id = tests.uid('buyer_c')), 3,
           'those of another account stay');
 
 select * from finish();

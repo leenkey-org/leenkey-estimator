@@ -6,7 +6,8 @@ import { devices, expect, test, type Browser, type Page } from "@playwright/test
 // buyer invited to visit who has deposited no identity document cannot book
 // and is led to deposit one; they deposit it, book at once (the check of the
 // team is not waited for); the seller sees a label, never the file; the team
-// marks the document as checked; its file is deleted; the buyer is told.
+// refuses a first document with a reason the buyer reads, then marks the
+// second one as checked; each file is deleted; the buyer is told.
 // A local stack just made by `scripts/local-stack.sh up` only (E2E_SEED=1,
 // SEED_PASSWORD, E2E_MUTATE=1, project « seed-mutations »). Seed used:
 // buyer_d (no identity document), seller_b and their conversation about
@@ -53,7 +54,9 @@ function sql(statement: string): string {
  * Removes what a run of the spec leaves, a failed one included: the visits,
  * the slots and the invitation of buyer_d on LK-0008, the notices they posted
  * in the conversation, the notifications about them and about the identity
- * document, the document and what is left of its file.
+ * document, the documents and what is left of their files; and the task
+ * « Créneaux de visite ouverts » the first slot ticked for LK-0008, whenever
+ * the property has no slot left (a retry would read it as ticked before).
  */
 function cleanUp() {
   sql(`
@@ -76,7 +79,11 @@ function cleanUp() {
        and not exists (select 1 from public.visits v where v.slot_id = s.id);
     delete from public.visit_invitations
      where property_id = '${PROPERTY}' and buyer_id = '${BUYER}';
-    delete from public.identity_documents where buyer_id = '${BUYER}';`);
+    delete from public.identity_documents where buyer_id = '${BUYER}';
+    delete from public.sale_task_status st using public.sale_step_tasks t
+     where t.id = st.task_id and t.auto_trigger = 'visit_slot.created'
+       and st.property_id = '${PROPERTY}'
+       and not exists (select 1 from public.visit_slots s where s.property_id = '${PROPERTY}');`);
   // The files, as the storage service deletes them; a failure leaves an
   // orphan file in the local bucket, nothing a test reads.
   try {
@@ -89,25 +96,8 @@ function cleanUp() {
   }
 }
 
-/** « Créneaux de visite ouverts », ticked for LK-0008 by the first slot of the spec. */
-const SLOT_TASK = `
-  from public.sale_task_status st using public.sale_step_tasks t
- where t.id = st.task_id and t.auto_trigger = 'visit_slot.created'
-   and st.property_id = '${PROPERTY}'`;
-/** The task was already ticked before the spec: left as it is at the end. */
-let slotTaskTicked = true;
-
-test.beforeAll(() => {
-  cleanUp();
-  slotTaskTicked =
-    sql(`select count(*) from public.sale_task_status st, public.sale_step_tasks t
-          where t.id = st.task_id and t.auto_trigger = 'visit_slot.created'
-            and st.property_id = '${PROPERTY}'`) !== "0";
-});
-test.afterAll(() => {
-  cleanUp();
-  if (!slotTaskTicked) sql(`delete ${SLOT_TASK};`);
-});
+test.beforeAll(cleanUp);
+test.afterAll(cleanUp);
 
 function consentCookie(baseURL: string) {
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
@@ -161,11 +151,11 @@ function parisDay(days: number): string {
 const thread = (page: Page) => page.getByRole("log", { name: "Messages de la conversation" });
 const identity = (page: Page) => page.getByRole("region", { name: "Pièce d'identité" });
 
-test("pièce d'identité : réservation bloquée, dépôt, réservation, libellé vendeur, vérification", async ({
+test("pièce d'identité : réservation bloquée, dépôt, réservation, libellé vendeur, refus, vérification", async ({
   browser,
   baseURL,
 }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(300_000);
   const base = baseURL ?? "http://localhost:3100";
   const seller = await openBrowser(browser, base, false);
   const buyer = await openBrowser(browser, base, true);
@@ -202,6 +192,10 @@ test("pièce d'identité : réservation bloquée, dépôt, réservation, libell�
     await expect(buyer.getByRole("button", { name: "Réserver ce créneau" })).toHaveCount(0);
     await expect(identity(buyer).getByText(/jamais transmise à notre assistant/)).toBeVisible();
     await expectNoSeriousViolation(buyer);
+    // On a phone, nothing wider than the screen.
+    expect(await buyer.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      390,
+    );
     // The database refuses the booking too, whatever the page shows.
     const token = bookingUrl.split("/").pop() ?? "";
     const refused = sql(`
@@ -274,7 +268,7 @@ test("pièce d'identité : réservation bloquée, dépôt, réservation, libell�
     expect((await seller.request.get(documentHref)).status()).toBe(404);
   });
 
-  await test.step("l'équipe ouvre la pièce et la marque comme vérifiée : le fichier est supprimé", async () => {
+  await test.step("l'équipe refuse la pièce avec un motif : fichier supprimé, l'acquéreur lit le motif et en dépose une autre", async () => {
     await signIn(admin, "admin", "/admin");
     await admin
       .getByRole("link", { name: /Pièce d'identité à vérifier/ })
@@ -283,21 +277,92 @@ test("pièce d'identité : réservation bloquée, dépôt, réservation, libell�
     await expect(admin).toHaveURL(/\/admin\/utilisateurs\/[0-9a-f-]{36}#identite$/);
     const section = admin.getByRole("region", { name: "Pièce d'identité" });
     await expect(section.getByText(/Passeport\s·\sÀ vérifier/)).toBeVisible();
+    await section.getByRole("button", { name: "Refuser" }).click();
+    const dialog = admin.getByRole("dialog");
+    await expect(dialog.getByText("Refuser cette pièce d'identité ?")).toBeVisible();
+    // Without a reason, nothing is decided.
+    await dialog.getByRole("button", { name: "Refuser la pièce" }).click();
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: /^La pièce a expiré/ }).click();
+    await dialog.getByRole("button", { name: "Refuser la pièce" }).click();
+    await expect(
+      admin.getByText("Pièce refusée. Son fichier est supprimé et l'acquéreur est prévenu."),
+    ).toBeVisible();
+    await expect(section.getByText(/Passeport\s·\sRefusée le .+ par Cédric/)).toBeVisible();
+    await expect(section.getByRole("button", { name: "Marquer comme vérifiée" })).toHaveCount(0);
+    expect(sql(`select count(*) from storage.objects where name like '${BUYER}/identity/%'`)).toBe(
+      "0",
+    );
+    // The seller: not deposited again, never « refusée » nor the reason; the visit stays.
+    await seller.reload();
+    const visit = seller.getByRole("listitem").filter({ hasText: "Avec David" }).first();
+    await expect(visit.getByText("Pièce d'identité non déposée")).toBeVisible();
+    await expect(seller.getByText(/expiré|Refusée/)).toHaveCount(0);
+
+    // The buyer reads the reason, in their space and in the notification queued for an email.
+    await buyer.reload();
+    const card = identity(buyer);
+    await expect(
+      card.getByText(
+        /^Nous n'avons pas pu vérifier la pièce que vous aviez déposée\. Notre remarque : La pièce a expiré/,
+      ),
+    ).toBeVisible();
+    expect((await buyer.request.get(documentHref)).status()).toBe(404);
+    expect(
+      sql(
+        `select (email_after is not null)::text || ':' || (data->>'reason') from public.notifications where profile_id = '${BUYER}' and type = 'identity.refused'`,
+      ),
+    ).toBe("true:La pièce a expiré : déposez une pièce en cours de validité.");
+    await expectNoSeriousViolation(buyer);
+    // Another document, deposited at once; the visit already booked was never cancelled.
+    await card.getByLabel("Type de pièce").selectOption("carte_identite");
+    await card.getByLabel("Fichier").setInputFiles({
+      name: "Carte David Moreau.pdf",
+      mimeType: "application/pdf",
+      buffer: PDF,
+    });
+    await card.getByRole("button", { name: "Déposer ma pièce d'identité" }).click();
+    await expect(card.getByText("Carte d'identité", { exact: true })).toBeVisible();
+    await expect(card.getByText(/^Pièce d'identité déposée\. Vous pouvez réserver/)).toBeVisible();
+    documentHref =
+      (await card.getByRole("link", { name: "Voir le document (PDF)" }).getAttribute("href")) ?? "";
+    expect(documentHref).toMatch(/^\/documents\/identite\/[0-9a-f-]{36}$/);
+    expect(
+      sql(
+        `select count(*) from public.visits where property_id = '${PROPERTY}' and buyer_id = '${BUYER}' and status = 'confirmed'`,
+      ),
+    ).toBe("1");
+    // One file in the folder: the one of the document that waits.
+    expect(sql(`select count(*) from storage.objects where name like '${BUYER}/identity/%'`)).toBe(
+      "1",
+    );
+  });
+
+  await test.step("l'équipe ouvre la pièce et la marque comme vérifiée : le fichier est supprimé", async () => {
+    await admin.goto("/admin");
+    await admin
+      .getByRole("link", { name: /Pièce d'identité à vérifier/ })
+      .filter({ hasText: "David" })
+      .click();
+    await expect(admin).toHaveURL(/\/admin\/utilisateurs\/[0-9a-f-]{36}#identite$/);
+    const section = admin.getByRole("region", { name: "Pièce d'identité" });
+    await expect(section.getByText(/Carte d'identité\s·\sÀ vérifier/)).toBeVisible();
     const file = await admin.request.get(
       (await section.getByRole("link", { name: "Ouvrir le fichier" }).getAttribute("href")) ?? "",
       { maxRedirects: 0 },
     );
     expect(file.status()).toBe(303);
     await expectNoSeriousViolation(admin);
-    await section.getByLabel("Note interne").fill("Passeport lisible, au nom du compte.");
+    await section.getByLabel("Note interne").fill("Carte lisible, au nom du compte.");
     await section.getByRole("button", { name: "Marquer comme vérifiée" }).click();
     await expect(
       admin.getByText(
         "Pièce marquée comme vérifiée. Son fichier est supprimé et l'acquéreur est prévenu.",
       ),
     ).toBeVisible();
-    await expect(section.getByText(/Passeport\s·\sVérifiée le .+ par Cédric/)).toBeVisible();
-    await expect(section.getByText(/^Fichier supprimé le /)).toBeVisible();
+    await expect(section.getByText(/Carte d'identité\s·\sVérifiée le .+ par Cédric/)).toBeVisible();
+    // The checked document and the refused one: neither has a file left.
+    await expect(section.getByText(/^Fichier supprimé le /)).toHaveCount(2);
     await expect(section.getByRole("button", { name: "Marquer comme vérifiée" })).toHaveCount(0);
     await expect(section.getByRole("link", { name: "Ouvrir le fichier" })).toHaveCount(0);
     // Gone from the bucket, said so by the document, written in the audit log.
@@ -306,15 +371,22 @@ test("pièce d'identité : réservation bloquée, dépôt, réservation, libell�
     );
     expect(
       sql(
-        `select (checked_at is not null and file_deleted_at is not null)::text from public.identity_documents where buyer_id = '${BUYER}' and withdrawn_at is null`,
+        `select (checked_at is not null and file_deleted_at is not null)::text from public.identity_documents where buyer_id = '${BUYER}' and withdrawn_at is null and refused_at is null`,
       ),
     ).toBe("true");
     expect(
       sql(`
-        select string_agg(a.action, ',' order by a.action) from public.audit_log a
+        select string_agg(distinct a.action, ',' order by a.action) from public.audit_log a
           join public.identity_documents d on d.id = a.entity_id
          where d.buyer_id = '${BUYER}' and a.action like 'identity.%'`),
-    ).toBe("identity.check,identity.file_deleted");
+    ).toBe("identity.check,identity.file_deleted,identity.opened,identity.refuse");
+    // The reason of the refusal is the buyer's to read: never in the audit log.
+    expect(
+      sql(`
+        select count(*) from public.audit_log a
+          join public.identity_documents d on d.id = a.entity_id
+         where d.buyer_id = '${BUYER}' and a.meta::text like '%expiré%'`),
+    ).toBe("0");
     expect((await admin.request.get(documentHref)).status()).toBe(404);
   });
 

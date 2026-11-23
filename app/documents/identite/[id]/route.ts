@@ -7,7 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 // section 11), never a permanent one. The session decides: the RLS of
 // identity_documents and the storage policies show the document to no one
 // else (a seller gets a 404, like a document that does not exist). Deleted
-// once the team has checked or refused it: nothing left to open then.
+// once the team has checked or refused it: nothing left to open then. An
+// opening by the team is written in audit_log (identity_document_opened)
+// before the URL is issued: no URL without its line.
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SIGNED_SECONDS = 600;
@@ -31,6 +33,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     .eq("id", id)
     .maybeSingle();
   if (document.error || !document.data || document.data.file_deleted_at) return notFound();
+  if (profile.roles.includes("admin")) {
+    const opened = await supabase.rpc("identity_document_opened", { p_document_id: id });
+    if (opened.error) {
+      console.error("[admin] identity file opening not recorded", {
+        user_id: profile.id,
+        entity_id: id,
+        code: opened.error.code,
+      });
+      return notFound();
+    }
+  }
   const signed = await supabase.storage
     .from("documents")
     .createSignedUrl(document.data.storage_path, SIGNED_SECONDS);

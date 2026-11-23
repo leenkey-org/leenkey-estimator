@@ -9,7 +9,7 @@ export const frIdentityDocument = {
   intro:
     "Pour réserver une visite, déposez une pièce d'identité : carte d'identité, passeport ou titre de séjour. Vous réservez dès qu'elle est déposée, sans attendre notre vérification.",
   privacy:
-    "Seule l'équipe Leenkey consulte votre pièce d'identité. Le vendeur voit seulement si elle est déposée ou vérifiée, jamais le document. Nous supprimons le fichier dès la vérification faite et nous n'en gardons aucune information : ni numéro, ni date de naissance. Elle n'est jamais transmise à notre assistant.",
+    "Seule l'équipe Leenkey consulte votre pièce d'identité. Le vendeur voit seulement si elle est déposée ou vérifiée, jamais le document. Nous supprimons le fichier une fois la vérification faite, ou dès que vous retirez la pièce. Nous ne gardons que le type de la pièce et les dates, jamais le fichier ni ce qu'il contient. Elle n'est jamais transmise à notre assistant.",
   // What the buyer reads of their own status.
   status: {
     not_provided: "Pièce d'identité non déposée",
