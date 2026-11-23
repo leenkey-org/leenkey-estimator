@@ -1,8 +1,11 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { interventionFeedback } from "@/leenkey/admin/feedback";
 import {
+  adviserStart,
   canRequestIntervention,
   interventionActions,
+  interventionAvailability,
   interventionFilterCounts,
   interventionsHref,
   interventionsLeft,
@@ -84,10 +87,34 @@ describe("the counter of the interventions of a property", () => {
     expect(interventionsLeft({ quota: 4, used: 5 })).toBe(0);
   });
 
-  it("lets the seller ask until the interventions of the plan are done", () => {
-    expect(canRequestIntervention({ quota: 4, used: 3 })).toBe(true);
-    expect(canRequestIntervention({ quota: 4, used: 4 })).toBe(false);
-    expect(canRequestIntervention({ quota: 6, used: 4 })).toBe(true);
+  it("lets the seller ask while an intervention is left that no request holds", () => {
+    expect(interventionAvailability({ quota: 4, used: 3, pending: 0 })).toBe("open");
+    expect(canRequestIntervention({ quota: 4, used: 3, pending: 0 })).toBe(true);
+    // A request that waits holds one of those left: never more requests than interventions.
+    expect(interventionAvailability({ quota: 4, used: 3, pending: 1 })).toBe("held");
+    expect(interventionAvailability({ quota: 4, used: 0, pending: 4 })).toBe("held");
+    expect(canRequestIntervention({ quota: 4, used: 2, pending: 2 })).toBe(false);
+    expect(interventionAvailability({ quota: 4, used: 2, pending: 1 })).toBe("open");
+    // The interventions of the plan done: used, whatever waits.
+    expect(interventionAvailability({ quota: 4, used: 4, pending: 0 })).toBe("used");
+    expect(interventionAvailability({ quota: 4, used: 5, pending: 1 })).toBe("used");
+    expect(canRequestIntervention({ quota: 6, used: 4, pending: 1 })).toBe(true);
+  });
+
+  it("says when the adviser starts, during the withdrawal period without an immediate start", () => {
+    const ordered = "2026-11-10T09:00:00Z";
+    // 14 days of withdrawal, then the day after: as the header of the conversation.
+    const start = adviserStart(ordered, new Date("2026-11-12T09:00:00Z"));
+    expect(start?.toISOString().slice(0, 10)).toBe("2026-11-25");
+    // Once that day has come, or with an immediate start (no order waiting): the usual delays.
+    expect(adviserStart(ordered, new Date("2026-11-26T09:00:00Z"))).toBeNull();
+    expect(adviserStart(null, new Date("2026-11-12T09:00:00Z"))).toBeNull();
+    const t = frAdvisorInterventions.seller.form;
+    expect(t.delayFrom("25 nov.")).not.toContain("jours ouvrés");
+    expect(t.sentFrom("25 nov.")).toContain("Votre accompagnement commence le 25 nov.");
+    expect(frAdvisorInterventions.admin.startsOn("25 nov.")).toBe(
+      "Accompagnement à partir du 25 nov. (fin du délai de rétractation)",
+    );
   });
 
   it("fills its bar with what is used, 100 % at most", () => {
@@ -163,6 +190,22 @@ describe("the request of the seller", () => {
       expect(frAdvisorInterventions.reasons[reason]).toBeTruthy();
     }
     expect(frAdvisorInterventions.reasons.initial_meeting).toBe("Rendez-vous initial");
+  });
+
+  it("names the reasons as the database does in the message of the conversation", () => {
+    // advisor_intervention_reason_label writes the reason in the message of the seller: the
+    // same words as the form and the back office.
+    const sql = readFileSync(
+      "supabase/migrations/20261123110000_advisor_interventions.sql",
+      "utf8",
+    );
+    const start = sql.indexOf("create function public.advisor_intervention_reason_label");
+    const body = sql.slice(start, sql.indexOf("$$;", start));
+    const labels = Object.fromEntries(
+      [...body.matchAll(/when '([a-z_]+)' then '([^']+)'/g)].map((match) => [match[1], match[2]]),
+    );
+    const other = /else '([^']+)'/.exec(body)?.[1];
+    expect({ ...labels, other }).toEqual(frAdvisorInterventions.reasons);
   });
 });
 

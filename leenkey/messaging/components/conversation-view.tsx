@@ -451,8 +451,9 @@ export function ConversationView({
             ) : null}
             {note ? (
               <div
+                // Its link is 44 px high: no padding of its own above the field.
                 className={cn(
-                  "bg-lk-surface px-3 pt-2.5",
+                  "bg-lk-surface px-3",
                   !(error || inviteNotice) && "border-t border-lk-line",
                 )}
               >

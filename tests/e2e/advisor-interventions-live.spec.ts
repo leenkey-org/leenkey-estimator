@@ -8,7 +8,8 @@ import { devices, expect, test, type Browser, type Locator, type Page } from "@p
 // done (it then counts in the plan of the seller), and corrects it: cancelled,
 // it no longer counts. The initial appointment is planned apart. The requests
 // and the messages stay (each run leaves one cancelled request and nothing
-// counted, so the spec runs again on the same base): only on a local stack,
+// counted, so the spec runs again on the same base; a run that fails cleans
+// up after itself, see settle): only on a local stack,
 // with E2E_SEED=1, SEED_PASSWORD and E2E_MUTATE=1 (project « seed-mutations »).
 // Seed used here only: the interventions of LK-0008 and its conversation with
 // the adviser, left answered and read (tests/e2e/advisor.spec.ts reads the
@@ -33,6 +34,8 @@ const LK0008 = "5eed1000-0000-4000-8000-000000000008";
 const DASHBOARD = `/vendeur?bien=${LK0008}`;
 const REQUEST = `/vendeur/biens/${LK0008}/intervention`;
 const ADMIN = "/admin/messages/interventions";
+/** The conversation of LK-0008 with the adviser, for the team (supabase/seed/05_demo_data.sql). */
+const ADMIN_CONVERSATION = "/admin/messages/5eed2000-0000-4000-8000-000000000008";
 const plain = (value: string) => value.replace(/\u00A0/g, " ");
 
 function consentCookie(baseURL: string) {
@@ -115,6 +118,55 @@ async function act(page: Page, item: Locator, action: string, confirm: string, n
   await expect(dialog).toBeHidden({ timeout: 10_000 });
 }
 
+/**
+ * After a run that failed: what it may have left behind. Its request, still
+ * waiting (it would hold one of the interventions of LK-0008 for good) or
+ * marked done (it would count), is cancelled; the conversation of LK-0008 is
+ * read by the team (tests/e2e/advisor.spec.ts counts the unread ones of the
+ * shared inbox). Through the back office, as the team would. Never throws: the
+ * failure reported is the one of the test.
+ */
+async function settle(team: Page, run: string) {
+  try {
+    await team.goto(ADMIN);
+    if (new URL(team.url()).pathname === "/connexion") await signIn(team, "admin", ADMIN);
+    for (const path of [ADMIN, `${ADMIN}?statut=faites`]) {
+      await team.goto(path);
+      const item = entry(team, run);
+      if ((await item.count()) > 0) {
+        await act(team, item, "Annulée", "Annuler l'intervention");
+        await expect(team.getByText("Intervention annulée.")).toBeVisible();
+      }
+    }
+    await expect(async () => {
+      await team.goto(ADMIN_CONVERSATION);
+      await team.waitForLoadState("networkidle");
+      await team.goto("/admin/messages");
+      await expect(
+        team
+          .getByRole("list", { name: "Conversations avec les vendeurs" })
+          .getByRole("link", { name: /LK-0008/ })
+          .getByText("Non lu"),
+      ).toHaveCount(0, { timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+  } catch (error) {
+    console.error("[e2e] advisor interventions: cleanup failed", error);
+  }
+}
+
+/** The pages of the test in progress, for the cleanup of a run that fails. */
+let current: { seller: Page; team: Page; run: string } | null = null;
+
+test.afterEach(async () => {
+  if (!current) return;
+  const { seller, team, run } = current;
+  current = null;
+  const info = test.info();
+  if (info.status !== info.expectedStatus) await settle(team, run);
+  await seller.context().close();
+  await team.context().close();
+});
+
 test("le vendeur demande une intervention, l'équipe la planifie, la marque faite puis la corrige : le compteur suit @a11y", async ({
   browser,
   baseURL,
@@ -124,6 +176,7 @@ test("le vendeur demande une intervention, l'équipe la planifie, la marque fait
   const seller = await openBrowser(browser, base, true);
   const team = await openBrowser(browser, base, false);
   const run = Date.now().toString(36);
+  current = { seller, team, run };
   const message = `Bonjour, j'ai reçu une offre et je souhaite en parler avec vous. (${run})`;
   const answer = `Bonjour Bruno, je vous appelle jeudi à 10 h. (${run})`;
   let used = 0;
@@ -282,9 +335,6 @@ test("le vendeur demande une intervention, l'équipe la planifie, la marque fait
       seller.getByRole("log", { name: "Messages de la conversation" }).getByText(answer),
     ).toBeVisible({ timeout: 15_000 });
   });
-
-  await seller.context().close();
-  await team.context().close();
 });
 
 test("le rendez-vous initial se planifie à part, sans compter dans la formule", async ({
@@ -300,6 +350,20 @@ test("le rendez-vous initial se planifie à part, sans compter dans la formule",
       .filter({ hasText: "LK-0008" })
       .filter({ hasText: "Rendez-vous initial" });
   const toPlan = initial().filter({ hasText: "À planifier" });
+  // A run that failed between « Planifiée » and the last « Annulée » left an
+  // initial appointment scheduled (in « À traiter ») or done (in « Faites »):
+  // cancelled first, as the team would, so that it is to plan again.
+  for (const path of [ADMIN, `${ADMIN}?statut=faites`]) {
+    await page.goto(path);
+    for (let left = 0; left < 5; left += 1) {
+      const stale = initial().filter({ hasNotText: "À planifier" }).first();
+      if ((await stale.count()) === 0) break;
+      await act(page, stale, "Annulée", "Annuler l'intervention");
+      await expect(page.getByText("Intervention annulée.")).toBeVisible();
+      await page.goto(path);
+    }
+  }
+  await page.goto(ADMIN);
   await expect(toPlan).toHaveCount(1);
   // Planned or done, never cancelled before it exists.
   await expect(toPlan.getByRole("button", { name: "Annulée", exact: true })).toHaveCount(0);

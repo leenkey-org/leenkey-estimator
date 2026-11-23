@@ -1,3 +1,4 @@
+import { firstContactFrom } from "@/leenkey/billing/orders";
 import type { AdminInterventionFilter } from "@/lib/validations/advisor-intervention";
 import type { Database } from "@/types/database";
 
@@ -73,12 +74,40 @@ export function interventionsLeft({ quota, used }: Pick<InterventionSummary, "qu
 }
 
 /**
- * Whether the seller may ask for one more: an intervention counts once done,
- * so a request that waits never closes the form; the interventions of the
- * plan used do. Writing to the adviser never depends on it.
+ * What the seller may do: ask (« open »); wait, their requests already hold
+ * the interventions left (« held »: an intervention counts once done, but a
+ * request that waits holds one, so that there are never more requests than
+ * interventions to give); or nothing more, the interventions of the plan are
+ * used (« used »). Writing to the adviser never depends on it.
  */
-export function canRequestIntervention(summary: Pick<InterventionSummary, "quota" | "used">) {
-  return interventionsLeft(summary) > 0;
+export type InterventionAvailability = "open" | "held" | "used";
+
+export function interventionAvailability({
+  quota,
+  used,
+  pending,
+}: Pick<InterventionSummary, "quota" | "used" | "pending">): InterventionAvailability {
+  if (used >= quota) return "used";
+  return used + pending >= quota ? "held" : "open";
+}
+
+export function canRequestIntervention(
+  summary: Pick<InterventionSummary, "quota" | "used" | "pending">,
+) {
+  return interventionAvailability(summary) === "open";
+}
+
+/**
+ * When the adviser starts, while they wait for the end of the withdrawal
+ * period of a plan ordered without an immediate start (SPEC-V2 11): the same
+ * day as the header of the conversation says (« Accompagnement à partir du
+ * … »). Null once started, or with an immediate start: the delays of answer
+ * apply.
+ */
+export function adviserStart(orderedAt: string | null, now: Date): Date | null {
+  if (!orderedAt) return null;
+  const from = firstContactFrom(new Date(orderedAt), false);
+  return from && from.getTime() > now.getTime() ? from : null;
 }
 
 /** Share of the interventions used, 0 to 100, for the bar under the counter. */

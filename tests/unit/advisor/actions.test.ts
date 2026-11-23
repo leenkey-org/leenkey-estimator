@@ -92,6 +92,9 @@ describe("« Demander une intervention »", () => {
   it("says why the database refused: the interventions used, no adviser, too many messages", async () => {
     mocks.answers.push(refused("54000", "advisor_intervention: quota"));
     expect(await requestIntervention(request)).toEqual({ ok: false, error: "quota" });
+    // The requests that wait already hold the interventions left.
+    mocks.answers.push(refused("54000", "advisor_intervention: pending"));
+    expect(await requestIntervention(request)).toEqual({ ok: false, error: "pending" });
     mocks.answers.push(refused("54000", "messages_per_hour"));
     expect(await requestIntervention(request)).toEqual({ ok: false, error: "rate" });
     mocks.answers.push(refused("22023", "advisor_intervention: no intervention in this plan"));

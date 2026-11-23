@@ -127,13 +127,14 @@ export default async function ConversationPage({ params, searchParams }: Props) 
           visits={visits}
           note={
             counter ? (
-              <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-lk-caption text-lk-ink-3">
+              <p className="flex flex-wrap items-center gap-x-2 text-lk-caption text-lk-ink-3">
                 <span className="tabular">
                   {fr.advisorInterventions.counter(counter.used, counter.quota)}
                 </span>
                 <Link
                   href={interventionsHref(conversation.propertyId)}
-                  className="font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
+                  // 44 px to touch, as the other links of the page (docs/DESIGN.md 15).
+                  className="inline-flex min-h-11 items-center font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
                 >
                   {canRequestIntervention(counter)
                     ? fr.advisorInterventions.entry.request

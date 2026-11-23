@@ -2740,7 +2740,12 @@ export type Database = {
           quota: number
           used: number
           conversation_id: string
+          advisor_ordered_at: string
         }[]
+      }
+      admin_advisor_interventions_open: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       admin_ai_conversations: {
         Args: { p_limit?: number; p_query?: string; p_context?: string }
@@ -3121,9 +3126,25 @@ export type Database = {
           next_quota: number
         }[]
       }
+      advisor_intervention_stands: {
+        Args: { p_property: string; p_requested_at: string }
+        Returns: boolean
+      }
+      advisor_interventions_cancel_open: {
+        Args: { p_property: string }
+        Returns: undefined
+      }
+      advisor_interventions_pending: {
+        Args: { p_property: string }
+        Returns: number
+      }
       advisor_interventions_used: {
         Args: { p_property: string }
         Returns: number
+      }
+      advisor_ordered_at: {
+        Args: { p_property: string }
+        Returns: string
       }
       advisor_period_start: {
         Args: { p_property: string }

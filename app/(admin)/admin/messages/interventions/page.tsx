@@ -13,8 +13,10 @@ import { ModerationFeedback } from "@/leenkey/admin/components/listing-moderatio
 import { adminInterventions, type AdminIntervention } from "@/leenkey/admin/interventions/queries";
 import { adminMetadata } from "@/leenkey/admin/metadata";
 import {
+  adviserStart,
   interventionActions,
   interventionFilterCounts,
+  isOpenIntervention,
   matchesInterventionFilter,
 } from "@/leenkey/advisor/interventions";
 import { conversationTitle, coverSrc } from "@/leenkey/messaging/presentation";
@@ -47,8 +49,12 @@ const FILTERS: readonly AdminInterventionFilter[] = [
 function toItem(row: AdminIntervention, now: Date): InterventionListItem {
   const planned = row.id !== null;
   const initial = row.reason === "initial_meeting";
+  // While the adviser waits for the end of the withdrawal period (no immediate
+  // start, SPEC 11), what waits says from when: nothing is due before.
+  const starts = isOpenIntervention(row.status) ? adviserStart(row.orderedAt, now) : null;
+  const wait = starts ? t.startsOn(formatDateShort(starts, now)) : null;
   const date = !planned
-    ? row.requestedAt
+    ? row.requestedAt && !wait
       ? t.planSince(formatDateShort(row.requestedAt, now))
       : null
     : row.status === "done" && row.doneAt
@@ -71,7 +77,10 @@ function toItem(row: AdminIntervention, now: Date): InterventionListItem {
     message: row.message ?? (initial ? t.initialText : ""),
     quoted: row.message !== null,
     // An initial appointment planned by the team was never « asked »: its date only once done.
-    date: planned && initial && row.status !== "done" ? null : date,
+    date:
+      [planned && initial && row.status !== "done" ? null : date, wait]
+        .filter(Boolean)
+        .join(" · ") || null,
     note: row.teamNote,
     conversationHref: row.conversationId ? `${ROUTES.adminMessages}/${row.conversationId}` : null,
     actions: interventionActions(row.status, planned, initial),

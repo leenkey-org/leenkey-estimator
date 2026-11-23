@@ -121,10 +121,11 @@ test("le vendeur écrit à son conseiller, l'équipe répond en temps réel, sig
 
   await test.step("l'équipe le voit non lu en tête de sa boîte, sur téléphone, et répond", async () => {
     await signIn(team, "admin", "/admin/messages");
+    // Its line, not the first one: another seller may have written since
+    // (tests/e2e/advisor-interventions-live.spec.ts, LK-0008, in the same project).
     const line = team
       .getByRole("list", { name: "Conversations avec les vendeurs" })
-      .getByRole("link")
-      .first();
+      .getByRole("link", { name: /LK-0001/ });
     await expect(line).toContainText("LK-0001");
     await expect(line).toContainText(question);
     await expect(line.getByText("Non lu")).toBeAttached();

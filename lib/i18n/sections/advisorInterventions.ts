@@ -42,7 +42,7 @@ export const frAdvisorInterventions = {
     included: (plan: string, quota: number) =>
       `Votre formule ${plan} comprend ${quota}\u00A0intervention${many(quota)} de votre conseiller Leenkey.`,
     counted:
-      "Une intervention est comptée une fois réalisée : une demande en attente ou annulée ne compte pas.",
+      "Une intervention est comptée une fois réalisée. Une demande en attente réserve l'une des interventions restantes ; annulée, elle la libère.",
     counterLabel: "Interventions de votre formule",
     status: {
       requested: "En attente",
@@ -59,6 +59,12 @@ export const frAdvisorInterventions = {
         "Dites à votre conseiller ce que vous souhaitez voir avec lui : il prépare votre échange.",
       delay:
         "Nous vous répondons sous 2\u00A0jours ouvrés, du lundi au vendredi, dans votre conversation avec votre conseiller.",
+      // Before the end of the withdrawal period without an immediate start (SPEC 11): the
+      // adviser starts that day, no delay of answer is promised before.
+      delayFrom: (date: string) =>
+        `Votre accompagnement commence le ${date} : nous vous répondons à partir de cette date, dans votre conversation avec votre conseiller.`,
+      sentFrom: (date: string) =>
+        `Votre demande est envoyée. Votre accompagnement commence le ${date} : nous vous répondons à partir de cette date, dans votre conversation avec votre conseiller.`,
       submit: "Envoyer ma demande",
       sent: "Votre demande est envoyée. Nous vous répondons sous 2\u00A0jours ouvrés, dans votre conversation avec votre conseiller.",
       conversation: "Voir la conversation",
@@ -66,6 +72,7 @@ export const frAdvisorInterventions = {
         reason: "Choisissez un motif.",
         message: (min: number) => `Écrivez au moins ${min}\u00A0caractères.`,
         quota: "Les interventions de votre formule sont utilisées.",
+        pending: "Vos demandes en cours couvrent déjà les interventions restantes.",
         noAdvisor: "La formule de ce bien ne comprend pas d'intervention du conseiller.",
         rate: "Vous avez envoyé beaucoup de messages. Réessayez dans une heure.",
         auth: "Votre session a expiré. Reconnectez-vous pour envoyer votre demande.",
@@ -81,6 +88,12 @@ export const frAdvisorInterventions = {
       write: "Vous pouvez toujours écrire à votre conseiller dans votre conversation.",
       upgrade: (plan: string, quota: number) => `La formule ${plan} en comprend ${quota}.`,
       plans: "Voir les formules",
+    },
+    // The requests that wait already hold the interventions left.
+    held: {
+      text: "Vos demandes en cours couvrent déjà les interventions restantes.",
+      write:
+        "Votre conseiller vous répond dans votre conversation, où vous pouvez toujours lui écrire.",
     },
     history: {
       title: "Vos demandes",
@@ -128,6 +141,8 @@ export const frAdvisorInterventions = {
     noName: "Vendeur",
     requestedOn: (date: string) => `Demandée le ${date}`,
     planSince: (date: string) => `Formule en vigueur depuis le ${date}`,
+    // The adviser waits for the end of the withdrawal period (no immediate start, SPEC 11).
+    startsOn: (date: string) => `Accompagnement à partir du ${date} (fin du délai de rétractation)`,
     doneOn: (date: string, name: string | null) =>
       name ? `Faite le ${date} par ${name}` : `Faite le ${date}`,
     initialText:

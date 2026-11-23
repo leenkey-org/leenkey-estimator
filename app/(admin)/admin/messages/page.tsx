@@ -8,9 +8,8 @@ import { requireAdmin } from "@/core/auth/session";
 import { AdvisorInbox } from "@/leenkey/admin/components/advisor-inbox";
 import { InboxRefresh } from "@/leenkey/messaging/components/inbox-refresh";
 import { adminMetadata } from "@/leenkey/admin/metadata";
-import { adminInterventions } from "@/leenkey/admin/interventions/queries";
+import { adminInterventionsOpen } from "@/leenkey/admin/interventions/queries";
 import { adminAdvisorConversations, awaitingAnswer } from "@/leenkey/admin/messages/queries";
-import { isOpenIntervention } from "@/leenkey/advisor/interventions";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { frAdminMessages } from "@/lib/i18n/sections/adminMessages";
 import { frAdvisorInterventions } from "@/lib/i18n/sections/advisorInterventions";
@@ -44,7 +43,7 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
   // The interventions that wait, said by their tab; unread: the tab without a number.
   const [list, interventions] = await Promise.all([
     adminAdvisorConversations(),
-    adminInterventions(),
+    adminInterventionsOpen(),
   ]);
   const now = new Date();
 
@@ -113,11 +112,7 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
           { href: ROUTES.adminMessages, label: tabs.conversations },
           {
             href: ROUTES.adminInterventions,
-            label: tabs.interventions(
-              interventions.ok
-                ? interventions.data.filter((row) => isOpenIntervention(row.status)).length
-                : 0,
-            ),
+            label: tabs.interventions(interventions ?? 0),
           },
         ]}
         current={ROUTES.adminMessages}

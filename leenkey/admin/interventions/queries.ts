@@ -41,6 +41,11 @@ export type AdminIntervention = {
   used: number;
   /** The conversation with the seller, where the date is agreed. */
   conversationId: string | null;
+  /**
+   * The order of a plan without immediate start, whose adviser waits for the
+   * end of the withdrawal (SPEC 11); null once started.
+   */
+  orderedAt: string | null;
 };
 
 const iso = (value: string | null) => (value ? new Date(value).toISOString() : null);
@@ -82,6 +87,23 @@ export const adminInterventions = cache(async (): Promise<QueryResult<AdminInter
       quota: row.quota as number | null,
       used: row.used ?? 0,
       conversationId: row.conversation_id as string | null,
+      orderedAt: iso(row.advisor_ordered_at as string | null),
     })),
   };
+});
+
+/**
+ * How many interventions wait for the team (the number of the tab
+ * « Interventions »), counted by the database without reading the list;
+ * null when it cannot be read.
+ */
+export const adminInterventionsOpen = cache(async (): Promise<number | null> => {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_advisor_interventions_open");
+  if (error) {
+    console.error("[admin] advisor interventions count failed", { code: error.code });
+    return null;
+  }
+  return data;
 });

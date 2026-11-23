@@ -17,6 +17,8 @@ export type InterventionRequestError =
   | "invalid"
   /** The interventions of the plan are used. */
   | "quota"
+  /** The requests that wait already hold the interventions left. */
+  | "pending"
   /** The plan of the property sells no intervention (ended, refunded, Autonomie). */
   | "noAdvisor"
   /** Too many messages sent within the hour (the request is a message). */
@@ -41,7 +43,12 @@ export async function requestIntervention(input: unknown): Promise<InterventionR
   });
   if (error) {
     if (error.code === "54000") {
-      return { ok: false, error: error.message.includes("quota") ? "quota" : "rate" };
+      const refusal = error.message.includes("quota")
+        ? "quota"
+        : error.message.includes("pending")
+          ? "pending"
+          : "rate";
+      return { ok: false, error: refusal };
     }
     if (error.code === "22023") {
       const noAdvisor =

@@ -196,19 +196,24 @@ async function newMessages(email: PlannedEmail): Promise<RenderedEmail | null> {
  * the messages of a seller, with the reference of their property.
  */
 async function advisorMessages(email: PlannedEmail): Promise<RenderedEmail | null> {
-  const last = email.items.at(-1);
-  if (!last) return null;
-  const words = text(last.data.excerpt);
-  const excerpt = emailSafeText(words);
+  const latest = email.items.at(-1);
+  if (!latest) return null;
   const count = email.items.length;
   const team = email.audience === "team";
+  // A request for an intervention of the adviser is a message of the seller
+  // (DECISIONS.md 2026-11-23): the email of the team says so, shows it and
+  // leads to it, even when another message followed it (« PS : … »).
+  const request = team
+    ? [...email.items].reverse().find((item) => item.data.intervention === true)
+    : undefined;
+  const intervention = request !== undefined;
+  const last = request ?? latest;
+  const words = text(last.data.excerpt);
+  const excerpt = emailSafeText(words);
   const senderName = team
     ? emailSafeText(last.data.sender_first_name)
     : fr.emails.newMessages.advisorSender;
   const reference = text(last.data.reference);
-  // A request for an intervention of the adviser is a message of the seller
-  // (DECISIONS.md 2026-11-23): the email of the team says so.
-  const intervention = team && last.data.intervention === true;
   const teamSubject = intervention
     ? fr.emails.newMessages.advisorTeamInterventionSubject(senderName, reference)
     : fr.emails.newMessages.advisorTeamSubject(senderName, reference, count);

@@ -34,10 +34,16 @@ const isReason = (value: string): value is InterventionReason =>
 export function InterventionRequestForm({
   propertyId,
   conversationHref,
+  startsOn = null,
 }: {
   propertyId: string;
   /** The conversation with the adviser, where the answer comes. */
   conversationHref: string | null;
+  /**
+   * « 18 nov. »: the day the adviser starts, while they wait for the end of
+   * the withdrawal period (SPEC 11); no delay of answer is promised before.
+   */
+  startsOn?: string | null;
 }) {
   const [reason, setReason] = useState<InterventionReason | "">("");
   const [message, setMessage] = useState("");
@@ -134,14 +140,16 @@ export function InterventionRequestForm({
             ) : undefined
           }
         >
-          {t.sent}
+          {startsOn ? t.sentFrom(startsOn) : t.sent}
         </InlineAlert>
       ) : null}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
         <Button type="submit" loading={pending} className="md:shrink-0">
           {t.submit}
         </Button>
-        <p className="text-lk-caption text-lk-ink-3">{t.delay}</p>
+        <p className="text-lk-caption text-lk-ink-3">
+          {startsOn ? t.delayFrom(startsOn) : t.delay}
+        </p>
       </div>
     </form>
   );

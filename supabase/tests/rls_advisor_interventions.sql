@@ -1,13 +1,15 @@
 -- Interventions of the adviser (DECISIONS.md 2026-11-23): the request of a
 -- seller whose plan sells interventions, its message in the conversation with
 -- the adviser, the counter (an intervention done counts, nothing else), the
--- refusal once the interventions of the plan are used, the passage to a
--- dearer plan, the initial appointment, the actions of the team (audited),
--- and the account (export, anonymisation). Read by the owner of the property
--- and the team only.
+-- refusal once the interventions of the plan are used or held by the
+-- requests that wait, the passage to a dearer plan, the initial appointment,
+-- the actions of the team (audited), what becomes of an open request when
+-- the plan ends, the listing is deleted or the account closed, and the
+-- account (export, anonymisation). Read by the owner of the property and the
+-- team only.
 begin;
 \ir _helpers.psql
-select plan(70);
+select plan(87);
 \ir _plan.psql
 
 insert into plans (code, name, tagline, price_cents, description, features, position) values
@@ -29,12 +31,23 @@ returning id as paid \gset
 insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms)
 values (tests.uid('seller_a'), 'maison', '3 allée des Tilleuls', '91200', 'Athis-Mons', 110, 5)
 returning id as free \gset
+insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms)
+values (tests.uid('seller_a'), 'maison', '5 rue des Lilas', '91170', 'Viry-Châtillon', 90, 4)
+returning id as second \gset
 
--- The webhook (L1-26): a plan paid, its conversation with the adviser.
+-- The webhook (L1-26): two plans paid a month ago, their conversations with
+-- the adviser; the second property has a listing online (deleted further down).
 reset role;
 insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at, early_start_requested_at)
-values (:'paid', tests.uid('seller_a'), 'accompagne', 99000, now(), now())
+values (:'paid', tests.uid('seller_a'), 'accompagne', 99000, now() - interval '1 month', now() - interval '1 month')
 returning id as sub \gset
+insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at, early_start_requested_at)
+values (:'second', tests.uid('seller_a'), 'accompagne', 99000, now() - interval '1 month', now() - interval '1 month');
+insert into listings (property_id, title, description, price_cents)
+values (:'second', 'Maison à supprimer', 'Description.', 30000000)
+returning id as second_listing \gset
+update listings set status = 'published', submitted_at = now(), published_at = now()
+ where id = :'second_listing';
 set constraints all immediate;
 set constraints all deferred;
 select conversations.id as conv from conversations where kind = 'advisor' and property_id = :'paid' \gset
@@ -66,7 +79,7 @@ select ok((select body like E'Demande d''intervention : Prix et stratégie\n\nBo
              from messages where conversation_id = :'conv' and meta->>'intervention_id' = :'r1'),
           'seller_a: the message says the reason, then their words');
 select is((select row(used, pending)::text from advisor_intervention_summary(:'paid')), '(0,1)',
-          'seller_a: a request does not count');
+          'seller_a: a request does not count, it waits');
 select throws_ok('select team_note from advisor_interventions', '42501', null,
                  'seller_a: never reads the note of the team');
 select throws_ok('select done_by from advisor_interventions', '42501', null,
@@ -83,6 +96,8 @@ select throws_ok(format($$select admin_advisor_initial_meeting(%L, 'done')$$, :'
                  '42501', null, 'seller_a: never marks the initial appointment done');
 select throws_ok('select * from admin_advisor_interventions()', '42501', null,
                  'seller_a: never reads the list of the team');
+select throws_ok('select admin_advisor_interventions_open()', '42501', null,
+                 'seller_a: never reads the count of the team');
 
 -- The others ---------------------------------------------------------------------
 \set who seller_b
@@ -116,6 +131,8 @@ select throws_ok(format('select * from advisor_intervention_summary(%L)', :'paid
                  'anon: cannot execute the counter');
 select throws_ok('select * from admin_advisor_interventions()', '42501', null,
                  'anon: cannot execute the list of the team');
+select throws_ok('select admin_advisor_interventions_open()', '42501', null,
+                 'anon: cannot execute the count of the team');
 select throws_ok(format($$select admin_advisor_intervention_set(%L, 'done')$$, :'r1'), '42501', null,
                  'anon: cannot execute an action of the team');
 select throws_ok(format($$select admin_advisor_initial_meeting(%L, 'done')$$, :'paid'), '42501', null,
@@ -130,18 +147,38 @@ select is((select count(*)::int from notifications
               and data->'intervention' = 'true'::jsonb
               and link = '/admin/messages/interventions' and email_after is not null), 1,
           'admin: told of the request, in the app and by email, with the way to the list');
-select is((select row(status, reason, quota, used, plan, seller_first_name, conversation_id)::text
+select is((select row(status, reason, quota, used, plan, seller_first_name, conversation_id, advisor_ordered_at)::text
              from admin_advisor_interventions() where id = :'r1'),
-          format('(requested,price_strategy,2,0,accompagne,Alice,%s)', :'conv'),
+          format('(requested,price_strategy,2,0,accompagne,Alice,%s,)', :'conv'),
           'admin: the request in the list, with the counter of the property');
 select is((select count(*)::int from admin_advisor_interventions()
             where id is null and property_id = :'paid' and reason = 'initial_meeting'
               and status = 'requested'), 1,
           'admin: the initial appointment of the plan, to plan');
+-- The request of the first property, the two initial appointments to plan.
+select is((select count(*)::int from admin_advisor_interventions()
+            where status in ('requested', 'scheduled') and property_id in (:'paid', :'second')), 3,
+          'admin: what waits for these two properties');
+select admin_advisor_interventions_open() as open0 \gset
+select ok(:open0 >= 3, 'admin: the count of the tab holds them');
+
+-- One admin opens the conversation: the request stays to handle.
+reset role;
+update conversations set leenkey_last_read_at = now() where id = :'conv';
+\set who admin
+\ir _as.psql
+select is((select count(*)::int from notifications
+            where profile_id = tests.uid('admin') and data->>'intervention_id' = :'r1'
+              and read_at is null), 1,
+          'admin: opening the conversation does not mark the request read');
 select throws_ok(format($$select admin_advisor_intervention_set(%L, 'requested')$$, :'r1'),
                  '22023', null, 'admin: a request never goes back to « requested »');
 select lives_ok(format($$select admin_advisor_intervention_set(%L, 'scheduled', 'Appel jeudi à 10 h')$$, :'r1'),
                 'admin: schedules the intervention, with a note');
+select is((select count(*)::int from notifications
+            where profile_id = tests.uid('admin') and data->>'intervention_id' = :'r1'
+              and read_at is null), 0,
+          'admin: handled, the request is read for the team');
 select throws_ok(format($$select admin_advisor_intervention_set(%L, 'scheduled')$$, :'r1'),
                  '22023', null, 'admin: a change already made is refused (a stale tab)');
 select is((select meta - 'property_id' from audit_log
@@ -158,19 +195,28 @@ select is((select row(status, used, done_by_first_name, team_note, done_at is no
           '(done,1,Cédric,"Appel jeudi à 10 h",t)',
           'admin: done counts, by whom, the note kept');
 
--- Two more requests: only the interventions done count.
+-- A request that waits holds one of the interventions left.
 \set who seller_a
 \ir _as.psql
 select is((select row(used, pending)::text from advisor_intervention_summary(:'paid')), '(1,0)',
           'seller_a: one intervention used');
 select advisor_intervention_request(:'paid', 'visits', 'Comment préparer mes premières visites ?') as r2 \gset
-select advisor_intervention_request(:'paid', 'offer', 'J''ai reçu une offre, pouvons-nous en parler ?') as r3 \gset
-select is((select row(used, pending)::text from advisor_intervention_summary(:'paid')), '(1,2)',
-          'seller_a: two requests wait, still one used');
+select is((select row(used, pending)::text from advisor_intervention_summary(:'paid')), '(1,1)',
+          'seller_a: a request waits, still one used');
+select throws_ok(format($$select advisor_intervention_request(%L, 'offer', 'J''ai reçu une offre, pouvons-nous en parler ?')$$, :'paid'),
+                 '54000', 'advisor_intervention: pending',
+                 'seller_a: no more requests than interventions left');
 \set who admin
 \ir _as.psql
 select lives_ok(format($$select admin_advisor_intervention_set(%L, 'cancelled')$$, :'r2'),
                 'admin: cancels a request');
+\set who seller_a
+\ir _as.psql
+select is((select row(used, pending)::text from advisor_intervention_summary(:'paid')), '(1,0)',
+          'seller_a: a cancelled request neither counts nor waits');
+select advisor_intervention_request(:'paid', 'offer', 'J''ai reçu une offre, pouvons-nous en parler ?') as r3 \gset
+\set who admin
+\ir _as.psql
 select lives_ok(format($$select admin_advisor_intervention_set(%L, 'done')$$, :'r3'),
                 'admin: marks another one done');
 
@@ -178,7 +224,7 @@ select lives_ok(format($$select admin_advisor_intervention_set(%L, 'done')$$, :'
 \set who seller_a
 \ir _as.psql
 select is((select row(quota, used, pending)::text from advisor_intervention_summary(:'paid')), '(2,2,0)',
-          'seller_a: a cancelled request does not count, two are used');
+          'seller_a: two interventions used');
 select throws_ok(format($$select advisor_intervention_request(%L, 'documents', 'Quels documents dois-je préparer ?')$$, :'paid'),
                  '54000', 'advisor_intervention: quota',
                  'seller_a: the request beyond the interventions of the plan is refused');
@@ -227,9 +273,15 @@ select is((select count(*)::int from audit_log
 select is((select row(used, initial_meeting)::text from advisor_intervention_summary(:'paid')), '(2,done)',
           'seller_a: the initial appointment is done, and not counted');
 
--- The passage to the dearer plan (stripe_checkout_complete): its number of
--- interventions, those used stay counted.
+-- The passage to the dearer plan (stripe_checkout_complete), today: its
+-- number of interventions; what was done two weeks ago, under the plan
+-- bought a month ago, stays counted (the plan began at the root of the chain
+-- of its upgrades, not at the upgrade).
 reset role;
+update advisor_interventions
+   set requested_at = now() - interval '3 weeks',
+       done_at = case when status = 'done' then now() - interval '2 weeks' end
+ where property_id = :'paid';
 insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at, early_start_requested_at)
 values (:'paid', tests.uid('seller_a'), 'serenite', 51000, now(), now())
 returning id as upgrade \gset
@@ -238,16 +290,17 @@ update subscriptions set replaced_by = :'upgrade' where id = :'sub';
 \ir _as.psql
 select is((select row(quota, used, initial_meeting, next_plan)::text from advisor_intervention_summary(:'paid')),
           '(3,2,done,)',
-          'seller_a: after the upgrade, the number of the new plan, what was used kept, no dearer plan');
-select lives_ok(format($$select advisor_intervention_request(%L, 'documents', 'Quels documents dois-je préparer ?')$$, :'paid'),
-                'seller_a: asks again with the dearer plan');
+          'seller_a: after the upgrade, the number of the new plan, what was done before it kept, no dearer plan');
+select advisor_intervention_request(:'paid', 'documents', 'Quels documents dois-je préparer ?') as r4 \gset
+select is((select row(used, pending)::text from advisor_intervention_summary(:'paid')), '(2,1)',
+          'seller_a: asks again with the dearer plan');
 select is(jsonb_array_length(account_export()->'advisor_interventions'), 6,
           'seller_a: their requests are in the export of the account');
 select is((select count(*)::int from jsonb_array_elements(account_export()->'advisor_interventions') e
             where e ? 'team_note' or e ? 'done_by'), 0,
           'seller_a: the export holds neither the note of the team nor who did it');
 
--- A plan bought again after its end starts anew.
+-- The plan ends: its open request no longer stands; bought again, the plan starts anew.
 reset role;
 update subscriptions set activated_at = now() - interval '13 months', ends_at = now() - interval '1 month'
  where property_id = :'paid';
@@ -258,34 +311,70 @@ update advisor_interventions set requested_at = now() - interval '2 months',
 \ir _as.psql
 select is((select count(*)::int from advisor_intervention_summary(:'paid')), 0,
           'seller_a: no counter once the plan has ended');
+\set who admin
+\ir _as.psql
+select is((select count(*)::int from admin_advisor_interventions() where id = :'r4'), 0,
+          'admin: the open request of a plan that ended no longer waits for the team');
+select is((select count(*)::int from admin_advisor_interventions() where id = :'r1'), 1,
+          'admin: what was done stays in the list');
 reset role;
 insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at, early_start_requested_at)
 values (:'paid', tests.uid('seller_a'), 'accompagne', 99000, now(), now());
 \set who seller_a
 \ir _as.psql
-select is((select row(quota, used, initial_meeting)::text from advisor_intervention_summary(:'paid')),
-          '(2,0,)',
-          'seller_a: a plan bought again starts anew, its initial appointment too');
+select is((select row(quota, used, pending, initial_meeting)::text from advisor_intervention_summary(:'paid')),
+          '(2,0,0,)',
+          'seller_a: a plan bought again starts anew: nothing used, nothing waiting, its initial appointment to plan');
+select advisor_intervention_request(:'paid', 'other', 'Une autre question pour mon conseiller.') as r5 \gset
 
 -- A suspended account asks for nothing.
 reset role;
 update profiles set suspended_at = now(), suspension_reason = 'Test' where id = tests.uid('seller_a');
 \set who seller_a
 \ir _as.psql
-select throws_ok(format($$select advisor_intervention_request(%L, 'other', 'Une autre question pour mon conseiller.')$$, :'paid'),
+select throws_ok(format($$select advisor_intervention_request(%L, 'visits', 'Comment préparer mes visites ?')$$, :'second'),
                  '42501', null, 'seller_a: a suspended account never asks for an intervention');
-
--- The account closed for 30 days: the free texts are erased.
 reset role;
-update profiles set suspended_at = null, suspension_reason = null,
-                    deleted_at = now() - interval '31 days'
- where id = tests.uid('seller_a');
+update profiles set suspended_at = null, suspension_reason = null where id = tests.uid('seller_a');
+
+-- The listing deleted by its seller: its open request is cancelled with it.
+\set who seller_a
+\ir _as.psql
+select advisor_intervention_request(:'second', 'listing', 'Pouvez-vous relire mon annonce avant la publication ?') as rs \gset
+select lives_ok(format('select listing_delete(%L)', :'second_listing'), 'seller_a: deletes the listing');
+select is((select status::text from advisor_interventions where id = :'rs'), 'cancelled',
+          'seller_a: the request that waited on the deleted property is cancelled');
+\set who admin
+\ir _as.psql
+select is((select count(*)::int from notifications
+            where profile_id = tests.uid('admin') and data->>'intervention_id' = :'rs'
+              and read_at is null), 0,
+          'admin: nothing left to handle for the deleted property');
+select is((select count(*)::int from admin_advisor_interventions()
+            where property_id = :'second' and (id is null or status in ('requested', 'scheduled'))), 0,
+          'admin: neither a request nor an initial appointment waits for a deleted property');
+
+-- The account closed: its open requests are cancelled, then, 30 days later,
+-- their free texts are erased.
+\set who seller_a
+\ir _as.psql
+select lives_ok('select account_close()', 'seller_a: closes their account');
+reset role;
+select is((select status::text from advisor_interventions where id = :'r5'), 'cancelled',
+          'closed: the request that waited is cancelled');
+select is((select count(*)::int from advisor_interventions a
+            join properties p on p.id = a.property_id
+           where p.owner_id = tests.uid('seller_a') and a.status in ('requested', 'scheduled')), 0,
+          'closed: no request of the account waits any more');
+update profiles set deleted_at = now() - interval '31 days' where id = tests.uid('seller_a');
 select lives_ok(format('select account_anonymize(%L)', tests.uid('seller_a')),
                 'the closed account is anonymised');
-select is((select count(*)::int from advisor_interventions
-            where property_id = :'paid' and (message is not null or team_note is not null)), 0,
+select is((select count(*)::int from advisor_interventions a
+            join properties p on p.id = a.property_id
+           where p.owner_id = tests.uid('seller_a')
+             and (a.message is not null or a.team_note is not null)), 0,
           'anonymised: neither the messages of the requests nor the notes of the team stay');
-select is((select count(*)::int from advisor_interventions where property_id = :'paid'), 6,
+select is((select count(*)::int from advisor_interventions where property_id = :'paid'), 7,
           'anonymised: the rows stay (what was done, when)');
 
 select * from finish();
