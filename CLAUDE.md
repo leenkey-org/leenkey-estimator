@@ -460,7 +460,7 @@ S'appliquent à tous les textes : interface, emails, prompts de l'assistant, PDF
 - Pas de chiffres ni de témoignages inventés sur le site.
 - Pas de mention « Prix ferme » sur les écrans.
 - Pas de pixel publicitaire tiers (Meta Pixel ou autre) hors décision écrite dans `docs/DECISIONS.md`.
-- Couleurs de marque : la charte D depuis le 2026-10-27 (validation de Younes, `docs/DECISIONS.md` L1-58) : nuit `#020D21`, dégradé `#2563EB` → `#7C3AED` sous un texte blanc, `#3B82F6` → `#8B5CF6` pour le décor (`docs/DESIGN.md` 2.1). Les emails, le rapport PDF et l'image de partage gardent `#1156FC` en attendant la confirmation de Cédric (Q65).
+- Couleurs de marque : la charte D depuis le 2026-10-27 (validation de Younes, `docs/DECISIONS.md` L1-58) : nuit `#020D21`, dégradé `#2563EB` → `#7C3AED` sous un texte blanc, `#3B82F6` → `#8B5CF6` pour le décor (`docs/DESIGN.md` 2.1). Les emails sont à la charte D depuis le 2026-11-23 (décision de Younes, `docs/DECISIONS.md`) ; le rapport PDF et l'image de partage gardent `#1156FC` en attendant la confirmation de Cédric (Q65).
 
 ### Pièges connus
 

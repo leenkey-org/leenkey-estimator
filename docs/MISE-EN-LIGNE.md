@@ -37,7 +37,7 @@ Depuis le dépôt, avec un fichier `.env.prod.local` jamais commité (`PROD_DATA
 4. [x] **Edge Function** `embed` : déployée le 2026-11-22 par le connecteur, « Verify JWT » activé.
 5. [ ] **Authentication** :
    - URL Configuration : *Site URL* `https://leenkey.fr`, *Redirect URLs* `https://leenkey.fr/**` ;
-   - Emails → Templates : les quatre fichiers de `supabase/templates/` (confirmation, recovery, email-change, password-changed), sujets **sans** `[PREPROD]` ;
+   - Emails → Templates : les quatre fichiers de `supabase/templates/`, sujets **sans** `[PREPROD]` : *Confirm signup* = `confirmation.html`, « Confirmez votre adresse email » ; *Reset password* = `recovery.html`, « Choisissez un nouveau mot de passe » ; *Change email address* = `email-change.html`, « Confirmez le changement d'adresse email » ; *Password changed* = `password-changed.html`, « Votre mot de passe a été modifié ». Sans eux, Supabase envoie ses modèles par défaut, en anglais (constaté le 2026-11-23) ;
    - SMTP : Resend (`smtp.resend.com`, port 465, utilisateur `resend`, clé dédiée, expéditeur `contact@leenkey.fr`, choix de Younes du 2026-11-22) ;
    - Providers → Email : *Confirm email* et *Secure email change* activés ; protection contre les mots de passe divulgués activée (`docs/SECURITE.md`).
 6. [ ] **Comptes de l'équipe** : après la bascule, Younes (Nebula Creativ) et Cédric (contact.leenkey) créent leur compte sur leenkey.fr, puis, dans l'éditeur SQL du projet : `update public.profiles set roles = '{admin}' where id in (select id from auth.users where email in ('<adresse 1>', '<adresse 2>'));`. Les demandes de validation et les emails de l'équipe partent aux deux comptes.
