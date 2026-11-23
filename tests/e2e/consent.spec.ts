@@ -270,6 +270,45 @@ test("« Gérer mes cookies » est aussi sous la connexion et la recherche", asy
   }
 });
 
+test("sur ordinateur, le bandeau est une barre en bas de l'écran, sous l'action de l'accueil", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "desktop layout");
+  for (const size of [
+    { width: 1280, height: 800 },
+    { width: 1024, height: 768 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(size);
+    await page.goto("/");
+    await expect(banner(page)).toBeVisible();
+    const bar = await banner(page).boundingBox();
+    expect(bar, "banner box").not.toBeNull();
+    if (!bar) continue;
+    // The whole width, against the bottom edge, and thin.
+    expect(bar.x).toBe(0);
+    expect(Math.round(bar.width)).toBe(size.width);
+    expect(Math.round(bar.y + bar.height)).toBe(size.height);
+    expect(bar.height).toBeLessThanOrEqual(130);
+    // The main action of the home page stays in sight and can be clicked.
+    const action = page.getByRole("button", { name: "Valoriser mon bien gratuitement" });
+    await expect(action).toBeVisible();
+    const box = await action.boundingBox();
+    expect(box, "action box").not.toBeNull();
+    if (box) expect(box.y + box.height, `${size.width} px`).toBeLessThanOrEqual(bar.y);
+    // Refusing is as easy as accepting: same size, side by side.
+    const refuse = await banner(page).getByRole("button", { name: "Refuser" }).boundingBox();
+    const accept = await banner(page).getByRole("button", { name: "Accepter" }).boundingBox();
+    expect(refuse?.width).toBe(accept?.width);
+    expect(refuse?.y).toBe(accept?.y);
+  }
+  // The preferences, opened by the visitor, stay a card at the bottom left.
+  await banner(page).getByRole("button", { name: "Personnaliser" }).click();
+  const panel = await preferences(page).boundingBox();
+  expect(panel?.width).toBeLessThan(500);
+});
+
 test("le bandeau n'a aucune violation sérieuse ou critique @a11y", async ({ page }) => {
   for (const path of ["/", "/acheter"]) {
     await page.goto(path);
