@@ -333,7 +333,7 @@ describe("the rules given to the model", () => {
       surface_m2: 68,
       carrez_m2: 66.5,
     });
-    expect(prompt).toContain("Type annoncé par le vendeur : Mesurage Carrez (carrez)");
+    expect(prompt).toContain("Type annoncé par le vendeur : Mesurage loi Carrez (carrez)");
     expect(prompt).toContain("<titre>Mesurage b2024/b</titre>");
     expect(prompt).toContain("Surface déclarée dans l'annonce : 66,5 m²");
     expect(

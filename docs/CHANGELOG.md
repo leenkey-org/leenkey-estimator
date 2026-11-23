@@ -12,6 +12,17 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-23 · Dossier de vente par catégories et par étapes (demande de Cédric) · PR #124
+- Modifié : onglet « Documents » d'un bien, la liste des pièces en trois catégories, « Documents du bien », « Documents de copropriété » (appartement ; maison ou autre bien dont la fiche indique des lots ou des charges), « Documents pour le notaire », chacune avec son compte (« 4 sur 11 ») ; chaque pièce dit quand elle sert : « Dès la mise en vente », « Avant le compromis », « Avant la signature ».
+- Ajouté : « Les étapes de votre dossier » : l'avancement de chaque étape (« 3 sur 9 pièces »), l'étape en cours et ses pièces à déposer nommées en premier ; filtre de la liste par étape (dans l'adresse, `?etape=`).
+- Ajouté : pièces « Plan pluriannuel de travaux » et « État daté fourni par le syndic » ; factures et justificatifs de travaux demandés aussi pour un appartement ; ligne facultative « Documents complémentaires » ; encart « À préparer pour votre notaire » (pièces d'identité et situation des vendeurs : aucun dépôt sur Leenkey).
+- Modifié : libellés des pièces repris de la demande (« Mesurage loi Carrez », « Factures et justificatifs de travaux », « PV des assemblées générales des 3 dernières années », « Fiche synthétique de copropriété », « Carnet d'entretien », « Informations financières et charges de copropriété »).
+- Modifié : « Dossier notaire : x / y pièces » et la tâche « Dossier notaire complet » comptent les pièces demandées jusqu'au compromis (appartement : 18 ; maison : 11 ; terrain : 4) ; l'état daté, demandé avant la signature, ne les retient pas. Le déclencheur `file_incomplete` compte les mêmes pièces.
+- Inchangé : « Non concerné » avec motif, « À actualiser », aide à la lecture de l'assistant, partage avec les acquéreurs, demandes d'accès ; ouvert aux trois formules.
+- Migration : 20261123100000_document_types_sale_file.sql (`document_type` : `plan_pluriannuel_travaux`, `etat_date`)
+- Tests : `tests/unit/sale-file/checklist.test.ts`, `tests/unit/sale-file/documents-config.test.ts` (catégories, étapes, comptes par catégorie et par étape, étape en cours, maison avec ou sans copropriété, « Non concerné », document retiré, dossier notaire sans l'état daté), `tests/e2e/sale-file-live.spec.ts` (catégories, étapes, filtre, encart du notaire, maison hors copropriété).
+- Questions : Q99 (`DECISIONS.md`).
+
 ### 2026-11-23 · Accueil sur ordinateur : piste A (retour de Cédric) · PR #123
 - Modifié : premier écran de l'accueil à partir de 1 024 px, en deux colonnes sur la nuit : à gauche la pastille, le titre, le sous-titre, la carte de recherche (onglets, champ, action, « Gratuit · 2 minutes · … ») dans la colonne, puis les accès directs ; à droite la photo dans un cadre arrondi, de la hauteur de la colonne. La carte de recherche ne chevauche plus le bas du bandeau sur ordinateur ; plus de bande vide au milieu (colonne de gauche de 640 px à partir de 1 280 px, la photo prend le reste).
 - Modifié : la carte « Exemple » chevauche le coin bas gauche de la photo (dès 1 024 px) ; elle monte en place une fois, une jauge fine sous le montant se remplit une fois, puis la carte flotte doucement ; sans mouvement avec `prefers-reduced-motion` et à l'impression. CSS seul.

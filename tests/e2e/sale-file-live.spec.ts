@@ -1,11 +1,13 @@
 import AxeBuilder from "@axe-core/playwright";
 import { devices, expect, test, type Browser, type Page } from "@playwright/test";
 
-// L3-04 (SPEC-V2 15): the sale file. The seller files a document (the file
-// goes from the browser to the private bucket, then is checked and filed),
-// marks a diagnostic « Non concerné », a buyer in contact asks for the
-// documents, the seller grants, the buyer opens the document; a file that is
-// not what its name says is refused. The documents stay: a local stack just
+// L3-04 (SPEC-V2 15): the sale file. The seller reads the list of their
+// property in three categories, each document with the stage it is needed
+// for (DECISIONS.md 2026-11-23), files a document (the file goes from the
+// browser to the private bucket, then is checked and filed), filters the
+// list by stage, marks a diagnostic « Non concerné », a buyer in contact
+// asks for the documents, the seller grants, the buyer opens the document; a
+// file that is not what its name says is refused. The documents stay: a local stack just
 // made by `scripts/local-stack.sh up` only (E2E_SEED=1, SEED_PASSWORD,
 // E2E_MUTATE=1, project « seed-mutations »). Seed used: LK-0001 of seller_a
 // and its conversation with buyer_c.
@@ -24,6 +26,8 @@ test.skip(
 
 const PROPERTY = "5eed1000-0000-4000-8000-000000000001";
 const TAB = `/vendeur/biens/${PROPERTY}/documents`;
+// A house of seller_a that is not in a co-ownership (LK-0002).
+const HOUSE_TAB = "/vendeur/biens/5eed1000-0000-4000-8000-000000000002/documents";
 
 /** The smallest PDF a reader opens. */
 const PDF = Buffer.from(
@@ -85,7 +89,37 @@ test("dossier de vente : dépôt, non concerné, demande d'accès, partage, ouve
   await test.step("le vendeur dépose un DPE, préselectionné depuis le nom du fichier", async () => {
     await signIn(seller, "seller_a", TAB);
     await expect(seller.getByRole("heading", { name: "Documents", level: 2 })).toBeVisible();
-    await expect(seller.getByText(/Dossier notaire : 0 \/ 16 pièces/)).toBeVisible();
+    // A flat: the notary file counts what is asked for up to the agreement.
+    await expect(seller.getByText(/Dossier notaire : 0 \/ 18 pièces/)).toBeVisible();
+    // The three categories of the list, each with its progress.
+    for (const [name, progress] of [
+      ["Documents du bien", "0 sur 11"],
+      ["Documents de copropriété", "0 sur 7"],
+      ["Documents pour le notaire", "0 sur 1"],
+    ]) {
+      await expect(seller.getByRole("heading", { name, level: 3 })).toBeVisible();
+      await expect(seller.getByRole("region", { name }).getByText(progress)).toBeVisible();
+    }
+    // The three stages: what is to file now first, the rest later.
+    const stages = seller.getByRole("region", { name: "Les étapes de votre dossier" });
+    await expect(
+      stages.getByRole("link", {
+        name: /En cours : Dès la mise en vente.*0 sur 9 pièces · À déposer maintenant : Titre de propriété, DPE, /,
+      }),
+    ).toBeVisible();
+    await expect(
+      stages.getByRole("link", { name: /À venir : Avant le compromis.*0 sur 9 pièces$/ }),
+    ).toBeVisible();
+    await expect(
+      stages.getByRole("link", { name: /À venir : Avant la signature.*0 sur 1 pièce$/ }),
+    ).toBeVisible();
+    // The identity documents are never filed on Leenkey: an information, no deposit.
+    const notary = seller.getByRole("region", { name: "Documents pour le notaire" });
+    await expect(notary.getByText("À préparer pour votre notaire")).toBeVisible();
+    await expect(notary.getByText(/Ces pièces ne se déposent pas sur Leenkey/)).toBeVisible();
+    await expect(seller.getByLabel("Type de document").locator("option")).not.toContainText([
+      /identité/i,
+    ]);
     await expectNoSeriousViolation(seller);
     await seller
       .getByLabel("Fichier")
@@ -94,8 +128,62 @@ test("dossier de vente : dépôt, non concerné, demande d'accès, partage, ouve
     await expect(seller.getByLabel("Nom du document")).toHaveValue("DPE");
     await seller.getByRole("button", { name: "Déposer le document" }).click();
     await expect(seller.getByText("Document déposé.")).toBeVisible({ timeout: 20_000 });
-    await expect(seller.getByText(/Dossier notaire : 1 \/ 16 pièces/)).toBeVisible();
+    await expect(seller.getByText(/Dossier notaire : 1 \/ 18 pièces/)).toBeVisible();
     await expect(seller.getByRole("link", { name: "DPE", exact: true })).toBeVisible();
+    await expect(
+      seller.getByRole("region", { name: "Documents du bien" }).getByText("1 sur 11"),
+    ).toBeVisible();
+    await expect(
+      seller.getByRole("link", {
+        name: /En cours : Dès la mise en vente.*1 sur 9 pièces · À déposer maintenant : Titre de propriété, Diagnostic amiante, /,
+      }),
+    ).toBeVisible();
+  });
+
+  await test.step("la liste se filtre par étape, chaque pièce dit quand elle sert", async () => {
+    const filter = seller.getByRole("navigation", { name: "Filtrer les pièces par étape" });
+    const property = seller.getByRole("region", { name: "Documents du bien" });
+    const notary = seller.getByRole("region", { name: "Documents pour le notaire" });
+    await expect(filter.getByRole("link", { name: "Toutes", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await filter.getByRole("link", { name: "Avant la signature" }).click();
+    await expect(seller).toHaveURL(/etape=signature/);
+    await expect(filter.getByRole("link", { name: "Avant la signature" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await expect(property).toHaveCount(0);
+    await expect(notary.getByText("État daté fourni par le syndic")).toBeVisible();
+    await expect(notary.getByText("Documents complémentaires")).toBeVisible();
+    await expect(notary.getByText("Facultatif")).toBeVisible();
+
+    await filter.getByRole("link", { name: "Avant le compromis" }).click();
+    await expect(seller).toHaveURL(/etape=compromis/);
+    await expect(notary).toHaveCount(0);
+    // Of the property, the tax and the works only.
+    await expect(property.getByText("0 sur 2")).toBeVisible();
+    await expect(property.getByText("Taxe foncière", { exact: true })).toBeVisible();
+    await expect(property.getByText("Factures et justificatifs de travaux")).toBeVisible();
+    await expect(property.getByText("Titre de propriété")).toHaveCount(0);
+    await expect(
+      seller
+        .getByRole("region", { name: "Documents de copropriété" })
+        .getByText("Plan pluriannuel de travaux"),
+    ).toBeVisible();
+    await expectNoSeriousViolation(seller);
+
+    // A stage of the card leads to its documents.
+    await seller.getByRole("link", { name: /En cours : Dès la mise en vente/ }).click();
+    await expect(seller).toHaveURL(/etape=mise-en-vente/);
+    await expect(property.getByText("1 sur 9")).toBeVisible();
+    await expect(property.getByText("Mesurage loi Carrez")).toBeVisible();
+    await expect(property.getByText("Taxe foncière", { exact: true })).toHaveCount(0);
+
+    await filter.getByRole("link", { name: "Toutes", exact: true }).click();
+    await expect(seller).not.toHaveURL(/etape=/);
+    await expect(property.getByText("1 sur 11")).toBeVisible();
   });
 
   await test.step("un fichier qui n'est pas ce que dit son nom est refusé", async () => {
@@ -110,7 +198,7 @@ test("dossier de vente : dépôt, non concerné, demande d'accès, partage, ouve
     ).toBeVisible({
       timeout: 20_000,
     });
-    await expect(seller.getByText(/Dossier notaire : 1 \/ 16 pièces/)).toBeVisible();
+    await expect(seller.getByText(/Dossier notaire : 1 \/ 18 pièces/)).toBeVisible();
   });
 
   await test.step("un diagnostic « Non concerné », avec son motif, compte comme présent", async () => {
@@ -121,7 +209,10 @@ test("dossier de vente : dépôt, non concerné, demande d'accès, partage, ouve
     await dialog.getByLabel("Motif").fill("Pas d'installation de gaz");
     await dialog.getByRole("button", { name: "Enregistrer" }).click();
     await expect(seller.getByText("Motif : Pas d'installation de gaz")).toBeVisible();
-    await expect(seller.getByText(/Dossier notaire : 2 \/ 16 pièces/)).toBeVisible();
+    await expect(seller.getByText(/Dossier notaire : 2 \/ 18 pièces/)).toBeVisible();
+    await expect(
+      seller.getByRole("link", { name: /En cours : Dès la mise en vente.*2 sur 9 pièces/ }),
+    ).toBeVisible();
     await expectNoSeriousViolation(seller);
   });
 
@@ -171,5 +262,25 @@ test("dossier de vente : dépôt, non concerné, demande d'accès, partage, ouve
     await expect(seller.getByRole("link", { name: "DPE", exact: true })).toHaveCount(0);
     await buyer.reload();
     await expect(buyer.getByRole("link", { name: "Ouvrir DPE" })).toHaveCount(0);
+    // The line is to file again: the count as it is.
+    await expect(seller.getByText(/Dossier notaire : 1 \/ 18 pièces/)).toBeVisible();
+  });
+
+  await test.step("une maison hors copropriété : ni pièces de copropriété ni état daté", async () => {
+    await seller.goto(HOUSE_TAB);
+    await expect(seller.getByText(/Dossier notaire : \d+ \/ 11 pièces/)).toBeVisible();
+    await expect(
+      seller.getByRole("heading", { name: "Documents du bien", level: 3 }),
+    ).toBeVisible();
+    await expect(
+      seller.getByRole("heading", { name: "Documents de copropriété", level: 3 }),
+    ).toHaveCount(0);
+    const notary = seller.getByRole("region", { name: "Documents pour le notaire" });
+    await expect(notary.getByText("État daté fourni par le syndic")).toHaveCount(0);
+    await expect(notary.getByText("Documents complémentaires")).toBeVisible();
+    await expect(notary.getByText("À préparer pour votre notaire")).toBeVisible();
+    // Nothing is asked for before the deed: two stages only.
+    const stages = seller.getByRole("region", { name: "Les étapes de votre dossier" });
+    await expect(stages.getByRole("link")).toHaveCount(2);
   });
 });

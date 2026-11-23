@@ -3,6 +3,7 @@ import { allPlans } from "@/core/billing/plans";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { propertyOffers } from "@/leenkey/offers/seller";
 import { buildChecklist } from "@/leenkey/sale-file/checklist";
+import { inCoOwnership } from "@/lib/config/documents";
 import { paidPlansOrderable } from "@/lib/config/sales";
 import { formatPrice } from "@/lib/format";
 import { frUpgrade } from "@/lib/i18n/sections/upgrade";
@@ -31,15 +32,16 @@ export type UpgradePromptView = {
 };
 
 /**
- * The mandatory documents of the sale file neither filed nor « Non concerné »
- * (L3-04, lib/config/documents.ts); null when they could not be read.
+ * The documents of the notary file neither filed nor « Non concerné » (L3-04,
+ * lib/config/documents.ts: those asked for from the listing and before the
+ * agreement); null when they could not be read.
  */
 async function missingDocuments(propertyId: string): Promise<number | null> {
   const supabase = await createClient();
   const [property, documents, exemptions] = await Promise.all([
     supabase
       .from("properties")
-      .select("type, dpe_exemption_reason")
+      .select("type, copro_lots, charges_monthly_cents, dpe_exemption_reason")
       .eq("id", propertyId)
       .maybeSingle(),
     supabase
@@ -51,7 +53,14 @@ async function missingDocuments(propertyId: string): Promise<number | null> {
   ]);
   if (property.error || !property.data || documents.error || exemptions.error) return null;
   const checklist = buildChecklist(
-    property.data.type,
+    {
+      type: property.data.type,
+      coOwnership: inCoOwnership(
+        property.data.type,
+        property.data.copro_lots,
+        property.data.charges_monthly_cents,
+      ),
+    },
     documents.data.map((row) => ({
       id: row.id,
       type: row.type,

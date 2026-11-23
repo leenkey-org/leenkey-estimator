@@ -4296,6 +4296,8 @@ export type Database = {
         | "fiche_synthetique"
         | "pre_etat_date"
         | "certificat_urbanisme"
+        | "plan_pluriannuel_travaux"
+        | "etat_date"
       financing_document_type:
         | "accord_principe"
         | "attestation_courtier"
@@ -4503,6 +4505,8 @@ export const Constants = {
         "fiche_synthetique",
         "pre_etat_date",
         "certificat_urbanisme",
+        "plan_pluriannuel_travaux",
+        "etat_date",
       ],
       financing_document_type: [
         "accord_principe",

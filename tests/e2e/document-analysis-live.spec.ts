@@ -208,7 +208,7 @@ test("analyse des documents : aide à la lecture, document à vérifier, annonce
     ).toBeVisible();
     await visitor.reload();
     await expect(block).toBeVisible();
-    await expect(visitor.getByText("Source : Mesurage Carrez")).toBeVisible();
+    await expect(visitor.getByText("Source : Mesurage loi Carrez")).toBeVisible();
     await expect(visitor.getByText(/66,5\sm²/).first()).toBeVisible();
     await expect(visitor.getByText(MENTION).first()).toBeVisible();
     // Never the name the seller gave the document.

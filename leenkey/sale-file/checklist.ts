@@ -1,22 +1,32 @@
 import {
   DOCUMENT_CATEGORIES,
   DOCUMENT_CATEGORY,
+  DOCUMENT_ORDER,
+  DOCUMENT_STAGE,
+  DOCUMENT_STAGES,
   DOCUMENT_VALIDITY_MONTHS,
   documentToRefresh,
   EXEMPTIBLE_DOCUMENTS,
-  REQUIRED_DOCUMENTS,
+  NOTARY_FILE_STAGES,
+  OPTIONAL_DOCUMENTS,
+  requiredDocuments,
   type DocumentCategory,
+  type DocumentStage,
   type DocumentType,
   type PropertyType,
 } from "@/lib/config/documents";
 
 // The checklist of the sale file (L3-04, SPEC-V2 15), pure and unit-tested:
-// from the type of the property, its documents and its « Non concerné », the
-// lines by category, the count « Dossier notaire : 12 / 15 pièces » and
-// whether the notary file is complete. A document « Non concerné » counts as
-// present. A line whose most recent dated document is older than the
-// validity of its type reads « À actualiser » (L3-05): it still counts as
-// present, and nothing is said of its legal validity.
+// from the property (its type, whether it is in a co-ownership), its
+// documents and its « Non concerné », the lines by category (« Documents du
+// bien », « Documents de copropriété », « Documents pour le notaire »), each
+// with the stage it is needed for, the progress of each category and of each
+// stage (« 3 sur 5 »), the stage to work on now, the count « Dossier
+// notaire : 12 / 18 pièces » and whether the notary file is complete
+// (DECISIONS.md 2026-11-23). A document « Non concerné » counts as present.
+// A line whose most recent dated document is older than the validity of its
+// type reads « À actualiser » (L3-05): it still counts as present, and
+// nothing is said of its legal validity.
 
 export type FiledDocument = {
   id: string;
@@ -28,11 +38,17 @@ export type FiledDocument = {
 };
 export type Exemption = { type: DocumentType; reason: string };
 
+/** The property of a checklist: a bare type reads « in a co-ownership when a flat ». */
+export type ChecklistProperty = { type: PropertyType | null; coOwnership: boolean };
+
 export type ChecklistLine = {
   type: DocumentType;
-  /** Part of the notary file of this type of property. */
+  /** Asked for this property: counted in its category and its stage. */
   required: boolean;
   exemptible: boolean;
+  /** When it is needed. */
+  stage: DocumentStage;
+  /** `missing` on a line that is not required: offered, not asked for. */
   state: "filed" | "exempt" | "missing";
   documents: FiledDocument[];
   reason: string | null;
@@ -44,31 +60,56 @@ export type ChecklistLine = {
   toRefresh: { date: string; months: number } | null;
 };
 
-export type ChecklistGroup = { category: DocumentCategory; lines: ChecklistLine[] };
+/** Of the documents asked for: how many are filed or « Non concerné ». */
+export type Progress = { done: number; total: number };
+
+export type ChecklistGroup = Progress & { category: DocumentCategory; lines: ChecklistLine[] };
+
+export type ChecklistStage = Progress & {
+  stage: DocumentStage;
+  /** The documents asked for at this stage, neither filed nor « Non concerné ». */
+  missing: DocumentType[];
+};
 
 export type Checklist = {
   groups: ChecklistGroup[];
-  /** Mandatory documents filed or « Non concerné ». */
+  /** The three stages, in their order; `total` is 0 when nothing is asked for at one. */
+  stages: ChecklistStage[];
+  /** The first stage with a document to file; null once nothing is missing. */
+  currentStage: DocumentStage | null;
+  /** The notary file: the documents of its stages (NOTARY_FILE_STAGES) filed or « Non concerné ». */
   done: number;
   total: number;
   complete: boolean;
 };
 
+/** The progress of some lines: of those asked for, how many are filed or « Non concerné ». */
+export function checklistProgress(lines: readonly ChecklistLine[]): Progress {
+  const asked = lines.filter((line) => line.required);
+  return { done: asked.filter((line) => line.state !== "missing").length, total: asked.length };
+}
+
 export function buildChecklist(
-  propertyType: PropertyType | null,
+  property: PropertyType | null | ChecklistProperty,
   documents: readonly FiledDocument[],
   exemptions: readonly Exemption[],
   /** The property is not subject to the DPE (L1-65): its reason; the DPE counts as « Non concerné ». */
   dpeExemption: string | null = null,
   now: Date = new Date(),
 ): Checklist {
-  const required = REQUIRED_DOCUMENTS[propertyType ?? "autre"];
+  const required =
+    property !== null && typeof property === "object"
+      ? requiredDocuments(property.type, property.coOwnership)
+      : requiredDocuments(property);
   const reasonOf = new Map(exemptions.map((exemption) => [exemption.type, exemption.reason]));
-  // The mandatory ones in their order, then what the seller filed besides.
-  const extra = [...new Set(documents.map((document) => document.type))].filter(
-    (type) => !required.includes(type),
+  // What is asked for, then what is always offered, then what the seller
+  // filed besides, each in the order of the checklist.
+  const offered = OPTIONAL_DOCUMENTS.filter((type) => !required.includes(type));
+  const filedTypes = new Set(documents.map((document) => document.type));
+  const extra = DOCUMENT_ORDER.filter(
+    (type) => filedTypes.has(type) && !required.includes(type) && !offered.includes(type),
   );
-  const lines: ChecklistLine[] = [...required, ...extra].map((type) => {
+  const lines: ChecklistLine[] = [...required, ...offered, ...extra].map((type) => {
     const filed = documents.filter((document) => document.type === type);
     const exemptible = EXEMPTIBLE_DOCUMENTS.includes(type) && required.includes(type);
     const reason =
@@ -88,6 +129,7 @@ export function buildChecklist(
       type,
       required: required.includes(type),
       exemptible,
+      stage: DOCUMENT_STAGE[type],
       // A file wins over « Non concerné ».
       state: filed.length > 0 ? "filed" : reason !== null ? "exempt" : "missing",
       documents: filed,
@@ -98,16 +140,26 @@ export function buildChecklist(
           : null,
     };
   });
-  const mandatory = lines.filter((line) => line.required);
-  const done = mandatory.filter((line) => line.state !== "missing").length;
+  const stages: ChecklistStage[] = DOCUMENT_STAGES.map((stage) => {
+    const ofStage = lines.filter((line) => line.stage === stage);
+    return {
+      stage,
+      ...checklistProgress(ofStage),
+      missing: ofStage
+        .filter((line) => line.required && line.state === "missing")
+        .map((line) => line.type),
+    };
+  });
+  const notary = checklistProgress(lines.filter((line) => NOTARY_FILE_STAGES.includes(line.stage)));
   return {
-    groups: DOCUMENT_CATEGORIES.map((category) => ({
-      category,
-      lines: lines.filter((line) => DOCUMENT_CATEGORY[line.type] === category),
-    })).filter((group) => group.lines.length > 0),
-    done,
-    total: mandatory.length,
-    complete: mandatory.length > 0 && done === mandatory.length,
+    groups: DOCUMENT_CATEGORIES.map((category) => {
+      const ofCategory = lines.filter((line) => DOCUMENT_CATEGORY[line.type] === category);
+      return { category, lines: ofCategory, ...checklistProgress(ofCategory) };
+    }).filter((group) => group.lines.length > 0),
+    stages,
+    currentStage: stages.find((stage) => stage.missing.length > 0)?.stage ?? null,
+    ...notary,
+    complete: notary.total > 0 && notary.done === notary.total,
   };
 }
 

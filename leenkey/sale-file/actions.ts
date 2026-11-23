@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getProfile } from "@/core/auth/session";
 import {
   EXEMPTIBLE_DOCUMENTS,
+  inCoOwnership,
   SALE_FILE_EXTENSIONS,
   SALE_FILE_MAX_BYTES,
   type DocumentType,
@@ -92,16 +93,18 @@ async function fileKind(supabase: Client, path: string) {
 }
 
 /**
- * Declares the notary file complete once every mandatory document is filed
- * or « Non concerné ». The task stays ticked when a document is removed
- * afterwards (as every task of the sale: an event passed), while the tab
- * shows the count as it is (DECISIONS.md 2026-11-18).
+ * Declares the notary file complete once every document asked for from the
+ * listing and before the agreement is filed or « Non concerné » (the « état
+ * daté », asked for before the deed, does not hold it back: DECISIONS.md
+ * 2026-11-23). The task stays ticked when a document is removed afterwards
+ * (as every task of the sale: an event passed), while the tab shows the
+ * count as it is (DECISIONS.md 2026-11-18).
  */
 async function declareIfComplete(supabase: Client, propertyId: string, userId: string) {
   const [property, documents, exemptions] = await Promise.all([
     supabase
       .from("properties")
-      .select("type, dpe_exempt, dpe_exemption_reason")
+      .select("type, copro_lots, charges_monthly_cents, dpe_exempt, dpe_exemption_reason")
       .eq("id", propertyId)
       .maybeSingle(),
     supabase
@@ -112,8 +115,16 @@ async function declareIfComplete(supabase: Client, propertyId: string, userId: s
     supabase.from("document_exemptions").select("type, reason").eq("property_id", propertyId),
   ]);
   if (property.error || documents.error || exemptions.error) return;
+  const type = (property.data?.type ?? null) as PropertyType | null;
   const checklist = buildChecklist(
-    (property.data?.type ?? null) as PropertyType | null,
+    {
+      type,
+      coOwnership: inCoOwnership(
+        type,
+        property.data?.copro_lots ?? null,
+        property.data?.charges_monthly_cents ?? null,
+      ),
+    },
     (documents.data ?? []).map((row) => ({
       id: row.id,
       type: row.type,

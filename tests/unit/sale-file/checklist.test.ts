@@ -1,19 +1,23 @@
 import { describe, expect, it } from "vitest";
 import {
   buildChecklist,
+  checklistProgress,
   sniffSaleFile,
   type Exemption,
   type FiledDocument,
 } from "@/leenkey/sale-file/checklist";
 import {
   EXEMPTIBLE_DOCUMENTS,
-  REQUIRED_DOCUMENTS,
+  requiredDocuments,
+  type DocumentStage,
   type DocumentType,
 } from "@/lib/config/documents";
 
-// L3-04: the checklist of the sale file (SPEC-V2 15), from the type of the
-// property, its documents and its « Non concerné »; and what the first bytes
-// of a file say it is.
+// L3-04: the checklist of the sale file (SPEC-V2 15), from the property, its
+// documents and its « Non concerné »: its three categories, the stage of
+// each line, the progress of each category and of each stage, the stage to
+// work on now, the notary file (DECISIONS.md 2026-11-23); and what the first
+// bytes of a file say it is.
 
 let next = 0;
 const filed = (type: DocumentType, title = `${type}.pdf`): FiledDocument => ({
@@ -27,47 +31,191 @@ const exempt = (type: DocumentType, reason = "Pas d'installation"): Exemption =>
   reason,
 });
 
-function line(checklist: ReturnType<typeof buildChecklist>, type: DocumentType) {
-  return checklist.groups.flatMap((group) => group.lines).find((item) => item.type === type);
+type Built = ReturnType<typeof buildChecklist>;
+const allLines = (checklist: Built) => checklist.groups.flatMap((group) => group.lines);
+function line(checklist: Built, type: DocumentType) {
+  return allLines(checklist).find((item) => item.type === type);
 }
+const group = (checklist: Built, category: string) =>
+  checklist.groups.find((item) => item.category === category);
+const stage = (checklist: Built, name: DocumentStage) =>
+  checklist.stages.find((item) => item.stage === name);
+const house = { type: "maison", coOwnership: false } as const;
+const houseInCoOwnership = { type: "maison", coOwnership: true } as const;
 
 describe("buildChecklist", () => {
-  it("counts the notary file of each type of property", () => {
+  it("counts the notary file of each property: what is asked for up to the agreement", () => {
+    // A flat: 19 documents asked for, the « état daté » outside the notary file.
     expect(buildChecklist("appartement", [], [])).toMatchObject({
       done: 0,
-      total: 16,
+      total: 18,
       complete: false,
     });
     expect(buildChecklist("maison", [], []).total).toBe(11);
+    expect(buildChecklist(house, [], []).total).toBe(11);
+    expect(buildChecklist(houseInCoOwnership, [], []).total).toBe(19);
     expect(buildChecklist("terrain", [], []).total).toBe(4);
     // No list of its own, or no type yet: the one of a house.
     expect(buildChecklist("autre", [], []).total).toBe(11);
     expect(buildChecklist(null, [], []).total).toBe(11);
   });
 
-  it("groups the lines by category, in the order of the list, each missing at first", () => {
+  it("groups the lines in three categories, in the order of the list, each missing at first", () => {
     const flat = buildChecklist("appartement", [], []);
-    expect(flat.groups.map((group) => group.category)).toEqual([
-      "diagnostics",
-      "ownership",
-      "coownership",
+    expect(flat.groups.map((item) => item.category)).toEqual(["property", "coownership", "notary"]);
+    // The property (the Carrez measurement among it), the co-ownership, the
+    // « état daté » and the line always offered.
+    expect(flat.groups.map((item) => item.lines.length)).toEqual([11, 7, 2]);
+    expect(allLines(flat).map((item) => item.type)).toEqual([
+      ...requiredDocuments("appartement"),
+      "autre",
     ]);
-    expect(flat.groups.map((group) => group.lines.length)).toEqual([8, 2, 6]);
-    expect(flat.groups.flatMap((group) => group.lines).map((item) => item.type)).toEqual(
-      REQUIRED_DOCUMENTS.appartement,
-    );
-    for (const item of flat.groups.flatMap((group) => group.lines)) {
-      expect(item).toMatchObject({ required: true, state: "missing", documents: [], reason: null });
+    for (const item of allLines(flat)) {
+      expect(item).toMatchObject({
+        required: item.type !== "autre",
+        state: "missing",
+        documents: [],
+        reason: null,
+      });
     }
-    expect(buildChecklist("maison", [], []).groups.map((group) => group.category)).toEqual([
-      "diagnostics",
-      "ownership",
-      "works",
+    // A house that is not in a co-ownership: no category for it.
+    const alone = buildChecklist(house, [], []);
+    expect(alone.groups.map((item) => item.category)).toEqual(["property", "notary"]);
+    expect(group(alone, "notary")?.lines.map((item) => item.type)).toEqual(["autre"]);
+    // In one: the same three categories as a flat.
+    const shared = buildChecklist(houseInCoOwnership, [], []);
+    expect(shared.groups.map((item) => item.category)).toEqual([
+      "property",
+      "coownership",
+      "notary",
     ]);
-    expect(buildChecklist("terrain", [], []).groups.map((group) => group.category)).toEqual([
-      "diagnostics",
-      "ownership",
+    expect(group(shared, "property")?.lines.map((item) => item.type)).toContain("carrez");
+    expect(group(shared, "coownership")?.lines).toHaveLength(7);
+    expect(line(shared, "etat_date")).toMatchObject({ required: true, exemptible: true });
+    expect(line(alone, "carrez")).toBeUndefined();
+    expect(line(alone, "etat_date")).toBeUndefined();
+    // Land: its four documents, nothing of a co-ownership even when one is said.
+    const land = buildChecklist({ type: "terrain", coOwnership: true }, [], []);
+    expect(land.groups.map((item) => item.category)).toEqual(["property", "notary"]);
+    expect(group(land, "property")?.lines).toHaveLength(4);
+  });
+
+  it("each line has the stage it is needed for", () => {
+    const flat = buildChecklist("appartement", [], []);
+    expect(line(flat, "titre_propriete")?.stage).toBe("listing");
+    expect(line(flat, "dpe")?.stage).toBe("listing");
+    expect(line(flat, "carrez")?.stage).toBe("listing");
+    expect(line(flat, "taxe_fonciere")?.stage).toBe("agreement");
+    expect(line(flat, "facture_travaux")?.stage).toBe("agreement");
+    expect(line(flat, "pv_ag")?.stage).toBe("agreement");
+    expect(line(flat, "plan_pluriannuel_travaux")?.stage).toBe("agreement");
+    expect(line(flat, "etat_date")?.stage).toBe("deed");
+    expect(line(flat, "autre")?.stage).toBe("deed");
+  });
+
+  it("the progress of each category and of each stage, « Non concerné » and optional lines apart", () => {
+    const flat = buildChecklist(
+      "appartement",
+      [
+        filed("titre_propriete"),
+        filed("dpe"),
+        filed("taxe_fonciere", "2024.pdf"),
+        filed("taxe_fonciere", "2025.pdf"),
+        filed("pv_ag"),
+        // Offered, never counted.
+        filed("autre", "Plan.pdf"),
+      ],
+      [exempt("gaz", "Pas de gaz"), exempt("plan_pluriannuel_travaux", "Aucun plan voté")],
+    );
+    expect(flat.groups.map(({ category, done, total }) => ({ category, done, total }))).toEqual([
+      // The title deed, the DPE, the gas « Non concerné », the tax.
+      { category: "property", done: 4, total: 11 },
+      // The minutes, the plan « Non concerné ».
+      { category: "coownership", done: 2, total: 7 },
+      // The « état daté » only: the offered line is not counted.
+      { category: "notary", done: 0, total: 1 },
     ]);
+    expect(flat.stages).toEqual([
+      {
+        stage: "listing",
+        done: 3,
+        total: 9,
+        missing: ["amiante", "plomb", "electricite", "termites", "erp", "carrez"],
+      },
+      {
+        stage: "agreement",
+        done: 3,
+        total: 9,
+        missing: [
+          "facture_travaux",
+          "reglement_copro",
+          "fiche_synthetique",
+          "carnet_entretien",
+          "appel_charges",
+          "pre_etat_date",
+        ],
+      },
+      { stage: "deed", done: 0, total: 1, missing: ["etat_date"] },
+    ]);
+    // The notary file: the first two stages.
+    expect(flat).toMatchObject({ done: 6, total: 18, complete: false });
+    // The same count for any lines (a category filtered by stage).
+    expect(checklistProgress(allLines(flat).filter((item) => item.stage === "agreement"))).toEqual({
+      done: 3,
+      total: 9,
+    });
+    expect(checklistProgress([])).toEqual({ done: 0, total: 0 });
+  });
+
+  it("a stage nothing is asked for has no count; the three stages are always there", () => {
+    const alone = buildChecklist(house, [], []);
+    expect(alone.stages.map(({ stage: name, total }) => [name, total])).toEqual([
+      ["listing", 9],
+      ["agreement", 2],
+      // Only the offered line: nothing asked for.
+      ["deed", 0],
+    ]);
+    expect(stage(alone, "deed")?.missing).toEqual([]);
+    expect(buildChecklist("terrain", [], []).stages.map((item) => item.total)).toEqual([3, 1, 0]);
+  });
+
+  it("the stage to work on now is the first with a document to file", () => {
+    const listing = requiredDocuments("maison").filter(
+      (type) => !["taxe_fonciere", "facture_travaux"].includes(type),
+    );
+    expect(buildChecklist(house, [], []).currentStage).toBe("listing");
+    // A document of a later stage does not move it.
+    expect(buildChecklist(house, [filed("taxe_fonciere")], []).currentStage).toBe("listing");
+    // Everything of the listing filed or « Non concerné »: the agreement.
+    const second = buildChecklist(
+      house,
+      listing.filter((type) => !EXEMPTIBLE_DOCUMENTS.includes(type)).map((type) => filed(type)),
+      listing.filter((type) => EXEMPTIBLE_DOCUMENTS.includes(type)).map((type) => exempt(type)),
+    );
+    expect(second.currentStage).toBe("agreement");
+    expect(stage(second, "listing")).toMatchObject({ done: 9, total: 9, missing: [] });
+    expect(stage(second, "agreement")?.missing).toEqual(["taxe_fonciere", "facture_travaux"]);
+    // Nothing missing: no stage to work on.
+    const notConcerned: DocumentType[] = [
+      ...listing.filter((type) => EXEMPTIBLE_DOCUMENTS.includes(type)),
+      "facture_travaux",
+    ];
+    const done = buildChecklist(
+      house,
+      [...allLines(second).flatMap((item) => item.documents), filed("taxe_fonciere")],
+      notConcerned.map((type) => exempt(type)),
+    );
+    expect(done).toMatchObject({ currentStage: null, complete: true });
+    // A document removed (it is no longer given): its line is to file again.
+    const removed = buildChecklist(
+      house,
+      allLines(done)
+        .flatMap((item) => item.documents)
+        .filter((document) => document.type !== "dpe"),
+      notConcerned.map((type) => exempt(type)),
+    );
+    expect(removed).toMatchObject({ currentStage: "listing", complete: false, done: 10 });
+    expect(stage(removed, "listing")?.missing).toEqual(["dpe"]);
   });
 
   it("a filed document counts once, however many files its line holds", () => {
@@ -96,7 +244,7 @@ describe("buildChecklist", () => {
         exempt("titre_propriete"),
         // Exemptible, but not asked for a house: no line, no count.
         exempt("certificat_urbanisme"),
-        // Not in the list of a house at all.
+        // Not in the list of a house that is not in a co-ownership.
         exempt("pv_ag"),
       ],
     );
@@ -123,13 +271,23 @@ describe("buildChecklist", () => {
       state: "exempt",
       reason: "Aucun projet",
     });
+
+    // A flat that is not in a co-ownership: its documents « Non concerné ».
+    const flat = buildChecklist(
+      "appartement",
+      [],
+      [exempt("pv_ag", "Pas de copropriété"), exempt("etat_date", "Pas de copropriété")],
+    );
+    expect(group(flat, "coownership")).toMatchObject({ done: 1, total: 7 });
+    expect(group(flat, "notary")).toMatchObject({ done: 1, total: 1 });
+    expect(stage(flat, "deed")).toMatchObject({ done: 1, total: 1, missing: [] });
   });
 
   it("the lines that may be « Non concerné » are the exemptible ones of the list", () => {
     for (const type of ["appartement", "maison", "terrain", "autre"] as const) {
-      const lines = buildChecklist(type, [], []).groups.flatMap((group) => group.lines);
+      const lines = allLines(buildChecklist(type, [], []));
       expect(lines.filter((item) => item.exemptible).map((item) => item.type)).toEqual(
-        REQUIRED_DOCUMENTS[type].filter((item) => EXEMPTIBLE_DOCUMENTS.includes(item)),
+        requiredDocuments(type).filter((item) => EXEMPTIBLE_DOCUMENTS.includes(item)),
       );
     }
   });
@@ -149,14 +307,19 @@ describe("buildChecklist", () => {
       [exempt("pv_ag")],
     );
     expect(checklist).toMatchObject({ done: 0, total: 4, complete: false });
-    expect(checklist.groups.map((group) => group.category)).toEqual([
-      "diagnostics",
-      "ownership",
+    expect(checklist.groups.map((item) => item.category)).toEqual([
+      "property",
       "coownership",
-      "other",
+      "notary",
     ]);
-    // After the mandatory ones of its category.
-    expect(checklist.groups[0].lines.map((item) => item.type)).toEqual(["erp", "dpe"]);
+    // After the documents asked for of its category.
+    expect(checklist.groups[0].lines.map((item) => item.type)).toEqual([
+      "titre_propriete",
+      "erp",
+      "certificat_urbanisme",
+      "taxe_fonciere",
+      "dpe",
+    ]);
     expect(line(checklist, "dpe")).toMatchObject({ required: false, state: "filed" });
     expect(line(checklist, "pv_ag")).toMatchObject({
       required: false,
@@ -164,13 +327,15 @@ describe("buildChecklist", () => {
       state: "filed",
       reason: null,
     });
+    expect(group(checklist, "coownership")).toMatchObject({ done: 0, total: 0 });
     expect(line(checklist, "autre")?.documents.map((item) => item.title)).toEqual([
       "Plan.pdf",
       "Notice.pdf",
     ]);
+    expect(line(checklist, "autre")).toMatchObject({ required: false, state: "filed" });
   });
 
-  it("is complete when every mandatory document is filed or « Non concerné »", () => {
+  it("the notary file is complete when everything asked for up to the agreement is filed or « Non concerné »", () => {
     const documents = [filed("erp"), filed("titre_propriete"), filed("taxe_fonciere")];
     expect(buildChecklist("terrain", documents, [])).toMatchObject({
       done: 3,
@@ -190,16 +355,22 @@ describe("buildChecklist", () => {
       buildChecklist("terrain", [...documents, filed("autre"), filed("dpe")], []).complete,
     ).toBe(false);
 
+    // A flat without its « état daté » (asked for before the deed): the notary
+    // file is complete, the deed still has a document to file.
+    const asked = requiredDocuments("appartement").filter((type) => type !== "etat_date");
     const flat = buildChecklist(
       "appartement",
-      REQUIRED_DOCUMENTS.appartement
-        .filter((type) => !EXEMPTIBLE_DOCUMENTS.includes(type))
-        .map((type) => filed(type)),
-      REQUIRED_DOCUMENTS.appartement
-        .filter((type) => EXEMPTIBLE_DOCUMENTS.includes(type))
-        .map((type) => exempt(type)),
+      asked.filter((type) => !EXEMPTIBLE_DOCUMENTS.includes(type)).map((type) => filed(type)),
+      asked.filter((type) => EXEMPTIBLE_DOCUMENTS.includes(type)).map((type) => exempt(type)),
     );
-    expect(flat).toMatchObject({ done: 16, total: 16, complete: true });
+    expect(flat).toMatchObject({ done: 18, total: 18, complete: true, currentStage: "deed" });
+    expect(stage(flat, "deed")).toMatchObject({ done: 0, total: 1, missing: ["etat_date"] });
+    // The « état daté » alone does not make it.
+    expect(buildChecklist("appartement", [filed("etat_date")], [])).toMatchObject({
+      done: 0,
+      total: 18,
+      complete: false,
+    });
   });
 });
 

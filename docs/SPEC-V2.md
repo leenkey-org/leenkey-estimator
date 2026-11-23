@@ -268,7 +268,9 @@ create type document_type    as enum ('dpe','amiante','plomb','electricite','gaz
                                       'titre_propriete','taxe_fonciere','pv_ag','reglement_copro',
                                       'appel_charges','facture_travaux','autre',
                                       -- L3-04 (DECISIONS.md 2026-11-18)
-                                      'assainissement','carnet_entretien','fiche_synthetique','pre_etat_date','certificat_urbanisme');
+                                      'assainissement','carnet_entretien','fiche_synthetique','pre_etat_date','certificat_urbanisme',
+                                      -- dossier par catégories et par étapes (DECISIONS.md 2026-11-23)
+                                      'plan_pluriannuel_travaux','etat_date');
 create type notification_channel as enum ('in_app','email');
 ```
 
@@ -1894,6 +1896,8 @@ Onglet « Documents » de la fiche du bien :
 - Partage : par document ou par lot (« Partager les diagnostics »), à un acquéreur ayant une relation avec le bien. Demandes d'accès des acquéreurs listées en tête avec Accorder / Refuser.
 
 > **Mise en œuvre (L3-04, `DECISIONS.md` 2026-11-18).** Onglet `/vendeur/biens/[id]/documents` ; appartement 16 pièces (électricité et gaz comptés séparément) ; « Non concerné » avec motif (`document_exemptions`) ; dépôt par adresse d'envoi signée, contrôle du contenu par le serveur ; partage par acquéreur (tout le dossier, les diagnostics, plus rien) ; demandes d'accès avec délai de 7 jours après un refus ; page `/acquereur/documents` ; fichier ouvert par `/documents/vente/[id]` (URL signée 10 minutes). Diagnostics personnalisés (Q77) : non faits, en attente d'arbitrage.
+
+> **Catégories et étapes (demande de Cédric du 2026-11-22, `DECISIONS.md` 2026-11-23).** La liste est rangée en trois catégories, qui remplacent celles du premier point : « Documents du bien » (titre de propriété, diagnostics du DDT un par ligne, mesurage loi Carrez en copropriété, certificat d'urbanisme ou bornage pour un terrain, taxe foncière, factures et justificatifs de travaux), « Documents de copropriété » (règlement de copropriété et état descriptif de division, PV des assemblées générales des 3 dernières années, fiche synthétique de copropriété, carnet d'entretien, plan pluriannuel de travaux, informations financières et charges de copropriété, pré-état daté) et « Documents pour le notaire » (état daté fourni par le syndic ; documents complémentaires, facultatifs). Chaque pièce porte son étape : « Dès la mise en vente » (titre, diagnostics, Carrez, certificat d'urbanisme), « Avant le compromis » (taxe foncière, factures de travaux, copropriété), « Avant la signature » (état daté, compléments) ; répartition à confirmer (Q99). L'onglet montre l'avancement de chaque catégorie et de chaque étape (« 3 sur 9 pièces »), nomme d'abord les pièces à déposer de l'étape en cours, et filtre la liste par étape (`?etape=`). Pièces demandées : appartement 19, maison 11 (20 en copropriété : lots ou charges renseignés sur la fiche du bien), terrain 4. « Dossier notaire : x / y pièces » et `documents.notary_ready` comptent les pièces des deux premières étapes (appartement : 18) ; l'état daté ne les retient pas. Les pièces d'identité et la situation des vendeurs ne se déposent pas : un encart « À préparer pour votre notaire ». Catégories, étapes et listes : `lib/config/documents.ts` ; logique : `leenkey/sale-file/checklist.ts`.
 
 ### Analyse IA
 
