@@ -15,7 +15,7 @@ const fr = { emails: frEmails, legal: frLegal } as const;
 
 const t = fr.emails.planActivated;
 
-const heading = { margin: "8px 0 8px", fontSize: "17px", lineHeight: "1.4", color: "#0F1E35" };
+const heading = { margin: "8px 0 8px", fontSize: "17px", lineHeight: "1.4", color: "#0F172A" };
 const small = { ...emailText, fontSize: "14px" };
 
 export type PlanActivatedEmailProps = {

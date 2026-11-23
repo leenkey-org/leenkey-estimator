@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-23 · Emails à la charte de la V2 · PR #127
+- Modifié : tous les emails du site (gabarit commun `EmailLayout`) et les quatre modèles d'authentification de Supabase (`supabase/templates/` : confirmation, mot de passe oublié, changement d'adresse, mot de passe modifié) à la charte D : bandeau de tête nuit avec « Leenkey » en blanc, bouton en pilule au dégradé bleu-violet (bleu plein là où le dégradé n'est pas rendu), Sora avec repli Arial, carte au rayon de 16 px sur fond `#F1F5F9`. Textes, liens et sujets inchangés.
+- Corrigé : sur un écran étroit, le libellé long d'un bouton des modèles d'authentification passait sur deux lignes très écartées.
+- Inchangé : rapport PDF, PDF de l'offre, image de partage, emails de l'estimateur repris de la V1.
+- À faire à la main : coller les quatre modèles et leurs sujets dans Supabase (Authentication → Emails), en préprod et en production (`docs/MISE-EN-LIGNE.md`).
+
 ### 2026-11-23 · Bandeau des cookies sur ordinateur · PR #126
 - Corrigé : à partir de 1 024 px, le bandeau des cookies du premier passage est une barre fine au bas de l'écran, sur toute la largeur ; il ne recouvre plus la carte de recherche de l'accueil (constat fait sur leenkey.fr après la mise en production). Textes et boutons inchangés ; téléphone, tablette et « Vos préférences » inchangés.
 - Modifié : `DECISIONS.md` (mise en production du 23 novembre : 63 migrations, branche `production` = `4045ca5`).

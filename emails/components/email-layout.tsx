@@ -18,23 +18,29 @@ import { frLegal } from "@/lib/i18n/sections/legal";
 // The texts this module shows (lib/i18n/sections, P-06).
 const fr = { emails: frEmails, legal: frLegal } as const;
 
-// Common template of the emails (docs/DESIGN.md 14, SPEC-V2 section 18):
-// stone background, white card of 560 px, 8 px blue band (a top border,
-// which Outlook keeps, unlike an empty block), « Leenkey » in text, Archivo
-// titles with an Arial fallback (mail clients ignore font-stretch), one blue
-// button, footer with the notification settings and the legal identity.
-// Inline styles only: mail clients drop style sheets. Colours of the palette
-// (DESIGN.md 2.1).
+// Common template of the emails (docs/DESIGN.md 14, SPEC-V2 section 18), in
+// the brand of the site since 2026-11-23 (charte D, DECISIONS.md): light
+// background, white card of 560 px with a 16 px radius, night band with
+// « Leenkey » in white, Sora with an Arial fallback (mail clients rarely load
+// a web font), one pill button in the brand gradient over a solid blue (the
+// clients that drop gradients keep the blue), footer with the notification
+// settings and the legal identity. Inline styles only: mail clients drop
+// style sheets. Colours of the palette (DESIGN.md 2.1).
 
 const t = fr.emails;
 
-const FONT = "Archivo, Arial, Helvetica, sans-serif";
-const INK = "#0F1E35";
-const MUTED = "#5B6474";
-const BLUE = "#1156FC";
-const BLUE_TINT = "#EEF4FF";
-const LINE = "#D9DBD3";
-const BACKGROUND = "#F4F4F1";
+const FONT = "Sora, Arial, Helvetica, sans-serif";
+const INK = "#0F172A";
+const MUTED = "#5B6880";
+const NIGHT = "#020D21";
+// Under white text: the AA tones of the gradient (DESIGN.md 2.1).
+const BUTTON_BLUE = "#2563EB";
+const BUTTON_GRADIENT = "linear-gradient(90deg, #2563EB, #7C3AED)";
+// Small coloured texts and marks: the indigo of the brand.
+const BLUE = "#4338CA";
+const BLUE_TINT = "#EEF2FF";
+const LINE = "#E2E8F0";
+const BACKGROUND = "#F1F5F9";
 
 export const emailText = { margin: "0 0 16px", fontSize: "15px", lineHeight: "1.6", color: INK };
 
@@ -91,14 +97,16 @@ export function EmailLayout({
           style={{
             maxWidth: "560px",
             backgroundColor: "#FFFFFF",
-            borderTop: `8px solid ${BLUE}`,
-            borderRadius: "6px",
+            borderRadius: "16px",
+            overflow: "hidden",
           }}
         >
-          <Section style={{ padding: "28px 32px 32px" }}>
-            <Text style={{ margin: "0 0 24px", fontSize: "20px", fontWeight: 700, color: INK }}>
+          <Section style={{ padding: "22px 32px", backgroundColor: NIGHT }}>
+            <Text style={{ margin: 0, fontSize: "20px", fontWeight: 700, color: "#FFFFFF" }}>
               {t.brand}
             </Text>
+          </Section>
+          <Section style={{ padding: "28px 32px 32px" }}>
             <Heading
               as="h1"
               style={{
@@ -118,9 +126,10 @@ export function EmailLayout({
                 style={{
                   display: "inline-block",
                   margin: "8px 0 24px",
-                  padding: "14px 24px",
-                  borderRadius: "4px",
-                  backgroundColor: BLUE,
+                  padding: "14px 28px",
+                  borderRadius: "999px",
+                  backgroundColor: BUTTON_BLUE,
+                  backgroundImage: BUTTON_GRADIENT,
                   color: "#FFFFFF",
                   fontSize: "15px",
                   fontWeight: 600,
@@ -173,7 +182,7 @@ export function EmailQuote({ label, text }: { label: string; text: string }) {
         padding: "12px 16px",
         borderLeft: `4px solid ${BLUE}`,
         backgroundColor: BLUE_TINT,
-        borderRadius: "4px",
+        borderRadius: "8px",
       }}
     >
       <Text style={{ margin: "0 0 4px", fontSize: "13px", fontWeight: 600, color: INK }}>
