@@ -27,6 +27,9 @@ export const frSaleFile = {
     etat_date: "État daté fourni par le syndic",
     facture_travaux: "Factures et justificatifs de travaux",
     autre: "Documents complémentaires",
+    // The one file of the diagnostician, filed at once (DECISIONS.md
+    // 2026-11-23): never a line, the name a buyer reads.
+    ddt: "Dossier de diagnostics (DDT)",
   },
   categories: {
     property: "Documents du bien",
@@ -70,8 +73,6 @@ export const frSaleFile = {
     filter: { label: "Filtrer les pièces par étape", all: "Toutes" },
     // Under the title of a category.
     categoryHelp: {
-      property:
-        "Les diagnostics forment votre dossier de diagnostics techniques (DDT) : déposez-les un par un.",
       coownership:
         "Votre syndic vous remet la plupart de ces pièces. Si votre bien n'est pas en copropriété, indiquez « Non concerné ».",
     },
@@ -86,6 +87,44 @@ export const frSaleFile = {
     identity: {
       title: "À préparer pour votre notaire",
       text: "Pièces d'identité et situation des vendeurs (état civil, régime matrimonial). Ces pièces ne se déposent pas sur Leenkey : vous les remettez directement à votre notaire.",
+    },
+    // The DDT filed at once (DECISIONS.md 2026-11-23, level A): the seller
+    // files the one file and ticks the diagnostics it holds. Nothing is said
+    // of what a DDT must hold: the disclaimer of the tab stays.
+    ddt: {
+      title: "Diagnostics",
+      intro:
+        "Le dossier de diagnostics techniques (DDT) est le fichier unique que votre diagnostiqueur vous a remis : il regroupe vos diagnostics. Déposez-le une seule fois, puis cochez les diagnostics qu'il contient.",
+      action: "Déposer mon DDT (un seul fichier)",
+      formTitle: "Déposer mon DDT",
+      file: "Fichier de votre DDT",
+      fileHelp: "PDF, JPEG ou PNG, 20 Mo au plus.",
+      covers: "Diagnostics contenus dans ce fichier",
+      coversHelp:
+        "Décochez ceux que votre DDT ne contient pas. Vous pourrez modifier ce choix plus tard.",
+      submit: "Déposer mon DDT",
+      cancel: "Annuler",
+      sending: "Envoi du fichier…",
+      added: "DDT déposé. Les diagnostics cochés sont comptés comme fournis.",
+      alone: "Vous pouvez aussi déposer un diagnostic seul, avec « Déposer un document ».",
+      filedCovers: (names: readonly string[]) => `Diagnostics couverts : ${names.join(", ")}`,
+      edit: "Modifier les diagnostics couverts",
+      save: "Enregistrer",
+      saved: "Diagnostics couverts mis à jour.",
+      // On a diagnostic line the DDT covers.
+      provided: "Fourni dans votre DDT",
+      // The name of the link holds what it shows (accessible name).
+      openAbout: (label: string) => `Fourni dans votre DDT : ouvrir le fichier (${label})`,
+      removeDescription:
+        "Il disparaît de votre dossier : les diagnostics qu'il couvrait repassent « À déposer », et les acquéreurs avec qui vous l'aviez partagé ne le voient plus.",
+      errors: {
+        auth: "Votre session a expiré. Reconnectez-vous.",
+        invalid: "Choisissez le fichier de votre DDT et cochez au moins un diagnostic.",
+        none: "Cochez au moins un diagnostic.",
+        unsupported: "Ce fichier n'est pas un PDF, un JPEG ou un PNG lisible.",
+        too_heavy: "Ce fichier dépasse 20 Mo.",
+        unavailable: "Ça n'a pas fonctionné. Réessayez.",
+      },
     },
     loadError: "Les documents n'ont pas pu être chargés. Rechargez la page.",
     progress: (done: number, total: number) => `Dossier notaire : ${done} / ${total} pièces`,
@@ -327,6 +366,8 @@ export const frSaleFile = {
     },
     offline: "Bien retiré",
     sharedOn: (date: string) => `Partagé le ${date}`,
+    // Under a shared DDT: the diagnostics its seller says it holds.
+    covers: (names: readonly string[]) => `Diagnostics inclus : ${names.join(", ")}`,
     open: "Ouvrir",
     openAbout: (title: string) => `Ouvrir ${title}`,
     listing: "Voir l'annonce",

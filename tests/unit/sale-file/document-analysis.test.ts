@@ -198,7 +198,15 @@ describe("the public facts: never a text of the model", () => {
   });
 
   it("the DPE, the ERP, the title deed and the free documents give none", () => {
-    for (const type of ["dpe", "erp", "titre_propriete", "facture_travaux", "autre"] as const) {
+    // Nor a DDT: nothing of it is ever shown on a listing (DECISIONS.md 2026-11-23).
+    for (const type of [
+      "dpe",
+      "erp",
+      "titre_propriete",
+      "facture_travaux",
+      "autre",
+      "ddt",
+    ] as const) {
       expect(PUBLIC_FACTS_BY_TYPE[type]).toBeUndefined();
       const all = Object.fromEntries(PUBLIC_FACT_KEYS.map((key) => [key, "absence"]));
       expect(readPublicFacts(type, { ...all, classe_energie: "C", classe_ges: "D" })).toEqual({});
@@ -283,6 +291,8 @@ describe("the rules given to the model", () => {
     expect(analysisPromptName("titre_propriete")).toBe("titre_propriete");
     expect(analysisPromptName("facture_travaux")).toBe("generic");
     expect(analysisPromptName("autre")).toBe("generic");
+    // A DDT is read as one document (level A, DECISIONS.md 2026-11-23).
+    expect(analysisPromptName("ddt")).toBe("generic");
   });
 
   it("the system prompt is the common rules, then those of the type", () => {

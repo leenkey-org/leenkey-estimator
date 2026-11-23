@@ -12,6 +12,16 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-23 · DDT déposé en une fois, niveau A (demande de Cédric) · PR #129
+- Ajouté : dans l'onglet « Documents » d'un bien, les diagnostics forment un groupe « Diagnostics » de « Documents du bien », avec en première action « Déposer mon DDT (un seul fichier) » : le vendeur dépose une fois le fichier unique de son diagnostiqueur et coche les diagnostics qu'il contient, parmi les lignes de diagnostic demandées pour ce bien (toutes cochées au départ, une au moins).
+- Ajouté : chaque ligne cochée compte comme fournie (« Fourni dans votre DDT », avec le lien vers le fichier) dans tous les comptes : catégorie, étape, « Dossier notaire : x / y », tâche « Dossier notaire complet », proposition `file_incomplete`. « Modifier les diagnostics couverts » ; retiré, le DDT rend ses lignes (« À déposer » ou « Non concerné »). Déposer un diagnostic seul reste possible.
+- Ajouté : partagé, le DDT est un seul document ; « Partager les diagnostics » le comprend ; l'acquéreur lit « Dossier de diagnostics (DDT) » et « Diagnostics inclus : … ».
+- Modifié : l'assistant lit le DDT comme un seul document (règles génériques, une phrase de plus pour citer chaque diagnostic présent ; mêmes limites : 100 pages, plafonds de la file). Pas d'« À actualiser » sur une ligne couverte par le seul DDT. Aucun fait public n'est tiré d'un DDT : rien ne s'affiche sur l'annonce à partir de lui.
+- Modifié : nouvelle valeur d'enum `document_type` : `ddt` ; colonne `documents.covers` (les diagnostics d'un DDT), écrite par `document_add` et `document_coverage_set`, jamais par un client ; `shared_documents()` rend `covers`. RLS existante inchangée (`grant select (covers)` : le vendeur, l'équipe, un acquéreur pour un document partagé avec lui). `document_public_facts_set` et `public_document_facts` écartent le DDT.
+- Modifié : `SPEC-V2.md` (sections 4 et 15), `DECISIONS.md` (2026-11-23, Q102), `BACKLOG-V3.md` (niveau B restant).
+- Tests : `tests/unit/sale-file/ddt.test.ts` (comptes avec un DDT qui couvre tout, une partie, rien ; retrait ; appartement en copropriété et maison ; schémas), `supabase/tests/rls_ddt.sql` (27), `tests/e2e/ddt-live.spec.ts` (dépôt, coche, comptes, modification, partage, retrait).
+- Migration : 20261123150000_document_type_ddt.sql, 20261123150100_ddt_coverage.sql
+
 ### 2026-11-23 · Vérification d'identité avant visite (demande de Cédric) · PR #128
 - Ajouté : un acquéreur dépose une pièce d'identité (carte d'identité, passeport ou titre de séjour ; PDF ou image, mêmes limites que le justificatif de financement) depuis « Mon projet d'achat » (`/acquereur/profil#identite`) et depuis la réservation d'une visite quand elle manque. Statuts « Pièce d'identité non déposée », « Pièce d'identité déposée », « Identité vérifiée par Leenkey » (jamais « validé »). Une pièce en attente se remplace ou se retire ; rien n'est lu ni gardé de la pièce (ni numéro, ni date de naissance).
 - Ajouté : réserver un créneau demande une pièce déposée, sans attendre le contrôle de l'équipe (`visit_book`) ; la page de réservation affiche le dépôt à la place des créneaux tant qu'elle manque. Une visite déjà réservée n'est jamais annulée.

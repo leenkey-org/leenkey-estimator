@@ -28,10 +28,13 @@ export function RemoveDocumentButton({
   propertyId,
   documentId,
   title,
+  description = t.removeDialog.description,
 }: {
   propertyId: string;
   documentId: string;
   title: string;
+  /** What the removal does, when it is more than the document (a DDT: its lines). */
+  description?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -54,7 +57,7 @@ export function RemoveDocumentButton({
       <ConfirmDialog
         open={open}
         title={t.removeDialog.title}
-        description={t.removeDialog.description}
+        description={description}
         confirmLabel={t.removeDialog.confirm}
         confirmVariant="danger"
         labels={t.removeDialog}

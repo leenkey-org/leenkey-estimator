@@ -6,24 +6,17 @@ import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { Input } from "@/components/shared/input";
 import { Select } from "@/components/shared/select";
-import {
-  SALE_FILE_EXTENSIONS,
-  SALE_FILE_MAX_BYTES,
-  guessDocumentType,
-  type DocumentType,
-  type SaleFileMime,
-} from "@/lib/config/documents";
+import { guessDocumentType, type DocumentType } from "@/lib/config/documents";
 import { frSaleFile } from "@/lib/i18n/sections/saleFile";
 import { DOCUMENT_TITLE_MAX } from "@/lib/validations/sale-file";
-import { fileDocument, startDocumentUpload } from "../actions";
+import { fileDocument } from "../actions";
+import { sendSaleFile } from "./send-file";
 
 // The texts this module shows (lib/i18n/sections, P-06).
 const fr = { saleFile: frSaleFile } as const;
 
 const t = fr.saleFile.seller.upload;
 type UploadError = keyof typeof t.errors;
-
-const isSaleFileMime = (value: string): value is SaleFileMime => value in SALE_FILE_EXTENSIONS;
 
 /**
  * « Déposer un document » (SPEC-V2 15): a PDF, a JPEG or a PNG of 20 MB at
@@ -37,7 +30,7 @@ export function UploadForm({
   types,
 }: {
   propertyId: string;
-  /** The types offered, the ones of the checklist first. */
+  /** The types offered, the ones of the checklist first (never the DDT: it has its own deposit). */
   types: readonly DocumentType[];
 }) {
   const router = useRouter();
@@ -66,29 +59,12 @@ export function UploadForm({
     if (busy) return;
     setAdded(false);
     if (!file || !type || !title.trim()) return setError("invalid");
-    if (!isSaleFileMime(file.type)) return setError("unsupported");
-    if (file.size > SALE_FILE_MAX_BYTES) return setError("too_heavy");
     setBusy(true);
     setError(null);
     try {
-      const opened = await startDocumentUpload({
-        propertyId,
-        mimeType: file.type,
-        sizeBytes: file.size,
-      });
-      if (!opened.ok) return setError(opened.error);
-      // As the storage client sends a file to a signed upload URL.
-      const body = new FormData();
-      // A private document is never kept by a browser or a cache.
-      body.append("cacheControl", "0");
-      body.append("", file);
-      const sent = await fetch(opened.data.uploadUrl, {
-        method: "PUT",
-        body,
-        headers: { "x-upsert": "false" },
-      });
-      if (!sent.ok) return setError(sent.status === 413 ? "too_heavy" : "unavailable");
-      const filed = await fileDocument({ propertyId, path: opened.data.path, type, title });
+      const sent = await sendSaleFile(propertyId, file);
+      if (!sent.ok) return setError(sent.error);
+      const filed = await fileDocument({ propertyId, path: sent.path, type, title });
       if (!filed.ok) return setError(filed.error);
       setFile(null);
       setType("");

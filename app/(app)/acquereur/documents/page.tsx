@@ -110,12 +110,20 @@ export default async function BuyerDocumentsPage() {
                             {document.title}
                           </span>
                           <span className="text-lk-caption text-lk-ink-3 tabular">
-                            {fr.saleFile.types[document.type]}
-                            {" · "}
+                            {/* Not twice: a DDT is named after its type. */}
+                            {document.title === fr.saleFile.types[document.type]
+                              ? null
+                              : `${fr.saleFile.types[document.type]} · `}
                             {fr.saleFile.size(document.sizeBytes)}
                             {" · "}
                             {t.sharedOn(formatDateShort(document.sharedAt, now))}
                           </span>
+                          {/* A shared DDT: the diagnostics its seller says it holds. */}
+                          {document.covers.length > 0 ? (
+                            <span className="text-lk-caption text-pretty text-lk-ink-2">
+                              {t.covers(document.covers.map((type) => fr.saleFile.types[type]))}
+                            </span>
+                          ) : null}
                         </div>
                         <Button asChild variant="secondary" size="sm" className="shrink-0">
                           <a
