@@ -1,20 +1,29 @@
 import { describe, expect, it } from "vitest";
 import {
+  CO_OWNERSHIP_DOCUMENTS,
   DIAGNOSTIC_TYPES,
   DOCUMENT_CATEGORIES,
   DOCUMENT_CATEGORY,
+  DOCUMENT_ORDER,
+  DOCUMENT_STAGE,
+  DOCUMENT_STAGES,
   EXEMPTIBLE_DOCUMENTS,
   guessDocumentType,
-  REQUIRED_DOCUMENTS,
+  inCoOwnership,
+  NOTARY_FILE_STAGES,
+  OPTIONAL_DOCUMENTS,
+  PROPERTY_DOCUMENTS,
+  requiredDocuments,
   SALE_FILE_EXTENSIONS,
   SALE_FILE_MAX_BYTES,
   type DocumentType,
-  type PropertyType,
 } from "@/lib/config/documents";
+import { frSaleFile } from "@/lib/i18n/sections/saleFile";
 import { Constants } from "@/types/database";
 
 // L3-04: the lists of the sale file (SPEC-V2 15) against the types of the
-// database, and the type a file name suggests.
+// database, and the type a file name suggests. The categories and the stages
+// asked by Cédric on 2026-11-22 (DECISIONS.md 2026-11-23).
 
 const TYPES = Constants.public.Enums.document_type;
 const PROPERTY_TYPES = Constants.public.Enums.property_type;
@@ -29,38 +38,163 @@ describe("the documents of the sale file", () => {
     expect([...new Set(Object.values(DOCUMENT_CATEGORY))].sort()).toEqual(
       [...DOCUMENT_CATEGORIES].sort(),
     );
+    expect(DOCUMENT_CATEGORIES).toEqual(["property", "coownership", "notary"]);
+  });
+
+  it("the three categories of the client, in his order", () => {
+    const of = (category: string) =>
+      DOCUMENT_ORDER.filter((type) => DOCUMENT_CATEGORY[type] === category);
+    expect(of("property")).toEqual([
+      "titre_propriete",
+      "dpe",
+      "amiante",
+      "plomb",
+      "electricite",
+      "gaz",
+      "termites",
+      "erp",
+      "assainissement",
+      "carrez",
+      "certificat_urbanisme",
+      "taxe_fonciere",
+      "facture_travaux",
+    ]);
+    expect(of("coownership")).toEqual([
+      "reglement_copro",
+      "pv_ag",
+      "fiche_synthetique",
+      "carnet_entretien",
+      "plan_pluriannuel_travaux",
+      "appel_charges",
+      "pre_etat_date",
+    ]);
+    expect(of("notary")).toEqual(["etat_date", "autre"]);
+  });
+
+  it("every type has a stage: the listing, the agreement or the deed", () => {
+    expect(Object.keys(DOCUMENT_STAGE).sort()).toEqual([...TYPES].sort());
+    expect(DOCUMENT_STAGES).toEqual(["listing", "agreement", "deed"]);
+    const at = (stage: string) => DOCUMENT_ORDER.filter((type) => DOCUMENT_STAGE[type] === stage);
+    // The title deed, the diagnostics and the Carrez measurement from the listing.
+    expect(at("listing")).toEqual([
+      "titre_propriete",
+      ...DOCUMENT_ORDER.filter((type) => DIAGNOSTIC_TYPES.includes(type)),
+      "certificat_urbanisme",
+    ]);
+    // The tax, the works and the co-ownership before the agreement.
+    expect(at("agreement")).toEqual([
+      "taxe_fonciere",
+      "facture_travaux",
+      ...DOCUMENT_ORDER.filter((type) => DOCUMENT_CATEGORY[type] === "coownership"),
+    ]);
+    // The « état daté » and what the notary asks besides before the deed.
+    expect(at("deed")).toEqual(["etat_date", "autre"]);
+    // The notary file: what is asked for up to the agreement.
+    expect(NOTARY_FILE_STAGES).toEqual(["listing", "agreement"]);
+  });
+
+  it("every type, category and stage has its name", () => {
+    expect(Object.keys(frSaleFile.types).sort()).toEqual([...TYPES].sort());
+    expect(Object.keys(frSaleFile.categories).sort()).toEqual([...DOCUMENT_CATEGORIES].sort());
+    expect(Object.keys(frSaleFile.stages).sort()).toEqual([...DOCUMENT_STAGES].sort());
+    // The words of the client.
+    expect(frSaleFile.categories).toEqual({
+      property: "Documents du bien",
+      coownership: "Documents de copropriété",
+      notary: "Documents pour le notaire",
+    });
+    expect(frSaleFile.stages).toEqual({
+      listing: "Dès la mise en vente",
+      agreement: "Avant le compromis",
+      deed: "Avant la signature",
+    });
+  });
+
+  it("the documents to file of a stage: three named at most, « maintenant » up to the agreement", () => {
+    const t = frSaleFile.seller;
+    expect(t.missingNames([])).toBe("");
+    expect(t.missingNames(["DPE"])).toBe("DPE");
+    expect(t.missingNames(["DPE", "Titre de propriété", "Taxe foncière"])).toBe(
+      "DPE, Titre de propriété, Taxe foncière",
+    );
+    expect(t.missingNames(["A", "B", "C", "D"])).toBe("A, B, C et 1 autre");
+    expect(t.missingNames(["A", "B", "C", "D", "E", "F"])).toBe("A, B, C et 3 autres");
+    expect(t.stageProgress(0, 1)).toBe("0 sur 1 pièce");
+    expect(t.stageProgress(3, 9)).toBe("3 sur 9 pièces");
+    expect(t.stageMissing("3 sur 9 pièces", "DPE", true)).toBe(
+      "3 sur 9 pièces · À déposer maintenant : DPE",
+    );
+    // Before the deed: the « état daté » comes after the agreement, not now.
+    expect(t.stageMissing("0 sur 1 pièce", frSaleFile.types.etat_date, false)).toBe(
+      "0 sur 1 pièce · À déposer : État daté fourni par le syndic",
+    );
+    // The line offered and the type of the deposit share one name; no identity document in it.
+    expect(frSaleFile.types.autre).toBe("Documents complémentaires");
+    expect(t.lineHelp.autre).toContain("(hors pièces d'identité)");
   });
 
   it("every type of property has its list, of known types, each once", () => {
-    expect(Object.keys(REQUIRED_DOCUMENTS).sort()).toEqual([...PROPERTY_TYPES].sort());
+    expect(Object.keys(PROPERTY_DOCUMENTS).sort()).toEqual([...PROPERTY_TYPES].sort());
     for (const type of PROPERTY_TYPES) {
-      const list = REQUIRED_DOCUMENTS[type];
-      expect(new Set(list).size, type).toBe(list.length);
-      for (const document of list) expect(TYPES, `${type}: ${document}`).toContain(document);
-      // « Autre document » is never asked for.
-      expect(list, type).not.toContain("autre");
+      for (const coOwnership of [false, true]) {
+        const list = requiredDocuments(type, coOwnership);
+        expect(new Set(list).size, type).toBe(list.length);
+        for (const document of list) expect(TYPES, `${type}: ${document}`).toContain(document);
+        // « Documents complémentaires » is never asked for: it is offered.
+        expect(list, type).not.toContain("autre");
+        // In the order of the checklist.
+        expect(list).toEqual(DOCUMENT_ORDER.filter((document) => list.includes(document)));
+      }
     }
-    expect(REQUIRED_DOCUMENTS.appartement).toHaveLength(16);
-    expect(REQUIRED_DOCUMENTS.maison).toHaveLength(11);
-    expect(REQUIRED_DOCUMENTS.terrain).toHaveLength(4);
-    expect(REQUIRED_DOCUMENTS.autre).toEqual(REQUIRED_DOCUMENTS.maison);
+    expect(OPTIONAL_DOCUMENTS).toEqual(["autre"]);
+    expect(PROPERTY_DOCUMENTS.autre).toEqual(PROPERTY_DOCUMENTS.maison);
   });
 
-  it("every exemptible type is asked for at least one type of property", () => {
+  it("a flat is in a co-ownership; a house when its sheet gives lots; land never", () => {
+    expect(inCoOwnership("appartement", null)).toBe(true);
+    expect(inCoOwnership("maison", null)).toBe(false);
+    expect(inCoOwnership("maison", 0)).toBe(false);
+    expect(inCoOwnership("maison", 12)).toBe(true);
+    expect(inCoOwnership("autre", 4)).toBe(true);
+    expect(inCoOwnership(null, null)).toBe(false);
+    expect(inCoOwnership("terrain", 12)).toBe(false);
+
+    // A flat: 19 documents, the Carrez measurement and the co-ownership among them.
+    expect(requiredDocuments("appartement")).toHaveLength(19);
+    expect(requiredDocuments("appartement")).toEqual(requiredDocuments("appartement", true));
+    expect(requiredDocuments("appartement")).toEqual(
+      expect.arrayContaining([...CO_OWNERSHIP_DOCUMENTS]),
+    );
+    // A house: 11, and 20 in a co-ownership (the sanitation besides).
+    expect(requiredDocuments("maison")).toHaveLength(11);
+    expect(requiredDocuments("maison", true)).toHaveLength(20);
+    expect(requiredDocuments("maison", false)).not.toEqual(
+      expect.arrayContaining(["reglement_copro"]),
+    );
+    expect(requiredDocuments(null)).toEqual(requiredDocuments("maison"));
+    // Land: 4, whatever is said of a co-ownership.
+    expect(requiredDocuments("terrain")).toEqual([
+      "titre_propriete",
+      "erp",
+      "certificat_urbanisme",
+      "taxe_fonciere",
+    ]);
+    expect(requiredDocuments("terrain", true)).toEqual(requiredDocuments("terrain"));
+  });
+
+  it("every exemptible type is asked for at least one property", () => {
     expect(new Set(EXEMPTIBLE_DOCUMENTS).size).toBe(EXEMPTIBLE_DOCUMENTS.length);
-    for (const type of EXEMPTIBLE_DOCUMENTS) {
-      const askedFor = (Object.keys(REQUIRED_DOCUMENTS) as PropertyType[]).filter((property) =>
-        REQUIRED_DOCUMENTS[property].includes(type),
-      );
-      expect(askedFor.length, type).toBeGreaterThan(0);
-    }
+    const asked = new Set(PROPERTY_TYPES.flatMap((type) => requiredDocuments(type, true)));
+    for (const type of EXEMPTIBLE_DOCUMENTS) expect(asked, type).toContain(type);
     // Always asked for, whatever the property.
     for (const type of ["dpe", "erp", "titre_propriete", "taxe_fonciere"] as const) {
       expect(EXEMPTIBLE_DOCUMENTS, type).not.toContain(type);
     }
+    // Every document of a co-ownership may be « Non concerné » (a flat that is not in one).
+    for (const type of CO_OWNERSHIP_DOCUMENTS) expect(EXEMPTIBLE_DOCUMENTS, type).toContain(type);
   });
 
-  it("the diagnostics shared together are those of the category", () => {
+  it("the diagnostics shared together: the DDT and the measurement", () => {
     expect([...DIAGNOSTIC_TYPES].sort()).toEqual(
       [
         "amiante",
@@ -122,6 +256,11 @@ describe("guessDocumentType", () => {
     ["fiche_synthetique_copropriete.pdf", "fiche_synthetique"],
     ["Pré-état daté.pdf", "pre_etat_date"],
     ["pre_etat_date.pdf", "pre_etat_date"],
+    ["Plan pluriannuel de travaux 2025.pdf", "plan_pluriannuel_travaux"],
+    ["PPT_copropriete.pdf", "plan_pluriannuel_travaux"],
+    // The notary.
+    ["État daté syndic.pdf", "etat_date"],
+    ["etat_date.pdf", "etat_date"],
     // The works.
     ["Facture toiture 2021.pdf", "facture_travaux"],
     ["devis_chaudiere.pdf", "facture_travaux"],
@@ -144,7 +283,7 @@ describe("guessDocumentType", () => {
     expect(guessDocumentType("interphone.pdf")).toBeNull();
   });
 
-  it("only suggests types of the database, never « Autre document »", () => {
+  it("only suggests types of the database, never « Documents complémentaires »", () => {
     for (const [name] of cases) {
       const type = guessDocumentType(name);
       if (type !== null) expect(Constants.public.Enums.document_type).toContain(type);

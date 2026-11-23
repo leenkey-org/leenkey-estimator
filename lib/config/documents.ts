@@ -1,100 +1,181 @@
 import type { Database } from "@/types/database";
 
 // The sale file (SPEC-V2 15, decision of 2026-10-08; DECISIONS.md
-// 2026-11-18): the documents asked for by type of property, their category,
-// and those a seller may mark « Non concerné » (with a reason). Leenkey never
-// says a diagnostic is or is not due: the list is a help, to be confirmed by
-// the diagnostician and the notary.
+// 2026-11-18 and 2026-11-23): the documents asked for according to the
+// property, in three categories (« Documents du bien », « Documents de
+// copropriété », « Documents pour le notaire », asked by Cédric on
+// 2026-11-22), each with the stage of the sale it is needed for, and those a
+// seller may mark « Non concerné » (with a reason). Leenkey never says a
+// diagnostic is or is not due: the list is a help, to be confirmed by the
+// diagnostician and the notary.
 
 export type DocumentType = Database["public"]["Enums"]["document_type"];
 export type PropertyType = Database["public"]["Enums"]["property_type"];
-export type DocumentCategory = "diagnostics" | "ownership" | "coownership" | "works" | "other";
+export type DocumentCategory = "property" | "coownership" | "notary";
 
 export const DOCUMENT_CATEGORIES: readonly DocumentCategory[] = [
-  "diagnostics",
-  "ownership",
+  "property",
   "coownership",
-  "works",
-  "other",
+  "notary",
 ];
 
+/**
+ * The category of each type, in the order of the lines of the checklist (the
+ * order of the client: the title deed, the diagnostics, the Carrez
+ * measurement, the tax, the works; then the co-ownership; then the notary).
+ */
 export const DOCUMENT_CATEGORY: Record<DocumentType, DocumentCategory> = {
-  dpe: "diagnostics",
-  amiante: "diagnostics",
-  plomb: "diagnostics",
-  electricite: "diagnostics",
-  gaz: "diagnostics",
-  termites: "diagnostics",
-  erp: "diagnostics",
-  carrez: "diagnostics",
-  assainissement: "diagnostics",
-  titre_propriete: "ownership",
-  taxe_fonciere: "ownership",
-  certificat_urbanisme: "ownership",
-  pv_ag: "coownership",
+  titre_propriete: "property",
+  dpe: "property",
+  amiante: "property",
+  plomb: "property",
+  electricite: "property",
+  gaz: "property",
+  termites: "property",
+  erp: "property",
+  assainissement: "property",
+  carrez: "property",
+  certificat_urbanisme: "property",
+  taxe_fonciere: "property",
+  facture_travaux: "property",
   reglement_copro: "coownership",
-  appel_charges: "coownership",
-  carnet_entretien: "coownership",
+  pv_ag: "coownership",
   fiche_synthetique: "coownership",
+  carnet_entretien: "coownership",
+  plan_pluriannuel_travaux: "coownership",
+  appel_charges: "coownership",
   pre_etat_date: "coownership",
-  facture_travaux: "works",
-  autre: "other",
+  etat_date: "notary",
+  autre: "notary",
 };
 
-/** The documents of the notary file, in the order of the checklist. */
-export const REQUIRED_DOCUMENTS: Record<PropertyType, readonly DocumentType[]> = {
-  appartement: [
-    "dpe",
-    "amiante",
-    "plomb",
-    "electricite",
-    "gaz",
-    "erp",
-    "termites",
-    "carrez",
-    "titre_propriete",
-    "taxe_fonciere",
-    "pv_ag",
-    "reglement_copro",
-    "appel_charges",
-    "carnet_entretien",
-    "fiche_synthetique",
-    "pre_etat_date",
-  ],
-  maison: [
-    "dpe",
-    "amiante",
-    "plomb",
-    "electricite",
-    "gaz",
-    "erp",
-    "termites",
-    "assainissement",
-    "titre_propriete",
-    "taxe_fonciere",
-    "facture_travaux",
-  ],
-  terrain: ["erp", "titre_propriete", "taxe_fonciere", "certificat_urbanisme"],
-  // No list of its own: the one of a house.
-  autre: [
-    "dpe",
-    "amiante",
-    "plomb",
-    "electricite",
-    "gaz",
-    "erp",
-    "termites",
-    "assainissement",
-    "titre_propriete",
-    "taxe_fonciere",
-    "facture_travaux",
-  ],
+/** Every type, in the order of the lines of the checklist. */
+export const DOCUMENT_ORDER = Object.keys(DOCUMENT_CATEGORY) as DocumentType[];
+
+/**
+ * When a document is needed, so that a seller is not asked for everything at
+ * once: from the listing (« Dès la mise en vente »), before the preliminary
+ * sale agreement (« Avant le compromis »), before the deed (« Avant la
+ * signature »).
+ */
+export type DocumentStage = "listing" | "agreement" | "deed";
+
+export const DOCUMENT_STAGES: readonly DocumentStage[] = ["listing", "agreement", "deed"];
+
+/**
+ * The stage of each type (DECISIONS.md 2026-11-23, to be confirmed by Cédric,
+ * Q99): the title deed, the diagnostics and the Carrez measurement from the
+ * listing; the tax, the works and the documents of the co-ownership before
+ * the agreement; the statement of the managing agent (« état daté ») and
+ * what the notary asks besides before the deed.
+ */
+export const DOCUMENT_STAGE: Record<DocumentType, DocumentStage> = {
+  titre_propriete: "listing",
+  dpe: "listing",
+  amiante: "listing",
+  plomb: "listing",
+  electricite: "listing",
+  gaz: "listing",
+  termites: "listing",
+  erp: "listing",
+  assainissement: "listing",
+  carrez: "listing",
+  certificat_urbanisme: "listing",
+  taxe_fonciere: "agreement",
+  facture_travaux: "agreement",
+  reglement_copro: "agreement",
+  pv_ag: "agreement",
+  fiche_synthetique: "agreement",
+  carnet_entretien: "agreement",
+  plan_pluriannuel_travaux: "agreement",
+  appel_charges: "agreement",
+  pre_etat_date: "agreement",
+  etat_date: "deed",
+  autre: "deed",
 };
+
+/**
+ * The stages whose documents make the notary file (« Dossier notaire : 12 /
+ * 18 pièces », the task « Dossier notaire complet », documents.notary_ready):
+ * what the notary needs to write the agreement. The « état daté » comes
+ * after it, from the managing agent: it never holds the task back.
+ */
+export const NOTARY_FILE_STAGES: readonly DocumentStage[] = ["listing", "agreement"];
+
+/** A building: its title deed and its diagnostics. */
+const BUILDING: readonly DocumentType[] = [
+  "titre_propriete",
+  "dpe",
+  "amiante",
+  "plomb",
+  "electricite",
+  "gaz",
+  "termites",
+  "erp",
+];
+const HOUSE: readonly DocumentType[] = [
+  ...BUILDING,
+  "assainissement",
+  "taxe_fonciere",
+  "facture_travaux",
+];
+
+/** The documents asked for by type of property, whatever its co-ownership. */
+export const PROPERTY_DOCUMENTS: Record<PropertyType, readonly DocumentType[]> = {
+  appartement: [...BUILDING, "taxe_fonciere", "facture_travaux"],
+  maison: HOUSE,
+  terrain: ["titre_propriete", "erp", "certificat_urbanisme", "taxe_fonciere"],
+  // No list of its own: the one of a house.
+  autre: HOUSE,
+};
+
+/** Besides, for a property in a co-ownership: the Carrez measurement and the documents of the building. */
+export const CO_OWNERSHIP_DOCUMENTS: readonly DocumentType[] = [
+  "carrez",
+  "reglement_copro",
+  "pv_ag",
+  "fiche_synthetique",
+  "carnet_entretien",
+  "plan_pluriannuel_travaux",
+  "appel_charges",
+  "pre_etat_date",
+  "etat_date",
+];
+
+/**
+ * Always offered, never counted: what the notary asks besides (« éventuels
+ * documents complémentaires »).
+ */
+export const OPTIONAL_DOCUMENTS: readonly DocumentType[] = ["autre"];
+
+/**
+ * Whether the documents of a co-ownership are asked for: always for a flat
+ * (one that is not in a co-ownership marks them « Non concerné »), for a
+ * house or another property when its sheet gives a number of lots, never
+ * for land. Its charges say nothing: the field is « Charges », and a house
+ * outside a co-ownership may have some.
+ */
+export function inCoOwnership(type: PropertyType | null, coproLots: number | null): boolean {
+  if (type === "appartement") return true;
+  if (type === "terrain") return false;
+  return (coproLots ?? 0) > 0;
+}
+
+/** The documents asked for a property, in the order of the checklist. */
+export function requiredDocuments(
+  type: PropertyType | null,
+  coOwnership: boolean = type === "appartement",
+): DocumentType[] {
+  const asked = PROPERTY_DOCUMENTS[type ?? "autre"];
+  const all = coOwnership && type !== "terrain" ? [...asked, ...CO_OWNERSHIP_DOCUMENTS] : asked;
+  return DOCUMENT_ORDER.filter((document) => all.includes(document));
+}
 
 /**
  * May be « Non concerné »: depends on the building, its installations, its
  * place or its works; the documents of a co-ownership and the Carrez
- * measurement, for a flat that is not in one.
+ * measurement, for a flat that is not in one, or a plan of works the
+ * co-ownership does not have.
  */
 export const EXEMPTIBLE_DOCUMENTS: readonly DocumentType[] = [
   "amiante",
@@ -109,15 +190,25 @@ export const EXEMPTIBLE_DOCUMENTS: readonly DocumentType[] = [
   "appel_charges",
   "carnet_entretien",
   "fiche_synthetique",
+  "plan_pluriannuel_travaux",
   "pre_etat_date",
+  "etat_date",
   "facture_travaux",
   "certificat_urbanisme",
 ];
 
 /** The diagnostics, shared together by « Partager les diagnostics ». */
-export const DIAGNOSTIC_TYPES = (Object.keys(DOCUMENT_CATEGORY) as DocumentType[]).filter(
-  (type) => DOCUMENT_CATEGORY[type] === "diagnostics",
-);
+export const DIAGNOSTIC_TYPES: readonly DocumentType[] = [
+  "dpe",
+  "amiante",
+  "plomb",
+  "electricite",
+  "gaz",
+  "termites",
+  "erp",
+  "assainissement",
+  "carrez",
+];
 
 /**
  * After how many months a document is shown « À actualiser » (L3-05, asked by
@@ -178,6 +269,8 @@ export function guessDocumentType(fileName: string): DocumentType | null {
     [/taxe.fonciere|fonciere/, "taxe_fonciere"],
     [/urbanisme|bornage/, "certificat_urbanisme"],
     [/pre.?etat/, "pre_etat_date"],
+    [/etat.date/, "etat_date"],
+    [/pluriannuel|\bppt\b|\bpppt\b/, "plan_pluriannuel_travaux"],
     [/pv|proces.verbal|\bag\b|assemblee/, "pv_ag"],
     [/reglement/, "reglement_copro"],
     [/appel|charges/, "appel_charges"],

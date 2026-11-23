@@ -18,7 +18,7 @@ import {
   shareSchema,
   uploadStartSchema,
 } from "@/lib/validations/sale-file";
-import { buildChecklist, sniffSaleFile } from "./checklist";
+import { buildChecklist, checklistProperty, sniffSaleFile } from "./checklist";
 
 // What a seller and a buyer do with the sale file (L3-04, SPEC-V2 15). A
 // document weighs up to 20 MB, more than a server action carries: the
@@ -92,16 +92,18 @@ async function fileKind(supabase: Client, path: string) {
 }
 
 /**
- * Declares the notary file complete once every mandatory document is filed
- * or « Non concerné ». The task stays ticked when a document is removed
- * afterwards (as every task of the sale: an event passed), while the tab
- * shows the count as it is (DECISIONS.md 2026-11-18).
+ * Declares the notary file complete once every document asked for from the
+ * listing and before the agreement is filed or « Non concerné » (the « état
+ * daté », asked for before the deed, does not hold it back: DECISIONS.md
+ * 2026-11-23). The task stays ticked when a document is removed afterwards
+ * (as every task of the sale: an event passed), while the tab shows the
+ * count as it is (DECISIONS.md 2026-11-18).
  */
 async function declareIfComplete(supabase: Client, propertyId: string, userId: string) {
   const [property, documents, exemptions] = await Promise.all([
     supabase
       .from("properties")
-      .select("type, dpe_exempt, dpe_exemption_reason")
+      .select("type, copro_lots, dpe_exempt, dpe_exemption_reason")
       .eq("id", propertyId)
       .maybeSingle(),
     supabase
@@ -113,7 +115,10 @@ async function declareIfComplete(supabase: Client, propertyId: string, userId: s
   ]);
   if (property.error || documents.error || exemptions.error) return;
   const checklist = buildChecklist(
-    (property.data?.type ?? null) as PropertyType | null,
+    checklistProperty({
+      type: (property.data?.type ?? null) as PropertyType | null,
+      coproLots: property.data?.copro_lots ?? null,
+    }),
     (documents.data ?? []).map((row) => ({
       id: row.id,
       type: row.type,

@@ -1,6 +1,6 @@
 import "server-only";
 import type { FinancingStatus } from "@/components/shared/financing-badge";
-import type { DocumentType, PropertyType } from "@/lib/config/documents";
+import type { DocumentType } from "@/lib/config/documents";
 import { createClient } from "@/lib/supabase/server";
 import {
   buyerSummary,
@@ -8,7 +8,7 @@ import {
   type BuyerSummary,
   type SellerAnalysis,
 } from "./analysis-view";
-import { buildChecklist, type Checklist } from "./checklist";
+import { buildChecklist, type Checklist, type ChecklistProperty } from "./checklist";
 
 // The sale file as its parties read it (L3-04, SPEC-V2 15), with the session
 // of the user (RLS): the seller the documents, the « Non concerné », the
@@ -60,7 +60,8 @@ export type SellerSaleFile = {
 
 export async function sellerSaleFile(
   propertyId: string,
-  propertyType: PropertyType | null,
+  /** Its type, and whether it is in a co-ownership (checklistProperty). */
+  property: ChecklistProperty,
   /** Not subject to the DPE (L1-65): its reason. */
   dpeExemption: string | null = null,
 ): Promise<QueryResult<SellerSaleFile>> {
@@ -123,7 +124,7 @@ export async function sellerSaleFile(
   return {
     ok: true,
     data: {
-      checklist: buildChecklist(propertyType, filed, exemptions.data ?? [], dpeExemption),
+      checklist: buildChecklist(property, filed, exemptions.data ?? [], dpeExemption),
       documents: rows,
       contacts: (buyers.data ?? []).map((buyer) => ({
         buyerId: buyer.buyer_id,

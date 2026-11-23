@@ -1,6 +1,8 @@
 // The sale file (L3-04, SPEC-V2 15): the tab « Documents » of a property, the
 // documents shared with a buyer. Leenkey never says a diagnostic is or is
-// not due (Cédric, 2026-11-09): the list is a help.
+// not due (Cédric, 2026-11-09): the list is a help. The categories, the
+// stages and the names of the documents are those of Cédric (2026-11-22,
+// DECISIONS.md 2026-11-23).
 export const frSaleFile = {
   types: {
     dpe: "DPE",
@@ -10,26 +12,32 @@ export const frSaleFile = {
     gaz: "Diagnostic gaz",
     termites: "État relatif aux termites",
     erp: "État des risques (ERP)",
-    carrez: "Mesurage Carrez",
+    carrez: "Mesurage loi Carrez",
     assainissement: "Diagnostic assainissement",
     titre_propriete: "Titre de propriété",
     taxe_fonciere: "Taxe foncière",
     certificat_urbanisme: "Certificat d'urbanisme ou bornage",
-    pv_ag: "PV des 3 dernières assemblées générales",
+    pv_ag: "PV des assemblées générales des 3 dernières années",
     reglement_copro: "Règlement de copropriété et état descriptif de division",
-    appel_charges: "Appels de charges (2 dernières années)",
-    carnet_entretien: "Carnet d'entretien de l'immeuble",
-    fiche_synthetique: "Fiche synthétique de la copropriété",
+    appel_charges: "Informations financières et charges de copropriété",
+    carnet_entretien: "Carnet d'entretien",
+    fiche_synthetique: "Fiche synthétique de copropriété",
+    plan_pluriannuel_travaux: "Plan pluriannuel de travaux",
     pre_etat_date: "Pré-état daté",
-    facture_travaux: "Factures des travaux de moins de 10 ans",
-    autre: "Autre document",
+    etat_date: "État daté fourni par le syndic",
+    facture_travaux: "Factures et justificatifs de travaux",
+    autre: "Documents complémentaires",
   },
   categories: {
-    diagnostics: "Diagnostics",
-    ownership: "Propriété",
-    coownership: "Copropriété",
-    works: "Travaux",
-    other: "Autres documents",
+    property: "Documents du bien",
+    coownership: "Documents de copropriété",
+    notary: "Documents pour le notaire",
+  },
+  // When a document is needed: on each line, and to filter the list.
+  stages: {
+    listing: "Dès la mise en vente",
+    agreement: "Avant le compromis",
+    deed: "Avant la signature",
   },
   seller: {
     metaTitle: "Documents",
@@ -38,11 +46,57 @@ export const frSaleFile = {
       "Rassemblez ici les pièces de votre vente. Vous choisissez ce que vous partagez, et avec qui : un acquéreur ne voit un document que si vous le partagez avec lui.",
     disclaimer:
       "Cette liste est une aide : les pièces à fournir dépendent de votre bien. Faites-la confirmer par votre diagnostiqueur certifié et votre notaire.",
+    // Under the count of the notary file, when a document is asked for after it.
+    notaryScope:
+      "Le dossier notaire compte les pièces à réunir avant le compromis. L'état daté vient ensuite, avant la signature.",
+    stagesTitle: "Les étapes de votre dossier",
+    stagesIntro:
+      "Vous n'avez pas à tout réunir d'emblée : chaque pièce est demandée au moment où elle sert.",
+    stageStates: { done: "Complet", current: "En cours", todo: "À venir" },
+    stageProgress: (done: number, total: number) =>
+      `${done} sur ${total} ${total > 1 ? "pièces" : "pièce"}`,
+    // The documents to file of a stage, three named at most: « DPE,
+    // Diagnostic amiante, Diagnostic plomb et 4 autres ».
+    missingNames: (names: readonly string[]) => {
+      const more = names.length - 3;
+      return more > 0
+        ? `${names.slice(0, 3).join(", ")} et ${more} ${more > 1 ? "autres" : "autre"}`
+        : names.join(", ");
+    },
+    // « maintenant » up to the agreement only: the « état daté » comes after it.
+    stageMissing: (progress: string, names: string, now: boolean) =>
+      `${progress} · ${now ? "À déposer maintenant" : "À déposer"} : ${names}`,
+    categoryProgress: (done: number, total: number) => `${done} sur ${total}`,
+    filter: { label: "Filtrer les pièces par étape", all: "Toutes" },
+    // Under the title of a category.
+    categoryHelp: {
+      property:
+        "Les diagnostics forment votre dossier de diagnostics techniques (DDT) : déposez-les un par un.",
+      coownership:
+        "Votre syndic vous remet la plupart de ces pièces. Si votre bien n'est pas en copropriété, indiquez « Non concerné ».",
+    },
+    // A word on a line, after the stage it is needed for.
+    lineHelp: {
+      carrez: "Pour un lot de copropriété.",
+      plan_pluriannuel_travaux: "S'il existe.",
+      appel_charges: "Vos appels de charges des 2 dernières années, par exemple.",
+      autre: "Ce que votre notaire vous demande en plus (hors pièces d'identité).",
+    },
+    // Never filed on Leenkey: an information, no deposit (DECISIONS.md 2026-11-23).
+    identity: {
+      title: "À préparer pour votre notaire",
+      text: "Pièces d'identité et situation des vendeurs (état civil, régime matrimonial). Ces pièces ne se déposent pas sur Leenkey : vous les remettez directement à votre notaire.",
+    },
     loadError: "Les documents n'ont pas pu être chargés. Rechargez la page.",
     progress: (done: number, total: number) => `Dossier notaire : ${done} / ${total} pièces`,
     complete: "Dossier notaire complet",
-    states: { filed: "Déposé", exempt: "Non concerné", missing: "À déposer" },
-    optional: "En plus du dossier notaire",
+    states: {
+      filed: "Déposé",
+      exempt: "Non concerné",
+      missing: "À déposer",
+      optional: "Facultatif",
+    },
+    optional: "En plus des pièces demandées",
     filedOn: (date: string) => `Déposé le ${date}`,
     open: "Ouvrir",
     openAbout: (title: string) => `Ouvrir ${title}`,
