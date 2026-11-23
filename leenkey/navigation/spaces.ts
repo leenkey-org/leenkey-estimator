@@ -55,6 +55,8 @@ export const ROUTES = {
   adminOffers: "/admin/offres",
   adminReports: "/admin/signalements",
   adminMessages: "/admin/messages",
+  /** The interventions of the adviser, beside the conversations (DECISIONS.md 2026-11-23). */
+  adminInterventions: "/admin/messages/interventions",
   adminAssistant: "/admin/assistant",
 } as const;
 

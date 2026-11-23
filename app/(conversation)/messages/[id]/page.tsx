@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireProfile } from "@/core/auth/session";
 import { listThreadMessages } from "@/core/messaging/queries";
+import { canRequestIntervention, interventionsHref } from "@/leenkey/advisor/interventions";
+import { propertyInterventions } from "@/leenkey/advisor/queries";
 import { ConversationView } from "@/leenkey/messaging/components/conversation-view";
 import { InboxPane } from "@/leenkey/messaging/components/inbox-pane";
 import { InboxRefresh } from "@/leenkey/messaging/components/inbox-refresh";
@@ -23,10 +26,11 @@ import {
 import { sheetHref } from "@/leenkey/properties/sheet";
 import { invitationLink } from "@/leenkey/visits/queries";
 import { capitalize } from "@/lib/format";
+import { frAdvisorInterventions } from "@/lib/i18n/sections/advisorInterventions";
 import { frMessaging } from "@/lib/i18n/sections/messaging";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { messaging: frMessaging } as const;
+const fr = { advisorInterventions: frAdvisorInterventions, messaging: frMessaging } as const;
 
 const t = fr.messaging;
 
@@ -68,6 +72,11 @@ export default async function ConversationPage({ params, searchParams }: Props) 
   const advisor = conversation.kind === "advisor";
   const names = advisor ? await threadSenders(id) : {};
   const heading = conversationHeading(conversation, now);
+  // The interventions the plan sells (DECISIONS.md 2026-11-23): their counter
+  // and the way to ask for one, above the field; unread: the conversation without them.
+  const interventions =
+    advisor && !conversation.closed ? await propertyInterventions(conversation.propertyId) : null;
+  const counter = interventions?.ok ? interventions.data : null;
   // Visits (L3-02): the seller invites from the field; the buyer books from the notice.
   const seller = conversation.role === "seller";
   const visits =
@@ -116,6 +125,24 @@ export default async function ConversationPage({ params, searchParams }: Props) 
           initialDraft={visit && !conversation.closed && !advisor ? t.start.visit : ""}
           suggestions={conversation.role === "seller" && !advisor}
           visits={visits}
+          note={
+            counter ? (
+              <p className="flex flex-wrap items-center gap-x-2 text-lk-caption text-lk-ink-3">
+                <span className="tabular">
+                  {fr.advisorInterventions.counter(counter.used, counter.quota)}
+                </span>
+                <Link
+                  href={interventionsHref(conversation.propertyId)}
+                  // 44 px to touch, as the other links of the page (docs/DESIGN.md 15).
+                  className="inline-flex min-h-11 items-center font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
+                >
+                  {canRequestIntervention(counter)
+                    ? fr.advisorInterventions.entry.request
+                    : fr.advisorInterventions.entry.view}
+                </Link>
+              </p>
+            ) : undefined
+          }
           now={now.toISOString()}
         />
       </MessagesLayout>

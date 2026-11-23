@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarPlus, ChevronLeft } from "lucide-react";
@@ -81,6 +89,12 @@ export type ConversationViewProps = {
    * invitation while it is valid, under the notice of the invitation.
    */
   visits?: { invite: boolean; bookHref: string | null; manageHref: string | null };
+  /**
+   * A line above the field, while the conversation is open: the counter of
+   * the interventions of the adviser and « Demander une intervention »
+   * (DECISIONS.md 2026-11-23).
+   */
+  note?: ReactNode;
   /** Time of the server render, for the days of the thread. */
   now: string;
 };
@@ -107,6 +121,7 @@ export function ConversationView({
   initialDraft = "",
   suggestions = false,
   visits,
+  note,
   now,
 }: ConversationViewProps) {
   const router = useRouter();
@@ -434,6 +449,17 @@ export function ConversationView({
                 <InlineAlert tone="danger">{t.errors[error]}</InlineAlert>
               </div>
             ) : null}
+            {note ? (
+              <div
+                // Its link is 44 px high: no padding of its own above the field.
+                className={cn(
+                  "bg-lk-surface px-3",
+                  !(error || inviteNotice) && "border-t border-lk-line",
+                )}
+              >
+                {note}
+              </div>
+            ) : null}
             <Composer
               value={draft}
               onValueChange={(value) => {
@@ -464,7 +490,7 @@ export function ConversationView({
                   />
                 ) : undefined
               }
-              className={cn((error || inviteNotice) && "border-t-0")}
+              className={cn((error || inviteNotice || note) && "border-t-0")}
             />
           </>
         )}

@@ -3,9 +3,12 @@ import { frAdminCases } from "@/lib/i18n/sections/adminCases";
 import { frAdminListings } from "@/lib/i18n/sections/adminListings";
 import { frAdminReports } from "@/lib/i18n/sections/adminReports";
 import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
+import { frAdvisorInterventions } from "@/lib/i18n/sections/advisorInterventions";
 import type { AccountDecisionInput, CaseCommand, ReportCommand } from "@/lib/validations/admin";
+import type { InterventionCommand } from "@/lib/validations/advisor-intervention";
 import type { Database } from "@/types/database";
 import type { CaseCommandResult } from "./cases/actions";
+import type { InterventionCommandResult } from "./interventions/actions";
 import type { ReportCommandResult } from "./reports/actions";
 import type { AccountDecisionResult } from "./users/actions";
 
@@ -15,6 +18,7 @@ const fr = {
   adminListings: frAdminListings,
   adminReports: frAdminReports,
   adminUsers: frAdminUsers,
+  advisorInterventions: frAdvisorInterventions,
 } as const;
 
 // What the back office says after a decision (listings L1-19, accounts
@@ -152,4 +156,33 @@ export function reportFeedback(
     sent: r.result.emailSent,
     failed: r.result.emailFailed,
   });
+}
+
+const i = fr.advisorInterventions.admin;
+
+const INTERVENTION_ERROR = {
+  invalid: i.errors.invalid,
+  forbidden: i.errors.forbidden,
+  not_found: i.errors.notFound,
+  conflict: i.errors.conflict,
+  unavailable: i.errors.unavailable,
+} as const;
+
+/**
+ * What an action on an intervention of the adviser says (DECISIONS.md
+ * 2026-11-23); null: no answer from the server. Changed meanwhile by another
+ * admin: a warning, the list is read again.
+ */
+export function interventionFeedback(
+  status: InterventionCommand["status"],
+  result: InterventionCommandResult | null,
+): Feedback {
+  if (!result) return { tone: "danger", text: i.errors.network, reload: true };
+  if (!result.ok) {
+    return {
+      tone: result.error === "conflict" ? "warning" : "danger",
+      text: INTERVENTION_ERROR[result.error],
+    };
+  }
+  return { tone: "success", text: i.result[status] };
 }

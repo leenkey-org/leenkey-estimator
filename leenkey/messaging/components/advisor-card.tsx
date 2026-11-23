@@ -2,16 +2,19 @@ import Link from "next/link";
 import { Lock } from "lucide-react";
 import { AdvisorAvatar } from "@/components/shared/advisor-avatar";
 import { Button } from "@/components/shared/button";
+import { canRequestIntervention, type InterventionSummary } from "@/leenkey/advisor/interventions";
 import { formatMessageTime } from "@/lib/format";
+import { frAdvisorInterventions } from "@/lib/i18n/sections/advisorInterventions";
 import { frMessaging } from "@/lib/i18n/sections/messaging";
 import { cn } from "@/lib/utils";
 import { messagePreview } from "../presentation";
 import type { ConversationSummary } from "../types";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { messaging: frMessaging } as const;
+const fr = { advisorInterventions: frAdvisorInterventions, messaging: frMessaging } as const;
 
 const t = fr.messaging.advisor;
+const i = fr.advisorInterventions;
 
 const cardClass = "flex flex-col gap-3 rounded-lk-xl border border-lk-line bg-lk-surface p-4";
 
@@ -21,16 +24,21 @@ const cardClass = "flex flex-col gap-3 rounded-lk-xl border border-lk-line bg-lk
  * the right (Autonomie, SPEC 8.6), the same card greyed (decision of
  * 2026-11-11): the adviser is there, « Accessible avec la formule
  * Accompagné », with the way to the plans; never a step of the sale held
- * back, never a disabled button (the text stays readable).
+ * back, never a disabled button (the text stays readable). With a plan that
+ * sells interventions (DECISIONS.md 2026-11-23): their counter, the initial
+ * appointment apart, and « Demander une intervention ».
  */
 export function AdvisorCard({
   conversation,
   plansHref,
+  interventions = null,
   now,
 }: {
   /** The open conversation with the adviser; null: the plan has no adviser. */
   conversation: ConversationSummary | null;
   plansHref: string;
+  /** The counter of the interventions of the plan and where they are asked for. */
+  interventions?: { summary: InterventionSummary; href: string } | null;
   now: Date;
 }) {
   if (!conversation) {
@@ -94,9 +102,27 @@ export function AdvisorCard({
           </div>
         </div>
       </div>
-      <Button asChild variant="secondary" className="md:self-start">
-        <Link href={`/messages/${conversation.id}`}>{t.write}</Link>
-      </Button>
+      {interventions ? (
+        // One under the other on a phone, side by side from 768 px.
+        <div className="flex flex-col gap-x-4 gap-y-0.5 border-t border-lk-line pt-3 text-lk-label text-lk-ink-2 md:flex-row md:flex-wrap">
+          <p className="font-semibold text-lk-ink tabular">
+            {i.counter(interventions.summary.used, interventions.summary.quota)}
+          </p>
+          <p>{i.initialMeeting[interventions.summary.initialMeeting]}</p>
+        </div>
+      ) : null}
+      <div className="flex flex-col gap-2 md:flex-row md:flex-wrap">
+        <Button asChild variant="secondary">
+          <Link href={`/messages/${conversation.id}`}>{t.write}</Link>
+        </Button>
+        {interventions ? (
+          <Button asChild variant="ghost">
+            <Link href={interventions.href}>
+              {canRequestIntervention(interventions.summary) ? i.entry.request : i.entry.view}
+            </Link>
+          </Button>
+        ) : null}
+      </div>
     </section>
   );
 }
