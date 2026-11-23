@@ -10,9 +10,11 @@ import { requireAdmin } from "@/core/auth/session";
 import { AccountModeration } from "@/leenkey/admin/components/account-moderation";
 import { AccountStatusBadge, RoleBadges } from "@/leenkey/admin/components/account-badges";
 import { FinancingCheck, FinancingFileDelete } from "@/leenkey/admin/components/financing-check";
+import { IdentityCheck, IdentityFileDelete } from "@/leenkey/admin/components/identity-check";
 import { ModerationFeedback } from "@/leenkey/admin/components/listing-moderation";
 import {
   adminFinancingDocuments,
+  adminIdentityDocuments,
   adminUser,
   fullName,
   type AdminUserDetail,
@@ -23,6 +25,7 @@ import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { frBuyerSpace } from "@/lib/i18n/sections/buyerSpace";
 import { frFinancingDocument } from "@/lib/i18n/sections/financingDocument";
 import { frFinancingStatus } from "@/lib/i18n/sections/financingStatus";
+import { frIdentityDocument } from "@/lib/i18n/sections/identityDocument";
 import { frListing } from "@/lib/i18n/sections/listing";
 import { frPropertyType } from "@/lib/i18n/sections/propertyType";
 import { adminOffersHref, adminUsersHref } from "@/lib/validations/admin";
@@ -35,6 +38,7 @@ const fr = {
   buyerSpace: frBuyerSpace,
   financingDocument: frFinancingDocument,
   financingStatus: frFinancingStatus,
+  identityDocument: frIdentityDocument,
   listing: frListing,
   propertyType: frPropertyType,
 } as const;
@@ -42,6 +46,7 @@ const fr = {
 const t = fr.adminUsers;
 const d = t.detail;
 const f = fr.financingDocument.admin;
+const idt = fr.identityDocument.admin;
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -127,8 +132,10 @@ const empty = "text-lk-secondary text-lk-ink-3";
 // metadata only, never their messages), its cases and its history
 // (audit_log); « Suspendre le compte » with a motive sent by email, or
 // « Réactiver le compte »; for a buyer, its proofs of financing with
-// « Marquer le justificatif comme vérifié » (L2-02); its offers, in the list
-// of the offers (L2-07). The page checks the admin role itself.
+// « Marquer le justificatif comme vérifié » (L2-02) and its identity document
+// with « Marquer comme vérifiée » or « Refuser » (DECISIONS.md 2026-11-23);
+// its offers, in the list of the offers (L2-07). The page checks the admin
+// role itself.
 export default async function AdminUserPage({ params }: Props) {
   const admin = await requireAdmin();
   const { id } = await params;
@@ -154,7 +161,12 @@ export default async function AdminUserPage({ params }: Props) {
   }
   if (!result.data) notFound();
   const user = result.data;
-  const documents = user.buyer ? await adminFinancingDocuments(user.id) : null;
+  const [documents, identities] = await Promise.all([
+    user.buyer ? adminFinancingDocuments(user.id) : null,
+    adminIdentityDocuments(user.id),
+  ]);
+  // Shown for a buyer, and for any account that deposited a document.
+  const showIdentity = Boolean(user.buyer) || !identities.ok || identities.data.length > 0;
   const name = nameOf(user);
   const now = new Date();
   const suspended = user.suspendedAt !== null;
@@ -358,6 +370,82 @@ export default async function AdminUserPage({ params }: Props) {
                       {document.checkedAt && !document.fileDeletedAt ? (
                         <FinancingFileDelete documentId={document.id} profileId={user.id} />
                       ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Section>
+        ) : null}
+
+        {showIdentity ? (
+          <Section id="identite" title={idt.title}>
+            {!identities.ok ? (
+              <p className={empty}>{d.error}</p>
+            ) : identities.data.length === 0 ? (
+              <p className={empty}>{idt.empty}</p>
+            ) : (
+              <ul className={`flex flex-col divide-y divide-lk-line ${box}`}>
+                {identities.data.map((document) => {
+                  const ended = document.checkedAt ?? document.refusedAt ?? document.withdrawnAt;
+                  return (
+                    <li key={document.id} className="flex flex-col gap-3 p-4">
+                      <div className="flex flex-col gap-0.5">
+                        <p className="text-lk-label font-semibold text-lk-ink">
+                          {fr.identityDocument.types[document.type]}
+                          <span className="font-normal text-lk-ink-3">
+                            {" · "}
+                            {document.checkedAt
+                              ? idt.checked(
+                                  formatDateShort(document.checkedAt, now),
+                                  document.decidedByName,
+                                )
+                              : document.refusedAt
+                                ? idt.refused(
+                                    formatDateShort(document.refusedAt, now),
+                                    document.decidedByName,
+                                  )
+                                : document.withdrawnAt
+                                  ? idt.withdrawn(formatDateShort(document.withdrawnAt, now))
+                                  : idt.toCheck}
+                          </span>
+                        </p>
+                        <p className="text-lk-caption text-lk-ink-3">
+                          {idt.filed(formatDateShort(document.createdAt, now))}
+                        </p>
+                        {document.refusalReason ? (
+                          <p className="text-lk-secondary whitespace-pre-line text-lk-ink-2">
+                            <span className="font-semibold">{idt.reason} : </span>
+                            {document.refusalReason}
+                          </p>
+                        ) : null}
+                        {document.note ? (
+                          <p className="text-lk-secondary whitespace-pre-line text-lk-ink-2">
+                            <span className="font-semibold">{idt.note} : </span>
+                            {document.note}
+                          </p>
+                        ) : null}
+                      </div>
+                      {document.fileDeletedAt ? (
+                        <p className="text-lk-caption text-lk-ink-3">
+                          {idt.fileDeleted(formatDateShort(document.fileDeletedAt, now))}
+                        </p>
+                      ) : ended ? (
+                        // Its end reached, its file still stored: the deletion, tried again.
+                        <IdentityFileDelete documentId={document.id} profileId={user.id} />
+                      ) : (
+                        <>
+                          <a
+                            href={`/documents/identite/${document.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex min-h-11 items-center self-start text-lk-secondary font-semibold text-lk-blue underline-offset-2 hover:underline"
+                          >
+                            {idt.open}
+                          </a>
+                          <IdentityCheck documentId={document.id} profileId={user.id} />
+                        </>
+                      )}
                     </li>
                   );
                 })}

@@ -37,7 +37,7 @@ export type AdminActivity = {
 
 /** Something that waits for the admin, the oldest first. */
 export type AdminTodoItem = {
-  kind: "listing" | "case" | "report" | "financing";
+  kind: "listing" | "case" | "report" | "financing" | "identity";
   id: string;
   /** The listing (« Maison 5 pièces · LK-0006 »), the subject of a case, the motive of a report. */
   label: string;
@@ -146,13 +146,14 @@ export function mergeTodo(groups: readonly AdminTodoItem[][], limit: number = TO
 
 /**
  * « À traiter » (SPEC 17): the listings to review, the open cases, the open
- * reports and the proofs of financing to check (L2-02), the oldest first.
+ * reports, the proofs of financing to check (L2-02) and the identity
+ * documents to check (DECISIONS.md 2026-11-23), the oldest first.
  */
 export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult<AdminTodoItem[]>> {
   await requireAdmin();
   try {
     const supabase = await createClient();
-    const [listings, cases, reports, proofs] = await Promise.all([
+    const [listings, cases, reports, proofs, identities] = await Promise.all([
       supabase
         .from("listings")
         .select(
@@ -185,11 +186,23 @@ export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult
         .is("deleted_at", null)
         .order("created_at", { ascending: true })
         .limit(limit),
+      // The identity documents that wait for their check (one per buyer).
+      supabase
+        .from("identity_documents")
+        .select(
+          "id, buyer_id, created_at, buyer:profiles!identity_documents_buyer_id_fkey(first_name, last_name)",
+        )
+        .is("checked_at", null)
+        .is("refused_at", null)
+        .is("withdrawn_at", null)
+        .order("created_at", { ascending: true })
+        .limit(limit),
     ]);
     if (listings.error) throw new Error(`listings: ${listings.error.code}`);
     if (cases.error) throw new Error(`cases: ${cases.error.code}`);
     if (reports.error) throw new Error(`reports: ${reports.error.code}`);
     if (proofs.error) throw new Error(`financing: ${proofs.error.code}`);
+    if (identities.error) throw new Error(`identity: ${identities.error.code}`);
     return {
       ok: true,
       data: mergeTodo(
@@ -218,6 +231,17 @@ export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult
           proofs.data.map((row) => ({
             kind: "financing" as const,
             // The sheet of the buyer: where the document is checked.
+            id: row.buyer_id,
+            label: shortLabel(
+              [row.buyer?.first_name, row.buyer?.last_name].filter(Boolean).join(" ") ||
+                fr.adminUsers.noName,
+            ),
+            since: row.created_at,
+            coverPath: null,
+          })),
+          identities.data.map((row) => ({
+            kind: "identity" as const,
+            // The sheet of the buyer too.
             id: row.buyer_id,
             label: shortLabel(
               [row.buyer?.first_name, row.buyer?.last_name].filter(Boolean).join(" ") ||

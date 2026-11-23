@@ -183,6 +183,7 @@ export type BookError =
   | "tooLate"
   | "already"
   | "offline"
+  | "identity"
   | "unavailable";
 export type BookResult = { ok: true; data: { visitId: string } } | { ok: false; error: BookError };
 
@@ -200,6 +201,8 @@ export async function bookVisit(input: unknown): Promise<BookResult> {
     if (error.code === "42501") return { ok: false, error: "expired" };
     if (error.code === "23P01") return { ok: false, error: "full" };
     if (error.code === "23505") return { ok: false, error: "already" };
+    // No identity document deposited (DECISIONS.md 2026-11-23): the form leads to the deposit.
+    if (error.code === "55000") return { ok: false, error: "identity" };
     if (error.code === "22023") {
       return {
         ok: false,

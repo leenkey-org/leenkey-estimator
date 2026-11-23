@@ -101,6 +101,10 @@ const POLICIES: Record<string, EmailPolicy> = {
   "offer.received_team": { audience: "team", throttleMinutes: 20 },
   "financing.checked": { audience: "recipient", throttleMinutes: 0 },
   "report.handled": { audience: "recipient", throttleMinutes: 0 },
+  // 2026-11-23: an identity document checked or refused (its buyer): at once, always sent,
+  // the booking of a visit depends on it.
+  "identity.checked": { audience: "recipient", throttleMinutes: 0 },
+  "identity.refused": { audience: "recipient", throttleMinutes: 0 },
   // L3-02: an invitation to visit (the buyer), at once, unless the account turned the emails
   // of its conversations off: the invitation is also a notice of the conversation.
   "visit.invited": { audience: "recipient", preference: "email_messages", throttleMinutes: 0 },
@@ -441,6 +445,45 @@ async function financingChecked(email: PlannedEmail): Promise<RenderedEmail | nu
         t.scope,
       ],
       action: { href: absoluteUrl(last.link ?? "/acquereur/profil"), label: t.action },
+      why: t.why,
+      siteUrl: siteUrl(),
+    }),
+  );
+}
+
+/**
+ * An identity document checked or refused by the team, to its buyer:
+ * « vérifiée », never « validée »; the reason of a refusal as the team wrote
+ * it for them; never anything of the document itself.
+ */
+async function identityDecided(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  if (!last) return null;
+  const link = absoluteUrl(last.link ?? "/acquereur/profil#identite");
+  if (email.type === "identity.checked") {
+    const t = fr.emails.identityChecked;
+    return rendered(
+      t.subject,
+      AccountNoticeEmail({
+        firstName: email.firstName,
+        title: t.title,
+        paragraphs: [t.text, t.next],
+        action: { href: link, label: t.action },
+        why: t.why,
+        siteUrl: siteUrl(),
+      }),
+    );
+  }
+  const t = fr.emails.identityRefused;
+  // Written by the team: made safe for a mail client all the same.
+  const reason = emailSafeText(last.data.reason);
+  return rendered(
+    t.subject,
+    AccountNoticeEmail({
+      firstName: email.firstName,
+      title: t.title,
+      paragraphs: [t.text, ...(reason ? [t.reason(reason)] : []), t.next],
+      action: { href: link, label: t.action },
       why: t.why,
       siteUrl: siteUrl(),
     }),
@@ -969,6 +1012,9 @@ export function renderNotificationEmail(
       return financingChecked(email);
     case "report.handled":
       return reportHandled(email);
+    case "identity.checked":
+    case "identity.refused":
+      return identityDecided(email);
     case "visit.invited":
       return visitInvited(email);
     case "visit.booked":

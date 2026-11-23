@@ -263,6 +263,9 @@ create type acquisition_mode   as enum ('own_name','joint','sci','other');
 create type financing_mode     as enum ('no_loan','loan');
 create type financing_progress as enum ('not_presented','simulation_done','broker_consulted','agreement_in_principle','other');
 create type financing_document_type as enum ('accord_principe','attestation_courtier','simulation_bancaire','preuve_fonds_propres','autre');
+-- Vérification d'identité avant visite (DECISIONS.md 2026-11-23) ; jamais « validé »
+create type identity_document_type as enum ('carte_identite','passeport','titre_sejour');
+create type identity_status as enum ('not_provided','provided','checked');
 create type conversation_kind as enum ('listing','advisor');
 create type plan_feature as enum ('advisor','human_price_strategy','human_listing_review','human_offer_analysis','negotiation_support','sale_file_building','deep_document_review','notary_coordination','closing_follow_up');
 -- Interventions du conseiller (DECISIONS.md 2026-11-23)
@@ -344,6 +347,33 @@ create table financing_documents (
 );
 alter table buyer_profiles add constraint buyer_profiles_current_doc_fk
   foreign key (current_financing_document_id) references financing_documents(id);
+```
+
+Pièce d'identité d'un acquéreur, demandée avant une visite (ajoutée le 2026-11-23, `DECISIONS.md`, section 14) :
+
+```sql
+-- UNE pièce par acquéreur (celle en attente ou vérifiée). Rien n'est lu de la pièce : ni numéro, ni date.
+-- Statut (identity_status) calculé : pièce vérifiée = checked ; en attente = provided ; sinon not_provided.
+-- Jamais lue par l'assistant ni par l'analyse des documents (table à part de `documents`).
+create table identity_documents (
+  id uuid primary key default gen_random_uuid(),
+  buyer_id uuid not null references profiles(id) on delete cascade,
+  type identity_document_type not null,
+  storage_path text not null unique,   -- bucket 'documents', privé : {buyer_id}/identity/{uuid}.pdf|jpg
+  mime_type text not null,
+  size_bytes int not null,             -- 5 Mo au plus, comme un justificatif de financement
+  checked_at timestamptz,              -- « Identité vérifiée par Leenkey »
+  refused_at timestamptz,
+  refusal_reason text,                 -- motif lu par l'acquéreur (3 à 1 000 caractères)
+  withdrawn_at timestamptz,            -- retirée ou remplacée par l'acquéreur, ou compte fermé
+  decided_by uuid references profiles(id),  -- équipe seulement (lecture par colonne)
+  team_note text,                      -- note interne, équipe seulement
+  file_deleted_at timestamptz,         -- fichier supprimé dès la décision ou le retrait
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
+);
+create unique index identity_documents_current_idx on identity_documents (buyer_id)
+  where refused_at is null and withdrawn_at is null;
 ```
 
 Un acquéreur peut avoir plusieurs justificatifs dans le temps ; `buyer_profiles.current_financing_document_id` pointe vers celui en vigueur. `financing_status` passe à `document_provided` au dépôt et à `document_checked` quand l'admin marque le justificatif comme vérifié (fonction SQL `financing_document_check`, admin uniquement, écrite dans `audit_log`). Libellé affiché après contrôle : « Contrôlé par Leenkey le JJ/MM/AAAA ».
@@ -1048,6 +1078,7 @@ Matrice (L = lecture, E = écriture) :
 | `plan_entitlements` | L | L | L | L/E |
 | `upgrade_prompts` | — | L/E ses biens | — | L |
 | `advisor_interventions` | — | L ses biens, sans `team_note` ni `done_by` (lecture par colonne) ; création par `advisor_intervention_request` | — | L tous par `admin_advisor_interventions` ; statut par `admin_advisor_intervention_set` et `admin_advisor_initial_meeting`, écrits dans `audit_log` |
+| `identity_documents` | — | — (statut seul, par `buyer_identity_for_seller`, pour les acquéreurs invités ou ayant réservé) | L les siennes, sans `team_note` ni `decided_by` (lecture par colonne) ; dépôt et retrait par `identity_document_add` et `identity_document_remove` | L toutes par `admin_identity_documents` ; décision par `identity_document_check` et `identity_document_refuse` (tracées) |
 | `visit_slots` | — | L/E ses biens | L si invitation valide | L |
 | `visit_invitations` | — | L/E ses biens | L les siennes | L |
 | `visits` | — | L ses biens, E feedback | L/E les siennes | L |
@@ -1915,6 +1946,16 @@ Personne ne réserve une visite sans y avoir été invité par le vendeur. Le ve
 
 > **Mise en œuvre (L3-03, `DECISIONS.md` 2026-11-21).** Le lendemain d'une visite qui a eu lieu (non annulée, créneau terminé), l'acquéreur et le vendeur sont sollicités une fois (`visit.feedback_requested`, cloche et email, tâche `visit-feedback` de `pg_cron`). Sur `/visites/[id]`, pendant 7 jours après la visite : l'acquéreur donne son intérêt de 1 à 5 et un commentaire ; le vendeur les lit tels quels (page de la visite, visites passées de l'onglet « Visites ») et écrit une note que l'acquéreur ne lit jamais (`visit_seller_note`, droits par colonne). Ni moyenne ni classement. Étapes de vente : le premier créneau ouvert émet `visit_slot.created`, une visite qui a eu lieu émet `visit.done` (avec la demande du lendemain).
 
+### Pièce d'identité avant la visite
+
+Ajouté le 2026-11-23 (`DECISIONS.md`, règles provisoires, Q101).
+
+- **Dépôt** : l'acquéreur dépose une pièce d'identité (carte d'identité, passeport ou titre de séjour ; PDF ou image, limites du justificatif de financement) depuis « Mon projet d'achat » (`/acquereur/profil#identite`) ou depuis `/visites/reserver/[token]` quand elle manque. Statuts : « Pièce d'identité non déposée », « Pièce d'identité déposée », « Identité vérifiée par Leenkey » ; jamais « validé ».
+- **Réservation** : `visit_book` demande une pièce **déposée** (déposée ou vérifiée), jamais vérifiée : le délai de l'équipe ne bloque pas une visite. Sans pièce, la page de réservation affiche le dépôt à la place des créneaux. Une visite déjà réservée n'est jamais annulée. Aucun lien avec une formule.
+- **Contrôle** : dans le back office (section 17), « Marquer comme vérifiée » ou « Refuser » avec un motif lu par l'acquéreur ; il est prévenu par la cloche et par email. Le fichier est supprimé dès la décision ; restent le statut, le type et les dates. Rien n'est lu de la pièce.
+- **Vendeur** : dans l'onglet « Visites », un libellé pour les acquéreurs invités ou ayant réservé (« Identité vérifiée par Leenkey », « Pièce d'identité déposée, en cours de vérification », « Pièce d'identité non déposée »), jamais le fichier ni le type.
+- **IA** : la pièce n'est jamais transmise à l'assistant ni à l'analyse des documents (sections 12 et 21).
+
 ### Adresse
 
 L'adresse exacte n'est communiquée qu'à l'acquéreur qui a une visite confirmée : dans l'email de confirmation et sur la page de la visite. Jamais ailleurs.
@@ -2028,6 +2069,8 @@ Liste avec rôles, date d'inscription, biens, formule, statut de financement. Fi
 Mise en œuvre (L1-30a, `DECISIONS.md` 2026-11-03) : recherche (prénom, nom, email) et filtres (vendeurs, acquéreurs, équipe, suspendus) ; fiche sans les offres ni le justificatif de financement, qui arrivent avec le lot 2 (L2-02) ; un compte suspendu se connecte encore mais n'écrit plus, ses annonces restent en ligne (Q71).
 
 Mise en œuvre (L2-02, `DECISIONS.md` 2026-11-13) : section « Justificatif de financement » de la fiche d'un acquéreur (historique des documents, celui en vigueur, alerte au-delà de 3 mois, « Ouvrir le fichier », note interne, « Marquer le justificatif comme vérifié ») ; ligne « Justificatif de financement à contrôler » dans « À traiter » du tableau de bord.
+
+Pièce d'identité (ajouté le 2026-11-23, `DECISIONS.md`, section 14) : section « Pièce d'identité » de la fiche d'un compte (historique des pièces, « À vérifier », « Ouvrir le fichier » par URL signée de 10 minutes, note interne, « Marquer comme vérifiée », « Refuser » avec un motif envoyé à l'acquéreur, « Supprimer le fichier » si la suppression qui suit la décision a échoué) ; entrée « Pièce d'identité à vérifier » dans « À traiter » du tableau de bord ; actions tracées dans `audit_log` (`identity.check`, `identity.refuse`, `identity.file_deleted`). Jamais « Valider l'identité ».
 
 ### Dossiers `/admin/dossiers`
 
@@ -2168,7 +2211,7 @@ Usages : centre et zoom par défaut de la carte de recherche (Épinay-sur-Orge, 
 Règles de sécurité : `CLAUDE.md` section 11. Compléments :
 
 - **Données personnelles traitées** : identité, contact, bien (adresse), financement déclaratif et justificatif, messages, documents du bien, conversations avec l'assistant.
-- **Minimisation** : montants de financement jamais visibles du vendeur ; adresse exacte uniquement après visite confirmée ; justificatifs visibles uniquement du propriétaire et de l'admin.
+- **Minimisation** : montants de financement jamais visibles du vendeur ; adresse exacte uniquement après visite confirmée ; justificatifs visibles uniquement du propriétaire et de l'admin ; pièce d'identité (section 14) visible de son acquéreur et de l'admin seulement, fichier supprimé dès le contrôle, rien n'en est lu ni gardé, le vendeur n'en voit que le statut.
 - **Prestataires techniques (sous-traitants)** : liste de travail dans `docs/juridique/prestataires.md` (entité, rôle, données concernées, lieu de traitement, points à vérifier), à valider par l'avocat puis reprendre dans la politique de confidentialité. Supabase en région Paris (`eu-west-3`) pour staging et production.
 - **Anthropic** : jamais de justificatif de financement ni de pièce d'identité envoyé au modèle (section 12) ; jamais les montants de financement d'un acquéreur dans une réponse à un vendeur. Les conditions de conservation et d'usage des données de l'API sont à vérifier contractuellement avant toute mention publique (dossier juridique).
 - **Droits** : export JSON et suppression depuis `/compte` ; anonymisation à 30 jours.

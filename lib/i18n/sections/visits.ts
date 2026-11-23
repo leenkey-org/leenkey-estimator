@@ -149,6 +149,8 @@ export const frVisits = {
       tooLate: "Ce créneau commence dans moins de 2 h : il n'est plus réservable.",
       already: "Vous avez déjà une visite réservée pour ce bien.",
       offline: "Ce bien n'est plus en ligne.",
+      // The identity check before a visit (DECISIONS.md 2026-11-23).
+      identity: "Déposez d'abord une pièce d'identité pour réserver ce créneau.",
       unavailable: "Ça n'a pas fonctionné. Réessayez.",
     },
   },

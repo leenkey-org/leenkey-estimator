@@ -4,16 +4,20 @@ import { Button } from "@/components/shared/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { requireProfile } from "@/core/auth/session";
+import { IdentityDocumentCard } from "@/leenkey/buyers/components/identity-document-card";
+import { buyerIdentity } from "@/leenkey/buyers/identity";
+import { identityDeposited } from "@/leenkey/buyers/identity-status";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { BookingForm } from "@/leenkey/visits/components/booking-form";
 import { groupByDay, visitRange } from "@/leenkey/visits/dates";
 import { invitationForBooking } from "@/leenkey/visits/queries";
 import { formatDate } from "@/lib/format";
+import { frIdentityDocument } from "@/lib/i18n/sections/identityDocument";
 import { frVisits } from "@/lib/i18n/sections/visits";
 import { SpacePage } from "../../../_components/space-page";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { visits: frVisits } as const;
+const fr = { identityDocument: frIdentityDocument, visits: frVisits } as const;
 
 const t = fr.visits.booking;
 
@@ -30,15 +34,21 @@ type Props = { params: Promise<{ token: string }> };
 // The link of an invitation: its token, its expiry and the account are
 // checked (an account that is not the invited buyer finds nothing), then the
 // free slots grouped by day. The exact address comes with the confirmation.
+// A buyer who has not deposited an identity document (DECISIONS.md
+// 2026-11-23) deposits it here first, then chooses a slot: visit_book refuses
+// the booking otherwise; the check of the team is never waited for.
 export default async function BookVisitPage({ params }: Props) {
   const [{ token }, profile] = await Promise.all([params, requireProfile()]);
-  const result = await invitationForBooking(token, profile.id);
+  const [result, identity] = await Promise.all([
+    invitationForBooking(token, profile.id),
+    buyerIdentity(profile.id),
+  ]);
   const page = (children: React.ReactNode) => (
     <SpacePage title={t.title} roles={profile.roles} profileId={profile.id}>
       {children}
     </SpacePage>
   );
-  if (!result.ok) {
+  if (!result.ok || !identity.ok) {
     return page(
       <InlineAlert tone="danger" className="mt-6">
         {t.loadError}
@@ -111,6 +121,18 @@ export default async function BookVisitPage({ params }: Props) {
         >
           {t.empty}
         </InlineAlert>
+      ) : !identityDeposited(identity.data.status) ? (
+        <div className="flex flex-col gap-6">
+          <InlineAlert tone="info">
+            {[
+              fr.identityDocument.booking.required,
+              fr.identityDocument.booking.slots(invitation.slots.length),
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          </InlineAlert>
+          <IdentityDocumentCard initial={identity.data} />
+        </div>
       ) : (
         <BookingForm token={token} groups={groups} />
       )}

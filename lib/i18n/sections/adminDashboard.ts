@@ -36,6 +36,7 @@ export const frAdminDashboard = {
       case: "Dossier",
       report: "Signalement",
       financing: "Justificatif de financement à contrôler",
+      identity: "Pièce d'identité à vérifier",
     },
     since: (wait: string) => `En attente depuis ${wait}`,
     emptyTitle: "Rien à traiter",

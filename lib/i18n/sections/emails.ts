@@ -542,6 +542,26 @@ export const frEmails = {
     action: "Voir mon projet d'achat",
     why: "Vous recevez cet email parce que vous avez déposé un justificatif de financement sur Leenkey.",
   },
+  // 2026-11-23: the identity document of a buyer checked or refused by the
+  // team, to its buyer. « Vérifiée », never « validée »; never what the
+  // document says.
+  identityChecked: {
+    subject: "Votre identité est vérifiée",
+    title: "Votre identité est vérifiée",
+    text: "Nous avons vérifié la pièce d'identité que vous avez déposée : votre espace affiche désormais « Identité vérifiée par Leenkey ».",
+    next: "Les vendeurs dont vous visitez le bien voient cette mention, jamais le document. Nous supprimons le fichier après cette vérification et nous n'en gardons aucune information.",
+    action: "Voir mon projet d'achat",
+    why: "Vous recevez cet email parce que vous avez déposé une pièce d'identité sur Leenkey.",
+  },
+  identityRefused: {
+    subject: "Votre pièce d'identité est à déposer de nouveau",
+    title: "Nous n'avons pas pu vérifier votre pièce d'identité",
+    text: "Nous avons examiné la pièce d'identité que vous avez déposée et nous n'avons pas pu la vérifier.",
+    reason: (reason: string) => `Notre remarque : ${reason}`,
+    next: "Nous supprimons son fichier. Vos visites déjà réservées sont conservées ; pour en réserver une autre, déposez une nouvelle pièce depuis votre espace.",
+    action: "Déposer une pièce d'identité",
+    why: "Vous recevez cet email parce que vous avez déposé une pièce d'identité sur Leenkey.",
+  },
   // DECISIONS.md 2026-11-22: the request of the team to bring a listing into
   // line, its reminder 2 days before the deadline, the final notice of its
   // deletion. To its seller; an answer goes to Leenkey.

@@ -148,6 +148,8 @@ describe("wording of the notifications (from type and data)", () => {
         "document.needs_attention",
         "document.shared",
         "financing.checked",
+        "identity.checked",
+        "identity.refused",
         "listing.compliance_reminder",
         "listing.compliance_requested",
         "listing.deleted",

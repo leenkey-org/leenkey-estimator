@@ -397,3 +397,54 @@ export async function adminFinancingDocuments(
     return { ok: false, error: "unavailable" };
   }
 }
+
+/** An identity document as the team reads it: with its note and who decided. */
+export type AdminIdentityDocument = {
+  id: string;
+  type: Database["public"]["Enums"]["identity_document_type"];
+  isPdf: boolean;
+  createdAt: string;
+  checkedAt: string | null;
+  refusedAt: string | null;
+  /** The reason of a refusal, as its buyer reads it. */
+  refusalReason: string | null;
+  withdrawnAt: string | null;
+  decidedByName: string | null;
+  note: string | null;
+  /** When its file was deleted: after the decision, or with its withdrawal. */
+  fileDeletedAt: string | null;
+};
+
+/** The identity documents of an account, the most recent first (admin_identity_documents). */
+export async function adminIdentityDocuments(
+  buyerId: string,
+): Promise<QueryResult<AdminIdentityDocument[]>> {
+  await requireAdmin();
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("admin_identity_documents", {
+      p_buyer_id: buyerId,
+    });
+    if (error) throw new Error(`admin_identity_documents: ${error.code} ${error.message}`);
+    return {
+      ok: true,
+      data: data.map((row) => ({
+        id: row.id,
+        type: row.type,
+        isPdf: row.mime_type === "application/pdf",
+        createdAt: row.created_at,
+        // Generated types declare the columns of a function result as never null.
+        checkedAt: (row.checked_at as string | null) ?? null,
+        refusedAt: (row.refused_at as string | null) ?? null,
+        refusalReason: (row.refusal_reason as string | null) ?? null,
+        withdrawnAt: (row.withdrawn_at as string | null) ?? null,
+        decidedByName: (row.decided_by_name as string | null) ?? null,
+        note: (row.team_note as string | null) ?? null,
+        fileDeletedAt: (row.file_deleted_at as string | null) ?? null,
+      })),
+    };
+  } catch (error) {
+    logFailure("identity documents", error, { entity_id: buyerId });
+    return { ok: false, error: "unavailable" };
+  }
+}

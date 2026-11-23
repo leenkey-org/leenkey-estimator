@@ -105,3 +105,19 @@ update public.buyer_profiles
  where profile_id = '5eed0000-0000-4000-8000-00000000000d'
    and (project, target_cities, budget_max_cents, down_payment_cents, loan_needed, loan_amount_cents, situation_note)
        is distinct from (null::public.buyer_project, null::text[], null::bigint, null::bigint, null::boolean, null::bigint, null::text);
+
+-- buyer_c: an identity document checked by the team, its file deleted as
+-- after any check (no file is seeded): the visits of the demo and of the
+-- tests are booked by this account (identity check before a visit,
+-- DECISIONS.md 2026-11-23). buyer_d has deposited none. Left as it is when
+-- the account already has a document (the recette, a test).
+insert into public.identity_documents
+  (id, buyer_id, type, storage_path, mime_type, size_bytes, checked_at, decided_by, file_deleted_at, created_at)
+select '5eedd000-0000-4000-8000-00000000000c', '5eed0000-0000-4000-8000-00000000000c', 'carte_identite',
+       '5eed0000-0000-4000-8000-00000000000c/identity/5eedd000-0000-4000-8000-00000000000c.pdf',
+       'application/pdf', 1, now() - interval '10 days', '5eed0000-0000-4000-8000-0000000000ad',
+       now() - interval '10 days', now() - interval '12 days'
+ where not exists (select 1 from public.identity_documents
+                    where buyer_id = '5eed0000-0000-4000-8000-00000000000c'
+                      and refused_at is null and withdrawn_at is null)
+on conflict (id) do nothing;

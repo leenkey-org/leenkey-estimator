@@ -63,3 +63,16 @@ language sql security definer set search_path = '' as $$
 $$;
 grant usage on schema tests to anon, authenticated;
 grant execute on function tests.dpe(uuid) to anon, authenticated;
+
+-- An identity document deposited by a fixture (identity check before a visit,
+-- DECISIONS.md 2026-11-23): what visit_book asks before a booking, for the
+-- tests that are not about the identity itself (rls_identity_documents.sql
+-- is). No file behind it. Security definer: called under any role.
+create or replace function tests.identity(p_name text) returns void
+language sql security definer set search_path = '' as $$
+  insert into public.identity_documents (buyer_id, type, storage_path, mime_type, size_bytes)
+  values (tests.uid(p_name), 'carte_identite',
+          tests.uid(p_name)::text || '/identity/' || gen_random_uuid()::text || '.pdf',
+          'application/pdf', 1000);
+$$;
+grant execute on function tests.identity(text) to anon, authenticated;

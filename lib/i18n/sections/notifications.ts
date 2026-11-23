@@ -194,6 +194,18 @@ export const frNotifications = {
       detail:
         "Votre dossier affiche « Justificatif vérifié ». Nous supprimons le fichier après ce contrôle.",
     },
+    // 2026-11-23: the identity document of a buyer checked or refused by the
+    // team, for its buyer. « Vérifiée », never « validée ».
+    identityChecked: {
+      title: "Votre identité est vérifiée",
+      detail:
+        "Votre espace affiche « Identité vérifiée par Leenkey ». Nous supprimons le fichier après cette vérification.",
+    },
+    identityRefused: {
+      title: "Votre pièce d'identité n'a pas pu être vérifiée",
+      detail: (reason: string | null) =>
+        reason ? `Notre remarque : ${reason}` : "Déposez une autre pièce pour réserver une visite.",
+    },
     // 2026-11-21: a report handled by the team, for its author. Never what was decided.
     reportHandled: {
       title: "Votre signalement a été traité",
