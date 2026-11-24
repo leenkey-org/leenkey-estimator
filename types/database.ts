@@ -633,6 +633,7 @@ export type Database = {
           analysis_retried_at: string[]
           analysis_started_at: string | null
           analyzed_at: string | null
+          covers: Database["public"]["Enums"]["document_type"][]
           created_at: string
           deleted_at: string | null
           extracted_text: string | null
@@ -657,6 +658,7 @@ export type Database = {
           analysis_retried_at?: string[]
           analysis_started_at?: string | null
           analyzed_at?: string | null
+          covers?: Database["public"]["Enums"]["document_type"][]
           created_at?: string
           deleted_at?: string | null
           extracted_text?: string | null
@@ -681,6 +683,7 @@ export type Database = {
           analysis_retried_at?: string[]
           analysis_started_at?: string | null
           analyzed_at?: string | null
+          covers?: Database["public"]["Enums"]["document_type"][]
           created_at?: string
           deleted_at?: string | null
           extracted_text?: string | null
@@ -3475,6 +3478,10 @@ export type Database = {
         Args: { p_path: string }
         Returns: number
       }
+      ddt_coverage: {
+        Args: { p_covers: Database["public"]["Enums"]["document_type"][] }
+        Returns: Database["public"]["Enums"]["document_type"][]
+      }
       document_access_answer: {
         Args: { p_request: string; p_documents?: string[]; p_grant: boolean }
         Returns: number
@@ -3489,6 +3496,7 @@ export type Database = {
           p_title: string
           p_storage_path: string
           p_property: string
+          p_covers?: Database["public"]["Enums"]["document_type"][]
         }
         Returns: string
       }
@@ -3537,6 +3545,13 @@ export type Database = {
       }
       document_analysis_retry: {
         Args: { p_document: string }
+        Returns: undefined
+      }
+      document_coverage_set: {
+        Args: {
+          p_document: string
+          p_covers: Database["public"]["Enums"]["document_type"][]
+        }
         Returns: undefined
       }
       document_of_mine: {
@@ -4422,6 +4437,7 @@ export type Database = {
           property_id: string
           document_id: string
           size_bytes: number
+          covers: Database["public"]["Enums"]["document_type"][]
         }[]
       }
       slugify: {
@@ -4635,6 +4651,7 @@ export type Database = {
         | "certificat_urbanisme"
         | "plan_pluriannuel_travaux"
         | "etat_date"
+        | "ddt"
       financing_document_type:
         | "accord_principe"
         | "attestation_courtier"
@@ -4861,6 +4878,7 @@ export const Constants = {
         "certificat_urbanisme",
         "plan_pluriannuel_travaux",
         "etat_date",
+        "ddt",
       ],
       financing_document_type: [
         "accord_principe",

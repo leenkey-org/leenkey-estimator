@@ -7,22 +7,26 @@ import { ProgressBar } from "@/components/shared/progress-bar";
 import { pillClassName } from "@/components/shared/status-badge";
 import { TaskList, type TaskItem } from "@/components/shared/task-list";
 import { propertyForSheet } from "@/leenkey/properties/load";
+import { AccessRequests } from "@/leenkey/sale-file/components/access-requests";
 import { AnalysisRefresher } from "@/leenkey/sale-file/components/analysis-controls";
+import { DdtCoverageEditor, DdtUploadForm } from "@/leenkey/sale-file/components/ddt-controls";
 import { SellerDocumentAnalysis } from "@/leenkey/sale-file/components/document-analysis";
 import {
   ExemptionButton,
   RemoveDocumentButton,
-  RequestButtons,
   ShareButtons,
 } from "@/leenkey/sale-file/components/seller-controls";
 import { UploadForm } from "@/leenkey/sale-file/components/upload-form";
 import {
   checklistProgress,
   checklistProperty,
+  ddtInitialCoverage,
   type ChecklistLine,
 } from "@/leenkey/sale-file/checklist";
 import { sellerSaleFile } from "@/leenkey/sale-file/queries";
 import {
+  DDT_TYPE,
+  ddtDiagnostics,
   DIAGNOSTIC_TYPES,
   DOCUMENT_ORDER,
   NOTARY_FILE_STAGES,
@@ -84,7 +88,11 @@ const lineHelp = (type: DocumentType): string | null => lineHelps[type] ?? null;
 // three plans. L3-05: under each document, its reading aid by the assistant
 // (being written, written, or why there is none), the facts the seller may
 // show on the listing, and « À actualiser » on a line whose document is old
-// for its type.
+// for its type. The diagnostics are one group of « Documents du bien »
+// (DECISIONS.md 2026-11-23, level A): first « Déposer mon DDT (un seul
+// fichier) », the one file of the diagnostician with the diagnostics it
+// holds, then the diagnostic lines, each still filed alone if need be; a
+// line the DDT covers reads « Fourni dans votre DDT ».
 export default async function PropertyDocumentsPage({ params, searchParams }: Props) {
   const [{ id }, { etape }] = await Promise.all([params, searchParams]);
   const property = await propertyForSheet(id);
@@ -112,9 +120,14 @@ export default async function PropertyDocumentsPage({ params, searchParams }: Pr
   ];
   const analysisOf = new Map(documents.map((document) => [document.id, document]));
   const allIds = documents.map((document) => document.id);
+  // « Partager les diagnostics »: each diagnostic, and the DDT.
   const diagnosticIds = documents
-    .filter((document) => DIAGNOSTIC_TYPES.includes(document.type))
+    .filter((document) => DIAGNOSTIC_TYPES.includes(document.type) || document.type === DDT_TYPE)
     .map((document) => document.id);
+  // What a DDT may cover here: the diagnostic lines of this property. One
+  // file for one line makes no group, unless a DDT is already there.
+  const diagnostics = ddtDiagnostics(checked.type, checked.coOwnership);
+  const ddtGroup = diagnostics.length > 1 || checklist.ddt.length > 0;
 
   // The stage chosen in the address, among those that have a line.
   const tab = `/vendeur/biens/${property.id}/documents`;
@@ -159,6 +172,119 @@ export default async function PropertyDocumentsPage({ params, searchParams }: Pr
     (document) => document.analysis?.status === "pending" && !document.analysis.delayed,
   );
 
+  const renderLine = (line: ChecklistLine) => (
+    <li key={line.type} className="flex flex-col gap-2 py-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <p className="text-lk-secondary font-medium text-lk-ink">
+            {fr.saleFile.types[line.type]}
+          </p>
+          <p className="text-lk-caption text-pretty text-lk-ink-3">
+            {[
+              fr.saleFile.stages[line.stage],
+              line.required || OPTIONAL_DOCUMENTS.includes(line.type) ? null : t.optional,
+              lineHelp(line.type),
+            ]
+              .filter((part) => part !== null)
+              .join(" · ")}
+          </p>
+        </div>
+        <span className="flex max-w-[55%] shrink-0 flex-wrap justify-end gap-1.5">
+          {line.toRefresh ? (
+            <span
+              className={cn(
+                pillClassName,
+                "px-2.5 py-1.25 text-lk-micro font-semibold",
+                stateTone.missing,
+              )}
+            >
+              {fr.saleFile.analysis.refresh.state}
+            </span>
+          ) : null}
+          <span
+            className={cn(
+              pillClassName,
+              "px-2.5 py-1.25 text-lk-micro font-semibold",
+              stateTone[lineState(line)],
+            )}
+          >
+            {t.states[lineState(line)]}
+          </span>
+        </span>
+      </div>
+      {line.toRefresh ? (
+        <p className="text-lk-caption text-pretty text-lk-ink-2">
+          {fr.saleFile.analysis.refresh.text(
+            formatDay(line.toRefresh.date),
+            fr.saleFile.analysis.refresh.age(line.toRefresh.months),
+            DIAGNOSTIC_TYPES.includes(line.type)
+              ? "diagnostiqueur"
+              : line.type === "pre_etat_date" || line.type === "etat_date"
+                ? "syndic"
+                : "notaire",
+          )}
+        </p>
+      ) : null}
+      {line.documents.map((document) => (
+        <div key={document.id} className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <div className="flex min-w-0 flex-col">
+              <a
+                href={`/documents/vente/${document.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate text-lk-secondary font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
+              >
+                {document.title}
+              </a>
+              <span className="text-lk-caption text-lk-ink-3">
+                {t.filedOn(formatDateShort(document.createdAt, now))}
+              </span>
+            </div>
+            <RemoveDocumentButton
+              propertyId={property.id}
+              documentId={document.id}
+              title={document.title}
+            />
+          </div>
+          <SellerDocumentAnalysis
+            propertyId={property.id}
+            document={analysisOf.get(document.id) ?? { ...document, analysis: null }}
+          />
+        </div>
+      ))}
+      {line.coveredBy.map((document) => (
+        <a
+          key={document.id}
+          href={`/documents/vente/${document.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={t.ddt.openAbout(fr.saleFile.types[line.type])}
+          className="inline-flex min-h-11 items-center self-start text-lk-secondary font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
+        >
+          {t.ddt.provided}
+        </a>
+      ))}
+      {line.state === "exempt" && line.reason ? (
+        <p className="text-lk-caption text-lk-ink-2">{t.reason(line.reason)}</p>
+      ) : null}
+      {line.exemptible && line.state !== "filed" ? (
+        <div className="-ml-3">
+          <ExemptionButton
+            propertyId={property.id}
+            type={line.type}
+            exempt={line.state === "exempt"}
+          />
+        </div>
+      ) : null}
+    </li>
+  );
+  const list = "flex flex-col divide-y divide-lk-line py-1";
+  // The diagnostics follow one another in the order of the lines.
+  const diagnosticPlaces = DIAGNOSTIC_TYPES.map((type) => DOCUMENT_ORDER.indexOf(type));
+  const firstDiagnostic = Math.min(...diagnosticPlaces);
+  const lastDiagnostic = Math.max(...diagnosticPlaces);
+
   return (
     <div className="flex flex-col gap-8">
       {analysing ? <AnalysisRefresher /> : null}
@@ -177,32 +303,12 @@ export default async function PropertyDocumentsPage({ params, searchParams }: Pr
         <p className="text-lk-caption text-pretty text-lk-ink-3">{t.disclaimer}</p>
       </div>
 
-      {requests.length > 0 ? (
-        <section aria-labelledby="file-requests" className="flex flex-col gap-3">
-          <h3 id="file-requests" className={sectionTitle}>
-            {t.requests.title}
-          </h3>
-          <ul className="flex flex-col gap-3">
-            {requests.map((request) => (
-              <li key={request.id} className={cn(card, "flex flex-col gap-3")}>
-                <div className="flex flex-col gap-1">
-                  <p className="text-lk-body font-semibold text-lk-ink">
-                    {t.requests.asks(request.firstName)}
-                  </p>
-                  <FinancingBadge status={request.financingStatus} className="self-start" />
-                  <p className="text-lk-caption text-lk-ink-3">{t.requests.grantHelp}</p>
-                </div>
-                <RequestButtons
-                  propertyId={property.id}
-                  requestId={request.id}
-                  name={request.firstName ?? t.share.someone}
-                />
-              </li>
-            ))}
-          </ul>
-          <FinancingMention />
-        </section>
-      ) : null}
+      <AccessRequests
+        propertyId={property.id}
+        requests={requests}
+        cardClassName={card}
+        titleClassName={sectionTitle}
+      />
 
       {stageItems.length > 0 ? (
         <section aria-labelledby="file-stages" className="flex flex-col gap-3">
@@ -251,116 +357,108 @@ export default async function PropertyDocumentsPage({ params, searchParams }: Pr
                   </p>
                 ) : null}
               </div>
-              {group.category === "property" &&
-              group.lines.some((line) => DIAGNOSTIC_TYPES.includes(line.type)) ? (
-                <p className="text-lk-caption text-pretty text-lk-ink-3">
-                  {t.categoryHelp.property}
-                </p>
-              ) : group.category === "coownership" ? (
+              {group.category === "coownership" ? (
                 <p className="text-lk-caption text-pretty text-lk-ink-3">
                   {t.categoryHelp.coownership}
                 </p>
               ) : null}
             </div>
-            <ul className={cn(card, "flex flex-col divide-y divide-lk-line py-1")}>
-              {group.lines.map((line) => (
-                <li key={line.type} className="flex flex-col gap-2 py-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <p className="text-lk-secondary font-medium text-lk-ink">
-                        {fr.saleFile.types[line.type]}
-                      </p>
-                      <p className="text-lk-caption text-pretty text-lk-ink-3">
-                        {[
-                          fr.saleFile.stages[line.stage],
-                          line.required || OPTIONAL_DOCUMENTS.includes(line.type)
-                            ? null
-                            : t.optional,
-                          lineHelp(line.type),
-                        ]
-                          .filter((part) => part !== null)
-                          .join(" · ")}
-                      </p>
-                    </div>
-                    <span className="flex max-w-[55%] shrink-0 flex-wrap justify-end gap-1.5">
-                      {line.toRefresh ? (
-                        <span
-                          className={cn(
-                            pillClassName,
-                            "px-2.5 py-1.25 text-lk-micro font-semibold",
-                            stateTone.missing,
-                          )}
-                        >
-                          {fr.saleFile.analysis.refresh.state}
-                        </span>
-                      ) : null}
-                      <span
-                        className={cn(
-                          pillClassName,
-                          "px-2.5 py-1.25 text-lk-micro font-semibold",
-                          stateTone[lineState(line)],
-                        )}
-                      >
-                        {t.states[lineState(line)]}
-                      </span>
-                    </span>
+            {group.category === "property" &&
+            ddtGroup &&
+            group.lines.some((line) => DIAGNOSTIC_TYPES.includes(line.type)) ? (
+              // The diagnostics as one group, between the lines before and after them.
+              <>
+                {group.lines.some((line) => DOCUMENT_ORDER.indexOf(line.type) < firstDiagnostic) ? (
+                  <ul className={cn(card, list)}>
+                    {group.lines
+                      .filter((line) => DOCUMENT_ORDER.indexOf(line.type) < firstDiagnostic)
+                      .map(renderLine)}
+                  </ul>
+                ) : null}
+                <div className={cn(card, "flex flex-col gap-3")}>
+                  <div className="flex flex-col gap-1">
+                    <h4
+                      id="file-diagnostics"
+                      className="text-lk-secondary font-semibold text-lk-ink"
+                    >
+                      {t.ddt.title}
+                    </h4>
+                    <p className="text-lk-caption text-pretty text-lk-ink-3">{t.ddt.intro}</p>
                   </div>
-                  {line.toRefresh ? (
-                    <p className="text-lk-caption text-pretty text-lk-ink-2">
-                      {fr.saleFile.analysis.refresh.text(
-                        formatDay(line.toRefresh.date),
-                        fr.saleFile.analysis.refresh.age(line.toRefresh.months),
-                        DIAGNOSTIC_TYPES.includes(line.type)
-                          ? "diagnostiqueur"
-                          : line.type === "pre_etat_date" || line.type === "etat_date"
-                            ? "syndic"
-                            : "notaire",
-                      )}
-                    </p>
-                  ) : null}
-                  {line.documents.map((document) => (
-                    <div key={document.id} className="flex flex-col gap-2">
-                      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                        <div className="flex min-w-0 flex-col">
-                          <a
-                            href={`/documents/vente/${document.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="truncate text-lk-secondary font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
-                          >
-                            {document.title}
-                          </a>
-                          <span className="text-lk-caption text-lk-ink-3">
-                            {t.filedOn(formatDateShort(document.createdAt, now))}
-                          </span>
+                  {checklist.ddt.length === 0 ? (
+                    <DdtUploadForm
+                      propertyId={property.id}
+                      diagnostics={diagnostics}
+                      ticked={ddtInitialCoverage(checklist, diagnostics)}
+                    />
+                  ) : (
+                    checklist.ddt.map((document) => (
+                      <div
+                        key={document.id}
+                        className="flex flex-col gap-2 rounded-lk-md bg-lk-stone-2 p-3"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                          <div className="flex min-w-0 flex-col">
+                            <a
+                              href={`/documents/vente/${document.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="truncate text-lk-secondary font-semibold text-lk-blue underline underline-offset-2 hover:no-underline"
+                            >
+                              {document.title}
+                            </a>
+                            <span className="text-lk-caption text-lk-ink-3">
+                              {t.filedOn(formatDateShort(document.createdAt, now))}
+                            </span>
+                          </div>
+                          <RemoveDocumentButton
+                            propertyId={property.id}
+                            documentId={document.id}
+                            title={document.title}
+                            description={t.ddt.removeDescription}
+                          />
                         </div>
-                        <RemoveDocumentButton
+                        <p className="text-lk-caption text-pretty text-lk-ink-2">
+                          {t.ddt.filedCovers(
+                            (document.covers ?? []).map((type) => fr.saleFile.types[type]),
+                          )}
+                        </p>
+                        <div className="-ml-3">
+                          <DdtCoverageEditor
+                            propertyId={property.id}
+                            documentId={document.id}
+                            diagnostics={diagnostics}
+                            covers={document.covers ?? []}
+                          />
+                        </div>
+                        <SellerDocumentAnalysis
                           propertyId={property.id}
-                          documentId={document.id}
-                          title={document.title}
+                          document={analysisOf.get(document.id) ?? { ...document, analysis: null }}
                         />
                       </div>
-                      <SellerDocumentAnalysis
-                        propertyId={property.id}
-                        document={analysisOf.get(document.id) ?? { ...document, analysis: null }}
-                      />
-                    </div>
-                  ))}
-                  {line.state === "exempt" && line.reason ? (
-                    <p className="text-lk-caption text-lk-ink-2">{t.reason(line.reason)}</p>
-                  ) : null}
-                  {line.exemptible && line.state !== "filed" ? (
-                    <div className="-ml-3">
-                      <ExemptionButton
-                        propertyId={property.id}
-                        type={line.type}
-                        exempt={line.state === "exempt"}
-                      />
-                    </div>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
+                    ))
+                  )}
+                  <p className="text-lk-caption text-pretty text-lk-ink-3">{t.ddt.alone}</p>
+                  <ul
+                    aria-labelledby="file-diagnostics"
+                    className={cn(list, "border-t border-lk-line py-0")}
+                  >
+                    {group.lines
+                      .filter((line) => DIAGNOSTIC_TYPES.includes(line.type))
+                      .map(renderLine)}
+                  </ul>
+                </div>
+                {group.lines.some((line) => DOCUMENT_ORDER.indexOf(line.type) > lastDiagnostic) ? (
+                  <ul className={cn(card, list)}>
+                    {group.lines
+                      .filter((line) => DOCUMENT_ORDER.indexOf(line.type) > lastDiagnostic)
+                      .map(renderLine)}
+                  </ul>
+                ) : null}
+              </>
+            ) : (
+              <ul className={cn(card, list)}>{group.lines.map(renderLine)}</ul>
+            )}
             {group.category === "notary" && (stage === null || stage === "deed") ? (
               <InfoNote title={t.identity.title}>
                 <p>{t.identity.text}</p>

@@ -20,7 +20,7 @@ import { buildChecklist, type Checklist, type ChecklistProperty } from "./checkl
 
 export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavailable" };
 
-const DOCUMENT_COLUMNS = "id, type, title, mime_type, size_bytes, created_at" as const;
+const DOCUMENT_COLUMNS = "id, type, title, mime_type, size_bytes, created_at, covers" as const;
 
 export type SellerDocument = {
   id: string;
@@ -29,6 +29,8 @@ export type SellerDocument = {
   mimeType: string;
   sizeBytes: number;
   createdAt: string;
+  /** A DDT: the diagnostics its seller says it holds; none for any other document. */
+  covers: DocumentType[];
   /** The buyers it is shared with. */
   sharedWith: string[];
   /** Its reading aid by the assistant (L3-05); null when it could not be read. */
@@ -112,6 +114,7 @@ export async function sellerSaleFile(
     mimeType: row.mime_type,
     sizeBytes: row.size_bytes,
     createdAt: row.created_at,
+    covers: row.covers,
     sharedWith: row.shares.map((share) => share.buyer_id),
     analysis: analysisOf.get(row.id) ?? null,
   }));
@@ -150,6 +153,8 @@ export type SharedDocument = {
   mimeType: string;
   sizeBytes: number;
   sharedAt: string;
+  /** A DDT: the diagnostics its seller says it holds; none for any other document. */
+  covers: DocumentType[];
   /** The summary meant for a buyer (L3-05), once the document is analysed. */
   summary: BuyerSummary | null;
 };
@@ -209,6 +214,7 @@ export async function buyerSharedDocuments(): Promise<QueryResult<SharedProperty
       mimeType: row.mime_type,
       sizeBytes: row.size_bytes,
       sharedAt: row.shared_at,
+      covers: row.covers,
       summary: summaryOf.get(row.document_id) ?? null,
     });
     groups.set(row.property_id, group);

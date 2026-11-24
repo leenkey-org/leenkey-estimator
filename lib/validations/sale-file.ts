@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DIAGNOSTIC_TYPES } from "@/lib/config/documents";
 import { Constants } from "@/types/database";
 
 // L3-04 (SPEC-V2 15): what a seller and a buyer send about the sale file,
@@ -22,8 +23,30 @@ export const uploadStartSchema = z.object({
 export const fileDocumentSchema = z.object({
   propertyId: z.string().uuid(),
   path: z.string().regex(SALE_FILE_PATH),
-  type: documentType,
+  // A DDT is filed with the diagnostics it covers (fileDdtSchema).
+  type: documentType.exclude(["ddt"]),
   title: z.string().trim().min(1).max(DOCUMENT_TITLE_MAX),
+});
+
+/** The diagnostics a DDT covers: one at least, each once, among the diagnostics. */
+const ddtCovers = z
+  .array(documentType.refine((type) => DIAGNOSTIC_TYPES.includes(type)))
+  .min(1)
+  .max(DIAGNOSTIC_TYPES.length)
+  .refine((covers) => new Set(covers).size === covers.length);
+
+/** « Déposer mon DDT »: the one file of the diagnostician, and the diagnostics it holds. */
+export const fileDdtSchema = z.object({
+  propertyId: z.string().uuid(),
+  path: z.string().regex(SALE_FILE_PATH),
+  covers: ddtCovers,
+});
+
+/** « Modifier les diagnostics couverts » of a DDT. */
+export const ddtCoverageSchema = z.object({
+  propertyId: z.string().uuid(),
+  documentId: z.string().uuid(),
+  covers: ddtCovers,
 });
 
 export const exemptionSchema = z.object({

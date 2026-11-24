@@ -28,10 +28,13 @@ export function RemoveDocumentButton({
   propertyId,
   documentId,
   title,
+  description = t.removeDialog.description,
 }: {
   propertyId: string;
   documentId: string;
   title: string;
+  /** What the removal does, when it is more than the document (a DDT: its lines). */
+  description?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -54,7 +57,7 @@ export function RemoveDocumentButton({
       <ConfirmDialog
         open={open}
         title={t.removeDialog.title}
-        description={t.removeDialog.description}
+        description={description}
         confirmLabel={t.removeDialog.confirm}
         confirmVariant="danger"
         labels={t.removeDialog}
@@ -176,15 +179,22 @@ export function ExemptionButton({
   );
 }
 
-/** « Accorder » or « Refuser » an access request. */
+/**
+ * « Accorder » or « Refuser » an access request. What came of it is given to
+ * the list (AccessRequests), which keeps it: the request answered leaves the
+ * page, and these buttons with it.
+ */
 export function RequestButtons({
   propertyId,
   requestId,
   name,
+  onAnswered,
 }: {
   propertyId: string;
   requestId: string;
   name: string;
+  /** Answered: the confirmation to show in its place. */
+  onAnswered: (text: string) => void;
 }) {
   const router = useRouter();
   const [notice, setNotice] = useState<{ tone: "success" | "danger"; text: string } | null>(null);
@@ -199,10 +209,7 @@ export function RequestButtons({
           text: t.requests.errors[result?.error ?? "unavailable"],
         });
       }
-      setNotice({
-        tone: "success",
-        text: grant ? t.requests.granted(result.data.shared) : t.requests.declined,
-      });
+      onAnswered(grant ? t.requests.granted(result.data.shared) : t.requests.declined);
       router.refresh();
     });
   return (

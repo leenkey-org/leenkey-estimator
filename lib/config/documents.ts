@@ -20,12 +20,21 @@ export const DOCUMENT_CATEGORIES: readonly DocumentCategory[] = [
 ];
 
 /**
+ * The one file a diagnostician gives: the « dossier de diagnostics techniques
+ * (DDT) », filed at once (DECISIONS.md 2026-11-23, level A). Never a line of
+ * the checklist: its seller says which diagnostics it holds
+ * (`documents.covers`), and each of those lines counts as provided.
+ */
+export const DDT_TYPE = "ddt" satisfies DocumentType;
+
+/**
  * The category of each type, in the order of the lines of the checklist (the
  * order of the client: the title deed, the diagnostics, the Carrez
  * measurement, the tax, the works; then the co-ownership; then the notary).
  */
 export const DOCUMENT_CATEGORY: Record<DocumentType, DocumentCategory> = {
   titre_propriete: "property",
+  ddt: "property",
   dpe: "property",
   amiante: "property",
   plomb: "property",
@@ -49,8 +58,10 @@ export const DOCUMENT_CATEGORY: Record<DocumentType, DocumentCategory> = {
   autre: "notary",
 };
 
-/** Every type, in the order of the lines of the checklist. */
-export const DOCUMENT_ORDER = Object.keys(DOCUMENT_CATEGORY) as DocumentType[];
+/** Every type that is a line, in the order of the lines of the checklist (not the DDT). */
+export const DOCUMENT_ORDER: DocumentType[] = (
+  Object.keys(DOCUMENT_CATEGORY) as DocumentType[]
+).filter((type) => type !== DDT_TYPE);
 
 /**
  * When a document is needed, so that a seller is not asked for everything at
@@ -71,6 +82,7 @@ export const DOCUMENT_STAGES: readonly DocumentStage[] = ["listing", "agreement"
  */
 export const DOCUMENT_STAGE: Record<DocumentType, DocumentStage> = {
   titre_propriete: "listing",
+  ddt: "listing",
   dpe: "listing",
   amiante: "listing",
   plomb: "listing",
@@ -197,7 +209,10 @@ export const EXEMPTIBLE_DOCUMENTS: readonly DocumentType[] = [
   "certificat_urbanisme",
 ];
 
-/** The diagnostics, shared together by « Partager les diagnostics ». */
+/**
+ * The diagnostics, shared together by « Partager les diagnostics », and what
+ * a DDT may cover (the same list in the constraint documents_covers).
+ */
 export const DIAGNOSTIC_TYPES: readonly DocumentType[] = [
   "dpe",
   "amiante",
@@ -209,6 +224,19 @@ export const DIAGNOSTIC_TYPES: readonly DocumentType[] = [
   "assainissement",
   "carrez",
 ];
+
+/**
+ * The diagnostics a DDT may cover on a property: its diagnostic lines, in the
+ * order of the checklist.
+ */
+export function ddtDiagnostics(
+  type: PropertyType | null,
+  coOwnership: boolean = type === "appartement",
+): DocumentType[] {
+  return requiredDocuments(type, coOwnership).filter((document) =>
+    DIAGNOSTIC_TYPES.includes(document),
+  );
+}
 
 /**
  * After how many months a document is shown « À actualiser » (L3-05, asked by
