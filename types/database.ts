@@ -9,6 +9,46 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_daily_briefs: {
+        Row: {
+          body: string
+          conversation_id: string | null
+          created_at: string
+          generated_by: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          body: string
+          conversation_id?: string | null
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string
+          conversation_id?: string | null
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_daily_briefs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_daily_briefs_generated_by_fkey"
+            columns: ["generated_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       advisor_interventions: {
         Row: {
           created_at: string
@@ -2930,6 +2970,10 @@ export type Database = {
           reports_open: number
           advisor_unread: number
         }[]
+      }
+      admin_daily_brief_recent: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       admin_financing_documents: {
         Args: { p_buyer_id: string }

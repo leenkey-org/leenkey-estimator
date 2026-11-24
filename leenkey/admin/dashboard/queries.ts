@@ -324,3 +324,86 @@ export async function adminUpgradeStats(
     return { ok: false, error: "unavailable" };
   }
 }
+
+/** What the daily brief counts beside the counters of the dashboard (L1-30b). */
+export type AdminBriefCounts = {
+  financingToCheck: number;
+  identityToCheck: number;
+  identityFilesToDelete: number;
+  /** Offers sent since `since` (each version counts, never a draft). */
+  offersSent: number;
+};
+
+/**
+ * The counts of the daily brief that « À traiter » lists without counting
+ * them (it keeps 20 items): the proofs of financing and the identity
+ * documents to check, the identity files to delete (same filters as
+ * adminTodo), and the offers sent over the last hours.
+ */
+export async function adminBriefCounts(since: Date): Promise<QueryResult<AdminBriefCounts>> {
+  await requireAdmin();
+  try {
+    const supabase = await createClient();
+    const count = { count: "exact" as const, head: true };
+    const [proofs, identities, identityFiles, offers] = await Promise.all([
+      supabase
+        .from("financing_documents")
+        .select("id", count)
+        .is("checked_at", null)
+        .is("deleted_at", null),
+      supabase
+        .from("identity_documents")
+        .select("id", count)
+        .is("checked_at", null)
+        .is("refused_at", null)
+        .is("withdrawn_at", null),
+      supabase
+        .from("identity_documents")
+        .select("id", count)
+        .is("file_deleted_at", null)
+        .or("checked_at.not.is.null,refused_at.not.is.null,withdrawn_at.not.is.null"),
+      supabase
+        .from("offers")
+        .select("id", count)
+        .neq("status", "draft")
+        .gte("submitted_at", since.toISOString()),
+    ]);
+    if (proofs.error) throw new Error(`financing: ${proofs.error.code}`);
+    if (identities.error) throw new Error(`identity: ${identities.error.code}`);
+    if (identityFiles.error) throw new Error(`identity files: ${identityFiles.error.code}`);
+    if (offers.error) throw new Error(`offers: ${offers.error.code}`);
+    return {
+      ok: true,
+      data: {
+        financingToCheck: proofs.count ?? 0,
+        identityToCheck: identities.count ?? 0,
+        identityFilesToDelete: identityFiles.count ?? 0,
+        offersSent: offers.count ?? 0,
+      },
+    };
+  } catch (error) {
+    logFailure("brief counts", error);
+    return { ok: false, error: "unavailable" };
+  }
+}
+
+/** The last daily brief written (L1-30b), null without any. */
+export async function latestDailyBrief(): Promise<
+  QueryResult<{ text: string; createdAt: string } | null>
+> {
+  await requireAdmin();
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("admin_daily_briefs")
+      .select("body, created_at")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(`admin_daily_briefs: ${error.code}`);
+    return { ok: true, data: data ? { text: data.body, createdAt: data.created_at } : null };
+  } catch (error) {
+    logFailure("daily brief", error);
+    return { ok: false, error: "unavailable" };
+  }
+}

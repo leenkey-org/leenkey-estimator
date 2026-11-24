@@ -956,7 +956,7 @@ create table ai_conversations (
   property_id uuid references properties(id),
   -- L1-29 (DECISIONS 2026-11-02) : la conversation avec l'assistant, ou une suggestion journalisée
   -- L1-30d (DECISIONS 2026-11-12) : le motif de refus et la synthèse avant appel, contexte admin seulement
-  kind text not null default 'chat' check (kind in ('chat','reply_suggestion','listing_description','rejection_reason','case_summary','listing_summary')),
+  kind text not null default 'chat' check (kind in ('chat','reply_suggestion','listing_description','rejection_reason','case_summary','listing_summary','document_analysis','daily_brief')),
   created_at timestamptz not null default now()
 );
 
@@ -2066,6 +2066,7 @@ Maquettes : `AdminAnnonces.dc.html`, `AdminDesktop.dc.html`. Conçu desktop d'ab
 
 - Tuiles : annonces à valider (avec l'ancienneté de la plus vieille, objectif 24 h), messages clients en attente, dossiers ouverts, offres des 7 derniers jours, signalements ouverts, formules vendues sur 30 jours (nombre et montant), inscriptions sur 30 jours (vendeurs / acquéreurs), déclencheurs de montée en gamme (affichés, cliqués, convertis).
 - « Résumé du jour » par l'assistant (outil `admin_daily_brief`), généré à l'ouverture, mis en cache 1 h.
+- Mise en œuvre (L1-30b, `DECISIONS.md` 2026-11-24) : sous la salutation, 5 lignes au plus rédigées par `MODELS.smart` à partir des chiffres lus en code avec la session de l'admin (ce qui attend l'équipe, puis inscriptions, formules et offres des dernières 24 h) ; le modèle ne lit pas la base et ne cite que ces chiffres. Un résumé pour toute l'équipe, gardé 1 h (table `admin_daily_briefs`), écrit après l'affichage du tableau de bord, jamais sur son chemin ; « Régénérer » 5 minutes au moins après le dernier. Journal `ai_conversations.kind = 'daily_brief'` (contexte équipe).
 - Liste « À traiter » : les éléments qui attendent Cédric, par ancienneté.
 - Mise en œuvre (L1-30a, `DECISIONS.md` 2026-11-03) : tuiles des annonces à valider, dossiers et signalements ouverts, formules vendues et inscriptions sur 30 jours ; messages clients (L1-34), offres (lot 2), déclencheurs (L2-09) et résumé du jour (L1-30b) avec leurs tâches. « À traiter » : annonces en attente, dossiers et signalements ouverts, 20 au plus.
 

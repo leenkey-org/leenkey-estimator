@@ -43,6 +43,18 @@ export const frAdminDashboard = {
     emptyTitle: "Rien à traiter",
     emptyText: "Aucune annonce, aucun dossier ni aucun signalement n'attend l'équipe.",
   },
+  // L1-30b: « Résumé du jour », written by the assistant from the figures of the dashboard.
+  brief: {
+    title: "Résumé du jour",
+    writing: "L'assistant rédige le résumé du jour.",
+    written: (time: string) => `Écrit à ${time} par l'assistant, d'après les chiffres ci-dessous.`,
+    note: "Mis à jour au plus une fois par heure. Les chiffres du tableau de bord font foi.",
+    regenerate: "Régénérer",
+    tooSoon: "Le résumé vient d'être écrit : vous pourrez le régénérer dans quelques minutes.",
+    unavailable:
+      "Le résumé du jour n'est pas disponible pour le moment. Les chiffres du tableau de bord restent à jour.",
+    retry: "Réessayer",
+  },
   error: "Une partie du tableau de bord n'a pas pu être chargée.",
   retry: "Réessayer",
 } as const;

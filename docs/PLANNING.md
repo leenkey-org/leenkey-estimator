@@ -108,7 +108,7 @@ Recette du lot 1 par Cédric du 16 au 20 novembre ; mise en ligne de la V2 la se
 - [x] **L1-16b** Carte avancée : regroupement, recherche dans la zone (synchronisation liste/carte livrée avec L1-16) · PR : #136 · Testé en préprod : ☐
 - [x] **L1-29** Suggestion de réponse en messagerie + rédaction de description · PR : #69 · Testé en préprod : ☐
 - [x] **L1-35** `listing_revisions` simplifié : historique des champs prix, titre, description d’une annonce publiée, et des photos, vendeur et admin, notification `listing.revised` à l'équipe · PR : #98 · Testé en préprod : ☐
-- [ ] **L1-30b** Résumé du jour par l'assistant dans le back office · PR : · Testé en préprod : ☐
+- [x] **L1-30b** Résumé du jour par l'assistant dans le back office · PR : #137 · Testé en préprod : ☐
 
 Mise en ligne :
 

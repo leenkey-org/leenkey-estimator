@@ -59,3 +59,6 @@ export const knowledgeImportSchema = z.object({
 });
 
 export const caseSummarySchema = z.object({ caseId: z.string().uuid() });
+
+/** « Résumé du jour » of the dashboard (L1-30b): the last one, or a new one on « Régénérer ». */
+export const dailyBriefSchema = z.object({ regenerate: z.boolean() }).strict();
