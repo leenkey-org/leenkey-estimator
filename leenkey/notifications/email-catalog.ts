@@ -565,13 +565,27 @@ async function listingCompliance(email: PlannedEmail): Promise<RenderedEmail | n
 async function listingTeamEdited(email: PlannedEmail): Promise<RenderedEmail | null> {
   const last = email.items.at(-1);
   const reference = text(last?.data.reference);
-  const reason = text(last?.data.reason);
-  if (!last || !reference || !reason) return null;
+  if (!last || !reference) return null;
   const t = fr.emails.listingTeamEdited;
-  const fields = (Array.isArray(last.data.fields) ? (last.data.fields as unknown[]) : []).flatMap(
-    (field) => (typeof field === "string" && t.fields[field] ? [t.fields[field]] : []),
-  );
-  const before = typeof last.data.old_price_cents === "number" ? last.data.old_price_cents : null;
+  // Several changes grouped in one email: every field, the price from the
+  // first change to the last, every reason. Free texts (the title, the
+  // reasons of the team) are made safe for a mail client.
+  // A reason a mail client would make a link of is read in the app instead.
+  const reasons = email.items.flatMap((item) => {
+    if (!text(item.data.reason)) return [];
+    const reason = emailSafeText(item.data.reason);
+    return [reason ? t.reason(reason) : t.reasonInApp];
+  });
+  if (reasons.length === 0) return null;
+  const fields = [
+    ...new Set(
+      email.items.flatMap((item) =>
+        Array.isArray(item.data.fields) ? (item.data.fields as unknown[]) : [],
+      ),
+    ),
+  ].flatMap((field) => (typeof field === "string" && t.fields[field] ? [t.fields[field]] : []));
+  const priced = email.items.filter((item) => typeof item.data.old_price_cents === "number");
+  const before = priced.length > 0 ? (priced[0].data.old_price_cents as number) : null;
   const after = typeof last.data.price_cents === "number" ? last.data.price_cents : null;
   return rendered(
     t.subject(reference),
@@ -579,17 +593,16 @@ async function listingTeamEdited(email: PlannedEmail): Promise<RenderedEmail | n
       firstName: email.firstName,
       title: t.title,
       paragraphs: [
-        // Written by the seller (or the team): made safe for a mail client.
         t.text(fr.emails.listingCompliance.listing(emailSafeText(last.data.title))),
         ...(fields.length > 0 ? [t.changed(fields)] : []),
         ...(before !== null && after !== null && before !== after
           ? [t.price(formatPrice(before), formatPrice(after))]
           : []),
-        t.reason(reason),
+        ...reasons,
         t.next,
       ],
       action: { href: absoluteUrl(last.link ?? "/vendeur"), label: t.action },
-      why: fr.emails.listingCompliance.why,
+      why: t.why,
       siteUrl: siteUrl(),
     }),
     fr.legal.contactEmail,

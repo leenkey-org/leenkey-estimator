@@ -3781,11 +3781,11 @@ export type Database = {
       }
       listing_admin_edit: {
         Args: {
-          p_description: string
+          p_description?: string
           p_listing_id: string
-          p_price_cents: number
+          p_price_cents?: number
           p_reason: string
-          p_title: string
+          p_title?: string
         }
         Returns: string[]
       }

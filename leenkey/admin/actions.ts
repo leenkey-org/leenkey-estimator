@@ -214,16 +214,21 @@ export async function editListingAction(input: unknown): Promise<ListingEditResu
   if (!profile?.roles.includes("admin")) return { ok: false, error: "forbidden" };
   const parsed = listingEditSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: "invalid", fields: listingEditInvalidFields(input) };
+    const fields = listingEditInvalidFields(input);
+    // No field refused: none was sent (the refinement « nothing »).
+    return fields.length > 0
+      ? { ok: false, error: "invalid", fields }
+      : { ok: false, error: "unchanged" };
   }
   const command = parsed.data;
   const supabase = await createClient();
+  // Only the fields the team changed: a field not sent stays as it is in base.
   const { data: fields, error } = await supabase.rpc("listing_admin_edit", {
     p_listing_id: command.listingId,
-    p_title: command.title,
-    p_description: command.description,
-    p_price_cents: command.priceEuros * 100,
     p_reason: command.reason,
+    ...(command.title != null ? { p_title: command.title } : {}),
+    ...(command.description != null ? { p_description: command.description } : {}),
+    ...(command.priceEuros != null ? { p_price_cents: command.priceEuros * 100 } : {}),
   });
   if (error) {
     console.error("[admin] listing edit failed", {

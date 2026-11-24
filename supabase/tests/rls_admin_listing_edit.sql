@@ -6,7 +6,7 @@
 -- seeded database.
 begin;
 \ir _helpers.psql
-select plan(32);
+select plan(34);
 \ir _plan.psql
 
 \set who seller_a
@@ -34,23 +34,23 @@ select listing_submit(:'listing') \gset
 -- ===========================================================================
 \set who anon
 \ir _as.psql
-select throws_ok(format($$select listing_admin_edit(%L, 'Titre', 'Texte.', 1, 'Motif')$$, :'listing'),
+select throws_ok(format($$select listing_admin_edit(%L, 'Motif', 'Titre', 'Texte.', 1)$$, :'listing'),
                  '42501', null, 'anon: cannot edit a listing as the team');
 \set who seller_a
 \ir _as.psql
-select throws_ok(format($$select listing_admin_edit(%L, 'Titre', 'Texte.', 1, 'Motif')$$, :'listing'),
+select throws_ok(format($$select listing_admin_edit(%L, 'Motif', 'Titre', 'Texte.', 1)$$, :'listing'),
                  '42501', null, 'seller_a: not even its own listing, through this function');
 \set who seller_b
 \ir _as.psql
-select throws_ok(format($$select listing_admin_edit(%L, 'Titre', 'Texte.', 1, 'Motif')$$, :'listing'),
+select throws_ok(format($$select listing_admin_edit(%L, 'Motif', 'Titre', 'Texte.', 1)$$, :'listing'),
                  '42501', null, 'seller_b: cannot');
 \set who buyer_c
 \ir _as.psql
-select throws_ok(format($$select listing_admin_edit(%L, 'Titre', 'Texte.', 1, 'Motif')$$, :'listing'),
+select throws_ok(format($$select listing_admin_edit(%L, 'Motif', 'Titre', 'Texte.', 1)$$, :'listing'),
                  '42501', null, 'buyer_c: cannot');
 \set who buyer_d
 \ir _as.psql
-select throws_ok(format($$select listing_admin_edit(%L, 'Titre', 'Texte.', 1, 'Motif')$$, :'listing'),
+select throws_ok(format($$select listing_admin_edit(%L, 'Motif', 'Titre', 'Texte.', 1)$$, :'listing'),
                  '42501', null, 'buyer_d: cannot');
 reset role;
 select is((select array[title, description, price_cents::text] from listings where id = :'listing'),
@@ -62,24 +62,26 @@ select is((select array[title, description, price_cents::text] from listings whe
 -- ===========================================================================
 \set who admin
 \ir _as.psql
-select throws_ok(format($$select listing_admin_edit(%L, 'Titre', 'Texte.', 1, ' a ')$$, :'listing'),
+select throws_ok(format($$select listing_admin_edit(%L, ' a ', 'Titre', 'Texte.', 1)$$, :'listing'),
                  '22023', null, 'admin: a reason is required (3 characters)');
-select throws_ok(format($$select listing_admin_edit(%L, 'Ti', 'Texte.', 1, 'Motif')$$, :'listing'),
+select throws_ok(format($$select listing_admin_edit(%L, 'Motif', 'Ti', 'Texte.', 1)$$, :'listing'),
                  '22023', null, 'admin: a title of 3 characters at least');
-select throws_ok(format($$select listing_admin_edit(%L, 'Titre', '  ', 1, 'Motif')$$, :'listing'),
+select throws_ok(format($$select listing_admin_edit(%L, 'Motif', 'Titre', '  ', 1)$$, :'listing'),
                  '22023', null, 'admin: a description');
-select throws_ok(format($$select listing_admin_edit(%L, 'Titre', 'Texte.', 0, 'Motif')$$, :'listing'),
+select throws_ok(format($$select listing_admin_edit(%L, 'Motif', 'Titre', 'Texte.', 0)$$, :'listing'),
                  '22023', null, 'admin: a price above zero');
-select throws_ok(format($$select listing_admin_edit(%L, 'Titre', 'Texte.', 1, 'Motif')$$, :'draft'),
+select throws_ok(format($$select listing_admin_edit(%L, 'Motif', 'Titre', 'Texte.', 1)$$, :'draft'),
                  '22023', null, 'admin: never a draft (the seller has it in hand)');
-select throws_ok(format($$select listing_admin_edit(%L, 'Titre', 'Texte.', 1, 'Motif')$$, gen_random_uuid()),
+select throws_ok(format($$select listing_admin_edit(%L, 'Motif', 'Titre', 'Texte.', 1)$$, gen_random_uuid()),
                  'P0002', null, 'admin: a listing that does not exist');
+select throws_ok(format($$select listing_admin_edit(%L, 'Motif')$$, :'listing'),
+                 '22023', null, 'admin: at least one field (title, description or price)');
 
 -- ===========================================================================
 -- In review: the price and the title
 -- ===========================================================================
-select is(listing_admin_edit(:'listing', '  Maison relue  ', 'Description du vendeur.', 29000000,
-                             'Prix arrondi, titre plus précis.'),
+select is(listing_admin_edit(:'listing', p_reason => 'Prix arrondi, titre plus précis.',
+                             p_title => '  Maison relue  ', p_price_cents => 29000000),
           array['price', 'title'], 'admin: in review, the fields changed are returned');
 reset role;
 select is((select array[title, price_cents::text, status::text] from listings where id = :'listing'),
@@ -109,7 +111,8 @@ select is((select count(*) from notifications
 -- The same values again: nothing written.
 \set who admin
 \ir _as.psql
-select is(listing_admin_edit(:'listing', 'Maison relue', 'Description du vendeur.', 29000000, 'Motif'),
+select is(listing_admin_edit(:'listing', p_reason => 'Motif', p_title => 'Maison relue',
+                             p_description => 'Description du vendeur.', p_price_cents => 29000000),
           '{}'::text[], 'admin: nothing changed, nothing returned');
 reset role;
 select is((select count(*) from listing_revisions where listing_id = :'listing')::int, 2,
@@ -121,10 +124,19 @@ select is((select count(*) from listing_revisions where listing_id = :'listing')
 \set who admin
 \ir _as.psql
 select listing_publish(:'listing') \gset
-select is(listing_admin_edit(:'listing', 'Maison relue', 'Description corrigée par l''équipe.', 29000000,
-                             'Coordonnées retirées de la description.'),
-          array['description'], 'admin: online, the description');
+-- The seller changes the price while the form of the team is open: the team
+-- sends only the description, the price of the seller stays.
+\set who seller_a
+\ir _as.psql
+update listings set price_cents = 28900000 where id = :'listing';
+\set who admin
+\ir _as.psql
+select is(listing_admin_edit(:'listing', p_reason => 'Coordonnées retirées de la description.',
+                             p_description => 'Description corrigée par l''équipe.'),
+          array['description'], 'admin: online, the description only');
 reset role;
+select is((select price_cents from listings where id = :'listing'), 28900000::bigint,
+          'a field not sent is left as it is: the newer price of the seller stays');
 select is((select count(*) from listing_revisions
             where listing_id = :'listing' and field = 'description')::int, 1,
           'one line for the description, not two');
@@ -137,7 +149,7 @@ select is((select status::text from listings where id = :'listing'), 'published'
 \ir _as.psql
 update listings set price_cents = 28500000 where id = :'listing';
 reset role;
-select ok((select reason is null from listing_revisions
+select ok((select bool_and(reason is null) from listing_revisions
             where listing_id = :'listing' and changed_by = tests.uid('seller_a')),
           'a change of the seller has no reason');
 
@@ -149,8 +161,8 @@ select ok((select reason is null from listing_revisions
 \o /dev/null
 select listing_suspend(:'listing', 'Contrôle (test).');
 \o
-select is(listing_admin_edit(:'listing', 'Maison relue, titre suspendu', 'Description corrigée par l''équipe.',
-                             28500000, 'Titre trompeur.'),
+select is(listing_admin_edit(:'listing', p_reason => 'Titre trompeur.',
+                             p_title => 'Maison relue, titre suspendu'),
           array['title'], 'admin: suspended, the title');
 reset role;
 select is((select count(*) from listing_revisions

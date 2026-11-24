@@ -614,8 +614,11 @@ export const frEmails = {
     changed: (fields: readonly string[]) => `Modifié : ${fields.join(", ")}.`,
     price: (before: string, after: string) => `Prix : ${before} → ${after}.`,
     reason: (reason: string) => `Notre motif : ${reason}`,
+    reasonInApp: "Notre motif est à lire dans l'historique de votre annonce.",
     next: "La modification figure dans l'historique de votre annonce. Pour en parler, répondez simplement à cet email.",
     action: "Voir mon annonce",
+    // In review too: not « publié ».
+    why: "Vous recevez cet email parce que vous avez une annonce sur Leenkey.",
   },
   // 2026-11-21: a report handled by the team, to its author. Never what was decided.
   reportHandled: {

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   LISTING_EDIT_STATUSES,
   listingEditable,
+  listingEditChanges,
   listingEditInvalidFields,
   listingEditSchema,
 } from "@/lib/validations/admin";
@@ -40,7 +41,6 @@ describe("listingEditSchema", () => {
     ]);
     expect(listingEditInvalidFields(input({ priceEuros: 0 }))).toEqual(["priceEuros"]);
     expect(listingEditInvalidFields(input({ priceEuros: 1500.5 }))).toEqual(["priceEuros"]);
-    expect(listingEditInvalidFields(input({ priceEuros: null }))).toEqual(["priceEuros"]);
     expect(listingEditInvalidFields(input({ priceEuros: Number.NaN }))).toEqual(["priceEuros"]);
     expect(listingEditInvalidFields(input({ priceEuros: 50_000_001 }))).toEqual(["priceEuros"]);
     expect(listingEditInvalidFields(input({ reason: " a " }))).toEqual(["reason"]);
@@ -59,6 +59,45 @@ describe("listingEditSchema", () => {
 
   it("counts the characters as Postgres does (an emoji is one)", () => {
     expect(listingEditInvalidFields(input({ title: "🏡🏡🏡" }))).toEqual([]);
+  });
+
+  it("takes only the fields changed (null or absent: left as it is), at least one", () => {
+    const only = { listingId: LISTING, reason: "Prix arrondi au millier." };
+    expect(listingEditSchema.safeParse({ ...only, priceEuros: 300000 }).success).toBe(true);
+    expect(
+      listingEditSchema.safeParse({ ...only, title: null, description: null, priceEuros: 300000 })
+        .success,
+    ).toBe(true);
+    // Nothing sent: refused, without naming a field (the action says « unchanged »).
+    expect(listingEditSchema.safeParse(only).success).toBe(false);
+    expect(listingEditInvalidFields(only)).toEqual([]);
+    expect(
+      listingEditSchema.safeParse({ ...only, title: null, description: null, priceEuros: null })
+        .success,
+    ).toBe(false);
+  });
+});
+
+describe("listingEditChanges", () => {
+  const initial = { title: "Maison", description: "Texte.", priceEuros: 300000 };
+
+  it("keeps only what the team changed, so a newer change of the seller stays", () => {
+    expect(listingEditChanges(initial, { ...initial })).toEqual({});
+    expect(listingEditChanges(initial, { ...initial, priceEuros: 299000 })).toEqual({
+      priceEuros: 299000,
+    });
+    expect(listingEditChanges(initial, { ...initial, title: "  Maison  " })).toEqual({});
+    expect(
+      listingEditChanges(initial, { ...initial, title: "Maison 5 pièces", description: "Autre." }),
+    ).toEqual({ title: "Maison 5 pièces", description: "Autre." });
+  });
+
+  it("a price emptied or not read is sent, and refused", () => {
+    const changes = listingEditChanges(initial, { ...initial, priceEuros: Number.NaN });
+    expect(Number.isNaN(changes.priceEuros)).toBe(true);
+    expect(listingEditInvalidFields({ listingId: LISTING, reason: "Motif", ...changes })).toEqual([
+      "priceEuros",
+    ]);
   });
 });
 

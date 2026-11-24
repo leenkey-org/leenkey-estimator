@@ -9,7 +9,11 @@ import { Textarea } from "@/components/shared/textarea";
 import { UnitInput } from "@/components/shared/unit-input";
 import { formatInteger } from "@/lib/format";
 import { frAdminListings } from "@/lib/i18n/sections/adminListings";
-import { listingEditInvalidFields, type ListingEditField } from "@/lib/validations/admin";
+import {
+  listingEditChanges,
+  listingEditInvalidFields,
+  type ListingEditField,
+} from "@/lib/validations/admin";
 import {
   LISTING_DESCRIPTION_MAX,
   LISTING_PRICE_MAX_EUROS,
@@ -51,14 +55,27 @@ const ERRORS: Record<Exclude<ListingEditResult, { ok: true }>["error"], string> 
   unchanged: e.errors.unchanged,
 };
 
-/** The values of the form as the server action takes them. */
-function command(listingId: string, form: Form) {
-  const price = parseFrenchNumber(form.price);
+/**
+ * The values of the form as the server action takes them: only the fields
+ * the team changed, so that a change of the seller made since the page was
+ * shown is never overwritten. A price emptied or not read counts as changed
+ * (NaN), and the schema refuses it.
+ */
+function command(listingId: string, values: ListingEditValues, form: Form) {
   return {
     listingId,
-    title: form.title,
-    description: form.description,
-    priceEuros: price,
+    ...listingEditChanges(
+      {
+        title: values.title,
+        description: values.description,
+        priceEuros: Math.round(values.priceCents / 100),
+      },
+      {
+        title: form.title,
+        description: form.description,
+        priceEuros: parseFrenchNumber(form.price) ?? Number.NaN,
+      },
+    ),
     reason: form.reason,
   };
 }
@@ -120,10 +137,19 @@ export function ListingEdit({
   };
 
   const submit = () => {
-    const input = command(listingId, form);
+    const input = command(listingId, values, form);
     const invalid = listingEditInvalidFields(input);
     if (invalid.length > 0) {
       refuse(invalid, input);
+      return;
+    }
+    // Nothing changed: said here, nothing sent.
+    if (
+      input.title === undefined &&
+      input.description === undefined &&
+      input.priceEuros === undefined
+    ) {
+      setDialogError(e.errors.unchanged);
       return;
     }
     setDialogError(null);

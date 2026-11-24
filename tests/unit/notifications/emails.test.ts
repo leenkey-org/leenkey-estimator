@@ -755,6 +755,46 @@ describe("emails of an offer (L2-04a)", () => {
     );
     expect(description?.text).not.toContain("Prix :");
     expect(await renderNotificationEmail(notice({ reason: " " }))).toBeNull();
+    // Its own « why »: the listing may still be in review.
+    expect(text).toContain("parce que vous avez une annonce sur Leenkey");
+    expect(text).not.toContain("publié une annonce");
+    // A reason a mail client would make a link of stays in the app.
+    const linked = await renderNotificationEmail(notice({ reason: "Voir www.exemple.fr" }));
+    expect(linked?.text).not.toContain("exemple.fr");
+    expect(linked?.text).toContain("Notre motif est à lire dans l'historique de votre annonce.");
+
+    // Two changes grouped in one email: every reason, every field, the price
+    // from the first change to the last.
+    const item = (id: string, data: Record<string, unknown>) =>
+      queued({
+        id,
+        type: "listing.team_edited",
+        groupKey: "listing-team-edit:l1",
+        link: "/vendeur/biens/p1/annonce#historique",
+        data: { listing_id: "l1", reference: "LK-0042", title: "Maison 5 pièces", ...data },
+      });
+    const grouped = await renderNotificationEmail(
+      planned([
+        item("n1", {
+          fields: ["price"],
+          reason: "Prix arrondi.",
+          old_price_cents: 30050000,
+          price_cents: 30000000,
+        }),
+        item("n2", {
+          fields: ["title"],
+          reason: "Titre plus précis.",
+          price_cents: 29900000,
+        }),
+      ]),
+    );
+    const groupedText = spaces(grouped?.text ?? "");
+    expect(groupedText).toContain("Notre motif : Prix arrondi.");
+    expect(groupedText).toContain("Notre motif : Titre plus précis.");
+    expect(groupedText).toContain("Modifié : le prix, le titre.");
+    expect(groupedText).toContain(
+      spaces(`Prix : ${formatPrice(30050000)} → ${formatPrice(29900000)}.`),
+    );
   });
 
   it("tells the buyer the answer of the seller, with its message", async () => {
