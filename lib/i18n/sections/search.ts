@@ -133,6 +133,8 @@ export const frSearch = {
     count: (total: number, formatted: string) =>
       total === 0 ? "Aucun bien" : total === 1 ? "1 bien" : `${formatted}\u00A0biens`,
     withPlace: (count: string, place: string) => `${count} ${place}`,
+    /** « Rechercher dans cette zone » applied (L1-16b). */
+    inArea: (count: string) => `${count} dans cette zone de la carte`,
     sort: "Trier par",
     sorts: {
       recent: "Plus récents",
@@ -155,6 +157,10 @@ export const frSearch = {
     closePreview: "Fermer l'aperçu",
     zoomIn: "Zoom avant",
     zoomOut: "Zoom arrière",
+    // L1-16b: grouping of the pills and search in the area of the map.
+    searchArea: "Rechercher dans cette zone",
+    /** Name of a group of pills, its number first (WCAG 2.5.3). */
+    cluster: (count: number) => `${count}\u00A0biens, zoomer`,
   },
   empty: {
     title: "Aucun bien ne correspond.",

@@ -85,11 +85,49 @@ export const SearchFilters = z
 
 export type SearchFilters = z.infer<typeof SearchFilters>;
 
+// « Rechercher dans cette zone » (L1-16b): the area of the map, in degrees.
+// Part of the search, not of its filters: an alert (L3-06) keeps its
+// commune, never an area of the map. In the URL: bbox=south,west,north,east.
+const latitude = z.number().finite().min(-90).max(90);
+const longitude = z.number().finite().min(-180).max(180);
+
+export const SearchBbox = z
+  .object({ south: latitude, west: longitude, north: latitude, east: longitude })
+  .strict()
+  .refine((box) => box.south < box.north && box.west < box.east, {
+    message: "south below north, west before east",
+  });
+
+export type SearchBbox = z.infer<typeof SearchBbox>;
+
+/** Decimals kept in the URL: about a metre. */
+const BBOX_DECIMALS = 5;
+
+/** The area of the map as it is written in the URL: « 48.62,2.25,48.73,2.42 ». */
+export function formatBbox(box: SearchBbox): string {
+  return [box.south, box.west, box.north, box.east]
+    .map((value) => String(Number(value.toFixed(BBOX_DECIMALS))))
+    .join(",");
+}
+
+/** The area of the URL, or undefined when it is not four numbers in order. */
+export function parseBbox(value: string | undefined): SearchBbox | undefined {
+  const parts = value?.split(",") ?? [];
+  if (parts.length !== 4 || !parts.every((part) => /^-?\d{1,3}(?:\.\d{1,12})?$/.test(part))) {
+    return undefined;
+  }
+  const [south, west, north, east] = parts.map(Number);
+  const parsed = SearchBbox.safeParse({ south, west, north, east });
+  return parsed.success ? parsed.data : undefined;
+}
+
 export type SearchQuery = {
   filters: SearchFilters;
   sort: SearchSort;
   /** « Voir plus »: pages 1 to page are shown. */
   page: number;
+  /** « Rechercher dans cette zone »: the listings inside the area of the map only. */
+  bbox?: SearchBbox;
 };
 
 // ---------------------------------------------------------------------------
@@ -111,6 +149,7 @@ const KEYS = {
   parking: "parking",
   elevator: "ascenseur",
   dpeMax: "dpe_max",
+  bbox: "bbox",
   sort: "tri",
   page: "page",
 } as const;
@@ -206,7 +245,9 @@ export function parseSearchParams(raw: RawParams): SearchQuery {
   const sort = oneOf(SEARCH_SORTS, get(KEYS.sort)) ?? "recent";
   const page = Math.min(Math.max(wholeNumber(get(KEYS.page)) ?? 1, 1), SEARCH_MAX_PAGE);
 
-  return { filters: SearchFilters.parse(filters), sort, page };
+  const bbox = parseBbox(get(KEYS.bbox));
+
+  return { filters: SearchFilters.parse(filters), sort, page, ...(bbox ? { bbox } : {}) };
 }
 
 /** URL parameters of a search, in a fixed order; defaults are left out. */
@@ -233,6 +274,7 @@ export function toSearchParams(query: Partial<SearchQuery>): URLSearchParams {
   if (filters.parking) set(KEYS.parking, 1);
   if (filters.elevator) set(KEYS.elevator, 1);
   set(KEYS.dpeMax, filters.dpeMax);
+  if (query.bbox) set(KEYS.bbox, formatBbox(query.bbox));
   if (query.sort && query.sort !== "recent") set(KEYS.sort, query.sort);
   if (query.page && query.page > 1) set(KEYS.page, query.page);
   return params;

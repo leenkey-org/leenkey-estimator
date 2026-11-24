@@ -129,7 +129,8 @@ function FiltersPanel() {
     const timer = window.setTimeout(async () => {
       let value: number | null = null;
       try {
-        const result = await countSearchResults(filters);
+        // Inside the area of the map, kept when the panel is applied (L1-16b).
+        const result = await countSearchResults(filters, query.bbox);
         value = result.ok ? result.data : null;
       } catch {
         // Network or new deployment: « Voir les biens » without a number.
@@ -140,7 +141,7 @@ function FiltersPanel() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [draftKey, filters, invalid, count.key]);
+  }, [draftKey, filters, invalid, count.key, query.bbox]);
 
   const counting = !invalid && count.key !== draftKey;
   const update = (patch: Partial<FiltersForm>) => setForm((current) => ({ ...current, ...patch }));
