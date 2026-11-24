@@ -91,6 +91,29 @@ Revue des permissions (base locale et préprod, linter de sécurité de Supabase
 | 2.7 | Laisser expirer une offre | buyer_d | « Offre expirée », plus de bouton Accepter | ☐ |
 | 2.8 | Demander à l'assistant de chercher un bien en langage naturel | buyer_c | Filtres corrects | ☐ |
 
+### Recette interne (Claude Code, L2-08, 2026-11-24)
+
+Sur une pile locale fraîche (Supabase local, emails capturés, modèle de l'assistant et Stripe simulés), avec les comptes de seed, après la fusion des dernières tâches des lots (PR #134 à #137).
+
+| Scénario | Parcours automatisé | Résultat |
+|---|---|---|
+| 2.1, 2.2 justificatif de financement, contrôle | `buyer-profile-live`, `admin-offers-live` | Vert |
+| 2.3 offre en 7 étapes, relecture, envoi, PDF | `offer-live` | Vert |
+| 2.4, 2.5 offre reçue, analyse, acceptation, coordonnées | `offer-live`, `admin-offers-live` | Vert |
+| 2.6, 2.7 retrait, nouvelle offre, expiration | `offer-live` | Vert |
+| 2.8 recherche en langage naturel par l'assistant | `buyer-assistant-live` (modèle simulé) | Vert ; les 10 recherches contre le vrai modèle (`npm run ai:eval-search`) restent à lancer, facturées |
+
+Contrôles d'ensemble (valent aussi pour le lot 3) :
+
+| Contrôle | Résultat |
+|---|---|
+| Suite E2E complète (mobile, desktop, seed modifié) | 491 verts, 0 échec, 72 ignorés (passage complet du 2026-11-24 sur une pile neuve) |
+| Accessibilité (axe, tests `@a11y` de la suite, mobile et desktop) | Aucune violation sérieuse ni critique |
+| Permissions (pgTAP, rejeu du job `rls` de la CI) | 58 fichiers verts, dont ceux des tables des lots 2 et 3 |
+| Lighthouse mobile | Voir P-02 ci-dessous |
+
+Reste à la charge de Cédric : les scénarios ci-dessus à la main en préprod (colonne OK), et les questions ouvertes de `DECISIONS.md` (Q93 à Q103). Tag `v2.0.0-lot2` : à poser par Younes.
+
 ### Retours lot 2
 
 | # | Écran | Constat | Attendu | Gravité | Corrigé |
@@ -107,10 +130,37 @@ Revue des permissions (base locale et préprod, linter de sécurité de Supabase
 | 3.5 | Partager les documents avec un acquéreur | seller_a / buyer_c | Résumé acquéreur visible | ☐ |
 | 3.6 | Créer une alerte et recevoir le digest | buyer_c | Email quotidien | ☐ |
 
+### Recette interne (Claude Code, L3-08, 2026-11-24)
+
+Même passage que le lot 2 ci-dessus (491 verts, 0 échec).
+
+| Scénario | Parcours automatisé | Résultat |
+|---|---|---|
+| 3.1, 3.2 créneaux, invitation, réservation, calendrier | `visits-live`, `visit-sheet-live` (fiche technique), `identity-check-live` (pièce d'identité avant réservation) | Vert |
+| 3.3 réservation sans invitation | `visits-live` et test de permissions `rls_visits` | Refusé |
+| 3.4 dépôt d'un document et analyse | `document-analysis-live`, `ddt-live` (DDT en une fois) | Vert (modèle simulé ; essai sur un vrai DDT à faire avant la production) |
+| 3.5 partage avec un acquéreur, réponses de l'assistant | `sale-file-live`, `shared-documents-answers-live` | Vert |
+| 3.6 alerte et email quotidien | `alerts-live` | Vert |
+| Retour de visite | `visit-feedback-live` | Vert |
+
+Reste : les scénarios à la main en préprod par Cédric, la vérification des citations de documents avec le vrai modèle (Q97). Tag `v2.0.0-lot3` : à poser par Younes.
+
 ### Retours lot 3
 
 | # | Écran | Constat | Attendu | Gravité | Corrigé |
 |---|---|---|---|---|---|
+
+## Performance et accessibilité finales (P-02, 2026-11-24)
+
+Lighthouse 12.6 mobile, bridage réel du navigateur (4G lente, processeur ralenti quatre fois), médiane de trois passages, sur la pile locale construite comme en production (`v2` après la PR #137, carte avancée comprise).
+
+| Page | LCP | CLS | TBT | Performance | Accessibilité | Bonnes pratiques |
+|---|---|---|---|---|---|---|
+| Accueil | 2,0 s | 0 | 420 ms | 88 | 100 | 96 |
+| Recherche | 1,95 s | 0 | 410 ms | 88 | 100 | 96 |
+| Annonce | 2,1 s | 0 | 350 ms | 90 | 100 | 96 |
+
+Objectifs de la SPEC 20 atteints : LCP sous 2,5 s et CLS sous 0,1 sur la recherche et l'annonce. L'INP ne se mesure pas en laboratoire ; le TBT (350 à 420 ms) est l'indicateur qui s'en approche et reste à suivre sur les données réelles de Vercel Analytics. Bonnes pratiques à 96 en local seulement (script de Vercel Analytics absent).
 
 ## Sauvegarde et restauration (P-03)
 

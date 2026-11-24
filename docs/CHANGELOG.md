@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-24 · L2-08, L3-08, P-02 · Recettes internes des lots 2 et 3, performance finale · PR #138
+- Ajouté : `docs/RECETTE.md`, recette interne des lots 2 et 3 (scénarios reliés aux parcours automatisés ; suite complète 491 verts, 0 échec ; axe sans violation sérieuse ; 58 fichiers de permissions verts) et mesure finale de performance (LCP 1,95 à 2,1 s, CLS 0, accessibilité 100).
+- Planning : L1-30 (toutes ses sous-tâches faites), L2-08, L3-08, P-02 et P-05b (mise en ligne du 22 novembre) cochées. Tags `v2.0.0-lot2` et `v2.0.0-lot3` à poser par Younes.
+
 ### 2026-11-24 · L1-30b · PR #137
 - Ajouté : « Résumé du jour » sur le tableau de bord du back office (`/admin`), sous la salutation : 5 lignes au plus rédigées par l'assistant (`MODELS.smart`, prompt `core/ai/prompts/admin-daily-brief.md`) à partir des chiffres lus en code avec la session de l'admin (annonces à valider et attente de la plus ancienne, dossiers, signalements, messages clients non lus, interventions du conseiller, justificatifs de financement et pièces d'identité à contrôler, fichiers de pièces d'identité à supprimer, offres en attente ; sur 24 h : inscriptions, formules vendues, offres envoyées). Le modèle ne lit pas la base et ne cite que ces chiffres ; une phrase quand rien n'attend.
 - Ajouté : cache d'une heure pour toute l'équipe (table `admin_daily_briefs`) ; le tableau de bord s'affiche sans l'attendre (la carte le demande après coup, squelette pendant la rédaction) ; « Régénérer » écrit un nouveau résumé 5 minutes au moins après le dernier (vérifié en code et par la base) ; en erreur, une phrase discrète, les chiffres restent.
