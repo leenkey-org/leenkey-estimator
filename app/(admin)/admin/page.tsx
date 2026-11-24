@@ -261,8 +261,6 @@ export default async function AdminHomePage() {
       ) : null}
 
       <UpgradeStats result={upgrades} />
-
-      <p className="text-lk-caption text-lk-ink-3">{t.later}</p>
     </AdminPage>
   );
 }
