@@ -22,8 +22,11 @@ import {
   adminTodo,
   adminUpgradeStats,
   type AdminTodoItem,
+  latestDailyBrief,
   UPGRADE_STATS_DAYS,
 } from "@/leenkey/admin/dashboard/queries";
+import { briefDecision } from "@/leenkey/admin/dashboard/daily-brief-facts";
+import { DailyBrief } from "@/leenkey/admin/components/daily-brief";
 import { photoUrl } from "@/leenkey/properties/photo-files";
 import { formatInteger, formatPrice, formatWaiting } from "@/lib/format";
 import { frAdminDashboard } from "@/lib/i18n/sections/adminDashboard";
@@ -109,18 +112,25 @@ function Tile({
 // what waits for the team (listings to review with the oldest one and the
 // 24 h target, open cases, open reports, the messages of the customers not
 // read, L1-34), the plans sold and the sign-ups of the last 30 days, then
-// « À traiter », the oldest first. Not yet here, with their screens: the offers (L2) and
-// the upgrade prompts (L2-09); the daily brief of the assistant (L1-30b). The
+// « À traiter », the oldest first. « Résumé du jour » (L1-30b) under the
+// greeting: the brief of the last hour is read with the page, a new one is
+// written after it (the card asks for it), never in its way. Not yet here,
+// with their screens: the offers (L2) and the upgrade prompts (L2-09). The
 // page checks the admin role itself, not only the layout.
 export default async function AdminHomePage() {
   const profile = await requireAdmin();
-  const [counts, activity, todo, upgrades] = await Promise.all([
+  const [counts, activity, todo, upgrades, brief] = await Promise.all([
     adminCounts(),
     adminActivity(),
     adminTodo(),
     adminUpgradeStats(),
+    latestDailyBrief(),
   ]);
   const now = new Date();
+  const cachedBrief =
+    brief.ok && brief.data && briefDecision(brief.data, now, false) === "cached"
+      ? brief.data
+      : null;
   const failed = !counts.ok || !activity.ok || !todo.ok;
 
   const oldest = counts.ok ? counts.data.listingsOldestSubmittedAt : null;
@@ -146,6 +156,8 @@ export default async function AdminHomePage() {
           {t.error}
         </InlineAlert>
       ) : null}
+
+      <DailyBrief initial={cachedBrief} />
 
       {counts.ok || activity.ok ? (
         <ul

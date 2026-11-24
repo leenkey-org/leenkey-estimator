@@ -26,6 +26,11 @@ export const MOCK_CASE_SUMMARY =
   "Points à aborder : les tâches de Leenkey de l'étape en cours.\n" +
   "À éviter : rien de particulier.";
 
+/** « Résumé du jour » of the dashboard of the back office (L1-30b). */
+export const MOCK_DAILY_BRIEF =
+  "Résumé de l'assistant de test, d'après les chiffres du tableau de bord.\n" +
+  "Les annonces à valider passent en premier, puis les dossiers et les signalements ouverts.";
+
 /** The summary of a listing on its public page (L2-05). */
 export const MOCK_LISTING_SUMMARY =
   "Résumé de l'assistant de test : un bien présenté d'après sa fiche et sa description. " +
@@ -529,7 +534,8 @@ export function mockText(
     | "listing_description"
     | "rejection_reason"
     | "case_summary"
-    | "listing_summary",
+    | "listing_summary"
+    | "daily_brief",
 ): TextCall {
   const answer = {
     reply_suggestion: MOCK_REPLY,
@@ -537,6 +543,7 @@ export function mockText(
     rejection_reason: MOCK_REJECTION_REASON,
     case_summary: MOCK_CASE_SUMMARY,
     listing_summary: MOCK_LISTING_SUMMARY,
+    daily_brief: MOCK_DAILY_BRIEF,
   }[kind];
   return async () => message([text(answer)], "end_turn");
 }

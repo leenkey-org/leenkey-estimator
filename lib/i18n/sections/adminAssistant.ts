@@ -96,6 +96,7 @@ export const frAdminAssistant = {
       listing_summary: "Résumé d'annonce",
       document_analysis: "Analyse de document",
       case_summary: "Synthèse avant appel",
+      daily_brief: "Résumé du jour",
     } as Record<string, string>,
     search: {
       label: "Rechercher dans le journal",

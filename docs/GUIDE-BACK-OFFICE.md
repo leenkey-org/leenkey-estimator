@@ -40,7 +40,7 @@ Sur ordinateur, le menu est à gauche. Le back office est conçu d'abord pour l'
 
 | Entrée | À quoi elle sert |
 | --- | --- |
-| Tableau de bord | Ce qui attend l'équipe, et les chiffres des 30 derniers jours |
+| Tableau de bord | Le résumé du jour, ce qui attend l'équipe, et les chiffres des 30 derniers jours |
 | Annonces | Valider, refuser, suspendre, demander une mise en conformité |
 | Utilisateurs | Les comptes, leur fiche, la suspension, les justificatifs de financement, les pièces d'identité |
 | Dossiers | Les ventes accompagnées et les demandes écrites à l'équipe |
@@ -73,6 +73,8 @@ Ces emails partent à l'adresse confirmée de chaque compte de l'équipe, plus u
 > À savoir : aucun email ne prévient d'un justificatif de financement à contrôler ni d'une pièce d'identité à vérifier. Ils apparaissent dans « À traiter ».
 
 ## 2. Le tableau de bord
+
+Sous la salutation, le « Résumé du jour » dit en 5 lignes au plus ce qui vous attend, le plus urgent d'abord, puis l'activité des dernières 24 heures (inscriptions, formules vendues, offres envoyées). L'assistant l'écrit à partir des chiffres du tableau de bord, sans en ajouter : en cas de doute, les tuiles et « À traiter » font foi. Le résumé est gardé une heure pour toute l'équipe ; l'heure où il a été écrit est indiquée dessous. « Régénérer » en écrit un nouveau, au plus tôt 5 minutes après le précédent. S'il n'est pas disponible, le reste du tableau de bord fonctionne normalement.
 
 Les tuiles du haut :
 
