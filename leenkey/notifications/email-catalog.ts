@@ -141,6 +141,9 @@ const POLICIES: Record<string, EmailPolicy> = {
   "listing.compliance_requested": { audience: "recipient", throttleMinutes: 0 },
   "listing.compliance_reminder": { audience: "recipient", throttleMinutes: 0 },
   "listing.deleted": { audience: "recipient", throttleMinutes: 0 },
+  // L1-30e (DECISIONS.md 2026-11-24): a listing changed by the team, to its seller: at once,
+  // always sent (it is about their listing).
+  "listing.team_edited": { audience: "recipient", throttleMinutes: 0 },
 };
 
 export function emailPolicy(type: string): EmailPolicy | null {
@@ -548,6 +551,45 @@ async function listingCompliance(email: PlannedEmail): Promise<RenderedEmail | n
         label: kind.action,
       },
       why: t.why,
+      siteUrl: siteUrl(),
+    }),
+    fr.legal.contactEmail,
+  );
+}
+
+/**
+ * A listing changed by the team from the back office (L1-30e), to its seller:
+ * what changed, the price before and after, the reason; an answer goes to
+ * Leenkey.
+ */
+async function listingTeamEdited(email: PlannedEmail): Promise<RenderedEmail | null> {
+  const last = email.items.at(-1);
+  const reference = text(last?.data.reference);
+  const reason = text(last?.data.reason);
+  if (!last || !reference || !reason) return null;
+  const t = fr.emails.listingTeamEdited;
+  const fields = (Array.isArray(last.data.fields) ? (last.data.fields as unknown[]) : []).flatMap(
+    (field) => (typeof field === "string" && t.fields[field] ? [t.fields[field]] : []),
+  );
+  const before = typeof last.data.old_price_cents === "number" ? last.data.old_price_cents : null;
+  const after = typeof last.data.price_cents === "number" ? last.data.price_cents : null;
+  return rendered(
+    t.subject(reference),
+    AccountNoticeEmail({
+      firstName: email.firstName,
+      title: t.title,
+      paragraphs: [
+        // Written by the seller (or the team): made safe for a mail client.
+        t.text(fr.emails.listingCompliance.listing(emailSafeText(last.data.title))),
+        ...(fields.length > 0 ? [t.changed(fields)] : []),
+        ...(before !== null && after !== null && before !== after
+          ? [t.price(formatPrice(before), formatPrice(after))]
+          : []),
+        t.reason(reason),
+        t.next,
+      ],
+      action: { href: absoluteUrl(last.link ?? "/vendeur"), label: t.action },
+      why: fr.emails.listingCompliance.why,
       siteUrl: siteUrl(),
     }),
     fr.legal.contactEmail,
@@ -1040,6 +1082,8 @@ export function renderNotificationEmail(
     case "listing.compliance_reminder":
     case "listing.deleted":
       return listingCompliance(email);
+    case "listing.team_edited":
+      return listingTeamEdited(email);
     default:
       return Promise.resolve(null);
   }

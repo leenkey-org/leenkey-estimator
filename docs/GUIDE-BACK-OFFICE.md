@@ -1,6 +1,6 @@
 # Guide du back office Leenkey
 
-Pour l'équipe Leenkey. Version du 23 novembre 2026.
+Pour l'équipe Leenkey. Version du 24 novembre 2026.
 
 ## En bref
 
@@ -136,6 +136,19 @@ Notre engagement : une annonce reçue est relue sous 24 h.
 ### Les modifications d'une annonce en ligne
 
 Un vendeur peut modifier son annonce en ligne sans nouvelle relecture. La fiche les liste dans « Modifications depuis la mise en ligne » : prix, titre, description, photos. Contrôlez-les.
+
+### Modifier une annonce
+
+Vous pouvez corriger vous-même le titre, la description ou le prix d'une annonce « En attente de validation », « En ligne », « En pause » ou « Suspendue par Leenkey ».
+
+1. Dans le bloc « Modifier l'annonce », cliquez sur « Modifier l'annonce ».
+2. Corrigez le titre, le prix ou la description.
+3. Écrivez le motif (3 caractères au moins). Le vendeur le lit tel quel.
+4. Cliquez sur « Enregistrer la modification ».
+
+L'annonce garde son statut. Le vendeur est prévenu dans son espace et par email, avec votre motif. La modification s'inscrit dans l'historique de l'annonce, de son côté comme du vôtre, avec la mention « par l'équipe Leenkey » et le motif.
+
+> À savoir : les photos ne se modifient pas ici. Pour une photo à retirer, demandez une mise en conformité ou suspendez l'annonce.
 
 ### Suspendre et remettre en ligne
 
@@ -366,7 +379,7 @@ C'est le seul export du back office.
 
 Ce que le back office ne fait pas aujourd'hui :
 
-- modifier le texte, le prix ou les photos d'une annonce à la place du vendeur ;
+- modifier les photos ou les caractéristiques d'un bien à la place du vendeur ;
 - rembourser un paiement (cela se fait dans Stripe) ;
 - donner ou retirer l'accès de l'équipe à un compte ;
 - rétablir une annonce supprimée ;
@@ -383,7 +396,7 @@ Ouvrez sa fiche dans « Utilisateurs ». Vérifiez l'adresse et la mention « Em
 
 ### Une annonce est en ligne avec une erreur de prix.
 
-Le back office ne modifie pas l'annonce. Écrivez au vendeur, ou ouvrez l'annonce et cliquez sur « Demander une mise en conformité ». Si l'erreur trompe les acquéreurs, cliquez sur « Suspendre ».
+Ouvrez l'annonce, cliquez sur « Modifier l'annonce », corrigez le prix et écrivez le motif. Le vendeur est prévenu. Vous pouvez aussi lui demander de le faire : « Demander une mise en conformité ».
 
 ### Un acquéreur signale un vendeur.
 

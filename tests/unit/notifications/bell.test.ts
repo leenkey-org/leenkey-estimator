@@ -157,6 +157,7 @@ describe("wording of the notifications (from type and data)", () => {
         "listing.published",
         "listing.rejected",
         "listing.revised",
+        "listing.team_edited",
         "message.new",
         "offer.accepted_team",
         "offer.answered",
@@ -386,6 +387,19 @@ describe("wording of the notifications (from type and data)", () => {
     expect(
       describeNotification(view({ type: "listing.deleted", data: { title: "Maison" } })),
     ).toMatchObject({ title: t.listingDeleted.title, tone: "warning" });
+    // L1-30e: a listing changed by the team, to its seller, with the reason.
+    expect(
+      describeNotification(
+        view({
+          type: "listing.team_edited",
+          data: { title: "Maison", fields: ["price", "title"], reason: "Prix arrondi." },
+        }),
+      ),
+    ).toMatchObject({
+      title: "Notre équipe a modifié votre annonce",
+      detail: "Maison · Modifié : prix, titre · Motif : Prix arrondi.",
+      tone: "blue",
+    });
     // L1-23, the facts written by sale_refresh_progress.
     expect(
       describeNotification(

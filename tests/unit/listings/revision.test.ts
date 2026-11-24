@@ -23,8 +23,15 @@ describe("a line of the history of a listing", () => {
       id: "r1",
       at: "2026-11-13T09:00:00.000Z",
       byTeam: false,
+      reason: null,
       change: { kind: "price", oldCents: 25000000, newCents: 23900000 },
     });
+  });
+
+  it("a change made by the team from the back office: its reason (L1-30e)", () => {
+    const line = toRevision(row({ changed_by: "admin-1", reason: "  Prix arrondi.  " }), SELLER);
+    expect(line).toMatchObject({ byTeam: true, reason: "Prix arrondi." });
+    expect(toRevision(row({ reason: " " }), SELLER)?.reason).toBeNull();
   });
 
   it("the title and the description, as written", () => {

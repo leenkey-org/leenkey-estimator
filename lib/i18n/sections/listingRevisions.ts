@@ -25,6 +25,10 @@ export const frListingRevisions = {
   noCaption: "sans légende",
   pct: (value: number) => `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value)}${NBSP}%`,
   byTeam: "par l'équipe Leenkey",
+  // L1-30e: the reason of a change made by the team from the back office.
+  reason: (reason: string) => `Motif : ${reason}`,
+  // In review, the history shows only the changes of the team (L1-30e).
+  pendingIntro: "Modifications faites par notre équipe pendant la relecture de votre annonce.",
   showTexts: "Voir l'ancienne et la nouvelle description",
   before: "Avant",
   after: "Après",

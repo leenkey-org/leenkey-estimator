@@ -8,9 +8,12 @@ import { createClient } from "@/lib/supabase/server";
 import type { SuggestionResult } from "@/leenkey/ai/types";
 import {
   complianceSchema,
+  listingEditInvalidFields,
+  listingEditSchema,
   moderationSchema,
   rejectionDraftSchema,
   type ComplianceAction,
+  type ListingEditField,
   type ModerationAction,
 } from "@/lib/validations/admin";
 import type { Database } from "@/types/database";
@@ -187,4 +190,53 @@ export async function listingComplianceAction(input: unknown): Promise<Complianc
   revalidatePath(`/admin/annonces/${command.listingId}`);
   if (command.action === "delete") revalidatePath("/sitemap.xml");
   return { ok: true, data: { action: command.action } };
+}
+
+export type ListingEditError =
+  | ModerationError
+  /** Nothing differs from the listing as it is: nothing written. */
+  | "unchanged";
+
+export type ListingEditResult =
+  | { ok: true; data: { fields: string[] } }
+  | { ok: false; error: ListingEditError; fields?: ListingEditField[] };
+
+/**
+ * « Modifier » a listing from the back office (L1-30e, DECISIONS.md
+ * 2026-11-24): its title, description and price, with a reason the seller
+ * reads. listing_admin_edit checks is_admin(), the status (in review, online,
+ * paused or suspended) and the values, writes the history of L1-35 with the
+ * reason, audit_log and the notice of the seller (bell, and email through the
+ * cron of the notifications). No service role.
+ */
+export async function editListingAction(input: unknown): Promise<ListingEditResult> {
+  const profile = await getProfile();
+  if (!profile?.roles.includes("admin")) return { ok: false, error: "forbidden" };
+  const parsed = listingEditSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "invalid", fields: listingEditInvalidFields(input) };
+  }
+  const command = parsed.data;
+  const supabase = await createClient();
+  const { data: fields, error } = await supabase.rpc("listing_admin_edit", {
+    p_listing_id: command.listingId,
+    p_title: command.title,
+    p_description: command.description,
+    p_price_cents: command.priceEuros * 100,
+    p_reason: command.reason,
+  });
+  if (error) {
+    console.error("[admin] listing edit failed", {
+      user_id: profile.id,
+      entity_id: command.listingId,
+      code: error.code,
+    });
+    return { ok: false, error: moderationError(error.code) };
+  }
+  if (!fields || fields.length === 0) return { ok: false, error: "unchanged" };
+  revalidatePath("/admin/annonces");
+  revalidatePath(`/admin/annonces/${command.listingId}`);
+  // The seller's sheet of the property shows the new values and the reason.
+  revalidatePath("/vendeur", "layout");
+  return { ok: true, data: { fields } };
 }
