@@ -167,7 +167,7 @@ test("l'équipe modifie le prix d'une annonce en ligne, avec un motif (ordinateu
     sql(`select price_cents || '|' || status from public.listings where id = '${listing}'`),
   ).toBe("30000000|published");
   expect(
-    sql(`select old_value || '>' || new_value || '|' || reason from public.listing_revisions
+    sql(`select (old_value #>> '{}') || '>' || (new_value #>> '{}') || '|' || reason from public.listing_revisions
           where listing_id = '${listing}' and field = 'price'`),
   ).toBe(`30050000>30000000|${PRICE_REASON}`);
   expect(
