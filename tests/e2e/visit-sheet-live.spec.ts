@@ -172,7 +172,7 @@ test("fiche technique : lien de la visite, PDF, comptes autorisés, visite annul
 
   await test.step("une visite annulée n'a plus de fiche", async () => {
     sql(`set session_replication_role = replica;
-         update public.visits set status = 'cancelled' where id = '${visitId}';`);
+         update public.visits set status = 'cancelled', cancelled_at = now() where id = '${visitId}';`);
     const response = await buyer.request.get(sheetPath, { maxRedirects: 0 });
     expect(response.status()).toBe(404);
     await buyer.goto(visitPath);

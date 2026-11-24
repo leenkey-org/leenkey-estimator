@@ -377,6 +377,15 @@ export async function visitForSheet(
   let address: VisitForSheet["address"] = null;
   if (sheetShowsAddress(role, visit.status)) {
     const place = await supabase.rpc("visit_address", { p_visit: visitId });
+    // Refused for who does not read the address (visit_address checks it
+    // again): the sheet goes without it, the refusal is logged.
+    if (place.error) {
+      console.error("[visits] sheet address not read", {
+        user_id: profile.id,
+        entity_id: visitId,
+        code: place.error.code,
+      });
+    }
     const row = place.data?.[0];
     if (row) address = { line: row.address_line, postalCode: row.postal_code, city: row.city };
   }
