@@ -956,7 +956,7 @@ create table ai_conversations (
   property_id uuid references properties(id),
   -- L1-29 (DECISIONS 2026-11-02) : la conversation avec l'assistant, ou une suggestion journalisée
   -- L1-30d (DECISIONS 2026-11-12) : le motif de refus et la synthèse avant appel, contexte admin seulement
-  kind text not null default 'chat' check (kind in ('chat','reply_suggestion','listing_description','rejection_reason','case_summary','listing_summary')),
+  kind text not null default 'chat' check (kind in ('chat','reply_suggestion','listing_description','rejection_reason','case_summary','listing_summary','document_analysis','daily_brief')),
   created_at timestamptz not null default now()
 );
 

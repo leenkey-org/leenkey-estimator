@@ -48,7 +48,7 @@ export const frAdminDashboard = {
     title: "Résumé du jour",
     writing: "L'assistant rédige le résumé du jour.",
     written: (time: string) => `Écrit à ${time} par l'assistant, d'après les chiffres ci-dessous.`,
-    note: "Mis à jour toutes les heures. Les chiffres du tableau de bord font foi.",
+    note: "Mis à jour au plus une fois par heure. Les chiffres du tableau de bord font foi.",
     regenerate: "Régénérer",
     tooSoon: "Le résumé vient d'être écrit : vous pourrez le régénérer dans quelques minutes.",
     unavailable:

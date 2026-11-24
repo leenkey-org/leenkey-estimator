@@ -4,7 +4,7 @@
 -- logged in the context of the team only.
 begin;
 \ir _helpers.psql
-select plan(24);
+select plan(27);
 \ir _plan.psql
 
 -- The briefs already written on this base (end-to-end tests): set aside, the
@@ -26,6 +26,7 @@ select is((select count(*)::int from admin_daily_briefs where conversation_id = 
           'admin: reads the brief');
 select throws_ok($$insert into admin_daily_briefs (body) values ('Un autre résumé.')$$,
                  '42501', null, 'admin: no new brief within 5 minutes');
+select is(admin_daily_brief_recent(), true, 'admin: a brief of less than 5 minutes is seen');
 select throws_ok($$update admin_daily_briefs set body = 'Changé.'$$,
                  '42501', null, 'admin: a brief is never changed');
 select throws_ok($$delete from admin_daily_briefs$$,
@@ -40,6 +41,7 @@ select throws_ok($$insert into ai_conversations (profile_id, context, kind)
 \set who seller_a
 \ir _as.psql
 select is((select count(*)::int from admin_daily_briefs), 0, 'seller_a: never the brief');
+select is(admin_daily_brief_recent(), false, 'seller_a: the helper tells nothing of the briefs');
 select throws_ok($$insert into admin_daily_briefs (body) values ('Résumé.')$$,
                  '42501', null, 'seller_a: never writes a brief');
 select throws_ok($$insert into ai_conversations (profile_id, context, kind)
@@ -58,6 +60,7 @@ select throws_ok($$insert into admin_daily_briefs (body) values ('Résumé.')$$,
 \set who buyer_c
 \ir _as.psql
 select is((select count(*)::int from admin_daily_briefs), 0, 'buyer_c: never the brief');
+select is(admin_daily_brief_recent(), false, 'buyer_c: the helper tells nothing of the briefs');
 select throws_ok($$insert into admin_daily_briefs (body) values ('Résumé.')$$,
                  '42501', null, 'buyer_c: never writes a brief');
 select throws_ok($$update admin_daily_briefs set body = 'Changé.'$$,

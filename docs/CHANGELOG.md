@@ -36,7 +36,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Ajouté : cache d'une heure pour toute l'équipe (table `admin_daily_briefs`) ; le tableau de bord s'affiche sans l'attendre (la carte le demande après coup, squelette pendant la rédaction) ; « Régénérer » écrit un nouveau résumé 5 minutes au moins après le dernier (vérifié en code et par la base) ; en erreur, une phrase discrète, les chiffres restent.
 - Ajouté : journal de l'assistant sous `ai_conversations.kind = 'daily_brief'` (contexte équipe seulement), « Résumé du jour » dans le journal de `/admin/assistant` ; `AI_MOCK=1` rend un texte fixe.
 - Migration : `20261124130000_admin_daily_brief.sql` (table, RLS équipe seulement, ni modification ni suppression par un client, genre du journal élargi).
-- Tests : `tests/unit/admin/daily-brief.test.ts`, `supabase/tests/rls_admin_daily_brief.sql` (24 cas, cinq comptes et visiteur), `tests/e2e/admin-daily-brief-live.spec.ts` (projet « seed-mutations »).
+- Tests : `tests/unit/admin/daily-brief.test.ts`, `supabase/tests/rls_admin_daily_brief.sql` (27 cas, cinq comptes et visiteur), `tests/e2e/admin-daily-brief-live.spec.ts` (projet « seed-mutations »).
 - Docs : `DECISIONS.md` (2026-11-24), `SPEC-V2.md` 17, `DESIGN.md` (L1-30b), `PLANNING.md`, `GUIDE-BACK-OFFICE.md` (et son PDF).
 
 ### 2026-11-24 · Fiche du bien en deux colonnes (demande de Cédric) · PR #133

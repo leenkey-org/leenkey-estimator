@@ -34,9 +34,11 @@ create trigger admin_daily_briefs_set_updated_at before update on public.admin_d
 
 -- Whether a brief was written within the last 5 minutes (read as the owner:
 -- the check of the insert policy does not depend on what the caller reads).
+-- False for anyone but the team: it tells nothing of the briefs to others.
 create function public.admin_daily_brief_recent() returns boolean
 language sql stable security definer set search_path = '' as $$
-  select exists (select 1 from public.admin_daily_briefs
+  select public.is_admin()
+     and exists (select 1 from public.admin_daily_briefs
                   where created_at > now() - interval '5 minutes');
 $$;
 
