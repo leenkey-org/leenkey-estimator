@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-24 · Médiateur de la consommation (Q32) · PR #132
+- Ajouté : le médiateur de Leenkey, le CM2C (Centre de la Médiation de la Consommation de Conciliateurs de Justice, 49 rue de Ponthieu, 75008 Paris, www.cm2c.net, 01 89 47 00 14), dans `lib/config/sales.ts`, l'article 16 des CGV, l'article 8 des mentions légales, le récapitulatif de commande et l'email de formule activée.
+- Modifié : CGV en vigueur depuis le 24 novembre 2026 (`cgvVersion` 2026-11-24 : les commandes suivantes enregistrent cette version).
+- Modifié : en production, les formules payantes s'ouvrent à la commande dès que la clé secrète Stripe est posée ; sans elle, elles restent annoncées comme pas encore ouvertes.
+- Tests : `tests/unit/billing/orders.test.ts`, `tests/e2e/legal.spec.ts` (date des CGV).
+
 ### 2026-11-24 · Fiche technique du bien à la visite confirmée (demande de Cédric) · PR #131
 - Ajouté : PDF « Fiche technique du bien » à `/visites/[id]/fiche-technique`, dessiné à la demande avec le moteur du PDF de l'offre (rien n'est stocké) : titre, référence, prix et commune de l'annonce, date et heure de la visite, caractéristiques renseignées de la page de l'annonce (surfaces, pièces, étage, année, chauffage, classes DPE et GES, charges, taxe foncière, lots), mentions réglementaires. Les chiffres du DPE seulement si `dpe_rules.figures_public` ; jamais son numéro ni sa date.
 - Ajouté : lien « Fiche technique du bien (PDF) » sur la page de la visite de l'acquéreur (visite réservée, non annulée, annonce en ligne) et dans son email « Visite confirmée » (lien vers le site, connexion demandée ; jamais une pièce jointe).
