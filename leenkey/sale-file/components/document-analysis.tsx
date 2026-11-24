@@ -151,7 +151,11 @@ export function SellerDocumentAnalysis({
             ? t.quality.wrong_type(fr.saleFile.types[document.type])
             : t.quality[analysis.quality]}{" "}
           {analysis.quality_note ? `${analysis.quality_note} ` : null}
-          {t.quality.help}
+          {analysis.quality === "wrong_type" &&
+          analysis.type_detected === "ddt" &&
+          document.type !== "ddt"
+            ? t.quality.ddtHint
+            : t.quality.help}
         </InlineAlert>
       ) : null}
       <Heading />

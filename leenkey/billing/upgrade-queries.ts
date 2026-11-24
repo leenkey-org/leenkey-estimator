@@ -45,7 +45,7 @@ async function missingDocuments(propertyId: string): Promise<number | null> {
       .maybeSingle(),
     supabase
       .from("documents")
-      .select("id, type, title, created_at")
+      .select("id, type, title, created_at, covers")
       .eq("property_id", propertyId)
       .is("deleted_at", null),
     supabase.from("document_exemptions").select("type, reason").eq("property_id", propertyId),
@@ -58,6 +58,8 @@ async function missingDocuments(propertyId: string): Promise<number | null> {
       type: row.type,
       title: row.title,
       createdAt: row.created_at,
+      // A DDT: the diagnostic lines it covers count as provided.
+      covers: row.covers,
     })),
     exemptions.data,
     // Not subject to the DPE (L1-65): its reason, as the tab and the notary file read it.
