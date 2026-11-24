@@ -5,6 +5,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { List, Map as MapIcon } from "lucide-react";
 import type { MapListing } from "../map-listings";
 import { useMapSync } from "./map-sync";
+import { useSearch } from "./search-context";
 import { SearchMap } from "./search-map";
 import { facadeScope } from "@/components/shared/facade-root";
 import { MapBackdrop, MapNotice } from "@/components/shared/map-notice";
@@ -12,6 +13,7 @@ import type { LatLngLiteral, Padding } from "@/core/maps/google-maps";
 import { frMaps } from "@/lib/i18n/sections/maps";
 import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
+import type { SearchBbox } from "@/lib/validations/search";
 
 // The texts this module shows (lib/i18n/sections, P-06).
 const fr = { maps: frMaps, search: frSearch } as const;
@@ -20,7 +22,9 @@ const fr = { maps: frMaps, search: frSearch } as const;
 // list from 1024 px, loaded with the page (L1-63, DECISIONS 2026-10-28); on a
 // phone and a tablet, full screen from a floating « Carte » button, and
 // loaded only then. A pill chosen shows its card over the map (L1-62).
-// Without a key (previews) the map says it is not available.
+// Without a key (previews) the map says it is not available. Since L1-16b,
+// « Rechercher dans cette zone » limits the search to the area of the map
+// (`bbox` in the URL), with the other filters.
 
 const t = fr.search.map;
 
@@ -28,6 +32,8 @@ type Props = {
   apiKey: string | null;
   listings: readonly MapListing[];
   centre: LatLngLiteral;
+  /** The area of the map the search is limited to (L1-16b), or null. */
+  bbox: SearchBbox | null;
 };
 
 // The breakpoint `lg` of Tailwind (64rem), not 1024px: with a larger font of
@@ -55,6 +61,7 @@ function MapContent({
   apiKey,
   listings,
   centre,
+  bbox,
   activeId,
   selectedId,
   onHover,
@@ -77,6 +84,7 @@ function MapContent({
   className?: string;
 }) {
   const { visited, markVisited } = useMapSync();
+  const { applyBbox } = useSearch();
   if (!apiKey) return <MapNotice className={className}>{fr.maps.unavailable}</MapNotice>;
   // Before the hydration (the server cannot know the width), the drawn
   // streets; below 1024 px, hidden with their panel (never busy: nothing
@@ -93,6 +101,8 @@ function MapContent({
       onHover={onHover}
       onSelect={onSelect}
       onVisit={markVisited}
+      bbox={bbox}
+      onSearchArea={applyBbox}
       padding={padding}
       previewClassName={previewClassName}
       previewSizes={previewSizes}

@@ -12,6 +12,7 @@ import { getProfile } from "@/core/auth/session";
 import { CreateAlertButton } from "@/leenkey/alerts/components/create-alert-button";
 import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
 import { bottomTabs } from "@/leenkey/navigation/config";
+import { ClearAreaButton } from "@/leenkey/search/components/clear-area-button";
 import { FiltersDialog } from "@/leenkey/search/components/filters-dialog";
 import { LoadMore } from "@/leenkey/search/components/load-more";
 import { MapSyncProvider } from "@/leenkey/search/components/map-sync";
@@ -46,7 +47,8 @@ const fr = { nav: frNav, search: frSearch } as const;
 // (L1-10): TopNav from 768 px, buyer tabs below for every visitor (the
 // middleware sends a signed-out visitor from Favoris, Messages or Compte to
 // the login page; « Vendre » opens the landing page for the sellers),
-// SiteFooter at the end (L1-36).
+// SiteFooter at the end (L1-36). « Rechercher dans cette zone » (L1-16b):
+// `bbox` in the URL limits the results to the area of the map.
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -82,13 +84,17 @@ export default async function SearchPage({ searchParams }: Props) {
   // The profile is read once per request (cache), by the TopNav too.
   const [result, profile] = await Promise.all([searchListings(query), getProfile()]);
   const now = new Date();
+  // An area of the map without listings keeps « Carte »: the map moves on from there.
   const mapButton =
-    Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) && result.ok && result.data.total > 0;
+    Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) &&
+    result.ok &&
+    (result.data.total > 0 || Boolean(query.bbox));
   const map = {
     // Public key, restricted to the domain of the site (L1-16).
     apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || null,
     listings: result.ok ? toMapListings(result.data.items, now) : [],
     centre: mapCentre(place),
+    bbox: query.bbox ?? null,
   };
 
   let content: ReactNode;
@@ -109,7 +115,8 @@ export default async function SearchPage({ searchParams }: Props) {
       </InlineAlert>
     );
   } else if (result.data.total === 0) {
-    const filtered = Boolean(query.filters.location) || countActiveFilters(query.filters) > 0;
+    const filtered =
+      Boolean(query.filters.location || query.bbox) || countActiveFilters(query.filters) > 0;
     content = (
       <EmptyState
         className="py-10"
@@ -120,6 +127,8 @@ export default async function SearchPage({ searchParams }: Props) {
             // The filters button of the header stays the one primary action.
             <div className="flex flex-wrap justify-center gap-2.5">
               <CreateAlertButton signedIn={Boolean(profile)} display="button" />
+              {/* An empty area of the map: the same search without it (L1-16b). */}
+              {query.bbox ? <ClearAreaButton display="button" /> : null}
               <Button asChild variant="outline-ink">
                 <Link href={SEARCH_PATH}>{t.empty.action}</Link>
               </Button>
@@ -135,12 +144,20 @@ export default async function SearchPage({ searchParams }: Props) {
     content = (
       <>
         <div className="mb-2 flex items-center justify-between gap-3 lg:mb-3.5">
-          <p
-            role="status"
-            className="min-w-0 text-lk-secondary font-semibold text-lk-ink lg:text-lk-compact"
-          >
-            {place ? t.results.withPlace(count, placePhrase(place, around)) : count}
-          </p>
+          {/* An area of the map (L1-16b): « Retirer la zone » beside the count. */}
+          <div className="flex min-w-0 flex-wrap items-center gap-x-1">
+            <p
+              role="status"
+              className="min-w-0 text-lk-secondary font-semibold text-lk-ink lg:text-lk-compact"
+            >
+              {query.bbox
+                ? t.results.inArea(count)
+                : place
+                  ? t.results.withPlace(count, placePhrase(place, around))
+                  : count}
+            </p>
+            {query.bbox ? <ClearAreaButton /> : null}
+          </div>
           <SortSelect />
         </div>
         <ResultsList items={items} now={now} />

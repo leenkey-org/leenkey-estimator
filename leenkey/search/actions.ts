@@ -4,7 +4,12 @@ import { z } from "zod";
 import { searchSummary } from "./filter-labels";
 import { resolveLocation } from "./location";
 import { countListings, searchListings } from "./queries";
-import { parseSearchParams, SEARCH_PAGE_SIZE, SearchFilters } from "@/lib/validations/search";
+import {
+  parseSearchParams,
+  SEARCH_PAGE_SIZE,
+  SearchBbox,
+  SearchFilters,
+} from "@/lib/validations/search";
 
 // Server actions of the search. A read, not a mutation: the filters panel
 // shows « Voir N biens » for the filters being chosen, before they are
@@ -13,10 +18,13 @@ import { parseSearchParams, SEARCH_PAGE_SIZE, SearchFilters } from "@/lib/valida
 
 export async function countSearchResults(
   input: unknown,
+  bbox?: unknown,
 ): Promise<{ ok: true; data: number } | { ok: false; error: "invalid" | "unavailable" }> {
   const parsed = SearchFilters.safeParse(input);
-  if (!parsed.success) return { ok: false, error: "invalid" };
-  return countListings(parsed.data);
+  // The area of the map of the search, when it has one (L1-16b).
+  const area = SearchBbox.optional().safeParse(bbox ?? undefined);
+  if (!parsed.success || !area.success) return { ok: false, error: "invalid" };
+  return countListings(parsed.data, area.data);
 }
 
 const lastSearchInput = z.object({

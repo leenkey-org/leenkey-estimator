@@ -338,6 +338,98 @@ test.describe("carte de la recherche (base de seed)", () => {
     ).toBeVisible();
   });
 
+  test("desktop : au dézoom, les pastilles se regroupent ; « Rechercher dans cette zone » limite la liste (L1-16b)", async ({
+    page,
+    context,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "la carte est à côté de la liste à partir de 1 024 px");
+    await fakeGoogleMaps(context);
+    await page.goto("/acheter");
+    await expect(pills(page).first()).toBeVisible();
+    const total = await cards(page).count();
+    const searchArea = page.getByRole("button", { name: "Rechercher dans cette zone" });
+    // Framed on the results by the page: no button.
+    await settled(page);
+    await expect(searchArea).toHaveCount(0);
+
+    // Two steps back: the pills of the seed pile up, grouped with their number.
+    const zoom = Number(await fakeMap(page).getAttribute("data-zoom"));
+    await page.getByRole("button", { name: "Zoom arrière" }).click();
+    await page.getByRole("button", { name: "Zoom arrière" }).click();
+    await expect(fakeMap(page)).toHaveAttribute("data-zoom", String(zoom - 2));
+    const group = fakeMap(page)
+      .getByRole("button", { name: /^\d+\sbiens, zoomer$/ })
+      .first();
+    await expect(group).toBeVisible();
+    const grouped = Number(await group.textContent());
+    expect(grouped).toBeGreaterThan(3);
+    // Its pills hidden (other groups may hide more).
+    expect(await pills(page).count()).toBeLessThanOrEqual(total - grouped);
+    // Moved by the person: the button, reachable from the keyboard.
+    await expect(searchArea).toBeVisible();
+
+    // A group chosen: the map zooms in on its pills.
+    await group.click();
+    await expect
+      .poll(async () => Number(await fakeMap(page).getAttribute("data-zoom")))
+      .toBeGreaterThan(zoom - 2);
+    const shown = await fakeMap(page).getAttribute("data-zoom");
+
+    // The list limited to the area of the map, the view kept, the button gone.
+    await searchArea.focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/[?&]bbox=-?[\d.]+(%2C|,)-?[\d.]+(%2C|,)-?[\d.]+(%2C|,)-?[\d.]+/);
+    await expect(
+      page.getByRole("status").filter({ hasText: "dans cette zone de la carte" }),
+    ).toBeVisible();
+    await expect(searchArea).toHaveCount(0);
+    await expect(fakeMap(page)).toHaveAttribute("data-zoom", shown ?? "");
+    const inArea = await cards(page).count();
+    expect(inArea).toBeGreaterThan(0);
+    expect(inArea).toBeLessThanOrEqual(total);
+  });
+
+  test("« bbox » dans l'adresse : la liste de la zone, avec les filtres ; « Retirer la zone » la retire seule (L1-16b)", async ({
+    page,
+  }) => {
+    await page.goto("/acheter");
+    const total = await cards(page).count();
+    expect(total).toBeGreaterThan(1);
+    // Around the first listing of the seed (Savigny-sur-Orge, 48.6818, 2.3489).
+    await page.goto("/acheter?bbox=48.672,2.339,48.692,2.359");
+    await expect(
+      page.getByRole("status").filter({ hasText: "dans cette zone de la carte" }),
+    ).toBeVisible();
+    const inArea = await cards(page).count();
+    expect(inArea).toBeGreaterThan(0);
+    expect(inArea).toBeLessThan(total);
+    // « Retirer la zone », beside the count, from the keyboard: the whole list.
+    const clearArea = page.getByRole("button", { name: "Retirer la zone" });
+    const box = await clearArea.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await clearArea.focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/acheter$/);
+    await expect(cards(page)).toHaveCount(total);
+    await expect(clearArea).toHaveCount(0);
+    // Combined with a filter: never more; removing the area keeps the filter.
+    await page.goto("/acheter?bbox=48.672,2.339,48.692,2.359&budget_max=1");
+    await expect(page.getByText("Aucun bien ne correspond.")).toBeVisible();
+    await clearArea.click();
+    await expect(page).toHaveURL(/\/acheter\?budget_max=1$/);
+    await expect(page.getByText("Aucun bien ne correspond.")).toBeVisible();
+    // An area without listings: the empty state and its reset.
+    await page.goto("/acheter?bbox=49.5,1.0,49.6,1.1");
+    await expect(page.getByText("Aucun bien ne correspond.")).toBeVisible();
+    await page.getByRole("link", { name: "Effacer les filtres" }).click();
+    await expect(page).toHaveURL(/\/acheter$/);
+    await expect(cards(page)).toHaveCount(total);
+    // An area out of order is ignored.
+    await page.goto("/acheter?bbox=49.6,1.1,49.5,1.0");
+    await expect(cards(page)).toHaveCount(total);
+  });
+
   test("carte affichée : aucune violation d'accessibilité sérieuse ou critique @a11y", async ({
     page,
     context,

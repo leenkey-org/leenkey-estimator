@@ -1,5 +1,5 @@
 import { resolveLocation } from "./location";
-import type { OutdoorSpace, SearchFilters, SearchSort } from "@/lib/validations/search";
+import type { OutdoorSpace, SearchBbox, SearchFilters, SearchSort } from "@/lib/validations/search";
 
 // SearchFilters (app, French URL vocabulary) → p_filters of the SQL function
 // search_listings (supabase/migrations/20261016100000_search_listings.sql).
@@ -65,4 +65,12 @@ export function toSqlFilters(filters: SearchFilters): SqlSearchFilters {
     }
   }
   return sql;
+}
+
+/**
+ * The area of the map (L1-16b) → p_bbox of search_listings: [west, south,
+ * east, north], or undefined without an area (the argument left out).
+ */
+export function toSqlBbox(bbox: SearchBbox | undefined): number[] | undefined {
+  return bbox ? [bbox.west, bbox.south, bbox.east, bbox.north] : undefined;
 }

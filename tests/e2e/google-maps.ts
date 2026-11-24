@@ -4,7 +4,8 @@ import type { BrowserContext } from "@playwright/test";
 // no request reaches Google, no key is needed (the CI build has a fake one),
 // and the tests read what the page drew. The stand-in implements what
 // core/maps calls: Map (Web Mercator, fitBounds), OverlayView (the price
-// pills), Circle, LatLng, LatLngBounds, Street View. It marks its element
+// pills), Circle, LatLng, LatLngBounds, Street View, and since L1-16b the
+// area shown (getBounds) and « idle » after each move. It marks its element
 // with data-fake-map and its zoom in data-zoom, the circle with data-circle,
 // the open Street View with data-street-view="open"; a press on the map
 // itself (not on a pill) is its « click ». Flags set by a test before the page loads:
@@ -32,6 +33,11 @@ const FAKE_MAPS = String.raw`(() => {
       y: TILE * (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)),
     };
   };
+  // The point of a pixel of that world: the inverse of world().
+  const unworld = (x, y) => ({
+    lat: (Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / TILE))) * 180) / Math.PI,
+    lng: (x / TILE - 0.5) * 360,
+  });
   const literal = (point) =>
     typeof point.lat === "function" ? { lat: point.lat(), lng: point.lng() } : point;
   const events = () => {
@@ -54,9 +60,25 @@ const FAKE_MAPS = String.raw`(() => {
     lng() { return this._lng; }
   }
   class LatLngBounds {
-    constructor() { this.points = []; }
+    constructor(southWest, northEast) {
+      this.points = [];
+      if (southWest) this.extend(southWest);
+      if (northEast) this.extend(northEast);
+    }
     extend(point) { this.points.push(literal(point)); return this; }
     isEmpty() { return this.points.length === 0; }
+    getNorthEast() {
+      return new LatLng(
+        Math.max(...this.points.map((p) => p.lat)),
+        Math.max(...this.points.map((p) => p.lng)),
+      );
+    }
+    getSouthWest() {
+      return new LatLng(
+        Math.min(...this.points.map((p) => p.lat)),
+        Math.min(...this.points.map((p) => p.lng)),
+      );
+    }
   }
   class StreetViewPanorama {
     constructor(element) { this.element = element; this.visible = false; this.events = events(); }
@@ -95,7 +117,26 @@ const FAKE_MAPS = String.raw`(() => {
       this.streetView = new StreetViewPanorama(element);
     }
     size() { return { width: this.element.clientWidth, height: this.element.clientHeight }; }
-    redraw() { for (const overlay of this.overlays) overlay.draw?.(); }
+    redraw() {
+      for (const overlay of this.overlays) overlay.draw?.();
+      // Still again: « idle », once after the moves of a task, as Google does.
+      if (!this.idling) {
+        this.idling = true;
+        setTimeout(() => {
+          this.idling = false;
+          this.events.emit("idle");
+        }, 0);
+      }
+    }
+    getBounds() {
+      const scale = 2 ** this.zoom;
+      const centre = world(this.center);
+      const offset = this.offset ?? { x: 0, y: 0 };
+      const { width, height } = this.size();
+      const at = (x, y) =>
+        unworld(centre.x + (x - width / 2 - offset.x) / scale, centre.y + (y - height / 2 - offset.y) / scale);
+      return new LatLngBounds(at(0, height), at(width, 0));
+    }
     setCenter(center) { this.center = literal(center); this.offset = null; this.redraw(); }
     setZoom(zoom) { this.zoom = zoom; this.zoomed(); this.redraw(); }
     zoomed() {

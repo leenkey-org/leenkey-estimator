@@ -13,6 +13,8 @@ export interface LatLng {
 export interface LatLngBounds {
   extend(point: LatLngLiteral): LatLngBounds;
   isEmpty(): boolean;
+  getNorthEast(): LatLng;
+  getSouthWest(): LatLng;
 }
 
 export interface MapsEventListener {
@@ -53,6 +55,8 @@ export type Padding = number | { top: number; right: number; bottom: number; lef
 
 export interface GoogleMap {
   fitBounds(bounds: LatLngBounds, padding?: Padding): void;
+  /** The area shown; undefined before the map is first drawn. */
+  getBounds(): LatLngBounds | undefined;
   /** The Street View of the map, shown in its place when visible. */
   getStreetView(): StreetViewPanorama;
   setCenter(center: LatLngLiteral): void;
@@ -148,7 +152,7 @@ export interface MapsLibrary {
 
 export interface CoreLibrary {
   LatLng: new (lat: number, lng: number) => LatLng;
-  LatLngBounds: new () => LatLngBounds;
+  LatLngBounds: new (southWest?: LatLngLiteral, northEast?: LatLngLiteral) => LatLngBounds;
   ControlPosition: { RIGHT_BOTTOM: ControlPosition; RIGHT_TOP: ControlPosition };
 }
 

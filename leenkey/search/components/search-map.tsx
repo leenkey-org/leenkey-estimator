@@ -1,18 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Search } from "lucide-react";
 import type { MapListing } from "../map-listings";
 import { MapPreview } from "./map-preview";
 import { MapNotice } from "@/components/shared/map-notice";
 import { LEENKEY_MAP_STYLE } from "@/components/shared/map-style";
 import { centreBelow } from "@/core/maps/geometry";
-import type { GoogleMap, LatLngLiteral, Padding } from "@/core/maps/google-maps";
+import type { GoogleMap, GoogleMapsApi, LatLngLiteral, Padding } from "@/core/maps/google-maps";
 import { createLabelLayer, type LabelLayer } from "@/core/maps/label-layer";
 import { useGoogleMaps } from "@/core/maps/use-google-maps";
 import { frMaps } from "@/lib/i18n/sections/maps";
 import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
+import {
+  formatBbox,
+  SearchBbox as SearchBboxSchema,
+  type SearchBbox,
+} from "@/lib/validations/search";
 
 // The texts this module shows (lib/i18n/sections, P-06).
 const fr = { maps: frMaps, search: frSearch } as const;
@@ -21,7 +26,9 @@ const fr = { maps: frMaps, search: frSearch } as const;
 // Leenkey, a price pill per listing, framed on the results; in the way of
 // Airbnb since L1-62, a pill chosen shows its card over the map and our own
 // zoom buttons replace those of Google. Mounted only when the map is shown
-// (L1-63).
+// (L1-63). Since L1-16b, pills that pile up at a low zoom are grouped in a
+// round navy button with their number, and once the person has moved the
+// map, « Rechercher dans cette zone » searches inside the area shown.
 
 const t = fr.search.map;
 const ZOOM = 12;
@@ -55,6 +62,56 @@ const PILL = cn(
   // A pill above the dots, its target 44 px high at least.
   "z-1 after:absolute after:-inset-2",
 );
+
+/**
+ * Group of pills (L1-16b, DESIGN.md 8): round, navy on a white ring, its
+ * number in white, above the pills; in the gradient while the card of one of
+ * its listings is hovered. 40 px, a target of 44.
+ */
+const CLUSTER = cn(
+  "absolute left-0 top-0 z-2 flex size-10 cursor-pointer items-center justify-center rounded-full border-2 border-lk-surface bg-lk-navy",
+  "text-lk-label font-semibold tabular text-white shadow-float",
+  "duration-140 ease-out-lk motion-safe:transition-[scale]",
+  "hover:z-20 hover:scale-105 data-active:z-10 data-active:scale-105 data-active:lk-gradient",
+  "focus-visible:z-20 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue",
+  "after:absolute after:-inset-0.5",
+);
+/** Pills grouped beyond 3 piled up (DESIGN.md 8), within about a pill of each other. */
+const CLUSTER_MIN_SIZE = 4;
+const CLUSTER_RADIUS_PX = 40;
+
+/** « Rechercher dans cette zone »: a white pill at the top, in the middle (Airbnb). */
+const SEARCH_AREA = cn(
+  "absolute top-3 left-1/2 z-10 flex h-11 -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-lk-surface px-4",
+  "text-lk-label font-semibold text-lk-ink shadow-float transition-colors duration-140 ease-out-lk hover:bg-lk-stone-2",
+  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue [&_svg]:size-4",
+);
+
+/** The area shown by the map, as the search reads it. */
+function areaOf(map: GoogleMap): SearchBbox | null {
+  const bounds = map.getBounds();
+  if (!bounds) return null;
+  const north = bounds.getNorthEast();
+  const south = bounds.getSouthWest();
+  return { south: south.lat(), west: south.lng(), north: north.lat(), east: north.lng() };
+}
+
+const sameArea = (a: SearchBbox | null, b: SearchBbox | null) =>
+  a !== null &&
+  b !== null &&
+  a.south === b.south &&
+  a.west === b.west &&
+  a.north === b.north &&
+  a.east === b.east;
+
+/** The map framed on an area (a link with « bbox », or a page opened again). */
+function fitArea(api: GoogleMapsApi, map: GoogleMap, area: SearchBbox) {
+  const bounds = new api.core.LatLngBounds(
+    { lat: area.south, lng: area.west },
+    { lat: area.north, lng: area.east },
+  );
+  map.fitBounds(bounds, 0);
+}
 
 const ZOOM_BUTTON =
   "flex size-11 items-center justify-center text-lk-ink transition-colors duration-140 ease-out-lk not-aria-disabled:hover:bg-lk-stone-2 aria-disabled:cursor-not-allowed aria-disabled:text-lk-field focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-lk-brand-blue focus-visible:outline-solid [&_svg]:size-4.5";
@@ -140,6 +197,8 @@ export function SearchMap({
   onSelect,
   onVisit,
   padding = FIT_PADDING,
+  bbox = null,
+  onSearchArea,
   previewClassName,
   previewSizes,
   className,
@@ -161,6 +220,10 @@ export function SearchMap({
   onVisit: (id: string) => void;
   /** Room kept around the pills when the map is framed on them. */
   padding?: Padding;
+  /** The area of the map the search is limited to (L1-16b): the map is framed on it. */
+  bbox?: SearchBbox | null;
+  /** « Rechercher dans cette zone »: the area shown, once the person moved the map. */
+  onSearchArea?: (bbox: SearchBbox) => void;
   /** Where the card of the pill chosen sits over the map. */
   previewClassName?: string;
   /** Widths of its photo, for the images of the right size. */
@@ -174,11 +237,22 @@ export function SearchMap({
   const [view, setView] = useState<{ map: GoogleMap; layer: LabelLayer } | null>(null);
   // The latest handlers, listings and choice, for the pills created once.
   const handlers = useRef({ onHover, onSelect, onVisit });
-  const latest = useRef({ listings, centre, padding, selectedId });
+  const latest = useRef({ listings, centre, padding, selectedId, bbox });
   useEffect(() => {
     handlers.current = { onHover, onSelect, onVisit };
-    latest.current = { listings, centre, padding, selectedId };
+    latest.current = { listings, centre, padding, selectedId, bbox };
   });
+  // « Rechercher dans cette zone » (L1-16b): shown once the person moved the
+  // map (drag, wheel, pinch, keys, our zoom, a group), never after a move of
+  // the page itself (framing, a card shown).
+  const [moved, setMoved] = useState(false);
+  const gesture = useRef(false);
+  /**
+   * The area searched from the map (as the URL writes it): the results that
+   * follow for that area keep the view. Any other change of the results
+   * (the navigation did not happen, another search) frames the map again.
+   */
+  const keepView = useRef<string | null>(null);
 
   useEffect(() => {
     if (maps.status !== "ready" || !element.current) return;
@@ -198,12 +272,64 @@ export function SearchMap({
       className: PILL,
       onSelect: (id) => handlers.current.onSelect(id),
       onHover: (id) => handlers.current.onHover(id),
+      clusters: {
+        className: CLUSTER,
+        name: t.cluster,
+        minSize: CLUSTER_MIN_SIZE,
+        radius: CLUSTER_RADIUS_PX,
+        maxZoom: MAX_ZOOM,
+        // A group chosen: the map shows its pills (a move of the person).
+        onSelect: (positions) => {
+          const bounds = new api.core.LatLngBounds();
+          for (const position of positions) bounds.extend(position);
+          gesture.current = true;
+          map.fitBounds(bounds, latest.current.padding);
+        },
+      },
     });
     // A press on the map itself, never on a pill or the card: the card closes.
     const click = map.addListener("click", () => handlers.current.onSelect(null));
+    // The moves of the person: the button shows once the map is still again
+    // and shows another area than the last one seen.
+    let shown = areaOf(map);
+    const drag = map.addListener("dragstart", () => {
+      gesture.current = true;
+    });
+    const idle = map.addListener("idle", () => {
+      const area = areaOf(map);
+      // An area the search cannot read (the whole world, across the
+      // antimeridian) never shows the button: nothing to press for nothing.
+      if (gesture.current && !sameArea(area, shown) && SearchBboxSchema.safeParse(area).success) {
+        setMoved(true);
+      }
+      gesture.current = false;
+      shown = area;
+    });
+    // The wheel, a double press, two fingers, the keys of Google: a move of
+    // the person, unless on a pill or a group (they never move the map).
+    const target = element.current;
+    const onMap = (event: Event) =>
+      !(event.target instanceof Element && event.target.closest("button"));
+    const mark = (event: Event) => {
+      if (onMap(event)) gesture.current = true;
+    };
+    const pinch = (event: TouchEvent) => {
+      if (event.touches.length > 1) mark(event);
+    };
+    const listen = { capture: true, passive: true } as const;
+    target.addEventListener("wheel", mark, listen);
+    target.addEventListener("dblclick", mark, listen);
+    target.addEventListener("keydown", mark, listen);
+    target.addEventListener("touchstart", pinch, listen);
     setView({ map, layer });
     return () => {
       click.remove();
+      drag.remove();
+      idle.remove();
+      target.removeEventListener("wheel", mark, listen);
+      target.removeEventListener("dblclick", mark, listen);
+      target.removeEventListener("keydown", mark, listen);
+      target.removeEventListener("touchstart", pinch, listen);
       layer.remove();
       setView(null);
     };
@@ -212,8 +338,11 @@ export function SearchMap({
   // The pills, and the map framed on them when the results or the place
   // change (`ids`, `place`: new arrays of the same ones keep the view). A
   // card shown before is closed: the map is framed again under it.
+  // With an area searched (L1-16b), the map is framed on it, or keeps its
+  // view when the area comes from the map itself.
   const ids = listings.map((listing) => listing.id).join(",");
   const place = `${centre.lat},${centre.lng}`;
+  const area = bbox ? formatBbox(bbox) : "";
   useEffect(() => {
     if (!view || maps.status !== "ready") return;
     const { map, layer } = view;
@@ -222,8 +351,18 @@ export function SearchMap({
     layer.setLabels(
       current.map(({ id, position, label, name }) => ({ id, position, text: label, name })),
     );
+    // A move of the page, not of the person: no « Rechercher dans cette zone ».
+    gesture.current = false;
+    setMoved(false);
     const [first, ...others] = current;
-    if (!first) {
+    const searched = latest.current.bbox;
+    const kept = keepView.current !== null && keepView.current === area;
+    keepView.current = null;
+    if (kept) {
+      // The area searched from the map: the view stays as the person left it.
+    } else if (searched) {
+      fitArea(maps.api, map, searched);
+    } else if (!first) {
       map.setCenter(latest.current.centre);
       map.setZoom(ZOOM);
     } else if (others.length === 0) {
@@ -234,7 +373,7 @@ export function SearchMap({
       for (const listing of current) bounds.extend(listing.position);
       map.fitBounds(bounds, latest.current.padding);
     }
-  }, [view, maps, ids, place]);
+  }, [view, maps, ids, place, area]);
 
   useEffect(() => {
     view?.layer.setActive(activeId);
@@ -267,6 +406,8 @@ export function SearchMap({
     const shift = shiftForCard(region.current, preview.current);
     const zoom = view.map.getZoom();
     if (!inRoom && shift !== null && zoom !== undefined) {
+      // A move of the page: never « Rechercher dans cette zone ».
+      gesture.current = false;
       const target = centreBelow(chosen.position, zoom, shift);
       if (reducedMotion()) view.map.setCenter(target);
       else view.map.panTo(target);
@@ -277,9 +418,20 @@ export function SearchMap({
   /** A step of zoom; a card shown, its pill kept in the room above it. */
   function zoomTo(zoom: number) {
     if (!view) return;
+    gesture.current = true;
     view.map.setZoom(zoom);
     const shift = selected ? shiftForCard(region.current, preview.current) : null;
     if (selected && shift !== null) view.map.setCenter(centreBelow(selected.position, zoom, shift));
+  }
+
+  /** « Rechercher dans cette zone »: the list limited to the area shown. */
+  function searchArea() {
+    const shown = view ? areaOf(view.map) : null;
+    const parsed = shown ? SearchBboxSchema.safeParse(shown) : null;
+    setMoved(false);
+    if (!parsed?.success || !onSearchArea) return;
+    keepView.current = formatBbox(parsed.data);
+    onSearchArea(parsed.data);
   }
 
   function close() {
@@ -307,6 +459,12 @@ export function SearchMap({
       className={cn("relative overflow-hidden", className)}
     >
       <div ref={element} className="absolute inset-0" />
+      {view && moved && onSearchArea && !selected ? (
+        <button type="button" onClick={searchArea} className={SEARCH_AREA}>
+          <Search aria-hidden="true" strokeWidth={2} />
+          {t.searchArea}
+        </button>
+      ) : null}
       {view ? <ZoomButtons map={view.map} onZoom={zoomTo} /> : null}
       {selected ? (
         <MapPreview

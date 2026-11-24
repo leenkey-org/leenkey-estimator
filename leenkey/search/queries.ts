@@ -1,7 +1,7 @@
 import "server-only";
 import { unstable_rethrow } from "next/navigation";
 import { groupPhotos, type PhotoRow } from "./photos";
-import { SQL_SORT, toSqlFilters } from "./sql-filters";
+import { SQL_SORT, toSqlBbox, toSqlFilters } from "./sql-filters";
 import type { DpeClass } from "@/components/shared/dpe-badge";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
@@ -9,6 +9,7 @@ import { chunk } from "@/lib/utils";
 import {
   DPE_CLASSES,
   SEARCH_PAGE_SIZE,
+  type SearchBbox,
   type SearchFilters,
   type SearchQuery,
 } from "@/lib/validations/search";
@@ -172,10 +173,17 @@ export async function withPhotos(items: SearchListing[]): Promise<SearchListing[
   });
 }
 
-async function fetchPage(filters: SearchFilters, sort: SearchQuery["sort"], page: number) {
+async function fetchPage(
+  filters: SearchFilters,
+  sort: SearchQuery["sort"],
+  page: number,
+  bbox?: SearchBbox,
+) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("search_listings", {
     p_filters: toSqlFilters(filters),
+    // « Rechercher dans cette zone » (L1-16b): the area of the map, or none.
+    p_bbox: toSqlBbox(bbox),
     p_sort: SQL_SORT[sort],
     p_page: page,
   });
@@ -190,12 +198,12 @@ async function fetchPage(filters: SearchFilters, sort: SearchQuery["sort"], page
  */
 export async function searchListings(query: SearchQuery): Promise<QueryResult<SearchResults>> {
   try {
-    const first = await fetchPage(query.filters, query.sort, 1);
+    const first = await fetchPage(query.filters, query.sort, 1, query.bbox);
     const total = Number(first[0]?.total_count ?? 0);
     const lastPage = Math.min(query.page, Math.max(1, Math.ceil(total / SEARCH_PAGE_SIZE)));
     const others = await Promise.all(
       Array.from({ length: lastPage - 1 }, (_, index) =>
-        fetchPage(query.filters, query.sort, index + 2),
+        fetchPage(query.filters, query.sort, index + 2, query.bbox),
       ),
     );
     const items = await withPhotos([first, ...others].flat().map(toListing));
@@ -205,20 +213,28 @@ export async function searchListings(query: SearchQuery): Promise<QueryResult<Se
       filters: query.filters,
       sort: query.sort,
       page: query.page,
+      bbox: query.bbox,
       error: error instanceof Error ? error.message : String(error),
     });
     return { ok: false, error: "unavailable" };
   }
 }
 
-/** Number of listings matching filters (« Voir N biens » of the filters panel). */
-export async function countListings(filters: SearchFilters): Promise<QueryResult<number>> {
+/**
+ * Number of listings matching filters (« Voir N biens » of the filters
+ * panel), inside the area of the map when the search has one (L1-16b).
+ */
+export async function countListings(
+  filters: SearchFilters,
+  bbox?: SearchBbox,
+): Promise<QueryResult<number>> {
   try {
-    const rows = await fetchPage(filters, "recent", 1);
+    const rows = await fetchPage(filters, "recent", 1, bbox);
     return { ok: true, data: Number(rows[0]?.total_count ?? 0) };
   } catch (error) {
     console.error("[search] countListings failed", {
       filters,
+      bbox,
       error: error instanceof Error ? error.message : String(error),
     });
     return { ok: false, error: "unavailable" };
