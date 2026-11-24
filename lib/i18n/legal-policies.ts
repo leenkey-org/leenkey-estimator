@@ -533,7 +533,7 @@ const salesSections: readonly LegalSection[] = [
     title: "16. Médiation de la consommation",
     blocks: [
       para(
-        "Après une réclamation écrite restée sans solution auprès de Leenkey, le client consommateur peut recourir gratuitement au médiateur de la consommation dont Leenkey relève. Ses coordonnées seront indiquées ici et dans le récapitulatif de chaque commande ; tant qu'il n'est pas désigné, aucune formule payante ne peut être commandée.",
+        "Conformément aux articles L. 611-1 et suivants du Code de la consommation, après une réclamation écrite adressée à Leenkey et restée sans solution, le client consommateur peut recourir gratuitement au médiateur de la consommation dont Leenkey relève : le Centre de la Médiation de la Consommation de Conciliateurs de Justice (CM2C), 49 rue de Ponthieu, 75008 Paris, téléphone 01 89 47 00 14, site internet https://www.cm2c.net/. La demande de médiation est présentée au médiateur dans un délai d'un an à compter de la réclamation écrite adressée à Leenkey. Les coordonnées du médiateur figurent aussi dans le récapitulatif de chaque commande.",
       ),
     ],
   },
@@ -579,7 +579,7 @@ const salesSections: readonly LegalSection[] = [
 ];
 
 export const salesTermsText = {
-  updated: "En vigueur depuis le 20 novembre 2026",
+  updated: "En vigueur depuis le 24 novembre 2026",
   toc: "Sommaire",
   sections: salesSections,
 } as const;

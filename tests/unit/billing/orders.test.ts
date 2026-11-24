@@ -181,10 +181,11 @@ describe("first contact of the advisor", () => {
 });
 
 describe("ordering in production", () => {
-  it("opens in local and preprod, stays closed in production without the final CGV and mediator", () => {
-    expect(paidPlansOrderable("local")).toBe(true);
-    expect(paidPlansOrderable("staging")).toBe(true);
-    expect(paidPlansOrderable("production")).toBe(false);
+  it("opens in local and preprod; in production, only with the Stripe key (CGV and mediator are there)", () => {
+    expect(paidPlansOrderable("local", false)).toBe(true);
+    expect(paidPlansOrderable("staging", false)).toBe(true);
+    expect(paidPlansOrderable("production", false)).toBe(false);
+    expect(paidPlansOrderable("production", true)).toBe(true);
   });
 });
 

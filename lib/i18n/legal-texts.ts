@@ -170,6 +170,14 @@ export const legalNotice = {
             "Les présentes mentions légales sont régies par le droit français, sous réserve des règles impératives applicables. Les litiges relèvent des juridictions désignées par la loi ; aucune compétence exclusive n'est imposée aux consommateurs.",
           ],
         },
+        {
+          kind: "p",
+          text: [
+            `Médiation de la consommation : après une réclamation écrite adressée à Leenkey et restée sans solution, le consommateur peut recourir gratuitement au Centre de la Médiation de la Consommation de Conciliateurs de Justice (CM2C), 49 rue de Ponthieu, 75008${S}Paris, téléphone 01${S}89${S}47${S}00${S}14, site internet `,
+            { link: "www.cm2c.net", href: "https://www.cm2c.net/" },
+            ".",
+          ],
+        },
       ],
     },
     {
