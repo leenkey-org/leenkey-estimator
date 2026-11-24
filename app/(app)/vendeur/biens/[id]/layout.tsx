@@ -3,10 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { requireProfile } from "@/core/auth/session";
-import {
-  PropertySheetHeader,
-  PropertySheetNotices,
-} from "@/leenkey/properties/components/property-sheet";
+import { PropertySheetHeader } from "@/leenkey/properties/components/property-sheet";
 import { propertyForSheet } from "@/leenkey/properties/load";
 import { listingDeletionFacts } from "@/leenkey/properties/queries";
 import { sheetHref } from "@/leenkey/properties/sheet";
@@ -34,24 +31,14 @@ export default async function PropertySheetLayout({ children, params }: Props) {
   return (
     <div className="mx-auto w-full max-w-lk-settings px-5 py-6 md:px-10 md:py-10 lg:max-w-lk-space">
       {property ? (
-        <div className="lg:grid lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start lg:gap-10">
-          <div>
-            <PropertySheetHeader
-              property={property}
-              roles={profile.roles}
-              profileId={profile.id}
-              deletion={deletion}
-            />
-          </div>
-          <div className="mt-6 flex min-w-0 flex-col gap-6 lg:mt-15">
-            <PropertySheetNotices
-              property={property}
-              deletion={deletion}
-              className="hidden flex-col gap-4 empty:hidden lg:flex"
-            />
-            <div>{children}</div>
-          </div>
-        </div>
+        <PropertySheetHeader
+          property={property}
+          roles={profile.roles}
+          profileId={profile.id}
+          deletion={deletion}
+        >
+          {children}
+        </PropertySheetHeader>
       ) : (
         <InlineAlert
           tone="danger"
