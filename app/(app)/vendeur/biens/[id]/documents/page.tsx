@@ -9,6 +9,7 @@ import { TaskList, type TaskItem } from "@/components/shared/task-list";
 import { propertyForSheet } from "@/leenkey/properties/load";
 import { AccessRequests } from "@/leenkey/sale-file/components/access-requests";
 import { AnalysisRefresher } from "@/leenkey/sale-file/components/analysis-controls";
+import { SaleFileSeen } from "@/leenkey/sale-file/components/sale-file-seen";
 import { DdtCoverageEditor, DdtUploadForm } from "@/leenkey/sale-file/components/ddt-controls";
 import { SellerDocumentAnalysis } from "@/leenkey/sale-file/components/document-analysis";
 import {
@@ -288,6 +289,7 @@ export default async function PropertyDocumentsPage({ params, searchParams }: Pr
   return (
     <div className="flex flex-col gap-8">
       {analysing ? <AnalysisRefresher /> : null}
+      <SaleFileSeen propertyId={property.id} />
       <div className="flex flex-col gap-3">
         <h2 className="text-lk-h3 font-bold text-wide text-lk-ink">{t.title}</h2>
         <p className="text-lk-secondary text-pretty text-lk-ink-2">{t.intro}</p>

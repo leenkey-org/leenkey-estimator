@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-24 · L3-07b · Tâches du lot 3 dans le moteur d'étapes · PR #134
+- Corrigé : « Documents à préparer identifiés » et « Diagnostics nécessaires identifiés » ne se cochaient jamais (aucun écran ne les déclarait) : l'ouverture de l'onglet « Documents » par le vendeur les coche.
+- Ajouté : la prochaine action et la liste des tâches mènent à l'onglet « Documents » (pièces, diagnostics, dossier notaire complet) et à l'onglet « Visites » (créneaux de visite ouverts).
+- Tests : `tests/unit/properties/next-action.test.ts`. Aucune migration.
+
 ### 2026-11-24 · Fiche du bien en deux colonnes (demande de Cédric) · PR #133
 - Modifié : à partir de 1 024 px, la fiche du bien du vendeur (`/vendeur/biens/[id]` et ses rubriques) occupe 1 216 px en deux colonnes : à gauche, le bien dans une carte (chiffres deux par deux), les rubriques en liste latérale avec leurs icônes, puis les actions du statut ; à droite, ce que veut dire le statut et le contenu de la rubrique. Sous 1 024 px, rien ne change (même ordre, une seule arborescence).
 - Ajouté : `LinkTabs` accepte `aside` (liste latérale à partir de 1 024 px) et une icône par onglet ; jeton `max-w-lk-space` (1 216 px).

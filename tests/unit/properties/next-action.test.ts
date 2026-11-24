@@ -325,6 +325,21 @@ describe("next action of the seller (SPEC-V2 8.7)", () => {
     });
   });
 
+  it("the documents to prepare and the diagnostics, in the tab « Documents » (L3-07b)", () => {
+    expect(getNextAction(situation(null, "prepare", PREPARED), NOW)).toMatchObject({
+      rule: "task",
+      task: { code: "checklist_viewed" },
+      href: `/vendeur/biens/${id}/documents`,
+    });
+    expect(
+      getNextAction(situation(null, "prepare", [...PREPARED, "checklist_viewed"]), NOW),
+    ).toMatchObject({
+      rule: "task",
+      task: { code: "diagnostics_listed" },
+      href: `/vendeur/biens/${id}/documents`,
+    });
+  });
+
   it("the listing written at step 3 of the creation, then sent from its preview", () => {
     expect(getNextAction(situation(null, "publish", PREPARED), NOW)).toMatchObject({
       rule: "task",
@@ -349,15 +364,25 @@ describe("next action of the seller (SPEC-V2 8.7)", () => {
         description: "Créer une annonce attractive et mettre le bien en vente sur Leenkey",
       },
     });
-    // The documents to prepare come with lot 3, the contacts from the buyers.
-    expect(getNextAction(situation(null, "prepare", PREPARED), NOW)).toMatchObject({
-      rule: "advice",
-      step: { code: "prepare" },
-    });
+    // The documents seen (L3-07b), nothing left in this step; the contacts come from the buyers.
+    expect(
+      getNextAction(
+        situation(null, "prepare", [...PREPARED, "checklist_viewed", "diagnostics_listed"]),
+        NOW,
+      ),
+    ).toMatchObject({ rule: "advice", step: { code: "prepare" } });
+    // Online: the slots of visit open from the tab « Visites » (L3-07b), then the visits come from the buyers.
     expect(getNextAction(situation("published", "contacts_visits", ONLINE), NOW)).toMatchObject({
-      rule: "advice",
-      step: { code: "contacts_visits" },
+      rule: "task",
+      task: { code: "visit_slots_opened" },
+      href: `/vendeur/biens/${id}/visites`,
     });
+    expect(
+      getNextAction(
+        situation("published", "contacts_visits", [...ONLINE, "visit_slots_opened"]),
+        NOW,
+      ),
+    ).toMatchObject({ rule: "advice", step: { code: "contacts_visits" } });
   });
 
   it("a task ticked by hand has no address: it is ticked from the list of the tasks", () => {
