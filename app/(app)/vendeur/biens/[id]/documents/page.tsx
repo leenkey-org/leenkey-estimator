@@ -7,13 +7,13 @@ import { ProgressBar } from "@/components/shared/progress-bar";
 import { pillClassName } from "@/components/shared/status-badge";
 import { TaskList, type TaskItem } from "@/components/shared/task-list";
 import { propertyForSheet } from "@/leenkey/properties/load";
+import { AccessRequests } from "@/leenkey/sale-file/components/access-requests";
 import { AnalysisRefresher } from "@/leenkey/sale-file/components/analysis-controls";
 import { DdtCoverageEditor, DdtUploadForm } from "@/leenkey/sale-file/components/ddt-controls";
 import { SellerDocumentAnalysis } from "@/leenkey/sale-file/components/document-analysis";
 import {
   ExemptionButton,
   RemoveDocumentButton,
-  RequestButtons,
   ShareButtons,
 } from "@/leenkey/sale-file/components/seller-controls";
 import { UploadForm } from "@/leenkey/sale-file/components/upload-form";
@@ -303,32 +303,12 @@ export default async function PropertyDocumentsPage({ params, searchParams }: Pr
         <p className="text-lk-caption text-pretty text-lk-ink-3">{t.disclaimer}</p>
       </div>
 
-      {requests.length > 0 ? (
-        <section aria-labelledby="file-requests" className="flex flex-col gap-3">
-          <h3 id="file-requests" className={sectionTitle}>
-            {t.requests.title}
-          </h3>
-          <ul className="flex flex-col gap-3">
-            {requests.map((request) => (
-              <li key={request.id} className={cn(card, "flex flex-col gap-3")}>
-                <div className="flex flex-col gap-1">
-                  <p className="text-lk-body font-semibold text-lk-ink">
-                    {t.requests.asks(request.firstName)}
-                  </p>
-                  <FinancingBadge status={request.financingStatus} className="self-start" />
-                  <p className="text-lk-caption text-lk-ink-3">{t.requests.grantHelp}</p>
-                </div>
-                <RequestButtons
-                  propertyId={property.id}
-                  requestId={request.id}
-                  name={request.firstName ?? t.share.someone}
-                />
-              </li>
-            ))}
-          </ul>
-          <FinancingMention />
-        </section>
-      ) : null}
+      <AccessRequests
+        propertyId={property.id}
+        requests={requests}
+        cardClassName={card}
+        titleClassName={sectionTitle}
+      />
 
       {stageItems.length > 0 ? (
         <section aria-labelledby="file-stages" className="flex flex-col gap-3">

@@ -12,12 +12,15 @@ import { devices, expect, test, type Browser, type Locator, type Page } from "@p
 // takes its DDT back (before starting, the one of an earlier attempt): a
 // retry starts from the same file. The removed document, its share and its
 // notification stay: a local stack just made by `scripts/local-stack.sh up`
-// only (E2E_SEED=1, SEED_PASSWORD, E2E_MUTATE=1, project « seed-mutations »).
-// Seed used: LK-0002 of seller_a, a house outside a co-ownership (its sale
-// file is only read by tests/e2e/sale-file-live.spec.ts, as patterns), and
-// buyer_c. The seed has no contact between them: the test starts by making
-// one (buyer_c writes to the seller from the listing) unless another spec or
-// an earlier attempt already did, so that it runs alone on a stack just made.
+// only (E2E_SEED=1, SEED_PASSWORD, E2E_MUTATE=1). Seed used: LK-0001 of
+// seller_a, a flat in a co-ownership, and its seed conversation with buyer_c
+// (the only contact of the seed between a buyer and a property of seller_a:
+// the test makes none, a second conversation between them would change what
+// tests/e2e/messaging-live.spec.ts reads). The sale file of LK-0001 is
+// counted by sale-file-live, document-analysis-live and
+// shared-documents-answers-live, and buyer_c's shared documents by the last
+// two: this spec runs after them all, alone, in its own project
+// (« seed-ddt »), and no spec reads that file or that buyer after it.
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
@@ -31,10 +34,9 @@ test.skip(
   "pile locale de seed requise (E2E_SEED=1, SEED_PASSWORD, E2E_MUTATE=1) : la spec dépose un DDT",
 );
 
-const TAB = "/vendeur/biens/5eed1000-0000-4000-8000-000000000002/documents";
-const LISTING = "/annonce/maison-5-pieces-epinay-sur-orge-lk0002";
+const TAB = "/vendeur/biens/5eed1000-0000-4000-8000-000000000001/documents";
 const DDT = "Dossier de diagnostics (DDT)";
-// The diagnostic lines of a house outside a co-ownership, in their order.
+// The diagnostic lines of a flat in a co-ownership, in their order.
 const DIAGNOSTICS = [
   "DPE",
   "Diagnostic amiante",
@@ -43,7 +45,7 @@ const DIAGNOSTICS = [
   "Diagnostic gaz",
   "État relatif aux termites",
   "État des risques (ERP)",
-  "Diagnostic assainissement",
+  "Mesurage loi Carrez",
 ] as const;
 type Diagnostic = (typeof DIAGNOSTICS)[number];
 // What the DDT of the test holds at first, then once its coverage is changed.
@@ -159,24 +161,10 @@ test("DDT déposé en une fois : dépôt, diagnostics cochés, comptes, partage,
   let ofProperty = 0;
   let atListing = 0;
   const expectCounts = async (more: number) => {
-    await expect(seller.getByText(`Dossier notaire : ${filed + more} / 11 pièces`)).toBeVisible();
+    await expect(seller.getByText(`Dossier notaire : ${filed + more} / 18 pièces`)).toBeVisible();
     await expect(propertyCount).toHaveText(`${ofProperty + more} sur 11`);
     await expect(listingStage).toContainText(`${atListing + more} sur 9 pièces`);
   };
-
-  await test.step("l'acquéreur est en contact avec le vendeur du bien", async () => {
-    await signIn(buyer, "buyer_c", LISTING);
-    await buyer.getByRole("link", { name: "Contacter le vendeur" }).click();
-    await buyer.waitForURL((url) => url.pathname.startsWith("/messages/"));
-    // A first message opens the contact; with one already, the link leads to it.
-    if (new URL(buyer.url()).pathname === "/messages/nouveau") {
-      await buyer
-        .getByRole("textbox", { name: "Votre message" })
-        .fill("Bonjour, pourrais-je consulter les diagnostics de la maison ?");
-      await buyer.getByRole("button", { name: "Envoyer" }).click();
-    }
-    await expect(buyer).toHaveURL(/\/messages\/[0-9a-f-]{36}$/);
-  });
 
   await test.step("les diagnostics forment un groupe, avec le dépôt du DDT en premier", async () => {
     await signIn(seller, "seller_a", TAB);
@@ -184,7 +172,7 @@ test("DDT déposé en une fois : dépôt, diagnostics cochés, comptes, partage,
     await clearLeftovers(seller);
     const [done, total] = await readCount(notaryFile, /Dossier notaire : (\d+) \/ (\d+) pièces/);
     filed = done;
-    expect(total).toBe(11);
+    expect(total).toBe(18);
     const [inGroup, asked] = await readCount(propertyCount, /(\d+) sur (\d+)/);
     ofProperty = inGroup;
     expect(asked).toBe(11);
@@ -200,7 +188,7 @@ test("DDT déposé en une fois : dépôt, diagnostics cochés, comptes, partage,
       propertyGroup.getByText(/le fichier unique que votre diagnostiqueur vous a remis/),
     ).toBeVisible();
     await expect(deposit).toBeVisible();
-    // The eight diagnostic lines of a house, each still there, in their order.
+    // The eight diagnostic lines of a co-owned flat, each still there, in their order.
     await expect(lines).toHaveCount(DIAGNOSTICS.length);
     for (const [index, name] of DIAGNOSTICS.entries()) {
       await expect(lines.nth(index).getByText(name, { exact: true })).toBeVisible();
@@ -318,7 +306,7 @@ test("DDT déposé en une fois : dépôt, diagnostics cochés, comptes, partage,
   await test.step("partagé avec les diagnostics, l'acquéreur lit un document et ce qu'il couvre", async () => {
     await seller.getByRole("button", { name: "Partager les diagnostics avec Chloé" }).click();
     await expect(seller.getByText("1 document partagé avec Chloé.")).toBeVisible();
-    await buyer.goto("/acquereur/documents");
+    await signIn(buyer, "buyer_c", "/acquereur/documents");
     await expect(
       buyer.getByRole("heading", { name: "Documents partagés", level: 1 }),
     ).toBeVisible();

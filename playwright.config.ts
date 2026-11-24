@@ -11,7 +11,7 @@ const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH;
 // the seed while they change it. They also need E2E_MUTATE=1 and a local
 // stack (see each file). `--no-deps` runs one of them alone.
 const MUTATING =
-  /(account-live|account-deletion-live|admin-assistant-live|advisor-live|advisor-interventions-live|admin-cases|admin-listings|admin-users|assistant-live|billing|assistant-suggestions|buyer-assistant-live|buyer-profile-live|case-request-live|journeys-live|messaging-live|notifications-live|offer-live|property-creation|property-edit|property-from-estimation|property-photos|property-status|upgrade-prompts-live|sale-file-live|ddt-live|visit-feedback-live|visits-live|alerts-live|listing-deletion-live|identity-check-live)\.spec\.ts$/;
+  /(account-live|account-deletion-live|admin-assistant-live|advisor-live|advisor-interventions-live|admin-cases|admin-listings|admin-users|assistant-live|billing|assistant-suggestions|buyer-assistant-live|buyer-profile-live|case-request-live|journeys-live|messaging-live|notifications-live|offer-live|property-creation|property-edit|property-from-estimation|property-photos|property-status|upgrade-prompts-live|sale-file-live|visit-feedback-live|visits-live|alerts-live|listing-deletion-live|identity-check-live)\.spec\.ts$/;
 // The offers of the back office (L2-07) move the sale of LK-0008, whose case
 // tests/e2e/admin-cases.spec.ts works on, and add an accepted offer to the
 // bell of buyer_c, which tests/e2e/offer-live.spec.ts reads: after all the
@@ -26,6 +26,11 @@ const AFTER_SALE_FILE = /document-analysis-live\.spec\.ts$/;
 // LK-0001 too, with buyer_c, whose shared summaries the spec above counts:
 // after it, in its own project.
 const AFTER_DOCUMENT_ANALYSIS = /shared-documents-answers-live\.spec\.ts$/;
+// The DDT filed at once files, shares with buyer_c and removes a document on
+// LK-0001 too (the only property of the seed whose seller buyer_c is already
+// in contact with): after the three specs that count that sale file and what
+// buyer_c reads of it, alone, in its own project.
+const AFTER_DOCUMENT_ANSWERS = /ddt-live\.spec\.ts$/;
 const desktop = { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } };
 
 // Cookie consent already answered (refused) so that the banner of L1-37
@@ -74,12 +79,24 @@ export default defineConfig({
   projects: [
     {
       name: "mobile",
-      testIgnore: [MUTATING, AFTER_MUTATIONS, AFTER_SALE_FILE, AFTER_DOCUMENT_ANALYSIS],
+      testIgnore: [
+        MUTATING,
+        AFTER_MUTATIONS,
+        AFTER_SALE_FILE,
+        AFTER_DOCUMENT_ANALYSIS,
+        AFTER_DOCUMENT_ANSWERS,
+      ],
       use: { ...devices["Pixel 7"], viewport: { width: 390, height: 844 } },
     },
     {
       name: "desktop",
-      testIgnore: [MUTATING, AFTER_MUTATIONS, AFTER_SALE_FILE, AFTER_DOCUMENT_ANALYSIS],
+      testIgnore: [
+        MUTATING,
+        AFTER_MUTATIONS,
+        AFTER_SALE_FILE,
+        AFTER_DOCUMENT_ANALYSIS,
+        AFTER_DOCUMENT_ANSWERS,
+      ],
       use: desktop,
     },
     {
@@ -104,6 +121,12 @@ export default defineConfig({
       name: "seed-document-answers",
       testMatch: AFTER_DOCUMENT_ANALYSIS,
       dependencies: ["seed-documents"],
+      use: desktop,
+    },
+    {
+      name: "seed-ddt",
+      testMatch: AFTER_DOCUMENT_ANSWERS,
+      dependencies: ["seed-document-answers"],
       use: desktop,
     },
   ],
