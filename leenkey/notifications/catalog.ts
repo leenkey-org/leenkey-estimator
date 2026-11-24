@@ -260,6 +260,29 @@ const CATALOG: Record<string, Entry> = {
     title: () => t.listingDeleted.title,
     detail: (data) => t.listingDeleted.detail(text(data.title)),
   },
+  // L1-30e (DECISIONS.md 2026-11-24): a listing changed by the team from the
+  // back office, to its seller, with the reason.
+  "listing.team_edited": {
+    icon: PencilLine,
+    tone: "blue",
+    filters: [],
+    title: () => t.listingTeamEdited.title,
+    detail: (data) => {
+      const fields = (Array.isArray(data.fields) ? (data.fields as unknown[]) : []).flatMap(
+        (field) =>
+          typeof field === "string" && t.listingRevised.fields[field]
+            ? [t.listingRevised.fields[field]]
+            : [],
+      );
+      return (
+        t.listingRevised.detail([
+          text(data.title),
+          t.listingRevised.changed(fields),
+          text(data.reason) ? t.listingTeamEdited.reason(text(data.reason) ?? "") : null,
+        ]) || null
+      );
+    },
+  },
   // L1-40: a plan ending within 30 days (the seller), a withdrawal to refund (the team).
   "plan.ending": {
     icon: CalendarClock,

@@ -143,6 +143,11 @@ export const frNotifications = {
       detail: (title: string | null, date: string | null) =>
         `${title ? `«\u00A0${title}\u00A0» : sans` : "Sans"} modification${date ? ` avant le ${date}` : ""}, nous pourrons la supprimer.`,
     },
+    // L1-30e: a listing changed by the team, to its seller.
+    listingTeamEdited: {
+      title: "Notre équipe a modifié votre annonce",
+      reason: (reason: string) => `Motif : ${reason}`,
+    },
     listingDeleted: {
       title: "Nous avons supprimé votre annonce",
       detail: (title: string | null) =>

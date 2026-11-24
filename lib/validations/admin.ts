@@ -1,5 +1,12 @@
 import { z } from "zod";
 import { planCode } from "./billing";
+import {
+  LISTING_DESCRIPTION_MAX,
+  LISTING_PRICE_MAX_EUROS,
+  LISTING_TITLE_MAX,
+  LISTING_TITLE_MIN,
+  textLength,
+} from "./listing";
 import type { Database } from "@/types/database";
 
 // L1-19: back office of the listings (SPEC-V2 section 17).
@@ -103,6 +110,80 @@ export const complianceSchema = z.discriminatedUnion("action", [
 
 export type ComplianceInput = z.infer<typeof complianceSchema>;
 export type ComplianceAction = ComplianceInput["action"];
+
+/**
+ * « Modifier » a listing from the back office (L1-30e, DECISIONS.md
+ * 2026-11-24): its title, description and price, within the limits the
+ * seller has (L1-13), and the reason the seller reads. listing_admin_edit
+ * checks them again.
+ */
+export const LISTING_EDIT_STATUSES = [
+  "pending",
+  "published",
+  "paused",
+  "suspended",
+] as const satisfies readonly ListingStatus[];
+
+export function listingEditable(status: ListingStatus): boolean {
+  return (LISTING_EDIT_STATUSES as readonly ListingStatus[]).includes(status);
+}
+
+/**
+ * Only the fields the team changed are sent (null or absent: left as it is,
+ * so that a newer change of the seller is never overwritten with the value
+ * the form was filled with); at least one. The description keeps the limit
+ * of the seller, 1 200 characters (DECISIONS.md 2026-11-24).
+ */
+export const listingEditSchema = z
+  .object({
+    listingId,
+    title: z
+      .string()
+      .trim()
+      .refine(
+        (title) => textLength(title) >= LISTING_TITLE_MIN && textLength(title) <= LISTING_TITLE_MAX,
+        "title",
+      )
+      .nullish(),
+    description: z
+      .string()
+      .trim()
+      .refine((text) => text !== "" && textLength(text) <= LISTING_DESCRIPTION_MAX, "description")
+      .nullish(),
+    priceEuros: z.number().int().positive().max(LISTING_PRICE_MAX_EUROS).nullish(),
+    reason,
+  })
+  .refine(
+    (value) => value.title != null || value.description != null || value.priceEuros != null,
+    "nothing",
+  );
+
+export type ListingEditInput = z.infer<typeof listingEditSchema>;
+export type ListingEditField = "title" | "description" | "priceEuros" | "reason";
+
+/** The fields the team changed, from the listing as the form was filled with. */
+export function listingEditChanges(
+  initial: { title: string; description: string; priceEuros: number },
+  form: { title: string; description: string; priceEuros: number },
+): { title?: string; description?: string; priceEuros?: number } {
+  return {
+    ...(form.title.trim() !== initial.title.trim() ? { title: form.title } : {}),
+    ...(form.description.trim() !== initial.description.trim()
+      ? { description: form.description }
+      : {}),
+    ...(form.priceEuros !== initial.priceEuros ? { priceEuros: form.priceEuros } : {}),
+  };
+}
+
+/** The fields a refusal of listingEditSchema names, in the order of the form. */
+export function listingEditInvalidFields(input: unknown): ListingEditField[] {
+  const parsed = listingEditSchema.safeParse(input);
+  if (parsed.success) return [];
+  const fields = new Set(parsed.error.issues.map((issue) => issue.path[0]));
+  return (["title", "priceEuros", "description", "reason"] as const).filter((field) =>
+    fields.has(field),
+  );
+}
 
 // L1-30a: the users of the back office (SPEC-V2 section 17).
 

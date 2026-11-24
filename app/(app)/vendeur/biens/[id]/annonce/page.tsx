@@ -31,7 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // L1-14, tab Annonce: price, title, description and reference, as the
 // buyers read them. A draft or a rejected listing changes them at step 3;
 // once sent, from here (L1-14b), and it stays online. Once it has been
-// online, the history of its changes (L1-35).
+// online, the history of its changes (L1-35); in review, the changes made by
+// the team from the back office, with their reason (L1-30e).
 
 /** The statuses of a listing that has been online: its history is kept. */
 const ONCE_ONLINE = new Set(["published", "paused", "suspended", "sold"]);
@@ -59,8 +60,13 @@ export default async function PropertyListingPage({ params, searchParams }: Prop
   }
 
   const perM2 = pricePerM2Cents(listing.priceCents, property.characteristics.surfaceM2);
-  const revisions =
-    status !== null && ONCE_ONLINE.has(status) ? await listingRevisions(listing.id) : null;
+  // In review: only the changes of the team (L1-30e), when there are some.
+  const inReview = status === "pending";
+  const read =
+    status !== null && (ONCE_ONLINE.has(status) || inReview)
+      ? await listingRevisions(listing.id)
+      : null;
+  const revisions = read && inReview && (!read.ok || read.data.entries.length === 0) ? null : read;
   return (
     <div className="flex flex-col gap-8">
       {query.modifie === "1" && editableOnceSent(status) ? (
@@ -109,7 +115,9 @@ export default async function PropertyListingPage({ params, searchParams }: Prop
       </SheetSection>
       {revisions ? (
         <SheetSection id="historique" title={fr.listingRevisions.sellerTitle}>
-          <p className="text-lk-secondary text-lk-ink-3">{fr.listingRevisions.sellerIntro}</p>
+          <p className="text-lk-secondary text-lk-ink-3">
+            {inReview ? fr.listingRevisions.pendingIntro : fr.listingRevisions.sellerIntro}
+          </p>
           <RevisionHistory result={revisions} />
         </SheetSection>
       ) : null}

@@ -17,6 +17,8 @@ export type ListingRevision = {
   at: string;
   /** Changed by the team (an admin), not by the seller. */
   byTeam: boolean;
+  /** The reason of a change made from the back office (L1-30e), read by the seller. */
+  reason: string | null;
   change: RevisionChange;
 };
 
@@ -27,6 +29,7 @@ export type RevisionRow = {
   new_value: Json | null;
   created_at: string;
   changed_by: string;
+  reason?: string | null;
 };
 
 const cents = (value: Json | null): number | null =>
@@ -52,6 +55,7 @@ export function toRevision(row: RevisionRow, ownerId: string | null): ListingRev
     id: row.id,
     at: row.created_at,
     byTeam: ownerId !== null && row.changed_by !== ownerId,
+    reason: row.reason?.trim() || null,
     change,
   };
 }

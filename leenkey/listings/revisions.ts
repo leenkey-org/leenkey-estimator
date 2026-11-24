@@ -17,7 +17,7 @@ export async function listingRevisions(listingId: string): Promise<RevisionsResu
   const [rows, owner] = await Promise.all([
     supabase
       .from("listing_revisions")
-      .select("id, field, old_value, new_value, created_at, changed_by")
+      .select("id, field, old_value, new_value, created_at, changed_by, reason")
       .eq("listing_id", listingId)
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })

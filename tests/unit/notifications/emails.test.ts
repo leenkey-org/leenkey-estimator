@@ -711,6 +711,92 @@ describe("emails of an offer (L2-04a)", () => {
     expect(deletedText).toContain("Notre remarque : Photos floues : à remplacer");
   });
 
+  it("tells the seller of a change of their listing by the team, with the reason (L1-30e)", async () => {
+    const { renderNotificationEmail, emailPolicy } =
+      await import("@/leenkey/notifications/email-catalog");
+    expect(emailPolicy("listing.team_edited")).toEqual({
+      audience: "recipient",
+      throttleMinutes: 0,
+    });
+    const notice = (data: Record<string, unknown>) =>
+      planned([
+        queued({
+          type: "listing.team_edited",
+          groupKey: "listing-team-edit:l1",
+          link: "/vendeur/biens/p1/annonce#historique",
+          data: {
+            listing_id: "l1",
+            reference: "LK-0042",
+            title: "Maison 5 pièces",
+            fields: ["price", "title"],
+            reason: "Prix arrondi au millier.",
+            old_price_cents: 30050000,
+            price_cents: 30000000,
+            ...data,
+          },
+        }),
+      ]);
+    const spaces = (value: string) => value.replace(/[\u00A0\u202F]/g, " ");
+    const email = await renderNotificationEmail(notice({}));
+    const text = spaces(email?.text ?? "");
+    expect(email?.subject).toBe("Nous avons modifié votre annonce LK-0042");
+    expect(text).toContain("Notre équipe a modifié votre annonce « Maison 5 pièces ».");
+    expect(text).toContain("Modifié : le prix, le titre.");
+    expect(text).toContain(spaces(`Prix : ${formatPrice(30050000)} → ${formatPrice(30000000)}.`));
+    expect(text).toContain("Notre motif : Prix arrondi au millier.");
+    expect(email?.html).toContain(
+      "https://leenkey-v2.vercel.app/vendeur/biens/p1/annonce#historique",
+    );
+    expect(email?.replyTo).toBe("contact@leenkey.fr");
+    expect(text).not.toMatch(/\bon\b|estimation|prix ferme/i);
+    // Without the price changed: no line of price; without a reason: no email.
+    const description = await renderNotificationEmail(
+      notice({ fields: ["description"], old_price_cents: undefined }),
+    );
+    expect(description?.text).not.toContain("Prix :");
+    expect(await renderNotificationEmail(notice({ reason: " " }))).toBeNull();
+    // Its own « why »: the listing may still be in review.
+    expect(text).toContain("parce que vous avez une annonce sur Leenkey");
+    expect(text).not.toContain("publié une annonce");
+    // A reason a mail client would make a link of stays in the app.
+    const linked = await renderNotificationEmail(notice({ reason: "Voir www.exemple.fr" }));
+    expect(linked?.text).not.toContain("exemple.fr");
+    expect(linked?.text).toContain("Notre motif est à lire dans l'historique de votre annonce.");
+
+    // Two changes grouped in one email: every reason, every field, the price
+    // from the first change to the last.
+    const item = (id: string, data: Record<string, unknown>) =>
+      queued({
+        id,
+        type: "listing.team_edited",
+        groupKey: "listing-team-edit:l1",
+        link: "/vendeur/biens/p1/annonce#historique",
+        data: { listing_id: "l1", reference: "LK-0042", title: "Maison 5 pièces", ...data },
+      });
+    const grouped = await renderNotificationEmail(
+      planned([
+        item("n1", {
+          fields: ["price"],
+          reason: "Prix arrondi.",
+          old_price_cents: 30050000,
+          price_cents: 30000000,
+        }),
+        item("n2", {
+          fields: ["title"],
+          reason: "Titre plus précis.",
+          price_cents: 29900000,
+        }),
+      ]),
+    );
+    const groupedText = spaces(grouped?.text ?? "");
+    expect(groupedText).toContain("Notre motif : Prix arrondi.");
+    expect(groupedText).toContain("Notre motif : Titre plus précis.");
+    expect(groupedText).toContain("Modifié : le prix, le titre.");
+    expect(groupedText).toContain(
+      spaces(`Prix : ${formatPrice(30050000)} → ${formatPrice(29900000)}.`),
+    );
+  });
+
   it("tells the buyer the answer of the seller, with its message", async () => {
     const { renderNotificationEmail } = await import("@/leenkey/notifications/email-catalog");
     const declined = await renderNotificationEmail(

@@ -1075,6 +1075,7 @@ export type Database = {
           listing_id: string
           new_value: Json | null
           old_value: Json | null
+          reason: string | null
         }
         Insert: {
           changed_by: string
@@ -1084,6 +1085,7 @@ export type Database = {
           listing_id: string
           new_value?: Json | null
           old_value?: Json | null
+          reason?: string | null
         }
         Update: {
           changed_by?: string
@@ -1093,6 +1095,7 @@ export type Database = {
           listing_id?: string
           new_value?: Json | null
           old_value?: Json | null
+          reason?: string | null
         }
         Relationships: [
           {
@@ -3775,6 +3778,16 @@ export type Database = {
       listing_admin_delete: {
         Args: { p_listing_id: string }
         Returns: undefined
+      }
+      listing_admin_edit: {
+        Args: {
+          p_description?: string
+          p_listing_id: string
+          p_price_cents?: number
+          p_reason: string
+          p_title?: string
+        }
+        Returns: string[]
       }
       listing_bad_transition: {
         Args: {

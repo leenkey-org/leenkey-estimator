@@ -499,6 +499,7 @@ create table listing_revisions (         -- historique simplifié : quels champs
   field text not null check (field in ('price','description','title','photo')),  -- 'photo' : {id, caption} avant / après (L1-35)
   old_value jsonb,                      -- ancienne valeur brute (le prix en centimes, le texte tel quel)
   new_value jsonb,
+  reason text,                          -- motif d'une modification faite par l'équipe depuis le back office, lu par le vendeur (L1-30e, DECISIONS.md 2026-11-24)
   created_at timestamptz not null default now()
 );
 -- Alimentée par trigger sur listings et photos quand l'annonce est en ligne ou en pause (une annonce en pause revient en ligne sans relecture), pour une modification faite avec une session (le seed et les scripts ne sont pas suivis ; L1-35, DECISIONS.md 2026-11-13). Pas de diff visuel : une liste chronologique « champ · ancienne → nouvelle valeur ».
@@ -1538,6 +1539,7 @@ Fonction unique `notify(profileId, type, payload)` dans `core/notifications/`. E
 | `offer.withdrawn` | oui | oui | — |
 | `offer.viewed` | oui | non | Ajouté en L2-04a : à l'acquéreur, à la première ouverture de son offre par le vendeur (SPEC 13) |
 | `listing.revised` (admin) | oui | non | — |
+| `listing.team_edited` (vendeur) | oui | oui | Ajouté le 2026-11-24 (L1-30e) : annonce modifiée par l'équipe depuis le back office, avec le motif |
 | `account.created` (admin) | oui | oui | À la confirmation de l'adresse email ; emails regroupés sur 20 minutes (`DECISIONS.md` 2026-11-08) |
 | `plan.activated` | oui | oui | — |
 | `alert.match` | non | oui | Digest quotidien |
@@ -2076,9 +2078,9 @@ Maquettes : `AdminAnnonces.dc.html`, `AdminDesktop.dc.html`. Conçu desktop d'ab
   - **Valider et publier** → `published`, email vendeur, `listing.published`.
   - **Refuser avec motif** → `rejected`, motif obligatoire (modèles de motifs + texte libre, bouton « Rédiger avec l'assistant »), email au vendeur. Le vendeur corrige et renvoie.
   - **Suspendre** (motif obligatoire, email au vendeur) → `suspended` ; **Remettre en ligne** → `published`. Le vendeur voit l'annonce en lecture seule avec le motif et un lien vers la messagerie conseiller ou le formulaire de contact ; il ne peut pas la remettre en ligne lui-même.
-  - **Modifier** (champs de l'annonce, traçé).
+  - **Modifier** (champs de l'annonce, tracé). Mise en œuvre (L1-30e, DECISIONS.md 2026-11-24) : titre, description et prix d'une annonce en relecture, en ligne, en pause ou suspendue, motif obligatoire envoyé au vendeur, seuls les champs changés envoyés ; fonction `listing_admin_edit` (`is_admin()`), chaque champ changé dans `listing_revisions` comme une modification du vendeur, par l'admin, avec le motif (`reason`), puis `audit_log` ; vendeur prévenu (`listing.team_edited`, cloche et email), motif lu dans l'historique de l'onglet Annonce. Le statut ne change pas. Les photos restent au vendeur (`BACKLOG-V3.md`).
   - **Demander une mise en conformité** (DECISIONS.md 2026-11-22 ; annonce en ligne, en pause ou à corriger) : motif obligatoire, date limite à 7 jours (`listing_compliance_delay()`), vendeur prévenu (`listing.compliance_requested`, cloche et email), rappel 2 jours avant (`listing.compliance_reminder`) si l'annonce n'a pas changé ; **Lever la demande**, **Renouveler la demande** ; après la date limite, l'annonce n'ayant pas changé depuis la demande (ni modification en ligne, ni nouvel envoi, ni modification du bien), **Supprimer l'annonce** à la main (`listing_admin_delete`, confirmation, dernier avis `listing.deleted` au vendeur), quel que soit son statut sauf vendue (une annonce suspendue aussi), avec les mêmes refus que la suppression par le vendeur (offres, délai de renonciation). Jamais de suppression automatique. Tout dans `audit_log`.
-- Mise en œuvre (L1-30d, `DECISIONS.md` 2026-11-12) : pré-analyse calculée en code à l'affichage (DPE, exemption, prix à plus de 10 % de l'analyse de valeur, moins de 6 photos, description de moins de 400 caractères ; « Conforme » ou « À vérifier », complétude sur 100), sans appel au modèle et sans stocker `review` ; colonne « Pré-analyse » ; export CSV de la liste filtrée ; « Rédiger avec l'assistant » du motif de refus journalisé sous le genre `rejection_reason`. « Modifier » arrive avec L1-35.
+- Mise en œuvre (L1-30d, `DECISIONS.md` 2026-11-12) : pré-analyse calculée en code à l'affichage (DPE, exemption, prix à plus de 10 % de l'analyse de valeur, moins de 6 photos, description de moins de 400 caractères ; « Conforme » ou « À vérifier », complétude sur 100), sans appel au modèle et sans stocker `review` ; colonne « Pré-analyse » ; export CSV de la liste filtrée ; « Rédiger avec l'assistant » du motif de refus journalisé sous le genre `rejection_reason`. « Modifier » : L1-30e (ci-dessus).
 
 ### Utilisateurs `/admin/utilisateurs`
 

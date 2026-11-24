@@ -187,6 +187,8 @@ export const frAdminListings = {
       "listing.compliance_request": "Mise en conformité demandée",
       "listing.compliance_clear": "Demande de mise en conformité levée",
       "listing.delete": "Supprimée",
+      // L1-30e.
+      "listing.admin_edit": "Modifiée par l'équipe",
     } as Record<string, string>,
     other: "Modifiée",
     by: (name: string) => `par ${name}`,
@@ -279,6 +281,36 @@ export const frAdminListings = {
       withdrawalOpen:
         "Le vendeur peut encore renoncer à la formule payée pour ce bien : l'annonce pourra être supprimée après sa demande de renonciation ou après ce délai.",
     },
+  },
+  // L1-30e (DECISIONS.md 2026-11-24): « Modifier » the listing from the back office.
+  edit: {
+    title: "Modifier l'annonce",
+    intro:
+      "Corrigez le titre, la description ou le prix. Le vendeur est prévenu dans son espace et par email, avec votre motif ; la modification s'inscrit dans l'historique de l'annonce.",
+    open: "Modifier l'annonce",
+    label: (reference: string) => `Modifier l'annonce ${reference}`,
+    dialog: {
+      title: "Modifier l'annonce",
+      text: "L'annonce garde son statut. Le vendeur reçoit votre motif dans son espace et par email.",
+      price: "Prix",
+      listingTitle: "Titre",
+      description: "Description",
+      count: (count: string, max: string) => `${count} / ${max} caractères`,
+      reason: "Motif envoyé au vendeur",
+      reasonHint: "Au moins 3 caractères, envoyé tel quel.",
+      confirm: "Enregistrer la modification",
+    },
+    errors: {
+      title: "Le titre doit faire entre 3 et 120 caractères.",
+      price: "Indiquez un prix en euros, sans centimes.",
+      priceTooHigh: "Ce prix semble trop élevé : vérifiez le nombre de zéros.",
+      description: "La description est obligatoire, 1 200 caractères au plus.",
+      reason: "Le motif doit faire au moins 3 caractères.",
+      unchanged: "Rien n'a changé : modifiez le titre, la description ou le prix.",
+      conflict:
+        "Cette annonce a changé de statut entre-temps : elle ne peut plus être modifiée ici. Rechargez la page.",
+    },
+    result: "Annonce modifiée : le vendeur est prévenu dans son espace et par email.",
   },
   result: {
     published: "Annonce publiée.",

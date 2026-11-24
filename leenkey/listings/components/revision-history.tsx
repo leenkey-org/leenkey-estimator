@@ -102,6 +102,11 @@ function Entry({ entry, now }: { entry: ListingRevision; now: Date }) {
         {formatDateTime(entry.at, now)}
         {entry.byTeam ? ` · ${t.byTeam}` : null}
       </p>
+      {entry.reason ? (
+        <p className="text-lk-secondary whitespace-pre-line text-pretty break-words text-lk-ink-2">
+          {t.reason(entry.reason)}
+        </p>
+      ) : null}
       {change.kind === "description" ? <Texts before={change.old} after={change.new} /> : null}
     </li>
   );

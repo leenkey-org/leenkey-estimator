@@ -600,6 +600,26 @@ export const frEmails = {
       action: "Ouvrir Ma vente",
     },
   },
+  // L1-30e (DECISIONS.md 2026-11-24): a listing changed by the team from the
+  // back office, to its seller, with the reason. An answer goes to Leenkey.
+  listingTeamEdited: {
+    subject: (reference: string) => `Nous avons modifié votre annonce ${reference}`,
+    title: "Nous avons modifié votre annonce",
+    text: (listing: string) => `Notre équipe a modifié votre annonce${listing}.`,
+    fields: {
+      price: "le prix",
+      title: "le titre",
+      description: "la description",
+    } as Record<string, string>,
+    changed: (fields: readonly string[]) => `Modifié : ${fields.join(", ")}.`,
+    price: (before: string, after: string) => `Prix : ${before} → ${after}.`,
+    reason: (reason: string) => `Notre motif : ${reason}`,
+    reasonInApp: "Notre motif est à lire dans l'historique de votre annonce.",
+    next: "La modification figure dans l'historique de votre annonce. Pour en parler, répondez simplement à cet email.",
+    action: "Voir mon annonce",
+    // In review too: not « publié ».
+    why: "Vous recevez cet email parce que vous avez une annonce sur Leenkey.",
+  },
   // 2026-11-21: a report handled by the team, to its author. Never what was decided.
   reportHandled: {
     subject: "Votre signalement a été traité",
