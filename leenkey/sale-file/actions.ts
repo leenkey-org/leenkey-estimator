@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { getProfile } from "@/core/auth/session";
+import { DECLARED_SALE_EVENTS, declareSaleEvent } from "@/leenkey/properties/sale-events";
 import {
   DDT_TYPE,
   ddtDiagnostics,
@@ -398,6 +399,33 @@ export async function setExemption(input: unknown): Promise<SimpleResult> {
   }
   await declareIfComplete(supabase, propertyId, profile.id);
   revalidateFile(propertyId);
+  return { ok: true, data: null };
+}
+
+/**
+ * The seller opened the tab « Documents » of their property (L3-07b,
+ * DECISIONS.md 2026-11-24): the list of the documents to prepare and of the
+ * diagnostics their property needs is in front of them, so the tasks
+ * « Documents à préparer identifiés » and « Diagnostics nécessaires
+ * identifiés » are done. sale_declare_event checks the account and the
+ * property. The steps are read again only when a task was ticked.
+ */
+export async function markSaleFileSeen(propertyId: string): Promise<SimpleResult> {
+  const profile = await getProfile();
+  if (!profile) return { ok: false, error: "auth" };
+  if (!UUID.test(propertyId)) return { ok: false, error: "invalid" };
+  let ticked = false;
+  for (const event of DECLARED_SALE_EVENTS) {
+    const result = await declareSaleEvent(propertyId, event);
+    if (!result.ok) {
+      return { ok: false, error: result.error === "forbidden" ? "invalid" : "unavailable" };
+    }
+    ticked ||= result.ticked;
+  }
+  if (ticked) {
+    revalidatePath(`/vendeur/biens/${propertyId}/etapes`);
+    revalidatePath("/vendeur");
+  }
   return { ok: true, data: null };
 }
 

@@ -36,8 +36,8 @@ const ANSWER_WITHIN_MS = 24 * 60 * 60 * 1000;
 /**
  * Where the seller does a task ticked by an event; null when nothing they do
  * on a screen ticks it: the analysis of value is made before the property
- * (L1-13b), the documents come with lot 3, the visits with lot 3, the offers
- * with lot 2, the contacts and the publication are not their doing.
+ * (L1-13b), the offers, the contacts, the first visit and the publication are
+ * not their doing. The documents and the slots of visit (L3-07b): their tab.
  */
 export function taskHref(code: string, property: SaleSituation["property"]): string | null {
   switch (code) {
@@ -49,6 +49,12 @@ export function taskHref(code: string, property: SaleSituation["property"]): str
       return editHref(property, "listing");
     case "listing_submitted":
       return inCreation(property.listingStatus) ? creationHref(property) : null;
+    case "checklist_viewed":
+    case "diagnostics_listed":
+    case "notary_file_complete":
+      return sheetHref(property.id, "documents");
+    case "visit_slots_opened":
+      return sheetHref(property.id, "visites");
     case "deed_signed":
       return statusActions(property.listingStatus).includes("sold") ? sheetHref(property.id) : null;
     default:
