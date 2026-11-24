@@ -18,7 +18,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Sécurité : lue par l'acquéreur de la visite, le vendeur du bien et l'équipe (RLS de `visits`, session de l'appelant) ; 404 pour tout autre compte, pour une visite annulée et pour une annonce hors ligne. L'adresse exacte y figure seulement pour qui la lit déjà sur la page de la visite (`visit_address`).
 - Tests : `tests/unit/visits/sheet.test.ts`, `tests/unit/notifications/emails.test.ts` (lien de l'acquéreur, rien pour le vendeur), `tests/e2e/visit-sheet-live.spec.ts` (projet « seed-mutations »).
 - Migration : aucune.
-- Docs : `DECISIONS.md` (2026-11-24 et Q102), `SPEC-V2.md` (sections 14 et 18), `BACKLOG-V3.md`.
+- Docs : `DECISIONS.md` (2026-11-24 et Q103), `SPEC-V2.md` (sections 14 et 18), `BACKLOG-V3.md`.
 ### 2026-11-23 · P-04 · Guide du back office · PR #129
 - Ajouté : `docs/GUIDE-BACK-OFFICE.md`, le guide de l'équipe pour le back office tel qu'il est en ligne : accès, menu, cloche et emails de l'équipe, tableau de bord, validation d'une annonce (pré-analyse, DPE, refus avec motif, suspension, mise en conformité et suppression), utilisateurs, dossiers et signalements, messages clients et interventions du conseiller, offres (lecture seule, cadre « loi Hoguet »), justificatifs de financement, pièces d'identité, formules et rétractations, assistant, export, limites et questions fréquentes. Libellés repris de l'interface.
 - Ajouté : `docs/GUIDE-BACK-OFFICE.pdf` (11 pages A4, charte D, Sora, sommaire cliquable, pages numérotées) et `npm run guide:pdf` (`scripts/guide-pdf.mjs`) qui le régénère depuis le Markdown avec le Chromium de Playwright, sans dépendance nouvelle (`PLAYWRIGHT_CHROMIUM_PATH` comme pour les tests E2E).

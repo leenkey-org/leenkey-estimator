@@ -1958,7 +1958,7 @@ Ajouté le 2026-11-23 (`DECISIONS.md`, règles provisoires, Q101).
 
 ### Fiche technique du bien
 
-Ajouté le 2026-11-24 (`DECISIONS.md`, demande de Cédric, règles provisoires, Q102).
+Ajouté le 2026-11-24 (`DECISIONS.md`, demande de Cédric, règles provisoires, Q103).
 
 - **Document** : un PDF « Fiche technique du bien » à `/visites/[id]/fiche-technique`, dessiné à la demande comme le PDF d'une offre (section 13) ; rien n'est stocké.
 - **Lecteurs** : l'acquéreur d'une visite réservée et non annulée, le vendeur du bien, l'équipe. Tout autre compte : 404. Non connecté : renvoi vers la connexion. Le droit est celui de la ligne de `visits` (RLS).
