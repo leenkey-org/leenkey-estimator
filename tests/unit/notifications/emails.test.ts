@@ -943,6 +943,13 @@ describe("the emails of a visit (L3-02)", () => {
     expect(text).toContain("Vous pouvez annuler jusqu'à 2 h avant la visite.");
     expect(text).toContain("Le fichier joint à cet email ajoute la visite à votre agenda.");
     expect(buyer?.html).toContain("https://leenkey-v2.vercel.app/visites/v1");
+    // The technical sheet of the property: a link to the site, never a file
+    // (DECISIONS.md 2026-11-24); the calendar file stays the only attachment.
+    expect(text).toContain("Fiche technique du bien (PDF)");
+    expect(buyer?.html).toContain(
+      'href="https://leenkey-v2.vercel.app/visites/v1/fiche-technique"',
+    );
+    expect(buyer?.attachments).toHaveLength(1);
     expect(text).not.toMatch(/\bon\b|@exemple/i);
     const buyerIcs = ics(buyer);
     expect(buyerIcs).toContain("UID:visit-v1@leenkey.fr");
@@ -961,6 +968,7 @@ describe("the emails of a visit (L3-02)", () => {
     // Neither the address nor a contact detail in the email of the seller.
     expect(`${seller?.text}${seller?.html}`).not.toContain(ADDRESS);
     expect(sellerText).not.toMatch(/Adresse|annuler jusqu|@exemple|\bon\b/i);
+    expect(`${seller?.text}${seller?.html}`).not.toMatch(/fiche-technique|Fiche technique/);
     expect(seller?.html).toContain("https://leenkey-v2.vercel.app/vendeur/biens/p1/visites");
     expect(ics(seller)).toContain("URL:https://leenkey-v2.vercel.app/vendeur/biens/p1/visites");
   });

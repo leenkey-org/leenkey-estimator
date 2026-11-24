@@ -47,6 +47,7 @@ import { formatNumericDateTime } from "@/leenkey/offers/document";
 import { gapLabel, offerGap } from "@/leenkey/offers/figures";
 import { visitDateTime } from "@/leenkey/visits/dates";
 import { visitIcs } from "@/leenkey/visits/ics";
+import { visitSheetPath } from "@/leenkey/visits/sheet";
 import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { frEmails } from "@/lib/i18n/sections/emails";
 import { frFinancingDocument } from "@/lib/i18n/sections/financingDocument";
@@ -808,6 +809,7 @@ async function visitBooked(
   const seller = last.data.role === "seller";
   const date = visitDateTime(visit.startsAt);
   const url = absoluteUrl(last.link ?? (seller ? "/vendeur" : "/acquereur"));
+  const visitId = text(last.data.visit_id);
   const content = await rendered(
     visitBookedSubject(date),
     VisitBookedEmail({
@@ -817,6 +819,9 @@ async function visitBooked(
       property: emailSafeText(last.data.title),
       date,
       address: seller ? null : visit.address,
+      // Read on the site, signed in (DECISIONS.md 2026-11-24): never a file here.
+      sheetUrl:
+        !seller && visitId ? absoluteUrl(visitSheetPath(encodeURIComponent(visitId))) : null,
       visitUrl: url,
       siteUrl: siteUrl(),
     }),

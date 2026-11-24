@@ -1962,9 +1962,19 @@ Ajouté le 2026-11-23 (`DECISIONS.md`, règles provisoires, Q101).
 - **Vendeur** : dans l'onglet « Visites », un libellé pour les acquéreurs dont l'invitation est encore valable ou dont une visite n'est pas annulée (« Identité vérifiée par Leenkey », « Pièce d'identité déposée, en cours de vérification », « Pièce d'identité non déposée »), jamais le fichier ni le type.
 - **IA** : la pièce n'est jamais transmise à l'assistant ni à l'analyse des documents (sections 12 et 21).
 
+### Fiche technique du bien
+
+Ajouté le 2026-11-24 (`DECISIONS.md`, demande de Cédric, règles provisoires, Q103).
+
+- **Document** : un PDF « Fiche technique du bien » à `/visites/[id]/fiche-technique`, dessiné à la demande comme le PDF d'une offre (section 13) ; rien n'est stocké.
+- **Lecteurs** : l'acquéreur d'une visite réservée et non annulée, le vendeur du bien, l'équipe. Tout autre compte : 404. Non connecté : renvoi vers la connexion. Le droit est celui de la ligne de `visits` (RLS).
+- **Contenu** : ce que la page publique de l'annonce montre, et rien d'autre : titre, référence, prix, commune, caractéristiques renseignées (surfaces, pièces, étage, année, chauffage, classes DPE et GES, leurs chiffres si `dpe_rules.figures_public`, charges, taxe foncière, lots), mentions réglementaires de l'annonce, date et heure de la visite. Jamais le numéro ni la date du DPE. L'adresse exacte seulement pour qui la lit sur la page de la visite (voir « Adresse »).
+- **Disponibilité** : tant que l'annonce est en ligne ; sinon 404 et lien masqué.
+- **Liens** : « Fiche technique du bien (PDF) » sur la page de la visite de l'acquéreur et dans son email « Visite confirmée » (lien vers le site, jamais une pièce jointe).
+
 ### Adresse
 
-L'adresse exacte n'est communiquée qu'à l'acquéreur qui a une visite confirmée : dans l'email de confirmation et sur la page de la visite. Jamais ailleurs.
+L'adresse exacte n'est communiquée qu'à l'acquéreur qui a une visite confirmée : dans l'email de confirmation, sur la page de la visite, dans son fichier d'agenda et sur la fiche technique du bien (lue une fois connecté, tant que la visite est confirmée). Jamais ailleurs.
 
 ---
 
@@ -2134,7 +2144,7 @@ Gabarit commun (`docs/DESIGN.md` 14) : fond `#F4F4F1`, carte blanche 560 px rayo
 | Réponse à votre offre | `offer.answered` | Acceptée / refusée, message éventuel |
 | Offre expirée | `offer.expired` | — |
 | Invitation à visiter | `visit.invited` | Lien de réservation, validité |
-| Visite confirmée | `visit.booked` | Date, adresse exacte (acquéreur uniquement), `.ics` |
+| Visite confirmée | `visit.booked` | Date, adresse exacte (acquéreur uniquement), lien vers la fiche technique du bien (acquéreur uniquement), `.ics` |
 | Rappel de visite | cron J-1 | Idem |
 | Documents partagés | `document.shared` | Liste, lien |
 | Demande d'accès aux documents | `document.access_requested` | Acquéreur, statut financement, lien |

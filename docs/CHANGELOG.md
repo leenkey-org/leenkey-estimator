@@ -12,6 +12,13 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-24 · Fiche technique du bien à la visite confirmée (demande de Cédric) · PR #131
+- Ajouté : PDF « Fiche technique du bien » à `/visites/[id]/fiche-technique`, dessiné à la demande avec le moteur du PDF de l'offre (rien n'est stocké) : titre, référence, prix et commune de l'annonce, date et heure de la visite, caractéristiques renseignées de la page de l'annonce (surfaces, pièces, étage, année, chauffage, classes DPE et GES, charges, taxe foncière, lots), mentions réglementaires. Les chiffres du DPE seulement si `dpe_rules.figures_public` ; jamais son numéro ni sa date.
+- Ajouté : lien « Fiche technique du bien (PDF) » sur la page de la visite de l'acquéreur (visite réservée, non annulée, annonce en ligne) et dans son email « Visite confirmée » (lien vers le site, connexion demandée ; jamais une pièce jointe).
+- Sécurité : lue par l'acquéreur de la visite, le vendeur du bien et l'équipe (RLS de `visits`, session de l'appelant) ; 404 pour tout autre compte, pour une visite annulée et pour une annonce hors ligne. L'adresse exacte y figure seulement pour qui la lit déjà sur la page de la visite (`visit_address`).
+- Tests : `tests/unit/visits/sheet.test.ts`, `tests/unit/notifications/emails.test.ts` (lien de l'acquéreur, rien pour le vendeur), `tests/e2e/visit-sheet-live.spec.ts` (projet « seed-mutations »).
+- Migration : aucune.
+- Docs : `DECISIONS.md` (2026-11-24 et Q103), `SPEC-V2.md` (sections 14 et 18), `BACKLOG-V3.md`.
 ### 2026-11-24 · DDT déposé en une fois, niveau A (demande de Cédric) · PR #130
 - Ajouté : dans l'onglet « Documents » d'un bien, les diagnostics forment un groupe « Diagnostics » de « Documents du bien », avec en première action « Déposer mon DDT (un seul fichier) » : le vendeur dépose une fois le fichier unique de son diagnostiqueur et coche les diagnostics qu'il contient, parmi les lignes de diagnostic demandées pour ce bien (cochées au départ sauf les lignes « Non concerné », une au moins). Un seul DDT par bien à la fois.
 - Ajouté : chaque ligne cochée compte comme fournie (« Fourni dans votre DDT », avec le lien vers le fichier) dans tous les comptes : catégorie, étape, « Dossier notaire : x / y », tâche « Dossier notaire complet », proposition `file_incomplete`. « Modifier les diagnostics couverts » ; retiré, le DDT rend ses lignes (« À déposer » ou « Non concerné »). Déposer un diagnostic seul reste possible.

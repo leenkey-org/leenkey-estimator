@@ -283,6 +283,11 @@ export const frEmails = {
       sellerNext: "Vous retrouvez cette visite dans l'onglet Visites de votre bien.",
       buyerAction: "Voir ma visite",
       sellerAction: "Voir mes visites",
+      // The technical sheet of the property (DECISIONS.md 2026-11-24): a link
+      // to the site, read once signed in; never a file in the email.
+      sheetText:
+        "Avant la visite, retrouvez les caractéristiques du bien dans sa fiche technique :",
+      sheetLink: "Fiche technique du bien (PDF)",
     },
     cancelled: {
       subject: (date: string) => `Visite annulée · ${date}`,
