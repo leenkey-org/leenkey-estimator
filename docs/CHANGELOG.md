@@ -12,6 +12,14 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-24 · Fiche technique du bien à la visite confirmée (demande de Cédric) · PR #131
+- Ajouté : PDF « Fiche technique du bien » à `/visites/[id]/fiche-technique`, dessiné à la demande avec le moteur du PDF de l'offre (rien n'est stocké) : titre, référence, prix et commune de l'annonce, date et heure de la visite, caractéristiques renseignées de la page de l'annonce (surfaces, pièces, étage, année, chauffage, classes DPE et GES, charges, taxe foncière, lots), mentions réglementaires. Les chiffres du DPE seulement si `dpe_rules.figures_public` ; jamais son numéro ni sa date.
+- Ajouté : lien « Fiche technique du bien (PDF) » sur la page de la visite de l'acquéreur (visite réservée, non annulée, annonce en ligne) et dans son email « Visite confirmée » (lien vers le site, connexion demandée ; jamais une pièce jointe).
+- Sécurité : lue par l'acquéreur de la visite, le vendeur du bien et l'équipe (RLS de `visits`, session de l'appelant) ; 404 pour tout autre compte, pour une visite annulée et pour une annonce hors ligne. L'adresse exacte y figure seulement pour qui la lit déjà sur la page de la visite (`visit_address`).
+- Tests : `tests/unit/visits/sheet.test.ts`, `tests/unit/notifications/emails.test.ts` (lien de l'acquéreur, rien pour le vendeur), `tests/e2e/visit-sheet-live.spec.ts` (projet « seed-mutations »).
+- Migration : aucune.
+- Docs : `DECISIONS.md` (2026-11-24 et Q102), `SPEC-V2.md` (sections 14 et 18), `BACKLOG-V3.md`.
+
 ### 2026-11-23 · Vérification d'identité avant visite (demande de Cédric) · PR #128
 - Ajouté : un acquéreur dépose une pièce d'identité (carte d'identité, passeport ou titre de séjour ; PDF ou image, mêmes limites que le justificatif de financement) depuis « Mon projet d'achat » (`/acquereur/profil#identite`) et depuis la réservation d'une visite quand elle manque. Statuts « Pièce d'identité non déposée », « Pièce d'identité déposée », « Identité vérifiée par Leenkey » (jamais « validé »). Une pièce en attente se remplace ou se retire ; rien n'est lu ni gardé de la pièce (ni numéro, ni date de naissance).
 - Ajouté : réserver un créneau demande une pièce déposée, sans attendre le contrôle de l'équipe (`visit_book`) ; la page de réservation affiche le dépôt à la place des créneaux tant qu'elle manque. Une visite déjà réservée n'est jamais annulée.

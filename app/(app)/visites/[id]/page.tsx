@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, FileText } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { requireProfile } from "@/core/auth/session";
@@ -15,6 +15,7 @@ import { VisitStatusBadge } from "@/leenkey/visits/components/visit-status-badge
 import { canCancel, visitDateTime, visitRange } from "@/leenkey/visits/dates";
 import { feedbackDeadline, feedbackWindow } from "@/leenkey/visits/feedback";
 import { visitDetail } from "@/leenkey/visits/queries";
+import { sheetAvailable, visitSheetPath } from "@/leenkey/visits/sheet";
 import { frVisits } from "@/lib/i18n/sections/visits";
 import { SpacePage } from "../../_components/space-page";
 
@@ -115,6 +116,16 @@ export default async function VisitPage({ params, searchParams }: Props) {
                 <a href={`/visites/${visit.id}/ics`}>
                   <CalendarPlus aria-hidden="true" />
                   {t.calendar}
+                </a>
+              </Button>
+            ) : null}
+            {/* The technical sheet of the property (DECISIONS.md 2026-11-24), drawn
+                from the listing online: for the buyer of a booked visit. */}
+            {visit.role === "buyer" && sheetAvailable(visit.status) && visit.listing?.slug ? (
+              <Button asChild variant="secondary" size="sm">
+                <a href={visitSheetPath(visit.id)} target="_blank" rel="noopener">
+                  <FileText aria-hidden="true" />
+                  {t.sheet}
                 </a>
               </Button>
             ) : null}

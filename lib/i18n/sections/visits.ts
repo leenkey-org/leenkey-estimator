@@ -174,6 +174,23 @@ export const frVisits = {
     icsSummary: (title: string) => `Visite : ${title}`,
     icsDescription: "Visite organisée avec Leenkey.",
     property: "le bien",
+    sheet: "Fiche technique du bien (PDF)",
+  },
+  // The technical sheet of the property, for a booked visit (DECISIONS.md
+  // 2026-11-24): a PDF drawn from the listing online, nothing more than it shows.
+  sheet: {
+    title: "FICHE TECHNIQUE DU BIEN",
+    referenceLine: (reference: string) => `Référence de l'annonce : ${reference}`,
+    issued: (date: string) => `Fiche établie le ${date}`,
+    sections: { property: "Le bien", visit: "La visite" },
+    listing: "Annonce",
+    reference: "Référence",
+    price: "Prix",
+    town: "Commune",
+    at: "à",
+    source:
+      "Cette fiche reprend les informations de l'annonce en ligne sur Leenkey à la date indiquée en tête de page.",
+    footer: (reference: string) => `${reference} · Fiche technique`,
   },
   // L3-03: the feedback after a visit (SPEC-V2 14). The buyer: an interest
   // from 1 to 5 and a comment, read by the seller as given. The seller: a

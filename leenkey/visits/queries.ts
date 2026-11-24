@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { VISIT_TOKEN, type VisitInterest } from "@/lib/validations/visit";
 import type { Database } from "@/types/database";
 import { interestOf } from "./feedback";
+import { sheetAvailable, sheetShowsAddress, type SheetRole } from "./sheet";
 
 // Visits as their parties read them (L3-02, SPEC-V2 14), with the session of
 // the user (RLS): the seller the slots, the invitations and the visits of
@@ -291,6 +292,104 @@ export async function visitDetail(
       buyerInterest: interestOf(visit.buyer_interest),
       buyerFeedback: visit.buyer_feedback,
       sellerNote: note.data ?? null,
+    },
+  };
+}
+
+export type VisitForSheet = {
+  id: string;
+  status: VisitStatus;
+  startsAt: string;
+  endsAt: string;
+  role: SheetRole;
+  /** The slug of the listing while it is online: the sheet is drawn from it. */
+  slug: string | null;
+  /** The exact address, for who reads it on the page of the visit. */
+  address: { line: string; postalCode: string; city: string } | null;
+};
+
+/**
+ * What the technical sheet of a visit needs (DECISIONS.md 2026-11-24), read
+ * with the session of the caller: the RLS of `visits` gives the row to its
+ * buyer, to the seller of the property and to the team only. Null for anyone
+ * else, and for a visit that is not booked any more (cancelled). The exact
+ * address through visit_address, as on the page of the visit: the seller,
+ * the buyer of a confirmed visit; never more.
+ */
+export async function visitForSheet(
+  visitId: string,
+  profile: { id: string; roles: readonly string[] },
+): Promise<QueryResult<VisitForSheet | null>> {
+  const supabase = await createClient();
+  const { data: visit, error } = await supabase
+    .from("visits")
+    .select("id, property_id, buyer_id, status, slot:visit_slots!inner(starts_at, ends_at)")
+    .eq("id", visitId)
+    .maybeSingle();
+  if (error) {
+    console.error("[visits] sheet visit read failed", {
+      user_id: profile.id,
+      entity_id: visitId,
+      code: error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  if (!visit || !sheetAvailable(visit.status)) return { ok: true, data: null };
+  const buyer = visit.buyer_id === profile.id;
+  // The buyer and the seller of the property; no row for anyone else.
+  const listing = await supabase.rpc("visit_listing", { p_property: visit.property_id });
+  if (listing.error) {
+    console.error("[visits] sheet listing read failed", {
+      user_id: profile.id,
+      entity_id: visitId,
+      code: listing.error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  const own = listing.data?.[0] ?? null;
+  let role: SheetRole;
+  let slug: string | null;
+  if (buyer || own) {
+    role = buyer ? "buyer" : "seller";
+    slug = own?.slug ?? null;
+  } else {
+    // The team: the RLS of `visits` gave the row, the one of `listings` gives the slug.
+    if (!profile.roles.includes("admin")) return { ok: true, data: null };
+    role = "admin";
+    const online = await supabase
+      .from("listings")
+      .select("slug")
+      .eq("property_id", visit.property_id)
+      .eq("status", "published")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (online.error) {
+      console.error("[visits] sheet listing read failed", {
+        user_id: profile.id,
+        entity_id: visitId,
+        code: online.error.code,
+      });
+      return { ok: false, error: "unavailable" };
+    }
+    slug = online.data[0]?.slug ?? null;
+  }
+  let address: VisitForSheet["address"] = null;
+  if (sheetShowsAddress(role, visit.status)) {
+    const place = await supabase.rpc("visit_address", { p_visit: visitId });
+    const row = place.data?.[0];
+    if (row) address = { line: row.address_line, postalCode: row.postal_code, city: row.city };
+  }
+  return {
+    ok: true,
+    data: {
+      id: visit.id,
+      status: visit.status,
+      startsAt: visit.slot.starts_at,
+      endsAt: visit.slot.ends_at,
+      role,
+      slug,
+      address,
     },
   };
 }
