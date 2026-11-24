@@ -12,6 +12,14 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-24 · L1-30b · PR #137
+- Ajouté : « Résumé du jour » sur le tableau de bord du back office (`/admin`), sous la salutation : 5 lignes au plus rédigées par l'assistant (`MODELS.smart`, prompt `core/ai/prompts/admin-daily-brief.md`) à partir des chiffres lus en code avec la session de l'admin (annonces à valider et attente de la plus ancienne, dossiers, signalements, messages clients non lus, interventions du conseiller, justificatifs de financement et pièces d'identité à contrôler, fichiers de pièces d'identité à supprimer, offres en attente ; sur 24 h : inscriptions, formules vendues, offres envoyées). Le modèle ne lit pas la base et ne cite que ces chiffres ; une phrase quand rien n'attend.
+- Ajouté : cache d'une heure pour toute l'équipe (table `admin_daily_briefs`) ; le tableau de bord s'affiche sans l'attendre (la carte le demande après coup, squelette pendant la rédaction) ; « Régénérer » écrit un nouveau résumé 5 minutes au moins après le dernier (vérifié en code et par la base) ; en erreur, une phrase discrète, les chiffres restent.
+- Ajouté : journal de l'assistant sous `ai_conversations.kind = 'daily_brief'` (contexte équipe seulement), « Résumé du jour » dans le journal de `/admin/assistant` ; `AI_MOCK=1` rend un texte fixe.
+- Migration : `20261124130000_admin_daily_brief.sql` (table, RLS équipe seulement, ni modification ni suppression par un client, genre du journal élargi).
+- Tests : `tests/unit/admin/daily-brief.test.ts`, `supabase/tests/rls_admin_daily_brief.sql` (27 cas, cinq comptes et visiteur), `tests/e2e/admin-daily-brief-live.spec.ts` (projet « seed-mutations »).
+- Docs : `DECISIONS.md` (2026-11-24), `SPEC-V2.md` 17, `DESIGN.md` (L1-30b), `PLANNING.md`, `GUIDE-BACK-OFFICE.md` (et son PDF).
+
 ### 2026-11-24 · L1-16b · PR #136
 - Ajouté : carte de la recherche, regroupement des pastilles qui se chevauchent au dézoom (au-delà de 3, pastille ronde navy avec le nombre, « 4 biens, zoomer », clic = zoom sur ses biens), sans dépendance (`core/maps/cluster.ts`, recalculé à chaque zoom).
 - Ajouté : « Rechercher dans cette zone » après un déplacement de la carte : la liste se limite à la zone vue (`bbox=sud,ouest,nord,est` dans l'adresse, validé par Zod, passé à `search_listings`), combinée aux filtres, comptée dans « Voir N biens », retirée seule par « Retirer la zone » (à côté du compteur « 12 biens dans cette zone de la carte » et dans l'état vide), ou avec « Effacer les filtres » ou un autre lieu.
@@ -31,14 +39,6 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Corrigé : « Documents à préparer identifiés » et « Diagnostics nécessaires identifiés » ne se cochaient jamais (aucun écran ne les déclarait) : l'ouverture de l'onglet « Documents » par le vendeur les coche.
 - Ajouté : la prochaine action et la liste des tâches mènent à l'onglet « Documents » (pièces, diagnostics, dossier notaire complet) et à l'onglet « Visites » (créneaux de visite ouverts).
 - Tests : `tests/unit/properties/next-action.test.ts`. Aucune migration.
-### 2026-11-24 · L1-30b · PR #136
-- Ajouté : « Résumé du jour » sur le tableau de bord du back office (`/admin`), sous la salutation : 5 lignes au plus rédigées par l'assistant (`MODELS.smart`, prompt `core/ai/prompts/admin-daily-brief.md`) à partir des chiffres lus en code avec la session de l'admin (annonces à valider et attente de la plus ancienne, dossiers, signalements, messages clients non lus, interventions du conseiller, justificatifs de financement et pièces d'identité à contrôler, fichiers de pièces d'identité à supprimer, offres en attente ; sur 24 h : inscriptions, formules vendues, offres envoyées). Le modèle ne lit pas la base et ne cite que ces chiffres ; une phrase quand rien n'attend.
-- Ajouté : cache d'une heure pour toute l'équipe (table `admin_daily_briefs`) ; le tableau de bord s'affiche sans l'attendre (la carte le demande après coup, squelette pendant la rédaction) ; « Régénérer » écrit un nouveau résumé 5 minutes au moins après le dernier (vérifié en code et par la base) ; en erreur, une phrase discrète, les chiffres restent.
-- Ajouté : journal de l'assistant sous `ai_conversations.kind = 'daily_brief'` (contexte équipe seulement), « Résumé du jour » dans le journal de `/admin/assistant` ; `AI_MOCK=1` rend un texte fixe.
-- Migration : `20261124130000_admin_daily_brief.sql` (table, RLS équipe seulement, ni modification ni suppression par un client, genre du journal élargi).
-- Tests : `tests/unit/admin/daily-brief.test.ts`, `supabase/tests/rls_admin_daily_brief.sql` (27 cas, cinq comptes et visiteur), `tests/e2e/admin-daily-brief-live.spec.ts` (projet « seed-mutations »).
-- Docs : `DECISIONS.md` (2026-11-24), `SPEC-V2.md` 17, `DESIGN.md` (L1-30b), `PLANNING.md`, `GUIDE-BACK-OFFICE.md` (et son PDF).
-
 ### 2026-11-24 · Fiche du bien en deux colonnes (demande de Cédric) · PR #133
 - Modifié : à partir de 1 024 px, la fiche du bien du vendeur (`/vendeur/biens/[id]` et ses rubriques) occupe 1 216 px en deux colonnes : à gauche, le bien dans une carte (chiffres deux par deux), les rubriques en liste latérale avec leurs icônes, puis les actions du statut ; à droite, ce que veut dire le statut et le contenu de la rubrique. Sous 1 024 px, rien ne change (même ordre, une seule arborescence).
 - Ajouté : `LinkTabs` accepte `aside` (liste latérale à partir de 1 024 px) et une icône par onglet ; jeton `max-w-lk-space` (1 216 px).
