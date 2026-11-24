@@ -12,11 +12,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
-### 2026-11-24 · L3-07b · Tâches du lot 3 dans le moteur d'étapes · PR #134
-- Corrigé : « Documents à préparer identifiés » et « Diagnostics nécessaires identifiés » ne se cochaient jamais (aucun écran ne les déclarait) : l'ouverture de l'onglet « Documents » par le vendeur les coche.
-- Ajouté : la prochaine action et la liste des tâches mènent à l'onglet « Documents » (pièces, diagnostics, dossier notaire complet) et à l'onglet « Visites » (créneaux de visite ouverts).
-- Tests : `tests/unit/properties/next-action.test.ts`. Aucune migration.
-### 2026-11-24 · L1-30e · PR #134
+### 2026-11-24 · L1-30e · PR #135
 - Ajouté : « Modifier l'annonce » sur la fiche d'une annonce du back office (en relecture, en ligne, en pause ou suspendue) : titre, prix et description, avec un motif obligatoire envoyé au vendeur ; le statut ne change pas ; seuls les champs changés sont envoyés (une modification plus récente du vendeur n'est jamais écrasée) ; « Rien n'a changé » quand les valeurs sont les mêmes.
 - Ajouté : fonction `listing_admin_edit` (`security definer`, `is_admin()`), colonne `listing_revisions.reason` ; chaque champ changé entre dans l'historique de L1-35, par l'admin, avec le motif (aussi pour une annonce en relecture ou suspendue), et dans `audit_log` (`listing.admin_edit`, « Modifiée par l'équipe » dans l'historique de la fiche).
 - Ajouté : notification `listing.team_edited` au vendeur (cloche et email « Nous avons modifié votre annonce », champs changés, prix avant et après, motif) ; le motif s'affiche sous la ligne dans l'historique de l'onglet Annonce, aussi pour une annonce en relecture modifiée par l'équipe.
@@ -25,6 +21,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Tests : `tests/unit/admin/listing-edit.test.ts`, `tests/unit/listings/revision.test.ts`, `tests/unit/notifications/bell.test.ts`, `tests/unit/notifications/emails.test.ts`, `supabase/tests/rls_admin_listing_edit.sql` (cinq comptes et anonyme), `tests/e2e/admin-listing-edit-live.spec.ts` (projet « seed-mutations »).
 - Docs : `DECISIONS.md` (2026-11-24), SPEC 4, 10 et 17, `DESIGN.md` (12.13, L1-30e), `GUIDE-BACK-OFFICE.md` (« Valider une annonce »), `BACKLOG-V3.md` (photos), `PLANNING.md`.
 
+### 2026-11-24 · L3-07b · Tâches du lot 3 dans le moteur d'étapes · PR #134
+- Corrigé : « Documents à préparer identifiés » et « Diagnostics nécessaires identifiés » ne se cochaient jamais (aucun écran ne les déclarait) : l'ouverture de l'onglet « Documents » par le vendeur les coche.
+- Ajouté : la prochaine action et la liste des tâches mènent à l'onglet « Documents » (pièces, diagnostics, dossier notaire complet) et à l'onglet « Visites » (créneaux de visite ouverts).
+- Tests : `tests/unit/properties/next-action.test.ts`. Aucune migration.
 ### 2026-11-24 · Fiche du bien en deux colonnes (demande de Cédric) · PR #133
 - Modifié : à partir de 1 024 px, la fiche du bien du vendeur (`/vendeur/biens/[id]` et ses rubriques) occupe 1 216 px en deux colonnes : à gauche, le bien dans une carte (chiffres deux par deux), les rubriques en liste latérale avec leurs icônes, puis les actions du statut ; à droite, ce que veut dire le statut et le contenu de la rubrique. Sous 1 024 px, rien ne change (même ordre, une seule arborescence).
 - Ajouté : `LinkTabs` accepte `aside` (liste latérale à partir de 1 024 px) et une icône par onglet ; jeton `max-w-lk-space` (1 216 px).
