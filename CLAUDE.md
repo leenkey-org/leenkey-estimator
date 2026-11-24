@@ -359,6 +359,7 @@ npm run a11y             # contrôle d'accessibilité axe sur les parcours E2E (
 npm run stripe:listen    # Stripe CLI vers /api/webhooks/stripe en local
 npm run backup           # pg_dump du projet lié vers ./backups/ (utilisé par la GitHub Action nocturne)
 npm run restore -- <fichier> # restaure une sauvegarde dans un projet vide ($RESTORE_DATABASE_URL ; docs/RECETTE.md, P-03)
+npm run guide:pdf        # régénère docs/GUIDE-BACK-OFFICE.pdf depuis docs/GUIDE-BACK-OFFICE.md (Chromium de Playwright, P-04)
 ```
 
 Scripts à créer dans `scripts/` et déclarés dans `package.json` dès la semaine 1.

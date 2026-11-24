@@ -43,7 +43,6 @@ export const frAdminDashboard = {
     emptyTitle: "Rien à traiter",
     emptyText: "Aucune annonce, aucun dossier ni aucun signalement n'attend l'équipe.",
   },
-  later: "Les offres en attente s'ajouteront ici ; leur liste est dans la rubrique « Offres ».",
   error: "Une partie du tableau de bord n'a pas pu être chargée.",
   retry: "Réessayer",
 } as const;
