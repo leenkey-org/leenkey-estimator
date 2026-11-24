@@ -27,7 +27,7 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Tests : `tests/unit/properties/next-action.test.ts`. Aucune migration.
 ### 2026-11-24 · L1-16b · PR #135
 - Ajouté : carte de la recherche, regroupement des pastilles qui se chevauchent au dézoom (au-delà de 3, pastille ronde navy avec le nombre, « 4 biens, zoomer », clic = zoom sur ses biens), sans dépendance (`core/maps/cluster.ts`, recalculé à chaque zoom).
-- Ajouté : « Rechercher dans cette zone » après un déplacement de la carte : la liste se limite à la zone vue (`bbox=sud,ouest,nord,est` dans l'adresse, validé par Zod, passé à `search_listings`), combinée aux filtres, comptée dans « Voir N biens », retirée par « Effacer les filtres » ou un autre lieu ; « 12 biens dans cette zone de la carte ».
+- Ajouté : « Rechercher dans cette zone » après un déplacement de la carte : la liste se limite à la zone vue (`bbox=sud,ouest,nord,est` dans l'adresse, validé par Zod, passé à `search_listings`), combinée aux filtres, comptée dans « Voir N biens », retirée seule par « Retirer la zone » (à côté du compteur « 12 biens dans cette zone de la carte » et dans l'état vide), ou avec « Effacer les filtres » ou un autre lieu.
 - Tests : unitaires (regroupement, zone de l'adresse, `p_bbox`) ; E2E de la carte (regroupement, recherche dans la zone, `bbox` dans l'adresse), doublure de Google Maps avec `getBounds` et « idle ».
 - Docs : `DESIGN.md` 8, `SPEC-V2.md` 8.4, `DECISIONS.md` (2026-11-24), `PLANNING.md`.
 

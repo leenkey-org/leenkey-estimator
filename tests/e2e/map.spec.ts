@@ -390,7 +390,7 @@ test.describe("carte de la recherche (base de seed)", () => {
     expect(inArea).toBeLessThanOrEqual(total);
   });
 
-  test("« bbox » dans l'adresse : la liste de la zone, avec les filtres ; une zone vide garde « Effacer les filtres » (L1-16b)", async ({
+  test("« bbox » dans l'adresse : la liste de la zone, avec les filtres ; « Retirer la zone » la retire seule (L1-16b)", async ({
     page,
   }) => {
     await page.goto("/acheter");
@@ -404,8 +404,20 @@ test.describe("carte de la recherche (base de seed)", () => {
     const inArea = await cards(page).count();
     expect(inArea).toBeGreaterThan(0);
     expect(inArea).toBeLessThan(total);
-    // Combined with a filter: never more.
+    // « Retirer la zone », beside the count, from the keyboard: the whole list.
+    const clearArea = page.getByRole("button", { name: "Retirer la zone" });
+    const box = await clearArea.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await clearArea.focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/acheter$/);
+    await expect(cards(page)).toHaveCount(total);
+    await expect(clearArea).toHaveCount(0);
+    // Combined with a filter: never more; removing the area keeps the filter.
     await page.goto("/acheter?bbox=48.672,2.339,48.692,2.359&budget_max=1");
+    await expect(page.getByText("Aucun bien ne correspond.")).toBeVisible();
+    await clearArea.click();
+    await expect(page).toHaveURL(/\/acheter\?budget_max=1$/);
     await expect(page.getByText("Aucun bien ne correspond.")).toBeVisible();
     // An area without listings: the empty state and its reset.
     await page.goto("/acheter?bbox=49.5,1.0,49.6,1.1");

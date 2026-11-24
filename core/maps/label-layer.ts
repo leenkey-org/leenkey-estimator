@@ -62,7 +62,8 @@ const overlap = (a: Box, b: Box) =>
  * a label is told to the page; it never reaches the map. With `clusters`,
  * labels that pile up at a low zoom are hidden behind one round button with
  * their number (L1-16b), recomputed at every draw of the overlay (each zoom);
- * the label chosen is never grouped.
+ * the label chosen is never grouped, and a label grouped while it has the
+ * focus hands it to its group.
  */
 export function createLabelLayer(
   api: GoogleMapsApi,
@@ -156,6 +157,8 @@ export function createLabelLayer(
       const settings = options.clusters;
       const zoom = map.getZoom();
       const hidden = new Set<string>();
+      // The label that has the focus, if any: its group takes it.
+      const focused = [...nodes].find(([, { button }]) => button === document.activeElement)?.[0];
       const found =
         settings && zoom !== undefined && zoom < settings.maxZoom
           ? clusterPoints(
@@ -171,6 +174,9 @@ export function createLabelLayer(
         group.button.setAttribute("aria-label", settings.name(cluster.ids.length));
         group.button.style.transform = `translate(${Math.round(cluster.x)}px, ${Math.round(cluster.y)}px) translate(-50%, -50%)`;
         for (const id of cluster.ids) hidden.add(id);
+        if (focused && cluster.ids.includes(focused)) {
+          group.button.focus({ preventScroll: true });
+        }
       });
       for (const { button } of groups.splice(found.length)) button.remove();
       markGroupsActive();

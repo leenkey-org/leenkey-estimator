@@ -135,6 +135,8 @@ export const frSearch = {
     withPlace: (count: string, place: string) => `${count} ${place}`,
     /** « Rechercher dans cette zone » applied (L1-16b). */
     inArea: (count: string) => `${count} dans cette zone de la carte`,
+    /** The area of the map removed, the other filters kept (L1-16b). */
+    clearArea: "Retirer la zone",
     sort: "Trier par",
     sorts: {
       recent: "Plus récents",

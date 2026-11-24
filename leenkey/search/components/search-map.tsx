@@ -13,7 +13,11 @@ import { useGoogleMaps } from "@/core/maps/use-google-maps";
 import { frMaps } from "@/lib/i18n/sections/maps";
 import { frSearch } from "@/lib/i18n/sections/search";
 import { cn } from "@/lib/utils";
-import { SearchBbox as SearchBboxSchema, type SearchBbox } from "@/lib/validations/search";
+import {
+  formatBbox,
+  SearchBbox as SearchBboxSchema,
+  type SearchBbox,
+} from "@/lib/validations/search";
 
 // The texts this module shows (lib/i18n/sections, P-06).
 const fr = { maps: frMaps, search: frSearch } as const;
@@ -243,8 +247,12 @@ export function SearchMap({
   // the page itself (framing, a card shown).
   const [moved, setMoved] = useState(false);
   const gesture = useRef(false);
-  /** The area searched from the map: the results that follow keep the view. */
-  const keepView = useRef(false);
+  /**
+   * The area searched from the map (as the URL writes it): the results that
+   * follow for that area keep the view. Any other change of the results
+   * (the navigation did not happen, another search) frames the map again.
+   */
+  const keepView = useRef<string | null>(null);
 
   useEffect(() => {
     if (maps.status !== "ready" || !element.current) return;
@@ -289,7 +297,11 @@ export function SearchMap({
     });
     const idle = map.addListener("idle", () => {
       const area = areaOf(map);
-      if (gesture.current && !sameArea(area, shown)) setMoved(true);
+      // An area the search cannot read (the whole world, across the
+      // antimeridian) never shows the button: nothing to press for nothing.
+      if (gesture.current && !sameArea(area, shown) && SearchBboxSchema.safeParse(area).success) {
+        setMoved(true);
+      }
       gesture.current = false;
       shown = area;
     });
@@ -330,7 +342,7 @@ export function SearchMap({
   // view when the area comes from the map itself.
   const ids = listings.map((listing) => listing.id).join(",");
   const place = `${centre.lat},${centre.lng}`;
-  const area = bbox ? `${bbox.south},${bbox.west},${bbox.north},${bbox.east}` : "";
+  const area = bbox ? formatBbox(bbox) : "";
   useEffect(() => {
     if (!view || maps.status !== "ready") return;
     const { map, layer } = view;
@@ -344,8 +356,10 @@ export function SearchMap({
     setMoved(false);
     const [first, ...others] = current;
     const searched = latest.current.bbox;
-    if (keepView.current) {
-      keepView.current = false;
+    const kept = keepView.current !== null && keepView.current === area;
+    keepView.current = null;
+    if (kept) {
+      // The area searched from the map: the view stays as the person left it.
     } else if (searched) {
       fitArea(maps.api, map, searched);
     } else if (!first) {
@@ -416,7 +430,7 @@ export function SearchMap({
     const parsed = shown ? SearchBboxSchema.safeParse(shown) : null;
     setMoved(false);
     if (!parsed?.success || !onSearchArea) return;
-    keepView.current = true;
+    keepView.current = formatBbox(parsed.data);
     onSearchArea(parsed.data);
   }
 

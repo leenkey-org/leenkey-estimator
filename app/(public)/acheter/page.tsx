@@ -12,6 +12,7 @@ import { getProfile } from "@/core/auth/session";
 import { CreateAlertButton } from "@/leenkey/alerts/components/create-alert-button";
 import { SiteTopNav } from "@/leenkey/navigation/components/site-top-nav";
 import { bottomTabs } from "@/leenkey/navigation/config";
+import { ClearAreaButton } from "@/leenkey/search/components/clear-area-button";
 import { FiltersDialog } from "@/leenkey/search/components/filters-dialog";
 import { LoadMore } from "@/leenkey/search/components/load-more";
 import { MapSyncProvider } from "@/leenkey/search/components/map-sync";
@@ -126,6 +127,8 @@ export default async function SearchPage({ searchParams }: Props) {
             // The filters button of the header stays the one primary action.
             <div className="flex flex-wrap justify-center gap-2.5">
               <CreateAlertButton signedIn={Boolean(profile)} display="button" />
+              {/* An empty area of the map: the same search without it (L1-16b). */}
+              {query.bbox ? <ClearAreaButton display="button" /> : null}
               <Button asChild variant="outline-ink">
                 <Link href={SEARCH_PATH}>{t.empty.action}</Link>
               </Button>
@@ -141,16 +144,20 @@ export default async function SearchPage({ searchParams }: Props) {
     content = (
       <>
         <div className="mb-2 flex items-center justify-between gap-3 lg:mb-3.5">
-          <p
-            role="status"
-            className="min-w-0 text-lk-secondary font-semibold text-lk-ink lg:text-lk-compact"
-          >
-            {query.bbox
-              ? t.results.inArea(count)
-              : place
-                ? t.results.withPlace(count, placePhrase(place, around))
-                : count}
-          </p>
+          {/* An area of the map (L1-16b): « Retirer la zone » beside the count. */}
+          <div className="flex min-w-0 flex-wrap items-center gap-x-1">
+            <p
+              role="status"
+              className="min-w-0 text-lk-secondary font-semibold text-lk-ink lg:text-lk-compact"
+            >
+              {query.bbox
+                ? t.results.inArea(count)
+                : place
+                  ? t.results.withPlace(count, placePhrase(place, around))
+                  : count}
+            </p>
+            {query.bbox ? <ClearAreaButton /> : null}
+          </div>
           <SortSelect />
         </div>
         <ResultsList items={items} now={now} />

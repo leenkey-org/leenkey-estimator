@@ -158,6 +158,23 @@ describe("the area of the map", () => {
     expect(parseSearchParams(new URL(href, "https://leenkey.fr").searchParams)).toEqual(query);
   });
 
+  it("is removed on its own, the filters kept (« Retirer la zone »)", () => {
+    const query = parseSearchParams(
+      new URLSearchParams("type=maison&tri=prix_asc&page=2&bbox=48.62,2.25,48.73,2.42"),
+    );
+    // As clearBbox of search-context.tsx: same filters and sort, first page.
+    expect(searchHref({ filters: query.filters, sort: query.sort, page: 1 })).toBe(
+      "/acheter?type=maison&tri=prix_asc",
+    );
+  });
+
+  it("is refused across the antimeridian: no « Rechercher dans cette zone » then", () => {
+    // What getBounds gives then: west after east.
+    expect(SearchBbox.safeParse({ south: 40, west: 170, north: 50, east: -170 }).success).toBe(
+      false,
+    );
+  });
+
   it("is left out of the query when it is invalid, the filters kept", () => {
     expect(parseSearchParams({ bbox: "48.73,2.25,48.62,2.42", type: "maison" })).toEqual({
       filters: { type: "maison" },

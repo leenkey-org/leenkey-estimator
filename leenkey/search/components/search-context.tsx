@@ -41,6 +41,8 @@ type SearchContextValue = {
   applyFilters: (filters: SearchFilters) => void;
   /** « Rechercher dans cette zone » (L1-16b): the listings inside the area of the map. */
   applyBbox: (bbox: SearchBbox) => void;
+  /** « Retirer la zone » (L1-16b): the same search without the area of the map. */
+  clearBbox: () => void;
   applySort: (sort: SearchQuery["sort"]) => void;
   /** « Voir plus »: next page, without scrolling to the top. */
   showMore: () => void;
@@ -102,6 +104,7 @@ export function SearchProvider({
         ),
       // The list from its top (the map beside it is held under the top bar).
       applyBbox: (bbox) => go({ filters: query.filters, sort: query.sort, page: 1, bbox }, true),
+      clearBbox: () => go({ filters: query.filters, sort: query.sort, page: 1 }, true),
       applySort: (sort) => go({ filters: query.filters, sort, page: 1, bbox: query.bbox }, true),
       showMore: () => go({ ...query, page: query.page + 1 }, false),
       filtersOpen,
