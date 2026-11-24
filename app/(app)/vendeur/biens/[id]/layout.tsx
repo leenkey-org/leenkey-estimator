@@ -3,7 +3,10 @@ import Link from "next/link";
 import { Button } from "@/components/shared/button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { requireProfile } from "@/core/auth/session";
-import { PropertySheetHeader } from "@/leenkey/properties/components/property-sheet";
+import {
+  PropertySheetHeader,
+  PropertySheetNotices,
+} from "@/leenkey/properties/components/property-sheet";
 import { propertyForSheet } from "@/leenkey/properties/load";
 import { listingDeletionFacts } from "@/leenkey/properties/queries";
 import { sheetHref } from "@/leenkey/properties/sheet";
@@ -18,7 +21,9 @@ type Props = { children: ReactNode; params: Promise<{ id: string }> };
 
 // L1-14: the page of a property of the seller (SPEC-V2 8.3, G9 with Tabs,
 // docs/DESIGN.md 13.1), in a column of 720 px. Its top (status, figures,
-// actions, tabs) is shared by the tabs Infos, Photos and Annonce.
+// actions, tabs) is shared by the tabs Infos, Photos and Annonce. From
+// 1 024 px (Cédric, DECISIONS.md 2026-11-24), two columns over 1 216 px: the
+// property and its tabs in a side column, then the tab.
 export default async function PropertySheetLayout({ children, params }: Props) {
   const [{ id }, profile] = await Promise.all([params, requireProfile()]);
   const property = await propertyForSheet(id);
@@ -27,17 +32,26 @@ export default async function PropertySheetLayout({ children, params }: Props) {
     ? await listingDeletionFacts(property.id, property.listing.id)
     : null;
   return (
-    <div className="mx-auto w-full max-w-lk-settings px-5 py-6 md:px-10 md:py-10">
+    <div className="mx-auto w-full max-w-lk-settings px-5 py-6 md:px-10 md:py-10 lg:max-w-lk-space">
       {property ? (
-        <>
-          <PropertySheetHeader
-            property={property}
-            roles={profile.roles}
-            profileId={profile.id}
-            deletion={deletion}
-          />
-          <div className="mt-6">{children}</div>
-        </>
+        <div className="lg:grid lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start lg:gap-10">
+          <div>
+            <PropertySheetHeader
+              property={property}
+              roles={profile.roles}
+              profileId={profile.id}
+              deletion={deletion}
+            />
+          </div>
+          <div className="mt-6 flex min-w-0 flex-col gap-6 lg:mt-15">
+            <PropertySheetNotices
+              property={property}
+              deletion={deletion}
+              className="hidden flex-col gap-4 empty:hidden lg:flex"
+            />
+            <div>{children}</div>
+          </div>
+        </div>
       ) : (
         <InlineAlert
           tone="danger"
