@@ -88,7 +88,7 @@ Semaine chargée : L1-01 contient la reprise de l'existant, non prévue au contr
 - [x] **L1-40** Vente conforme des formules : récapitulatif avant paiement, cases non précochées, « Commander et payer », e-mail récapitulatif, bouton de rétractation (14 jours), contact au 15e jour sans démarrage immédiat, retour en Autonomie à l'échéance · PR : #81 · Testé en préprod : ☐
 - [x] **L1-33** `plan_entitlements`, `hasEntitlement`, contenu des formules dans `plans`, page formules avec tableau comparatif (déclencheurs : voir L2-09) · PR : #84 · Testé en préprod : ☐
 - [x] **L1-28** Assistant : route de streaming, outils vendeur, confirmation, quotas, journalisation, panneau desktop +… · PR : #67 · Testé en préprod : ☐
-- [ ] **L1-30** Back office complet lot 1 : tableau de bord, utilisateurs, dossiers, signalements (résumé du jour par l'assistant : S6),… · PR : · Testé en préprod : ☐
+- [x] **L1-30** Back office complet lot 1 : tableau de bord, utilisateurs, dossiers, signalements (résumé du jour par l'assistant : S6),… · PR : · Testé en préprod : ☐
   - [x] **L1-30a** Tableau de bord (tuiles, « À traiter », compteurs de la barre latérale et de l'en-tête mobile), utilisateurs (liste, fiche, suspension du compte avec email) · PR : #70 · Testé en préprod : ☐
   - [x] **L1-30c** Dossiers (liste, fiche, statut, suivi, notes, tâches de Leenkey), signalements (liste, fiche, lecture tracée, avertir, clore, notification de l'équipe) · PR : #73 · Testé en préprod : ☐
   - [x] **L1-30d** Pré-analyse des annonces, `/admin/assistant`, « Rédiger avec l'assistant » du motif de refus, export CSV des annonces, « Synthèse avant appel » · PR : #93, #94 · Testé en préprod : ☐
@@ -114,7 +114,7 @@ Mise en ligne :
 
 - [x] **P-06** Performance mobile (recette interne du 12 novembre) : LCP sous 2,5 s sur la recherche et l'annonce (SPEC 21), JavaScript du premier chargement réduit, bandeau des cookies sans effet sur le LCP ; mesuré en local (bridage réel), à confirmer sur la production après la bascule · PR : #96 · Testé en préprod : ☐
 
-- [ ] **P-05b** Mise en ligne de la V2 (**mercredi 25 nov.**, décision du 17 novembre, sur go de Younes) : projet Supabase de production, migrations, seed `plans` et `sale_steps`, variables de production, Resend, vérification des modèles IA, Stripe live si CGV et médiateur prêts ; puis changement de la branche de production du projet Vercel de `leenkey.fr` (jamais de fusion dans `main`) ; retour arrière : remettre `main` · PR : · Testé en préprod : ☐
+- [x] **P-05b** Mise en ligne de la V2 (**mercredi 25 nov.**, décision du 17 novembre, sur go de Younes) : projet Supabase de production, migrations, seed `plans` et `sale_steps`, variables de production, Resend, vérification des modèles IA, Stripe live si CGV et médiateur prêts ; puis changement de la branche de production du projet Vercel de `leenkey.fr` (jamais de fusion dans `main`) ; retour arrière : remettre `main` · PR : · Testé en préprod : ☐
 
 Lot 2 :
 
@@ -129,7 +129,7 @@ Lot 2 :
 - [x] **L2-07** Outil vendeur `summarize_offer`, `summarize_contacts` ; back office offres · PR : #105 · Testé en préprod : ☐
 - [x] **L2-09** Déclencheurs de montée en gamme : `upgrade_prompts`, `getUpgradePrompt`, `UpgradePrompt`, 6 déclencheurs (S6, déplacé depuis L1-33) · PR : #106 · Testé en préprod : ☐
 - [x] **L2-10** RGPD : export JSON et suppression du compte depuis `/compte`, cron `anonymize-deleted` (S7) · PR : #107 · Testé en préprod : ☐
-- [ ] **L2-08** Recette lot 2 · PR : · Testé en préprod : ☐
+- [x] **L2-08** Recette lot 2 · PR : · Testé en préprod : ☐
 
 ## S8-S9 · semaines du 30 nov. et 7 déc. · Lot 3 : visites, documents, alertes → livraison ven. 11 déc.
 
@@ -142,12 +142,12 @@ Lot 2 :
 - [x] **L3-07** `summarize_shared_documents` : outil et réponses aux acquéreurs à partir des documents partagés · PR : #120 · Testé en préprod : ☐
 - [x] **L3-07b** Tâches L3 dans le moteur d'étapes (seconde moitié de L3-07 ; les tâches de visite se cochent depuis L3-03, celles des documents restent à décider, `DECISIONS.md` 2026-11-22) · PR : · Testé en préprod : ☐
 - [x] **L3-09** Déclencheurs de montée en gamme `visits_no_offer` et `file_incomplete` · PR : #117 · Testé en préprod : ☐
-- [ ] **L3-08** Recette lot 3 · PR : · Testé en préprod : ☐
+- [x] **L3-08** Recette lot 3 · PR : · Testé en préprod : ☐
 
 ## S10 · semaine du 14 déc. · Préprod validée → livraison ven. 18 déc.
 
 - [x] **P-01** Revue sécurité (RLS avec tous les comptes, en-têtes, rate limits, secrets, uploads) · PR : #108 · Testé en préprod : ☐ Restent 6 points de la bascule et des comptes de production (`docs/SECURITE.md`).
-- [ ] **P-02** Performance et accessibilité finales · PR : · Testé en préprod : ☐
+- [x] **P-02** Performance et accessibilité finales · PR : · Testé en préprod : ☐
 - [x] **P-03** Sauvegarde GitHub Action + restauration testée sur un projet vide · PR : #109 · Testé en préprod : ☐ Restent les deux secrets GitHub et la branche par défaut (`docs/RECETTE.md`).
 - [x] **P-04** Guide back office (`docs/GUIDE-BACK-OFFICE.md` + PDF) · PR : #130 · Testé en préprod : ☐
 - [ ] **P-05** Répétition complète de la mise en production sur staging ; préprod validée par Cédric le 18 décembre · PR : · Testé en préprod : ☐
