@@ -623,6 +623,7 @@ html {
   --container-lk-frame: 120rem; /* 1920 px, the frame of every page (L1-56), see lk-frame */
   --container-lk-home: 51.25rem; /* 820 px, buyer home */
   --container-lk-settings: 45rem; /* 720 px, account and settings */
+  --container-lk-space: 76rem; /* 1 216 px, page of a property from 1 024 px (side column) */
   --container-lk-heading: 50rem; /* 800 px, 40 px titles of the public pages */
   --container-lk-prose: 40rem; /* 640 px, about 68 characters per line */
   --container-lk-form: 35rem; /* 560 px, step forms */

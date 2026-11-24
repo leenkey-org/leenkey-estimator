@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-24 · Fiche du bien en deux colonnes (demande de Cédric) · PR #133
+- Modifié : à partir de 1 024 px, la fiche du bien du vendeur (`/vendeur/biens/[id]` et ses rubriques) occupe 1 216 px en deux colonnes : à gauche, le bien dans une carte (chiffres deux par deux), les rubriques en liste latérale avec leurs icônes, puis les actions du statut ; à droite, ce que veut dire le statut et le contenu de la rubrique. Sous 1 024 px, rien ne change (même ordre, une seule arborescence).
+- Ajouté : `LinkTabs` accepte `aside` (liste latérale à partir de 1 024 px) et une icône par onglet ; jeton `max-w-lk-space` (1 216 px).
+- Docs : `DESIGN.md` (13, « Fiche du bien en deux colonnes »), `DECISIONS.md` (2026-11-24).
+
 ### 2026-11-24 · Médiateur de la consommation (Q32) · PR #132
 - Ajouté : le médiateur de Leenkey, le CM2C (Centre de la Médiation de la Consommation de Conciliateurs de Justice, 49 rue de Ponthieu, 75008 Paris, www.cm2c.net, 01 89 47 00 14), dans `lib/config/sales.ts`, l'article 16 des CGV, l'article 8 des mentions légales, le récapitulatif de commande et l'email de formule activée.
 - Modifié : CGV en vigueur depuis le 24 novembre 2026 (`cgvVersion` 2026-11-24 : les commandes suivantes enregistrent cette version).
