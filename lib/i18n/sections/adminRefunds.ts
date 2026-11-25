@@ -29,7 +29,7 @@ export const frAdminRefunds = {
   },
   noRequest: "Sans rétractation",
   requestedOn: (date: string) => `Demande du ${date}`,
-  deadlineOn: (date: string) => `Avant le ${date}`,
+  deadlineOn: (date: string) => `Au plus tard le ${date}`,
   refundedAmount: (amount: string) => `${amount} remboursés`,
   replacedBy: (plan: string) => `Remplacée par ${plan}, renoncée avec elle : paiement à part`,
   noSeller: "Vendeur",

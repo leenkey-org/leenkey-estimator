@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   creditNoteState,
   refundDeadline,
+  refundLastDay,
   refundStatus,
   sortRefunds,
   waitsForRefund,
@@ -26,22 +27,40 @@ const facts = (overrides: Partial<RefundFacts> = {}): RefundFacts => ({
 });
 
 describe("the refunds that need a credit note", () => {
-  it("skips the refunds an issued credit note links, by hand or not", async () => {
-    const { refundsWithoutCreditNote } = await import("@/core/billing/stripe");
+  it("one per refund no credit note links, of its amount", async () => {
+    const { planCreditNotes } = await import("@/core/billing/stripe");
     const refunds = [
       { id: "re_1", amountCents: 50000 },
       { id: "re_2", amountCents: 49000 },
     ];
-    expect(refundsWithoutCreditNote(refunds, [])).toEqual(refunds);
-    expect(refundsWithoutCreditNote(refunds, [{ refundIds: ["re_1"] }])).toEqual([
-      { id: "re_2", amountCents: 49000 },
+    expect(planCreditNotes(refunds, [])).toEqual([
+      { refundId: "re_1", amountCents: 50000 },
+      { refundId: "re_2", amountCents: 49000 },
     ]);
-    expect(refundsWithoutCreditNote(refunds, [{ refundIds: ["re_2", "re_1"] }])).toEqual([]);
+    expect(planCreditNotes(refunds, [{ refundIds: ["re_1"], amountCents: 50000 }])).toEqual([
+      { refundId: "re_2", amountCents: 49000 },
+    ]);
+    expect(planCreditNotes(refunds, [{ refundIds: ["re_2", "re_1"], amountCents: 99000 }])).toEqual(
+      [],
+    );
+  });
+
+  it("a credit note made by hand without a link counts: never more credited than refunded", async () => {
+    const { planCreditNotes } = await import("@/core/billing/stripe");
+    const refund = [{ id: "re_1", amountCents: 99000 }];
+    // « En dehors de Stripe », the whole amount: nothing more.
+    expect(planCreditNotes(refund, [{ refundIds: [], amountCents: 99000 }])).toEqual([]);
+    expect(planCreditNotes(refund, [{ refundIds: [], amountCents: 120000 }])).toEqual([]);
+    // Part of it: the rest only.
+    expect(planCreditNotes(refund, [{ refundIds: [], amountCents: 40000 }])).toEqual([
+      { refundId: "re_1", amountCents: 59000 },
+    ]);
   });
 
   it("never a credit note of nothing", async () => {
-    const { refundsWithoutCreditNote } = await import("@/core/billing/stripe");
-    expect(refundsWithoutCreditNote([{ id: "re_0", amountCents: 0 }], [])).toEqual([]);
+    const { planCreditNotes } = await import("@/core/billing/stripe");
+    expect(planCreditNotes([{ id: "re_0", amountCents: 0 }], [])).toEqual([]);
+    expect(planCreditNotes([], [])).toEqual([]);
   });
 
   it("one idempotency key per refund", async () => {
@@ -80,11 +99,18 @@ describe("the refunds that need a credit note", () => {
 describe("the status of a refund", () => {
   const now = new Date("2026-11-20T09:00:00Z");
 
-  it("is owed 14 days after the request (L221-24)", () => {
-    expect(refundDeadline("2026-11-10T09:00:00Z").toISOString()).toBe("2026-11-24T09:00:00.000Z");
+  it("is owed until the end of the 14th day after the request, in Paris (L221-24)", () => {
+    expect(refundLastDay("2026-11-10T09:00:00Z")).toBe("2026-11-24");
+    expect(refundDeadline("2026-11-10T09:00:00Z").toISOString()).toBe("2026-11-24T12:00:00.000Z");
+    // Asked at 23:30 in Paris on the 10th (22:30 UTC): the day of Paris counts.
+    expect(refundLastDay("2026-11-10T22:30:00Z")).toBe("2026-11-24");
+    // Asked at 00:30 in Paris on the 11th (23:30 UTC on the 10th).
+    expect(refundLastDay("2026-11-10T23:30:00Z")).toBe("2026-11-25");
     expect(refundStatus(facts(), now)).toBe("to_refund");
-    expect(refundStatus(facts(), new Date("2026-11-24T09:00:00Z"))).toBe("to_refund");
-    expect(refundStatus(facts(), new Date("2026-11-24T09:00:01Z"))).toBe("late");
+    // 23:59 in Paris on the 24th (CET, UTC+1): still on time.
+    expect(refundStatus(facts(), new Date("2026-11-24T22:59:59Z"))).toBe("to_refund");
+    // Midnight in Paris: late.
+    expect(refundStatus(facts(), new Date("2026-11-24T23:00:00Z"))).toBe("late");
   });
 
   it("refunded once the webhook says so, in full or in part", () => {

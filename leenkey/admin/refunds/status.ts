@@ -2,10 +2,10 @@
 // 2026-11-25): where each plan renounced or refunded stands, from the facts
 // admin_refunds() reads. Pure, without the database (tests/unit).
 
+import { parisDay } from "@/leenkey/billing/orders";
+
 /** A withdrawal is refunded within 14 days of the request (code de la consommation, L221-24). */
 export const REFUND_DAYS = 14;
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type RefundStatus =
   /** Renounced, nothing refunded yet, within the 14 days. */
@@ -31,16 +31,28 @@ export type RefundFacts = {
   creditedCents: number;
 };
 
-/** The last moment to refund a withdrawal: the request plus 14 days. */
+/** The last day to refund a withdrawal, « YYYY-MM-DD » in Paris: the day of the request plus 14 days. */
+export function refundLastDay(requestedAt: string | Date): string {
+  const day = new Date(`${parisDay(new Date(requestedAt))}T12:00:00Z`);
+  day.setUTCDate(day.getUTCDate() + REFUND_DAYS);
+  return day.toISOString().slice(0, 10);
+}
+
+/** The last day to refund, as a moment of that day (noon UTC), to show. */
 export function refundDeadline(requestedAt: string | Date): Date {
-  return new Date(new Date(requestedAt).getTime() + REFUND_DAYS * DAY_MS);
+  return new Date(`${refundLastDay(requestedAt)}T12:00:00Z`);
+}
+
+/** Late once that last day is over in Paris. */
+function pastDeadline(requestedAt: string, now: Date): boolean {
+  return parisDay(now) > refundLastDay(requestedAt);
 }
 
 export function refundStatus(facts: RefundFacts, now: Date = new Date()): RefundStatus {
   if (facts.refundedAt) return "refunded";
   if (facts.refundedCents > 0 && facts.refundedCents >= facts.amountPaidCents) return "refunded";
   if (facts.refundedCents > 0) return "partial";
-  if (facts.requestedAt && now.getTime() > refundDeadline(facts.requestedAt).getTime()) {
+  if (facts.requestedAt && pastDeadline(facts.requestedAt, now)) {
     return "late";
   }
   return "to_refund";

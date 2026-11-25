@@ -207,21 +207,44 @@ export type CreditNoteInfo = {
 };
 
 export type CreditNotesResult =
-  /** The issued credit notes of the invoice of the payment, those created now included. */
-  | { status: "ok"; creditNotes: CreditNoteInfo[]; created: number; pending: number }
+  | {
+      status: "ok";
+      /** The credit notes of the invoice not voided, those created now included. */
+      creditNotes: CreditNoteInfo[];
+      /** The credit notes of the invoice voided since (to forget). */
+      voidIds: string[];
+      created: number;
+      pending: number;
+    }
   /** The session has no invoice (ordered without invoice_creation, or nothing paid). */
   | { status: "no_invoice" };
 
+/** A credit note to create: the refund it is linked to, and its amount. */
+export type CreditNotePlan = { refundId: string; amountCents: number };
+
 /**
- * The refunds that have no credit note yet: those no issued credit note of
- * the invoice links (one made by hand on the invoice counts too).
+ * The credit notes still to create for the refunds of a payment: one per
+ * refund no credit note of the invoice links, and never more, in all, than
+ * what was refunded: a credit note made by hand without a link to its refund
+ * (« en dehors de Stripe ») already counts. `creditNotes`: those of the
+ * invoice not voided.
  */
-export function refundsWithoutCreditNote(
+export function planCreditNotes(
   refunds: readonly RefundInfo[],
-  creditNotes: readonly Pick<CreditNoteInfo, "refundIds">[],
-): RefundInfo[] {
+  creditNotes: readonly Pick<CreditNoteInfo, "refundIds" | "amountCents">[],
+): CreditNotePlan[] {
   const linked = new Set(creditNotes.flatMap((note) => note.refundIds));
-  return refunds.filter((refund) => refund.amountCents > 0 && !linked.has(refund.id));
+  const refunded = refunds.reduce((sum, refund) => sum + Math.max(refund.amountCents, 0), 0);
+  let room = refunded - creditNotes.reduce((sum, note) => sum + note.amountCents, 0);
+  const plans: CreditNotePlan[] = [];
+  for (const refund of refunds) {
+    if (room <= 0) break;
+    if (refund.amountCents <= 0 || linked.has(refund.id)) continue;
+    const amountCents = Math.min(refund.amountCents, room);
+    plans.push({ refundId: refund.id, amountCents });
+    room -= amountCents;
+  }
+  return plans;
 }
 
 /** The idempotency key of the credit note of a refund: one per refund, whoever asks. */
@@ -259,11 +282,13 @@ function mockCreditNote(paymentIntentId: string, amountCents: number): CreditNot
  * The credit notes of the refunds of a payment made by Checkout: those
  * missing are created on the invoice of the session, each linked to its
  * refund already made (`refunds`), so that Stripe never refunds a second
- * time (never `refund_amount` nor `out_of_band_amount`). Idempotent: the
- * refunds an issued credit note of the invoice links are skipped, and each
- * creation carries the key of its refund. Stripe emails the credit note to
- * the customer. Only the refunds that succeeded: a pending one waits
- * (`pending`), to ask again later. `mockRefundedCents`: what the mock
+ * time (never `refund_amount` nor `out_of_band_amount`), and emailed to the
+ * customer by Stripe (`email_type`). Idempotent: the refunds a credit note
+ * of the invoice links are skipped, the total credited never exceeds the
+ * total refunded (planCreditNotes), and each creation carries the key of
+ * its refund: `memo` must stay the same from one call to the next (a
+ * constant of the caller). Only the refunds that succeeded: a pending one
+ * waits (`pending`), to ask again later. `mockRefundedCents`: what the mock
  * credits (STRIPE_MOCK=1), the amount refunded the caller was told.
  */
 export async function ensureCreditNotes(input: {
@@ -277,6 +302,7 @@ export async function ensureCreditNotes(input: {
     return {
       status: "ok",
       creditNotes: amount > 0 ? [mockCreditNote(input.paymentIntentId, amount)] : [],
+      voidIds: [],
       created: amount > 0 ? 1 : 0,
       pending: 0,
     };
@@ -287,8 +313,10 @@ export async function ensureCreditNotes(input: {
   if (!invoice) return { status: "no_invoice" };
 
   const existing: CreditNoteInfo[] = [];
+  const voidIds: string[] = [];
   for await (const note of api.creditNotes.list({ invoice, limit: 100 })) {
-    if (note.status === "issued") existing.push(creditNoteInfo(note));
+    if (note.status === "void") voidIds.push(note.id);
+    else existing.push(creditNoteInfo(note));
   }
   const refunds: RefundInfo[] = [];
   let pending = 0;
@@ -300,22 +328,24 @@ export async function ensureCreditNotes(input: {
     else if (refund.status === "pending" || refund.status === "requires_action") pending += 1;
   }
   const created: CreditNoteInfo[] = [];
-  for (const refund of refundsWithoutCreditNote(refunds, existing)) {
+  for (const plan of planCreditNotes(refunds, existing)) {
     const note = await api.creditNotes.create(
       {
         invoice,
-        amount: refund.amountCents,
-        refunds: [{ refund: refund.id, amount_refunded: refund.amountCents }],
+        amount: plan.amountCents,
+        refunds: [{ refund: plan.refundId, amount_refunded: plan.amountCents }],
         reason: "order_change",
+        email_type: "credit_note",
         ...(input.memo ? { memo: input.memo } : {}),
       },
-      { idempotencyKey: creditNoteKey(refund.id) },
+      { idempotencyKey: creditNoteKey(plan.refundId) },
     );
     created.push(creditNoteInfo(note));
   }
   return {
     status: "ok",
     creditNotes: [...existing, ...created],
+    voidIds,
     created: created.length,
     pending,
   };

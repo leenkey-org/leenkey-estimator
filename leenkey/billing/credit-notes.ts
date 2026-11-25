@@ -1,7 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ensureCreditNotes } from "@/core/billing/stripe";
-import { frBilling } from "@/lib/i18n/sections/billing";
 import type { Database } from "@/types/database";
 
 // The credit note (« avoir ») of a refund of a plan (DECISIONS.md 2026-11-25,
@@ -9,10 +8,19 @@ import type { Database } from "@/types/database";
 // from /admin/remboursements (leenkey/admin/actions.ts) when it failed.
 // Stripe creates it on the invoice of the order, linked to the refund
 // already made, and emails it to the seller; credit_notes_record keeps it
-// for /vendeur/formule and the back office. Always called with the service
-// role client: the webhook's, or the admin action's after requireAdmin
-// (CLAUDE.md section 14). Never throws: a failure is logged and told to the
-// caller, the refund stays recorded.
+// for /vendeur/formule and the back office, and a credit note voided in
+// Stripe since is forgotten. Always called with the service role client:
+// the webhook's, or the admin action's once getProfile() has given an
+// account with the admin role (retryCreditNote, CLAUDE.md section 14).
+// Never throws: a failure is logged and told to the caller, the refund
+// stays recorded.
+
+/**
+ * Printed on the credit note by Stripe. A constant of the code, not a text
+ * of the interface: it is a parameter of the idempotent creation (one key
+ * per refund), which must never change from one call to the next.
+ */
+export const CREDIT_NOTE_MEMO = "Avoir émis à la suite du remboursement de votre formule Leenkey.";
 
 type Client = SupabaseClient<Database>;
 
@@ -43,7 +51,7 @@ export async function recordCreditNotes(
     const result = await ensureCreditNotes({
       checkoutSessionId: subscription.stripe_checkout_session_id,
       paymentIntentId,
-      memo: frBilling.creditNotes.memo,
+      memo: CREDIT_NOTE_MEMO,
       mockRefundedCents: options.mockRefundedCents,
     });
     if (result.status === "no_invoice") {
@@ -64,11 +72,20 @@ export async function recordCreditNotes(
       ...(options.actorId ? { p_actor: options.actorId } : {}),
     });
     if (recordError) throw new Error(`credit_notes_record: ${recordError.code}`);
+    if (result.voidIds.length > 0) {
+      // Voided in Stripe: neither the seller nor the team sees it any more.
+      const { error: voidError } = await supabase
+        .from("credit_notes")
+        .delete()
+        .in("stripe_credit_note_id", result.voidIds);
+      if (voidError) throw new Error(`credit_notes void: ${voidError.code}`);
+    }
     console.info("[billing] credit notes", {
       entity_id: subscription.id,
       created: result.created,
       total: result.creditNotes.length,
       pending: result.pending,
+      voided: result.voidIds.length,
     });
     return {
       status: "recorded",
