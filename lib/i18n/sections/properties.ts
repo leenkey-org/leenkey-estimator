@@ -291,6 +291,8 @@ export const frProperties = {
     title: "Vos biens",
     create: "Créer mon annonce",
     untitled: "Bien à compléter",
+    // On the card of the property shown by « Ma vente » (2026-11-25).
+    current: "Vente affichée",
     error: "Vos biens n'ont pas pu être chargés.",
   },
   // L1-14: the page of a property (SPEC-V2 8.3), its tabs and the actions

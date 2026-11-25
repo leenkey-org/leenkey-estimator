@@ -1,7 +1,18 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarCheck, Lightbulb, ListChecks, MessageCircle, TriangleAlert } from "lucide-react";
+import {
+  CalendarCheck,
+  CalendarDays,
+  Eye,
+  Lightbulb,
+  ListChecks,
+  MessageCircle,
+  MessageSquare,
+  Tag,
+  TriangleAlert,
+  UserCheck,
+} from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FinancingMention } from "@/components/shared/financing-badge";
@@ -23,7 +34,7 @@ import { RecentConversations } from "@/leenkey/messaging/components/recent-conve
 import { OfferReceivedCard } from "@/leenkey/offers/components/offer-received-card";
 import { OfferSellerActions } from "@/leenkey/offers/components/offer-seller-actions";
 import { awaitingAnswer, buyerConversationHref, propertyOffers } from "@/leenkey/offers/seller";
-import { PropertyList } from "@/leenkey/properties/components/property-list";
+import { PropertyCards } from "@/leenkey/properties/components/property-cards";
 import { SellerHeader } from "@/leenkey/properties/components/seller-header";
 import { AssistantHeaderLink } from "@/leenkey/ai/components/assistant-header-link";
 import { TaskDoneButton } from "@/leenkey/properties/components/task-done-button";
@@ -77,24 +88,36 @@ const ICONS = {
 
 type Props = { searchParams: Promise<{ bien?: string | string[] }> };
 
-/** A section of the dashboard, its title and an optional link on its right. */
+/**
+ * A section of the dashboard, its title (a note in a pill beside it, as « 1
+ * tâche sur 4 faite ») and an optional link on its right.
+ */
 function Section({
   id,
   title,
+  note,
   link,
   children,
 }: {
   id: string;
   title: string;
+  note?: string;
   link?: { href: string; label: string };
   children: ReactNode;
 }) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 id={id} className="text-lk-h3 font-bold text-wide text-lk-ink">
-          {title}
-        </h2>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
+          <h2 id={id} className="text-lk-h3 font-bold text-wide text-lk-ink lg:text-lk-h3-lg">
+            {title}
+          </h2>
+          {note ? (
+            <span className="rounded-full bg-lk-blue-tint px-2.5 py-0.5 text-lk-micro font-semibold tabular text-lk-blue-dark">
+              {note}
+            </span>
+          ) : null}
+        </div>
         {link ? (
           <Link
             href={link.href}
@@ -107,6 +130,51 @@ function Section({
       </div>
       {children}
     </section>
+  );
+}
+
+/** A block of the cockpit: the column it takes from 1 024 px (the sale by default). */
+type Slot = { key: string; side?: boolean; after?: boolean; node: ReactNode };
+
+/**
+ * The cockpit (2026-11-25, Younes: « refais le cockpit »; Cédric: no narrow
+ * column): one column below 1 024 px; from 1 024 px, 1 216 px in two
+ * columns, the sale on the left (header, next action, offers, tasks), its
+ * adviser, figures and conversations on the right (320 px, 360 px from
+ * 1 280 px), then across the page the proposal of a plan (always after the
+ * useful content, DESIGN 10.4) and the properties. The page order is the
+ * order on the screen at every width (no CSS order: the keyboard and a
+ * screen reader follow what is shown); each column is a box from 1 024 px
+ * only (display: contents below).
+ */
+function Cockpit({ header, slots }: { header: ReactNode; slots: readonly Slot[] }) {
+  const main = slots.filter((slot) => !slot.side && !slot.after);
+  const side = slots.filter((slot) => slot.side);
+  const after = slots.filter((slot) => slot.after);
+  const block = (slot: Slot) => (
+    <div
+      key={slot.key}
+      // empty: a block that renders nothing (a proposal put away) leaves no gap.
+      className="px-(--lk-gutter) empty:hidden md:px-0"
+    >
+      {slot.node}
+    </div>
+  );
+  return (
+    <div className="mx-auto flex w-full max-w-205 flex-col gap-7 pb-10 md:px-(--lk-gutter) md:py-10 lg:max-w-lk-space lg:gap-8">
+      <div className="flex flex-col gap-7 lg:flex-row lg:items-start lg:gap-8">
+        <div className="contents lg:flex lg:min-w-0 lg:flex-1 lg:flex-col lg:gap-8">
+          <div>{header}</div>
+          {main.map(block)}
+        </div>
+        {side.length ? (
+          <div className="contents lg:flex lg:w-80 lg:shrink-0 lg:flex-col lg:gap-7 xl:w-90">
+            {side.map(block)}
+          </div>
+        ) : null}
+      </div>
+      {after.map(block)}
+    </div>
   );
 }
 
@@ -207,7 +275,7 @@ export default async function SellerHomePage({ searchParams }: Props) {
       property={{
         id: property.id,
         name: propertyName(property),
-        thumbSrc: property.coverPath ? photoUrl(property.coverPath, 400) : null,
+        photoSrc: property.coverPath ? photoUrl(property.coverPath) : null,
         figures: listing
           ? t.figures(
               formatPrice(listing.priceCents),
@@ -216,69 +284,88 @@ export default async function SellerHomePage({ searchParams }: Props) {
           : null,
         status: property.listingStatus ?? "draft",
       }}
-      progress={heading && progress ? { ...heading, plan: PLANS[progress.template] ?? "" } : null}
+      progress={
+        heading && progress
+          ? { ...heading, title: step?.title ?? "", plan: PLANS[progress.template] ?? "" }
+          : null
+      }
       planHref={mode === "sold" ? undefined : `/vendeur/formule?bien=${property.id}`}
     />
   );
 
-  let content: ReactNode;
+  // The blocks of the cockpit, by their rank on a phone (Cockpit).
+  const slots: Slot[] = [];
   if (!data.ok) {
-    content = (
-      <InlineAlert tone="danger" live={false} action={retry}>
-        {list.error}
-      </InlineAlert>
-    );
+    slots.push({
+      key: "error",
+      node: (
+        <InlineAlert tone="danger" live={false} action={retry}>
+          {list.error}
+        </InlineAlert>
+      ),
+    });
   } else if (mode === "draft") {
-    content = (
-      <NextActionCard
-        label={t.next.label}
-        icon={ListChecks}
-        title={t.draft.title}
-        detail={t.draft.text}
-        actions={
-          <Button asChild>
-            <Link href={creationHref(property)}>{t.draft.action}</Link>
-          </Button>
-        }
-      />
-    );
+    slots.push({
+      key: "next",
+      node: (
+        <NextActionCard
+          label={t.next.label}
+          icon={ListChecks}
+          title={t.draft.title}
+          detail={t.draft.text}
+          actions={
+            <Button asChild>
+              <Link href={creationHref(property)}>{t.draft.action}</Link>
+            </Button>
+          }
+        />
+      ),
+    });
   } else if (mode === "sold") {
     const days = daysOnSale(listing?.publishedAt ?? null, listing?.soldAt ?? null);
     const contacts = data.data.conversations.length;
-    content = (
-      <section aria-labelledby="bilan" className="flex flex-col gap-3">
-        <div className="flex items-start gap-3.5 rounded-lk-2xl border border-lk-line bg-lk-surface p-4 md:p-5">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-lk-sm bg-lk-blue-tint">
-            <CalendarCheck
-              aria-hidden="true"
-              strokeWidth={1.8}
-              className="lk-icon-gradient size-5"
-            />
-          </span>
-          <div className="flex flex-col gap-1">
-            <h2 id="bilan" className="text-lk-title font-semibold text-lk-ink">
-              {t.sold.title}
-            </h2>
-            <p className="text-lk-compact text-lk-ink-3">{t.sold.text}</p>
+    slots.push({
+      key: "sold",
+      node: (
+        <section aria-labelledby="bilan" className="flex flex-col gap-3">
+          <div className="flex items-start gap-3.5 rounded-lk-2xl border border-lk-line bg-lk-surface p-4 shadow-lk-d-field md:p-5">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-lk-sm bg-lk-blue-tint">
+              <CalendarCheck
+                aria-hidden="true"
+                strokeWidth={1.8}
+                className="lk-icon-gradient size-5"
+              />
+            </span>
+            <div className="flex flex-col gap-1">
+              <h2 id="bilan" className="text-lk-title font-semibold text-lk-ink">
+                {t.sold.title}
+              </h2>
+              <p className="text-lk-compact text-lk-ink-3">{t.sold.text}</p>
+            </div>
           </div>
-        </div>
-        {/* The price across the tile row: « 1 250 000 € » would not fit a third of 390 px. */}
-        <div className="grid grid-cols-2 gap-2.5">
-          {listing ? (
+          {/* The price across the tile row: « 1 250 000 € » would not fit a third of 390 px. */}
+          <div className="grid grid-cols-2 gap-2.5">
+            {listing ? (
+              <StatTile
+                className="col-span-2"
+                icon={Tag}
+                value={formatPrice(listing.soldPriceCents ?? listing.priceCents)}
+                // The final price when the seller gave it, otherwise the last one shown.
+                label={listing.soldPriceCents !== null ? t.sold.price : t.sold.askedPrice}
+              />
+            ) : null}
+            {days !== null ? (
+              <StatTile icon={CalendarDays} value={formatInteger(days)} label={t.sold.days(days)} />
+            ) : null}
             <StatTile
-              className="col-span-2"
-              value={formatPrice(listing.soldPriceCents ?? listing.priceCents)}
-              // The final price when the seller gave it, otherwise the last one shown.
-              label={listing.soldPriceCents !== null ? t.sold.price : t.sold.askedPrice}
+              icon={MessageSquare}
+              value={formatInteger(contacts)}
+              label={t.sold.contacts(contacts)}
             />
-          ) : null}
-          {days !== null ? (
-            <StatTile value={formatInteger(days)} label={t.sold.days(days)} />
-          ) : null}
-          <StatTile value={formatInteger(contacts)} label={t.sold.contacts(contacts)} />
-        </div>
-      </section>
-    );
+          </div>
+        </section>
+      ),
+    });
   } else {
     const action = situation ? getNextAction(situation, now) : null;
     const view = action ? nextActionView(action, links, now, property.listingStatus) : null;
@@ -296,73 +383,84 @@ export default async function SellerHomePage({ searchParams }: Props) {
     const discussHrefs = await Promise.all(
       awaiting.map((item) => buyerConversationHref(item.offer.listingId, item.buyerId)),
     );
-    content = (
-      <>
-        {view ? (
-          <NextActionCard
-            label={t.next.label}
-            icon={ICONS[view.icon]}
-            title={view.title}
-            detail={view.detail}
-            actions={
-              <>
-                {view.primary && "href" in view.primary ? (
-                  <Button asChild>
-                    <Link href={view.primary.href}>{view.primary.label}</Link>
-                  </Button>
-                ) : view.primary && editable ? (
-                  <TaskDoneButton
-                    propertyId={property.id}
-                    taskId={view.primary.taskId}
-                    title={view.primary.taskTitle}
-                    done={false}
-                    label={view.primary.label}
-                    variant="primary"
-                    size="md"
-                    stretch
-                  />
-                ) : null}
-                {view.secondary ? (
-                  <Button asChild variant="secondary">
-                    <Link href={view.secondary.href}>{view.secondary.label}</Link>
-                  </Button>
-                ) : null}
-              </>
-            }
-          />
-        ) : null}
-
-        {/* An offer may wait for an answer: its absence is never said by silence. */}
-        {offers.ok ? null : (
-          <InlineAlert tone="danger" live={false}>
-            {frOffer.seller.dashboard.loadError}
-          </InlineAlert>
-        )}
-        {awaiting.length > 0 ? (
-          <section aria-labelledby="offres-recues" className="flex flex-col gap-3">
-            <h2 id="offres-recues" className="sr-only">
-              {frOffer.seller.dashboard.title}
-            </h2>
-            {awaiting.map((item, index) => (
-              <OfferReceivedCard
-                key={item.offer.id}
-                item={item}
-                now={now}
-                title={frOffer.seller.received}
-                actions={
-                  <OfferSellerActions
-                    offerId={item.offer.id}
-                    reference={item.offer.reference}
-                    discussHref={discussHrefs[index]}
-                    full
-                  />
-                }
-              />
-            ))}
-          </section>
-        ) : null}
-
-        {advisor || !advisorRight ? (
+    const doneLines = lines.filter((line) => line.state === "done").length;
+    slots.push({
+      key: "next",
+      node: view ? (
+        <NextActionCard
+          label={t.next.label}
+          icon={ICONS[view.icon]}
+          title={view.title}
+          detail={view.detail}
+          actions={
+            <>
+              {view.primary && "href" in view.primary ? (
+                <Button asChild>
+                  <Link href={view.primary.href}>{view.primary.label}</Link>
+                </Button>
+              ) : view.primary && editable ? (
+                <TaskDoneButton
+                  propertyId={property.id}
+                  taskId={view.primary.taskId}
+                  title={view.primary.taskTitle}
+                  done={false}
+                  label={view.primary.label}
+                  variant="primary"
+                  size="md"
+                  stretch
+                />
+              ) : null}
+              {view.secondary ? (
+                <Button asChild variant="secondary">
+                  <Link href={view.secondary.href}>{view.secondary.label}</Link>
+                </Button>
+              ) : null}
+            </>
+          }
+        />
+      ) : null,
+    });
+    slots.push({
+      key: "offers",
+      node: (
+        <>
+          {/* An offer may wait for an answer: its absence is never said by silence. */}
+          {offers.ok ? null : (
+            <InlineAlert tone="danger" live={false}>
+              {frOffer.seller.dashboard.loadError}
+            </InlineAlert>
+          )}
+          {awaiting.length > 0 ? (
+            <section aria-labelledby="offres-recues" className="flex flex-col gap-3">
+              <h2 id="offres-recues" className="sr-only">
+                {frOffer.seller.dashboard.title}
+              </h2>
+              {awaiting.map((item, index) => (
+                <OfferReceivedCard
+                  key={item.offer.id}
+                  item={item}
+                  now={now}
+                  title={frOffer.seller.received}
+                  actions={
+                    <OfferSellerActions
+                      offerId={item.offer.id}
+                      reference={item.offer.reference}
+                      discussHref={discussHrefs[index]}
+                      full
+                    />
+                  }
+                />
+              ))}
+            </section>
+          ) : null}
+        </>
+      ),
+    });
+    slots.push({
+      key: "advisor",
+      side: true,
+      node:
+        advisor || !advisorRight ? (
           <AdvisorCard
             conversation={advisor}
             plansHref={`${ROUTES.plan}?bien=${property.id}`}
@@ -373,85 +471,113 @@ export default async function SellerHomePage({ searchParams }: Props) {
             }
             now={now}
           />
-        ) : null}
-
-        <section aria-label={t.stats.label} className="grid grid-cols-3 gap-2.5">
-          <StatTile value={formatInteger(figures.views)} label={t.stats.views(figures.views)} />
-          <StatTile
-            value={formatInteger(figures.contacts)}
-            label={t.stats.contacts(figures.contacts)}
-          />
-          <StatTile
-            value={formatInteger(figures.qualified)}
-            label={t.stats.qualified(figures.qualified)}
-          />
-        </section>
-
-        {/* minmax(0, 1fr): the previews cut at the end of their line never widen it. */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
-          {step ? (
-            <Section
-              id="a-faire"
-              title={t.todo.title}
-              link={{ href: links.steps, label: t.todo.all }}
-            >
-              <TaskList
-                stateLabels={t.todo.states}
-                items={lines.map((line) => ({
-                  ...line,
-                  detail: line.detail ?? undefined,
-                  control: line.manual ? (
-                    <TaskDoneButton
-                      propertyId={property.id}
-                      taskId={line.id}
-                      title={line.title}
-                      done={line.state === "done"}
-                    />
-                  ) : undefined,
-                }))}
-              />
-            </Section>
-          ) : null}
-          <Section
-            id="conversations"
-            title={t.conversations.title}
-            link={recent.length ? { href: links.messages, label: t.conversations.all } : undefined}
-          >
-            {recent.length ? (
-              <>
-                <RecentConversations conversations={recent} now={now} />
-                <FinancingMention />
-              </>
-            ) : (
-              <p className="rounded-lk-xl border border-lk-line bg-lk-surface px-4 py-3.5 text-lk-compact text-lk-ink-3">
-                {t.conversations.empty}
-              </p>
-            )}
-          </Section>
-        </div>
-        {/* A plan proposed in context (L2-09, SPEC 11 bis): at most one, after the useful content. */}
-        <UpgradePromptSlot prompt={prompt} />
-      </>
-    );
-  }
-
-  return (
-    <div className="mx-auto w-full max-w-205 pb-10 md:px-(--lk-gutter) md:py-10 lg:px-0">
-      {header}
-      <div className="flex flex-col gap-7 px-(--lk-gutter) pt-6 md:px-0 md:pt-7">
-        {content}
-        <section aria-labelledby="vos-biens" className="flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-3">
-            <h2 id="vos-biens" className="text-lk-h3 font-bold text-wide text-lk-ink">
-              {list.title}
-            </h2>
-            <Button asChild variant="secondary" size="sm">
-              <Link href={ROUTES.newProperty}>{list.create}</Link>
-            </Button>
+        ) : null,
+    });
+    slots.push({
+      key: "stats",
+      side: true,
+      node: (
+        <Section id="chiffres" title={t.stats.label}>
+          <div className="grid grid-cols-3 gap-2.5">
+            <StatTile
+              icon={Eye}
+              value={formatInteger(figures.views)}
+              label={t.stats.views(figures.views)}
+            />
+            <StatTile
+              icon={MessageSquare}
+              value={formatInteger(figures.contacts)}
+              label={t.stats.contacts(figures.contacts)}
+            />
+            <StatTile
+              icon={UserCheck}
+              value={formatInteger(figures.qualified)}
+              label={t.stats.qualified(figures.qualified)}
+            />
           </div>
-          <PropertyList properties={properties} />
-        </section>
-      </div>
-    </div>
-  );
+        </Section>
+      ),
+    });
+    slots.push({
+      key: "todo",
+      node: step ? (
+        <Section
+          id="a-faire"
+          title={t.todo.title}
+          note={lines.length ? t.todo.progress(doneLines, lines.length) : undefined}
+          link={{ href: links.steps, label: t.todo.all }}
+        >
+          <TaskList
+            className="rounded-lk-2xl shadow-lk-d-field"
+            stateLabels={t.todo.states}
+            items={lines.map((line) => ({
+              ...line,
+              detail: line.detail ?? undefined,
+              control: line.manual ? (
+                <TaskDoneButton
+                  propertyId={property.id}
+                  taskId={line.id}
+                  title={line.title}
+                  done={line.state === "done"}
+                />
+              ) : undefined,
+            }))}
+          />
+        </Section>
+      ) : null,
+    });
+    slots.push({
+      key: "conversations",
+      side: true,
+      node: (
+        <Section
+          id="conversations"
+          title={t.conversations.title}
+          link={recent.length ? { href: links.messages, label: t.conversations.all } : undefined}
+        >
+          {recent.length ? (
+            <>
+              <RecentConversations conversations={recent} now={now} />
+              <FinancingMention />
+            </>
+          ) : (
+            // Nothing yet: a clear empty state, where the messages will come from.
+            <div className="flex items-start gap-3.5 rounded-lk-2xl border border-dashed border-lk-line-strong bg-lk-surface px-4 py-4">
+              <span
+                aria-hidden="true"
+                className="lk-gradient-soft flex size-10 shrink-0 items-center justify-center rounded-full"
+              >
+                <MessageCircle strokeWidth={1.75} className="lk-icon-gradient size-5" />
+              </span>
+              <p className="pt-1 text-lk-compact text-lk-ink-2">{t.conversations.empty}</p>
+            </div>
+          )}
+        </Section>
+      ),
+    });
+    // A plan proposed in context (L2-09, SPEC 11 bis): at most one, after the useful content.
+    slots.push({ key: "upgrade", after: true, node: <UpgradePromptSlot prompt={prompt} /> });
+  }
+  slots.push({
+    key: "properties",
+    after: true,
+    node: (
+      <section aria-labelledby="vos-biens" className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2
+            id="vos-biens"
+            className="text-lk-h3 font-bold text-wide text-lk-ink lg:text-lk-h3-lg"
+          >
+            {list.title}
+          </h2>
+          <Button asChild variant="secondary" size="sm">
+            <Link href={ROUTES.newProperty}>{list.create}</Link>
+          </Button>
+        </div>
+        <PropertyCards properties={properties} currentId={property.id} />
+      </section>
+    ),
+  });
+
+  return <Cockpit header={header} slots={slots.filter((slot) => slot.node !== null)} />;
 }

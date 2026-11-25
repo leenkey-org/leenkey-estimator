@@ -8,6 +8,8 @@ export const frSaleDashboard = {
     published ? `${price} · publié le ${published}` : price,
   step: (position: number, total: number, title: string) =>
     `Étape ${position} sur ${total} · ${title}`,
+  // Above the name of the step in the header (2026-11-25).
+  stepOf: (position: number, total: number) => `Étape ${position} sur ${total}`,
   next: {
     label: "Prochaine action",
     rejected: {
@@ -63,6 +65,9 @@ export const frSaleDashboard = {
   todo: {
     title: "À faire",
     all: "Toutes les étapes",
+    // Beside the title (2026-11-25): « 1 tâche sur 4 faite ».
+    progress: (done: number, total: number) =>
+      done > 1 ? `${done} tâches sur ${total} faites` : `${done} tâche sur ${total} faite`,
     states: { done: "Fait", current: "À faire maintenant", todo: "À venir" },
     leenkey: "Par votre conseiller Leenkey",
     automatic: "Se coche automatiquement",
