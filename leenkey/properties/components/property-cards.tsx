@@ -29,7 +29,7 @@ function summary(property: SellerProperty): string | null {
  * sur les vignettes »): a card each, its main photo in 4:3 with its status
  * on it, its name, its summary, its address and its price; each one opens
  * its page (L1-14), from which a draft resumes. One a row on a phone, two
- * from 640 px, three from 1 280 px. A link: hovered or focused, the card
+ * from 640 px, three from 1 024 px, four from 1 280 px. A link: hovered or focused, the card
  * rises 2 px and its photo zooms slowly (DESIGN.md 9), never with
  * prefers-reduced-motion. The property shown above in the outline of the
  * gradient, « Vente affichée » on its photo.
@@ -43,7 +43,7 @@ export function PropertyCards({
   currentId?: string;
 }) {
   return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {properties.map((property) => {
         const status = property.listingStatus ?? "draft";
         const current = property.id === currentId;
@@ -54,8 +54,9 @@ export function PropertyCards({
           <li key={property.id} className="flex">
             <Link
               href={sheetHref(property.id)}
+              aria-current={current ? "true" : undefined}
               className={cn(
-                "group relative flex w-full flex-col rounded-lk-3xl",
+                "group relative flex w-full flex-col rounded-lk-d-card",
                 current
                   ? "lk-gradient-border p-1.75 shadow-lk-d-featured"
                   : "border border-lk-line bg-lk-surface p-2 shadow-lk-d-field",
@@ -75,7 +76,7 @@ export function PropertyCards({
                     <Photo
                       src={photoUrl(property.coverPath)}
                       alt=""
-                      sizes="(min-width: 1280px) 260px, (min-width: 640px) 45vw, 100vw"
+                      sizes="(min-width: 1280px) 280px, (min-width: 1024px) 31vw, (min-width: 640px) 45vw, 100vw"
                     />
                   </span>
                 ) : (

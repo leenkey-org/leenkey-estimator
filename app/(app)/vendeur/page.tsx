@@ -61,7 +61,6 @@ import { frProperties } from "@/lib/i18n/sections/properties";
 import { frSaleDashboard } from "@/lib/i18n/sections/saleDashboard";
 import { frSellStart } from "@/lib/i18n/sections/sellStart";
 import { frSpaces } from "@/lib/i18n/sections/spaces";
-import { cn } from "@/lib/utils";
 import { SpacePage } from "../_components/space-page";
 
 // The texts this module shows (lib/i18n/sections, P-06).
@@ -134,48 +133,38 @@ function Section({
   );
 }
 
-/** A block of the cockpit, the column it takes from 1 024 px and its rank below. */
-type Slot = { key: string; order: number; side?: boolean; node: ReactNode };
-
-// The rank of a block in the single column below 1 024 px (the order of
-// « Ma vente » since L1-24); from 1 024 px, the order of its column.
-const ORDER: Record<number, string> = {
-  2: "order-2",
-  3: "order-3",
-  4: "order-4",
-  5: "order-5",
-  6: "order-6",
-  7: "order-7",
-  8: "order-8",
-  9: "order-9",
-};
+/** A block of the cockpit: the column it takes from 1 024 px (the sale by default). */
+type Slot = { key: string; side?: boolean; after?: boolean; node: ReactNode };
 
 /**
  * The cockpit (2026-11-25, Younes: « refais le cockpit »; Cédric: no narrow
- * column): one column below 1 024 px, the header across a phone; from
- * 1 024 px, 1 216 px in two columns, the sale on the left (header, next
- * action, tasks, properties), its figures, its adviser and its
- * conversations on the right (320 px, 360 px from 1 280 px). Each column
- * is a box from 1 024 px only (display: contents below): the blocks keep
- * one order on a phone.
+ * column): one column below 1 024 px; from 1 024 px, 1 216 px in two
+ * columns, the sale on the left (header, next action, offers, tasks), its
+ * adviser, figures and conversations on the right (320 px, 360 px from
+ * 1 280 px), then across the page the proposal of a plan (always after the
+ * useful content, DESIGN 10.4) and the properties. The page order is the
+ * order on the screen at every width (no CSS order: the keyboard and a
+ * screen reader follow what is shown); each column is a box from 1 024 px
+ * only (display: contents below).
  */
 function Cockpit({ header, slots }: { header: ReactNode; slots: readonly Slot[] }) {
-  const main = slots.filter((slot) => !slot.side);
+  const main = slots.filter((slot) => !slot.side && !slot.after);
   const side = slots.filter((slot) => slot.side);
+  const after = slots.filter((slot) => slot.after);
   const block = (slot: Slot) => (
     <div
       key={slot.key}
       // empty: a block that renders nothing (a proposal put away) leaves no gap.
-      className={cn(ORDER[slot.order], "px-(--lk-gutter) empty:hidden md:px-0 lg:order-none")}
+      className="px-(--lk-gutter) empty:hidden md:px-0"
     >
       {slot.node}
     </div>
   );
   return (
-    <div className="mx-auto w-full max-w-205 pb-10 md:px-(--lk-gutter) md:py-10 lg:max-w-lk-space">
+    <div className="mx-auto flex w-full max-w-205 flex-col gap-7 pb-10 md:px-(--lk-gutter) md:py-10 lg:max-w-lk-space lg:gap-8">
       <div className="flex flex-col gap-7 lg:flex-row lg:items-start lg:gap-8">
         <div className="contents lg:flex lg:min-w-0 lg:flex-1 lg:flex-col lg:gap-8">
-          <div className="order-1 lg:order-none">{header}</div>
+          <div>{header}</div>
           {main.map(block)}
         </div>
         {side.length ? (
@@ -184,6 +173,7 @@ function Cockpit({ header, slots }: { header: ReactNode; slots: readonly Slot[] 
           </div>
         ) : null}
       </div>
+      {after.map(block)}
     </div>
   );
 }
@@ -308,7 +298,6 @@ export default async function SellerHomePage({ searchParams }: Props) {
   if (!data.ok) {
     slots.push({
       key: "error",
-      order: 2,
       node: (
         <InlineAlert tone="danger" live={false} action={retry}>
           {list.error}
@@ -318,7 +307,6 @@ export default async function SellerHomePage({ searchParams }: Props) {
   } else if (mode === "draft") {
     slots.push({
       key: "next",
-      order: 2,
       node: (
         <NextActionCard
           label={t.next.label}
@@ -338,7 +326,6 @@ export default async function SellerHomePage({ searchParams }: Props) {
     const contacts = data.data.conversations.length;
     slots.push({
       key: "sold",
-      order: 2,
       node: (
         <section aria-labelledby="bilan" className="flex flex-col gap-3">
           <div className="flex items-start gap-3.5 rounded-lk-2xl border border-lk-line bg-lk-surface p-4 shadow-lk-d-field md:p-5">
@@ -399,7 +386,6 @@ export default async function SellerHomePage({ searchParams }: Props) {
     const doneLines = lines.filter((line) => line.state === "done").length;
     slots.push({
       key: "next",
-      order: 2,
       node: view ? (
         <NextActionCard
           label={t.next.label}
@@ -436,7 +422,6 @@ export default async function SellerHomePage({ searchParams }: Props) {
     });
     slots.push({
       key: "offers",
-      order: 3,
       node: (
         <>
           {/* An offer may wait for an answer: its absence is never said by silence. */}
@@ -473,7 +458,6 @@ export default async function SellerHomePage({ searchParams }: Props) {
     });
     slots.push({
       key: "advisor",
-      order: 4,
       side: true,
       node:
         advisor || !advisorRight ? (
@@ -491,7 +475,6 @@ export default async function SellerHomePage({ searchParams }: Props) {
     });
     slots.push({
       key: "stats",
-      order: 5,
       side: true,
       node: (
         <Section id="chiffres" title={t.stats.label}>
@@ -517,7 +500,6 @@ export default async function SellerHomePage({ searchParams }: Props) {
     });
     slots.push({
       key: "todo",
-      order: 6,
       node: step ? (
         <Section
           id="a-faire"
@@ -546,7 +528,6 @@ export default async function SellerHomePage({ searchParams }: Props) {
     });
     slots.push({
       key: "conversations",
-      order: 7,
       side: true,
       node: (
         <Section
@@ -575,11 +556,11 @@ export default async function SellerHomePage({ searchParams }: Props) {
       ),
     });
     // A plan proposed in context (L2-09, SPEC 11 bis): at most one, after the useful content.
-    slots.push({ key: "upgrade", order: 8, node: <UpgradePromptSlot prompt={prompt} /> });
+    slots.push({ key: "upgrade", after: true, node: <UpgradePromptSlot prompt={prompt} /> });
   }
   slots.push({
     key: "properties",
-    order: 9,
+    after: true,
     node: (
       <section aria-labelledby="vos-biens" className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">

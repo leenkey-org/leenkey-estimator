@@ -84,7 +84,7 @@ export function SellerHeader({
           "md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] md:grid-rows-[auto_1fr] md:gap-x-8 md:gap-y-6 md:p-8",
         )}
       >
-        <div className="order-1 flex flex-col gap-3 md:col-start-1 md:row-start-1">
+        <div className="flex flex-col gap-3 md:col-start-1 md:row-start-1">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-0.5">
               <p className="text-lk-compact text-white/75">{greeting}</p>
@@ -95,7 +95,28 @@ export function SellerHeader({
           {choices && choices.length > 1 ? <PropertySwitcher choices={choices} /> : null}
         </div>
 
-        <div className="order-3 flex flex-col gap-5 md:col-start-1 md:row-start-2 md:justify-end">
+        {/* The photo, second on a phone as in the page: decorative (the name says
+            the property), its status on it. */}
+        <div className="relative aspect-3/2 overflow-hidden rounded-lk-2xl bg-white/6 ring-1 ring-white/10 md:col-start-2 md:row-span-2 md:row-start-1 md:aspect-auto md:min-h-64">
+          <div aria-hidden="true" className="absolute inset-0">
+            {property.photoSrc ? (
+              <Photo
+                src={property.photoSrc}
+                alt=""
+                priority
+                sizes="(min-width: 1280px) 360px, (min-width: 768px) 45vw, 100vw"
+              />
+            ) : (
+              <span className="flex h-full items-center justify-center">
+                <FacadeDrawing className="w-2/5 text-white/55" />
+              </span>
+            )}
+            {/* A veil at the bottom: the photo melts into the night. */}
+            <span className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-lk-night/55 to-transparent" />
+          </div>
+          <StatusBadge status={property.status} className="absolute top-3 left-3 shadow-lk-badge" />
+        </div>
+        <div className="flex flex-col gap-5 md:col-start-1 md:row-start-2 md:justify-end">
           <div className="flex min-w-0 flex-col gap-1">
             <p className="line-clamp-2 text-lk-h3 font-semibold text-wide lg:text-lk-h3-lg">
               {property.name}
@@ -129,27 +150,6 @@ export function SellerHeader({
               {fr.billing.entry}
             </Link>
           ) : null}
-        </div>
-
-        {/* The photo: decorative (the name says the property), its status on it. */}
-        <div className="relative order-2 aspect-3/2 overflow-hidden rounded-lk-2xl bg-white/6 ring-1 ring-white/10 md:col-start-2 md:row-span-2 md:row-start-1 md:aspect-auto md:min-h-64">
-          <div aria-hidden="true" className="absolute inset-0">
-            {property.photoSrc ? (
-              <Photo
-                src={property.photoSrc}
-                alt=""
-                priority
-                sizes="(min-width: 1280px) 360px, (min-width: 768px) 45vw, 100vw"
-              />
-            ) : (
-              <span className="flex h-full items-center justify-center">
-                <FacadeDrawing className="w-2/5 text-white/55" />
-              </span>
-            )}
-            {/* A veil at the bottom: the photo melts into the night. */}
-            <span className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-lk-night/55 to-transparent" />
-          </div>
-          <StatusBadge status={property.status} className="absolute top-3 left-3 shadow-lk-badge" />
         </div>
       </div>
     </header>

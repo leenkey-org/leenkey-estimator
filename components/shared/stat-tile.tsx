@@ -45,7 +45,7 @@ export function StatTile({
       <span
         className={cn(
           "font-bold tracking-lk-d-snug tabular",
-          Icon ? "lk-gradient-text self-start text-lk-price" : "text-lk-stat text-lk-ink",
+          Icon ? "lk-gradient-text max-w-full self-start text-lk-stat" : "text-lk-stat text-lk-ink",
         )}
       >
         {value}
