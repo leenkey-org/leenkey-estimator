@@ -112,6 +112,7 @@ export const frEmails = {
       `Votre formule ${plan}, au prix de ${amount} TTC pour le bien ${property}, a été souscrite le ${date}.`,
     orderedUpgrade: (plan: string, amount: string, property: string, date: string) =>
       `Votre passage à la formule ${plan}, au prix de ${amount} TTC pour le bien ${property}, a été souscrit le ${date}.`,
+    vat: "TVA non applicable, article 293 B du CGI.",
     duration: (until: string) =>
       `Durée du contrat : 12 mois, jusqu'au ${until}, sans renouvellement automatique. À l'échéance, votre bien repasse en Autonomie : votre annonce reste en ligne.`,
     includes: "Ce que comprend votre formule",

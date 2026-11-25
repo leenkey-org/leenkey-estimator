@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-25 · Franchise en base de TVA · PR #141
+- Modifié : « TVA non applicable, article 293 B du CGI. » en pied de la facture Stripe (quand aucun taux n'est donné), dans le récapitulatif de commande et dans l'email de la formule activée ; CGV article 4, nouvelle version du 25 novembre 2026.
+- Docs : `DECISIONS.md` (2026-11-25), `MISE-EN-LIGNE.md`, `CLAUDE.md` et `.env.example` (`STRIPE_TAX_RATE` à laisser vide).
+
 ### 2026-11-25 · Cockpit vendeur redessiné (« Ma vente ») · PR #140
 - Modifié : `/vendeur` en deux colonnes à partir de 1 024 px (1 216 px : la vente à gauche, chiffres, conseiller et conversations à droite), une colonne dessous dans le même ordre ; en-tête avec la photo du bien en grand et le statut dessus, l'étape nommée en grand ; prochaine action dans le contour du dégradé ; chiffres avec pictogrammes ; « Vos biens » en cartes photo (montée de 2 px et zoom de la photo au survol et au focus, rien en mouvement réduit), le bien affiché marqué ; compteur des tâches faites ; état vide des conversations.
 - Composants : `SellerHeader`, `StepProgress` (`heading`), `StatTile` (`icon`), `NextActionCard`, `AdvisorCard`, nouveau `PropertyCards` (`leenkey/properties/components/property-cards.tsx`) ; `PropertyList` reste pour « Dossier ».

@@ -94,6 +94,8 @@ export const frBilling = {
     property: "Bien",
     price: "Prix",
     priceValue: (price: string) => `${price} TTC, payé une fois`,
+    vatLabel: "TVA",
+    vatValue: "Non applicable, article 293 B du CGI (franchise en base de TVA).",
     upgradeValue: (price: string, from: string) =>
       `${price} TTC : la différence avec ${from}, déjà payée`,
     duration: "Durée",
