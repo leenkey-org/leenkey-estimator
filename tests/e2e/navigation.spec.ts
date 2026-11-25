@@ -571,6 +571,8 @@ test.describe("comptes connectés (base de seed)", () => {
         // L1-34: its count once a seller wrote (the seed has none unread).
         /^Messages(\s*\d+)?$/,
         "Offres",
+        // The refunds (DECISIONS 2026-11-25): their count is in « À traiter », not here.
+        "Remboursements",
         /^Signalements(\s*\d+)?$/,
         "Assistant",
       ]);
