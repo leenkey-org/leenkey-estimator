@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-25 · Cockpit vendeur redessiné (« Ma vente ») · PR #140
+- Modifié : `/vendeur` en deux colonnes à partir de 1 024 px (1 216 px : la vente à gauche, chiffres, conseiller et conversations à droite), une colonne dessous dans le même ordre ; en-tête avec la photo du bien en grand et le statut dessus, l'étape nommée en grand ; prochaine action dans le contour du dégradé ; chiffres avec pictogrammes ; « Vos biens » en cartes photo (montée de 2 px et zoom de la photo au survol et au focus, rien en mouvement réduit), le bien affiché marqué ; compteur des tâches faites ; état vide des conversations.
+- Composants : `SellerHeader`, `StepProgress` (`heading`), `StatTile` (`icon`), `NextActionCard`, `AdvisorCard`, nouveau `PropertyCards` (`leenkey/properties/components/property-cards.tsx`) ; `PropertyList` reste pour « Dossier ».
+- Docs : `DESIGN.md` (10.4, 12.3), `DECISIONS.md` (2026-11-25).
+
 ### 2026-11-25 · Audit de sécurité · PR #139
 - Corrigé : Next.js 15.5.29 (faille critique d'exécution de code dans l'optimisation d'images, non exploitable ici ; déni de service par les server actions) ; DOMPurify 3.5.0. En-tête `X-Powered-By` retiré.
 - Ajouté : `docs/SECURITE.md`, audit du 2026-11-25 (base de production, en-têtes, routes protégées, dépendances, secrets). Au `BACKLOG-V3.md` : Zod 4, CSP des scripts.

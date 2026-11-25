@@ -16,7 +16,9 @@ const fr = { advisorInterventions: frAdvisorInterventions, messaging: frMessagin
 const t = fr.messaging.advisor;
 const i = fr.advisorInterventions;
 
-const cardClass = "flex flex-col gap-3 rounded-lk-xl border border-lk-line bg-lk-surface p-4";
+// Rounded 20 with a soft shadow, as the cards of « Ma vente » (2026-11-25).
+const cardClass =
+  "flex flex-col gap-3 rounded-lk-2xl border border-lk-line bg-lk-surface p-4 shadow-lk-d-field md:p-5";
 
 /**
  * The adviser on the dashboard of a sale (SPEC-V2 8.7, L1-34): « LK », the
@@ -43,7 +45,7 @@ export function AdvisorCard({
 }) {
   if (!conversation) {
     return (
-      <section aria-labelledby="conseiller" className={cn(cardClass, "bg-lk-stone-2")}>
+      <section aria-labelledby="conseiller" className={cn(cardClass, "bg-lk-stone-2 shadow-none")}>
         <div className="flex items-start gap-3">
           <AdvisorAvatar label={t.avatar} className="bg-lk-line text-lk-ink-3" />
           <div className="flex min-w-0 flex-col gap-0.5">

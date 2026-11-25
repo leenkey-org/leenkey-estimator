@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -6,28 +7,49 @@ import { cn } from "@/lib/utils";
  * By three in a grid on the dashboard of a sale (« 248 vues · 7 j »). A
  * detail under the label (the back office, L1-30a: « Plus ancienne : 30 h ·
  * au-delà de 24 h »), 11 px, in the warning colour when it says a delay.
+ * `icon` (« Ma vente », 2026-11-25): a pictogram in the gradient above the
+ * figure, the figure 26 px in the gradient, a soft shadow. Never clickable:
+ * it never rises on hover (DESIGN.md 9).
  */
 export function StatTile({
   value,
   label,
   detail,
   detailTone = "muted",
+  icon: Icon,
   className,
 }: {
   value: string;
   label: string;
   detail?: string;
   detailTone?: "muted" | "warning";
+  icon?: LucideIcon;
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col gap-1 rounded-lk-xl border border-lk-line bg-lk-surface px-4 py-3.5",
+        "flex min-w-0 flex-col gap-1 border border-lk-line bg-lk-surface",
+        Icon ? "rounded-lk-2xl p-3.5 shadow-lk-d-field md:p-4" : "rounded-lk-xl px-4 py-3.5",
         className,
       )}
     >
-      <span className="text-lk-stat font-bold tracking-lk-d-snug tabular text-lk-ink">{value}</span>
+      {Icon ? (
+        <span
+          aria-hidden="true"
+          className="lk-gradient-soft mb-1.5 flex size-9 items-center justify-center rounded-lk-sm"
+        >
+          <Icon strokeWidth={1.75} className="lk-icon-gradient size-4.5" />
+        </span>
+      ) : null}
+      <span
+        className={cn(
+          "font-bold tracking-lk-d-snug tabular",
+          Icon ? "lk-gradient-text self-start text-lk-price" : "text-lk-stat text-lk-ink",
+        )}
+      >
+        {value}
+      </span>
       {/* Read « 248 vues · 7 j », not « 248vues » (no box in a flex column). */}{" "}
       <span className="text-lk-caption text-lk-ink-3">{label}</span>
       {detail ? (
