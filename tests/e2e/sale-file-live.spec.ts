@@ -323,6 +323,10 @@ test("dossier de vente : dépôt, non concerné, demande d'accès, partage, ouve
   await test.step("retiré par le vendeur, le document disparaît pour l'acquéreur", async () => {
     await seller.getByRole("button", { name: "Retirer DPE" }).click();
     await seller.getByRole("dialog").getByRole("button", { name: "Retirer le document" }).click();
+    // The dialog closes once the removal is done: while it is open, the page
+    // behind it is hidden from the accessibility tree, and the link would
+    // count as gone before it is.
+    await expect(seller.getByRole("dialog")).toHaveCount(0);
     await expect(seller.getByRole("link", { name: "DPE", exact: true })).toHaveCount(0);
     await buyer.reload();
     await expect(buyer.getByRole("link", { name: "Ouvrir DPE" })).toHaveCount(0);
