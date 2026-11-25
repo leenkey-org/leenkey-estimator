@@ -600,6 +600,18 @@ create table stripe_events (             -- idempotence
   fully_refunded boolean
 );
 
+create table credit_notes (              -- avoirs Stripe des remboursements (DECISIONS.md 2026-11-25)
+  id uuid primary key default gen_random_uuid(),
+  subscription_id uuid not null references subscriptions(id),
+  stripe_credit_note_id text not null unique,
+  number text not null,
+  amount_cents int not null check (amount_cents >= 0),
+  pdf_url text,                           -- PDF de Stripe (https), null dans le mock des tests
+  issued_at timestamptz not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
+);
+
 create table upgrade_prompts (           -- déclencheurs de montée en gamme affichés
   id uuid primary key default gen_random_uuid(),
   property_id uuid not null references properties(id) on delete cascade,
@@ -1084,6 +1096,7 @@ Matrice (L = lecture, E = écriture) :
 | `offer_events`, `listing_revisions` | — | L ses biens | L les siennes (`offer_events`) | L |
 | `plan_entitlements` | L | L | L | L/E |
 | `upgrade_prompts` | — | L/E ses biens | — | L |
+| `credit_notes` | — | L celles de ses formules | — | L toutes ; écriture par personne depuis un client : `credit_notes_record` (service role : webhook, ou action admin « Créer l'avoir », tracée dans `audit_log`) ; `admin_refunds()` pour `/admin/remboursements` |
 | `advisor_interventions` | — | L ses biens, sans `team_note` ni `done_by` (lecture par colonne) ; création par `advisor_intervention_request` | — | L tous par `admin_advisor_interventions` ; statut par `admin_advisor_intervention_set` et `admin_advisor_initial_meeting`, écrits dans `audit_log` |
 | `identity_documents` | — | — (statut seul, par `buyer_identity_for_seller`, pour une invitation encore valable ou une visite non annulée) | L les siennes, sans `team_note` ni `decided_by` (lecture par colonne) ; dépôt et retrait par `identity_document_add` et `identity_document_remove` | L toutes par `admin_identity_documents` ; décision par `identity_document_check` et `identity_document_refuse` (tracées) |
 | `visit_slots` | — | L/E ses biens | L si invitation valide | L |

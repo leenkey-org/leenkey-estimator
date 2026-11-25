@@ -54,6 +54,8 @@ export const ROUTES = {
   adminCases: "/admin/dossiers",
   adminOffers: "/admin/offres",
   adminReports: "/admin/signalements",
+  /** The withdrawals to refund and the credit notes (DECISIONS.md 2026-11-25). */
+  adminRefunds: "/admin/remboursements",
   adminMessages: "/admin/messages",
   /** The interventions of the adviser, beside the conversations (DECISIONS.md 2026-11-23). */
   adminInterventions: "/admin/messages/interventions",

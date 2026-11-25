@@ -287,6 +287,7 @@ describe("back office sidebar", () => {
       { href: "/admin/dossiers", label: "Dossiers", icon: "folder" },
       { href: "/admin/messages", label: "Messages", icon: "message" },
       { href: "/admin/offres", label: "Offres", icon: "file" },
+      { href: "/admin/remboursements", label: "Remboursements", icon: "refund" },
       { href: "/admin/signalements", label: "Signalements", icon: "flag" },
       { href: "/admin/assistant", label: "Assistant", icon: "sparkles" },
     ]);

@@ -631,7 +631,7 @@ async function withdrawalsToProcess(email: PlannedEmail): Promise<RenderedEmail 
     withdrawalsToProcessSubject(items),
     WithdrawalsToProcessEmail({
       items,
-      casesUrl: absoluteUrl("/admin/dossiers"),
+      casesUrl: absoluteUrl("/admin/remboursements"),
       siteUrl: siteUrl(),
     }),
   );

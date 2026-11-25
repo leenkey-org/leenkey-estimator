@@ -4,6 +4,7 @@ import { appEnv } from "@/lib/env";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { checkoutMetadataSchema } from "@/lib/validations/billing";
+import { recordCreditNotes } from "./credit-notes";
 import { emailPlanActivated, emailPlanPurchased, type PaidOrder } from "./emails";
 
 // What a Stripe event changes for Leenkey (SPEC-V2 section 11), its signature
@@ -200,8 +201,15 @@ async function chargeRefunded(
   }
   const result = readResult(data);
   log("refund", { event_id: eventId, status: result.status, full: charge.refunded });
-  if (result.status === "processed") return ok("processed");
-  return ok(result.status === "unknown" ? "unknown" : "duplicate");
+  if (result.status === "unknown") return ok("unknown");
+  // The credit note of the refund (DECISIONS.md 2026-11-25), on a second
+  // delivery too: only the refunds without one get one. Its failure never
+  // fails the refund: logged, then « Avoir à créer » on /admin/remboursements.
+  const creditNote = await recordCreditNotes(supabase, paymentIntent, {
+    mockRefundedCents: charge.amount_refunded,
+  });
+  log("credit note", { event_id: eventId, status: creditNote.status });
+  return ok(result.status === "processed" ? "processed" : "duplicate");
 }
 
 /** The jsonb answer of the SQL functions. */

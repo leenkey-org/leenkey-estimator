@@ -299,7 +299,8 @@ const CATALOG: Record<string, Entry> = {
     tone: "warning",
     filters: [],
     title: () => t.planWithdrawn.title,
-    link: caseLink,
+    // The refunds of the back office (DECISIONS.md 2026-11-25), not the case.
+    link: () => "/admin/remboursements",
     detail: (data) => t.planWithdrawn.detail(text(data.plan_name), text(data.reference)),
   },
   // L1-26: a plan paid (the seller), its case and its refunds (the team).
@@ -334,6 +335,8 @@ const CATALOG: Record<string, Entry> = {
     filters: [],
     title: (data) =>
       data.check === true ? t.planRefunded.checkTitle : t.planRefunded.title(data.full === true),
+    // Its status and its credit note (DECISIONS.md 2026-11-25); a check stays in the cases.
+    link: (data) => (data.check === true ? null : "/admin/remboursements"),
     detail: (data) =>
       t.planRefunded.detail(
         typeof data.amount_cents === "number" ? formatAmount(data.amount_cents) : null,

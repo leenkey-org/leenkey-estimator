@@ -38,6 +38,7 @@ import { frAdminCases } from "./sections/adminCases";
 import { frAdminOffers } from "./sections/adminOffers";
 import { frAdminMessages } from "./sections/adminMessages";
 import { frAdvisorInterventions } from "./sections/advisorInterventions";
+import { frAdminRefunds } from "./sections/adminRefunds";
 import { frAdminReports } from "./sections/adminReports";
 import { frEmails } from "./sections/emails";
 import { frBilling } from "./sections/billing";
@@ -93,6 +94,7 @@ export const fr = {
   adminMessages: frAdminMessages,
   advisorInterventions: frAdvisorInterventions,
   adminReports: frAdminReports,
+  adminRefunds: frAdminRefunds,
   emails: frEmails,
   billing: frBilling,
   financingStatus: frFinancingStatus,

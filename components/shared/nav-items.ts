@@ -17,6 +17,7 @@ export const NAV_ICONS = [
   "layout-grid",
   "flag",
   "square-plus",
+  "refund",
 ] as const;
 
 export type NavIconName = (typeof NAV_ICONS)[number];

@@ -10,6 +10,7 @@ import {
   Search,
   Sparkles,
   SquarePlus,
+  Undo2,
   User,
   Users,
   type LucideIcon,
@@ -34,6 +35,8 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   "layout-grid": LayoutGrid,
   flag: Flag,
   "square-plus": SquarePlus,
+  // The refunds of the back office (DECISIONS.md 2026-11-25).
+  refund: Undo2,
 };
 
 /** Icon of a navigation item, decorative: the label names the link. */

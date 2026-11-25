@@ -14,9 +14,21 @@ const mocks = vi.hoisted(() => ({
   },
   emails: [] as string[],
   orders: [] as Record<string, unknown>[],
+  creditNotes: [] as { paymentIntent: string; mockRefundedCents?: number }[],
+  creditNoteStatus: "recorded" as "recorded" | "failed",
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/leenkey/billing/credit-notes", () => ({
+  recordCreditNotes: async (
+    _supabase: unknown,
+    paymentIntent: string,
+    options: { mockRefundedCents?: number },
+  ) => {
+    mocks.creditNotes.push({ paymentIntent, mockRefundedCents: options.mockRefundedCents });
+    return { status: mocks.creditNoteStatus };
+  },
+}));
 vi.mock("@/leenkey/billing/emails", () => ({
   emailPlanActivated: async () => {
     mocks.emails.push("seller");
@@ -86,6 +98,8 @@ beforeEach(() => {
   mocks.rpc = [];
   mocks.emails = [];
   mocks.orders = [];
+  mocks.creditNotes = [];
+  mocks.creditNoteStatus = "recorded";
   mocks.rpcResult = {
     data: { status: "processed", plan_name: "Accompagné", reference: "LK-0009" },
     error: null,
@@ -229,6 +243,38 @@ describe("handleStripeEvent", () => {
     });
     mocks.rpcResult = { data: { status: "unknown" }, error: null };
     expect((await handle(refund(false, 100))).outcome).toBe("unknown");
+  });
+
+  it("asks the credit note of a refund, on a second delivery too, never failing the refund", async () => {
+    const refund = {
+      id: "evt_cn",
+      object: "event",
+      type: "charge.refunded",
+      livemode: false,
+      data: {
+        object: {
+          id: "ch_1",
+          object: "charge",
+          payment_intent: "pi_1",
+          refunded: true,
+          amount_refunded: 99000,
+        },
+      },
+    } as unknown as Stripe.Event;
+    mocks.rpcResult = { data: { status: "processed" }, error: null };
+    expect(await handle(refund)).toEqual({ status: 200, outcome: "processed" });
+    expect(mocks.creditNotes).toEqual([{ paymentIntent: "pi_1", mockRefundedCents: 99000 }]);
+    // Sent again: only the refunds without a credit note get one (core/billing/stripe.ts).
+    mocks.rpcResult = { data: { status: "duplicate" }, error: null };
+    expect(await handle(refund)).toEqual({ status: 200, outcome: "duplicate" });
+    expect(mocks.creditNotes).toHaveLength(2);
+    // Stripe failed: the refund stays recorded, 200, « Avoir à créer » in the back office.
+    mocks.creditNoteStatus = "failed";
+    expect(await handle(refund)).toEqual({ status: 200, outcome: "duplicate" });
+    // Not a plan: no credit note asked.
+    mocks.rpcResult = { data: { status: "unknown" }, error: null };
+    expect(await handle(refund)).toEqual({ status: 200, outcome: "unknown" });
+    expect(mocks.creditNotes).toHaveLength(3);
   });
 
   it("ignores the other events", async () => {

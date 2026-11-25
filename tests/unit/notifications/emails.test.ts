@@ -434,7 +434,7 @@ describe("« Rétractation à rembourser » and « Votre formule se termine » (
     );
     expect(email?.text).toMatch(/1\s500\s€ payés · demande du 5 novembre 2026 à 14:05/);
     expect(email?.text).toContain("démarrage immédiat demandé");
-    expect(email?.html).toContain("https://leenkey-v2.vercel.app/admin/dossiers");
+    expect(email?.html).toContain("https://leenkey-v2.vercel.app/admin/remboursements");
   });
 
   it("the owner: the date of the end, back to Autonomie, an answer goes to Leenkey", async () => {

@@ -366,3 +366,83 @@ test("renoncer au contrat pendant les 14 jours : accusé, puis plus de commande 
   await expect(page.getByRole("button", { name: /^(Choisir|Passer à) / })).toHaveCount(0);
   await expectNoSeriousViolation(page);
 });
+
+// DECISIONS.md 2026-11-25 (« Avoirs et remboursements »): the withdrawal
+// above is listed for the team with its deadline, then Cédric refunds it in
+// Stripe; the webhook marks it refunded and creates the credit note (the
+// mock's MOCK-0001), which the team and the seller see.
+test("rétractation à rembourser, remboursement dans Stripe, puis avoir pour l'équipe et le vendeur", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  const day = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  await signIn(page, "admin", "/admin");
+  // « À traiter » says it, and leads to the page.
+  const todo = page.getByRole("region", { name: "À traiter" });
+  const line = todo.getByRole("link", { name: /rétractations? à rembourser/ });
+  await expect(line).toBeVisible();
+  await line.click();
+  await expect(page).toHaveURL(/\/admin\/remboursements$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Remboursements" })).toBeVisible();
+
+  // The passage to Sérénité (510 €) of LK-0009: to refund, 14 days after the request.
+  const table = page.getByRole("table", { name: "Remboursements" });
+  const row = table
+    .getByRole("row")
+    .filter({ hasText: "LK-0009" })
+    .filter({ hasText: "510" })
+    .filter({ hasText: "À rembourser" });
+  await expect(row).toHaveCount(1);
+  await expect(row).toContainText(day.format(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)));
+  await expect(row.getByText(/^Avoir /)).toHaveCount(0);
+  const stripe = row.getByRole("link", { name: /^Rembourser dans Stripe/ });
+  const href = (await stripe.getAttribute("href")) ?? "";
+  expect(href).toMatch(/^https:\/\/dashboard\.stripe\.com\/test\/payments\/pi_/);
+  const paymentIntent = decodeURIComponent(href.split("/").pop() ?? "");
+  await expectNoSeriousViolation(page);
+
+  // Cédric refunds it in Stripe: the webhook records it and creates the credit note.
+  const refund = {
+    id: `evt_e2e_withdrawal_refund_${paymentIntent}`,
+    object: "event",
+    type: "charge.refunded",
+    livemode: false,
+    created: Math.floor(Date.now() / 1000),
+    data: {
+      object: {
+        id: `ch_${paymentIntent}`,
+        object: "charge",
+        amount: 51000,
+        amount_refunded: 51000,
+        refunded: true,
+        payment_intent: paymentIntent,
+      },
+    },
+  };
+  expect(await (await postEvent(page, refund)).json()).toMatchObject({ outcome: "processed" });
+  // Sent again: one credit note all the same.
+  expect(await (await postEvent(page, refund)).json()).toMatchObject({ outcome: "duplicate" });
+
+  await page.reload();
+  // The same payment (the passage refunded in the second test is another row).
+  const done = table.getByRole("row").filter({ has: page.locator(`a[href="${href}"]`) });
+  await expect(done).toHaveCount(1);
+  await expect(done).toContainText(`Remboursé le ${day.format(new Date())}`);
+  await expect(done).toContainText("Avoir MOCK-0001");
+  await expect(done.getByText("Avoir à créer")).toHaveCount(0);
+
+  // The seller sees the credit note on the page of the plans.
+  const context = await browser.newContext({ baseURL });
+  const seller = await context.newPage();
+  await signIn(seller, "seller_b", planPage(LK0009));
+  const notes = seller.getByRole("region", { name: "Vos avoirs" });
+  await expect(notes).toContainText(/Avoir MOCK-0001 · 510\s€ · /);
+  await expectNoSeriousViolation(seller);
+  await context.close();
+});

@@ -12,6 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-25 · Avoirs et remboursements · PR #143
+- Ajouté : avoir Stripe créé automatiquement après chaque remboursement, lié au remboursement existant (jamais un second remboursement), idempotent (avoirs existants de la facture, clé par remboursement), envoyé par Stripe au vendeur et affiché dans « Vos avoirs » sur `/vendeur/formule`.
+- Ajouté : `/admin/remboursements` (menu du back office) : rétractations à rembourser avec la date limite de 14 jours, statut mis à jour par le webhook (« À rembourser », « En retard », « Remboursé partiellement », « Remboursé le … »), avoir ou « Avoir à créer » avec « Créer l'avoir », lien « Rembourser dans Stripe » ; ligne dans « À traiter ».
+- Modifié : la notification et l'email « Rétractation à rembourser » mènent à `/admin/remboursements`.
+- Migration : `20261125150000_credit_notes_refunds.sql` (table `credit_notes` et sa RLS, `credit_notes_record`, `admin_refunds()`) ; test `supabase/tests/rls_credit_notes_refunds.sql`.
+
 ### 2026-11-25 · Prix des formules sans « TTC » · PR #142
 - Modifié : « TTC » retiré des prix des formules (accueil, `/tarifs`, `/vendeur/formule`, FAQ, CGU, CGV, emails, assistant du site, back office), Leenkey étant en franchise de TVA (`DECISIONS.md` 2026-11-25).
 

@@ -41,6 +41,7 @@ export const frNav = {
     cases: "Dossiers",
     offers: "Offres",
     reports: "Signalements",
+    refunds: "Remboursements",
     messages: "Messages",
     assistant: "Assistant",
     role: "Administrateur",
