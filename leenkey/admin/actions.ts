@@ -3,11 +3,14 @@
 import { revalidatePath } from "next/cache";
 import type { EmailDelivery } from "@/core/notifications/email";
 import { getProfile } from "@/core/auth/session";
+import { recordCreditNotes } from "@/leenkey/billing/credit-notes";
 import { openWithdrawal } from "@/leenkey/billing/withdrawal-open";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { SuggestionResult } from "@/leenkey/ai/types";
 import {
   complianceSchema,
+  creditNoteRetrySchema,
   listingEditInvalidFields,
   listingEditSchema,
   moderationSchema,
@@ -24,7 +27,8 @@ import { draftRejectionReason } from "./rejection-draft";
 // Server actions of the back office (L1-19). The status changes go through
 // the SQL functions of L1-04 (listing_publish, listing_reject,
 // listing_suspend, listing_unsuspend), which check is_admin(), validate the
-// transition and write audit_log. No service role.
+// transition and write audit_log. No service role, except for the credit
+// note asked again (retryCreditNote below, CLAUDE.md section 14).
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
 
@@ -244,4 +248,48 @@ export async function editListingAction(input: unknown): Promise<ListingEditResu
   // The seller's sheet of the property shows the new values and the reason.
   revalidatePath("/vendeur", "layout");
   return { ok: true, data: { fields } };
+}
+
+export type CreditNoteRetryResult =
+  | { ok: true; data: { created: number } }
+  | { ok: false; error: "forbidden" | "invalid" | "not_found" | "no_invoice" | "unavailable" };
+
+/**
+ * « Créer l'avoir » on /admin/remboursements (DECISIONS.md 2026-11-25): the
+ * credit note of a refund whose creation failed in the webhook, asked again.
+ * Stripe is asked for the refunds without one only (never a second refund
+ * nor a second credit note). The subscription is read with the admin's
+ * session; credit_notes_record is open to the service role alone (nobody
+ * writes credit notes from a client), and writes who asked in audit_log.
+ */
+export async function retryCreditNote(input: unknown): Promise<CreditNoteRetryResult> {
+  const profile = await getProfile();
+  if (!profile?.roles.includes("admin")) return { ok: false, error: "forbidden" };
+  const parsed = creditNoteRetrySchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const supabase = await createClient();
+  const { data: subscription, error } = await supabase
+    .from("subscriptions")
+    .select("id, stripe_payment_intent_id")
+    .eq("id", parsed.data.subscriptionId)
+    .maybeSingle();
+  if (error) {
+    console.error("[admin] credit note retry read failed", {
+      user_id: profile.id,
+      entity_id: parsed.data.subscriptionId,
+      code: error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  if (!subscription?.stripe_payment_intent_id) return { ok: false, error: "not_found" };
+  const outcome = await recordCreditNotes(
+    createAdminClient(),
+    subscription.stripe_payment_intent_id,
+    { actorId: profile.id },
+  );
+  revalidatePath("/admin/remboursements");
+  if (outcome.status === "recorded") return { ok: true, data: { created: outcome.created } };
+  if (outcome.status === "no_invoice") return { ok: false, error: "no_invoice" };
+  if (outcome.status === "unknown") return { ok: false, error: "not_found" };
+  return { ok: false, error: "unavailable" };
 }

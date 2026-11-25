@@ -7,6 +7,8 @@ import {
   Folder,
   IdCard,
   type LucideIcon,
+  ReceiptText,
+  Undo2,
 } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InlineAlert } from "@/components/shared/inline-alert";
@@ -54,10 +56,13 @@ const KIND: Record<AdminTodoItem["kind"], { icon: LucideIcon; label: string }> =
   financing: { icon: FileCheck, label: t.todo.kinds.financing },
   identity: { icon: IdCard, label: t.todo.kinds.identity },
   identityFile: { icon: FileX, label: t.todo.kinds.identityFile },
+  refund: { icon: Undo2, label: t.todo.kinds.refund },
+  creditNote: { icon: ReceiptText, label: t.todo.kinds.creditNote },
 };
 
 /** Where an item is dealt with: its own page (cases and reports since L1-30c). */
 function todoHref(item: AdminTodoItem): string {
+  if (item.kind === "refund" || item.kind === "creditNote") return ROUTES.adminRefunds;
   if (item.kind === "listing") return `/admin/annonces/${item.id}`;
   if (item.kind === "financing") return `/admin/utilisateurs/${item.id}#justificatif`;
   // The sheet of the account: « Marquer comme vérifiée », « Supprimer le fichier ».

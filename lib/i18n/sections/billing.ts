@@ -140,6 +140,17 @@ export const frBilling = {
   },
   cancelled: "Le paiement a été annulé : rien n'a été débité.",
   // L1-40: « Renoncer au contrat » during the 14 days (SPEC 11).
+  // The credit notes of the refunds of a plan (DECISIONS.md 2026-11-25).
+  creditNotes: {
+    /** Printed on the credit note by Stripe. */
+    memo: "Avoir émis à la suite du remboursement de votre formule Leenkey.",
+    title: "Vos avoirs",
+    text: "Votre remboursement a donné lieu à un avoir sur votre facture. Stripe vous l'a aussi envoyé par email.",
+    item: (number: string, amount: string, date: string) => `Avoir ${number} · ${amount} · ${date}`,
+    pdf: "Télécharger le PDF",
+    pdfLabel: (number: string) => `Télécharger l'avoir ${number} (PDF, nouvel onglet)`,
+    noPdf: "PDF disponible dans l'email de Stripe",
+  },
   withdrawal: {
     title: "Droit de rétractation",
     text: (date: string) =>

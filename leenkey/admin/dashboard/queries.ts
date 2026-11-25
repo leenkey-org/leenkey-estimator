@@ -1,11 +1,13 @@
 import "server-only";
 import { cache } from "react";
 import { requireAdmin } from "@/core/auth/session";
+import { adminRefunds, refundCounts } from "@/leenkey/admin/refunds/queries";
+import { frAdminDashboard } from "@/lib/i18n/sections/adminDashboard";
 import { frAdminUsers } from "@/lib/i18n/sections/adminUsers";
 import { createClient } from "@/lib/supabase/server";
 
 // The texts this module shows (lib/i18n/sections, P-06).
-const fr = { adminUsers: frAdminUsers } as const;
+const fr = { adminDashboard: frAdminDashboard, adminUsers: frAdminUsers } as const;
 
 // Reads of the dashboard of the back office (L1-30a, SPEC-V2 section 17),
 // with the admin's session: the SQL functions check is_admin() themselves
@@ -37,7 +39,16 @@ export type AdminActivity = {
 
 /** Something that waits for the admin, the oldest first. */
 export type AdminTodoItem = {
-  kind: "listing" | "case" | "report" | "financing" | "identity" | "identityFile";
+  kind:
+    | "listing"
+    | "case"
+    | "report"
+    | "financing"
+    | "identity"
+    | "identityFile"
+    /** One line for all the withdrawals to refund, one for the credit notes (DECISIONS.md 2026-11-25). */
+    | "refund"
+    | "creditNote";
   id: string;
   /** The listing (« Maison 5 pièces · LK-0006 »), the subject of a case, the motive of a report. */
   label: string;
@@ -148,137 +159,167 @@ export function mergeTodo(groups: readonly AdminTodoItem[][], limit: number = TO
  * « À traiter » (SPEC 17): the listings to review, the open cases, the open
  * reports, the proofs of financing to check (L2-02), the identity
  * documents to check and the identity files still stored after their
- * document reached its end (DECISIONS.md 2026-11-23), the oldest first.
+ * document reached its end (DECISIONS.md 2026-11-23), the withdrawals to
+ * refund and the credit notes to create, one line each (DECISIONS.md
+ * 2026-11-25), the oldest first.
  */
 export async function adminTodo(limit: number = TODO_LIMIT): Promise<QueryResult<AdminTodoItem[]>> {
   await requireAdmin();
   try {
     const supabase = await createClient();
-    const [listings, cases, reports, proofs, identities, identityFiles] = await Promise.all([
-      supabase
-        .from("listings")
-        .select(
-          "id, title, reference, submitted_at, created_at, property:properties(photos(storage_path, is_cover))",
-        )
-        .eq("status", "pending")
-        .is("deleted_at", null)
-        .order("submitted_at", { ascending: true, nullsFirst: true })
-        .limit(limit),
-      supabase
-        .from("cases")
-        .select("id, subject, created_at")
-        .neq("status", "closed")
-        .order("created_at", { ascending: true })
-        .limit(limit),
-      supabase
-        .from("reports")
-        .select("id, reason, created_at")
-        .is("resolved_at", null)
-        .order("created_at", { ascending: true })
-        .limit(limit),
-      // L2-02: the proofs of financing that wait for their check (one in
-      // force per buyer: a replaced or removed one is marked removed).
-      supabase
-        .from("financing_documents")
-        .select(
-          "id, buyer_id, created_at, buyer:profiles!financing_documents_buyer_id_fkey(first_name, last_name)",
-        )
-        .is("checked_at", null)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: true })
-        .limit(limit),
-      // The identity documents that wait for their check (one per buyer).
-      supabase
-        .from("identity_documents")
-        .select(
-          "id, buyer_id, created_at, buyer:profiles!identity_documents_buyer_id_fkey(first_name, last_name)",
-        )
-        .is("checked_at", null)
-        .is("refused_at", null)
-        .is("withdrawn_at", null)
-        .order("created_at", { ascending: true })
-        .limit(limit),
-      // The identity documents checked, refused or withdrawn whose file is
-      // still stored (its deletion failed): « Supprimer le fichier » on the
-      // sheet of the account. The scheduled task removes them too.
-      supabase
-        .from("identity_documents")
-        .select(
-          "id, buyer_id, updated_at, created_at, buyer:profiles!identity_documents_buyer_id_fkey(first_name, last_name)",
-        )
-        .is("file_deleted_at", null)
-        .or("checked_at.not.is.null,refused_at.not.is.null,withdrawn_at.not.is.null")
-        .order("created_at", { ascending: true })
-        .limit(limit),
-    ]);
+    const [listings, cases, reports, proofs, identities, identityFiles, refunds] =
+      await Promise.all([
+        supabase
+          .from("listings")
+          .select(
+            "id, title, reference, submitted_at, created_at, property:properties(photos(storage_path, is_cover))",
+          )
+          .eq("status", "pending")
+          .is("deleted_at", null)
+          .order("submitted_at", { ascending: true, nullsFirst: true })
+          .limit(limit),
+        supabase
+          .from("cases")
+          .select("id, subject, created_at")
+          .neq("status", "closed")
+          .order("created_at", { ascending: true })
+          .limit(limit),
+        supabase
+          .from("reports")
+          .select("id, reason, created_at")
+          .is("resolved_at", null)
+          .order("created_at", { ascending: true })
+          .limit(limit),
+        // L2-02: the proofs of financing that wait for their check (one in
+        // force per buyer: a replaced or removed one is marked removed).
+        supabase
+          .from("financing_documents")
+          .select(
+            "id, buyer_id, created_at, buyer:profiles!financing_documents_buyer_id_fkey(first_name, last_name)",
+          )
+          .is("checked_at", null)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: true })
+          .limit(limit),
+        // The identity documents that wait for their check (one per buyer).
+        supabase
+          .from("identity_documents")
+          .select(
+            "id, buyer_id, created_at, buyer:profiles!identity_documents_buyer_id_fkey(first_name, last_name)",
+          )
+          .is("checked_at", null)
+          .is("refused_at", null)
+          .is("withdrawn_at", null)
+          .order("created_at", { ascending: true })
+          .limit(limit),
+        // The identity documents checked, refused or withdrawn whose file is
+        // still stored (its deletion failed): « Supprimer le fichier » on the
+        // sheet of the account. The scheduled task removes them too.
+        supabase
+          .from("identity_documents")
+          .select(
+            "id, buyer_id, updated_at, created_at, buyer:profiles!identity_documents_buyer_id_fkey(first_name, last_name)",
+          )
+          .is("file_deleted_at", null)
+          .or("checked_at.not.is.null,refused_at.not.is.null,withdrawn_at.not.is.null")
+          .order("created_at", { ascending: true })
+          .limit(limit),
+        adminRefunds(),
+      ]);
+    // The refunds unread: the rest of « À traiter » shows all the same (their page says it).
+    const owed = refundCounts(refunds.ok ? refunds.data : []);
     if (listings.error) throw new Error(`listings: ${listings.error.code}`);
     if (cases.error) throw new Error(`cases: ${cases.error.code}`);
     if (reports.error) throw new Error(`reports: ${reports.error.code}`);
     if (proofs.error) throw new Error(`financing: ${proofs.error.code}`);
     if (identities.error) throw new Error(`identity: ${identities.error.code}`);
     if (identityFiles.error) throw new Error(`identity files: ${identityFiles.error.code}`);
-    return {
-      ok: true,
-      data: mergeTodo(
-        [
-          listings.data.map((row) => ({
-            kind: "listing" as const,
-            id: row.id,
-            label: `${shortLabel(row.title)} · ${row.reference}`,
-            since: row.submitted_at ?? row.created_at,
-            coverPath: coverOf(row.property),
-          })),
-          cases.data.map((row) => ({
-            kind: "case" as const,
-            id: row.id,
-            label: shortLabel(row.subject),
-            since: row.created_at,
-            coverPath: null,
-          })),
-          reports.data.map((row) => ({
-            kind: "report" as const,
-            id: row.id,
-            label: shortLabel(row.reason),
-            since: row.created_at,
-            coverPath: null,
-          })),
-          proofs.data.map((row) => ({
-            kind: "financing" as const,
-            // The sheet of the buyer: where the document is checked.
-            id: row.buyer_id,
-            label: shortLabel(
-              [row.buyer?.first_name, row.buyer?.last_name].filter(Boolean).join(" ") ||
-                fr.adminUsers.noName,
-            ),
-            since: row.created_at,
-            coverPath: null,
-          })),
-          identities.data.map((row) => ({
-            kind: "identity" as const,
-            // The sheet of the buyer too.
-            id: row.buyer_id,
-            label: shortLabel(
-              [row.buyer?.first_name, row.buyer?.last_name].filter(Boolean).join(" ") ||
-                fr.adminUsers.noName,
-            ),
-            since: row.created_at,
-            coverPath: null,
-          })),
-          identityFiles.data.map((row) => ({
-            kind: "identityFile" as const,
-            id: row.buyer_id,
-            label: shortLabel(
-              [row.buyer?.first_name, row.buyer?.last_name].filter(Boolean).join(" ") ||
-                fr.adminUsers.noName,
-            ),
-            // Since its document reached its end.
-            since: row.updated_at ?? row.created_at,
-            coverPath: null,
-          })),
-        ],
-        limit,
-      ),
-    };
+    // The refunds have a legal deadline: their lines are always shown, the
+    // other items fill the rest, the oldest first.
+    const pinned: AdminTodoItem[] = [
+      ...(owed.toRefund > 0 && owed.oldestRequestedAt
+        ? [
+            {
+              kind: "refund" as const,
+              id: "refunds",
+              label: fr.adminDashboard.todo.refunds(owed.toRefund),
+              since: owed.oldestRequestedAt,
+              coverPath: null,
+            },
+          ]
+        : []),
+      ...(owed.creditNotesMissing > 0 && owed.oldestMissingAt
+        ? [
+            {
+              kind: "creditNote" as const,
+              id: "credit-notes",
+              label: fr.adminDashboard.todo.creditNotes(owed.creditNotesMissing),
+              since: owed.oldestMissingAt,
+              coverPath: null,
+            },
+          ]
+        : []),
+    ];
+    const others = mergeTodo(
+      [
+        listings.data.map((row) => ({
+          kind: "listing" as const,
+          id: row.id,
+          label: `${shortLabel(row.title)} · ${row.reference}`,
+          since: row.submitted_at ?? row.created_at,
+          coverPath: coverOf(row.property),
+        })),
+        cases.data.map((row) => ({
+          kind: "case" as const,
+          id: row.id,
+          label: shortLabel(row.subject),
+          since: row.created_at,
+          coverPath: null,
+        })),
+        reports.data.map((row) => ({
+          kind: "report" as const,
+          id: row.id,
+          label: shortLabel(row.reason),
+          since: row.created_at,
+          coverPath: null,
+        })),
+        proofs.data.map((row) => ({
+          kind: "financing" as const,
+          // The sheet of the buyer: where the document is checked.
+          id: row.buyer_id,
+          label: shortLabel(
+            [row.buyer?.first_name, row.buyer?.last_name].filter(Boolean).join(" ") ||
+              fr.adminUsers.noName,
+          ),
+          since: row.created_at,
+          coverPath: null,
+        })),
+        identities.data.map((row) => ({
+          kind: "identity" as const,
+          // The sheet of the buyer too.
+          id: row.buyer_id,
+          label: shortLabel(
+            [row.buyer?.first_name, row.buyer?.last_name].filter(Boolean).join(" ") ||
+              fr.adminUsers.noName,
+          ),
+          since: row.created_at,
+          coverPath: null,
+        })),
+        identityFiles.data.map((row) => ({
+          kind: "identityFile" as const,
+          id: row.buyer_id,
+          label: shortLabel(
+            [row.buyer?.first_name, row.buyer?.last_name].filter(Boolean).join(" ") ||
+              fr.adminUsers.noName,
+          ),
+          // Since its document reached its end.
+          since: row.updated_at ?? row.created_at,
+          coverPath: null,
+        })),
+      ],
+      Math.max(limit - pinned.length, 0),
+    );
+    return { ok: true, data: mergeTodo([others, pinned], limit) };
   } catch (error) {
     logFailure("to do", error);
     return { ok: false, error: "unavailable" };

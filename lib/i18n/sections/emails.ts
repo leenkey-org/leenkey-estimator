@@ -174,7 +174,7 @@ export const frEmails = {
     item: (plan: string, property: string, amount: string, at: string) =>
       `Formule ${plan} · ${property} · ${amount} payés · demande du ${at}`,
     early: "démarrage immédiat demandé : remboursement intégral tout de même",
-    action: "Voir les dossiers",
+    action: "Voir les remboursements",
   },
   // L2-04a: an offer received, to its seller (SPEC-V2 18: amount, gap,
   // financing status, a link; never the PDF).

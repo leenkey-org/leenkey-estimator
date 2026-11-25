@@ -88,6 +88,9 @@ const reason = z
   .max(1000)
   .refine((value) => reasonLength(value) >= REASON_MIN);
 
+/** « Créer l'avoir » on /admin/remboursements (DECISIONS.md 2026-11-25). */
+export const creditNoteRetrySchema = z.object({ subscriptionId: z.string().uuid() });
+
 export const moderationSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("publish"), listingId }),
   z.object({ action: z.literal("reject"), listingId, reason }),

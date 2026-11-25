@@ -38,7 +38,14 @@ export const frAdminDashboard = {
       financing: "Justificatif de financement à contrôler",
       identity: "Pièce d'identité à vérifier",
       identityFile: "Fichier d'une pièce d'identité à supprimer",
+      refund: "Remboursements",
+      creditNote: "Avoirs",
     },
+    // DECISIONS.md 2026-11-25: one line for the refunds, one for the credit notes.
+    refunds: (count: number) =>
+      count > 1 ? `${count}\u00A0rétractations à rembourser` : "Une rétractation à rembourser",
+    creditNotes: (count: number) =>
+      count > 1 ? `${count}\u00A0avoirs à créer` : "Un avoir à créer",
     since: (wait: string) => `En attente depuis ${wait}`,
     emptyTitle: "Rien à traiter",
     emptyText: "Aucune annonce, aucun dossier ni aucun signalement n'attend l'équipe.",

@@ -39,6 +39,14 @@ export type PlanPage = {
     /** The plan this one replaced (a passage), still renounceable with it. */
     replaced: { plan: PlanCode; activatedAt: string; amountPaidCents: number } | null;
   } | null;
+  /** The credit notes of the refunds of the plans of this property (DECISIONS.md 2026-11-25). */
+  creditNotes: {
+    id: string;
+    number: string;
+    amountCents: number;
+    pdfUrl: string | null;
+    issuedAt: string;
+  }[];
 };
 
 /** The plans of a property of the seller: the one asked (?bien=), else the one of « Ma vente ». */
@@ -52,7 +60,7 @@ export async function planPage(
   if (!property) return { ok: true, data: null };
   try {
     const supabase = await createClient();
-    const [progress, subscription, seller] = await Promise.all([
+    const [progress, subscription, seller, creditNotes] = await Promise.all([
       supabase.rpc("property_current_plan", { p: property.id }),
       supabase
         .from("subscriptions")
@@ -67,9 +75,18 @@ export async function planPage(
         .limit(1)
         .maybeSingle(),
       supabase.from("profiles").select("first_name, last_name").eq("id", profileId).maybeSingle(),
+      // The RLS gives the owner the credit notes of their plans only.
+      supabase
+        .from("credit_notes")
+        .select(
+          "id, number, amount_cents, pdf_url, issued_at, subscription:subscriptions!inner(property_id)",
+        )
+        .eq("subscription.property_id", property.id)
+        .order("issued_at", { ascending: true }),
     ]);
     if (progress.error) throw new Error(`property_current_plan: ${progress.error.code}`);
     if (subscription.error) throw new Error(`subscriptions: ${subscription.error.code}`);
+    if (creditNotes.error) throw new Error(`credit_notes: ${creditNotes.error.code}`);
     const current = progress.data ?? "autonomie";
     const active = subscription.data;
     // A passage: the plan replaced, not renounced nor refunded, paid.
@@ -126,6 +143,13 @@ export async function planPage(
                   : null,
               }
             : null,
+        creditNotes: creditNotes.data.map((note) => ({
+          id: note.id,
+          number: note.number,
+          amountCents: note.amount_cents,
+          pdfUrl: note.pdf_url,
+          issuedAt: note.issued_at,
+        })),
       },
     };
   } catch (error) {

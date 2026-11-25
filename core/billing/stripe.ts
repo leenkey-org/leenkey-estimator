@@ -189,3 +189,139 @@ export function verifyWebhook(payload: string, signature: string | null): Stripe
   verifier ??= process.env.STRIPE_SECRET_KEY ? stripe() : new Stripe("sk_test_signature_only");
   return verifier.webhooks.constructEvent(payload, signature, secret);
 }
+
+/** A refund of a payment, as Stripe lists it. */
+export type RefundInfo = { id: string; amountCents: number };
+
+/** A credit note of an invoice. */
+export type CreditNoteInfo = {
+  id: string;
+  number: string;
+  amountCents: number;
+  /** The PDF Stripe draws, null in the mock. */
+  pdfUrl: string | null;
+  /** ISO date of its issue. */
+  issuedAt: string;
+  /** The refunds it is linked to. */
+  refundIds: string[];
+};
+
+export type CreditNotesResult =
+  /** The issued credit notes of the invoice of the payment, those created now included. */
+  | { status: "ok"; creditNotes: CreditNoteInfo[]; created: number; pending: number }
+  /** The session has no invoice (ordered without invoice_creation, or nothing paid). */
+  | { status: "no_invoice" };
+
+/**
+ * The refunds that have no credit note yet: those no issued credit note of
+ * the invoice links (one made by hand on the invoice counts too).
+ */
+export function refundsWithoutCreditNote(
+  refunds: readonly RefundInfo[],
+  creditNotes: readonly Pick<CreditNoteInfo, "refundIds">[],
+): RefundInfo[] {
+  const linked = new Set(creditNotes.flatMap((note) => note.refundIds));
+  return refunds.filter((refund) => refund.amountCents > 0 && !linked.has(refund.id));
+}
+
+/** The idempotency key of the credit note of a refund: one per refund, whoever asks. */
+export function creditNoteKey(refundId: string): string {
+  return `credit-note-${refundId}`;
+}
+
+function creditNoteInfo(note: Stripe.CreditNote): CreditNoteInfo {
+  return {
+    id: note.id,
+    number: note.number,
+    amountCents: note.total,
+    pdfUrl: note.pdf || null,
+    issuedAt: new Date(note.created * 1000).toISOString(),
+    refundIds: note.refunds.map((item) =>
+      typeof item.refund === "string" ? item.refund : item.refund.id,
+    ),
+  };
+}
+
+/** The mocked credit note of a payment (STRIPE_MOCK=1): one, of the amount refunded. */
+function mockCreditNote(paymentIntentId: string, amountCents: number): CreditNoteInfo {
+  const ref = paymentIntentId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 60);
+  return {
+    id: `cn_mock_${ref}`,
+    number: "MOCK-0001",
+    amountCents,
+    pdfUrl: null,
+    issuedAt: new Date().toISOString(),
+    refundIds: [`re_mock_${ref}`],
+  };
+}
+
+/**
+ * The credit notes of the refunds of a payment made by Checkout: those
+ * missing are created on the invoice of the session, each linked to its
+ * refund already made (`refunds`), so that Stripe never refunds a second
+ * time (never `refund_amount` nor `out_of_band_amount`). Idempotent: the
+ * refunds an issued credit note of the invoice links are skipped, and each
+ * creation carries the key of its refund. Stripe emails the credit note to
+ * the customer. Only the refunds that succeeded: a pending one waits
+ * (`pending`), to ask again later. `mockRefundedCents`: what the mock
+ * credits (STRIPE_MOCK=1), the amount refunded the caller was told.
+ */
+export async function ensureCreditNotes(input: {
+  checkoutSessionId: string;
+  paymentIntentId: string;
+  memo?: string;
+  mockRefundedCents?: number;
+}): Promise<CreditNotesResult> {
+  if (stripeMocked()) {
+    const amount = input.mockRefundedCents ?? 0;
+    return {
+      status: "ok",
+      creditNotes: amount > 0 ? [mockCreditNote(input.paymentIntentId, amount)] : [],
+      created: amount > 0 ? 1 : 0,
+      pending: 0,
+    };
+  }
+  const api = stripe();
+  const session = await api.checkout.sessions.retrieve(input.checkoutSessionId);
+  const invoice = typeof session.invoice === "string" ? session.invoice : session.invoice?.id;
+  if (!invoice) return { status: "no_invoice" };
+
+  const existing: CreditNoteInfo[] = [];
+  for await (const note of api.creditNotes.list({ invoice, limit: 100 })) {
+    if (note.status === "issued") existing.push(creditNoteInfo(note));
+  }
+  const refunds: RefundInfo[] = [];
+  let pending = 0;
+  for await (const refund of api.refunds.list({
+    payment_intent: input.paymentIntentId,
+    limit: 100,
+  })) {
+    if (refund.status === "succeeded") refunds.push({ id: refund.id, amountCents: refund.amount });
+    else if (refund.status === "pending" || refund.status === "requires_action") pending += 1;
+  }
+  const created: CreditNoteInfo[] = [];
+  for (const refund of refundsWithoutCreditNote(refunds, existing)) {
+    const note = await api.creditNotes.create(
+      {
+        invoice,
+        amount: refund.amountCents,
+        refunds: [{ refund: refund.id, amount_refunded: refund.amountCents }],
+        reason: "order_change",
+        ...(input.memo ? { memo: input.memo } : {}),
+      },
+      { idempotencyKey: creditNoteKey(refund.id) },
+    );
+    created.push(creditNoteInfo(note));
+  }
+  return {
+    status: "ok",
+    creditNotes: [...existing, ...created],
+    created: created.length,
+    pending,
+  };
+}
+
+/** The page of a payment in the Stripe dashboard (`/test` outside production). */
+export function dashboardPaymentUrl(paymentIntentId: string, live: boolean): string {
+  return `https://dashboard.stripe.com${live ? "" : "/test"}/payments/${encodeURIComponent(paymentIntentId)}`;
+}
