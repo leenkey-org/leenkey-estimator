@@ -77,7 +77,7 @@ export function PlanActivatedEmail({
     >
       <Text style={emailText}>{fr.emails.greeting(firstName)}</Text>
       <Text style={emailText}>
-        {(upgrade ? t.orderedUpgrade : t.ordered)(planName, amount, property, orderedOn)}
+        {(upgrade ? t.orderedUpgrade : t.ordered)(planName, amount, property, orderedOn)} {t.vat}
       </Text>
       <Text style={emailText}>{t.duration(endsOn)}</Text>
       <Text style={emailText}>{contactFrom ? t.contactLater(contactFrom) : t.contactNow}</Text>

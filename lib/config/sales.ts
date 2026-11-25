@@ -21,7 +21,7 @@ export const MEDIATOR: Mediator = {
 
 export const SALES_TERMS = {
   /** Published version (date) of the CGV accepted at checkout (/cgv, lib/i18n/legal-policies.ts). */
-  cgvVersion: "2026-11-24",
+  cgvVersion: "2026-11-25",
   /** The CGV for the launch are published (DECISIONS.md 2026-11-09, Q34). */
   cgvFinal: true,
   /** The consumer mediator Leenkey joined (Q32). */
@@ -40,3 +40,11 @@ export function paidPlansOrderable(
   if (env !== "production") return true;
   return SALES_TERMS.cgvFinal && SALES_TERMS.mediator !== null && stripeKey;
 }
+
+/**
+ * Leenkey is under the VAT exemption of small businesses (franchise en base,
+ * article 293 B of the CGI; Younes, 2026-11-25): no VAT is charged, and the
+ * invoices and receipts say so (article 242 nonies A of annex II of the
+ * CGI). Any VAT written on an invoice would be due (article 283-3).
+ */
+export const VAT_EXEMPTION_NOTICE = "TVA non applicable, article 293 B du CGI.";

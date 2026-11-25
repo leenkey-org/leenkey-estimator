@@ -19,7 +19,7 @@ Sans les deux premiers, la bascule reste possible : le site ouvre avec la formul
 - [ ] **Supabase** (compte Nebula Creativ, Leenkey invité) : projet `leenkey-prod`, région `eu-west-3` (Paris), créé par CC le 2026-11-21 sur l'offre gratuite. **Passage à l'offre Pro (sauvegarde quotidienne) : Y**, avant les premières données réelles.
 - [ ] **Stripe** (compte Leenkey, Nebula invité), mode réel :
   - trois prix en paiement unique, en euros, TTC : Accompagné 990 €, Sérénité 1 500 €, passage d'Accompagné à Sérénité 510 € ;
-  - un taux de taxe « TVA 20 % », **inclus dans le prix** (inclusive) : son identifiant `txr_…` va dans `STRIPE_TAX_RATE` ;
+  - **pas de taux de taxe** : Leenkey est en franchise en base de TVA (`DECISIONS.md` 2026-11-25) ; `STRIPE_TAX_RATE` reste absente, et la facture Stripe porte « TVA non applicable, article 293 B du CGI. » (mis par le code) ;
   - le numéro de TVA de la société (FR53 107 616 211) et son adresse dans les réglages des factures ; reçus et factures envoyés par email activés ;
   - un point de terminaison de webhook `https://leenkey.fr/api/webhooks/stripe`, événements `checkout.session.completed` et `charge.refunded` ; son secret va dans `STRIPE_WEBHOOK_SECRET`.
 - [ ] **Anthropic** (compte Leenkey) : une clé de production, plafond de dépense mensuel.
@@ -57,7 +57,7 @@ Depuis le dépôt, avec un fichier `.env.prod.local` jamais commité (`PROD_DATA
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | clé restreinte à leenkey.fr |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | mode réel |
 | `STRIPE_PRICE_ACCOMPAGNE`, `STRIPE_PRICE_SERENITE`, `STRIPE_PRICE_UPGRADE` | identifiants des trois prix réels |
-| `STRIPE_TAX_RATE` | identifiant du taux « TVA 20 % » inclus |
+| `STRIPE_TAX_RATE` | **à ne pas créer** tant que Leenkey est en franchise de TVA (`DECISIONS.md` 2026-11-25) |
 | `ANTHROPIC_API_KEY` | clé de production |
 | `RESEND_API_KEY` | clé de production |
 | `CRON_SECRET` | la valeur du coffre `cron_secret` |

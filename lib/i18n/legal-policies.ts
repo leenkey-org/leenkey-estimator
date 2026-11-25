@@ -392,7 +392,7 @@ const salesSections: readonly LegalSection[] = [
     title: "4. Prix et absence de commission",
     blocks: [
       para(
-        "Les prix sont exprimés en euros toutes taxes comprises, TVA au taux de 20\u00A0% incluse. Les forfaits sont fixes, attachés au bien désigné lors de la commande, et indépendants du prix de vente comme de la réussite de la vente. Aucun frais caché n'est appliqué ; tout service payant supplémentaire ferait l'objet d'une information complète et d'une commande distincte.",
+        "Les prix sont exprimés en euros et sont les prix définitifs à payer : Leenkey bénéficie de la franchise en base de TVA, TVA non applicable, article 293 B du code général des impôts. Les forfaits sont fixes, attachés au bien désigné lors de la commande, et indépendants du prix de vente comme de la réussite de la vente. Aucun frais caché n'est appliqué ; tout service payant supplémentaire ferait l'objet d'une information complète et d'une commande distincte.",
       ),
       para(
         `Le passage de la formule Accompagné à la formule Sérénité coûte la différence entre les deux prix, soit 510${S}€ TTC ; il fait repartir la durée de 12 mois.`,
@@ -579,7 +579,7 @@ const salesSections: readonly LegalSection[] = [
 ];
 
 export const salesTermsText = {
-  updated: "En vigueur depuis le 24 novembre 2026",
+  updated: "En vigueur depuis le 25 novembre 2026",
   toc: "Sommaire",
   sections: salesSections,
 } as const;

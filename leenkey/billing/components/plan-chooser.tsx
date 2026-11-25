@@ -186,6 +186,7 @@ export function PlanChooser({
             ? r.upgradeValue(price, currentPlan.name)
             : r.priceValue(price),
       },
+      { label: r.vatLabel, value: r.vatValue },
       { label: r.duration, value: r.durationValue },
       { label: r.withdrawal, value: r.withdrawalValue },
       { label: r.mediator, value: mediator ?? r.mediatorPending },

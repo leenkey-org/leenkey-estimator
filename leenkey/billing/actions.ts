@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { allPlans } from "@/core/billing/plans";
 import { createCheckoutSession, retrievePrice, stripeConfigured } from "@/core/billing/stripe";
 import { getProfile, getUser } from "@/core/auth/session";
-import { paidPlansOrderable, SALES_TERMS } from "@/lib/config/sales";
+import { paidPlansOrderable, SALES_TERMS, VAT_EXEMPTION_NOTICE } from "@/lib/config/sales";
 import { appEnv } from "@/lib/env";
 import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 import { absoluteUrl } from "@/lib/site";
@@ -148,6 +148,7 @@ export async function startCheckout(input: unknown): Promise<StartCheckoutResult
       clientReferenceId: propertyId,
       successUrl: absoluteUrl(`${back}&paiement=ok&session_id={CHECKOUT_SESSION_ID}`),
       cancelUrl: absoluteUrl(`${back}&paiement=annule`),
+      invoiceFooter: VAT_EXEMPTION_NOTICE,
       // One key per order: Stripe sends back the same session if this very
       // request is retried, never for a second click (another acceptance time).
       idempotencyKey: randomUUID(),

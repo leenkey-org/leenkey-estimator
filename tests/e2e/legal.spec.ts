@@ -39,7 +39,7 @@ test("les textes légaux sont publiés, datés, avec l'adresse légale", async (
   // The page about artificial intelligence says what the assistant of the
   // buyer does since L2-06: dated of that day.
   for (const [path, date] of [
-    ["/cgv", "24 novembre 2026"],
+    ["/cgv", "25 novembre 2026"],
     ["/confidentialite", "20 novembre 2026"],
     ["/signalement", "9 novembre 2026"],
     ["/intelligence-artificielle", "20 novembre 2026"],

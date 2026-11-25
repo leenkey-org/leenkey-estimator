@@ -40,6 +40,8 @@ export type CheckoutInput = {
   cancelUrl: string;
   /** A retry of the same request with this key gets the same session back (Stripe). */
   idempotencyKey: string;
+  /** Printed at the bottom of the Stripe invoice (a legal notice), when no tax rate applies. */
+  invoiceFooter?: string;
 };
 
 export type CheckoutSession = { id: string; url: string };
@@ -106,10 +108,11 @@ export async function retrievePrice(priceId: string): Promise<PriceInfo> {
 
 /**
  * The line of an order. With STRIPE_TAX_RATE (the id of a Stripe tax rate,
- * « txr_… », created as inclusive: 20 % VAT in France), the price stays the
- * one displayed, all taxes included, and the receipt and the invoice of
- * Stripe show the VAT it holds (Cédric, 2026-11-19: Leenkey charges VAT).
- * Without it, as before: no tax line.
+ * « txr_… », created as inclusive), the price stays the one displayed and
+ * the receipt and the invoice of Stripe show the VAT it holds. Without it,
+ * no tax line: Leenkey is under the VAT exemption of small businesses
+ * (Younes, 2026-11-25, DECISIONS.md), so STRIPE_TAX_RATE stays unset until
+ * it is not.
  */
 export function checkoutLineItem(
   priceId: string,
@@ -119,6 +122,19 @@ export function checkoutLineItem(
   return rate
     ? { price: priceId, quantity: 1, tax_rates: [rate] }
     : { price: priceId, quantity: 1 };
+}
+
+/**
+ * The invoice of an order: its footer (a legal notice, e.g. a VAT
+ * exemption) only when no tax rate applies, never both on one invoice.
+ */
+export function invoiceCreation(
+  footer: string | undefined,
+  taxRateId: string | undefined,
+): { enabled: true; invoice_data?: { footer: string } } {
+  return footer && !taxRateId?.trim()
+    ? { enabled: true, invoice_data: { footer } }
+    : { enabled: true };
 }
 
 export async function createCheckoutSession(input: CheckoutInput): Promise<CheckoutSession> {
@@ -151,7 +167,7 @@ export async function createCheckoutSession(input: CheckoutInput): Promise<Check
       cancel_url: input.cancelUrl,
       locale: "fr",
       expires_at: Math.floor(Date.now() / 1000) + SESSION_LIFETIME_SECONDS,
-      invoice_creation: { enabled: true },
+      invoice_creation: invoiceCreation(input.invoiceFooter, process.env.STRIPE_TAX_RATE),
       allow_promotion_codes: true,
     },
     { idempotencyKey: input.idempotencyKey },
