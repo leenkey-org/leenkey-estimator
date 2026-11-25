@@ -37,6 +37,8 @@ export const SECURITY_HEADERS = [
 ] as const;
 
 const nextConfig: NextConfig = {
+  // No « X-Powered-By: Next.js » header (security audit of 2026-11-25).
+  poweredByHeader: false,
   // Photos of the properties (L1-12): already WebP in three widths, served by
   // the route /img; the loader picks the width, without the optimiser.
   images: {
