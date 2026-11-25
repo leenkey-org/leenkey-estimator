@@ -109,9 +109,9 @@ export const frEmails = {
     text: (plan: string, property: string) =>
       `Merci : votre formule ${plan} est active pour votre bien ${property}.`,
     ordered: (plan: string, amount: string, property: string, date: string) =>
-      `Votre formule ${plan}, au prix de ${amount} TTC pour le bien ${property}, a été souscrite le ${date}.`,
+      `Votre formule ${plan}, au prix de ${amount} pour le bien ${property}, a été souscrite le ${date}.`,
     orderedUpgrade: (plan: string, amount: string, property: string, date: string) =>
-      `Votre passage à la formule ${plan}, au prix de ${amount} TTC pour le bien ${property}, a été souscrit le ${date}.`,
+      `Votre passage à la formule ${plan}, au prix de ${amount} pour le bien ${property}, a été souscrit le ${date}.`,
     vat: "TVA non applicable, article 293 B du CGI.",
     duration: (until: string) =>
       `Durée du contrat : 12 mois, jusqu'au ${until}, sans renouvellement automatique. À l'échéance, votre bien repasse en Autonomie : votre annonce reste en ligne.`,
@@ -140,7 +140,7 @@ export const frEmails = {
     ],
     mediator: (name: string) => `Médiateur de la consommation : ${name}.`,
     mediatorPending: "Médiateur de la consommation : en cours de désignation.",
-    paid: (amount: string) => `Montant payé : ${amount} TTC, une seule fois, pour ce bien.`,
+    paid: (amount: string) => `Montant payé : ${amount}, une seule fois, pour ce bien.`,
     contactNow: "Votre conseiller Leenkey vous contacte sous 1\u00A0jour ouvré.",
     contactLater: (date: string) =>
       `Votre conseiller Leenkey vous contacte à partir du ${date}, après le délai de rétractation de 14\u00A0jours.`,
@@ -156,7 +156,7 @@ export const frEmails = {
     replaced: (plan: string, ordered: string) =>
       `Elle comprend la formule ${plan}, souscrite le ${ordered} puis remplacée, encore dans son délai.`,
     refund: (amount: string) =>
-      `Nous vous remboursons ${amount} TTC au plus tard 14 jours après votre demande, par le moyen de paiement utilisé lors de la commande, sans frais.`,
+      `Nous vous remboursons ${amount} au plus tard 14 jours après votre demande, par le moyen de paiement utilisé lors de la commande, sans frais.`,
     early:
       "Vous aviez demandé un démarrage immédiat des prestations : le remboursement reste intégral.",
     contact: (email: string) => `Pour toute question : ${email}.`,
@@ -172,7 +172,7 @@ export const frEmails = {
       count > 1 ? `${count}\u00A0rétractations à rembourser` : "Une rétractation à rembourser",
     text: "À rembourser depuis Stripe sous 14 jours : le remboursement met fin à la formule. Une note est dans le dossier du bien.",
     item: (plan: string, property: string, amount: string, at: string) =>
-      `Formule ${plan} · ${property} · ${amount} TTC payés · demande du ${at}`,
+      `Formule ${plan} · ${property} · ${amount} payés · demande du ${at}`,
     early: "démarrage immédiat demandé : remboursement intégral tout de même",
     action: "Voir les dossiers",
   },
@@ -453,7 +453,7 @@ export const frEmails = {
       upgrade
         ? `Le vendeur de ${property} passe à ${plan}.`
         : `Le vendeur de ${property} a souscrit la formule ${plan}.`,
-    details: (seller: string, amount: string) => `${seller} · ${amount} TTC payés.`,
+    details: (seller: string, amount: string) => `${seller} · ${amount} payés.`,
     earlyStart: "Démarrage immédiat demandé : premier contact sous 1\u00A0jour ouvré.",
     lateStart:
       "Pas de démarrage immédiat : premier contact à partir du 15e\u00A0jour, après le délai de rétractation.",

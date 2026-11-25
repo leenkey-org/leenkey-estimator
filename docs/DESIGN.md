@@ -716,7 +716,7 @@ Ligne de détail possible sous le badge : « Contrôlé par Leenkey le 30/09/202
 
 **PlanCard** (formules)
 - Carte blanche, bordure 1,5 px `--lk-line`, rayon 6, padding 16, écart 10.
-- Ligne de tête : nom 16 px 600 ; prix 20 px 700 large + « TTC » 11 px `--lk-ink-3`.
+- Ligne de tête : nom 16 px 600 ; prix 20 px 700 large (+ un suffixe 11 px `--lk-ink-3` facultatif, `priceSuffix` ; plus de « TTC » depuis le 2026-11-25 : franchise de TVA, `DECISIONS.md`).
 - Accroche 13 px `--lk-ink-3` (textes de Cédric, `SPEC-V2` section 11 bis).
 - Liste à coches : icône `Check` 16 px `--lk-blue`, 13 px.
 - Bouton plein largeur : `secondary` (Accompagné) ou `primary` (Sérénité).

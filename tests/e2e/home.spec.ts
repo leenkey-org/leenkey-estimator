@@ -548,8 +548,8 @@ test.describe("accueil (base de seed)", () => {
     ]);
     const cards = section.getByRole("listitem");
     await expect(cards.nth(0)).toContainText("Gratuit");
-    await expect(cards.nth(1)).toContainText("990 € TTC");
-    await expect(cards.nth(2)).toContainText("1 500 € TTC");
+    await expect(cards.nth(1)).toContainText("990 €");
+    await expect(cards.nth(2)).toContainText("1 500 €");
     // The free plan put forward, no plan « recommandé » (2026-11-04).
     await expect(cards.nth(0)).toContainText("Pour avancer à votre rythme");
     await expect(cards.nth(1)).toContainText("Pour être accompagné");

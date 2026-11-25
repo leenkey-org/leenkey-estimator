@@ -125,7 +125,7 @@ test("payer Accompagné : retour de Stripe, confirmation par le webhook, une seu
   await plans.getByRole("button", { name: "Choisir Accompagné" }).click();
   const recap = page.getByRole("region", { name: "Récapitulatif de votre commande" });
   await recap.getByRole("checkbox", { name: /J'ai lu et j'accepte/ }).check();
-  await recap.getByRole("button", { name: "Commander et payer 990 € TTC" }).click();
+  await recap.getByRole("button", { name: "Commander et payer 990 €" }).click();
 
   // Back from (simulated) Stripe: nothing is active before the webhook.
   await page.waitForURL(/paiement=ok/);
@@ -211,7 +211,7 @@ test("passer à Sérénité avec démarrage immédiat, puis un remboursement ram
   const recap = page.getByRole("region", { name: "Récapitulatif de votre commande" });
   await recap.getByRole("checkbox", { name: /J'ai lu et j'accepte/ }).check();
   await recap.getByRole("checkbox", { name: /commencent avant la fin du délai/ }).check();
-  await recap.getByRole("button", { name: "Commander et payer 510 € TTC" }).click();
+  await recap.getByRole("button", { name: "Commander et payer 510 €" }).click();
   await page.waitForURL(/paiement=ok/);
   const session = sessionOf(page);
   expect(session.metadata).toMatchObject({ plan: "serenite", kind: "upgrade", early_start: "1" });
@@ -278,7 +278,7 @@ test("deux onglets, deux paiements du même passage : le second est gardé, l'é
       .click();
     const recap = page.getByRole("region", { name: "Récapitulatif de votre commande" });
     await recap.getByRole("checkbox", { name: /J'ai lu et j'accepte/ }).check();
-    await recap.getByRole("button", { name: "Commander et payer 510 € TTC" }).click();
+    await recap.getByRole("button", { name: "Commander et payer 510 €" }).click();
     await page.waitForURL(/paiement=ok/);
     return sessionOf(page);
   };

@@ -80,7 +80,7 @@ Les tuiles du haut :
 
 - « Annonces à valider », avec l'attente de la plus ancienne. Elle passe en orange « au-delà de 24 h ».
 - « Dossiers ouverts », « Signalements ouverts », « Messages clients non lus ».
-- « Formules vendues · 30 j », avec le montant TTC.
+- « Formules vendues · 30 j », avec le montant encaissé.
 - « Inscriptions · 30 j », avec le nombre de vendeurs et d'acquéreurs.
 
 Cliquez sur une tuile pour ouvrir sa liste.

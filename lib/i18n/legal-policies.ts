@@ -115,9 +115,9 @@ const termsSections: readonly LegalSection[] = [
       p(
         "Les formules ",
         { strong: "Accompagné" },
-        ` (990${S}€ TTC) et `,
+        ` (990${S}€) et `,
         { strong: "Sérénité" },
-        ` (1${S}500${S}€ TTC) sont des forfaits fixes par bien, sans commission sur le prix de vente, payés `,
+        ` (1${S}500${S}€) sont des forfaits fixes par bien, sans commission sur le prix de vente, payés `,
         { strong: "à la souscription" },
         ". Elles couvrent un bien pendant 12 mois, ne sont jamais renouvelées automatiquement et sont régies par les ",
         { link: "conditions générales de vente", href: "/cgv" },
@@ -346,7 +346,7 @@ const salesSections: readonly LegalSection[] = [
       para(
         "Tous les outils pour gérer sa vente soi-même : rapport de valeur du bien ; création et publication de l'annonce sur Leenkey avec l'aide de l'assistant ; espace personnel et suivi de la vente ; messagerie et gestion des demandes de visite ; réception des offres d'achat ; accès aux informations communiquées par les acquéreurs ; assistant disponible à chaque étape ; checklist et liste des documents à préparer. Sans carte bancaire, sans durée limitée et sans obligation de passer à une formule payante. Elle ne comprend pas d'appel ni d'accompagnement par un conseiller.",
       ),
-      sub(`Accompagné, 990${S}€ TTC par bien, pour 12 mois`),
+      sub(`Accompagné, 990${S}€ par bien, pour 12 mois`),
       para("Tout Autonomie, plus :"),
       list(
         "un conseiller Leenkey dédié ;",
@@ -359,7 +359,7 @@ const salesSections: readonly LegalSection[] = [
         "une aide à la préparation et à l'organisation des documents ;",
         "un rendez-vous initial de 30 minutes et 4 interventions personnalisées de 20 minutes.",
       ),
-      sub(`Sérénité, 1${S}500${S}€ TTC par bien, pour 12 mois`),
+      sub(`Sérénité, 1${S}500${S}€ par bien, pour 12 mois`),
       para("Tout Accompagné, plus :"),
       list(
         "6 interventions personnalisées de 20 minutes au lieu de 4 ;",
@@ -395,7 +395,7 @@ const salesSections: readonly LegalSection[] = [
         "Les prix sont exprimés en euros et sont les prix définitifs à payer : Leenkey bénéficie de la franchise en base de TVA, TVA non applicable, article 293 B du code général des impôts. Les forfaits sont fixes, attachés au bien désigné lors de la commande, et indépendants du prix de vente comme de la réussite de la vente. Aucun frais caché n'est appliqué ; tout service payant supplémentaire ferait l'objet d'une information complète et d'une commande distincte.",
       ),
       para(
-        `Le passage de la formule Accompagné à la formule Sérénité coûte la différence entre les deux prix, soit 510${S}€ TTC ; il fait repartir la durée de 12 mois.`,
+        `Le passage de la formule Accompagné à la formule Sérénité coûte la différence entre les deux prix, soit 510${S}€ ; il fait repartir la durée de 12 mois.`,
       ),
     ],
   },
@@ -404,10 +404,10 @@ const salesSections: readonly LegalSection[] = [
     title: "5. Commande et preuve",
     blocks: [
       para(
-        "Avant de payer, le client voit un récapitulatif de sa commande : la formule, le bien concerné, le contenu exact de la formule, le prix TTC, la durée de 12 mois sans renouvellement automatique, le retour en formule Autonomie à l'échéance, le droit de rétractation de 14 jours et les coordonnées du médiateur de la consommation. Il peut revenir sur son choix avant de confirmer.",
+        "Avant de payer, le client voit un récapitulatif de sa commande : la formule, le bien concerné, le contenu exact de la formule, le prix, la durée de 12 mois sans renouvellement automatique, le retour en formule Autonomie à l'échéance, le droit de rétractation de 14 jours et les coordonnées du médiateur de la consommation. Il peut revenir sur son choix avant de confirmer.",
       ),
       para(
-        "Il coche lui-même la case d'acceptation des CGU et des CGV, dont les versions sont affichées et enregistrées avec la date et l'heure, et, s'il le souhaite, la case de demande de démarrage immédiat des prestations. Aucune case n'est cochée d'avance. Le bouton « Commander et payer », suivi du prix TTC, indique l'obligation de paiement.",
+        "Il coche lui-même la case d'acceptation des CGU et des CGV, dont les versions sont affichées et enregistrées avec la date et l'heure, et, s'il le souhaite, la case de demande de démarrage immédiat des prestations. Aucune case n'est cochée d'avance. Le bouton « Commander et payer », suivi du prix, indique l'obligation de paiement.",
       ),
       para(
         "Après le paiement, le client reçoit par email la confirmation de sa commande : la formule, le prix, le bien, la date, la durée, le début des prestations, la fiche de la formule, les conditions acceptées, les informations sur la rétractation et le formulaire de rétractation.",

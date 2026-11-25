@@ -18,7 +18,6 @@ export const frSitePricing = {
   view: "Affichage des formules",
   views: { price: "Prix des formules", savings: "Mon économie vs agence" },
   free: "Gratuit",
-  taxes: "TTC",
   savings: (amount: string) => `\u2212${amount} vs agence`,
   savingsNote: `Économie indicative sur un bien à 350${N}000${N}€`,
   unavailable: "Les formules n'ont pas pu être chargées. Réessayez dans un instant.",

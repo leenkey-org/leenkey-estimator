@@ -8,7 +8,7 @@ Ce fichier est lu automatiquement par Claude Code au début de chaque session. I
 
 ## 1. Le projet en bref
 
-Leenkey est une plateforme immobilière française où des propriétaires publient et vendent leur bien accompagnés par Leenkey, et où des acquéreurs identifiés et qualifiés consultent les annonces, contactent les vendeurs, réservent des visites et déposent des offres d'achat structurées. Un assistant IA accompagne vendeurs, acquéreurs et l'administrateur. Les formules vendeur (Autonomie gratuite, Accompagné 990 € TTC, Sérénité 1 500 € TTC) sont vendues via Stripe. Les annonces sont exclusives à Leenkey : aucune diffusion vers des portails externes.
+Leenkey est une plateforme immobilière française où des propriétaires publient et vendent leur bien accompagnés par Leenkey, et où des acquéreurs identifiés et qualifiés consultent les annonces, contactent les vendeurs, réservent des visites et déposent des offres d'achat structurées. Un assistant IA accompagne vendeurs, acquéreurs et l'administrateur. Les formules vendeur (Autonomie gratuite, Accompagné 990 €, Sérénité 1 500 € ; Leenkey est en franchise de TVA, les prix s'affichent sans « TTC », DECISIONS.md 2026-11-25) sont vendues via Stripe. Les annonces sont exclusives à Leenkey : aucune diffusion vers des portails externes.
 
 Trois publics :
 - **Vendeur** (`seller`) : publie un bien, suit sa vente par étapes, gère documents, visites et offres.

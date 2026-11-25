@@ -86,7 +86,7 @@ test("la page formule : trois formules, la formule actuelle, le récapitulatif e
   const early = recap.getByRole("checkbox", { name: /commencent avant la fin du délai/ });
   await expect(terms).not.toBeChecked();
   await expect(early).not.toBeChecked();
-  await recap.getByRole("button", { name: "Commander et payer 990 € TTC" }).click();
+  await recap.getByRole("button", { name: "Commander et payer 990 €" }).click();
   await expect(
     recap.getByText("Cochez la case pour accepter les conditions générales."),
   ).toBeVisible();
@@ -107,7 +107,7 @@ test("les cases cochées pour une formule ne passent jamais à une autre", async
   await recap.getByRole("button", { name: "Changer de formule" }).click();
 
   await plansList(page).getByRole("button", { name: "Choisir Sérénité" }).click();
-  await expect(recap.getByRole("button", { name: "Commander et payer 1 500 € TTC" })).toBeVisible();
+  await expect(recap.getByRole("button", { name: "Commander et payer 1 500 €" })).toBeVisible();
   await expect(recap.getByRole("checkbox", { name: /J'ai lu et j'accepte/ })).not.toBeChecked();
   await expect(
     recap.getByRole("checkbox", { name: /commencent avant la fin du délai/ }),
@@ -132,8 +132,8 @@ test("une formule payante : « Passer à Sérénité pour 510 € », la formule
   await expect(plans.getByRole("button", { name: /Choisir/ })).toHaveCount(0);
   await plans.getByRole("button", { name: "Passer à Sérénité pour 510 €" }).click();
   const recap = recapOf(page);
-  await expect(recap).toContainText("510 € TTC : la différence avec Accompagné, déjà payée");
-  await expect(recap.getByRole("button", { name: "Commander et payer 510 € TTC" })).toBeVisible();
+  await expect(recap).toContainText("510 € : la différence avec Accompagné, déjà payée");
+  await expect(recap.getByRole("button", { name: "Commander et payer 510 €" })).toBeVisible();
 });
 
 test("le tableau comparatif sous les formules, replié sur téléphone (L1-33)", async ({

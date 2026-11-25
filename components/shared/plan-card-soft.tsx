@@ -21,7 +21,7 @@ export function PlanCardSoft({
   tag: string;
   name: string;
   text: string;
-  /** « Gratuit », « 990 € TTC ». */
+  /** « Gratuit », « 990 € ». */
   price: string;
   note: string;
   featured?: boolean;

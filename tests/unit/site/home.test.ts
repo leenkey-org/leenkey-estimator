@@ -184,7 +184,7 @@ describe("pages of the site (L1-42)", () => {
     const accompagne = formatPrice(price("accompagne"));
     const serenite = formatPrice(price("serenite"));
     const faq = texts(site.faqPage.items[0].answer).join("");
-    expect(faq).toContain(`Accompagné à ${accompagne} TTC`);
-    expect(faq).toContain(`Sérénité à ${serenite} TTC`);
+    expect(faq).toContain(`Accompagné à ${accompagne}`);
+    expect(faq).toContain(`Sérénité à ${serenite}`);
   });
 });

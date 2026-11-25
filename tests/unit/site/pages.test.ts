@@ -143,8 +143,8 @@ describe("legal texts of the launch (2026-11-09)", () => {
         (block) => block.kind === "p" && plain(block.text).startsWith("Les formules Accompagné"),
       );
     if (paid?.kind !== "p") throw new Error("no paragraph of the paid plans");
-    expect(plain(paid.text)).toContain(`Accompagné (${price("accompagne")} TTC)`);
-    expect(plain(paid.text)).toContain(`Sérénité (${price("serenite")} TTC)`);
+    expect(plain(paid.text)).toContain(`Accompagné (${price("accompagne")})`);
+    expect(plain(paid.text)).toContain(`Sérénité (${price("serenite")})`);
     expect(plain(paid.text)).toContain("à la souscription");
   });
 

@@ -15,7 +15,7 @@ export const frAdminDashboard = {
     // L1-34: the sellers who wrote to their adviser, not read by the team.
     messages: "Messages clients non lus",
     plans: (days: number) => `Formules vendues · ${days}\u00A0j`,
-    plansAmount: (amount: string) => `${amount} TTC`,
+    plansAmount: (amount: string) => amount,
     signups: (days: number) => `Inscriptions · ${days}\u00A0j`,
     signupsSplit: (sellers: number, buyers: number) =>
       `${sellers}\u00A0${sellers > 1 ? "vendeurs" : "vendeur"}, ${buyers}\u00A0${buyers > 1 ? "acquéreurs" : "acquéreur"}`,

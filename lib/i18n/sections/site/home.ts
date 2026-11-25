@@ -173,7 +173,6 @@ export const frSiteHome = {
     title: "Les formules Leenkey",
     lead: "Vendez à votre rythme, avec l'accompagnement qui vous convient.",
     free: "Gratuit",
-    taxes: "TTC",
     // By plan code: the short texts of the home page (the names and the
     // prices come from the plans table, the reference data). Autonomie is
     // put forward, no plan « recommandé » (Younes, 2026-11-04).

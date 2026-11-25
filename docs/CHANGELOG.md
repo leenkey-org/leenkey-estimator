@@ -12,6 +12,9 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-25 · Prix des formules sans « TTC » · PR #142
+- Modifié : « TTC » retiré des prix des formules (accueil, `/tarifs`, `/vendeur/formule`, FAQ, CGU, CGV, emails, assistant du site, back office), Leenkey étant en franchise de TVA (`DECISIONS.md` 2026-11-25).
+
 ### 2026-11-25 · Franchise en base de TVA · PR #141
 - Modifié : « TVA non applicable, article 293 B du CGI. » en pied de la facture Stripe (quand aucun taux n'est donné), dans le récapitulatif de commande et dans l'email de la formule activée ; CGV article 4, nouvelle version du 25 novembre 2026.
 - Docs : `DECISIONS.md` (2026-11-25), `MISE-EN-LIGNE.md`, `CLAUDE.md` et `.env.example` (`STRIPE_TAX_RATE` à laisser vide).

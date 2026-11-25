@@ -135,7 +135,7 @@ describe("briefPrompt", () => {
     expect(prompt).toContain("Pièces d'identité à contrôler : 4");
     expect(prompt).toContain("Offres en attente de la réponse du vendeur : 5");
     expect(prompt).toContain("Inscriptions : 6 vendeur(s), 7 acquéreur(s)");
-    expect(prompt).toMatch(/Formules vendues : 1 \(990\s€ TTC\)/);
+    expect(prompt).toMatch(/Formules vendues : 1 \(990\s€\)/);
     expect(prompt).toContain("Offres envoyées : 2");
     expect(prompt).not.toContain("Rien n'attend l'équipe");
     expect(prompt).not.toMatch(/validé/);
