@@ -18,7 +18,6 @@ export const frBilling = {
     total > 2 ? `Choisir un autre de vos ${total}\u00A0biens` : "Choisir votre autre bien",
   otherPropertiesLabel: "Vos autres biens",
   free: "Gratuit",
-  taxes: "TTC",
   // The comparison table of the plans (SPEC-V2 11 bis, wording of the plans
   // of 2026-11-06): a row without a feature is in every plan (the steps of
   // a sale never depend on a plan); a row with one is ticked for the plans
@@ -93,11 +92,11 @@ export const frBilling = {
     plan: "Formule",
     property: "Bien",
     price: "Prix",
-    priceValue: (price: string) => `${price} TTC, payé une fois`,
+    priceValue: (price: string) => `${price}, payé une fois`,
     vatLabel: "TVA",
     vatValue: "Non applicable, article 293 B du CGI (franchise en base de TVA).",
     upgradeValue: (price: string, from: string) =>
-      `${price} TTC : la différence avec ${from}, déjà payée`,
+      `${price} : la différence avec ${from}, déjà payée`,
     duration: "Durée",
     durationValue:
       "12 mois à partir du paiement, renouvelables à l'échéance, jamais automatiquement. Sans renouvellement, votre bien repasse en Autonomie.",
@@ -117,7 +116,7 @@ export const frBilling = {
       "Je demande que les prestations commencent avant la fin du délai de rétractation de 14 jours.",
     earlyStartHelp:
       "Sans cette demande, votre conseiller vous contacte à partir du 15e jour. Vous pouvez renoncer au contrat pendant 14 jours dans tous les cas.",
-    pay: (price: string) => `Commander et payer ${price} TTC`,
+    pay: (price: string) => `Commander et payer ${price}`,
     change: "Changer de formule",
     termsRequired: "Cochez la case pour accepter les conditions générales.",
   },

@@ -116,7 +116,7 @@ export function briefPrompt(facts: DailyBriefFacts, now: Date): string {
     "<dernieres_24_heures>",
     `Inscriptions : ${n(facts.signupsSellers)} vendeur(s), ${n(facts.signupsBuyers)} acquéreur(s)`,
     `Formules vendues : ${n(facts.plansSold)}${
-      facts.plansSold > 0 ? ` (${formatPrice(facts.plansAmountCents)} TTC)` : ""
+      facts.plansSold > 0 ? ` (${formatPrice(facts.plansAmountCents)})` : ""
     }`,
     `Offres envoyées : ${n(facts.offersSent)}`,
     "</dernieres_24_heures>",

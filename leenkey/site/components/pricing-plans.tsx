@@ -64,7 +64,6 @@ export function PricingPlans({ plans }: { plans: readonly PlanView[] }) {
                       ? t.free
                       : formatPrice(plan.priceCents)
                 }
-                priceSuffix={saving === null && !free ? t.taxes : undefined}
                 priceNote={
                   saving !== null ? t.savingsNote : "note" in texts ? texts.note : undefined
                 }

@@ -21,7 +21,7 @@ const fr = { billing: frBilling } as const;
 // 12.4): the three cards, the plan in force ticked, a lower one not
 // selectable; « Choisir » opens the summary of the order (plan, property,
 // price, 12 months, withdrawal, mediator, what is included), the two boxes
-// never ticked beforehand and « Commander et payer … € TTC », which sends
+// never ticked beforehand and « Commander et payer … € », which sends
 // to Stripe. Nothing is activated on this page: the webhook does it.
 
 const t = fr.billing;
@@ -326,7 +326,6 @@ export function PlanChooser({
                 nameAs="h2"
                 name={plan.name}
                 price={free ? t.free : formatPrice(plan.priceCents)}
-                priceSuffix={free ? undefined : t.taxes}
                 featuresIntro={plan.intro ?? undefined}
                 features={plan.features}
                 featuresOutro={plan.outro ?? undefined}

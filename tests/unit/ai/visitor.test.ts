@@ -163,7 +163,7 @@ describe("the prompt of the assistant of the site", () => {
       },
     ]);
     expect(text).toContain('<formule nom="Autonomie" prix="gratuit">');
-    expect(text).toMatch(/<formule nom="Accompagné" prix="990\s€ TTC">/);
+    expect(text).toMatch(/<formule nom="Accompagné" prix="990\s€">/);
     expect(text).toContain("- Un conseiller Leenkey dédié");
     expect(text).toContain("Gratuit, sans carte bancaire.");
   });

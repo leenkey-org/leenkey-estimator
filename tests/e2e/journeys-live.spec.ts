@@ -321,7 +321,7 @@ test("parcours 3, paiement : Sérénité commandée, activée par le webhook, do
       .click();
     const recap = page.getByRole("region", { name: "Récapitulatif de votre commande" });
     await recap.getByRole("checkbox", { name: /J'ai lu et j'accepte/ }).check();
-    await recap.getByRole("button", { name: "Commander et payer 1 500 € TTC" }).click();
+    await recap.getByRole("button", { name: "Commander et payer 1 500 €" }).click();
     await page.waitForURL(/paiement=ok/);
     await expect(
       page.getByRole("heading", { name: "Paiement en cours de confirmation" }),

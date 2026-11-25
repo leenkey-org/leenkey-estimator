@@ -212,9 +212,7 @@ export async function PlansSection() {
                 tag={t.items[plan.code].tag}
                 name={plan.name}
                 text={t.items[plan.code].text}
-                price={
-                  plan.priceCents === 0 ? t.free : `${formatPrice(plan.priceCents)}\u00a0${t.taxes}`
-                }
+                price={plan.priceCents === 0 ? t.free : formatPrice(plan.priceCents)}
                 note={t.items[plan.code].note}
                 // The free plan put forward (Younes, 2026-11-04): the place of a
                 // card, not a right (no hasEntitlement to read here).

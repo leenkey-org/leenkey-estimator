@@ -107,12 +107,12 @@ export function plansSection(plans: readonly VisitorPlan[]): string {
   const lines = [
     "# Formules",
     "",
-    "Les formules en vente aujourd'hui, telles que le site les présente. Prix TTC, par bien.",
+    "Les formules en vente aujourd'hui, telles que le site les présente. Prix par bien, définitifs : Leenkey est en franchise de TVA (TVA non applicable, article 293 B du CGI).",
   ];
   for (const plan of plans) {
     lines.push(
       "",
-      `<formule nom="${plan.name}" prix="${plan.priceCents === 0 ? "gratuit" : `${formatPrice(plan.priceCents)} TTC`}">`,
+      `<formule nom="${plan.name}" prix="${plan.priceCents === 0 ? "gratuit" : formatPrice(plan.priceCents)}">`,
     );
     if (plan.tagline) lines.push(`Accroche : ${plan.tagline}`);
     if (plan.intro) lines.push(plan.intro);

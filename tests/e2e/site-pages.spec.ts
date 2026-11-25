@@ -83,7 +83,7 @@ test.describe("pages du site en V2", () => {
     await questions.first().focus();
     await page.keyboard.press("Enter");
     await expect(answer).toBeVisible();
-    await expect(page.locator("details").first()).toContainText("Accompagné à 990 € TTC");
+    await expect(page.locator("details").first()).toContainText("Accompagné à 990 €");
     await expect(page.getByText(/42 jours/)).toHaveCount(0);
   });
 

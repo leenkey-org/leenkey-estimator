@@ -262,7 +262,7 @@ describe("emails of a plan", () => {
       EMAIL_PLAIN_TEXT,
     );
     expect(text).toMatch(
-      /Votre formule Accompagné, au prix de 990\s€ TTC pour le bien LK-0009, a été souscrite le 2 novembre 2026\./,
+      /Votre formule Accompagné, au prix de 990\s€ pour le bien LK-0009, a été souscrite le 2 novembre 2026\./,
     );
     expect(text).toContain("jusqu'au 2 novembre 2027, sans renouvellement automatique");
     expect(text).toContain("Un conseiller Leenkey dédié");
@@ -289,7 +289,7 @@ describe("emails of a plan", () => {
       EMAIL_PLAIN_TEXT,
     );
     expect(later).toContain("Bonjour Bruno,");
-    expect(later).toContain("990 € TTC");
+    expect(later).toContain("990 €");
     expect(later).toContain("à partir du mardi 17 novembre");
     const now = await render(
       PlanActivatedEmail({ ...seller, contactFrom: null }),
@@ -320,7 +320,7 @@ describe("emails of a plan", () => {
       }),
       EMAIL_PLAIN_TEXT,
     );
-    expect(text).toContain("Bruno Lefèvre · 990 € TTC payés.");
+    expect(text).toContain("Bruno Lefèvre · 990 € payés.");
     expect(text).toContain("15e\u00A0jour");
     expect(text).not.toContain("À vérifier");
   });
