@@ -12,6 +12,11 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-25 · Audit de sécurité · PR #139
+- Corrigé : Next.js 15.5.29 (faille critique d'exécution de code dans l'optimisation d'images, non exploitable ici ; déni de service par les server actions) ; DOMPurify 3.5.0. En-tête `X-Powered-By` retiré.
+- Ajouté : `docs/SECURITE.md`, audit du 2026-11-25 (base de production, en-têtes, routes protégées, dépendances, secrets). Au `BACKLOG-V3.md` : Zod 4, CSP des scripts.
+- À faire par Younes : activer la protection contre les mots de passe divulgués dans Supabase Auth.
+
 ### 2026-11-24 · L2-08, L3-08, P-02 · Recettes internes des lots 2 et 3, performance finale · PR #138
 - Ajouté : `docs/RECETTE.md`, recette interne des lots 2 et 3 (scénarios reliés aux parcours automatisés ; suite complète 491 verts, 0 échec ; axe sans violation sérieuse ; 58 fichiers de permissions verts) et mesure finale de performance (LCP 1,95 à 2,1 s, CLS 0, accessibilité 100).
 - Planning : L1-30 (toutes ses sous-tâches faites), L2-08, L3-08, P-02 et P-05b (mise en ligne du 22 novembre) cochées. Tags `v2.0.0-lot2` et `v2.0.0-lot3` à poser par Younes.

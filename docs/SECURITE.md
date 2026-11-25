@@ -54,3 +54,30 @@
 - [x] Emails hors prod redirigés vers `EMAIL_TEST_INBOX` **P-01 (2026-11-17)** : `core/notifications/routing.ts`, testé (`tests/unit/admin/moderation.test.ts`).
 - [x] Sauvegarde quotidienne et restauration testée (P-03) **P-01 (2026-11-17)** : action nocturne chiffrée, 14 jours ; restauration testée sur une base vide (`docs/RECETTE.md`). Restent les deux secrets GitHub et la branche par défaut, avant la bascule.
 - [ ] Journal de l'assistant (`ai_messages`) : les suggestions et brouillons de l'équipe (motif de refus, synthèse avant appel, L1-30d) gardent les données envoyées au modèle (nom du client, notes, messages avec le conseiller) dans des lignes de l'admin, qui ne disparaissent pas avec le compte du client ; seules les conversations des visiteurs sont purgées (30 jours). Durée de conservation du journal à fixer avant la mise en ligne, avec la suppression de compte (L2-10).
+
+
+## Audit du 2026-11-25 (après la fin des lots)
+
+Production (`leenkey.fr`, base `leenkey-prod`) et dépôt, à la demande de Younes.
+
+**Base de données (requêtes de contrôle et alertes de sécurité de Supabase)**
+- [x] Toutes les tables de `public` ont la RLS ; aucune politique d'écriture ouverte (`true`) ; aucun droit d'écriture du rôle `anon` ; toutes les fonctions `security definer` ont un `search_path` fixé ; aucun espace de stockage public ; deux comptes administrateurs, ceux de l'équipe.
+- [x] Alertes connues et voulues : 16 fonctions appelables sans compte (lectures publiques des annonces, recherche, assistant du site, analyse de valeur, compteur de vues, limite de débit) ; la vue `offer_for_seller` en `security definer` (elle masque les coordonnées de l'acquéreur, ci-dessus) ; `document_analysis_attempts`, `rate_limits` et `stripe_events` sans politique (écrites seulement par des fonctions ou le webhook) ; fonctions `security definer` appelables par un compte connecté, chacune vérifiant `auth.uid()` ou `is_admin()` (tests pgTAP).
+- [ ] **À faire par Younes** : activer la protection contre les mots de passe divulgués (Supabase, Authentication → Sign In / Providers → « Prevent use of leaked passwords »), en production et en préprod.
+
+**Site en ligne**
+- [x] En-têtes : HSTS (1 an), `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, CSP (`frame-ancestors`, `object-src`, `base-uri`, `form-action`). `X-Powered-By` retiré.
+- [x] Routes `/api/cron/*` : 401 sans le secret ; webhook Stripe : 400 sans signature valable.
+- [x] `robots.txt` : espaces connectés, back office et API exclus.
+- [x] Route d'optimisation d'images de Next.js (`/_next/image`) non exposée (404, chargeur d'images du site).
+
+**Dépendances (`npm audit`, production)**
+- [x] Next.js 15.5.27 → **15.5.29** : faille critique d'exécution de code dans l'optimisation d'images (non exploitable ici, route non exposée) et déni de service par les server actions (le site en utilise) corrigés.
+- [x] DOMPurify (via jsPDF, rapport PDF de l'estimateur) → 3.5.0.
+- [ ] PostCSS embarqué par Next.js (8.4.31) : ne traite que nos propres fichiers CSS à la construction, pas de donnée d'un visiteur : non exploitable ; disparaîtra avec une version de Next.js qui le met à jour.
+- [ ] Zod 3 : consommation mémoire excessive sur de très grandes listes (corrigé seulement en Zod 4, changement majeur). Risque borné par les tailles de requête (4 Mo pour les server actions). Migration vers Zod 4 au `BACKLOG-V3.md`.
+
+**Dépôt**
+- [x] Aucun secret réel dans les fichiers ni l'historique (seulement des clés factices de tests et `.env.example` vide). Clé service limitée à `lib/supabase/admin.ts`, importé par les crons et le webhook seulement ; aucune variable serveur lue dans un composant client.
+
+**À améliorer (non bloquant)** : une CSP qui limite aussi les scripts (`script-src` avec nonce : Google Analytics, Google Maps, Stripe et les scripts de Next.js à autoriser un par un), au `BACKLOG-V3.md`.
