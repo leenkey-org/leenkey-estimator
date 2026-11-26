@@ -155,21 +155,25 @@ export const frEmails = {
   // The confirmation of a refund, to the seller, with its credit note
   // (Cédric, 2026-11-26): once per credit note.
   planRefunded: {
+    // `property` may be empty (a property without a reference nor a town).
     subject: (plan: string, property: string) =>
-      `Confirmation de votre remboursement · formule ${plan} · ${property}`,
+      property
+        ? `Confirmation de votre remboursement · formule ${plan} · ${property}`
+        : `Confirmation de votre remboursement · formule ${plan}`,
     title: "Votre remboursement est effectué",
-    text: (amount: string, plan: string, property: string, date: string) =>
-      `Nous vous avons remboursé ${amount} le ${date} pour votre formule ${plan} (bien ${property}), par le moyen de paiement utilisé lors de la commande, sans frais.`,
+    text: (amount: string, plan: string, property: string) =>
+      `Nous vous avons remboursé ${amount} pour votre formule ${plan}${property ? ` (bien ${property})` : ""}, par le moyen de paiement utilisé lors de la commande, sans frais.`,
     withdrawal: (date: string) =>
       `Ce remboursement fait suite à l'exercice de votre droit de rétractation, le ${date}.`,
     bank: "Le délai pour le voir apparaître sur votre relevé dépend de votre banque.",
     keepsTitle: "Ce que vous conservez",
     keeps:
       "Votre annonce, vos documents, vos messages et l'avancement de votre vente restent en place : rien n'est supprimé. La formule en vigueur pour votre bien est indiquée dans votre espace.",
-    creditNoteAttached: (number: string) =>
-      `Votre avoir ${number} est joint à cet email. Vous le retrouvez à tout moment dans votre espace, rubrique « Mes factures et paiements ».`,
-    creditNoteLink: (number: string) =>
-      `Votre avoir ${number} est à télécharger dans votre espace, rubrique « Mes factures et paiements » :`,
+    // The date is the one of the credit note (Stripe), not of the refund itself.
+    creditNoteAttached: (number: string, date: string) =>
+      `Votre avoir ${number}, émis le ${date}, est joint à cet email. Vous le retrouvez à tout moment dans votre espace, rubrique « Mes factures et paiements ».`,
+    creditNoteLink: (number: string, date: string) =>
+      `Votre avoir ${number}, émis le ${date}, est à télécharger dans votre espace, rubrique « Mes factures et paiements » :`,
     creditNoteLinkLabel: "télécharger mon avoir",
     contact: (email: string) => `Pour toute question : ${email}.`,
     action: "Voir mes factures et paiements",

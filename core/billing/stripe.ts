@@ -221,13 +221,38 @@ export type CreditNoteInfo = {
   id: string;
   number: string;
   amountCents: number;
-  /** The PDF Stripe draws, null in the mock. */
+  /** The PDF Stripe draws; in the mock, an address nothing ever fetches. */
   pdfUrl: string | null;
   /** ISO date of its issue. */
   issuedAt: string;
   /** The refunds it is linked to. */
   refundIds: string[];
+  /**
+   * Created by this code (its metadata says so): Leenkey emails it. Any
+   * other credit note of the invoice was made in the Stripe dashboard, or
+   * before Leenkey sent them itself: Stripe emailed it.
+   */
+  ours: boolean;
 };
+
+/** The metadata of the credit notes this code creates. */
+export const CREDIT_NOTE_MARK = "leenkey_refund_email";
+
+/**
+ * Stripe refused a creation because its idempotency key was first used with
+ * other parameters: a credit note attempted before a deploy that changed
+ * what is sent (2026-11-26: no reason, the memo, the metadata) and asked
+ * again within the 24 hours Stripe keeps a key. Nothing was created; the
+ * same request passes once the key is forgotten.
+ */
+export class CreditNoteKeyConflict extends Error {
+  constructor(refundId: string) {
+    super(
+      `credit note of ${refundId}: its idempotency key was used with other parameters (a creation attempted before a deploy); Stripe forgets the key 24 hours after that attempt, ask again then`,
+    );
+    this.name = "CreditNoteKeyConflict";
+  }
+}
 
 export type CreditNotesResult =
   | {
@@ -285,6 +310,7 @@ function creditNoteInfo(note: Stripe.CreditNote): CreditNoteInfo {
     refundIds: note.refunds.map((item) =>
       typeof item.refund === "string" ? item.refund : item.refund.id,
     ),
+    ours: note.metadata?.[CREDIT_NOTE_MARK] === "1",
   };
 }
 
@@ -295,9 +321,11 @@ function mockCreditNote(paymentIntentId: string, amountCents: number): CreditNot
     id: `cn_mock_${ref}`,
     number: "MOCK-0001",
     amountCents,
-    pdfUrl: null,
+    // Never fetched (downloadPdf and the download route answer for the mock).
+    pdfUrl: `https://pay.stripe.com/mock/credit_notes/cn_mock_${ref}/pdf`,
     issuedAt: new Date().toISOString(),
     refundIds: [`re_mock_${ref}`],
+    ours: true,
   };
 }
 
@@ -353,20 +381,29 @@ export async function ensureCreditNotes(input: {
   }
   const created: CreditNoteInfo[] = [];
   for (const plan of planCreditNotes(refunds, existing)) {
-    const note = await api.creditNotes.create(
-      {
-        invoice,
-        amount: plan.amountCents,
-        refunds: [{ refund: plan.refundId, amount_refunded: plan.amountCents }],
-        // No `reason`: its values are a closed list of Stripe, printed as
-        // « Modification de commande »; the memo says why instead. No
-        // email of Stripe: Leenkey sends the credit note with its own
-        // confirmation of the refund (leenkey/billing/refund-emails.ts).
-        email_type: "none",
-        ...(input.memo ? { memo: input.memo } : {}),
-      },
-      { idempotencyKey: creditNoteKey(plan.refundId) },
-    );
+    const note = await api.creditNotes
+      .create(
+        {
+          invoice,
+          amount: plan.amountCents,
+          refunds: [{ refund: plan.refundId, amount_refunded: plan.amountCents }],
+          // No `reason`: its values are a closed list of Stripe, printed as
+          // « Modification de commande »; the memo says why instead. No
+          // email of Stripe: Leenkey sends the credit note with its own
+          // confirmation of the refund (leenkey/billing/refund-emails.ts),
+          // and knows by this metadata which credit notes are its own.
+          email_type: "none",
+          metadata: { [CREDIT_NOTE_MARK]: "1" },
+          ...(input.memo ? { memo: input.memo } : {}),
+        },
+        { idempotencyKey: creditNoteKey(plan.refundId) },
+      )
+      .catch((error: unknown) => {
+        if (error instanceof Stripe.errors.StripeIdempotencyError) {
+          throw new CreditNoteKeyConflict(plan.refundId);
+        }
+        throw error;
+      });
     created.push(creditNoteInfo(note));
   }
   return {
@@ -390,7 +427,12 @@ export type InvoiceInfo = {
 /** The mocked invoice of a session (STRIPE_MOCK=1). */
 function mockInvoice(checkoutSessionId: string): InvoiceInfo {
   const ref = checkoutSessionId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 60);
-  return { id: `in_mock_${ref}`, number: "MOCK-F-0001", pdfUrl: null };
+  return {
+    id: `in_mock_${ref}`,
+    number: "MOCK-F-0001",
+    // Never fetched (downloadPdf and the download route answer for the mock).
+    pdfUrl: `https://pay.stripe.com/mock/invoices/in_mock_${ref}/pdf`,
+  };
 }
 
 /**
@@ -411,7 +453,7 @@ export async function checkoutInvoice(checkoutSessionId: string): Promise<Invoic
 
 /** A credit note read again from Stripe: the address of its PDF is fresh. */
 export async function creditNotePdfUrl(creditNoteId: string): Promise<string | null> {
-  if (stripeMocked()) return null;
+  if (stripeMocked()) return `https://pay.stripe.com/mock/credit_notes/${creditNoteId}/pdf`;
   const note = await stripe().creditNotes.retrieve(creditNoteId);
   return note.pdf || null;
 }
@@ -427,27 +469,71 @@ export const PDF_MAX_BYTES = 5 * 1024 * 1024;
 const PDF_TIMEOUT_MS = 4_000;
 
 /**
+ * An address of Stripe: https, on stripe.com or one of its subdomains
+ * (`invoice_pdf` and the `pdf` of a credit note are on pay.stripe.com, their
+ * files on files.stripe.com). Anything else is never fetched by the server
+ * nor given to a browser as a document of Leenkey.
+ */
+export function isStripeUrl(url: string | null | undefined): url is string {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" || parsed.username || parsed.password) return false;
+    return parsed.hostname === "stripe.com" || parsed.hostname.endsWith(".stripe.com");
+  } catch {
+    return false;
+  }
+}
+
+/** The body of an answer, read piece by piece and dropped once over `max` bytes. */
+async function readCapped(response: Response, max: number): Promise<Buffer | null> {
+  const declared = Number(response.headers.get("content-length") ?? 0);
+  if (declared > max) return null;
+  const reader = response.body?.getReader();
+  if (!reader) {
+    const bytes = Buffer.from(await response.arrayBuffer());
+    return bytes.length > max ? null : bytes;
+  }
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > max) {
+      await reader.cancel().catch(() => {});
+      return null;
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks);
+}
+
+/**
  * The bytes of a PDF Stripe draws (`invoice_pdf`, the `pdf` of a credit
- * note): null when there is no address, when it is not https, when it does
- * not answer in time, is too large or is not a PDF. Never throws: the
- * caller falls back on a link. STRIPE_MOCK=1: MOCK_PDF, no call leaves.
+ * note): null when there is no address, when it is not an address of
+ * Stripe (before the call, and after its redirects), when it does not
+ * answer in time, is too large or is not a PDF. Never throws: the caller
+ * falls back on a link. STRIPE_MOCK=1: MOCK_PDF, no call leaves.
  */
 export async function downloadPdf(
   url: string | null,
-  fetcher: typeof fetch = fetch,
+  options: { timeoutMs?: number } = {},
 ): Promise<Buffer | null> {
   if (stripeMocked()) return MOCK_PDF;
-  if (!url || !url.startsWith("https://")) return null;
+  if (!isStripeUrl(url)) return null;
   try {
-    const response = await fetcher(url, {
+    const response = await fetch(url, {
       redirect: "follow",
-      signal: AbortSignal.timeout(PDF_TIMEOUT_MS),
+      signal: AbortSignal.timeout(
+        Math.max(1, Math.min(options.timeoutMs ?? PDF_TIMEOUT_MS, PDF_TIMEOUT_MS)),
+      ),
     });
     if (!response.ok) return null;
-    const declared = Number(response.headers.get("content-length") ?? 0);
-    if (declared > PDF_MAX_BYTES) return null;
-    const bytes = Buffer.from(await response.arrayBuffer());
-    if (bytes.length === 0 || bytes.length > PDF_MAX_BYTES) return null;
+    // Where the redirects ended (empty in a test double: the address asked).
+    if (response.url && !isStripeUrl(response.url)) return null;
+    const bytes = await readCapped(response, PDF_MAX_BYTES);
+    if (!bytes || bytes.length === 0) return null;
     return bytes.subarray(0, 5).toString("latin1") === "%PDF-" ? bytes : null;
   } catch {
     return null;

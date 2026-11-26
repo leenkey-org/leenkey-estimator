@@ -9,6 +9,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// The longest event: a payment recorded, then the invoice asked of Stripe
+// within its budget of 6 s (leenkey/billing/documents.ts) and the emails
+// (5 s each at most, core/notifications/email.ts). Stripe waits 20 s or so.
+export const maxDuration = 30;
 
 export async function POST(request: Request) {
   const payload = await request.text();

@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 import { creditNoteAttachment } from "./documents";
 import { emailPlanRefunded } from "./emails";
@@ -8,19 +9,30 @@ import { emailPlanRefunded } from "./emails";
 // 2026-11-26; DECISIONS.md): one email per credit note, hence per refund (a
 // plan and the passage that followed it are two payments, two refunds, two
 // credit notes, two emails). Called by recordCreditNotes once the credit
-// notes are recorded, with its service role client (the webhook's, or the
-// admin action's after its own check): the address of the seller is read
-// from their account, a charge.refunded carries none we can trust.
+// notes are recorded, and by « Renvoyer l'email » of the back office
+// (leenkey/admin/actions.ts), with a service role client (the webhook's, or
+// the admin action's after its own check): the address of the seller is
+// read from their account, a charge.refunded carries none we can trust.
 //
-// Once only: credit_note_email_claim takes the email of a credit note for
-// one caller (a second delivery of the webhook, « Créer l'avoir » clicked
-// again find it taken); when the email could not be handed over it is given
-// back (credit_note_email_release), for the next pass. Never throws: the
-// refund and its credit note stay recorded whatever happens here.
+// Once only, and never lost:
+// - credit_note_email_claim takes the email of a credit note for one caller,
+//   for 10 minutes (a second delivery of the webhook at the same time finds
+//   it taken); a caller that died leaves a stale claim, taken back by the
+//   next pass;
+// - credit_note_email_sent, once the mail service took the email: final;
+// - credit_note_email_release when it could not be handed over, for the
+//   next pass (another delivery, the back office).
+// The key given to the mail service says whether the PDF is attached
+// (emails.ts, refundEmailKey): the same email asked twice leaves once.
+// Never throws: the refund and its credit note stay recorded whatever
+// happens here.
 
 type Client = SupabaseClient<Database>;
 
+/** What a pass did: emails handed to the mail service, emails that could not leave. */
 export type RefundEmails = { sent: number; failed: number };
+
+export const NO_REFUND_EMAILS: RefundEmails = { sent: 0, failed: 0 };
 
 export async function emailCreditNotes(
   supabase: Client,
@@ -78,7 +90,7 @@ export async function emailCreditNotes(
           property: listing.data?.reference ?? property.data?.city ?? "",
           propertyId: subscription.property_id,
           amountCents: note.amount_cents,
-          refundedAt: note.issued_at,
+          issuedAt: note.issued_at,
           withdrawnAt: subscription.withdrawal_requested_at,
           creditNote: { stripeId: note.stripe_credit_note_id, number: note.number },
         },
@@ -97,6 +109,19 @@ export async function emailCreditNotes(
         continue;
       }
       summary.sent += 1;
+      const { error: sentError } = await supabase.rpc("credit_note_email_sent", {
+        p_credit_note_id: note.id,
+      });
+      if (sentError) {
+        // Left, not marked: the claim goes stale and the next pass asks the
+        // mail service again, which sends nothing twice under the same key
+        // for a day.
+        console.error("[billing] refund email sent, not marked", {
+          entity_id: subscriptionId,
+          credit_note: note.stripe_credit_note_id,
+          code: sentError.code,
+        });
+      }
       console.info("[billing] refund email", {
         entity_id: subscriptionId,
         credit_note: note.stripe_credit_note_id,
@@ -112,4 +137,45 @@ export async function emailCreditNotes(
     });
     return summary;
   }
+}
+
+/** A credit note whose confirmation of refund has not left yet. */
+export type PendingRefundEmail = {
+  subscriptionId: string;
+  creditNoteId: string;
+  /** « LK-0001-CN-01 » */
+  number: string;
+  amountCents: number;
+  issuedAt: string;
+};
+
+/**
+ * For the back office (/admin/remboursements): among these plans, the
+ * credit notes whose email to the seller is still to send (it failed, or
+ * its sender died), oldest first. Read with the session of the caller: the
+ * RLS of credit_notes gives every row to the team, and to a seller their
+ * own only. null when the read failed.
+ */
+export async function pendingRefundEmails(
+  subscriptionIds: readonly string[],
+): Promise<PendingRefundEmail[] | null> {
+  if (subscriptionIds.length === 0) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("credit_notes")
+    .select("id, subscription_id, number, amount_cents, issued_at")
+    .in("subscription_id", [...subscriptionIds])
+    .is("refund_emailed_at", null)
+    .order("issued_at", { ascending: true });
+  if (error) {
+    console.error("[billing] pending refund emails read failed", { code: error.code });
+    return null;
+  }
+  return data.map((note) => ({
+    subscriptionId: note.subscription_id,
+    creditNoteId: note.id,
+    number: note.number,
+    amountCents: note.amount_cents,
+    issuedAt: note.issued_at,
+  }));
 }

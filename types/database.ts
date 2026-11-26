@@ -547,6 +547,7 @@ export type Database = {
           issued_at: string
           number: string
           pdf_url: string | null
+          refund_email_claimed_at: string | null
           refund_emailed_at: string | null
           stripe_credit_note_id: string
           subscription_id: string
@@ -559,6 +560,7 @@ export type Database = {
           issued_at: string
           number: string
           pdf_url?: string | null
+          refund_email_claimed_at?: string | null
           refund_emailed_at?: string | null
           stripe_credit_note_id: string
           subscription_id: string
@@ -571,6 +573,7 @@ export type Database = {
           issued_at?: string
           number?: string
           pdf_url?: string | null
+          refund_email_claimed_at?: string | null
           refund_emailed_at?: string | null
           stripe_credit_note_id?: string
           subscription_id?: string
@@ -3546,6 +3549,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      billing_document_opened: {
+        Args: { p_kind: string; p_id: string }
+        Returns: undefined
+      }
       buyer_can_be_invited: {
         Args: { p_buyer: string; p_property: string }
         Returns: boolean
@@ -3637,6 +3644,14 @@ export type Database = {
       credit_note_email_release: {
         Args: { p_credit_note_id: string }
         Returns: undefined
+      }
+      credit_note_email_sent: {
+        Args: { p_credit_note_id: string }
+        Returns: undefined
+      }
+      credit_notes_emailed_elsewhere: {
+        Args: { p_stripe_credit_note_ids: string[] }
+        Returns: number
       }
       credit_notes_record: {
         Args: { p_actor?: string; p_payment_intent_id: string; p_notes: Json }
@@ -4489,6 +4504,10 @@ export type Database = {
       }
       rate_limits_purge: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      refund_email_resent: {
+        Args: { p_subscription_id: string; p_sent: number; p_failed: number }
         Returns: undefined
       }
       report_target: {

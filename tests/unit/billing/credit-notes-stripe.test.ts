@@ -23,6 +23,9 @@ const sdk = vi.hoisted(() => ({
   notes: [] as Note[],
   refunds: [] as { id: string; amount: number; status: string }[],
   created: [] as { params: Record<string, unknown>; options: Record<string, unknown> }[],
+  keyConflict: false,
+  // Stands for Stripe.errors.StripeIdempotencyError.
+  IdempotencyError: class extends Error {},
 }));
 
 const iterable = <T>(items: T[]) => ({
@@ -34,12 +37,18 @@ const iterable = <T>(items: T[]) => ({
 vi.mock("server-only", () => ({}));
 vi.mock("stripe", () => ({
   default: class {
+    static errors = { StripeIdempotencyError: sdk.IdempotencyError };
     checkout = {
       sessions: { retrieve: async () => ({ id: "cs_1", invoice: sdk.invoice }) },
     };
     creditNotes = {
       list: () => iterable(sdk.notes),
       create: async (params: Record<string, unknown>, options: Record<string, unknown>) => {
+        if (sdk.keyConflict) {
+          throw new sdk.IdempotencyError(
+            "Keys for idempotent requests can only be used with the same parameters they were first used with.",
+          );
+        }
         sdk.created.push({ params, options });
         const refunds = params.refunds as { refund: string }[];
         return {
@@ -50,6 +59,7 @@ vi.mock("stripe", () => ({
           created: 1_764_064_800,
           status: "issued",
           refunds: refunds.map((item) => ({ refund: item.refund })),
+          metadata: params.metadata,
         };
       },
     };
@@ -73,6 +83,7 @@ beforeEach(() => {
   sdk.notes = [];
   sdk.refunds = [];
   sdk.created = [];
+  sdk.keyConflict = false;
   vi.stubEnv("NEXT_PUBLIC_ENV", "staging");
   vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_unit");
   vi.stubEnv("STRIPE_MOCK", "");
@@ -99,6 +110,8 @@ describe("ensureCreditNotes", () => {
           amount: 99000,
           refunds: [{ refund: "re_1", amount_refunded: 99000 }],
           email_type: "none",
+          // How Leenkey knows the credit notes it emails itself.
+          metadata: { leenkey_refund_email: "1" },
           memo: "Avoir de test",
         },
         options: { idempotencyKey: "credit-note-re_1" },
@@ -113,8 +126,25 @@ describe("ensureCreditNotes", () => {
       created: 1,
       pending: 0,
       voidIds: [],
-      creditNotes: [{ id: "cn_1", amountCents: 99000, refundIds: ["re_1"] }],
+      creditNotes: [{ id: "cn_1", amountCents: 99000, refundIds: ["re_1"], ours: true }],
     });
+  });
+
+  it("a credit note without the mark of Leenkey (made in the dashboard, or before) is not ours", async () => {
+    sdk.refunds = [{ id: "re_1", amount: 99000, status: "succeeded" }];
+    sdk.notes = [note({ id: "cn_hand", refunds: [{ refund: "re_1" }] })];
+    expect(await ensure()).toMatchObject({ creditNotes: [{ id: "cn_hand", ours: false }] });
+  });
+
+  // A creation attempted before a deploy that changed what is sent, asked
+  // again within the 24 hours Stripe keeps a key: refused, told clearly.
+  it("a key first used with other parameters: a clear error, nothing created", async () => {
+    sdk.refunds = [{ id: "re_1", amount: 99000, status: "succeeded" }];
+    sdk.keyConflict = true;
+    await expect(ensure()).rejects.toThrow(
+      /credit note of re_1: its idempotency key was used with other parameters/,
+    );
+    expect(sdk.created).toEqual([]);
   });
 
   it("skips a pending refund, and counts it", async () => {

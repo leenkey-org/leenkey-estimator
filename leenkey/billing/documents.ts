@@ -32,34 +32,53 @@ export function pdfAttachment(
 /**
  * Stripe creates the invoice of a Checkout Session once the payment is
  * made: it may not be finalized yet when checkout.session.completed
- * arrives. Asked a few times, a second apart (the webhook stays short),
- * then the email leaves with a link.
+ * arrives. One budget of time for the whole (the webhook must answer
+ * Stripe, and the email of the order leaves after this, with a link when
+ * there is no PDF): the invoice is asked again every second while it has no
+ * PDF, its PDF is downloaded once (a download that failed is not tried
+ * again), and whatever is still running when the budget ends is left
+ * behind. Never throws.
  */
-const INVOICE_TRIES = 3;
+export const INVOICE_BUDGET_MS = 6_000;
 const INVOICE_PAUSE_MS = 1_000;
 
 export async function orderInvoiceAttachment(
   checkoutSessionId: string,
-  options: { tries?: number; pauseMs?: number } = {},
+  options: { budgetMs?: number; pauseMs?: number } = {},
 ): Promise<EmailAttachment | null> {
-  const tries = options.tries ?? INVOICE_TRIES;
+  const budgetMs = options.budgetMs ?? INVOICE_BUDGET_MS;
   const pauseMs = options.pauseMs ?? INVOICE_PAUSE_MS;
-  try {
-    for (let attempt = 1; attempt <= tries; attempt += 1) {
+  const deadline = Date.now() + budgetMs;
+  let reason = "no PDF yet";
+  const work = (async (): Promise<EmailAttachment | null> => {
+    for (;;) {
       const invoice = await checkoutInvoice(checkoutSessionId);
-      const bytes = invoice ? await downloadPdf(invoice.pdfUrl) : null;
-      if (invoice && bytes) return pdfAttachment("facture", invoice.number, bytes);
-      if (attempt < tries) await new Promise((resolve) => setTimeout(resolve, pauseMs));
+      if (invoice?.pdfUrl) {
+        const left = deadline - Date.now();
+        const bytes = left > 0 ? await downloadPdf(invoice.pdfUrl, { timeoutMs: left }) : null;
+        if (!bytes) reason = "PDF not downloaded";
+        return bytes ? pdfAttachment("facture", invoice.number, bytes) : null;
+      }
+      if (deadline - Date.now() <= pauseMs) return null;
+      await new Promise((resolve) => setTimeout(resolve, pauseMs));
     }
-    console.warn("[billing] invoice not attached: no PDF yet", { session: checkoutSessionId });
+  })().catch((error: unknown) => {
+    reason = error instanceof Error ? error.message : String(error);
     return null;
-  } catch (error) {
-    console.error("[billing] invoice not attached", {
-      session: checkoutSessionId,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return null;
+  });
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<null>((resolve) => {
+    timer = setTimeout(() => {
+      reason = "out of time";
+      resolve(null);
+    }, budgetMs);
+  });
+  const attachment = await Promise.race([work, late]);
+  clearTimeout(timer);
+  if (!attachment) {
+    console.warn("[billing] invoice not attached", { session: checkoutSessionId, reason });
   }
+  return attachment;
 }
 
 /** The PDF of a credit note, from the address Stripe gave when it was created. */

@@ -20,12 +20,12 @@ const small = { ...emailText, fontSize: "14px" };
 export type PlanRefundedEmailProps = {
   firstName: string | null;
   planName: string;
-  /** « LK-0001 », or the town of a property without a listing yet. */
+  /** « LK-0001 », or the town of a property without a listing yet; may be empty. */
   property: string;
   /** « 990 € », the amount of this refund. */
   amount: string;
-  /** « 26 novembre 2026 » */
-  refundedOn: string;
+  /** « 26 novembre 2026 », when Stripe issued the credit note. */
+  issuedOn: string;
   /** « 20 novembre 2026 », when the refund follows a withdrawal. */
   withdrawnOn: string | null;
   creditNoteNumber: string;
@@ -44,7 +44,7 @@ export function PlanRefundedEmail({
   planName,
   property,
   amount,
-  refundedOn,
+  issuedOn,
   withdrawnOn,
   creditNoteNumber,
   creditNoteAttached,
@@ -53,14 +53,14 @@ export function PlanRefundedEmail({
 }: PlanRefundedEmailProps) {
   return (
     <EmailLayout
-      preview={t.text(amount, planName, property, refundedOn)}
+      preview={t.text(amount, planName, property)}
       title={t.title}
       siteUrl={siteUrl}
       action={{ href: documentsUrl, label: t.action }}
     >
       <Text style={emailText}>{fr.emails.greeting(firstName)}</Text>
       <Text style={emailText}>
-        {t.text(amount, planName, property, refundedOn)} {fr.emails.planActivated.vat}
+        {t.text(amount, planName, property)} {fr.emails.planActivated.vat}
       </Text>
       {withdrawnOn ? <Text style={emailText}>{t.withdrawal(withdrawnOn)}</Text> : null}
       <Text style={emailText}>{t.bank}</Text>
@@ -71,10 +71,10 @@ export function PlanRefundedEmail({
       <Text style={emailText}>{t.keeps}</Text>
 
       {creditNoteAttached ? (
-        <Text style={emailText}>{t.creditNoteAttached(creditNoteNumber)}</Text>
+        <Text style={emailText}>{t.creditNoteAttached(creditNoteNumber, issuedOn)}</Text>
       ) : (
         <Text style={emailText}>
-          {t.creditNoteLink(creditNoteNumber)}{" "}
+          {t.creditNoteLink(creditNoteNumber, issuedOn)}{" "}
           <Link href={documentsUrl} style={emailLink}>
             {t.creditNoteLinkLabel}
           </Link>

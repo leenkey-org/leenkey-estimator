@@ -17,7 +17,13 @@ vi.mock("@/lib/supabase/server", () => ({
   },
 }));
 
-const migration = readFileSync("supabase/migrations/20261108160000_rate_limits.sql", "utf8");
+// The second one adds the bucket « document » (2026-11-26).
+const migration = [
+  "supabase/migrations/20261108160000_rate_limits.sql",
+  "supabase/migrations/20261126150000_billing_documents.sql",
+]
+  .map((file) => readFileSync(file, "utf8"))
+  .join("\n");
 
 describe("limits of requests", () => {
   it("are the same in the code and in SQL", async () => {

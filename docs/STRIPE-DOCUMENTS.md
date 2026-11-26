@@ -24,7 +24,7 @@ Le bouton « Mode test » est en haut du tableau de bord. Certains réglages son
 
 1. **Image de marque** : Paramètres → Entreprise → *Image de marque* (« Branding ») *(libellé à vérifier dans Stripe)*.
    - Icône et logo de Leenkey (fichiers fournis par Nebula Creativ).
-   - Couleur de la marque : `#2563EB` ; couleur d'accentuation : `#020D21` (charte du site).
+   - Couleur de la marque : `#2563EB` (bleu de la charte du site). Couleur d'accentuation : `#020D21` (le bleu nuit du site) est **proposé**, à votre goût.
 2. **Informations publiques** : Paramètres → Entreprise → *Informations publiques* (« Public details ») *(libellé à vérifier dans Stripe)*.
    - Nom public de l'entreprise : `SAS LEENKEY`
    - Adresse : `36 rue Pierre Brossolette, 91360 Épinay-sur-Orge`

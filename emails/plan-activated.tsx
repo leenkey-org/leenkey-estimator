@@ -44,8 +44,12 @@ export type PlanActivatedEmailProps = {
   /** Last day of the withdrawal, « 23 novembre 2026 ». */
   withdrawalUntil: string;
   mediator: string | null;
-  /** The invoice is attached to the email; otherwise `invoicesUrl` leads to it. */
-  invoiceAttached?: boolean;
+  /**
+   * The invoice of the order: attached to the email, or reached by
+   * `invoicesUrl`; « none » for an order with nothing to pay (a code of
+   * 100 %): no invoice is promised.
+   */
+  invoice?: "attached" | "link" | "none";
   /** « Mes factures et paiements » of the seller. */
   invoicesUrl: string;
   planUrl: string;
@@ -70,7 +74,7 @@ export function PlanActivatedEmail({
   cgvVersion,
   withdrawalUntil,
   mediator,
-  invoiceAttached = false,
+  invoice = "link",
   invoicesUrl,
   planUrl,
   siteUrl,
@@ -135,7 +139,7 @@ export function PlanActivatedEmail({
       </Text>
 
       <Text style={small}>{mediator ? t.mediator(mediator) : t.mediatorPending}</Text>
-      {invoiceAttached ? (
+      {invoice === "none" ? null : invoice === "attached" ? (
         <Text style={small}>{t.invoiceAttached}</Text>
       ) : (
         <Text style={small}>

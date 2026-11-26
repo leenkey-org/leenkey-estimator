@@ -171,7 +171,10 @@ async function checkoutCompleted(
     held
       ? Promise.resolve("none" as const)
       : // The invoice of the order attached (Cédric, 2026-11-26); a link without its PDF.
-        orderInvoiceAttachment(session.id).then((invoice) => emailPlanActivated(paid, invoice)),
+        // Within its own time budget (documents.ts); nothing to attach to an order of 0 €.
+        (amount > 0 ? orderInvoiceAttachment(session.id) : Promise.resolve(null)).then((invoice) =>
+          emailPlanActivated(paid, invoice),
+        ),
     emailPlanPurchased(paid, supabase),
   ]);
   log(held ? "payment recorded, plan held" : "payment recorded", {

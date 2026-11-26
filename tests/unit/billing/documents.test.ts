@@ -14,6 +14,7 @@ const sdk = vi.hoisted(() => ({
   // What the session holds at each reading: the invoice comes late.
   invoices: [] as (Invoice | string | null)[],
   fail: false,
+  hang: false,
 }));
 
 vi.mock("server-only", () => ({}));
@@ -27,6 +28,7 @@ vi.mock("stripe", () => ({
         },
         retrieve: async (id: string, params: unknown) => {
           if (sdk.fail) throw new Error("Stripe is down");
+          if (sdk.hang) return new Promise(() => {});
           sdk.retrieved.push({ id, params });
           const invoice = sdk.invoices.length > 1 ? sdk.invoices.shift() : sdk.invoices[0];
           return { id, invoice: invoice ?? null };
@@ -61,6 +63,7 @@ beforeEach(() => {
   sdk.retrieved = [];
   sdk.invoices = [];
   sdk.fail = false;
+  sdk.hang = false;
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
   vi.stubEnv("NEXT_PUBLIC_ENV", "staging");
@@ -132,6 +135,33 @@ describe("checkoutInvoice", () => {
   });
 });
 
+describe("isStripeUrl", () => {
+  it("https on stripe.com or a subdomain of it, nothing else", async () => {
+    const { isStripeUrl } = await import("@/core/billing/stripe");
+    for (const url of [
+      "https://pay.stripe.com/invoice/acct_1/test_x/pdf?s=ap",
+      "https://files.stripe.com/v1/files/file_1/contents",
+      "https://stripe.com/x",
+    ]) {
+      expect(isStripeUrl(url)).toBe(true);
+    }
+    for (const url of [
+      "https://evil.example/x.pdf",
+      "https://stripe.com.evil.example/x.pdf",
+      "https://evilstripe.com/x.pdf",
+      "https://pay.stripe.com@evil.example/x.pdf",
+      "http://pay.stripe.com/x.pdf",
+      "javascript:alert(1)",
+      "not an address",
+      "",
+      null,
+      undefined,
+    ]) {
+      expect(isStripeUrl(url)).toBe(false);
+    }
+  });
+});
+
 describe("downloadPdf", () => {
   it("gives the bytes of a PDF", async () => {
     fetchMock.mockResolvedValue(answer(PDF));
@@ -141,11 +171,21 @@ describe("downloadPdf", () => {
     expect(fetchMock.mock.calls[0]?.[0]).toBe("https://pay.stripe.com/i/pdf");
   });
 
-  it("no address, not https, refused, not a PDF, too large, unreachable: null, never thrown", async () => {
-    const { downloadPdf, PDF_MAX_BYTES } = await import("@/core/billing/stripe");
-    expect(await downloadPdf(null)).toBeNull();
+  it("never asks another host than Stripe, nor follows a redirect out of it", async () => {
+    const { downloadPdf } = await import("@/core/billing/stripe");
+    expect(await downloadPdf("https://evil.example/x.pdf")).toBeNull();
     expect(await downloadPdf("http://pay.stripe.com/i/pdf")).toBeNull();
+    expect(await downloadPdf(null)).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
+    // A real PDF, but served from elsewhere after redirects: refused.
+    fetchMock.mockResolvedValueOnce({ ...answer(PDF), url: "https://evil.example/x.pdf" });
+    expect(await downloadPdf("https://pay.stripe.com/i/pdf")).toBeNull();
+    fetchMock.mockResolvedValueOnce({ ...answer(PDF), url: "https://files.stripe.com/f/x" });
+    expect((await downloadPdf("https://pay.stripe.com/i/pdf"))?.equals(PDF)).toBe(true);
+  });
+
+  it("refused, not a PDF, too large, unreachable: null, never thrown", async () => {
+    const { downloadPdf, PDF_MAX_BYTES } = await import("@/core/billing/stripe");
     fetchMock.mockResolvedValueOnce(answer("gone", { status: 404 }));
     expect(await downloadPdf("https://pay.stripe.com/i/pdf")).toBeNull();
     fetchMock.mockResolvedValueOnce(answer("<html>Sign in</html>"));
@@ -156,18 +196,46 @@ describe("downloadPdf", () => {
     expect(await downloadPdf("https://pay.stripe.com/i/pdf")).toBeNull();
   });
 
+  it("a body without a declared length is read piece by piece and dropped once too large", async () => {
+    const { downloadPdf, PDF_MAX_BYTES } = await import("@/core/billing/stripe");
+    const piece = new Uint8Array(1024 * 1024).fill(0x20);
+    piece.set(Buffer.from("%PDF-", "latin1"));
+    let pulled = 0;
+    let cancelled = false;
+    const endless = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulled += 1;
+        controller.enqueue(piece);
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    fetchMock.mockResolvedValueOnce(new Response(endless));
+    expect(await downloadPdf("https://pay.stripe.com/i/pdf")).toBeNull();
+    // Stopped just over the cap, never read to the end (there is none).
+    expect(pulled).toBeLessThanOrEqual(PDF_MAX_BYTES / piece.byteLength + 3);
+    expect(cancelled).toBe(true);
+    // A small streamed PDF passes.
+    fetchMock.mockResolvedValueOnce(new Response(new Uint8Array(PDF)));
+    expect((await downloadPdf("https://pay.stripe.com/i/pdf"))?.equals(PDF)).toBe(true);
+  });
+
   it("STRIPE_MOCK: always the same bytes, no call leaves", async () => {
     vi.stubEnv("NEXT_PUBLIC_ENV", "local");
     vi.stubEnv("STRIPE_MOCK", "1");
-    const { checkoutInvoice, creditNotePdfUrl, downloadPdf, MOCK_PDF } =
+    const { checkoutInvoice, creditNotePdfUrl, downloadPdf, isStripeUrl, MOCK_PDF } =
       await import("@/core/billing/stripe");
-    expect(await checkoutInvoice("cs_mock_abc")).toEqual({
+    const invoice = await checkoutInvoice("cs_mock_abc");
+    expect(invoice).toEqual({
       id: "in_mock_csmockabc",
       number: "MOCK-F-0001",
-      pdfUrl: null,
+      pdfUrl: "https://pay.stripe.com/mock/invoices/in_mock_csmockabc/pdf",
     });
-    expect(await creditNotePdfUrl("cn_mock_1")).toBeNull();
-    const bytes = await downloadPdf(null);
+    // Mocked addresses pass the same checks as real ones, and are never fetched.
+    expect(isStripeUrl(invoice?.pdfUrl)).toBe(true);
+    expect(isStripeUrl(await creditNotePdfUrl("cn_mock_1"))).toBe(true);
+    const bytes = await downloadPdf(invoice?.pdfUrl ?? null);
     expect(bytes?.equals(MOCK_PDF)).toBe(true);
     expect(MOCK_PDF.subarray(0, 5).toString("latin1")).toBe("%PDF-");
     expect(fetchMock).not.toHaveBeenCalled();
@@ -176,6 +244,8 @@ describe("downloadPdf", () => {
 });
 
 describe("orderInvoiceAttachment", () => {
+  afterEach(() => vi.useRealTimers());
+
   it("attaches the invoice under its number, in base64", async () => {
     sdk.invoices = [
       { id: "in_1", number: "LK/0001 A", invoice_pdf: "https://pay.stripe.com/i/pdf" },
@@ -197,18 +267,73 @@ describe("orderInvoiceAttachment", () => {
     ];
     fetchMock.mockResolvedValue(answer(PDF));
     const { orderInvoiceAttachment } = await import("@/leenkey/billing/documents");
-    const attachment = await orderInvoiceAttachment("cs_1", { pauseMs: 0 });
+    const attachment = await orderInvoiceAttachment("cs_1", { pauseMs: 1 });
     expect(attachment?.filename).toBe("facture-leenkey-LK-0001.pdf");
     expect(sdk.retrieved).toHaveLength(3);
   });
 
-  it("no PDF after the tries, or Stripe down: null (the email carries a link), never thrown", async () => {
+  it("a PDF that does not download is not asked a second time", async () => {
+    sdk.invoices = [{ id: "in_1", number: "LK-0001", invoice_pdf: "https://pay.stripe.com/i/pdf" }];
+    fetchMock.mockResolvedValue(answer("gone", { status: 500 }));
     const { orderInvoiceAttachment } = await import("@/leenkey/billing/documents");
+    expect(await orderInvoiceAttachment("cs_1", { pauseMs: 1 })).toBeNull();
+    expect(sdk.retrieved).toHaveLength(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("no invoice in the budget: asked every second, then null (the email carries a link)", async () => {
+    vi.useFakeTimers();
     sdk.invoices = [null];
-    expect(await orderInvoiceAttachment("cs_1", { pauseMs: 0 })).toBeNull();
-    expect(sdk.retrieved).toHaveLength(3);
+    const { orderInvoiceAttachment, INVOICE_BUDGET_MS } =
+      await import("@/leenkey/billing/documents");
+    let result: unknown = "pending";
+    void orderInvoiceAttachment("cs_1").then((value) => {
+      result = value;
+    });
+    await vi.advanceTimersByTimeAsync(INVOICE_BUDGET_MS - 1_500);
+    expect(result).toBe("pending");
+    await vi.advanceTimersByTimeAsync(1_500);
+    expect(result).toBeNull();
+    // At 0, 1, 2, 3, 4 and 5 s; none once a pause would end at the deadline.
+    expect(sdk.retrieved).toHaveLength(6);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("Stripe that never answers: null when the budget ends, never later", async () => {
+    vi.useFakeTimers();
+    sdk.hang = true;
+    const { orderInvoiceAttachment, INVOICE_BUDGET_MS } =
+      await import("@/leenkey/billing/documents");
+    let result: unknown = "pending";
+    void orderInvoiceAttachment("cs_1").then((value) => {
+      result = value;
+    });
+    await vi.advanceTimersByTimeAsync(INVOICE_BUDGET_MS - 1);
+    expect(result).toBe("pending");
+    await vi.advanceTimersByTimeAsync(1);
+    expect(result).toBeNull();
+    expect(INVOICE_BUDGET_MS).toBeLessThanOrEqual(6_000);
+  });
+
+  it("a download that hangs: null when the budget ends", async () => {
+    vi.useFakeTimers();
+    sdk.invoices = [{ id: "in_1", number: "LK-0001", invoice_pdf: "https://pay.stripe.com/i/pdf" }];
+    fetchMock.mockReturnValue(new Promise(() => {}));
+    const { orderInvoiceAttachment, INVOICE_BUDGET_MS } =
+      await import("@/leenkey/billing/documents");
+    let result: unknown = "pending";
+    void orderInvoiceAttachment("cs_1").then((value) => {
+      result = value;
+    });
+    await vi.advanceTimersByTimeAsync(INVOICE_BUDGET_MS);
+    expect(result).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("Stripe down: null, never thrown", async () => {
+    const { orderInvoiceAttachment } = await import("@/leenkey/billing/documents");
     sdk.fail = true;
-    expect(await orderInvoiceAttachment("cs_1", { pauseMs: 0 })).toBeNull();
+    expect(await orderInvoiceAttachment("cs_1", { pauseMs: 1 })).toBeNull();
   });
 
   it("STRIPE_MOCK: the mocked invoice, at once", async () => {

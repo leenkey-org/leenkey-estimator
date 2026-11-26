@@ -59,7 +59,7 @@ async function rendered(element: React.ReactElement) {
 /**
  * `invoice`: the PDF of the invoice of the order (documents.ts), attached;
  * null when it could not be fetched: the email then says where to download
- * it.
+ * it. An order with nothing to pay (a code of 100 %) promises no invoice.
  */
 export async function emailPlanActivated(
   order: PaidOrder,
@@ -89,7 +89,7 @@ export async function emailPlanActivated(
         mediator: SALES_TERMS.mediator
           ? `${SALES_TERMS.mediator.name}, ${SALES_TERMS.mediator.url}`
           : null,
-        invoiceAttached: invoice !== null,
+        invoice: order.amountCents <= 0 ? "none" : invoice ? "attached" : "link",
         invoicesUrl: paymentsUrl(order.propertyId),
         planUrl: absoluteUrl(`/vendeur/formule?bien=${order.propertyId}`),
         siteUrl: siteUrl(),
@@ -101,7 +101,7 @@ export async function emailPlanActivated(
       html,
       text,
       replyTo: fr.legal.contactEmail,
-      ...(invoice ? { attachments: [invoice] } : {}),
+      ...(invoice && order.amountCents > 0 ? { attachments: [invoice] } : {}),
     });
   } catch (error) {
     console.error("[billing] plan activated email failed", {
@@ -209,13 +209,13 @@ export type RefundNotice = {
   sellerEmail: string | null;
   sellerFirstName: string | null;
   planName: string;
-  /** « LK-0001 », or the town of a property without a listing yet. */
+  /** « LK-0001 », or the town of a property without a listing yet; may be empty. */
   property: string;
   propertyId: string;
   /** The amount of this refund: the one of its credit note. */
   amountCents: number;
-  /** When Stripe issued the credit note. */
-  refundedAt: string;
+  /** When Stripe issued the credit note (the refund itself may be of the day before). */
+  issuedAt: string;
   /** When the seller renounced, null for a refund without a withdrawal. */
   withdrawnAt: string | null;
   creditNote: { stripeId: string; number: string };
@@ -225,8 +225,15 @@ export type RefundNotice = {
  * The confirmation of a refund (Cédric, 2026-11-26), to the seller, with
  * its credit note: `creditNote` is its PDF (documents.ts), null when it
  * could not be fetched: the email then says where to download it. The key
- * names the email for Resend: sent again within a day, it leaves once.
+ * names the email for Resend, which sends once what is asked twice within a
+ * day and refuses a key asked again with another body: the key says
+ * whether the PDF is attached, so that a second try that falls on the other
+ * case (the PDF came, or no longer comes) is another email and leaves.
  */
+export function refundEmailKey(stripeCreditNoteId: string, attached: boolean): string {
+  return `plan-refunded-${stripeCreditNoteId}-${attached ? "pdf" : "link"}`.slice(0, 256);
+}
+
 export async function emailPlanRefunded(
   refund: RefundNotice,
   creditNote: EmailAttachment | null,
@@ -239,7 +246,7 @@ export async function emailPlanRefunded(
         planName: refund.planName,
         property: refund.property,
         amount: formatAmount(refund.amountCents),
-        refundedOn: legalDate(refund.refundedAt),
+        issuedOn: legalDate(refund.issuedAt),
         withdrawnOn: refund.withdrawnAt ? legalDate(refund.withdrawnAt) : null,
         creditNoteNumber: refund.creditNote.number,
         creditNoteAttached: creditNote !== null,
@@ -253,7 +260,7 @@ export async function emailPlanRefunded(
       html,
       text,
       replyTo: fr.legal.contactEmail,
-      idempotencyKey: `plan-refunded-${refund.creditNote.stripeId}`.slice(0, 256),
+      idempotencyKey: refundEmailKey(refund.creditNote.stripeId, creditNote !== null),
       ...(creditNote ? { attachments: [creditNote] } : {}),
     });
   } catch (error) {

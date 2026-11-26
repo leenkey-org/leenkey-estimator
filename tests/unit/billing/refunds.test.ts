@@ -78,7 +78,15 @@ describe("the refunds that need a credit note", () => {
     expect(first).toMatchObject({
       status: "ok",
       created: 1,
-      creditNotes: [{ number: "MOCK-0001", amountCents: 99000, pdfUrl: null }],
+      creditNotes: [
+        {
+          number: "MOCK-0001",
+          amountCents: 99000,
+          // An address of the mock: shown as a link, never fetched.
+          pdfUrl: "https://pay.stripe.com/mock/credit_notes/cn_mock_picsmock1/pdf",
+          ours: true,
+        },
+      ],
     });
     expect(first.status === "ok" && again.status === "ok").toBe(true);
     if (first.status === "ok" && again.status === "ok") {

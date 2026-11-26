@@ -13,7 +13,15 @@ import { addressScope, clientAddress } from "./client-address";
 // caller is this server. Messages and the assistant have their own limits
 // (messages_rate_limit, ai_quota_consume, ai_visitor_ask).
 
-export type RateBucket = "signup" | "signin" | "reset" | "contact" | "report" | "estimate";
+export type RateBucket =
+  | "signup"
+  | "signin"
+  | "reset"
+  | "contact"
+  | "report"
+  | "estimate"
+  /** Per account, not per address (allowAccount): the PDFs of /vendeur/formule/document. */
+  | "document";
 
 /** The limits of rate_limit_hit, in requests per window (tests/unit/security). */
 export const RATE_LIMITS: Record<RateBucket, { limit: number; windowSeconds: number }> = {
@@ -23,6 +31,7 @@ export const RATE_LIMITS: Record<RateBucket, { limit: number; windowSeconds: num
   contact: { limit: 5, windowSeconds: 3600 },
   report: { limit: 5, windowSeconds: 3600 },
   estimate: { limit: 20, windowSeconds: 3600 },
+  document: { limit: 30, windowSeconds: 900 },
 };
 
 const hmac = (key: string, text: string) => createHmac("sha256", key).update(text).digest("hex");
@@ -68,6 +77,27 @@ export async function allowRequest(
     p_bucket: bucket,
     p_key: rateKey(keys.hashKey, bucket, address),
     p_count: count,
+  });
+  if (error) {
+    console.error("[rate-limit] count failed", { bucket, code: error.code });
+    return true;
+  }
+  return data === true;
+}
+
+/**
+ * Counts a request of a signed-in account in the bucket, whatever its
+ * address; false once the limit is passed. As allowRequest: lets it through
+ * without the secret or when the base does not answer.
+ */
+export async function allowAccount(bucket: RateBucket, accountId: string): Promise<boolean> {
+  const keys = rateLimitKeys();
+  if (!keys) return true;
+  const { data, error } = await createPublicClient().rpc("rate_limit_hit", {
+    p_server: keys.serverKey,
+    p_bucket: bucket,
+    p_key: hmac(keys.hashKey, `${bucket}:account:${accountId}`),
+    p_count: true,
   });
   if (error) {
     console.error("[rate-limit] count failed", { bucket, code: error.code });

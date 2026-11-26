@@ -7,6 +7,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // be fetched, and the refund email once per credit note.
 
 vi.mock("server-only", () => ({}));
+// pendingRefundEmails reads with the session of the caller.
+const session = vi.hoisted(() => ({
+  rows: [] as Record<string, unknown>[],
+  error: null as { code: string } | null,
+  asked: [] as string[],
+}));
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: async () => {
+    const chain: Record<string, unknown> = {};
+    chain.from = () => chain;
+    chain.select = () => chain;
+    chain.is = () => chain;
+    chain.in = (_column: string, ids: string[]) => {
+      session.asked = ids;
+      return chain;
+    };
+    chain.order = async () => ({ data: session.error ? null : session.rows, error: session.error });
+    return chain;
+  },
+}));
 
 const fetchMock = vi.fn();
 const PDF = { filename: "avoir-leenkey-LK-0001-CN-01.pdf", content: "JVBERi0xLjc=" };
@@ -71,7 +91,7 @@ const refund = {
   property: "LK-0009",
   propertyId: "5eed1000-0000-4000-8000-000000000009",
   amountCents: 99000,
-  refundedAt: "2026-11-10T10:00:00Z",
+  issuedAt: "2026-11-10T10:00:00Z",
   withdrawnAt: "2026-11-05T13:05:00Z" as string | null,
   creditNote: { stripeId: "cn_1", number: "LK-0001-CN-01" },
 };
@@ -106,6 +126,21 @@ describe("emailPlanActivated", () => {
   });
 });
 
+describe("emailPlanActivated, an order with nothing to pay", () => {
+  it("promises no invoice (a code of 100 %): no sentence, no link, no attachment", async () => {
+    const { emailPlanActivated } = await import("@/leenkey/billing/emails");
+    const invoice = { filename: "facture-leenkey-LK-0001.pdf", content: "JVBERi0xLjc=" };
+    for (const attached of [null, invoice]) {
+      fetchMock.mockClear();
+      expect(await emailPlanActivated({ ...order, amountCents: 0 }, attached)).toBe("test");
+      const { body } = sent();
+      expect(body).not.toHaveProperty("attachments");
+      expect(body.text).not.toContain("facture");
+      expect(body.text).not.toContain("#factures");
+    }
+  });
+});
+
 describe("emailPlanRefunded", () => {
   it("says the amount, the plan, what the seller keeps, with the credit note attached", async () => {
     const { emailPlanRefunded } = await import("@/leenkey/billing/emails");
@@ -116,10 +151,11 @@ describe("emailPlanRefunded", () => {
       "[PREPROD] Confirmation de votre remboursement · formule Accompagné · LK-0009",
     );
     expect(body.attachments).toEqual([PDF]);
-    expect(headers["Idempotency-Key"]).toBe("plan-refunded-cn_1");
+    // The key says the PDF is attached: the same email asked again leaves once.
+    expect(headers["Idempotency-Key"]).toBe("plan-refunded-cn_1-pdf");
     expect(body.text).toContain("Bonjour Bruno,");
     expect(body.text).toMatch(
-      /Nous vous avons remboursé 990\s€ le 10 novembre 2026 pour votre formule Accompagné \(bien LK-0009\)/,
+      /Nous vous avons remboursé 990\s€ pour votre formule Accompagné \(bien LK-0009\), par le moyen/,
     );
     expect(body.text).toContain("TVA non applicable, article 293 B du CGI.");
     expect(body.text).toContain(
@@ -128,7 +164,10 @@ describe("emailPlanRefunded", () => {
     expect(body.text).toContain(
       "Votre annonce, vos documents, vos messages et l'avancement de votre vente restent en place",
     );
-    expect(body.text).toContain("Votre avoir LK-0001-CN-01 est joint à cet email.");
+    // The date is the one of the credit note, said as such (not the day of the refund).
+    expect(body.text).toContain(
+      "Votre avoir LK-0001-CN-01, émis le 10 novembre 2026, est joint à cet email.",
+    );
     expect(body.text).not.toContain("télécharger mon avoir");
     // Editorial rules (CLAUDE.md section 16).
     expect(body.text).not.toMatch(/\bon\b/i);
@@ -141,15 +180,28 @@ describe("emailPlanRefunded", () => {
     expect(
       await emailPlanRefunded({ ...refund, withdrawnAt: null, amountCents: 51000 }, null),
     ).toBe("test");
-    const { body } = sent();
+    const { body, headers } = sent();
     expect(body).not.toHaveProperty("attachments");
+    // Another body than with the PDF: another key, never refused for the first one.
+    expect(headers["Idempotency-Key"]).toBe("plan-refunded-cn_1-link");
     expect(body.text).toMatch(/remboursé 510\s€/);
-    expect(body.text).toContain("Votre avoir LK-0001-CN-01 est à télécharger dans votre espace");
+    expect(body.text).toContain(
+      "Votre avoir LK-0001-CN-01, émis le 10 novembre 2026, est à télécharger dans votre espace",
+    );
     expect(body.text).toContain(
       "https://leenkey-v2.vercel.app/vendeur/formule?bien=5eed1000-0000-4000-8000-000000000009#factures",
     );
     expect(body.text).not.toContain("rétractation");
     expect(body.text).not.toContain("est joint à cet email");
+  });
+
+  it("a property without a reference nor a town: no empty brackets, no subject ending in a dot", async () => {
+    const { emailPlanRefunded } = await import("@/leenkey/billing/emails");
+    await emailPlanRefunded({ ...refund, property: "" }, null);
+    const { body } = sent();
+    expect(body.subject).toBe("[PREPROD] Confirmation de votre remboursement · formule Accompagné");
+    expect(body.text).toMatch(/remboursé 990\s€ pour votre formule Accompagné, par le moyen/);
+    expect(body.text).not.toContain("(bien");
   });
 
   it("no address, or Resend refusing: failed, never thrown", async () => {
@@ -171,10 +223,15 @@ type NoteRow = {
   pdf_url: string | null;
   issued_at: string;
   refund_emailed_at: string | null;
+  /** In ms, on the clock of the fake base. */
+  refund_email_claimed_at: number | null;
 };
+
+const TEN_MINUTES = 10 * 60 * 1000;
 
 function database(notes: NoteRow[], options: { email?: string | null } = {}) {
   const rpc: { fn: string; id: string }[] = [];
+  const clock = { now: 1_000_000_000 };
   const tables: Record<string, unknown> = {
     subscriptions: {
       id: "s1",
@@ -203,12 +260,21 @@ function database(notes: NoteRow[], options: { email?: string | null } = {}) {
     rpc: async (fn: string, args: { p_credit_note_id: string }) => {
       rpc.push({ fn, id: args.p_credit_note_id });
       const row = notes.find((item) => item.id === args.p_credit_note_id);
+      // As the three SQL functions (supabase/tests/rls_billing_documents.sql).
       if (fn === "credit_note_email_claim") {
-        if (!row || row.refund_emailed_at !== null) return { data: false, error: null };
-        row.refund_emailed_at = "now";
+        const free =
+          row &&
+          row.refund_emailed_at === null &&
+          (row.refund_email_claimed_at === null ||
+            row.refund_email_claimed_at < clock.now - TEN_MINUTES);
+        if (!row || !free) return { data: false, error: null };
+        row.refund_email_claimed_at = clock.now;
         return { data: true, error: null };
       }
-      if (row) row.refund_emailed_at = null;
+      if (fn === "credit_note_email_sent" && row) row.refund_emailed_at = "now";
+      if (fn === "credit_note_email_release" && row && row.refund_emailed_at === null) {
+        row.refund_email_claimed_at = null;
+      }
       return { data: null, error: null };
     },
     auth: {
@@ -222,7 +288,7 @@ function database(notes: NoteRow[], options: { email?: string | null } = {}) {
       },
     },
   };
-  return { supabase, rpc };
+  return { supabase, rpc, clock };
 }
 
 const row = (overrides: Partial<NoteRow> = {}): NoteRow => ({
@@ -233,6 +299,7 @@ const row = (overrides: Partial<NoteRow> = {}): NoteRow => ({
   pdf_url: null,
   issued_at: "2026-11-10T10:00:00Z",
   refund_emailed_at: null,
+  refund_email_claimed_at: null,
   ...overrides,
 });
 
@@ -249,13 +316,16 @@ describe("emailCreditNotes", () => {
     expect(sent(0).body.text).toMatch(/remboursé 510\s€/);
     expect(sent(0).body.text).toContain("Votre avoir LK-0001-CN-01");
     expect(sent(1).body.text).toMatch(/remboursé 990\s€/);
-    expect(sent(1).headers["Idempotency-Key"]).toBe("plan-refunded-cn_2");
+    expect(sent(1).headers["Idempotency-Key"]).toBe("plan-refunded-cn_2-link");
     // No address of the PDF: the link, never a lost email.
     expect(sent(0).body).not.toHaveProperty("attachments");
     expect(sent(0).body.text).toContain("#factures");
-    expect(rpc.map((call) => call.fn)).toEqual([
-      "credit_note_email_claim",
-      "credit_note_email_claim",
+    // Taken, handed to the mail service, then marked sent: in that order.
+    expect(rpc.map((call) => `${call.fn}:${call.id}`)).toEqual([
+      "credit_note_email_claim:n1",
+      "credit_note_email_sent:n1",
+      "credit_note_email_claim:n2",
+      "credit_note_email_sent:n2",
     ]);
     // The webhook delivered again, « Créer l'avoir » clicked again.
     expect(await emailCreditNotes(supabase as never, "s1")).toEqual({ sent: 0, failed: 0 });
@@ -285,7 +355,46 @@ describe("emailCreditNotes", () => {
       "credit_note_email_release",
     ]);
     expect(notes[0]?.refund_emailed_at).toBeNull();
+    expect(notes[0]?.refund_email_claimed_at).toBeNull();
     expect(await emailCreditNotes(supabase as never, "s1")).toEqual({ sent: 1, failed: 0 });
+    expect(notes[0]?.refund_emailed_at).toBe("now");
+  });
+
+  it("a sender that died after taking it: nothing for 10 minutes, then the email leaves", async () => {
+    const { emailCreditNotes } = await import("@/leenkey/billing/refund-emails");
+    const notes = [row()];
+    const { supabase, clock } = database(notes);
+    // Taken, then nothing: neither sent nor released.
+    notes[0]!.refund_email_claimed_at = clock.now;
+    clock.now += 9 * 60 * 1000;
+    expect(await emailCreditNotes(supabase as never, "s1")).toEqual({ sent: 0, failed: 0 });
+    expect(fetchMock).not.toHaveBeenCalled();
+    clock.now += 2 * 60 * 1000;
+    expect(await emailCreditNotes(supabase as never, "s1")).toEqual({ sent: 1, failed: 0 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(notes[0]?.refund_emailed_at).toBe("now");
+  });
+
+  it("left but not marked (the base failed after the mail service): the same key at the next pass", async () => {
+    const { emailCreditNotes } = await import("@/leenkey/billing/refund-emails");
+    const notes = [row()];
+    const { supabase, clock } = database(notes);
+    const real = supabase.rpc;
+    let broken = true;
+    supabase.rpc = async (fn, args) => {
+      if (fn === "credit_note_email_sent" && broken) {
+        return { data: null, error: { code: "XX000" } } as never;
+      }
+      return real(fn, args);
+    };
+    expect(await emailCreditNotes(supabase as never, "s1")).toEqual({ sent: 1, failed: 0 });
+    broken = false;
+    clock.now += 11 * 60 * 1000;
+    expect(await emailCreditNotes(supabase as never, "s1")).toEqual({ sent: 1, failed: 0 });
+    // Asked twice of the mail service under one key: it sends once.
+    expect(sent(0).headers["Idempotency-Key"]).toBe("plan-refunded-cn_1-link");
+    expect(sent(1).headers["Idempotency-Key"]).toBe(sent(0).headers["Idempotency-Key"]);
+    expect(JSON.stringify(sent(1).body)).toBe(JSON.stringify(sent(0).body));
   });
 
   it("the PDF of the credit note attached when Stripe serves it", async () => {
@@ -335,5 +444,43 @@ describe("emailCreditNotes", () => {
     };
     expect(await emailCreditNotes(broken as never, "s1")).toEqual({ sent: 0, failed: 0 });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("pendingRefundEmails", () => {
+  beforeEach(() => {
+    session.rows = [];
+    session.error = null;
+    session.asked = [];
+  });
+
+  it("the credit notes of these plans whose email is still to send", async () => {
+    session.rows = [
+      {
+        id: "n1",
+        subscription_id: "s1",
+        number: "LK-0001-CN-01",
+        amount_cents: 51000,
+        issued_at: "2026-11-10T10:00:00Z",
+      },
+    ];
+    const { pendingRefundEmails } = await import("@/leenkey/billing/refund-emails");
+    expect(await pendingRefundEmails(["s1", "s2"])).toEqual([
+      {
+        subscriptionId: "s1",
+        creditNoteId: "n1",
+        number: "LK-0001-CN-01",
+        amountCents: 51000,
+        issuedAt: "2026-11-10T10:00:00Z",
+      },
+    ]);
+    expect(session.asked).toEqual(["s1", "s2"]);
+  });
+
+  it("no plan: nothing asked; a read that failed: null", async () => {
+    const { pendingRefundEmails } = await import("@/leenkey/billing/refund-emails");
+    expect(await pendingRefundEmails([])).toEqual([]);
+    session.error = { code: "XX000" };
+    expect(await pendingRefundEmails(["s1"])).toBeNull();
   });
 });

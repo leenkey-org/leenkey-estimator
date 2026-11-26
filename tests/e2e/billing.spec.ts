@@ -475,6 +475,20 @@ test("rétractation à rembourser, remboursement dans Stripe, puis avoir pour l'
   await expect(
     refunded.first().getByRole("link", { name: /Télécharger la facture/ }),
   ).toBeVisible();
+  // The credit note itself: a PDF for its owner (the mocked one here)…
+  const creditNote = refunded.first().getByRole("link", { name: /^Télécharger l'avoir MOCK-0001/ });
+  const noteHref = (await creditNote.getAttribute("href")) ?? "";
+  expect(noteHref).toMatch(/^\/vendeur\/formule\/document\?avoir=[0-9a-f-]{36}$/);
+  const notePdf = await seller.request.get(noteHref);
+  expect(notePdf.status()).toBe(200);
+  expect(notePdf.headers()["content-type"]).toBe("application/pdf");
+  expect((await notePdf.body()).subarray(0, 5).toString("latin1")).toBe("%PDF-");
+  // … and a 404 for another seller, who does not even learn that it exists.
+  const otherContext = await browser.newContext({ baseURL });
+  const other = await otherContext.newPage();
+  await signIn(other, "seller_a", "/vendeur");
+  expect((await other.request.get(noteHref)).status()).toBe(404);
+  await otherContext.close();
   await expectNoSeriousViolation(seller);
   await context.close();
 });

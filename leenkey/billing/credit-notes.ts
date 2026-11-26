@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { ensureCreditNotes } from "@/core/billing/stripe";
 import { VAT_EXEMPTION_NOTICE } from "@/lib/config/sales";
 import type { Database } from "@/types/database";
-import { emailCreditNotes } from "./refund-emails";
+import { emailCreditNotes, NO_REFUND_EMAILS, type RefundEmails } from "./refund-emails";
 
 // The credit note (« avoir ») of a refund of a plan (DECISIONS.md 2026-11-25,
 // « Avoirs et remboursements »): after charge.refunded (webhook.ts) or again
@@ -12,7 +12,8 @@ import { emailCreditNotes } from "./refund-emails";
 // already made; credit_notes_record keeps it for /vendeur/formule and the
 // back office, and a credit note voided in Stripe since is forgotten. Then
 // the seller gets the confirmation of the refund with the credit note
-// (refund-emails.ts, once per credit note; Cédric, 2026-11-26). Always called with the service role client:
+// (refund-emails.ts, once per credit note; Cédric, 2026-11-26), for the
+// credit notes this code created only. Always called with the service role client:
 // the webhook's, or the admin action's once getProfile() has given an
 // account with the admin role (retryCreditNote, CLAUDE.md section 14).
 // Never throws: a failure is logged and told to the caller, the refund
@@ -39,7 +40,14 @@ export function creditNoteMemo(withdrawn: boolean): string {
 type Client = SupabaseClient<Database>;
 
 export type CreditNoteOutcome =
-  | { status: "recorded"; created: number; total: number; pending: number }
+  | {
+      status: "recorded";
+      created: number;
+      total: number;
+      pending: number;
+      /** The confirmations of refund this call sent to the seller, and those that did not leave. */
+      emails: RefundEmails;
+    }
   /** Not a plan of Leenkey, or its payment not recorded yet. */
   | { status: "unknown" }
   /** The order has no Stripe invoice: the credit note is made by hand. */
@@ -94,9 +102,28 @@ export async function recordCreditNotes(
         .in("stripe_credit_note_id", result.voidIds);
       if (voidError) throw new Error(`credit_notes void: ${voidError.code}`);
     }
+    // The credit notes of the invoice this code did not create (made by hand
+    // in the Stripe dashboard, or before Leenkey sent them itself): Stripe
+    // emailed them, nothing is sent for them. Without that mark, no email
+    // at all in this pass: never twice to the seller.
+    const foreign = result.creditNotes.filter((note) => !note.ours).map((note) => note.id);
+    const marked =
+      foreign.length > 0
+        ? await supabase.rpc("credit_notes_emailed_elsewhere", {
+            p_stripe_credit_note_ids: foreign,
+          })
+        : { error: null };
+    if (marked.error) {
+      console.error("[billing] credit notes of Stripe not marked: no refund email sent", {
+        entity_id: subscription.id,
+        code: marked.error.code,
+      });
+    }
     // Once recorded: the confirmation of the refund to the seller, with the
     // credit note. Never throws, never fails what was just recorded.
-    const emails = await emailCreditNotes(supabase, subscription.id);
+    const emails = marked.error
+      ? NO_REFUND_EMAILS
+      : await emailCreditNotes(supabase, subscription.id);
     console.info("[billing] credit notes", {
       entity_id: subscription.id,
       created: result.created,
@@ -110,6 +137,7 @@ export async function recordCreditNotes(
       created: result.created,
       total: result.creditNotes.length,
       pending: result.pending,
+      emails,
     };
   } catch (error) {
     console.error("[billing] credit note not created", {

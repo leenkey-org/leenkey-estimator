@@ -45,7 +45,29 @@ export const frAdminRefunds = {
     missing: "Avoir à créer",
     create: "Créer l'avoir",
     creating: "Création…",
-    created: "Avoir créé et envoyé au vendeur.",
+    // After « Créer l'avoir » (retryCreditNote): by what its `emails` says.
+    created: "Avoir créé.",
+    createdEmailed: "Avoir créé et envoyé au vendeur par email.",
+    createdNotEmailed:
+      "Avoir créé. L'email au vendeur n'est pas parti : utilisez « Renvoyer l'email ».",
+    // The confirmation of refund to the seller (pendingRefundEmails, resendRefundEmail).
+    email: {
+      pending: "Email de remboursement à envoyer",
+      resend: "Renvoyer l'email",
+      resending: "Envoi…",
+      sent: (count: number) =>
+        count > 1
+          ? `${count}\u00A0emails de remboursement envoyés au vendeur, chacun avec son avoir.`
+          : "Email de remboursement envoyé au vendeur, avec son avoir.",
+      failed: "L'email n'a pas pu partir. Réessayez dans quelques minutes.",
+      nothing: "Aucun email à envoyer : le vendeur l'a déjà reçu, ou un envoi est en cours.",
+      errors: {
+        forbidden: "Cette action est réservée à l'équipe.",
+        invalid: "Ce remboursement est introuvable.",
+        not_found: "Ce remboursement est introuvable.",
+        unavailable: "L'email n'a pas pu partir. Réessayez dans quelques minutes.",
+      },
+    },
     nothing:
       "Aucun avoir de plus à créer : le remboursement est peut-être encore en cours chez Stripe. Réessayez dans quelques minutes.",
     errors: {

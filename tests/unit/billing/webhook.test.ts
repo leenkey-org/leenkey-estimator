@@ -211,6 +211,15 @@ describe("handleStripeEvent", () => {
     });
   });
 
+  it("an order with nothing to pay (a code of 100 %): the email leaves, no invoice asked", async () => {
+    expect(
+      await handle(completed({ amount_total: 0, payment_status: "no_payment_required" })),
+    ).toEqual({ status: 200, outcome: "processed" });
+    expect(mocks.emails.sort()).toEqual(["seller", "team"]);
+    expect(mocks.invoices).toEqual([]);
+    expect(mocks.attached).toEqual([null]);
+  });
+
   it("passes what to check to the team for a plan activated all the same", async () => {
     mocks.rpcResult = {
       data: {
