@@ -35,7 +35,7 @@ export function FilterPills({
     >
       <ul className="flex w-max gap-2 md:w-auto md:flex-wrap">
         {items.map((item) => (
-          <li key={item.label}>
+          <li key={`${item.href} ${item.label}`}>
             <Link
               href={item.href}
               aria-current={item.active ? "page" : undefined}

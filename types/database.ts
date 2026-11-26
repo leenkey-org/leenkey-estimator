@@ -908,20 +908,54 @@ export type Database = {
           },
         ]
       }
+      favorite_lists: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_lists_owner_id_fkey"
+            columns: ["owner_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           buyer_id: string
           created_at: string
+          list_id: string | null
           listing_id: string
         }
         Insert: {
           buyer_id: string
           created_at?: string
+          list_id?: string | null
           listing_id: string
         }
         Update: {
           buyer_id?: string
           created_at?: string
+          list_id?: string | null
           listing_id?: string
         }
         Relationships: [
@@ -929,6 +963,12 @@ export type Database = {
             foreignKeyName: "favorites_buyer_id_fkey"
             columns: ["buyer_id"]
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_list_id_fkey"
+            columns: ["list_id"]
+            referencedRelation: "favorite_lists"
             referencedColumns: ["id"]
           },
           {

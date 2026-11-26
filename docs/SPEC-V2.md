@@ -505,9 +505,20 @@ create table listing_revisions (         -- historique simplifié : quels champs
 -- Alimentée par trigger sur listings et photos quand l'annonce est en ligne ou en pause (une annonce en pause revient en ligne sans relecture), pour une modification faite avec une session (le seed et les scripts ne sont pas suivis ; L1-35, DECISIONS.md 2026-11-13). Pas de diff visuel : une liste chronologique « champ · ancienne → nouvelle valeur ».
 create index on listing_revisions (listing_id, created_at desc);
 
+-- Listes de favoris nommées par le compte (DECISIONS.md 2026-11-26) : 20 au plus par compte (trigger), un nom par compte sans tenir compte de la casse.
+create table favorite_lists (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references profiles(id) on delete cascade,
+  name text not null check (char_length(btrim(name)) between 1 and 40),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
+);
+create unique index on favorite_lists (owner_id, lower(btrim(name)));
+
 create table favorites (
   buyer_id uuid references profiles(id) on delete cascade,
   listing_id uuid references listings(id) on delete cascade,
+  list_id uuid references favorite_lists(id) on delete set null,  -- une seule liste au plus ; supprimer la liste garde le favori
   created_at timestamptz not null default now(),
   primary key (buyer_id, listing_id)
 );
@@ -1084,7 +1095,8 @@ Matrice (L = lecture, E = écriture) :
 | `estimations` | création via la fonction `estimation_record()` (`security definer`, appelée par `/api/estimate`) ; aucune lecture | L les siennes ; rattachement via `estimation_claim(token)` | L les siennes | L tous |
 | `listings` | L si `published` | L/E ses annonces sauf si `suspended` (lecture seule) ; `status` uniquement via fonctions : `draft`↔`pending`, `published`↔`paused`, `→sold` ; jamais vers ou depuis `suspended` | L si `published` | L/E tous ; seul rôle autorisé à `→suspended` et `suspended→published/paused` |
 | `photos` | via route `/img` | L/E ses biens | via route `/img` | L tous |
-| `favorites` | — | — | L/E les siens | L |
+| `favorites` | — | — | L/E les siens ; `list_id` : seule colonne modifiable, vers une de ses listes ou aucune | L |
+| `favorite_lists` | — | L/E les siennes (tout compte connecté ; création par un compte actif, 20 au plus ; seul `name` se modifie) | L/E les siennes (idem) | L |
 | `plans` | L | L | L | L/E |
 | `subscriptions` | — | L les siennes | — | L tous |
 | `legal_acceptances` | — | L les siennes (écriture par fonction à l'inscription et à la commande) | L les siennes | L tous |
