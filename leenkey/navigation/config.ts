@@ -3,7 +3,7 @@
 // data for the bars of components/shared, which know no route of the site.
 
 import { loginPath } from "@/core/auth/next-path";
-import type { NavItem } from "@/components/shared/nav-items";
+import { matchesPath, type NavItem } from "@/components/shared/nav-items";
 import { homePathForRoles } from "@/leenkey/auth/routes";
 import { frNav } from "@/lib/i18n/sections/nav";
 import { frSiteLinks } from "@/lib/i18n/sections/site/links";
@@ -135,6 +135,74 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
   { href: ROUTES.adminReports, label: admin.reports, icon: "flag" },
   { href: ROUTES.adminAssistant, label: admin.assistant, icon: "sparkles" },
 ];
+
+const sidebar = fr.nav.sidebar;
+
+/**
+ * The column of a signed-in area from 1 024 px (Younes, DECISIONS.md
+ * 2026-11-26): the pages of the space that already exist, then, under a
+ * line, the way to the other side (as the tabs of the BottomNav, DECISIONS
+ * 2026-10-19) and the account. Null for the back office, which has its own
+ * sidebar. The visits and the offers have no page of their own: a buyer
+ * finds them on their home, a seller on the page of the property.
+ */
+export function spaceSidebar(
+  space: Space,
+): { label: string; groups: readonly (readonly NavItem[])[] } | null {
+  switch (space) {
+    case "buyer":
+      return {
+        label: sidebar.buyerLabel,
+        groups: [
+          [
+            { href: ROUTES.buyer, label: sidebar.overview, icon: "layout-grid", exact: true },
+            { href: ROUTES.favourites, label: sidebar.favourites, icon: "heart" },
+            { href: ROUTES.buyerAlerts, label: sidebar.alerts, icon: "bell" },
+            { href: ROUTES.messages, label: tabs.messages, icon: "message" },
+            { href: ROUTES.buyerProfile, label: sidebar.project, icon: "wallet" },
+            { href: ROUTES.buyerDocuments, label: sidebar.documents, icon: "folder" },
+          ],
+          [
+            { href: ROUTES.search, label: tabs.search, icon: "search" },
+            { href: ROUTES.seller, label: tabs.sell, icon: "square-plus" },
+            { href: ROUTES.account, label: fr.nav.menu.account, icon: "user" },
+          ],
+        ],
+      };
+    case "seller":
+      return {
+        label: sidebar.sellerLabel,
+        groups: [
+          [
+            { href: ROUTES.seller, label: tabs.sale, icon: "dashboard", exact: true },
+            // The page of a property is the file of the sale (L1-14).
+            {
+              href: ROUTES.sellerFile,
+              label: tabs.file,
+              icon: "file",
+              match: [ROUTES.sellerProperties],
+            },
+            { href: ROUTES.messages, label: tabs.messages, icon: "message" },
+            { href: ROUTES.plan, label: fr.nav.menu.plans, icon: "tag" },
+          ],
+          [
+            { href: ROUTES.search, label: tabs.buy, icon: "search" },
+            { href: ROUTES.account, label: fr.nav.menu.account, icon: "user" },
+          ],
+        ],
+      };
+    case "admin":
+      return null;
+  }
+}
+
+/**
+ * The messaging keeps the whole width (no column): its two panes continue on
+ * the page of a conversation, which has another layout (G6).
+ */
+export function hasSpaceSidebar(path: string): boolean {
+  return !matchesPath(path, ROUTES.messages);
+}
 
 /** « Vendre mon bien »: the two ways to start a sale, signed in or not (DECISIONS 2026-10-26). */
 export function sellCta(): { href: string; label: string } {

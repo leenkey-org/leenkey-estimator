@@ -130,10 +130,10 @@ const TAB_ICONS = [Info, Images, Megaphone, ListChecks, HandCoins, CalendarDays,
  * status, its key figures (surface, rooms, floor, price per m²), what the
  * status means, the actions it allows, then the tabs Infos, Photos, Annonce.
  * The bell beside the title below 768 px, as on the other pages of the space.
- * From 1 024 px (Cédric, DECISIONS.md 2026-11-24), two columns: on the left,
+ * From 1 280 px (Cédric, DECISIONS.md 2026-11-24; the column of the space, 2026-11-26), two columns: on the left,
  * the property in a card (figures two by two), the tabs as a side list, then
  * the actions; on the right, what the status means, then the tab (children).
- * One tree for both: below 1 024 px the two columns are `contents` and the
+ * One tree for both: below 1 280 px the two columns are `contents` and the
  * `order` of each part gives the order of a single column.
  */
 export function PropertySheetHeader({
@@ -159,8 +159,8 @@ export function PropertySheetHeader({
     return Icon ? { ...tab, icon: <Icon strokeWidth={1.75} /> } : tab;
   });
   return (
-    <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start lg:gap-10">
-      <div className="contents lg:flex lg:flex-col lg:gap-4">
+    <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[20rem_minmax(0,1fr)] xl:items-start xl:gap-10">
+      <div className="contents xl:flex xl:flex-col xl:gap-4">
         <Link
           href="/vendeur"
           className="order-1 -ml-1 inline-flex min-h-11 items-center gap-1 self-start rounded-lk-sm pr-2 text-lk-secondary font-medium text-lk-ink-2 hover:text-lk-ink focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue"
@@ -168,10 +168,10 @@ export function PropertySheetHeader({
           <ChevronLeft aria-hidden="true" className="size-4" />
           {t.back}
         </Link>
-        <div className="order-2 flex flex-col gap-4 lg:rounded-lk-2xl lg:border lg:border-lk-line lg:bg-lk-surface lg:p-5 lg:shadow-lk-field">
+        <div className="order-2 flex flex-col gap-4 xl:rounded-lk-2xl xl:border xl:border-lk-line xl:bg-lk-surface xl:p-5 xl:shadow-lk-field">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1.5">
-              <h1 className="text-lk-h1 font-bold text-wide text-balance text-lk-ink lg:text-lk-h2">
+              <h1 className="text-lk-h1 font-bold text-wide text-balance text-lk-ink xl:text-lk-h2">
                 {propertyName(property)}
               </h1>
               <p className="text-lk-secondary text-lk-ink-3">
@@ -182,7 +182,7 @@ export function PropertySheetHeader({
             </div>
             <SpaceNotificationBell roles={roles} profileId={profileId} className="md:hidden" />
           </div>
-          {figures.length > 0 ? <KeyFigures items={figures} className="lg:grid-cols-2" /> : null}
+          {figures.length > 0 ? <KeyFigures items={figures} className="xl:grid-cols-2" /> : null}
         </div>
         <div className="order-4">
           <ListingStatusActions
@@ -200,17 +200,17 @@ export function PropertySheetHeader({
           label={t.tabs.label}
           tabs={tabs}
           aside
-          className="order-5 mt-2 lg:order-3 lg:mt-0"
+          className="order-5 mt-2 xl:order-3 xl:mt-0"
         />
       </div>
-      <div className="contents lg:mt-15 lg:flex lg:min-w-0 lg:flex-col lg:gap-6">
+      <div className="contents xl:mt-15 xl:flex xl:min-w-0 xl:flex-col xl:gap-6">
         <div className="order-3 flex flex-col gap-4 empty:hidden">
           <StatusNotice property={property} />
           {deletion?.compliance && COMPLIANCE_STATUSES.includes(property.listingStatus) ? (
             <ComplianceNotice compliance={deletion.compliance} />
           ) : null}
         </div>
-        <div className="order-6 mt-2 min-w-0 lg:mt-0">{children}</div>
+        <div className="order-6 mt-2 min-w-0 xl:mt-0">{children}</div>
       </div>
     </div>
   );

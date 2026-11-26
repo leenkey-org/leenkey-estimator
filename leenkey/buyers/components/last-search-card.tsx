@@ -23,7 +23,8 @@ type State =
   | { kind: "search"; href: string; criteria: string[] | null; fresh: number };
 
 /**
- * Under the greeting of the buyer home (DESIGN.md 12.10): the search kept by
+ * Under the greeting of the buyer home (DESIGN.md 12.10), on its one tinted
+ * panel: the search kept by
  * this browser, its criteria and its listings published since it was last
  * seen, to resume it or start a new one; without one, the way to the
  * listings. Read after the first paint (localStorage): skeletons of about
@@ -62,12 +63,13 @@ export function LastSearchCard({ className }: { className?: string }) {
       aria-labelledby="derniere-recherche"
       aria-busy={state.kind === "reading" || undefined}
       className={cn(
-        "flex flex-col gap-4 rounded-lk-2xl border border-lk-line bg-lk-surface p-5 shadow-lk-block md:p-6",
+        // The one tinted panel of the buyer home (2026-11-26).
+        "lk-gradient-soft flex flex-col gap-4 rounded-lk-2xl border border-lk-blue-border p-5 md:p-7",
         className,
       )}
     >
       <div className="flex items-start gap-3.5">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-lk-sm bg-lk-blue-tint">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-lk-sm bg-lk-surface">
           <Search aria-hidden="true" strokeWidth={1.8} className="lk-icon-gradient size-5" />
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -86,7 +88,7 @@ export function LastSearchCard({ className }: { className?: string }) {
           {state.kind === "reading" ? (
             <Skeleton className="my-0.5 h-4 w-1/2" />
           ) : (
-            <p className="text-lk-compact text-lk-ink-3">
+            <p className="text-lk-compact text-lk-ink-2">
               {/* A no-break space keeps the height of the line when the criteria could not be read. */}
               {search
                 ? search.criteria === null
@@ -99,7 +101,7 @@ export function LastSearchCard({ className }: { className?: string }) {
           )}
         </div>
         {search && search.fresh > 0 ? (
-          <span className="shrink-0 rounded-full bg-lk-blue-tint px-2.5 py-1 text-lk-caption font-semibold text-lk-blue">
+          <span className="shrink-0 rounded-full bg-lk-surface px-2.5 py-1 text-lk-caption font-semibold text-lk-blue">
             {t.lastSearch.newCount(search.fresh)}
           </span>
         ) : null}
@@ -107,7 +109,7 @@ export function LastSearchCard({ className }: { className?: string }) {
       {state.kind === "reading" ? (
         <Skeleton className="h-11 w-full sm:w-1/2" />
       ) : (
-        <div className="grid gap-2.5 sm:grid-cols-2">
+        <div className="grid gap-2.5 sm:max-w-120 sm:grid-cols-2">
           {search ? (
             <>
               <Button asChild>

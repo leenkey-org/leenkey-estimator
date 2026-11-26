@@ -111,7 +111,8 @@ test("les pages de chaque changement, reliées au compte", async ({ page }) => {
   );
   await page.goto("/compte/email");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Adresse email");
-  await expect(page.getByText("buyer_c@test.leenkey.fr")).toBeVisible();
+  // In the page: from 1 024 px the column of the space shows the email too.
+  await expect(page.getByRole("main").getByText("buyer_c@test.leenkey.fr")).toBeVisible();
   await page.goto("/compte/mot-de-passe");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Mot de passe");
   await expect(page.getByLabel("Mot de passe actuel")).toHaveAttribute(

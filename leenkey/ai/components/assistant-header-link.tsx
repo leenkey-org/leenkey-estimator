@@ -17,11 +17,14 @@ const fr = { assistant: frAssistant } as const;
 export function AssistantHeaderLink({
   propertyId = null,
   href,
+  tone = "dark",
   className,
 }: {
   propertyId?: string | null;
   /** The page of the assistant, when it is not the one of the seller. */
   href?: string;
+  /** `light`: on a white page (the home of a buyer since 2026-11-26), the tint of the bell. */
+  tone?: "dark" | "light";
   className?: string;
 }) {
   return (
@@ -29,8 +32,9 @@ export function AssistantHeaderLink({
       href={href ?? (propertyId ? `${ROUTES.assistant}?bien=${propertyId}` : ROUTES.assistant)}
       aria-label={fr.assistant.open}
       className={cn(
-        iconButtonVariants({ variant: "on-dark" }),
-        "inline-flex items-center justify-center focus-visible:outline-white",
+        iconButtonVariants({ variant: tone === "light" ? "tint" : "on-dark" }),
+        "inline-flex items-center justify-center",
+        tone === "dark" && "focus-visible:outline-white",
         className,
       )}
     >

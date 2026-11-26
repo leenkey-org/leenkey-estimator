@@ -461,8 +461,25 @@ test.describe("comptes connectés (base de seed)", () => {
         "/acquereur/favoris",
       );
       await expect(page.getByRole("button", { name: "Menu du compte" })).toHaveText("A");
-      await expect(page.getByRole("link", { name: "Ma vente" })).toBeHidden();
-      await expect(page.getByRole("link", { name: "Mon compte" })).toHaveCount(0);
+      // No tab of the BottomNav, no way to sign in; the column of the space
+      // (from 1 024 px) has its own « Ma vente » and « Mon compte ».
+      await expect(mainNav(page).getByRole("link", { name: "Ma vente" })).toBeHidden();
+      await expect(page.getByRole("banner").getByRole("link", { name: "Mon compte" })).toHaveCount(
+        0,
+      );
+      const column = page.getByRole("navigation", { name: "Navigation de l'espace vendeur" });
+      await expect(column.getByRole("link")).toHaveText([
+        "Ma vente",
+        "Dossier",
+        "Messages",
+        "Ma formule",
+        "Acheter",
+        "Mon compte",
+      ]);
+      await expect(column.getByRole("link", { name: "Ma vente" })).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
     }
     expect(await seriousViolations(page)).toEqual([]);
     // Signed in, the TopNav is at its widest: bell, favourites and avatar.
@@ -517,6 +534,23 @@ test.describe("comptes connectés (base de seed)", () => {
         "/vendeur/biens/nouveau",
       );
     } else {
+      // The column of the space from 1 024 px (DECISIONS.md 2026-11-26).
+      const column = page.getByRole("navigation", { name: "Navigation de l'espace acquéreur" });
+      await expect(column.getByRole("link")).toHaveText([
+        "Vue d'ensemble",
+        "Mes favoris",
+        "Mes alertes",
+        "Messages",
+        "Mon projet d'achat",
+        "Documents partagés",
+        "Chercher",
+        "Vendre",
+        "Mon compte",
+      ]);
+      await expect(column.getByRole("link", { name: "Vue d'ensemble" })).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
       // Exact: the buyer home also has « Voir les 3 favoris » (L1-25).
       await page.getByRole("link", { name: "Favoris", exact: true }).click();
       await expect(page).toHaveURL("/acquereur/favoris");
