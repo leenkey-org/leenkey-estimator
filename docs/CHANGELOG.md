@@ -12,16 +12,17 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-26 · Repasse design, lot 1 : une seule carte d'annonce · PR #147
+- Modifié : les résultats de `/acheter` reprennent la carte de l'accueil (« Biens à vendre près de chez vous ») : `ShowcaseCard` sans cadre, photo de rayon 18, le même composant aux deux endroits ; rangées plus espacées (28 puis 32 px). Le cadre blanc (`framed`) ne reste que sur l'aperçu d'un bien sur la carte.
+- Modifié : lien liste ↔ carte sans cadre à colorer : la photo de la carte est entourée de 2 px `--lk-brand-blue` quand la carte ou sa pastille est survolée ou au focus, ou sa pastille choisie (`data-lit`) ; avant, le cadre devenait bleu au survol et seule la pastille choisie entourait la carte.
+- Modifié : les blocs d'attente de « Voir plus » ont la forme de la nouvelle carte (photo 1 / 0,95, trois lignes).
+
 ### 2026-11-26 · Repasse design, lot 1 : analyse de valeur `/estimer` · PR #146
 - Modifié : cartes de choix du wizard (toutes les étapes) : survol en bordure et ombre bleues, carte choisie dans le contour du dégradé avec une coche en dégradé ; à l'étape 1, un pictogramme par type de bien dans une tuile en dégradé doux (ceux de la recherche pour maison, appartement, terrain).
 - Modifié : barre « Retour / Continuer » collée en bas de l'écran à toutes les largeurs (zone de sécurité iOS), le pied de page sous la ligne de flottaison ; progression, questions et actions sur un même cadre.
 - Ajouté : à partir de 1 024 px, à côté des questions, les trois points de l'accueil (« Gratuit », « 2 minutes », « Rapport PDF de 4 pages par email »), un par ligne avec son pictogramme ; pas sur les étapes à deux colonnes.
 - Inchangé : questions, ordre, valeurs, textes, moteur et appels ; les choix restent des boutons `aria-pressed` aux mêmes noms.
 - Tests : `tests/e2e/reprise-v1.spec.ts` (la barre est en bas de l'écran, puis au-dessus du pied en bas de page, au lieu du pied visible au-dessus d'une barre fixe).
-### 2026-11-26 · Repasse design, lot 1 : une seule carte d'annonce · PR #147
-- Modifié : les résultats de `/acheter` reprennent la carte de l'accueil (« Biens à vendre près de chez vous ») : `ShowcaseCard` sans cadre, photo de rayon 18, le même composant aux deux endroits ; rangées plus espacées (28 puis 32 px). Le cadre blanc (`framed`) ne reste que sur l'aperçu d'un bien sur la carte.
-- Modifié : lien liste ↔ carte sans cadre à colorer : la photo de la carte est entourée de 2 px `--lk-brand-blue` quand la carte ou sa pastille est survolée ou au focus, ou sa pastille choisie (`data-lit`) ; avant, le cadre devenait bleu au survol et seule la pastille choisie entourait la carte.
-- Modifié : les blocs d'attente de « Voir plus » ont la forme de la nouvelle carte (photo 1 / 0,95, trois lignes).
 
 ### 2026-11-26 · Repasse design, lot 1 : pages d'authentification · PR #145
 - Modifié : connexion, inscription, mot de passe oublié, nouveau mot de passe, confirmation et conditions (gabarit `app/(auth)/layout.tsx`) : fond de page, titre et formulaire dans une carte ; à partir de 1 024 px, panneau de marque à droite sur la nuit (pastille « Parce que le lien, c'est la clé », photo de l'accueil, trois lignes des raccourcis de l'accueil), absent en dessous. Textes, champs, liens, validations et actions serveur inchangés (`DECISIONS.md` 2026-11-26, `DESIGN.md` 12.1).
