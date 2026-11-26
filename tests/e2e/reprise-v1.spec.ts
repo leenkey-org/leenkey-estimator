@@ -53,7 +53,11 @@ test("l'estimateur affiche sa première étape, dans l'en-tête et le pied V2", 
     await expect(
       page.getByRole("banner").getByRole("link", { name: "Acheter", exact: true }),
     ).toBeVisible();
-  // At the bottom of the page, the footer shows above the bar of the wizard.
+  // The bar of the wizard is at the bottom of the screen; at the bottom of
+  // the page, it ends above the footer, which it never covers.
+  const atTop = await page.locator("[data-wizard-bar]").boundingBox();
+  const viewport = page.viewportSize();
+  expect(atTop && viewport && Math.abs(atTop.y + atTop.height - viewport.height) <= 1).toBe(true);
   await page.evaluate(() =>
     window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" }),
   );
@@ -62,7 +66,7 @@ test("l'estimateur affiche sa première étape, dans l'en-tête et le pied V2", 
   );
   const footer = await page.getByRole("contentinfo").boundingBox();
   const bar = await page.locator("[data-wizard-bar]").boundingBox();
-  expect(footer && bar && footer.y + footer.height <= bar.y + 1).toBe(true);
+  expect(footer && bar && bar.y + bar.height <= footer.y + 1).toBe(true);
 });
 
 // L1-13b: the result of the wizard (restored from this browser, as after a
