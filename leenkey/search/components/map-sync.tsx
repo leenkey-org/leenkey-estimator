@@ -11,9 +11,9 @@ import {
 } from "react";
 
 // The list and the map of the results together (docs/DESIGN.md 8): the card
-// hovered or focused lights its pill; a pill chosen shows its card over the
-// map (L1-62, in the way of Airbnb) and outlines its card in the list,
-// which stays where it is. The pills whose card was seen stay grey for the
+// hovered or focused lights its pill, the pill hovered rings the photo of
+// its card; a pill chosen shows its card over the map (L1-62, in the way of
+// Airbnb) and rings the photo of its card in the list, which stays where it is. The pills whose card was seen stay grey for the
 // visit (sessionStorage).
 
 const VISITED_KEY = "lk:maps:visited";
@@ -76,7 +76,12 @@ export function MapSyncProvider({ children }: { children: ReactNode }) {
   return <MapSyncContext.Provider value={value}>{children}</MapSyncContext.Provider>;
 }
 
-/** One result of the list, tied to its pill on the map; outlined while its pill is chosen. */
+/**
+ * One result of the list, tied to its pill on the map. While the card or its
+ * pill is under the pointer or the focus, or its pill is chosen, the item
+ * carries data-lit and the card rings its photo (ShowcaseCard): the card of
+ * the home page has no frame to colour.
+ */
 export function ResultItem({
   id,
   index,
@@ -86,17 +91,18 @@ export function ResultItem({
   index: number;
   children: ReactNode;
 }) {
-  const { setHoveredId, selectedId } = useMapSync();
+  const { hoveredId, setHoveredId, selectedId } = useMapSync();
   return (
     <li
       data-listing-id={id}
       data-result-index={index}
       data-selected={selectedId === id || undefined}
+      data-lit={selectedId === id || hoveredId === id || undefined}
       onPointerEnter={() => setHoveredId(id)}
       onPointerLeave={() => setHoveredId(null)}
       onFocus={() => setHoveredId(id)}
       onBlur={() => setHoveredId(null)}
-      className="rounded-lk-2xl data-selected:outline-2 data-selected:outline-offset-2 data-selected:outline-lk-brand-blue data-selected:outline-solid"
+      className="min-w-0"
     >
       {children}
     </li>

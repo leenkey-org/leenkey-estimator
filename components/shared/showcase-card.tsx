@@ -37,7 +37,7 @@ export type ShowcaseCardProps = Pick<
    * swiped sideways, where the main photo shows alone on a phone.
    */
   swipe?: boolean;
-  /** A frame that turns blue on hover and press (the list of the search, L1-55). */
+  /** A white frame around the card, blue on hover and press: the card shown over a map (L1-62). */
   framed?: boolean;
   /** The main photo is the largest image of the page: loaded first. */
   priority?: boolean;
@@ -59,7 +59,8 @@ const SWIPE_PX = 40;
  * stretched over the card and described by the city and the price. Its
  * photos turn with arrows from 768 px (always shown on a touch screen),
  * where the dots count them; with `swipe`, on a phone too. A slow zoom of
- * the photo on hover.
+ * the photo on hover. The home page and the list of the search show the same
+ * card; `framed` is the card over the map only.
  */
 export function ShowcaseCard({
   href,
@@ -120,8 +121,8 @@ export function ShowcaseCard({
       onTouchEnd={swipe && several ? onTouchEnd : undefined}
       className={cn(
         "group relative flex flex-col gap-3",
-        // The frame of the cards of the search (Younes: « encadré qui devient bleu »),
-        // as high as the others of its row.
+        // The frame of the card shown over a map (the list of the search has
+        // the card of the home page, without a frame, since 2026-11-26).
         framed &&
           "h-full rounded-lk-2xl border border-lk-line bg-lk-surface p-2 pb-3 transition-[border-color,box-shadow] duration-140 ease-out-lk hover:border-lk-blue hover:shadow-lk-hover has-[a:active]:border-lk-blue",
         className,
@@ -168,6 +169,9 @@ export function ShowcaseCard({
         ref={frame}
         className={cn(
           "relative order-1 overflow-hidden rounded-lk-d-card bg-lk-line",
+          // A ring around the photo while an ancestor carries data-lit (the
+          // result of the search tied to the pill hovered or chosen on the map).
+          "in-data-lit:outline-2 in-data-lit:outline-offset-2 in-data-lit:outline-lk-brand-blue in-data-lit:outline-solid",
           photoShape === "wide" ? "aspect-[3/2]" : "aspect-[1/0.95]",
         )}
       >
