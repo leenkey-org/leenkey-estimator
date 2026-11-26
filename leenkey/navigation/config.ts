@@ -164,7 +164,7 @@ export function spaceSidebar(
           ],
           [
             { href: ROUTES.search, label: tabs.search, icon: "search" },
-            { href: ROUTES.seller, label: tabs.sell, icon: "square-plus" },
+            { href: ROUTES.sell, label: tabs.sell, icon: "square-plus" },
             { href: ROUTES.account, label: fr.nav.menu.account, icon: "user" },
           ],
         ],

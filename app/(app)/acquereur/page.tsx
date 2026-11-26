@@ -208,7 +208,7 @@ export default async function BuyerHomePage() {
     : 0;
 
   return (
-    <div className="lk-frame flex flex-col gap-6 py-8 md:py-10 lg:mx-0 lg:max-w-lk-space lg:gap-7">
+    <div className="lk-frame flex flex-col gap-6 py-8 md:py-10 lg:group-has-[>aside]/space:mx-0 lg:max-w-lk-space lg:gap-7">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-2">
           <h1 className="text-lk-h1 font-bold text-wide text-lk-ink lg:text-lk-h1-lg">

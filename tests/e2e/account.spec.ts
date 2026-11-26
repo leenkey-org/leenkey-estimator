@@ -105,7 +105,7 @@ test("les pages de chaque changement, reliées au compte", async ({ page }) => {
   await signIn(page, "/compte/informations");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Informations personnelles");
   await expect(page.getByLabel("Prénom")).not.toHaveValue("");
-  await expect(page.getByRole("link", { name: "Mon compte" }).first()).toHaveAttribute(
+  await expect(page.getByRole("main").getByRole("link", { name: "Mon compte" })).toHaveAttribute(
     "href",
     "/compte",
   );

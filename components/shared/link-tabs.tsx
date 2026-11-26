@@ -44,11 +44,11 @@ export function LinkTabs({
       aria-label={label}
       className={cn(
         "-mx-5 overflow-x-auto border-b border-lk-line px-5 md:mx-0 md:px-0",
-        aside && "xl:overflow-visible xl:border-b-0",
+        aside && "2xl:overflow-visible 2xl:border-b-0",
         className,
       )}
     >
-      <ul className={cn("flex gap-6", aside && "xl:flex-col xl:gap-1")}>
+      <ul className={cn("flex gap-6", aside && "2xl:flex-col 2xl:gap-1")}>
         {tabs.map((tab) => {
           const active =
             current !== undefined ? tab.href === current : pathnameOf(tab.href) === path;
@@ -64,14 +64,14 @@ export function LinkTabs({
                     ? "font-semibold text-lk-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.75 after:rounded-full after:bg-lk-indigo-mark"
                     : "font-medium text-lk-ink-3 hover:text-lk-ink",
                   aside &&
-                    "xl:flex xl:w-full xl:gap-3 xl:rounded-lk-md xl:px-3 xl:text-lk-title xl:after:hidden",
-                  aside && (active ? "xl:bg-lk-stone-2" : "xl:hover:bg-lk-stone-2"),
+                    "2xl:flex 2xl:w-full 2xl:gap-3 2xl:rounded-lk-md 2xl:px-3 2xl:text-lk-title 2xl:after:hidden",
+                  aside && (active ? "2xl:bg-lk-stone-2" : "2xl:hover:bg-lk-stone-2"),
                 )}
               >
                 {aside && tab.icon ? (
                   <span
                     aria-hidden="true"
-                    className="hidden shrink-0 xl:inline-flex [&_svg]:size-5"
+                    className="hidden shrink-0 2xl:inline-flex [&_svg]:size-5"
                   >
                     {tab.icon}
                   </span>

@@ -34,7 +34,9 @@ export function SpacePage({
       className={cn(
         "py-8 md:py-10",
         // From 1 024 px, beside the column of the space (SpaceSidebar): against it.
-        wide ? "lk-frame" : "mx-auto w-full max-w-lk-settings px-5 md:px-10 lg:mx-0",
+        wide
+          ? "lk-frame"
+          : "mx-auto w-full max-w-lk-settings px-5 md:px-10 lg:group-has-[>aside]/space:mx-0",
       )}
     >
       {back ? (

@@ -168,7 +168,7 @@ describe("column of a signed-in area (DECISIONS.md 2026-11-26)", () => {
       ],
       [
         ["Chercher", "/acheter"],
-        ["Vendre", "/vendeur"],
+        ["Vendre", "/vendre"],
         ["Mon compte", "/compte"],
       ],
     ]);

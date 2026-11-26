@@ -44,7 +44,7 @@ export function PropertyCards({
   currentId?: string;
 }) {
   return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {properties.map((property) => {
         const status = property.listingStatus ?? "draft";
         const current = property.id === currentId;

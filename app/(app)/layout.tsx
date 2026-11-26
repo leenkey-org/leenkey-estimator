@@ -32,7 +32,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <FacadeRoot className={cn("flex min-h-dvh flex-col bg-lk-bg", BOTTOM_NAV_OFFSET)}>
       <SiteTopNav />
-      <div className="flex-1 lg:flex">
+      <div className="group/space flex-1 lg:flex">
         <SpaceSidebar
           roles={profile.roles}
           initial={accountInitial(profile.firstName)}

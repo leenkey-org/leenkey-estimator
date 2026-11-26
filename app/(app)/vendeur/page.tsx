@@ -162,7 +162,7 @@ function Cockpit({ header, slots }: { header: ReactNode; slots: readonly Slot[] 
     </div>
   );
   return (
-    <div className="mx-auto flex w-full max-w-205 flex-col gap-7 pb-10 md:px-(--lk-gutter) md:py-10 lg:mx-0 lg:max-w-lk-space lg:gap-8">
+    <div className="mx-auto flex w-full max-w-205 flex-col gap-7 pb-10 md:px-(--lk-gutter) md:py-10 lg:group-has-[>aside]/space:mx-0 lg:max-w-lk-space lg:gap-8">
       <div className="flex flex-col gap-7 lg:gap-8 xl:flex-row xl:items-start">
         <div className="contents xl:flex xl:min-w-0 xl:flex-1 xl:flex-col xl:gap-8">
           <div>{header}</div>

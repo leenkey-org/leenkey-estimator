@@ -30,7 +30,7 @@ export default async function PropertySheetLayout({ children, params }: Props) {
     ? await listingDeletionFacts(property.id, property.listing.id)
     : null;
   return (
-    <div className="mx-auto w-full max-w-lk-settings px-5 py-6 md:px-10 md:py-10 lg:mx-0 xl:max-w-lk-space">
+    <div className="mx-auto w-full max-w-lk-settings px-5 py-6 md:px-10 md:py-10 lg:group-has-[>aside]/space:mx-0 2xl:max-w-lk-space">
       {property ? (
         <PropertySheetHeader
           property={property}

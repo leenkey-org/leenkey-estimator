@@ -159,8 +159,8 @@ export function PropertySheetHeader({
     return Icon ? { ...tab, icon: <Icon strokeWidth={1.75} /> } : tab;
   });
   return (
-    <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[20rem_minmax(0,1fr)] xl:items-start xl:gap-10">
-      <div className="contents xl:flex xl:flex-col xl:gap-4">
+    <div className="flex flex-col gap-4 2xl:grid 2xl:grid-cols-[20rem_minmax(0,1fr)] 2xl:items-start 2xl:gap-10">
+      <div className="contents 2xl:flex 2xl:flex-col 2xl:gap-4">
         <Link
           href="/vendeur"
           className="order-1 -ml-1 inline-flex min-h-11 items-center gap-1 self-start rounded-lk-sm pr-2 text-lk-secondary font-medium text-lk-ink-2 hover:text-lk-ink focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-lk-brand-blue"
@@ -168,10 +168,10 @@ export function PropertySheetHeader({
           <ChevronLeft aria-hidden="true" className="size-4" />
           {t.back}
         </Link>
-        <div className="order-2 flex flex-col gap-4 xl:rounded-lk-2xl xl:border xl:border-lk-line xl:bg-lk-surface xl:p-5 xl:shadow-lk-field">
+        <div className="order-2 flex flex-col gap-4 2xl:rounded-lk-2xl 2xl:border 2xl:border-lk-line 2xl:bg-lk-surface 2xl:p-5 2xl:shadow-lk-field">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1.5">
-              <h1 className="text-lk-h1 font-bold text-wide text-balance text-lk-ink xl:text-lk-h2">
+              <h1 className="text-lk-h1 font-bold text-wide text-balance text-lk-ink 2xl:text-lk-h2">
                 {propertyName(property)}
               </h1>
               <p className="text-lk-secondary text-lk-ink-3">
@@ -182,7 +182,7 @@ export function PropertySheetHeader({
             </div>
             <SpaceNotificationBell roles={roles} profileId={profileId} className="md:hidden" />
           </div>
-          {figures.length > 0 ? <KeyFigures items={figures} className="xl:grid-cols-2" /> : null}
+          {figures.length > 0 ? <KeyFigures items={figures} className="2xl:grid-cols-2" /> : null}
         </div>
         <div className="order-4">
           <ListingStatusActions
@@ -200,17 +200,17 @@ export function PropertySheetHeader({
           label={t.tabs.label}
           tabs={tabs}
           aside
-          className="order-5 mt-2 xl:order-3 xl:mt-0"
+          className="order-5 mt-2 2xl:order-3 2xl:mt-0"
         />
       </div>
-      <div className="contents xl:mt-15 xl:flex xl:min-w-0 xl:flex-col xl:gap-6">
+      <div className="contents 2xl:mt-15 2xl:flex 2xl:min-w-0 2xl:flex-col 2xl:gap-6">
         <div className="order-3 flex flex-col gap-4 empty:hidden">
           <StatusNotice property={property} />
           {deletion?.compliance && COMPLIANCE_STATUSES.includes(property.listingStatus) ? (
             <ComplianceNotice compliance={deletion.compliance} />
           ) : null}
         </div>
-        <div className="order-6 mt-2 min-w-0 xl:mt-0">{children}</div>
+        <div className="order-6 mt-2 min-w-0 2xl:mt-0">{children}</div>
       </div>
     </div>
   );
