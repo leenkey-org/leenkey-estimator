@@ -4,17 +4,23 @@ import { createClient } from "@/lib/supabase/server";
 import { chunk } from "@/lib/utils";
 import { DPE_CLASSES } from "@/lib/validations/search";
 import { withCovers, type SearchListing } from "@/leenkey/search/queries";
+import { countFavoriteLists, type FavoriteList } from "./lists";
 
 // Favourites of the signed-in account (L1-18), with the visitor's session:
 // RLS only shows their own rows, and public_listings only published ones.
 
 export type QueryResult<T> = { ok: true; data: T } | { ok: false; error: "unavailable" };
 
+/** A saved listing and the list it is filed in (null: in none). */
+export type FavoriteItem = SearchListing & { listId: string | null };
+
 export type FavoriteListings = {
   /** Still published, most recently saved first. */
-  items: SearchListing[];
+  items: FavoriteItem[];
   /** Saved listings that are no longer online (sold, paused, suspended…). */
   offline: number;
+  /** The lists of the account, by name, each with the number of its `items`. */
+  lists: FavoriteList[];
 };
 
 /** Ids per `.in()` filter (lib/utils.ts, chunk). */
@@ -75,19 +81,33 @@ export async function favoriteStates(listingIds: readonly string[]): Promise<Set
   return saved;
 }
 
-/** The favourites page: saved listings still online, as search cards. */
+/**
+ * The favourites page: saved listings still online, as search cards, and the
+ * lists the account files them in (DECISIONS.md 2026-11-26).
+ */
 export async function listFavorites(profileId: string): Promise<QueryResult<FavoriteListings>> {
   try {
     const supabase = await createClient();
-    const saved = await supabase
-      .from("favorites")
-      .select("listing_id, created_at")
-      .eq("buyer_id", profileId)
-      .order("created_at", { ascending: false })
-      .limit(500);
+    const [saved, named] = await Promise.all([
+      supabase
+        .from("favorites")
+        .select("listing_id, list_id, created_at")
+        .eq("buyer_id", profileId)
+        .order("created_at", { ascending: false })
+        .limit(500),
+      // owner_id: an admin reads every list, the page shows their own.
+      supabase.from("favorite_lists").select("id, name").eq("owner_id", profileId),
+    ]);
     if (saved.error) throw new Error(`favorites: ${saved.error.code} ${saved.error.message}`);
+    if (named.error) throw new Error(`favorite_lists: ${named.error.code} ${named.error.message}`);
     const ids = saved.data.map((row) => row.listing_id);
-    if (ids.length === 0) return { ok: true, data: { items: [], offline: 0 } };
+    const listOf = new Map(saved.data.map((row) => [row.listing_id, row.list_id]));
+    if (ids.length === 0) {
+      return {
+        ok: true,
+        data: { items: [], offline: 0, lists: countFavoriteLists(named.data, []) },
+      };
+    }
 
     const pages = await Promise.all(
       chunk(ids, IDS_PER_REQUEST).map((part) =>
@@ -139,8 +159,18 @@ export async function listFavorites(profileId: string): Promise<QueryResult<Favo
         cover: null,
       });
     }
-    const items = await withCovers(ids.flatMap((id) => byId.get(id) ?? []));
-    return { ok: true, data: { items, offline: ids.length - items.length } };
+    const items = (await withCovers(ids.flatMap((id) => byId.get(id) ?? []))).map((item) => ({
+      ...item,
+      listId: listOf.get(item.id) ?? null,
+    }));
+    return {
+      ok: true,
+      data: {
+        items,
+        offline: ids.length - items.length,
+        lists: countFavoriteLists(named.data, items),
+      },
+    };
   } catch (error) {
     console.error("[favorites] list failed", {
       user_id: profileId,

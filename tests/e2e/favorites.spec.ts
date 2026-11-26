@@ -7,12 +7,18 @@ import { expect, test, type Page } from "@playwright/test";
 // listings, one per project, so that the two projects can run at the same
 // time and the order of the search results does not matter. The last test
 // removes the offline favourite of buyer_c: npm run db:seed puts it back.
+// Named lists (DECISIONS.md 2026-11-26): seller_a again, on the listing of
+// its project (LK-0009, LK-0011: no spec takes them offline) and with list
+// names of its project; the test removes what it made, before and after.
+// The tests of this file run one after the other in each project (not
+// fullyParallel): two of them use the same favourite of seller_a.
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
 /** The heart of a listing: over the photo on a phone, « Enregistrer » beside the title from 1024 px (L1-60). */
 const HEART = /^(Ajouter aux favoris|Enregistrer)$/;
 
+test.describe.configure({ mode: "default" });
 test.skip(!seeded || !SEED_PASSWORD, "comptes de seed requis (E2E_SEED=1 et SEED_PASSWORD)");
 
 /** Published seed listings of seller_b (supabase/seed/05_demo_data.sql). */
@@ -166,4 +172,120 @@ test("les favoris qui ne sont plus en ligne sont comptés, puis retirés", async
   await expect(message).toBeVisible();
   await expect(message).toBeFocused();
   await expect(cards).toHaveCount(3);
+});
+
+test("listes de favoris : créer, ranger, filtrer, renommer, supprimer", async ({
+  page,
+  isMobile,
+}) => {
+  const href = isMobile ? LISTINGS.mobile : LISTINGS.desktop;
+  // Names of the project: the two projects work on the lists of seller_a at the same time.
+  const NAME = isMobile ? "Liste E2E mobile" : "Liste E2E desktop";
+  const RENAMED = `${NAME} renommée`;
+  const pills = page.getByRole("navigation", { name: "Listes de favoris" });
+  const pill = (name: string) => pills.getByRole("link", { name: new RegExp(`^${name} · \\d+$`) });
+  const status = (text: string) => page.getByRole("status").filter({ hasText: text });
+  const dialog = page.getByRole("dialog");
+  const card = page
+    .getByRole("list", { name: "Biens sauvegardés" })
+    .getByRole("listitem")
+    .filter({ has: page.locator(`a[href="${href}"]`) });
+  const removeList = async (name: string) => {
+    await pill(name).click();
+    await expect(page.getByRole("heading", { level: 2, name, exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Supprimer la liste" }).click();
+    await expect(dialog).toContainText("Les biens de cette liste restent dans vos favoris");
+    await dialog.getByRole("button", { name: "Supprimer la liste" }).click();
+    await expect(page).toHaveURL("/acquereur/favoris");
+    await expect(pill(name)).toHaveCount(0);
+  };
+
+  await signIn(page, "/acquereur/favoris");
+  // Left by an interrupted run: start without the lists of this test.
+  for (const name of [RENAMED, NAME]) {
+    if ((await pill(name).count()) > 0) await removeList(name);
+  }
+  await page.goto(href);
+  const heart = page.getByRole("button", { name: HEART });
+  if ((await heart.getAttribute("aria-pressed")) !== "true") {
+    await heart.click();
+    await expect(page.getByText("Ajouté à vos favoris.")).toBeAttached();
+  }
+  await page.goto("/acquereur/favoris");
+  await expect(card).toHaveCount(1);
+
+  // A name is required; the list then shows among the filters, empty.
+  await page.getByRole("button", { name: "Nouvelle liste" }).click();
+  // The dialog opens on its field; a refusal brings the focus back to it.
+  await expect(dialog.getByLabel("Nom de la liste")).toBeFocused();
+  await dialog.getByRole("button", { name: "Créer la liste" }).click();
+  await expect(dialog.getByText("Donnez un nom à la liste.")).toBeVisible();
+  await expect(dialog.getByLabel("Nom de la liste")).toBeFocused();
+  // Not the name of a filter of the page.
+  await dialog.getByLabel("Nom de la liste").fill(" sans  LISTE ");
+  await dialog.getByRole("button", { name: "Créer la liste" }).click();
+  await expect(
+    dialog.getByText("« Tous » et « Sans liste » sont déjà les noms de deux filtres."),
+  ).toBeVisible();
+  await dialog.getByLabel("Nom de la liste").fill(NAME);
+  await dialog.getByRole("button", { name: "Créer la liste" }).click();
+  await expect(status(`La liste « ${NAME} » est créée.`)).toBeVisible();
+  await expect(pill(NAME)).toHaveText(`${NAME} · 0`);
+  await expect(page.getByRole("button", { name: "Nouvelle liste" })).toBeFocused();
+  // Not the same name twice, whatever its case.
+  await page.getByRole("button", { name: "Nouvelle liste" }).click();
+  await dialog.getByLabel("Nom de la liste").fill(NAME.toUpperCase());
+  await dialog.getByRole("button", { name: "Créer la liste" }).click();
+  await expect(dialog.getByText("Vous avez déjà une liste de ce nom.")).toBeVisible();
+  await dialog.getByRole("button", { name: "Annuler" }).click();
+
+  // Filed from its card; the filters follow.
+  const menu = card.getByRole("combobox", { name: /^Ranger dans une liste : / });
+  await expect(menu).toHaveValue("");
+  await menu.selectOption({ label: NAME });
+  await expect(status(`Rangé dans « ${NAME} ».`)).toBeVisible();
+  await expect(pill(NAME)).toHaveText(`${NAME} · 1`);
+  await pill("Sans liste").click();
+  await expect(page).toHaveURL(/\?liste=aucune$/);
+  await expect(page.locator(`a[href="${href}"]`)).toHaveCount(0);
+  await pill(NAME).click();
+  await expect(page).toHaveURL(/\?liste=[0-9a-f-]{36}$/);
+  await expect(page.getByRole("heading", { level: 2, name: NAME, exact: true })).toBeVisible();
+  await expect(pill(NAME)).toHaveAttribute("aria-current", "page");
+  await expect(card).toHaveCount(1);
+  await expect(
+    page.getByRole("list", { name: "Biens sauvegardés" }).getByRole("listitem"),
+  ).toHaveCount(1);
+
+  await page.getByRole("button", { name: "Renommer" }).click();
+  await expect(dialog.getByLabel("Nom de la liste")).toHaveValue(NAME);
+  await dialog.getByLabel("Nom de la liste").fill(RENAMED);
+  await dialog.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(status(`La liste s'appelle maintenant « ${RENAMED} ».`)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: RENAMED, exact: true })).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(
+    results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),
+  ).toEqual([]);
+  // The phone width holds the filters, the title and its actions.
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
+  ).toBeLessThanOrEqual(0);
+
+  // Deleted: back to every favourite, the message with the focus, the favourite kept.
+  await removeList(RENAMED);
+  const gone = status(`La liste « ${RENAMED} » est supprimée. Ses biens restent dans vos favoris.`);
+  await expect(gone).toBeVisible();
+  await expect(gone).toBeFocused();
+  await expect(card).toHaveCount(1);
+
+  // As found: the favourite of this test removed.
+  const cardHeart = card.getByRole("button", { name: /^Ajouter aux favoris/ });
+  await cardHeart.click();
+  await expect(cardHeart).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByText("Retiré de vos favoris.")).toBeAttached();
+  await page.reload();
+  await expect(page.locator(`a[href="${href}"]`)).toHaveCount(0);
 });

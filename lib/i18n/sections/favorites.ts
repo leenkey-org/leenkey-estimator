@@ -30,4 +30,55 @@ export const frFavorites = {
     error: "Vos favoris n'ont pas pu être chargés.",
     retry: "Réessayer",
   },
+  // Named lists of favourites (DECISIONS.md 2026-11-26).
+  lists: {
+    nav: "Listes de favoris",
+    all: "Tous",
+    none: "Sans liste",
+    create: "Nouvelle liste",
+    createTitle: "Nouvelle liste",
+    createText:
+      "Donnez un nom à votre liste : une ville, un quartier, « À visiter ». Vous y rangez ensuite vos favoris.",
+    createConfirm: "Créer la liste",
+    nameLabel: "Nom de la liste",
+    nameHelp: (max: number) => `${max}\u00A0caractères au plus.`,
+    rename: "Renommer",
+    renameTitle: "Renommer la liste",
+    renameText: (name: string) => `Choisissez le nouveau nom de la liste « ${name} ».`,
+    renameConfirm: "Enregistrer",
+    remove: "Supprimer la liste",
+    removeTitle: (name: string) => `Supprimer la liste « ${name} » ?`,
+    removeText:
+      "Les biens de cette liste restent dans vos favoris : vous les retrouvez dans « Tous ».",
+    dialog: { back: "Retour", close: "Fermer", cancel: "Annuler" },
+    errors: {
+      required: "Donnez un nom à la liste.",
+      tooLong: (max: number) => `Le nom ne peut pas dépasser ${max}\u00A0caractères.`,
+      duplicate: "Vous avez déjà une liste de ce nom.",
+      // « Tous » and « Sans liste » name the two filters of the page.
+      reserved:
+        "« Tous » et « Sans liste » sont déjà les noms de deux filtres. Choisissez un autre nom.",
+      limit: (max: number) =>
+        `Vous avez déjà ${max}\u00A0listes. Supprimez-en une pour en créer une nouvelle.`,
+      missing: "Cette liste n'existe plus. Actualisez la page.",
+      unavailable: "La liste n'a pas pu être enregistrée. Réessayez.",
+      removeUnavailable: "La liste n'a pas pu être supprimée. Réessayez.",
+    },
+    created: (name: string) => `La liste « ${name} » est créée.`,
+    renamed: (name: string) => `La liste s'appelle maintenant « ${name} ».`,
+    removed: (name: string) =>
+      `La liste « ${name} » est supprimée. Ses biens restent dans vos favoris.`,
+    // Beside the menu of a card, for the eye.
+    moveShort: "Liste",
+    moveProperty: (property: string) => `Ranger dans une liste : ${property}`,
+    moved: (name: string) => `Rangé dans « ${name} ».`,
+    unfiled: "Retiré de sa liste.",
+    moveError: "Le bien n'a pas pu être rangé. Réessayez.",
+    moveMissing: "Ce favori ou cette liste n'existe plus. Actualisez la page.",
+    emptyListTitle: "Cette liste est vide",
+    emptyListText: "Rangez-y un bien depuis « Tous », avec le menu « Liste » sous chaque bien.",
+    emptyNoneTitle: "Tous vos favoris sont rangés",
+    emptyNoneText: "Chacun de vos favoris est dans une liste.",
+    seeAll: "Voir tous mes favoris",
+  },
 } as const;

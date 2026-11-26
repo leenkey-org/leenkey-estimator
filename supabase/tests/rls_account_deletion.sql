@@ -10,7 +10,7 @@
 -- file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(62);
+select plan(63);
 \ir _plan.psql
 -- The ids, read here: the service role does not read the schema tests.
 select tests.uid('buyer_c') as buyer_c, tests.uid('buyer_d') as buyer_d,
@@ -106,6 +106,10 @@ select offer_submit(:'offer1');
 insert into offers (listing_id, buyer_id, price_cents) values (:'listing_b', tests.uid('buyer_c'), 19000000)
 returning id as draft \gset
 insert into favorites (buyer_id, listing_id) values (tests.uid('buyer_c'), :'listing_b');
+-- A list of favourites, with that favourite in it (DECISIONS.md 2026-11-26).
+insert into favorite_lists (owner_id, name) values (tests.uid('buyer_c'), 'Effaceville')
+returning id as fav_list \gset
+update favorites set list_id = :'fav_list' where buyer_id = tests.uid('buyer_c');
 select conversation_start(:'listing_a') as conv \gset
 
 -- buyer_d: an offer accepted by seller_a (a sale in progress), one waiting
@@ -268,6 +272,8 @@ select is((select count(*)::int from favorites where buyer_id = :'buyer_c')
           + (select count(*)::int from notifications where profile_id = :'buyer_c')
           + (select count(*)::int from ai_conversations where profile_id = :'buyer_c'), 0,
           'no favorite, notification nor assistant conversation');
+select is((select count(*)::int from favorite_lists where owner_id = :'buyer_c'), 0,
+          'no list of favourites');
 select is((select count(*)::int from offers where id = :'draft'), 0, 'its draft is erased');
 select is((select storage_path from financing_documents where id = :'doc_kept'), '',
           'the document its offer refers to keeps its row, never its file');

@@ -294,7 +294,15 @@ test("dossier de vente : dépôt, non concerné, demande d'accès, partage, ouve
         name: /^Demander l'accès aux documents : Appartement 3.*Savigny-sur-Orge$/,
       })
       .click();
-    await expect(buyer.getByText("Votre demande est envoyée au vendeur.")).toBeVisible();
+    // The message of the button, or already the state it leaves once the page
+    // is read again (the two can arrive in one render).
+    await expect(
+      buyer
+        .getByText(
+          /Votre demande est envoyée au vendeur\.|Demande envoyée, en attente de la réponse du vendeur\./,
+        )
+        .first(),
+    ).toBeVisible();
   });
 
   await test.step("le vendeur accorde : le document est partagé", async () => {
