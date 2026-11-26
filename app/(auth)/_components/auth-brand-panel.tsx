@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { KeyRound, Search, Tag, UserRound } from "lucide-react";
+import { ChartLine, KeyRound, Search, Tag } from "lucide-react";
 import { FacadeDrawing } from "@/components/shared/facade-drawing";
 import { sitePhoto } from "@/leenkey/site/photos";
 import { frSiteHome } from "@/lib/i18n/sections/site/home";
@@ -12,8 +12,10 @@ const t = fr.site.home;
 // Three lines of the shortcut cards of the home page, word for word, with
 // their icons: no promise the site does not already make, no figure.
 const BENEFITS = [
+  // Not the line of « Être accompagné »: alone here, it would promise every
+  // account an adviser that only the paid plans have.
+  { icon: ChartLine, text: t.shortcuts.items.valuation.text },
   { icon: Tag, text: t.shortcuts.items.sell.text },
-  { icon: UserRound, text: t.shortcuts.items.support.text },
   { icon: Search, text: t.shortcuts.items.buy.text },
 ] as const;
 
