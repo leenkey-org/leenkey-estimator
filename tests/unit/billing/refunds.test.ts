@@ -168,3 +168,55 @@ describe("the status of a refund", () => {
     ]);
   });
 });
+
+// DECISIONS.md 2026-11-26: per withdrawal, what is due, refunded and left,
+// and « Rétractation – Remboursement en attente » while something is left.
+describe("a withdrawal on /admin/remboursements (2026-11-26)", () => {
+  const now = new Date("2026-11-20T09:00:00Z");
+
+  it("what is refunded and left of a payment, never more than was paid", async () => {
+    const { leftOfPayment, refundedOfPayment } = await import("@/leenkey/admin/refunds/status");
+    expect(refundedOfPayment(facts())).toBe(0);
+    expect(leftOfPayment(facts())).toBe(99000);
+    expect(refundedOfPayment(facts({ refundedCents: 40000 }))).toBe(40000);
+    expect(leftOfPayment(facts({ refundedCents: 40000 }))).toBe(59000);
+    // Marked refunded by the webhook: all of it, whatever the amount last read.
+    expect(leftOfPayment(facts({ refundedAt: "2026-11-19T09:00:00Z", refundedCents: 0 }))).toBe(0);
+    expect(refundedOfPayment(facts({ refundedCents: 120000 }))).toBe(99000);
+  });
+
+  it("what is left of a request of two payments, in any order of the refunds", async () => {
+    const { leftOfWithdrawal } = await import("@/leenkey/admin/refunds/status");
+    const request = (refunded: number) => ({
+      withdrawalDueCents: 150000,
+      withdrawalRefundedCents: refunded,
+      withdrawalPayments: 2,
+    });
+    expect(leftOfWithdrawal(request(0))).toBe(150000);
+    // The 510 € first, or the 990 € first.
+    expect(leftOfWithdrawal(request(51000))).toBe(99000);
+    expect(leftOfWithdrawal(request(99000))).toBe(51000);
+    expect(leftOfWithdrawal(request(150000))).toBe(0);
+    // A refund without a withdrawal has none.
+    expect(
+      leftOfWithdrawal({
+        withdrawalDueCents: null,
+        withdrawalRefundedCents: null,
+        withdrawalPayments: null,
+      }),
+    ).toBeNull();
+  });
+
+  it("« Rétractation – Remboursement en attente » while something is left, late or partly refunded", async () => {
+    const { withdrawalPending } = await import("@/leenkey/admin/refunds/status");
+    const { frAdminRefunds } = await import("@/lib/i18n/sections/adminRefunds");
+    expect(frAdminRefunds.status.withdrawalPending).toBe("Rétractation – Remboursement en attente");
+    expect(withdrawalPending(facts(), now)).toBe(true);
+    expect(withdrawalPending(facts({ refundedCents: 30000 }), now)).toBe(true);
+    expect(withdrawalPending(facts(), new Date("2026-12-30T09:00:00Z"))).toBe(true);
+    expect(withdrawalPending(facts({ refundedAt: "2026-11-19T09:00:00Z" }), now)).toBe(false);
+    expect(withdrawalPending(facts({ refundedCents: 99000 }), now)).toBe(false);
+    // A partial refund made by the team without a withdrawal is not one.
+    expect(withdrawalPending(facts({ requestedAt: null, refundedCents: 30000 }), now)).toBe(false);
+  });
+});

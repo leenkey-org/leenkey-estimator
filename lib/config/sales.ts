@@ -21,7 +21,9 @@ export const MEDIATOR: Mediator = {
 
 export const SALES_TERMS = {
   /** Published version (date) of the CGV accepted at checkout (/cgv, lib/i18n/legal-policies.ts). */
-  cgvVersion: "2026-11-25",
+  // 2026-11-26: article 10, the withdrawal after a passage and the services
+  // stopped at the request (DECISIONS.md 2026-11-26).
+  cgvVersion: "2026-11-26",
   /** The CGV for the launch are published (DECISIONS.md 2026-11-09, Q34). */
   cgvFinal: true,
   /** The consumer mediator Leenkey joined (Q32). */

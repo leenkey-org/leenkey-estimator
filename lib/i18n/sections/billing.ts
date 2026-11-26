@@ -101,7 +101,8 @@ export const frBilling = {
     durationValue:
       "12 mois à partir du paiement, renouvelables à l'échéance, jamais automatiquement. Sans renouvellement, votre bien repasse en Autonomie.",
     withdrawal: "Rétractation",
-    withdrawalValue: "Vous pouvez renoncer au contrat pendant 14 jours après la commande.",
+    withdrawalValue:
+      "Vous pouvez renoncer au contrat pendant 14 jours après la commande. Les prestations payantes s'arrêtent dès votre demande ; nous vous remboursons sous 14 jours.",
     mediator: "Médiateur de la consommation",
     mediatorPending: "En cours de désignation.",
     includes: "Ce qui est compris",
@@ -171,13 +172,37 @@ export const frBilling = {
   withdrawal: {
     title: "Droit de rétractation",
     text: (date: string) =>
-      `Vous pouvez renoncer à votre formule, sans motif, jusqu'au ${date} inclus. Nous vous remboursons sous 14 jours.`,
+      `Vous pouvez renoncer à votre formule, sans motif, jusqu'au ${date} inclus. Les prestations payantes s'arrêtent dès votre demande ; nous vous remboursons sous 14 jours.`,
+    // After a passage (Accompagné, then Sérénité): what may be renounced (2026-11-26).
+    choice: {
+      intro:
+        "Vous pouvez renoncer, sans motif, à votre dernière commande seule ou à vos deux commandes. Les prestations concernées s'arrêtent dès votre demande ; nous vous remboursons sous 14 jours.",
+      onlyUpgrade: (plan: string, kept: string) =>
+        `Le délai de rétractation de votre formule ${kept} est passé : vous pouvez renoncer à votre passage à ${plan} et revenir à la formule ${kept}. Les prestations propres à ${plan} s'arrêtent dès votre demande ; nous vous remboursons sous 14 jours.`,
+      legend: "Votre choix",
+      upgrade: (kept: string) => `Revenir à la formule ${kept}`,
+      full: (free: string) => `Renoncer aux deux formules et revenir à ${free}`,
+      detail: (amount: string, date: string) =>
+        `Nous vous remboursons ${amount}. Possible jusqu'au ${date} inclus.`,
+    },
     early:
       "Vous avez demandé que les prestations commencent avant la fin de ce délai : en cas de rétractation, nous vous remboursons tout de même l'intégralité du prix.",
     action: "Renoncer au contrat",
     dialogTitle: "Renoncer à votre formule ?",
+    dialogTitleUpgrade: (kept: string) => `Revenir à la formule ${kept} ?`,
     dialogText: (plan: string, property: string, date: string) =>
-      `Formule ${plan} pour ${property}, souscrite le ${date}. Nous vous remboursons sous 14 jours, par le moyen de paiement utilisé lors de la commande.`,
+      `Formule ${plan} pour ${property}, souscrite le ${date}.`,
+    // The confirmation says what stops now, what stays, and the refund (2026-11-26).
+    stopsTitle: "Ce qui s'arrête dès maintenant",
+    stopsAll: "Les prestations payantes de votre formule.",
+    keepsTitle: "Ce qui reste",
+    keeps:
+      "Votre annonce, vos documents, vos messages et l'avancement de votre vente sont conservés : votre vente continue.",
+    keepsPlan: (kept: string) =>
+      `Votre formule ${kept} continue jusqu'à son échéance initiale, avec votre conseiller et l'historique de votre accompagnement.`,
+    refundTitle: "Votre remboursement",
+    refund: (amount: string) =>
+      `Nous vous remboursons ${amount} au plus tard 14 jours après votre demande, par le moyen de paiement utilisé lors de la commande.`,
     dialogEmail: (email: string) => `Un accusé de réception part à ${email}.`,
     dialogName: (name: string) => `Au nom de ${name}.`,
     dialogReplaced: (plan: string, date: string) =>
@@ -185,15 +210,22 @@ export const frBilling = {
     confirm: "Confirmer la rétractation",
     labels: { back: "Retour", close: "Fermer", cancel: "Annuler" },
     done: (date: string) =>
-      `Rétractation enregistrée le ${date}. Nous vous remboursons sous 14 jours, par le moyen de paiement utilisé ; un accusé de réception vous a été envoyé par email.`,
+      `Rétractation enregistrée le ${date}. Les prestations concernées sont arrêtées depuis votre demande. Nous vous remboursons sous 14 jours, par le moyen de paiement utilisé ; un accusé de réception vous a été envoyé par email.`,
     doneNoEmail: (date: string, email: string) =>
-      `Rétractation enregistrée le ${date}. Nous vous remboursons sous 14 jours, par le moyen de paiement utilisé. L'accusé de réception n'a pas pu partir par email : cette page en tient lieu, et vous pouvez le demander à ${email}.`,
+      `Rétractation enregistrée le ${date}. Les prestations concernées sont arrêtées depuis votre demande. Nous vous remboursons sous 14 jours, par le moyen de paiement utilisé. L'accusé de réception n'a pas pu partir par email : cette page en tient lieu, et vous pouvez le demander à ${email}.`,
+    // A request recorded, still to refund: said again on each visit.
+    pendingFull: (date: string, amount: string, deadline: string, free: string) =>
+      `Rétractation enregistrée le ${date}. Vos prestations payantes sont arrêtées depuis cette date : votre bien est en ${free}. Votre annonce, vos documents, vos messages et l'avancement de votre vente sont conservés. Nous vous remboursons ${amount} au plus tard le ${deadline}, par le moyen de paiement utilisé.`,
+    pendingUpgrade: (date: string, amount: string, deadline: string, kept: string) =>
+      `Rétractation enregistrée le ${date} : vous êtes revenu à la formule ${kept}, qui continue jusqu'à son échéance initiale. Nous vous remboursons ${amount} au plus tard le ${deadline}, par le moyen de paiement utilisé.`,
     withdrawnNote:
       "Votre rétractation est en cours : il n'est pas possible de commander une autre formule pour ce bien d'ici le remboursement.",
     errors: {
       session: "Votre session a expiré. Reconnectez-vous pour renoncer au contrat.",
       over: "Le délai de rétractation de 14 jours est passé. Pour toute question, écrivez-nous à contact@leenkey.fr.",
       notInForce: "Cette formule n'est plus en vigueur : la rétractation ne s'applique plus.",
+      notOffered:
+        "Ce choix n'est plus possible : rechargez la page pour voir ce à quoi vous pouvez encore renoncer.",
       unavailable:
         "La rétractation n'a pas pu être enregistrée. Réessayez, ou écrivez-nous à contact@leenkey.fr.",
     },

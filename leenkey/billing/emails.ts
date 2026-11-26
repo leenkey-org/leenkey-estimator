@@ -161,6 +161,10 @@ export type WithdrawalRequest = {
   earlyStart: boolean;
   /** The plan a passage replaced, renounced with it. */
   replaced: { planName: string; activatedAt: string } | null;
+  /** The plan kept when a passage alone is renounced (DECISIONS.md 2026-11-26); null: nothing paid is kept. */
+  keptPlanName: string | null;
+  /** The paid services that stop with the request, as the plans name them. */
+  stops: string[];
 };
 
 /**
@@ -185,6 +189,8 @@ export async function emailWithdrawalReceived(request: WithdrawalRequest): Promi
               orderedOn: legalDate(request.replaced.activatedAt),
             }
           : null,
+        keptPlanName: request.keptPlanName,
+        stops: request.stops,
         planUrl: absoluteUrl(`/vendeur/formule?bien=${request.propertyId}`),
         siteUrl: siteUrl(),
       }),

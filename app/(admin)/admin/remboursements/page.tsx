@@ -18,10 +18,14 @@ import { adminMetadata } from "@/leenkey/admin/metadata";
 import { adminRefunds, refundCounts, type AdminRefundRow } from "@/leenkey/admin/refunds/queries";
 import {
   creditNoteState,
+  leftOfPayment,
+  leftOfWithdrawal,
   refundDeadline,
+  refundedOfPayment,
   refundStatus,
   type RefundStatus,
   waitsForRefund,
+  withdrawalPending,
 } from "@/leenkey/admin/refunds/status";
 import { legalDate } from "@/leenkey/billing/withdrawal";
 import { ROUTES } from "@/leenkey/navigation/spaces";
@@ -50,10 +54,22 @@ const TONE: Record<RefundStatus, string> = {
 
 const badge = cn(pillClassName, "px-2.5 py-1.25 text-lk-micro font-semibold");
 
-/** The status in words (« Remboursé le 25 novembre 2026 »): the colour never alone. */
+/**
+ * The status in words (« Remboursé le 25 novembre 2026 »): the colour never
+ * alone. A withdrawal with money left says « Rétractation – Remboursement en
+ * attente » (Cédric, 2026-11-26), and « En retard » beside it past the 14 days.
+ */
 function StatusPill({ row, now }: { row: AdminRefundRow; now: Date }) {
   const status = refundStatus(row, now);
   const date = row.refundedAt ?? row.lastRefundAt;
+  if (withdrawalPending(row, now)) {
+    return (
+      <span className="flex flex-wrap items-center gap-1.5 self-start">
+        <span className={cn(badge, TONE.to_refund)}>{t.status.withdrawalPending}</span>
+        {status === "late" ? <span className={cn(badge, TONE.late)}>{t.status.late}</span> : null}
+      </span>
+    );
+  }
   const label =
     status === "refunded" && date ? t.status.refundedOn(legalDate(date)) : t.status[status];
   return <span className={cn(badge, TONE[status], "self-start")}>{label}</span>;
@@ -145,14 +161,59 @@ function RequestDates({
   );
 }
 
-/** What is to refund: the amount paid, and what Stripe already refunded of it. */
+/**
+ * What is to refund: the amount paid, and what Stripe already refunded of it.
+ * For a withdrawal (2026-11-26): what is due, refunded and left for this
+ * payment; for a request of two payments, what is left of the whole; and the
+ * plan the seller is back on.
+ */
 function Amount({ row }: { row: AdminRefundRow }) {
+  if (!row.requestedAt) {
+    return (
+      <span className="flex flex-col">
+        <span className="font-semibold text-lk-ink tabular">
+          {formatAmount(row.amountPaidCents)}
+        </span>
+        {row.refundedCents > 0 && row.refundedCents < row.amountPaidCents ? (
+          <span className="text-lk-caption text-lk-ink-3 tabular">
+            {t.refundedAmount(formatAmount(row.refundedCents))}
+          </span>
+        ) : null}
+      </span>
+    );
+  }
+  const left = leftOfPayment(row);
+  const requestLeft = leftOfWithdrawal(row);
   return (
     <span className="flex flex-col">
-      <span className="font-semibold text-lk-ink tabular">{formatAmount(row.amountPaidCents)}</span>
-      {row.refundedCents > 0 && row.refundedCents < row.amountPaidCents ? (
-        <span className="text-lk-caption text-lk-ink-3 tabular">
-          {t.refundedAmount(formatAmount(row.refundedCents))}
+      <span className="font-semibold text-lk-ink tabular">
+        {t.due(formatAmount(row.amountPaidCents))}
+      </span>
+      <span className="text-lk-caption text-lk-ink-2 tabular">
+        {t.refunded(formatAmount(refundedOfPayment(row)))}
+      </span>
+      <span
+        className={cn(
+          "text-lk-caption tabular",
+          left > 0 ? "font-semibold text-lk-ink" : "text-lk-ink-2",
+        )}
+      >
+        {t.left(formatAmount(left))}
+      </span>
+      {row.withdrawalDueCents !== null &&
+      requestLeft !== null &&
+      (row.withdrawalPayments ?? 1) > 1 ? (
+        <span className="max-w-56 text-lk-caption text-lk-ink-3 tabular">
+          {t.requestTotal(
+            formatAmount(row.withdrawalDueCents),
+            formatAmount(requestLeft),
+            row.withdrawalPayments ?? 2,
+          )}
+        </span>
+      ) : null}
+      {row.backToPlan ? (
+        <span className="max-w-56 text-lk-caption text-lk-ink-3">
+          {t.backTo(fr.plan[row.backToPlan])}
         </span>
       ) : null}
     </span>

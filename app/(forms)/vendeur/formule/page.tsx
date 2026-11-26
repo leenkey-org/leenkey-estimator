@@ -13,7 +13,7 @@ import { planFeatures } from "@/core/billing/plans";
 import { PlanComparison } from "@/leenkey/billing/components/plan-comparison";
 import { PlanChooser } from "@/leenkey/billing/components/plan-chooser";
 import { WithdrawalPanel } from "@/leenkey/billing/components/withdrawal-panel";
-import { canWithdraw, legalDate, withdrawalLastDay } from "@/leenkey/billing/withdrawal";
+import { withdrawalView } from "@/leenkey/billing/withdrawal-view";
 import { planPage } from "@/leenkey/billing/queries";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { paidPlansOrderable, SALES_TERMS } from "@/lib/config/sales";
@@ -54,7 +54,8 @@ function Body({ children }: { children: React.ReactNode }) {
 // webhook wrote; ?paiement=annule). A plan is chosen per property: the one of
 // ?bien=, else the one of « Ma vente »; under them, the comparison table of
 // 11 bis (L1-33). L1-40: « Renoncer au contrat » during the 14 days, above the
-// plans (« visible, directe et accessible »), then the date of the request.
+// plans (« visible, directe et accessible »), with the choice a passage opens
+// (DECISIONS.md 2026-11-26), then the request recorded and its refund to come.
 // Under the plans, « Mes factures et paiements » (DECISIONS.md 2026-11-26):
 // every payment of the seller, its invoice and the credit notes of its
 // refunds (?document=indisponible: a download that could not be served).
@@ -154,17 +155,10 @@ export default async function PlanPage({ searchParams }: Props) {
 
   const now = new Date();
   const sold = data.property.status === "sold";
-  const active = data.active;
-  // Renounceable: paid, within the 14 days (or already renounced, to say it).
-  const withdrawal =
-    active &&
-    (active.withdrawalRequestedAt ||
-      (active.amountPaidCents > 0 && canWithdraw(active.activatedAt, now)))
-      ? active
-      : null;
-  const withdrawn = Boolean(active?.withdrawalRequestedAt);
-  const planName = (code: string) => data.prices.find((plan) => plan.code === code)?.name ?? code;
-  const user = withdrawal ? await getUser() : null;
+  // What may be renounced within the 14 days, and the requests still to refund.
+  const withdrawal = withdrawalView(data, features, now);
+  const withdrawn = withdrawal.recorded.length > 0;
+  const user = withdrawal.current ? await getUser() : null;
   // Nothing else is ordered while a plan is being renounced (L1-40).
   const orderable = paidPlansOrderable() && !sold && !withdrawn;
   const activeNote = data.active?.endsAt
@@ -206,29 +200,16 @@ export default async function PlanPage({ searchParams }: Props) {
             </details>
           ) : null}
         </div>
-        {withdrawal ? (
+        {withdrawal.current || withdrawn ? (
           <WithdrawalPanel
-            subscriptionId={withdrawal.id}
-            planName={planName(withdrawal.plan)}
+            {...withdrawal}
             propertyName={
               data.property.reference
                 ? `${data.property.name} · ${data.property.reference}`
                 : data.property.name
             }
-            orderedOn={legalDate(withdrawal.activatedAt)}
-            lastDay={legalDate(withdrawalLastDay(withdrawal.activatedAt))}
-            earlyStart={withdrawal.earlyStart}
             name={data.sellerName}
-            replaced={
-              withdrawal.replaced && canWithdraw(withdrawal.replaced.activatedAt, now)
-                ? {
-                    planName: planName(withdrawal.replaced.plan),
-                    orderedOn: legalDate(withdrawal.replaced.activatedAt),
-                  }
-                : null
-            }
             email={user?.email ?? null}
-            requestedAt={withdrawal.withdrawalRequestedAt}
           />
         ) : null}
         {sold ? <InlineAlert tone="info">{t.sold}</InlineAlert> : null}

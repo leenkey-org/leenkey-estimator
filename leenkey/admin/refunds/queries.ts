@@ -3,7 +3,13 @@ import { cache } from "react";
 import { requireAdmin } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Database, Json } from "@/types/database";
-import { creditNoteState, refundStatus, sortRefunds, waitsForRefund } from "./status";
+import {
+  creditNoteState,
+  refundStatus,
+  sortRefunds,
+  waitsForRefund,
+  type WithdrawalFacts,
+} from "./status";
 
 // Reads of /admin/remboursements (DECISIONS.md 2026-11-25), with the admin's
 // session: admin_refunds() checks is_admin() itself (it reads stripe_events,
@@ -40,7 +46,11 @@ export type AdminRefundRow = {
   replacingPlan: PlanCode | null;
   creditedCents: number;
   creditNotes: AdminCreditNote[];
-};
+  /** What the request renounced: everything (« full ») or a passage alone (« upgrade »); null without a withdrawal. */
+  withdrawalScope: "full" | "upgrade" | null;
+  /** The plan the seller is back on by this withdrawal (the free plan after « full »). */
+  backToPlan: PlanCode | null;
+} & WithdrawalFacts;
 
 export type AdminRefundCounts = {
   /** Withdrawals not, or not fully, refunded. */
@@ -100,6 +110,14 @@ export const adminRefunds = cache(async (): Promise<QueryResult<AdminRefundRow[]
       replacingPlan: nullable(row.replacing_plan),
       creditedCents: row.credited_cents ?? 0,
       creditNotes: creditNotesOf(row.credit_notes),
+      withdrawalScope:
+        row.withdrawal_scope === "full" || row.withdrawal_scope === "upgrade"
+          ? row.withdrawal_scope
+          : null,
+      backToPlan: nullable(row.back_to_plan),
+      withdrawalDueCents: nullable(row.withdrawal_due_cents),
+      withdrawalRefundedCents: nullable(row.withdrawal_refunded_cents),
+      withdrawalPayments: nullable(row.withdrawal_payments),
     }));
     return { ok: true, data: sortRefunds(rows) };
   } catch (error) {

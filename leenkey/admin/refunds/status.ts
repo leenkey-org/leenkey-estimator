@@ -31,6 +31,50 @@ export type RefundFacts = {
   creditedCents: number;
 };
 
+/**
+ * The withdrawal a payment belongs to (DECISIONS.md 2026-11-26): a request
+ * may renounce two payments (a plan and the passage that replaced it), each
+ * refunded on its own in Stripe. Null without a withdrawal.
+ */
+export type WithdrawalFacts = {
+  /** Everything due for the request, all its payments together. */
+  withdrawalDueCents: number | null;
+  /** What Stripe refunded of it so far. */
+  withdrawalRefundedCents: number | null;
+  /** How many payments the request renounced. */
+  withdrawalPayments: number | null;
+};
+
+/** What Stripe refunded of this payment: never more than was paid, all of it once marked refunded. */
+export function refundedOfPayment(
+  facts: Pick<RefundFacts, "refundedAt" | "amountPaidCents" | "refundedCents">,
+): number {
+  if (facts.refundedAt) return facts.amountPaidCents;
+  return Math.max(0, Math.min(facts.amountPaidCents, facts.refundedCents));
+}
+
+/** What is left to refund of this payment. */
+export function leftOfPayment(
+  facts: Pick<RefundFacts, "refundedAt" | "amountPaidCents" | "refundedCents">,
+): number {
+  return facts.amountPaidCents - refundedOfPayment(facts);
+}
+
+/** What is left to refund of the whole request; null without a withdrawal. */
+export function leftOfWithdrawal(facts: WithdrawalFacts): number | null {
+  if (facts.withdrawalDueCents === null) return null;
+  return Math.max(0, facts.withdrawalDueCents - (facts.withdrawalRefundedCents ?? 0));
+}
+
+/**
+ * « Rétractation – Remboursement en attente » (Cédric, 2026-11-26): a
+ * withdrawal with money left to refund on this payment, late or not, partly
+ * refunded or not.
+ */
+export function withdrawalPending(facts: RefundFacts, now: Date = new Date()): boolean {
+  return waitsForRefund(facts, now);
+}
+
 /** The last day to refund a withdrawal, « YYYY-MM-DD » in Paris: the day of the request plus 14 days. */
 export function refundLastDay(requestedAt: string | Date): string {
   const day = new Date(`${parisDay(new Date(requestedAt))}T12:00:00Z`);

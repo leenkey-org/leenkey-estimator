@@ -247,6 +247,12 @@ function previews(): Preview[] {
         amount: formatPrice(99000),
         earlyStart: false,
         replaced: null,
+        keptPlanName: null,
+        stops: [
+          "Conseiller dédié",
+          "Regard personnalisé sur le prix et la stratégie",
+          "Relecture et optimisation de l'annonce",
+        ],
         planUrl: `${site}/vendeur/formule`,
         siteUrl: site,
       }),

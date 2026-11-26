@@ -19,6 +19,8 @@ export type WithdrawalToProcess = {
   /** « 10 novembre 2026 à 14:05 » */
   requestedAt: string;
   earlyStart: boolean;
+  /** The plan the seller is on from the request (DECISIONS.md 2026-11-26); null when not known. */
+  backTo?: string | null;
 };
 
 export type WithdrawalsToProcessEmailProps = {
@@ -49,6 +51,7 @@ export function WithdrawalsToProcessEmail({
       {items.map((item) => (
         <Text key={`${item.property}-${item.requestedAt}`} style={emailText}>
           {t.item(item.planName, item.property, item.amount, item.requestedAt)}
+          {item.backTo ? ` · ${t.backTo(item.backTo)}` : ""}
           {item.earlyStart ? ` (${t.early})` : ""}
         </Text>
       ))}

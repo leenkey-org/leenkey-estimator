@@ -339,13 +339,15 @@ Ce que le site fait seul au paiement : il active la formule, envoie le récapitu
 
 ### Une rétractation
 
-Le vendeur clique sur « Renoncer au contrat » dans son espace. L'équipe reçoit « Rétractation à rembourser ». Une note s'ajoute au dossier de la formule.
+Le vendeur clique sur « Renoncer au contrat » dans son espace. Les prestations payantes concernées s'arrêtent aussitôt. L'équipe reçoit « Rétractation à rembourser ». Une note s'ajoute au dossier de la formule, dont le titre devient « Rétractation · formule … ».
 
-1. Ouvrez le dossier.
-2. Remboursez le paiement dans Stripe. Le remboursement est intégral.
-3. Le site enregistre seul le remboursement et met fin aux droits de la formule.
+Après un passage d'Accompagné à Sérénité, le vendeur choisit : revenir à Accompagné (510 € à rembourser) ou renoncer aux deux formules (1 500 €, en deux paiements). Une fois le délai d'Accompagné passé, il ne peut que revenir à Accompagné.
 
-> À savoir : le site ne rembourse jamais lui-même. La formule reste en vigueur jusqu'au remboursement fait dans Stripe.
+1. Ouvrez « Remboursements » : le statut « Rétractation – Remboursement en attente », le montant dû, déjà remboursé et restant, la date limite et la formule à laquelle le vendeur revient.
+2. Remboursez chaque paiement dans Stripe (« Rembourser dans Stripe »).
+3. Le site enregistre seul le remboursement. Une fois tout remboursé, le dossier se clôture seul.
+
+> À savoir : le site ne rembourse jamais lui-même. La clôture du dossier ne change rien à la vente : l'annonce, les documents, les échanges et l'avancement du vendeur sont conservés. Après un retour à Accompagné, le dossier reste ouvert.
 
 ## 10. L'assistant
 

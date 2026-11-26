@@ -186,6 +186,13 @@ export const frEmails = {
       `Nous avons reçu le ${at} votre demande de rétractation pour la formule ${plan} (bien ${property}), souscrite le ${ordered}.`,
     replaced: (plan: string, ordered: string) =>
       `Elle comprend la formule ${plan}, souscrite le ${ordered} puis remplacée, encore dans son délai.`,
+    // What stops at once and what stays (DECISIONS.md 2026-11-26).
+    kept: (plan: string) =>
+      `Vous revenez à la formule ${plan} : elle continue jusqu'à son échéance initiale, avec votre conseiller et l'historique de votre accompagnement.`,
+    stops: (services: string) => `Ce qui s'arrête dès votre demande : ${services}.`,
+    stopsAll: "Les prestations payantes de votre formule s'arrêtent dès votre demande.",
+    keeps:
+      "Ce qui reste : votre annonce, vos documents, vos messages et l'avancement de votre vente sont conservés. Votre vente continue.",
     refund: (amount: string) =>
       `Nous vous remboursons ${amount} au plus tard 14 jours après votre demande, par le moyen de paiement utilisé lors de la commande, sans frais.`,
     early:
@@ -201,9 +208,10 @@ export const frEmails = {
         : `Rétractation à rembourser · formule ${plan} · ${property}`,
     title: (count: number) =>
       count > 1 ? `${count}\u00A0rétractations à rembourser` : "Une rétractation à rembourser",
-    text: "À rembourser depuis Stripe sous 14 jours : le remboursement met fin à la formule. Une note est dans le dossier du bien.",
+    text: "Les prestations payantes concernées sont arrêtées dès la demande. À rembourser depuis Stripe sous 14 jours ; le suivi est dans « Remboursements », une note dans le dossier du bien.",
     item: (plan: string, property: string, amount: string, at: string) =>
-      `Formule ${plan} · ${property} · ${amount} payés · demande du ${at}`,
+      `Formule ${plan} · ${property} · ${amount} à rembourser · demande du ${at}`,
+    backTo: (plan: string) => `retour à ${plan}`,
     early: "démarrage immédiat demandé : remboursement intégral tout de même",
     action: "Voir les remboursements",
   },

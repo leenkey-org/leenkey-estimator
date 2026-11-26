@@ -6,11 +6,13 @@ import { propertyName } from "@/leenkey/properties/sheet";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 import { sellerPayments, type SellerPayment } from "./payments";
+import type { WithdrawalScope } from "./withdrawal";
 
 // Reads of /vendeur/formule (L1-26, SPEC-V2 8.8), with the seller's session:
 // the RLS gives them their properties and their subscriptions; the plan in
 // force is property_current_plan, as the rights read it (an ended plan is
-// already back to Autonomie, before the daily job of L1-40 moves the sale).
+// already back to Autonomie, before the daily job of L1-40 moves the sale; a
+// plan renounced too, from the request on, DECISIONS.md 2026-11-26).
 
 type PlanCode = Database["public"]["Enums"]["plan_code"];
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
@@ -36,8 +38,7 @@ export type PlanPage = {
     endsAt: string | null;
     earlyStart: boolean;
     amountPaidCents: number;
-    withdrawalRequestedAt: string | null;
-    /** The plan this one replaced (a passage), still renounceable with it. */
+    /** The plan this one replaced (a passage): renounced with it, or gone back to. */
     replaced: { plan: PlanCode; activatedAt: string; amountPaidCents: number } | null;
   } | null;
   /**
@@ -47,6 +48,18 @@ export type PlanPage = {
    * plans are shown all the same).
    */
   payments: SellerPayment[] | null;
+  /**
+   * The withdrawals recorded and not refunded yet, the oldest first (one per
+   * request: the plans renounced together share its date).
+   */
+  withdrawals: {
+    requestedAt: string;
+    scope: WithdrawalScope;
+    /** What is left to refund of the plans it renounced. */
+    dueCents: number;
+    /** The plan the seller went back to (« upgrade »); null: the free plan. */
+    backTo: PlanCode | null;
+  }[];
 };
 
 type Client = Awaited<ReturnType<typeof createClient>>;
@@ -104,16 +117,15 @@ export async function planPage(
   if (!property) return { ok: true, data: null };
   try {
     const supabase = await createClient();
-    const [progress, subscription, seller, payments] = await Promise.all([
+    const [progress, subscription, seller, payments, renounced] = await Promise.all([
       supabase.rpc("property_current_plan", { p: property.id }),
       supabase
         .from("subscriptions")
-        .select(
-          "id, plan, activated_at, ends_at, early_start_requested_at, amount_paid_cents, withdrawal_requested_at",
-        )
+        .select("id, plan, activated_at, ends_at, early_start_requested_at, amount_paid_cents")
         .eq("property_id", property.id)
         .is("replaced_by", null)
         .is("refunded_at", null)
+        .is("withdrawal_requested_at", null)
         .gt("ends_at", new Date().toISOString())
         .order("activated_at", { ascending: false })
         .limit(1)
@@ -125,11 +137,36 @@ export async function planPage(
         Object.fromEntries(plans.map((plan) => [plan.code, plan.name])),
         Object.fromEntries(properties.data.map((item) => [item.id, propertyName(item)])),
       ),
+      // The plans renounced, still to refund; the plan a passage went back to.
+      supabase
+        .from("subscriptions")
+        .select("amount_paid_cents, withdrawal_requested_at, withdrawal_reverts_to")
+        .eq("property_id", property.id)
+        .not("withdrawal_requested_at", "is", null)
+        .is("refunded_at", null)
+        .gt("amount_paid_cents", 0)
+        .order("withdrawal_requested_at", { ascending: true }),
     ]);
     if (progress.error) throw new Error(`property_current_plan: ${progress.error.code}`);
     if (subscription.error) throw new Error(`subscriptions: ${subscription.error.code}`);
+    if (renounced.error) throw new Error(`subscriptions: ${renounced.error.code}`);
     const current = progress.data ?? "autonomie";
     const active = subscription.data;
+    const withdrawals = new Map<string, PlanPage["withdrawals"][number]>();
+    for (const row of renounced.data) {
+      const requestedAt = row.withdrawal_requested_at;
+      if (!requestedAt) continue;
+      const known = withdrawals.get(requestedAt);
+      // The plan kept is the one in force, unless renounced or refunded in turn since.
+      const kept =
+        row.withdrawal_reverts_to && active?.id === row.withdrawal_reverts_to ? active.plan : null;
+      withdrawals.set(requestedAt, {
+        requestedAt,
+        scope: row.withdrawal_reverts_to ? "upgrade" : (known?.scope ?? "full"),
+        dueCents: (known?.dueCents ?? 0) + row.amount_paid_cents,
+        backTo: kept ?? known?.backTo ?? null,
+      });
+    }
     // A passage: the plan replaced, not renounced nor refunded, paid.
     const replaced = active
       ? await supabase
@@ -174,7 +211,6 @@ export async function planPage(
                 endsAt: active.ends_at,
                 earlyStart: active.early_start_requested_at !== null,
                 amountPaidCents: active.amount_paid_cents,
-                withdrawalRequestedAt: active.withdrawal_requested_at,
                 replaced: replaced?.data
                   ? {
                       plan: replaced.data.plan,
@@ -185,6 +221,7 @@ export async function planPage(
               }
             : null,
         payments,
+        withdrawals: [...withdrawals.values()],
       },
     };
   } catch (error) {

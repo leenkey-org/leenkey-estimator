@@ -1,8 +1,9 @@
 -- L1-33: has_entitlement(property, feature) reads the rights of the plan in
 -- force of a property in plan_entitlements, for its owner and the admins
 -- only: false for another seller, a buyer, and closed to a visitor. The plan
--- in force (property_current_plan): neither ended, refunded nor replaced; a
--- withdrawal asked keeps the plan until its refund (L1-40).
+-- in force (property_current_plan): neither ended, refunded, replaced nor
+-- renounced (a withdrawal asked ends the rights at once, 2026-11-26:
+-- rls_withdrawal_choice.sql).
 begin;
 \ir _helpers.psql
 select plan(19);
@@ -39,8 +40,8 @@ values (tests.uid('seller_a'), 'appartement', '2 avenue de la Gare', '91390', 'M
 returning id as gone \gset
 
 reset role;
-insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at, withdrawal_requested_at)
-values (:'paid', tests.uid('seller_a'), 'accompagne', 99000, now() - interval '3 days', now() - interval '1 day');
+insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at)
+values (:'paid', tests.uid('seller_a'), 'accompagne', 99000, now() - interval '3 days');
 insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at)
 values (:'ended', tests.uid('seller_a'), 'serenite', 150000, now() - interval '13 months');
 insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at, refunded_at)
@@ -58,7 +59,7 @@ values (:'gone', tests.uid('seller_a'), 'serenite', 150000, now() - interval '4 
 \ir _as.psql
 select is(has_entitlement(:'free', 'advisor'), false, 'seller_a: Autonomie has no adviser');
 select is(has_entitlement(:'paid', 'advisor'), true,
-          'seller_a: Accompagné has the adviser, a withdrawal asked keeps it until the refund');
+          'seller_a: Accompagné has the adviser');
 select is(has_entitlement(:'paid', 'sale_file_building'), false,
           'seller_a: Accompagné does not build the sale file');
 select is(has_entitlement(:'ended', 'advisor'), false,

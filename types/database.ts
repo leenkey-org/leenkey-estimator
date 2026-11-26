@@ -2327,6 +2327,7 @@ export type Database = {
           stripe_payment_intent_id: string | null
           stripe_promotion_code: string | null
           withdrawal_requested_at: string | null
+          withdrawal_reverts_to: string | null
         }
         Insert: {
           activated_at?: string
@@ -2346,6 +2347,7 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           stripe_promotion_code?: string | null
           withdrawal_requested_at?: string | null
+          withdrawal_reverts_to?: string | null
         }
         Update: {
           activated_at?: string
@@ -2365,6 +2367,7 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           stripe_promotion_code?: string | null
           withdrawal_requested_at?: string | null
+          withdrawal_reverts_to?: string | null
         }
         Relationships: [
           {
@@ -2382,6 +2385,12 @@ export type Database = {
           {
             foreignKeyName: "subscriptions_replaced_by_fkey"
             columns: ["replaced_by"]
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_withdrawal_reverts_to_fkey"
+            columns: ["withdrawal_reverts_to"]
             referencedRelation: "subscriptions"
             referencedColumns: ["id"]
           },
@@ -3214,6 +3223,11 @@ export type Database = {
           replacing_plan: Database["public"]["Enums"]["plan_code"]
           amount_paid_cents: number
           credit_notes: Json
+          withdrawal_scope: string
+          back_to_plan: Database["public"]["Enums"]["plan_code"]
+          withdrawal_due_cents: number
+          withdrawal_refunded_cents: number
+          withdrawal_payments: number
         }[]
       }
       admin_report_counts: {
@@ -4335,6 +4349,14 @@ export type Database = {
         Args: { p_photo_ids: string[]; p_property_id: string }
         Returns: undefined
       }
+      plan_case_subject: {
+        Args: { p_withdrawal: boolean; p_place: string; p_plan_name: string }
+        Returns: string
+      }
+      plan_case_subject_follows: {
+        Args: { p_subject: string }
+        Returns: boolean
+      }
       price_in_words_fr: {
         Args: { p_cents: number }
         Returns: string
@@ -4678,7 +4700,7 @@ export type Database = {
         Returns: Json
       }
       subscription_withdraw: {
-        Args: { p_with_replaced?: boolean; p_subscription_id: string }
+        Args: { p_scope?: string; p_subscription_id: string }
         Returns: Json
       }
       subscriptions_daily: {
