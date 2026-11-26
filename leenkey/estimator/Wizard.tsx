@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { computeEstimation } from "./estimation";
 import { prixM2Dvf, type DvfResult } from "./dvf";
 import { getFlow } from "./flows";
@@ -222,7 +222,11 @@ function buildPayload(form: LeenkeyForm) {
   };
 }
 
-export function LeenkeyWizard() {
+/**
+ * aside: a quiet note next to the questions from 1024 px (design pass of
+ * 2026-11-26), given by the page so that its texts stay on the server.
+ */
+export function LeenkeyWizard({ aside }: { aside?: ReactNode } = {}) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<LeenkeyForm>(initialForm);
   const [errors, setErrors] = useState<Errors>({});
@@ -510,8 +514,20 @@ export function LeenkeyWizard() {
   // The wizard is the main content of /estimer, under the sticky header of
   // the site (60 px, then the 72 px TopNav, L1-43), in Façade (L1-44): a G5
   // form, its progress under the header, its actions at the bottom.
+  // One frame for the progress, the step and the actions: 768 px, then from
+  // 1024 px the questions and the note beside them (1024 px in all); a step in
+  // two columns (large) has its own panel and no note.
+  const withAside = Boolean(aside) && !current?.large;
+  const frame = cn(
+    "mx-auto w-full px-5",
+    current?.large ? "max-w-6xl" : withAside ? "max-w-3xl lg:max-w-5xl" : "max-w-3xl",
+  );
+  const columns = withAside && "lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-12";
+  // At least the height of the screen under the header of the site (60 px,
+  // then 72 px): the actions stay at the bottom of the screen, the footer of
+  // the site comes after them, below the fold, as under the forms in steps.
   return (
-    <main className="min-h-screen bg-lk-surface">
+    <main className="flex min-h-[calc(100dvh-3.75rem)] flex-col bg-lk-surface md:min-h-[calc(100dvh-4.5rem)]">
       {/* Header */}
       {/* A second sticky header: room for it when the focus moves (app/globals.css). */}
       <header
@@ -519,7 +535,7 @@ export function LeenkeyWizard() {
         className="sticky top-15 z-30 border-b border-lk-line bg-lk-surface md:top-18"
       >
         {/* Progress (logo retiré : déjà dans la navbar au-dessus) */}
-        <div className="mx-auto max-w-5xl px-5 py-3">
+        <div className={cn(frame, "py-3")}>
           <div className="mb-2 flex items-center justify-between gap-3 text-lk-caption text-lk-ink-3">
             <span className="font-semibold text-lk-ink">{current?.label}</span>
             <span className="tabular">
@@ -577,56 +593,65 @@ export function LeenkeyWizard() {
       )}
 
       {/* Step content */}
-      <div className={cn("mx-auto px-5 pb-32 pt-10", current?.large ? "max-w-6xl" : "max-w-3xl")}>
-        <div key={step} className="step-enter">
-          {StepNode}
+      <div className={cn(frame, columns, "pt-8 pb-12 md:pt-10 md:pb-16")}>
+        <div className="min-w-0">
+          <div key={step} className="step-enter">
+            {StepNode}
+          </div>
+          {firstError && (
+            <InlineAlert tone="danger" className="mt-6">
+              {firstError}
+            </InlineAlert>
+          )}
         </div>
-        {firstError && (
-          <InlineAlert tone="danger" className="mt-6">
-            {firstError}
-          </InlineAlert>
+        {withAside && (
+          <div className="hidden min-w-0 lg:block">
+            <div className="sticky top-40">{aside}</div>
+          </div>
         )}
       </div>
 
-      {/* Footer nav: data-wizard-bar keeps the site footer above it (/estimer) */}
+      {/* Footer nav: at the bottom of the screen on every width, then above the site footer */}
       <footer
         data-wizard-bar
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-lk-line bg-lk-surface pb-[env(safe-area-inset-bottom)]"
+        className="sticky bottom-0 z-30 mt-auto border-t border-lk-line bg-lk-surface pb-[env(safe-area-inset-bottom)]"
       >
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-5 py-3.5">
-          <button
-            type="button"
-            onClick={back}
-            disabled={step === 1}
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "md" }),
-              "inline-flex items-center",
-              step === 1 && "invisible",
-            )}
-          >
-            Retour
-          </button>
-          <button
-            type="button"
-            onClick={next}
-            disabled={submitting}
-            aria-busy={submitting || undefined}
-            className={cn(
-              buttonVariants({ size: "lg" }),
-              "inline-flex min-w-45 items-center justify-center gap-2",
-            )}
-          >
-            {submitting ? (
-              <>
-                <Loader2 aria-hidden="true" className="size-4 motion-safe:animate-spin" />
-                Envoi en cours…
-              </>
-            ) : step === TOTAL ? (
-              "Voir ma valorisation"
-            ) : (
-              "Continuer"
-            )}
-          </button>
+        <div className={cn(frame, columns)}>
+          <div className="flex min-w-0 items-center justify-between gap-3 py-3.5">
+            <button
+              type="button"
+              onClick={back}
+              disabled={step === 1}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "md" }),
+                "inline-flex items-center",
+                step === 1 && "invisible",
+              )}
+            >
+              Retour
+            </button>
+            <button
+              type="button"
+              onClick={next}
+              disabled={submitting}
+              aria-busy={submitting || undefined}
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "inline-flex min-w-45 items-center justify-center gap-2",
+              )}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 aria-hidden="true" className="size-4 motion-safe:animate-spin" />
+                  Envoi en cours…
+                </>
+              ) : step === TOTAL ? (
+                "Voir ma valorisation"
+              ) : (
+                "Continuer"
+              )}
+            </button>
+          </div>
         </div>
       </footer>
     </main>

@@ -1,7 +1,7 @@
 import { chipClassName } from "@/components/shared/chip-toggle";
 import { cn } from "@/lib/utils";
 import { createContext, useContext, useEffect, useId, useMemo, useState } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Check, type LucideIcon } from "lucide-react";
 import type { ReactNode, InputHTMLAttributes } from "react";
 
 // Building blocks of the steps of the wizard, in Façade since L1-44
@@ -27,6 +27,35 @@ export function StepHeader({ title, subtitle }: { title: string; subtitle?: stri
   );
 }
 
+/* ---------- Selectable cards ---------- */
+// The shape of a choice card (design pass of 2026-11-26, DESIGN.md 13.1):
+// white, a 2 px border so that nothing moves when it is chosen; hovered, the
+// soft blue border and shadow of a ShortcutCard; chosen, the gradient outline
+// of the charte (lk-gradient-border) and a check in the gradient.
+const cardClassName = (selected: boolean) =>
+  cn(
+    "group relative flex w-full text-left",
+    "transition-[border-color,box-shadow] duration-220 ease-out-lk",
+    selected
+      ? "lk-gradient-border shadow-lk-d-hover"
+      : "border-2 border-lk-line bg-lk-surface hover:border-lk-indigo-line hover:shadow-lk-d-hover",
+  );
+
+/** The mark of a card: a circle (one choice) or a square (several), filled with the gradient and a check when chosen. */
+function CardMark({ selected, shape }: { selected: boolean; shape: "round" | "square" }) {
+  return (
+    <span
+      className={cn(
+        "flex size-5 shrink-0 items-center justify-center",
+        shape === "round" ? "rounded-full" : "rounded-lk-xs",
+        selected ? "lk-gradient" : "border-[1.5px] border-lk-field bg-lk-surface",
+      )}
+    >
+      {selected && <Check aria-hidden="true" strokeWidth={3} className="size-3 text-white" />}
+    </span>
+  );
+}
+
 /* ---------- Selectable card (single) ---------- */
 export function OptionCard({
   selected,
@@ -34,12 +63,15 @@ export function OptionCard({
   title,
   description,
   compact,
+  icon: Icon,
 }: {
   selected: boolean;
   onClick: () => void;
   title: string;
   description?: string;
   compact?: boolean;
+  /** Decorative: in a soft gradient tile before the title (the property types). */
+  icon?: LucideIcon;
 }) {
   return (
     <button
@@ -47,44 +79,31 @@ export function OptionCard({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        "group relative flex w-full items-start gap-4 rounded-lk-md border-[1.5px] p-4 text-left md:p-5",
-        "transition-colors duration-140 ease-out-lk",
-        compact && "items-center md:p-4",
-        selected
-          ? "border-lk-blue bg-lk-blue-tint"
-          : "border-lk-line bg-lk-surface hover:border-lk-ink-3",
+        cardClassName(selected),
+        "items-start gap-3.5 rounded-lk-d-card p-4 md:p-5",
+        (compact || Icon) && "items-center",
+        compact && "rounded-lk-md md:p-4",
       )}
     >
+      {Icon && (
+        <span className="lk-gradient-soft flex size-11 shrink-0 items-center justify-center rounded-lk-lg md:size-12">
+          <Icon
+            aria-hidden="true"
+            strokeWidth={1.9}
+            className="lk-icon-gradient size-5.5 text-lk-blue md:size-6"
+          />
+        </span>
+      )}
       <span className="min-w-0 flex-1 space-y-1">
-        <span
-          className={cn(
-            "block break-words text-lk-button-md leading-snug font-semibold",
-            selected ? "text-lk-blue" : "text-lk-ink",
-          )}
-        >
+        <span className="block break-words text-lk-button-md leading-snug font-semibold text-lk-ink">
           {title}
         </span>
         {description && (
           <span className="block text-lk-secondary text-lk-ink-2">{description}</span>
         )}
       </span>
-      <span
-        className={cn(
-          "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-[1.5px]",
-          selected ? "border-lk-blue bg-lk-blue" : "border-lk-field bg-lk-surface",
-        )}
-      >
-        {selected && (
-          <svg
-            viewBox="0 0 12 12"
-            className="size-3 text-white"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.5}
-          >
-            <path d="M2 6l3 3 5-6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
+      <span className={cn(!compact && !Icon && "mt-0.5")}>
+        <CardMark selected={selected} shape="round" />
       </span>
     </button>
   );
@@ -109,12 +128,9 @@ export function ToggleCard({
       aria-pressed={selected}
       className={cn(
         // The whole cell of its grid, even inside a wrapper (a button shrinks to its text).
-        "flex w-full gap-3 rounded-lk-md border-[1.5px] px-4 py-3 text-left text-lk-label font-medium",
-        "transition-colors duration-140 ease-out-lk",
+        cardClassName(selected),
+        "gap-3 rounded-lk-md px-4 py-3 text-lk-label font-medium text-lk-ink",
         desc ? "items-start" : "items-center",
-        selected
-          ? "border-lk-blue bg-lk-blue-tint text-lk-ink"
-          : "border-lk-line bg-lk-surface text-lk-ink hover:border-lk-ink-3",
       )}
     >
       <span className="min-w-0 flex-1">
@@ -123,24 +139,7 @@ export function ToggleCard({
           <span className="mt-0.5 block text-lk-caption font-normal text-lk-ink-2">{desc}</span>
         )}
       </span>
-      <span
-        className={cn(
-          "flex size-5 shrink-0 items-center justify-center rounded-lk-xs border-[1.5px]",
-          selected ? "border-lk-blue bg-lk-blue" : "border-lk-field bg-lk-surface",
-        )}
-      >
-        {selected && (
-          <svg
-            viewBox="0 0 12 12"
-            className="size-3 text-white"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={3}
-          >
-            <path d="M2 6l3 3 5-6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
-      </span>
+      <CardMark selected={selected} shape="square" />
     </button>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Building, Building2, Castle, House, LandPlot, Store, type LucideIcon } from "lucide-react";
 import {
   Field,
   OptionCard,
@@ -73,20 +74,24 @@ function ErrorMsg({ msg }: { msg?: string }) {
 }
 
 /* ============ STEP 1 — Type ============ */
-const BIEN_OPTIONS: { value: BienType; label: string; desc: string }[] = [
-  { value: "maison", label: "Maison", desc: "Individuelle, mitoyenne, de ville" },
-  { value: "appartement", label: "Appartement", desc: "Du studio au penthouse" },
-  { value: "terrain", label: "Terrain", desc: "Constructible, agricole, loisirs" },
+// Pictograms: those of the search categories for a house, a flat and a plot
+// (leenkey/search/components/type-tiles.tsx); decorative, the label names the card.
+const BIEN_OPTIONS: { value: BienType; label: string; desc: string; icon: LucideIcon }[] = [
+  { value: "maison", label: "Maison", desc: "Individuelle, mitoyenne, de ville", icon: House },
+  { value: "appartement", label: "Appartement", desc: "Du studio au penthouse", icon: Building2 },
+  { value: "terrain", label: "Terrain", desc: "Constructible, agricole, loisirs", icon: LandPlot },
   {
     value: "local_commercial",
     label: "Local commercial",
     desc: "Boutique, bureau, atelier",
+    icon: Store,
   },
-  { value: "immeuble", label: "Immeuble", desc: "Immeuble de rapport complet" },
+  { value: "immeuble", label: "Immeuble", desc: "Immeuble de rapport complet", icon: Building },
   {
     value: "atypique",
     label: "Bien atypique",
     desc: "Loft, château, corps de ferme...",
+    icon: Castle,
   },
 ];
 
@@ -106,6 +111,7 @@ export function Step1({ form, set, errors }: P) {
               onClick={() => set({ type: o.value })}
               title={o.label}
               description={o.desc}
+              icon={o.icon}
             />
           ))}
         </div>
