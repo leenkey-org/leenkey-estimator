@@ -173,12 +173,18 @@ test("alertes : création depuis la recherche, pause, nouveau nom, suppression",
       (response) =>
         response.request().method() === "POST" && new URL(response.url()).pathname === ALERTS,
     );
-  await Promise.all([saved(), toggle.click()]);
+  // …then for the switch to be free again: it is disabled until the page has
+  // the answer, and only then does its state say what was saved.
+  const savedBy = async (click: () => Promise<void>) => {
+    await Promise.all([saved(), click()]);
+    await expect(row.getByRole("switch")).toBeEnabled();
+  };
+  await savedBy(() => toggle.click());
   await expect(toggle).not.toBeChecked();
   await expect(row).toContainText("En pause");
   await buyer.reload();
   await expect(row.getByRole("switch")).not.toBeChecked();
-  await Promise.all([saved(), row.getByRole("switch").click()]);
+  await savedBy(() => row.getByRole("switch").click());
   await expect(row.getByRole("switch")).toBeChecked();
   // The digest below reads the base: the alert is active there too.
   await buyer.reload();
