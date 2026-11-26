@@ -12,11 +12,12 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-26 · Repasse design, lot 1 : pages d'authentification · PR #145
+- Modifié : connexion, inscription, mot de passe oublié, nouveau mot de passe, confirmation et conditions (gabarit `app/(auth)/layout.tsx`) : fond de page, titre et formulaire dans une carte ; à partir de 1 024 px, panneau de marque à droite sur la nuit (pastille « Parce que le lien, c'est la clé », photo de l'accueil, trois lignes des raccourcis de l'accueil), absent en dessous. Textes, champs, liens, validations et actions serveur inchangés (`DECISIONS.md` 2026-11-26, `DESIGN.md` 12.1).
+
 ### 2026-11-26 · Repasse design, lot 1 : `/vendre` · PR #144
 - Modifié : `/vendre` au niveau de l'accueil : hero sur la nuit (pastille « Vendre mon bien », « commencer ? » dans le dégradé), les deux chemins en cartes de la charte D à cheval sur le hero (la valorisation mise en avant, avec « Gratuit · 2 minutes · Rapport PDF de 4 pages par email »), puis les « Trois étapes » de l'accueil ; plus de bande vide avant le pied. Textes, liens et « Reprendre ma vente » inchangés (`DECISIONS.md` 2026-11-26).
 - Modifié : `ChoiceCard` dans la charte D (icône en dégradé, contour du dégradé pour le chemin recommandé, légère montée au survol hors mouvement réduit) ; test E2E de `/vendre` mis à jour (troisième titre de niveau 2).
-### 2026-11-26 · Repasse design, lot 1 : pages d'authentification · PR #145
-- Modifié : connexion, inscription, mot de passe oublié, nouveau mot de passe, confirmation et conditions (gabarit `app/(auth)/layout.tsx`) : fond de page, titre et formulaire dans une carte ; à partir de 1 024 px, panneau de marque à droite sur la nuit (pastille « Parce que le lien, c'est la clé », photo de l'accueil, trois lignes des raccourcis de l'accueil), absent en dessous. Textes, champs, liens, validations et actions serveur inchangés (`DECISIONS.md` 2026-11-26, `DESIGN.md` 12.1).
 
 ### 2026-11-25 · Avoirs et remboursements · PR #143
 - Ajouté : avoir Stripe créé automatiquement après chaque remboursement, lié au remboursement existant (jamais un second remboursement), idempotent (avoirs existants de la facture, clé par remboursement), envoyé par Stripe au vendeur et affiché dans « Vos avoirs » sur `/vendeur/formule`.
