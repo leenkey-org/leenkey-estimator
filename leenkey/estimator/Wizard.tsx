@@ -560,7 +560,7 @@ export function LeenkeyWizard({ aside }: { aside?: ReactNode } = {}) {
 
       {/* Resume prompt */}
       {resumePrompt && (
-        <div className="mx-auto mt-4 max-w-3xl px-5">
+        <div className={cn(frame, "mt-4")}>
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-lk-md bg-lk-blue-tint px-4 py-3.5 text-lk-secondary">
             <span className="text-lk-navy">
               Nous avons retrouvé votre formulaire en cours. Voulez-vous reprendre ?
