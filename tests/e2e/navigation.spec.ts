@@ -267,6 +267,8 @@ test.describe("visiteur sans session", () => {
     await expect(main.getByRole("heading", { level: 2 })).toHaveText([
       "Connaître la valeur de mon bien",
       "Publier directement mon annonce",
+      // The three steps of the home page under the two ways (design pass, 2026-11-26).
+      "Trois étapes. Vous gardez les clés du début à la fin.",
     ]);
     await expect(
       main.getByRole("link", { name: "Valoriser mon bien gratuitement" }),

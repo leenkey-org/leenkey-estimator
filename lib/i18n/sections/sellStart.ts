@@ -6,7 +6,11 @@ export const frSellStart = {
   metaTitle: "Vendre votre bien · Leenkey",
   description:
     "Commencez par une analyse de valeur gratuite, ou publiez directement votre annonce sur Leenkey.",
+  // The pill above the title: the label of the call « Vendre mon bien ».
+  badge: "Vendre mon bien",
   title: "Comment voulez-vous commencer ?",
+  // The words of the title in the gradient.
+  accent: "commencer ?",
   lead: "Les deux chemins mènent à votre annonce sur Leenkey.",
   valuation: {
     title: "Connaître la valeur de mon bien",

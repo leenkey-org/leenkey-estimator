@@ -377,7 +377,7 @@ export const cardCaptions = {
   favourite:
     "FavoriteButton (L1-18) : sans session (lien vers l'inscription), non sauvegardé, sauvegardé ; white-float sur une photo, stone dans la colonne prix",
   choice:
-    "ChoiceCard : un chemin parmi deux (/vendre), tuile d'icône 44 px sur bleu clair, titre, une phrase, son action en bas ; le chemin recommandé en primary",
+    "ChoiceCard : un chemin parmi deux (/vendre), icône en dégradé sur sa tuile douce, titre, une phrase, son action en bas ; le chemin recommandé dans le contour du dégradé, son action en cta",
   choiceHref: "/design#cartes",
   /** Not a real listing: a tap in the catalogue fails and the heart comes back. */
   favouriteListingId: "00000000-0000-4000-8000-000000000000",

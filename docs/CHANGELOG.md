@@ -12,6 +12,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-26 · Repasse design, lot 1 : `/vendre` · PR #144
+- Modifié : `/vendre` au niveau de l'accueil : hero sur la nuit (pastille « Vendre mon bien », « commencer ? » dans le dégradé), les deux chemins en cartes de la charte D à cheval sur le hero (la valorisation mise en avant, avec « Gratuit · 2 minutes · Rapport PDF de 4 pages par email »), puis les « Trois étapes » de l'accueil ; plus de bande vide avant le pied. Textes, liens et « Reprendre ma vente » inchangés (`DECISIONS.md` 2026-11-26).
+- Modifié : `ChoiceCard` dans la charte D (icône en dégradé, contour du dégradé pour le chemin recommandé, légère montée au survol hors mouvement réduit) ; test E2E de `/vendre` mis à jour (troisième titre de niveau 2).
+
 ### 2026-11-25 · Avoirs et remboursements · PR #143
 - Ajouté : avoir Stripe créé automatiquement après chaque remboursement, lié au remboursement existant (jamais un second remboursement), idempotent (avoirs existants de la facture, clé par remboursement), envoyé par Stripe au vendeur et affiché dans « Vos avoirs » sur `/vendeur/formule`.
 - Ajouté : `/admin/remboursements` (menu du back office) : rétractations à rembourser avec la date limite de 14 jours, statut mis à jour par le webhook (« À rembourser », « En retard », « Remboursé partiellement », « Remboursé le … »), avoir ou « Avoir à créer » avec « Créer l'avoir », lien « Rembourser dans Stripe » ; ligne dans « À traiter ».
