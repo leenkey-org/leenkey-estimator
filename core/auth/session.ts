@@ -28,7 +28,13 @@ export const getUser = cache(async (): Promise<User | null> => {
   return data.user ?? null;
 });
 
-export type SessionProfile = { id: string; firstName: string | null; roles: string[] };
+export type SessionProfile = {
+  id: string;
+  firstName: string | null;
+  /** Beside the first name on the card of the account (column of the signed-in areas). */
+  lastName?: string | null;
+  roles: string[];
+};
 
 export const getProfile = cache(async (): Promise<SessionProfile | null> => {
   const user = await getUser();
@@ -36,7 +42,7 @@ export const getProfile = cache(async (): Promise<SessionProfile | null> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, first_name, roles, deleted_at")
+    .select("id, first_name, last_name, roles, deleted_at")
     .eq("id", user.id)
     .maybeSingle();
   if (error) {
@@ -44,7 +50,12 @@ export const getProfile = cache(async (): Promise<SessionProfile | null> => {
     return null;
   }
   if (!data || data.deleted_at) return null;
-  return { id: data.id, firstName: data.first_name, roles: data.roles };
+  return {
+    id: data.id,
+    firstName: data.first_name,
+    lastName: data.last_name,
+    roles: data.roles,
+  };
 });
 
 /**

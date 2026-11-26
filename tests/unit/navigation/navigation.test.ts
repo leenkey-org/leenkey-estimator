@@ -25,6 +25,8 @@ import {
   signInLink,
   SITE_LINKS,
   spaceFor,
+  spaceSidebar,
+  hasSpaceSidebar,
   TOP_NAV_LINKS,
   type Space,
 } from "@/leenkey/navigation/config";
@@ -146,6 +148,67 @@ describe("pageSpace (useSpace)", () => {
     expect(pageSpace(null, "/messages", ["seller"])).toBe("seller");
     expect(pageSpace(null, "/admin", ["seller"])).toBe("seller");
     expect(pageSpace(null, "/admin", ["admin"])).toBe("admin");
+  });
+});
+
+describe("column of a signed-in area (DECISIONS.md 2026-11-26)", () => {
+  const links = (space: Space) =>
+    spaceSidebar(space)?.groups.map((group) => group.map((item) => [item.label, item.href]));
+
+  it("buyer: the pages of the space, then the other side and the account", () => {
+    expect(spaceSidebar("buyer")?.label).toBe("Navigation de l'espace acquéreur");
+    expect(links("buyer")).toEqual([
+      [
+        ["Vue d'ensemble", "/acquereur"],
+        ["Mes favoris", "/acquereur/favoris"],
+        ["Mes alertes", "/acquereur/alertes"],
+        ["Messages", "/messages"],
+        ["Mon projet d'achat", "/acquereur/profil"],
+        ["Documents partagés", "/acquereur/documents"],
+      ],
+      [
+        ["Chercher", "/acheter"],
+        ["Vendre", "/vendre"],
+        ["Mon compte", "/compte"],
+      ],
+    ]);
+  });
+
+  it("seller: the sale, its file, the messages, the plan, then the other side and the account", () => {
+    expect(spaceSidebar("seller")?.label).toBe("Navigation de l'espace vendeur");
+    expect(links("seller")).toEqual([
+      [
+        ["Ma vente", "/vendeur"],
+        ["Dossier", "/vendeur/dossier"],
+        ["Messages", "/messages"],
+        ["Ma formule", "/vendeur/formule"],
+      ],
+      [
+        ["Acheter", "/acheter"],
+        ["Mon compte", "/compte"],
+      ],
+    ]);
+  });
+
+  it("none in the back office, which has its own sidebar", () => {
+    expect(spaceSidebar("admin")).toBeNull();
+  });
+
+  it("the current item: the home on itself only, « Dossier » on the page of a property", () => {
+    const buyer = spaceSidebar("buyer")?.groups.flat() ?? [];
+    expect(currentHref("/acquereur", buyer)).toBe("/acquereur");
+    expect(currentHref("/acquereur/alertes", buyer)).toBe("/acquereur/alertes");
+    expect(currentHref("/compte/notifications", buyer)).toBe("/compte");
+    expect(currentHref("/offres/abc", buyer)).toBeNull();
+    const seller = spaceSidebar("seller")?.groups.flat() ?? [];
+    expect(currentHref("/vendeur?bien=abc", seller)).toBe("/vendeur");
+    expect(currentHref("/vendeur/biens/abc/etapes", seller)).toBe("/vendeur/dossier");
+  });
+
+  it("not on the messaging, whose panes take the whole width", () => {
+    expect(hasSpaceSidebar("/messages")).toBe(false);
+    expect(hasSpaceSidebar("/acquereur/favoris")).toBe(true);
+    expect(hasSpaceSidebar("/compte")).toBe(true);
   });
 });
 

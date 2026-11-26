@@ -105,13 +105,14 @@ test("les pages de chaque changement, reliées au compte", async ({ page }) => {
   await signIn(page, "/compte/informations");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Informations personnelles");
   await expect(page.getByLabel("Prénom")).not.toHaveValue("");
-  await expect(page.getByRole("link", { name: "Mon compte" }).first()).toHaveAttribute(
+  await expect(page.getByRole("main").getByRole("link", { name: "Mon compte" })).toHaveAttribute(
     "href",
     "/compte",
   );
   await page.goto("/compte/email");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Adresse email");
-  await expect(page.getByText("buyer_c@test.leenkey.fr")).toBeVisible();
+  // In the page: from 1 024 px the column of the space shows the email too.
+  await expect(page.getByRole("main").getByText("buyer_c@test.leenkey.fr")).toBeVisible();
   await page.goto("/compte/mot-de-passe");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Mot de passe");
   await expect(page.getByLabel("Mot de passe actuel")).toHaveAttribute(

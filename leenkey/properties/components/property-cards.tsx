@@ -29,8 +29,9 @@ function summary(property: SellerProperty): string | null {
  * sur les vignettes »): a card each, its main photo in 4:3 with its status
  * on it, its name, its summary, its address and its price; each one opens
  * its page (L1-14), from which a draft resumes. One a row on a phone, two
- * from 640 px, three from 1 024 px, four from 1 280 px. A link: hovered or focused, the card
- * rises 2 px and its photo zooms slowly (DESIGN.md 9), never with
+ * from 640 px, three from 1 024 px, four from 1 536 px (1 280 px before the
+ * column of the space, DECISIONS.md 2026-11-26). A link: hovered or focused,
+ * the card rises 2 px and its photo zooms slowly (DESIGN.md 9), never with
  * prefers-reduced-motion. The property shown above in the outline of the
  * gradient, « Vente affichée » on its photo.
  */
@@ -43,7 +44,7 @@ export function PropertyCards({
   currentId?: string;
 }) {
   return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {properties.map((property) => {
         const status = property.listingStatus ?? "draft";
         const current = property.id === currentId;

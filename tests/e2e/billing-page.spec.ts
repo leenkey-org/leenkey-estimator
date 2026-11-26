@@ -224,7 +224,8 @@ test("« Choisir Accompagné » de /tarifs ouvre sa commande, après la connexio
 
 test("« Ma formule » dans le compte d'un vendeur (2026-11-09)", async ({ page, isMobile }) => {
   await signIn(page, "/compte");
-  await expect(page.getByRole("link", { name: /Ma formule/ })).toHaveAttribute(
+  // In the page: from 1 024 px the column of the space has « Ma formule » too.
+  await expect(page.getByRole("main").getByRole("link", { name: /Ma formule/ })).toHaveAttribute(
     "href",
     "/vendeur/formule",
   );

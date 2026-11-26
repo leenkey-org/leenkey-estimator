@@ -55,6 +55,19 @@ export const frNav = {
     account: "Mon compte",
     signOut: "Se déconnecter",
   },
+  // The column of the signed-in areas from 1 024 px (DECISIONS.md 2026-11-26):
+  // the names of its two navigations and the labels no other bar has.
+  sidebar: {
+    buyerLabel: "Navigation de l'espace acquéreur",
+    sellerLabel: "Navigation de l'espace vendeur",
+    overview: "Vue d'ensemble",
+    favourites: "Mes favoris",
+    // As the titles of their pages (alerts.ts, buyerSpace.ts, saleFile.ts):
+    // written here so that the bars do not load those parts (P-06).
+    alerts: "Mes alertes",
+    project: "Mon projet d'achat",
+    documents: "Documents partagés",
+  },
   notifications: {
     bell: "Notifications",
     bellUnread: (count: number) =>

@@ -18,6 +18,9 @@ export const NAV_ICONS = [
   "flag",
   "square-plus",
   "refund",
+  "bell",
+  "wallet",
+  "tag",
 ] as const;
 
 export type NavIconName = (typeof NAV_ICONS)[number];

@@ -1,4 +1,5 @@
 import {
+  Bell,
   FileText,
   Flag,
   Folder,
@@ -10,9 +11,11 @@ import {
   Search,
   Sparkles,
   SquarePlus,
+  Tag,
   Undo2,
   User,
   Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import type { NavIconName } from "./nav-items";
@@ -37,6 +40,10 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   "square-plus": SquarePlus,
   // The refunds of the back office (DECISIONS.md 2026-11-25).
   refund: Undo2,
+  // The column of the signed-in areas (DECISIONS.md 2026-11-26): alerts, buying project, plan.
+  bell: Bell,
+  wallet: Wallet,
+  tag: Tag,
 };
 
 /** Icon of a navigation item, decorative: the label names the link. */

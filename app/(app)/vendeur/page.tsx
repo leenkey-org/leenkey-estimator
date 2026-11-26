@@ -138,13 +138,14 @@ type Slot = { key: string; side?: boolean; after?: boolean; node: ReactNode };
 
 /**
  * The cockpit (2026-11-25, Younes: « refais le cockpit »; Cédric: no narrow
- * column): one column below 1 024 px; from 1 024 px, 1 216 px in two
- * columns, the sale on the left (header, next action, offers, tasks), its
- * adviser, figures and conversations on the right (320 px, 360 px from
- * 1 280 px), then across the page the proposal of a plan (always after the
+ * column): one column below 1 280 px (beside the column of the space from
+ * 1 024 px, DECISIONS.md 2026-11-26, two columns would be too narrow); from
+ * 1 280 px, 1 216 px at most in two columns, the sale on the left (header,
+ * next action, offers, tasks), its adviser, figures and conversations on the
+ * right (320 px, 360 px from 1 536 px), then across the page the proposal of a plan (always after the
  * useful content, DESIGN 10.4) and the properties. The page order is the
  * order on the screen at every width (no CSS order: the keyboard and a
- * screen reader follow what is shown); each column is a box from 1 024 px
+ * screen reader follow what is shown); each column is a box from 1 280 px
  * only (display: contents below).
  */
 function Cockpit({ header, slots }: { header: ReactNode; slots: readonly Slot[] }) {
@@ -161,14 +162,14 @@ function Cockpit({ header, slots }: { header: ReactNode; slots: readonly Slot[] 
     </div>
   );
   return (
-    <div className="mx-auto flex w-full max-w-205 flex-col gap-7 pb-10 md:px-(--lk-gutter) md:py-10 lg:max-w-lk-space lg:gap-8">
-      <div className="flex flex-col gap-7 lg:flex-row lg:items-start lg:gap-8">
-        <div className="contents lg:flex lg:min-w-0 lg:flex-1 lg:flex-col lg:gap-8">
+    <div className="mx-auto flex w-full max-w-205 flex-col gap-7 pb-10 md:px-(--lk-gutter) md:py-10 lg:group-has-[>aside]/space:mx-0 lg:max-w-lk-space lg:gap-8">
+      <div className="flex flex-col gap-7 lg:gap-8 xl:flex-row xl:items-start">
+        <div className="contents xl:flex xl:min-w-0 xl:flex-1 xl:flex-col xl:gap-8">
           <div>{header}</div>
           {main.map(block)}
         </div>
         {side.length ? (
-          <div className="contents lg:flex lg:w-80 lg:shrink-0 lg:flex-col lg:gap-7 xl:w-90">
+          <div className="contents xl:flex xl:w-80 xl:shrink-0 xl:flex-col xl:gap-7 2xl:w-90">
             {side.map(block)}
           </div>
         ) : null}
