@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { RESULTS_GRID } from "./results-grid";
 import { useSearch } from "./search-context";
 import { Button } from "@/components/shared/button";
 import { Skeleton } from "@/components/shared/skeleton";
 import { frSearch } from "@/lib/i18n/sections/search";
+import { cn } from "@/lib/utils";
 
 // The texts this module shows (lib/i18n/sections, P-06).
 const fr = { search: frSearch } as const;
@@ -34,11 +36,12 @@ export function LoadMore({ shown, hasMore }: { shown: number; hasMore: boolean }
   return (
     <>
       {loading ? (
-        // The size of the cards (L1-55): the next ones take their place without a jump.
-        <div className="mt-5 grid gap-x-4 gap-y-5 md:grid-cols-2 lg:mt-6 lg:gap-x-5 lg:gap-y-6 2xl:grid-cols-3">
-          <Skeleton className="aspect-[1/1.25] rounded-lk-2xl" />
-          <Skeleton className="hidden aspect-[1/1.25] rounded-lk-2xl md:block" />
-          <Skeleton className="hidden aspect-[1/1.25] rounded-lk-2xl 2xl:block" />
+        // The shape of the cards (photo, title, town, price): the next ones
+        // take their place without a jump.
+        <div className={cn(RESULTS_GRID, "mt-7 lg:mt-8")}>
+          <CardSkeleton />
+          <CardSkeleton className="hidden md:flex" />
+          <CardSkeleton className="hidden 2xl:flex" />
         </div>
       ) : null}
       <div className="mt-6 flex justify-center">
@@ -54,5 +57,19 @@ export function LoadMore({ shown, hasMore }: { shown: number; hasMore: boolean }
         </Button>
       </div>
     </>
+  );
+}
+
+/** A ShowcaseCard to come: its photo (1 / 0.95, radius 18), then its three lines. */
+function CardSkeleton({ className }: { className?: string }) {
+  return (
+    <div aria-hidden="true" className={cn("flex min-w-0 flex-col gap-3", className)}>
+      <Skeleton className="aspect-[1/0.95] rounded-lk-d-card" />
+      <div className="flex flex-col gap-1.5">
+        <Skeleton className="h-4.5 w-3/5" />
+        <Skeleton className="h-4 w-2/5" />
+        <Skeleton className="mt-1 h-5 w-1/3" />
+      </div>
+    </div>
   );
 }
