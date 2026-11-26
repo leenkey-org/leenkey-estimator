@@ -9,7 +9,7 @@
 -- refunds.
 begin;
 \ir _helpers.psql
-select plan(95);
+select plan(135);
 \ir _plan.psql
 
 insert into plans (code, name, tagline, price_cents, description, features, position) values
@@ -26,12 +26,17 @@ on conflict do nothing;
 \set who seller_a
 \ir _as.psql
 insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms)
-select tests.uid('seller_a'), 'appartement', n || ' rue du Retrait', '91600', 'Ville' || n, 50, 2
-  from generate_series(1, 7) n;
+select tests.uid('seller_a'), 'appartement', lpad(n::text, 2, '0') || ' rue du Retrait', '91600',
+       'Ville' || n, 50, 2
+  from generate_series(1, 16) n;
 select (array_agg(id order by address_line))[1] as p1, (array_agg(id order by address_line))[2] as p2,
        (array_agg(id order by address_line))[3] as p3, (array_agg(id order by address_line))[4] as p4,
        (array_agg(id order by address_line))[5] as p5, (array_agg(id order by address_line))[6] as p6,
-       (array_agg(id order by address_line))[7] as p7
+       (array_agg(id order by address_line))[7] as p7, (array_agg(id order by address_line))[8] as p8,
+       (array_agg(id order by address_line))[9] as p9, (array_agg(id order by address_line))[10] as p10,
+       (array_agg(id order by address_line))[11] as p11, (array_agg(id order by address_line))[12] as p12,
+       (array_agg(id order by address_line))[13] as p13, (array_agg(id order by address_line))[14] as p14,
+       (array_agg(id order by address_line))[15] as p15, (array_agg(id order by address_line))[16] as p16
   from properties where owner_id = tests.uid('seller_a') and address_line like '% rue du Retrait' \gset
 \set who seller_b
 \ir _as.psql
@@ -76,6 +81,46 @@ select tests.pay('7s', :'p7', tests.uid('seller_a'), 'serenite', true, 51000, 1)
 select tests.pay('5a', :'p5', tests.uid('seller_a'), 'accompagne', false, 99000, 30) as s5a \gset
 select tests.pay('5s', :'p5', tests.uid('seller_a'), 'serenite', true, 51000, 2) as s5s \gset
 select tests.pay('b', :'pb', tests.uid('seller_b'), 'accompagne', false, 99000, 2) as sb \gset
+-- p8, p9: a passage, for the calls of the code deployed before the migration.
+-- p10: a single plan, for the same. p13: a single plan, then a payment held.
+select tests.pay('8a', :'p8', tests.uid('seller_a'), 'accompagne', false, 99000, 5) as s8a \gset
+select tests.pay('8s', :'p8', tests.uid('seller_a'), 'serenite', true, 51000, 1) as s8s \gset
+select tests.pay('9a', :'p9', tests.uid('seller_a'), 'accompagne', false, 99000, 5) as s9a \gset
+select tests.pay('9s', :'p9', tests.uid('seller_a'), 'serenite', true, 51000, 1) as s9s \gset
+select tests.pay('10', :'p10', tests.uid('seller_a'), 'accompagne', false, 99000, 3) as s10 \gset
+select tests.pay('13', :'p13', tests.uid('seller_a'), 'accompagne', false, 99000, 3) as s13 \gset
+-- p11, p12: single plans at the edge of their period, whatever the day the
+-- tests run: the latest order whose last day is over, the earliest still open.
+select min(n) as days_over, min(n) - 1 as days_open
+  from generate_series(14, 25) n where not withdrawal_open(now() - make_interval(days => n)) \gset
+select tests.pay('11', :'p11', tests.uid('seller_a'), 'accompagne', false, 99000, :days_over) as s11 \gset
+select tests.pay('12', :'p12', tests.uid('seller_a'), 'accompagne', false, 99000, :days_open) as s12 \gset
+-- p14, p15, p16: withdrawals as the old function recorded them (before the
+-- migration). p14: the passage renounced alone, not refunded: Accompagné is
+-- still marked replaced. p15: the same, refunded (the refund cleared
+-- replaced_by). p16: both renounced together, the passage refunded.
+insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at)
+values (:'p14', tests.uid('seller_a'), 'accompagne', 99000, now() - interval '5 days') returning id as s14a \gset
+insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at, plan_snapshot,
+                           withdrawal_requested_at)
+values (:'p14', tests.uid('seller_a'), 'serenite', 51000, now() - interval '1 day', '{"upgrade": true}',
+        now() - interval '1 hour') returning id as s14s \gset
+update subscriptions set replaced_by = :'s14s' where id = :'s14a';
+insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at)
+values (:'p15', tests.uid('seller_a'), 'accompagne', 99000, now() - interval '10 days') returning id as s15a \gset
+insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at, plan_snapshot,
+                           withdrawal_requested_at, refunded_at)
+values (:'p15', tests.uid('seller_a'), 'serenite', 51000, now() - interval '3 days', '{"upgrade": true}',
+        now() - interval '2 days', now() - interval '1 day') returning id as s15s \gset
+insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at,
+                           withdrawal_requested_at)
+values (:'p16', tests.uid('seller_a'), 'accompagne', 99000, now() - interval '10 days',
+        now() - interval '2 days') returning id as s16a \gset
+insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at, plan_snapshot,
+                           withdrawal_requested_at, refunded_at)
+values (:'p16', tests.uid('seller_a'), 'serenite', 51000, now() - interval '3 days', '{"upgrade": true}',
+        (select withdrawal_requested_at from subscriptions where id = :'s16a'), now() - interval '1 day')
+returning id as s16s \gset
 select ends_at as s4a_ends from subscriptions where id = :'s4a' \gset
 select ends_at as s5a_ends from subscriptions where id = :'s5a' \gset
 -- One intervention of the adviser done on p4 under Sérénité, one still asked.
@@ -165,6 +210,19 @@ select is((select row(r->>'status', r->>'left_cents', r->>'case_closed')::text
           '(processed,59000,false)', 'p1: a partial refund says what is left');
 reset role;
 select is(property_current_plan(:'p1')::text, 'autonomie', 'p1: a partial refund never brings the plan back');
+\set who seller_a
+\ir _as.psql
+select is((select row(due_cents, refunded_cents)::text from withdrawal_refunds(:'p1')), '(99000,40000)',
+          'seller_a: reads what is refunded of their withdrawal (590 € left)');
+\set who seller_b
+\ir _as.psql
+select is((select count(*)::int from withdrawal_refunds(:'p1')), 0,
+          'seller_b: reads nothing of the withdrawal of another seller');
+\set who anon
+\ir _as.psql
+select throws_ok(format('select * from withdrawal_refunds(%L)', :'p1'), '42501', null,
+                 'anon: never reads the refunds of a withdrawal');
+reset role;
 set local role service_role;
 select is((select row(r->>'left_cents', r->>'case_closed')::text
              from stripe_charge_refunded('evt_w_r1b', 'pi_w_1', 99000, true) r),
@@ -185,6 +243,36 @@ select is((select row((select count(*) from documents), (select count(*) from co
                       (select count(*) from sale_task_status where property_id = :'p1'))::text),
           format('(%s,%s,%s)', :'documents_before', :'conversations_before', :'tasks_before'),
           'p1: the documents, the conversations and the steps of the sale are not touched');
+-- Stripe sends the refund again: the same event, then another one for the same payment.
+set local role service_role;
+select is(stripe_charge_refunded('evt_w_r1b', 'pi_w_1', 99000, true)->>'status', 'duplicate',
+          'p1: the same refund event again changes nothing');
+select is((select row(r->>'status', r->>'left_cents', r->>'case_closed')::text
+             from stripe_charge_refunded('evt_w_r1c', 'pi_w_1', 99000, true) r),
+          '(processed,0,false)', 'p1: another event for the refund already recorded closes nothing again');
+reset role;
+select is((select row((select count(*) from case_notes n join cases c on c.id = n.case_id
+                        where c.property_id = :'p1' and n.body like 'Dossier d''accompagnement clôturé%'),
+                      (select count(*) from audit_log a join cases c on c.id = a.entity_id
+                        where c.property_id = :'p1' and a.action = 'case.status'),
+                      property_current_plan(:'p1'))::text),
+          '(1,1,autonomie)', 'p1: one closing, one audit row, still Autonomie');
+-- A new purchase after the refunded withdrawal: a plan as any other.
+select tests.pay('1bis', :'p1', tests.uid('seller_a'), 'accompagne', false, 99000, 0) as s1bis \gset
+select is((select row(property_current_plan(:'p1'),
+                      (select plan from sale_progress where property_id = :'p1'),
+                      (select count(*) from cases where property_id = :'p1' and source = 'plan_purchase'),
+                      (select count(*) from cases where property_id = :'p1' and source = 'plan_purchase'
+                          and status = 'new' and subject like 'Formule Accompagné souscrite · %'),
+                      advisor_period_start(:'p1') = (select activated_at from subscriptions where id = :'s1bis'))::text),
+          '(accompagne,accompagne,2,1,t)',
+          'p1: bought again after the refund: in force, a new case, a new period of accompaniment');
+\set who seller_a
+\ir _as.psql
+select is(has_entitlement(:'p1', 'advisor'), true, 'p1: the rights of the plan bought again');
+select is((select count(*)::int from withdrawal_refunds(:'p1')), 1,
+          'p1: the refunded withdrawal stays one request, the new plan is not one');
+reset role;
 
 -- B. After a passage, both within their period: everything ------------------------
 \set who seller_a
@@ -330,6 +418,15 @@ select is((select ends_at from subscriptions where id = :'s5a'), :'s5a_ends'::ti
           'p5: Accompagné keeps its initial term');
 select is(advisor_period_start(:'p5'), (select activated_at from subscriptions where id = :'s5a'),
           'p5: the history of the accompaniment starts with Accompagné still');
+-- The conversation with the adviser says the order of Accompagné, not of the passage renounced.
+select advisor_conversation_ensure(:'p5') is not null as p5_conversation \gset
+\set who seller_a
+\ir _as.psql
+select is((select row(plan, closed_at is null, advisor_ordered_at)::text
+             from conversation_summaries() where property_id = :'p5' and kind = 'advisor'),
+          (select row('accompagne'::plan_code, true, activated_at)::text from subscriptions where id = :'s5a'),
+          'p5: the conversation with the adviser stays open and reads the order of Accompagné');
+reset role;
 set local role service_role;
 select is((select row(r->>'left_cents', r->>'case_closed')::text
              from stripe_charge_refunded('evt_w_r5s1', 'pi_w_5s', 10000, false) r),
@@ -393,10 +490,142 @@ select is((select stripe_checkout_complete('evt_w_late2', 'cs_w_late2', 'pi_w_la
 reset role;
 select is(property_current_plan(:'pb')::text, 'autonomie', 'pb: still Autonomie');
 
+-- A second passage on p5, renounced alone again ---------------------------------------
+-- (The first request was made earlier: in this file both would share now().)
+update subscriptions set withdrawal_requested_at = now() - interval '1 hour' where id = :'s5s';
+select tests.pay('5s2', :'p5', tests.uid('seller_a'), 'serenite', true, 51000, 1) as s5s2 \gset
+select is((select row(property_current_plan(:'p5'),
+                      (select replaced_by = :'s5s2' from subscriptions where id = :'s5a'),
+                      (select subject from cases where property_id = :'p5' and source = 'plan_purchase'))::text),
+          '(serenite,t,"Formule Sérénité souscrite · Ville5")', 'p5: a second passage after the first was refunded');
+\set who seller_a
+\ir _as.psql
+select is((select row(r->>'status', r->>'scope', r->>'refund_due_cents', r->>'back_to_plan')::text
+             from subscription_withdraw(:'s5s2', 'upgrade') r),
+          '(recorded,upgrade,51000,accompagne)', 'p5: the second passage is renounced alone too');
+reset role;
+select is((select row(property_current_plan(:'p5'),
+                      (select withdrawal_reverts_to = :'s5a' from subscriptions where id = :'s5s2'),
+                      (select row(replaced_by is null, ends_at = :'s5a_ends'::timestamptz)::text
+                         from subscriptions where id = :'s5a'))::text),
+          '(accompagne,t,"(t,t)")', 'p5: back on Accompagné again, its term unchanged');
+set local role service_role;
+select is((select row(r->>'left_cents', r->>'case_closed')::text
+             from stripe_charge_refunded('evt_w_r5s3', 'pi_w_5s2', 51000, true) r),
+          '(0,false)', 'p5: the second passage refunded, the case of Accompagné still open');
+reset role;
+\set who admin
+\ir _as.psql
+select is((select row(count(*), min(withdrawal_scope), min(back_to_plan::text), sum(withdrawal_due_cents))::text
+             from admin_refunds() where property_id = :'p5'),
+          '(2,upgrade,accompagne,102000)', 'admin: the two passages of p5, each its own request');
+
+-- The last day of the period, in the base as on the site ---------------------------------
+reset role;
+select is(withdrawal_last_day('2026-11-02T10:00:00Z'), '2026-11-16'::date,
+          'calendar: ordered on Monday 2 November, the 14 days end on Monday 16');
+select is((select row(withdrawal_open('2026-11-02T10:00:00Z', '2026-11-16T22:59:00Z'),
+                      withdrawal_open('2026-11-02T10:00:00Z', '2026-11-16T23:01:00Z'))::text),
+          '(t,f)', 'calendar: open until 23:59 in Paris on the 14th day, closed at 00:01 on the 15th');
+select is((select row(withdrawal_last_day('2026-11-07T10:00:00Z'),
+                      withdrawal_open('2026-11-07T10:00:00Z', '2026-11-23T22:59:00Z'),
+                      withdrawal_open('2026-11-07T10:00:00Z', '2026-11-23T23:01:00Z'))::text),
+          '(2026-11-23,t,f)', 'calendar: a period ending on a Saturday goes to the Monday, until its end');
+select is((select row(withdrawal_last_day('2026-10-28T09:00:00Z'), withdrawal_last_day('2026-03-23T09:00:00Z'),
+                      withdrawal_last_day('2026-04-30T09:00:00Z'), withdrawal_last_day('2026-05-11T09:00:00Z'))::text),
+          '(2026-11-12,2026-04-07,2026-05-15,2026-05-26)',
+          'calendar: 11 November, Easter Monday, Ascension Thursday and Whit Monday go to the next working day');
+select is(withdrawal_last_day('2026-11-02T23:30:00Z'), '2026-11-17'::date,
+          'calendar: an order at 00:30 in Paris counts from that day of Paris');
+\set who seller_a
+\ir _as.psql
+select throws_ok($$select withdrawal_last_day(now())$$, '42501', null,
+                 'seller_a: the calendar is not a function of the clients');
+select throws_ok(format('select subscription_withdraw(%L)', :'s11'), '22023', null,
+                 'p11: a direct call the day after the last day is refused (no margin of 20 days)');
+select is(subscription_withdraw(:'s12')->>'status', 'recorded',
+          'p12: a direct call on the last day is recorded');
+
+-- The code deployed before the migration: (subscription, with_replaced) -------------------
+select is((select row(r->>'status', r->>'scope', r->>'refund_due_cents')::text
+             from subscription_withdraw(:'s8s', true) r),
+          '(recorded,full,150000)', 'old call, true after a passage: both contracts, as before');
+select is((select row(r->>'status', r->>'scope', r->>'refund_due_cents', r->>'back_to_plan')::text
+             from subscription_withdraw(p_subscription_id => :'s9s', p_with_replaced => false) r),
+          '(recorded,upgrade,51000,accompagne)',
+          'old call by names, false after a passage: the passage alone, Accompagné in force at once');
+select is((select row(r->>'status', r->>'scope', r->>'refund_due_cents')::text
+             from subscription_withdraw(:'s10', false) r),
+          '(recorded,full,99000)', 'old call, false on a single plan: that plan');
+select is((select row(r->>'status', r->>'scope')::text
+             from subscription_withdraw(p_subscription_id => :'s9s', p_scope => 'full') r),
+          '(already,upgrade)', 'new call by names resolves to the new function');
+select is(subscription_withdraw(:'s9s')->>'status', 'already',
+          'a call with the subscription alone resolves to the new function');
+\set who seller_b
+\ir _as.psql
+select throws_ok(format('select subscription_withdraw(%L, false)', :'s13'), '42501', null,
+                 'seller_b: the old call never withdraws the plan of another seller');
+\set who anon
+\ir _as.psql
+select throws_ok(format('select subscription_withdraw(%L, true)', :'s13'), '42501', null,
+                 'anon: the old call is closed too');
+
+-- Two open cases: the refund goes to the case of the withdrawal ---------------------------
+\set who seller_a
+\ir _as.psql
+select is(subscription_withdraw(:'s13')->>'status', 'recorded', 'p13: the plan is renounced');
+reset role;
+set local role service_role;
+select is((select stripe_checkout_complete('evt_w_13h', 'cs_w_13h', 'pi_w_13h', :'p13', tests.uid('seller_a'),
+            'accompagne', false, 50000, 0, false, now(), '2026-11-09', '2026-11-26') ->> 'status'),
+          'held', 'p13: a payment below the price, after the withdrawal, is held in a case of its own');
+select is((select row(r->>'left_cents', r->>'case_closed')::text
+             from stripe_charge_refunded('evt_w_r13', 'pi_w_13', 99000, true) r),
+          '(0,true)', 'p13: the refund of the withdrawal closes the case of the withdrawal');
+reset role;
+select is((select array_agg(row(c.status, c.subject like 'Rétractation · formule %',
+                                (select count(*) from case_notes n
+                                  where n.case_id = c.id and n.body like 'Remboursement de %'))::text
+                            order by (c.subject like 'Rétractation · formule %') desc)
+             from cases c where c.property_id = :'p13' and c.source = 'plan_purchase'),
+          '{"(closed,t,1)","(new,f,0)"}'::text[],
+          'p13: the note of the refund is in the case of the withdrawal; the payment held keeps its open case');
+
+-- Withdrawals recorded by the old function, brought to the new shape -------------------------
+select is(property_current_plan(:'p14')::text, 'autonomie',
+          'old shape: before the migration plays, a passage renounced alone leaves the property on Autonomie');
+select withdrawal_old_shape_adopt();
+select is((select row(property_current_plan(:'p14'),
+                      (select plan from sale_progress where property_id = :'p14'),
+                      (select withdrawal_reverts_to = :'s14a' from subscriptions where id = :'s14s'),
+                      (select replaced_by is null from subscriptions where id = :'s14a'))::text),
+          '(accompagne,accompagne,t,t)',
+          'old shape: the passage renounced alone goes back to Accompagné, in force again');
+select is((select row((select withdrawal_reverts_to = :'s15a' from subscriptions where id = :'s15s'),
+                      (select withdrawal_reverts_to is null from subscriptions where id = :'s16s'),
+                      property_current_plan(:'p15'), property_current_plan(:'p16'))::text),
+          '(t,t,accompagne,autonomie)',
+          'old shape: a refunded passage finds the plan it went back to; never when both were renounced');
+select withdrawal_old_shape_adopt();
+select is((select count(*)::int from subscriptions where withdrawal_reverts_to is not null
+              and id in (:'s14s', :'s15s', :'s16s')), 2, 'old shape: played twice, nothing more');
+\set who admin
+\ir _as.psql
+select is((select array_agg(row(withdrawal_scope, back_to_plan)::text order by property_id = :'p14' desc)
+             from admin_refunds() where subscription_id in (:'s14s', :'s15s')),
+          '{"(upgrade,accompagne)","(upgrade,accompagne)"}'::text[],
+          'admin: the old withdrawals of a passage say « back to Accompagné »');
+\set who seller_a
+\ir _as.psql
+select throws_ok('select withdrawal_old_shape_adopt()', '42501', null,
+                 'seller_a: never plays the migration of the old withdrawals');
+reset role;
+
 -- The team reads ----------------------------------------------------------------------
 \set who admin
 \ir _as.psql
-select is((select count(*)::int from admin_refunds() where owner_id = tests.uid('seller_a')), 11,
+select is((select count(*)::int from admin_refunds() where owner_id = tests.uid('seller_a')), 22,
           'admin: every payment renounced or refunded of seller_a');
 select is((select row(withdrawal_scope, back_to_plan, withdrawal_due_cents, withdrawal_refunded_cents)::text
              from admin_refunds() where subscription_id = :'s7s'),

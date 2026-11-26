@@ -215,9 +215,9 @@ export const frBilling = {
       `Rétractation enregistrée le ${date}. Les prestations concernées sont arrêtées depuis votre demande. Nous vous remboursons sous 14 jours, par le moyen de paiement utilisé. L'accusé de réception n'a pas pu partir par email : cette page en tient lieu, et vous pouvez le demander à ${email}.`,
     // A request recorded, still to refund: said again on each visit.
     pendingFull: (date: string, amount: string, deadline: string, free: string) =>
-      `Rétractation enregistrée le ${date}. Vos prestations payantes sont arrêtées depuis cette date : votre bien est en ${free}. Votre annonce, vos documents, vos messages et l'avancement de votre vente sont conservés. Nous vous remboursons ${amount} au plus tard le ${deadline}, par le moyen de paiement utilisé.`,
+      `Rétractation enregistrée le ${date}. Vos prestations payantes sont arrêtées depuis cette date : votre bien est en ${free}. Votre annonce, vos documents, vos messages et l'avancement de votre vente sont conservés. Il reste ${amount} à vous rembourser, au plus tard le ${deadline}, par le moyen de paiement utilisé.`,
     pendingUpgrade: (date: string, amount: string, deadline: string, kept: string) =>
-      `Rétractation enregistrée le ${date} : vous êtes revenu à la formule ${kept}, qui continue jusqu'à son échéance initiale. Nous vous remboursons ${amount} au plus tard le ${deadline}, par le moyen de paiement utilisé.`,
+      `Rétractation enregistrée le ${date} : votre bien est revenu à la formule ${kept}, qui continue jusqu'à son échéance initiale. Il reste ${amount} à vous rembourser, au plus tard le ${deadline}, par le moyen de paiement utilisé.`,
     withdrawnNote:
       "Votre rétractation est en cours : il n'est pas possible de commander une autre formule pour ce bien d'ici le remboursement.",
     errors: {

@@ -273,6 +273,9 @@ export async function withdrawPlan(input: unknown): Promise<WithdrawResult> {
     .is("withdrawal_requested_at", null)
     .is("refunded_at", null)
     .gt("amount_paid_cents", 0)
+    // The one subscription_withdraw picks.
+    .order("activated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
   if (replaced.error) {
     console.error("[billing] withdrawal read failed", {

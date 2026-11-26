@@ -117,7 +117,7 @@ export async function planPage(
   if (!property) return { ok: true, data: null };
   try {
     const supabase = await createClient();
-    const [progress, subscription, seller, payments, renounced] = await Promise.all([
+    const [progress, subscription, seller, payments, renounced, refunds] = await Promise.all([
       supabase.rpc("property_current_plan", { p: property.id }),
       supabase
         .from("subscriptions")
@@ -146,10 +146,20 @@ export async function planPage(
         .is("refunded_at", null)
         .gt("amount_paid_cents", 0)
         .order("withdrawal_requested_at", { ascending: true }),
+      // What Stripe already refunded of each request (a partial refund): the
+      // page says what is left, never the whole amount again.
+      supabase.rpc("withdrawal_refunds", { p_property: property.id }),
     ]);
     if (progress.error) throw new Error(`property_current_plan: ${progress.error.code}`);
     if (subscription.error) throw new Error(`subscriptions: ${subscription.error.code}`);
     if (renounced.error) throw new Error(`subscriptions: ${renounced.error.code}`);
+    if (refunds.error) throw new Error(`withdrawal_refunds: ${refunds.error.code}`);
+    const leftOf = (requestedAt: string) => {
+      const request = refunds.data.find(
+        (row) => Date.parse(row.requested_at) === Date.parse(requestedAt),
+      );
+      return request ? Math.max(0, request.due_cents - request.refunded_cents) : null;
+    };
     const current = progress.data ?? "autonomie";
     const active = subscription.data;
     const withdrawals = new Map<string, PlanPage["withdrawals"][number]>();
@@ -176,6 +186,8 @@ export async function planPage(
           .is("withdrawal_requested_at", null)
           .is("refunded_at", null)
           .gt("amount_paid_cents", 0)
+          .order("activated_at", { ascending: false })
+          .limit(1)
           .maybeSingle()
       : null;
     if (replaced?.error) throw new Error(`subscriptions: ${replaced.error.code}`);
@@ -221,7 +233,10 @@ export async function planPage(
               }
             : null,
         payments,
-        withdrawals: [...withdrawals.values()],
+        withdrawals: [...withdrawals.values()].map((withdrawal) => ({
+          ...withdrawal,
+          dueCents: leftOf(withdrawal.requestedAt) ?? withdrawal.dueCents,
+        })),
       },
     };
   } catch (error) {

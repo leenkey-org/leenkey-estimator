@@ -6,7 +6,7 @@
 -- rls_withdrawal_choice.sql).
 begin;
 \ir _helpers.psql
-select plan(19);
+select plan(21);
 \ir _plan.psql
 
 insert into plans (code, name, tagline, price_cents, description, features, position) values
@@ -38,10 +38,16 @@ returning id as upgraded \gset
 insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms)
 values (tests.uid('seller_a'), 'appartement', '2 avenue de la Gare', '91390', 'Morsang-sur-Orge', 52, 2)
 returning id as gone \gset
+insert into properties (owner_id, type, address_line, postal_code, city, surface_m2, rooms)
+values (tests.uid('seller_a'), 'appartement', '9 rue du Renoncement', '91600', 'Savigny-sur-Orge', 40, 2)
+returning id as renounced \gset
 
 reset role;
 insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at)
 values (:'paid', tests.uid('seller_a'), 'accompagne', 99000, now() - interval '3 days');
+-- A plan renounced yesterday, not refunded yet (2026-11-26: no right from the request).
+insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at, withdrawal_requested_at)
+values (:'renounced', tests.uid('seller_a'), 'accompagne', 99000, now() - interval '3 days', now() - interval '1 day');
 insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at)
 values (:'ended', tests.uid('seller_a'), 'serenite', 150000, now() - interval '13 months');
 insert into subscriptions (property_id, owner_id, plan, amount_paid_cents, activated_at, refunded_at)
@@ -65,6 +71,8 @@ select is(has_entitlement(:'paid', 'sale_file_building'), false,
 select is(has_entitlement(:'ended', 'advisor'), false,
           'seller_a: a plan ended 12 months after is back to Autonomie');
 select is(has_entitlement(:'refunded', 'advisor'), false, 'seller_a: a refunded plan has no right');
+select is(has_entitlement(:'renounced', 'advisor'), false,
+          'seller_a: a plan renounced has no right from the request, before its refund');
 select is(has_entitlement(:'upgraded', 'sale_file_building'), true,
           'seller_a: Sérénité, after Accompagné, builds the sale file');
 select is(has_entitlement(:'gone', 'sale_file_building'), true,
@@ -85,6 +93,7 @@ select is(has_entitlement(:'paid', 'advisor'), false, 'buyer_d: never reads the 
 \set who admin
 \ir _as.psql
 select is(has_entitlement(:'paid', 'advisor'), true, 'admin: reads the rights of any property');
+select is(has_entitlement(:'renounced', 'advisor'), false, 'admin: a plan renounced has no right either');
 select is(has_entitlement(:'free', 'advisor'), false, 'admin: Autonomie has no adviser');
 select is(has_entitlement(:'gone', 'sale_file_building'), true,
           'admin: Sérénité in force builds the sale file');

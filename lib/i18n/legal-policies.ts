@@ -478,7 +478,7 @@ const salesSections: readonly LegalSection[] = [
         "Un accusé de réception lui est envoyé aussitôt par email. Les prestations payantes auxquelles le client renonce cessent dès l'enregistrement de sa demande, sans attendre le remboursement. Leenkey rembourse les sommes correspondantes au plus tard 14 jours après la demande, par le moyen de paiement utilisé lors de la commande, sans frais.",
       ),
       para(
-        "La rétractation ne met pas fin à la vente : le compte du client, son annonce, ses documents, ses échanges et l'avancement de sa vente sont conservés, et son bien repasse en formule Autonomie.",
+        "La rétractation ne met pas fin à la vente : le compte du client, son annonce, ses documents, ses échanges et l'avancement de sa vente sont conservés, et son bien repasse en formule Autonomie, ou en formule Accompagné dans le cas prévu ci-dessous.",
       ),
       para(
         "Après un passage de la formule Accompagné à la formule Sérénité, chaque commande a son propre délai de 14 jours. Tant que les deux délais courent, le client peut, au choix, renoncer au passage seul et revenir à la formule Accompagné (remboursement du prix du passage), ou renoncer aux deux commandes et revenir à la formule Autonomie (remboursement des deux sommes payées). Lorsque le délai de la formule Accompagné est expiré, seul le passage à la formule Sérénité peut encore faire l'objet d'une rétractation. Le client qui revient à la formule Accompagné en conserve la durée initiale et l'historique de son accompagnement ; les interventions du conseiller déjà réalisées restent décomptées.",

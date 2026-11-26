@@ -219,4 +219,19 @@ describe("a withdrawal on /admin/remboursements (2026-11-26)", () => {
     // A partial refund made by the team without a withdrawal is not one.
     expect(withdrawalPending(facts({ requestedAt: null, refundedCents: 30000 }), now)).toBe(false);
   });
+
+  it("« En retard » past the 14 days while money is left, a partial refund included", async () => {
+    const { refundLate } = await import("@/leenkey/admin/refunds/status");
+    const after = new Date("2026-12-30T09:00:00Z");
+    expect(refundLate(facts(), now)).toBe(false);
+    expect(refundLate(facts(), after)).toBe(true);
+    // Partly refunded: the status says « partial », the lateness is told apart.
+    expect(refundStatus(facts({ refundedCents: 30000 }), after)).toBe("partial");
+    expect(refundLate(facts({ refundedCents: 30000 }), after)).toBe(true);
+    expect(refundLate(facts({ refundedCents: 30000 }), now)).toBe(false);
+    // Nothing left, or no withdrawal: never late.
+    expect(refundLate(facts({ refundedAt: "2026-12-29T09:00:00Z" }), after)).toBe(false);
+    expect(refundLate(facts({ refundedCents: 99000 }), after)).toBe(false);
+    expect(refundLate(facts({ requestedAt: null, refundedCents: 30000 }), after)).toBe(false);
+  });
 });

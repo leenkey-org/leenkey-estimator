@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Database, Json } from "@/types/database";
 import {
   creditNoteState,
-  refundStatus,
+  refundLate,
   sortRefunds,
   waitsForRefund,
   type WithdrawalFacts,
@@ -136,7 +136,7 @@ export function refundCounts(rows: readonly AdminRefundRow[], now: Date = new Da
     values.filter((value): value is string => Boolean(value)).sort()[0] ?? null;
   return {
     toRefund: owed.length,
-    late: owed.filter((row) => refundStatus(row, now) === "late").length,
+    late: owed.filter((row) => refundLate(row, now)).length,
     creditNotesMissing: missing.length,
     oldestRequestedAt: oldest(owed.map((row) => row.requestedAt)),
     oldestMissingAt: oldest(missing.map((row) => row.lastRefundAt ?? row.refundedAt)),

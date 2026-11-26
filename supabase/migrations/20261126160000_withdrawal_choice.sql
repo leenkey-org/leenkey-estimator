@@ -16,7 +16,11 @@
 --    force, back to Autonomie) or 'upgrade' (the passage alone, back to the
 --    plan replaced). Refused: 'upgrade' without a plan replaced; 'full' when
 --    the plan replaced is past its own period (only the passage is still
---    renounceable). The exact last day stays checked by the site (L1-40).
+--    renounceable). The last day is the one the site shows, computed here
+--    too (withdrawal_last_day: 14 days from the day after the order, in
+--    Paris, to the next working day): a direct call is refused past it, no
+--    longer only after 20 days. The old signature stays for one release, as a
+--    wrapper: the code deployed before this migration still calls it.
 -- 4. stripe_charge_refunded: the refund of a renounced plan says what is
 --    left to refund; the case of the plan follows the plan in force (plan and
 --    subject) and, for a withdrawal, closes by itself once nothing is left
@@ -26,8 +30,15 @@
 --    before »; the subject of the case follows a passage.
 -- 6. admin_refunds(): per payment still, with the withdrawal it belongs to
 --    (its scope, the plan the seller goes back to, what is due, refunded and
---    left for the whole request).
--- No policy changes; no enum value added.
+--    left for the whole request). withdrawal_refunds(property): the same
+--    amounts per request, for the owner of the property (/vendeur/formule
+--    says what is left after a partial refund).
+-- 7. conversation_summaries reads the order of the adviser from
+--    advisor_ordered_at, no longer from a copy of « the plan in force ».
+-- 8. Existing data: the withdrawals recorded by the old function are brought
+--    to the new shape, the sales and the cases follow.
+-- No policy changes; no enum value added. credit_notes and
+-- credit_notes_record are not touched.
 
 -- 1. ---------------------------------------------------------------------------
 alter table public.subscriptions
@@ -112,6 +123,50 @@ revoke execute on function public.plan_case_subject_follows(text) from public, a
 grant execute on function public.plan_case_subject_follows(text) to service_role;
 
 -- 3. ---------------------------------------------------------------------------
+-- The last day of the 14 days of withdrawal of an order, as the site shows it
+-- (leenkey/billing/orders.ts, withdrawalEnds, mirrored line by line): they
+-- start the day after the order, in Paris, and end at the end of the 14th;
+-- one ending on a Saturday, a Sunday or a public holiday of metropolitan
+-- France (the eight fixed ones, Easter Monday, Ascension Thursday, Whit
+-- Monday) goes to the next working day.
+create function public.withdrawal_last_day(p_ordered_at timestamptz) returns date
+language plpgsql stable set search_path = '' as $$
+declare
+  v_day date := (p_ordered_at at time zone 'Europe/Paris')::date + 14;
+  y int; a int; b int; c int; d int; e int; f int; g int; h int; i int; k int; l int; m int;
+  v_easter date;
+begin
+  loop
+    -- Easter Sunday of the year of the day (anonymous Gregorian computus).
+    y := extract(year from v_day)::int;
+    a := y % 19; b := y / 100; c := y % 100; d := b / 4; e := b % 4;
+    f := (b + 8) / 25; g := (b - f + 1) / 3;
+    h := (19 * a + b - d - g + 15) % 30;
+    i := c / 4; k := c % 4;
+    l := (32 + 2 * e + 2 * i - h - k) % 7;
+    m := (a + 11 * h + 22 * l) / 451;
+    v_easter := make_date(y, (h + l - 7 * m + 114) / 31, ((h + l - 7 * m + 114) % 31) + 1);
+    exit when extract(isodow from v_day) < 6
+          and to_char(v_day, 'MM-DD') not in
+              ('01-01', '05-01', '05-08', '07-14', '08-15', '11-01', '11-11', '12-25')
+          and v_day not in (v_easter + 1, v_easter + 39, v_easter + 50);
+    v_day := v_day + 1;
+  end loop;
+  return v_day;
+end;
+$$;
+
+-- Whether an order may still be renounced at p_now: until the end of its
+-- last day, in Paris (canWithdraw of leenkey/billing/withdrawal.ts).
+create function public.withdrawal_open(p_ordered_at timestamptz, p_now timestamptz default now())
+returns boolean
+language sql stable set search_path = '' as $$
+  select (p_now at time zone 'Europe/Paris')::date <= public.withdrawal_last_day(p_ordered_at);
+$$;
+revoke execute on function public.withdrawal_last_day(timestamptz) from public, anon, authenticated;
+revoke execute on function public.withdrawal_open(timestamptz, timestamptz)
+  from public, anon, authenticated;
+
 drop function public.subscription_withdraw(uuid, boolean);
 
 create function public.subscription_withdraw(
@@ -173,7 +228,7 @@ begin
      or v_sub.amount_paid_cents <= 0 then
     raise exception 'subscription_withdraw: not a plan in force' using errcode = '55000';
   end if;
-  if v_now > v_sub.activated_at + interval '20 days' then
+  if not public.withdrawal_open(v_sub.activated_at, v_now) then
     raise exception 'subscription_withdraw: the withdrawal period is over' using errcode = '22023';
   end if;
 
@@ -189,7 +244,7 @@ begin
   end if;
   -- Past the period of the plan replaced, only the passage is renounced.
   if v_scope = 'full' and v_prev.id is not null
-     and v_now > v_prev.activated_at + interval '20 days' then
+     and not public.withdrawal_open(v_prev.activated_at, v_now) then
     raise exception 'subscription_withdraw: the plan replaced is past its period'
       using errcode = '0A000';
   end if;
@@ -300,6 +355,29 @@ $$;
 revoke execute on function public.subscription_withdraw(uuid, text) from public, anon;
 grant execute on function public.subscription_withdraw(uuid, text) to authenticated;
 
+-- For one release only, TO DROP IN THE NEXT MIGRATION: the migration reaches
+-- the database before the code, and the code deployed until then calls
+-- subscription_withdraw(p_subscription_id, p_with_replaced). Without a
+-- default on the boolean: a call with the subscription alone goes to the
+-- function above. The old « true » renounced the plan replaced too ('full');
+-- the old « false » after a passage renounced the passage alone ('upgrade');
+-- without a plan replaced still paid and in force, there is one order only
+-- ('full'). With the rights of the caller: the function above checks them.
+create function public.subscription_withdraw(p_subscription_id uuid, p_with_replaced boolean)
+returns jsonb
+language sql security invoker set search_path = '' as $$
+  select public.subscription_withdraw(
+    p_subscription_id,
+    case when coalesce(p_with_replaced, false)
+           or not exists (select 1 from public.subscriptions s
+                           where s.replaced_by = p_subscription_id
+                             and s.withdrawal_requested_at is null
+                             and s.refunded_at is null and s.amount_paid_cents > 0)
+         then 'full'::text else 'upgrade'::text end);
+$$;
+revoke execute on function public.subscription_withdraw(uuid, boolean) from public, anon;
+grant execute on function public.subscription_withdraw(uuid, boolean) to authenticated;
+
 -- 4. ---------------------------------------------------------------------------
 create or replace function public.stripe_charge_refunded(
   p_event_id text,
@@ -383,9 +461,13 @@ begin
   select l.reference into v_reference from public.listings l
    where l.property_id = v_subscription.property_id;
   select p.city into v_place from public.properties p where p.id = v_subscription.property_id;
+  -- The case of the plan, as the withdrawal picked it: the one that says the
+  -- withdrawal first, then an open one, the latest. A case opened since for a
+  -- payment « à vérifier » never takes the note of this refund.
   select c.* into v_case from public.cases c
    where c.property_id = v_subscription.property_id and c.source = 'plan_purchase'
-   order by c.created_at desc
+   order by (v_withdrawn and c.subject like 'Rétractation · formule % · %') desc,
+            (c.status <> 'closed') desc, c.created_at desc
    limit 1;
   v_body := case
     when v_withdrawn and not p_fully_refunded then
@@ -774,7 +856,165 @@ $$;
 revoke execute on function public.admin_refunds() from public, anon;
 grant execute on function public.admin_refunds() to authenticated;
 
--- 7. Existing data ---------------------------------------------------------------
+-- What is due and refunded of each withdrawal of a property, for its owner
+-- (and the team): /vendeur/formule says what is left after a partial refund.
+-- Security definer: stripe_events is read by nobody else; no row for anyone
+-- but the owner and the admins.
+create function public.withdrawal_refunds(p_property uuid)
+returns table (requested_at timestamptz, due_cents int, refunded_cents int)
+language sql stable security definer set search_path = '' as $$
+  select s.withdrawal_requested_at,
+         sum(s.amount_paid_cents)::int,
+         sum(case when s.refunded_at is not null then s.amount_paid_cents
+                  else least(s.amount_paid_cents,
+                             coalesce((select max(e.refunded_cents) from public.stripe_events e
+                                        where e.type = 'charge.refunded'
+                                          and e.payment_intent_id = s.stripe_payment_intent_id), 0))
+             end)::int
+    from public.subscriptions s
+   where s.property_id = p_property
+     and s.withdrawal_requested_at is not null
+     and exists (select 1 from public.properties pr
+                  where pr.id = p_property
+                    and (pr.owner_id = (select auth.uid()) or public.is_admin()))
+   group by s.withdrawal_requested_at
+   order by s.withdrawal_requested_at;
+$$;
+revoke execute on function public.withdrawal_refunds(uuid) from public, anon;
+grant execute on function public.withdrawal_refunds(uuid) to authenticated;
+
+-- 7. ---------------------------------------------------------------------------
+-- As 20261109140000_advisor_conversation.sql, with one change: the order of
+-- the plan whose adviser waits for the end of the withdrawal is read from
+-- advisor_ordered_at (the plan in force as property_current_plan reads it),
+-- no longer from a copy of the condition, which picked a passage renounced.
+create or replace function public.conversation_summaries(p_conversation_id uuid default null)
+returns table (
+  id uuid,
+  kind public.conversation_kind,
+  role text,
+  property_id uuid,
+  listing_id uuid,
+  listing_slug text,
+  listing_status public.listing_status,
+  listing_title text,
+  property_type public.property_type,
+  rooms int,
+  city text,
+  cover_path text,
+  counterpart_first_name text,
+  buyer_financing_status public.financing_status,
+  last_message_at timestamptz,
+  last_message_body text,
+  last_message_mine boolean,
+  unread boolean,
+  closed_at timestamptz,
+  plan public.plan_code,
+  advisor_ordered_at timestamptz
+)
+language sql stable security definer set search_path = '' as $$
+  select c.id, c.kind,
+         case when c.seller_id = auth.uid() then 'seller' else 'buyer' end,
+         c.property_id, l.id, l.slug, l.status, l.title, p.type, p.rooms, p.city,
+         case when c.seller_id = auth.uid() or l.status = 'published' then
+           (select ph.storage_path from public.photos ph where ph.property_id = p.id and ph.is_cover)
+         end,
+         -- The advisor conversation: the team, no first name of an account.
+         case when c.kind = 'listing' then other.first_name end,
+         case when c.kind = 'listing' and c.seller_id = auth.uid() then
+           coalesce((select bp.financing_status from public.buyer_profiles bp
+                     where bp.profile_id = c.buyer_id), 'not_provided')
+         end,
+         c.last_message_at,
+         last.body,
+         last.sender_id = auth.uid(),
+         last.sender_id <> auth.uid()
+           and c.last_message_at > coalesce(
+             case when c.seller_id = auth.uid() then c.seller_last_read_at else c.buyer_last_read_at end,
+             '-infinity'::timestamptz),
+         case when c.kind = 'advisor' and not public.advisor_right(c.property_id)
+              then coalesce(c.closed_at, now()) else c.closed_at end,
+         -- The plan of the property, said by the header of the adviser.
+         case when c.kind = 'advisor' then public.property_current_plan(c.property_id) end,
+         -- The order of a plan whose adviser waits for the end of the withdrawal
+         -- (no immediate start, SPEC 11): the header says from when. An upgrade
+         -- keeps the adviser of the plan it replaced.
+         case when c.kind = 'advisor' then public.advisor_ordered_at(c.property_id) end
+  from public.conversations c
+  join public.properties p on p.id = c.property_id
+  -- The listing of the conversation; for the adviser, the listing of the property.
+  left join public.listings l
+    on l.id = coalesce(c.listing_id,
+                       (select l2.id from public.listings l2
+                         where l2.property_id = c.property_id and l2.deleted_at is null
+                         order by l2.created_at desc limit 1))
+  left join public.profiles other
+    on other.id = case when c.seller_id = auth.uid() then c.buyer_id else c.seller_id end
+  join lateral (select m.body, m.sender_id from public.messages m
+                where m.conversation_id = c.id
+                order by m.created_at desc, m.id desc limit 1) last on true
+  where (c.kind = 'listing' and (c.seller_id = auth.uid() or c.buyer_id = auth.uid())
+         or c.kind = 'advisor' and c.seller_id = auth.uid() and p.deleted_at is null)
+    and (p_conversation_id is null or c.id = p_conversation_id)
+  -- The adviser first (SPEC 8.6: pinned at the top of the seller's list).
+  order by c.kind = 'advisor' desc, c.last_message_at desc, c.id;
+$$;
+
+-- 8. Existing data ---------------------------------------------------------------
+-- In a function, so that the permission tests play it on rows of the old
+-- shape; TO DROP IN THE NEXT MIGRATION, with the wrapper of subscription_withdraw.
+-- A passage renounced alone by the old function (Sérénité renounced, the
+-- Accompagné it replaced neither renounced nor refunded, still marked
+-- replaced): the new shape. Accompagné is in force again, the passage says
+-- which plan it goes back to: the seller is on Accompagné, not on Autonomie.
+create function public.withdrawal_old_shape_adopt() returns void
+language plpgsql security invoker set search_path = '' as $$
+begin
+with pairs as (
+  select s.id as passage, a.id as kept
+    from public.subscriptions s
+    join public.subscriptions a on a.replaced_by = s.id
+   where s.withdrawal_requested_at is not null and s.withdrawal_reverts_to is null
+     and s.refunded_at is null
+     and a.withdrawal_requested_at is null and a.refunded_at is null
+     and a.amount_paid_cents > 0
+),
+kept as (
+  update public.subscriptions a set replaced_by = null
+    from pairs p where a.id = p.kept
+  returning a.id
+)
+update public.subscriptions s set withdrawal_reverts_to = p.kept
+  from pairs p where s.id = p.passage;
+
+-- The same, already refunded (the refund cleared replaced_by): the plan gone
+-- back to is the order just before the passage on the same property, paid,
+-- activated, and not renounced with it. Only for a passage (plan_snapshot),
+-- so that /admin/remboursements does not say « revient à Autonomie ».
+update public.subscriptions s
+   set withdrawal_reverts_to = (
+         select a.id from public.subscriptions a
+          where a.property_id = s.property_id and a.id <> s.id
+            and a.activated_at < s.activated_at
+            and a.amount_paid_cents > 0 and a.ends_at > a.activated_at
+            and a.replaced_by is null
+            and a.withdrawal_requested_at is distinct from s.withdrawal_requested_at
+          order by a.activated_at desc limit 1)
+ where s.withdrawal_requested_at is not null and s.withdrawal_reverts_to is null
+   and s.refunded_at is not null
+   and s.plan_snapshot->>'upgrade' = 'true'
+   and exists (
+         select 1 from public.subscriptions a
+          where a.property_id = s.property_id and a.id <> s.id
+            and a.activated_at < s.activated_at
+            and a.amount_paid_cents > 0 and a.ends_at > a.activated_at
+            and a.replaced_by is null
+            and a.withdrawal_requested_at is distinct from s.withdrawal_requested_at);
+end;
+$$;
+revoke execute on function public.withdrawal_old_shape_adopt() from public, anon, authenticated;
+select public.withdrawal_old_shape_adopt();
+
 -- The sales of the plans renounced before this migration follow the plan in
 -- force now (as the daily job does for a plan ended).
 update public.sale_progress sp
@@ -814,10 +1054,11 @@ update public.cases c
    and public.plan_case_subject_follows(c.subject);
 
 -- The cases of the withdrawals already refunded in full, the property back
--- on the free plan: closed, as stripe_charge_refunded now does.
-with done as (
-  update public.cases c
-     set status = 'closed'
+-- on the free plan: closed, as stripe_charge_refunded now does (the note,
+-- the audit_log row, the « case.created » notifications read).
+with target as (
+  select c.id, c.status as was
+    from public.cases c
    where c.source = 'plan_purchase' and c.status <> 'closed' and c.property_id is not null
      and (select pl.price_cents from public.plans pl
            where pl.code = public.property_current_plan(c.property_id)) = 0
@@ -829,7 +1070,25 @@ with done as (
      and not exists (select 1 from public.case_notes n
                       where n.case_id = c.id and n.author_id is null
                         and (n.body like 'À vérifier%' or n.body like '%À vérifier :%'))
-  returning c.id
+),
+done as (
+  update public.cases c set status = 'closed'
+    from target t where c.id = t.id
+  returning c.id, t.was
+),
+audited as (
+  insert into public.audit_log (actor_id, action, entity, entity_id, meta)
+  select null, 'case.status', 'case', d.id,
+         jsonb_build_object('from', d.was, 'to', 'closed', 'auto', true, 'reason', 'refund',
+                            'migration', '20261126160000')
+    from done d
+  returning 1
+),
+seen as (
+  update public.notifications n set read_at = now()
+    from done d
+   where n.type = 'case.created' and n.read_at is null and n.data->>'case_id' = d.id::text
+  returning 1
 )
 insert into public.case_notes (case_id, author_id, body)
 select d.id, null,

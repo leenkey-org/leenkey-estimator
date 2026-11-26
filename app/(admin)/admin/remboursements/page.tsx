@@ -21,6 +21,7 @@ import {
   leftOfPayment,
   leftOfWithdrawal,
   refundDeadline,
+  refundLate,
   refundedOfPayment,
   refundStatus,
   type RefundStatus,
@@ -66,7 +67,9 @@ function StatusPill({ row, now }: { row: AdminRefundRow; now: Date }) {
     return (
       <span className="flex flex-wrap items-center gap-1.5 self-start">
         <span className={cn(badge, TONE.to_refund)}>{t.status.withdrawalPending}</span>
-        {status === "late" ? <span className={cn(badge, TONE.late)}>{t.status.late}</span> : null}
+        {refundLate(row, now) ? (
+          <span className={cn(badge, TONE.late)}>{t.status.late}</span>
+        ) : null}
       </span>
     );
   }
@@ -141,7 +144,7 @@ function RequestDates({
   short?: boolean;
 }) {
   if (!row.requestedAt) return <span className="text-lk-ink-3">{t.noRequest}</span>;
-  const late = refundStatus(row, now) === "late";
+  const late = refundLate(row, now);
   return (
     <span className="flex flex-col">
       <span className="text-lk-ink-2">

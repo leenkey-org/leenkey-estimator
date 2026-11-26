@@ -253,6 +253,8 @@ export async function listingDeletionFacts(
         .select("id")
         .eq("property_id", propertyId)
         .is("refunded_at", null)
+        // A plan renounced is no longer in force (DECISIONS.md 2026-11-26).
+        .is("withdrawal_requested_at", null)
         .gt("amount_paid_cents", 0)
         .gt("ends_at", new Date().toISOString())
         .limit(1),

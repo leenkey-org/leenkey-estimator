@@ -4700,7 +4700,9 @@ export type Database = {
         Returns: Json
       }
       subscription_withdraw: {
-        Args: { p_scope?: string; p_subscription_id: string }
+        Args:
+          | { p_subscription_id: string; p_scope?: string }
+          | { p_with_replaced: boolean; p_subscription_id: string }
         Returns: Json
       }
       subscriptions_daily: {
@@ -4827,6 +4829,26 @@ export type Database = {
       visits_remind: {
         Args: { p_now?: string }
         Returns: number
+      }
+      withdrawal_last_day: {
+        Args: { p_ordered_at: string }
+        Returns: string
+      }
+      withdrawal_old_shape_adopt: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      withdrawal_open: {
+        Args: { p_ordered_at: string; p_now?: string }
+        Returns: boolean
+      }
+      withdrawal_refunds: {
+        Args: { p_property: string }
+        Returns: {
+          refunded_cents: number
+          due_cents: number
+          requested_at: string
+        }[]
       }
       words_below_1000_fr: {
         Args: { p_final: boolean; p_n: number }

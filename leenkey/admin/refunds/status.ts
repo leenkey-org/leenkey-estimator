@@ -102,6 +102,16 @@ export function refundStatus(facts: RefundFacts, now: Date = new Date()): Refund
   return "to_refund";
 }
 
+/**
+ * « En retard »: a withdrawal with money left to refund on this payment once
+ * its last day is over, whatever was refunded of it so far (a partial refund
+ * past the 14 days is late too).
+ */
+export function refundLate(facts: RefundFacts, now: Date = new Date()): boolean {
+  if (!facts.requestedAt) return false;
+  return leftOfPayment(facts) > 0 && pastDeadline(facts.requestedAt, now);
+}
+
 export function creditNoteState(
   facts: Pick<RefundFacts, "refundedCents" | "creditedCents">,
 ): CreditNoteState {

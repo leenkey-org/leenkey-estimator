@@ -51,7 +51,7 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
     from: () => {
       const self: Record<string, unknown> = {};
-      for (const name of ["select", "eq", "is", "gt"]) self[name] = () => self;
+      for (const name of ["select", "eq", "is", "gt", "order", "limit"]) self[name] = () => self;
       self.maybeSingle = async () => ({ data: mocks.reads.shift() ?? null, error: null });
       return self;
     },
