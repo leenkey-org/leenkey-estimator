@@ -44,6 +44,7 @@ export const DOCUMENT_CATEGORY: Record<DocumentType, DocumentCategory> = {
   erp: "property",
   assainissement: "property",
   carrez: "property",
+  audit_energetique: "property",
   certificat_urbanisme: "property",
   taxe_fonciere: "property",
   facture_travaux: "property",
@@ -92,6 +93,7 @@ export const DOCUMENT_STAGE: Record<DocumentType, DocumentStage> = {
   erp: "listing",
   assainissement: "listing",
   carrez: "listing",
+  audit_energetique: "listing",
   certificat_urbanisme: "listing",
   taxe_fonciere: "agreement",
   facture_travaux: "agreement",
@@ -161,25 +163,80 @@ export const CO_OWNERSHIP_DOCUMENTS: readonly DocumentType[] = [
 export const OPTIONAL_DOCUMENTS: readonly DocumentType[] = ["autre"];
 
 /**
- * Whether the documents of a co-ownership are asked for: always for a flat
- * (one that is not in a co-ownership marks them « Non concerné »), for a
- * house or another property when its sheet gives a number of lots, never
- * for land. Its charges say nothing: the field is « Charges », and a house
- * outside a co-ownership may have some.
+ * The energy audit (« audit énergétique », DECISIONS.md 2026-11-26, asked by
+ * Cédric; when it is asked for is a proposal to be validated by him): asked
+ * for a house or another building in single ownership (outside a
+ * co-ownership) whose DPE, one of a home, is in class E, F or G; offered
+ * « Facultatif » to any other building (offeredDocuments); never for land.
+ * As every line, a help: its seller may mark it « Non concerné », and it
+ * never holds a publication back.
  */
-export function inCoOwnership(type: PropertyType | null, coproLots: number | null): boolean {
+export const ENERGY_AUDIT_TYPE = "audit_energetique" satisfies DocumentType;
+export const ENERGY_AUDIT_CLASSES: readonly string[] = ["E", "F", "G"];
+
+export function energyAuditAsked(property: {
+  type: PropertyType | null;
+  coOwnership: boolean;
+  /** The energy class of its DPE; none when it is exempt or not typed yet. */
+  dpe: string | null;
+  dpeExempt?: boolean;
+  /** « tertiaire »: business premises, whose sale asks for no audit. */
+  dpeKind?: string;
+}): boolean {
+  return (
+    (property.type === "maison" || property.type === "autre") &&
+    !property.coOwnership &&
+    property.dpeExempt !== true &&
+    property.dpeKind !== "tertiaire" &&
+    property.dpe !== null &&
+    ENERGY_AUDIT_CLASSES.includes(property.dpe)
+  );
+}
+
+/**
+ * The lines shown without being asked for: the energy audit of a building
+ * (« Facultatif » when it is not asked for), then what the notary asks
+ * besides (OPTIONAL_DOCUMENTS).
+ */
+export function offeredDocuments(type: PropertyType | null): DocumentType[] {
+  return type === "terrain" ? [...OPTIONAL_DOCUMENTS] : [ENERGY_AUDIT_TYPE, ...OPTIONAL_DOCUMENTS];
+}
+
+/**
+ * Whether a property is in a co-ownership, from what its seller says at step
+ * 2 (« Ce bien est-il en copropriété ? », properties.is_coownership,
+ * DECISIONS.md 2026-11-26): always for a flat (one that is not in a
+ * co-ownership marks its documents « Non concerné »), never for land, as
+ * said for a house or another property.
+ */
+export function coOwnershipOf(type: PropertyType | null, declared: boolean): boolean {
   if (type === "appartement") return true;
   if (type === "terrain") return false;
-  return (coproLots ?? 0) > 0;
+  return declared;
+}
+
+/**
+ * The same from the lots of its sheet alone, for a reader that does not know
+ * what the seller said: a house or another property is in a co-ownership
+ * when its sheet gives a number of lots.
+ */
+export function inCoOwnership(type: PropertyType | null, coproLots: number | null): boolean {
+  return coOwnershipOf(type, (coproLots ?? 0) > 0);
 }
 
 /** The documents asked for a property, in the order of the checklist. */
 export function requiredDocuments(
   type: PropertyType | null,
   coOwnership: boolean = type === "appartement",
+  /** The energy audit is asked for (energyAuditAsked). */
+  energyAudit: boolean = false,
 ): DocumentType[] {
   const asked = PROPERTY_DOCUMENTS[type ?? "autre"];
-  const all = coOwnership && type !== "terrain" ? [...asked, ...CO_OWNERSHIP_DOCUMENTS] : asked;
+  const all = [
+    ...asked,
+    ...(coOwnership && type !== "terrain" ? CO_OWNERSHIP_DOCUMENTS : []),
+    ...(energyAudit && type !== "terrain" ? [ENERGY_AUDIT_TYPE] : []),
+  ];
   return DOCUMENT_ORDER.filter((document) => all.includes(document));
 }
 
@@ -187,7 +244,8 @@ export function requiredDocuments(
  * May be « Non concerné »: depends on the building, its installations, its
  * place or its works; the documents of a co-ownership and the Carrez
  * measurement, for a flat that is not in one, or a plan of works the
- * co-ownership does not have.
+ * co-ownership does not have; the energy audit, which the diagnostician may
+ * say is not due.
  */
 export const EXEMPTIBLE_DOCUMENTS: readonly DocumentType[] = [
   "amiante",
@@ -197,6 +255,7 @@ export const EXEMPTIBLE_DOCUMENTS: readonly DocumentType[] = [
   "termites",
   "assainissement",
   "carrez",
+  "audit_energetique",
   "pv_ag",
   "reglement_copro",
   "appel_charges",
@@ -284,6 +343,7 @@ export type SaleFileMime = keyof typeof SALE_FILE_EXTENSIONS;
 export function guessDocumentType(fileName: string): DocumentType | null {
   const name = fileName.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   const rules: [RegExp, DocumentType][] = [
+    [/audit.energ/, "audit_energetique"],
     [/\bdpe\b|performance.energ/, "dpe"],
     [/amiante/, "amiante"],
     [/plomb|crep/, "plomb"],

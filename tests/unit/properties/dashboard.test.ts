@@ -109,6 +109,7 @@ const characteristics: SellerProperty["characteristics"] = {
   ges: "D",
   heating: null,
   features: [],
+  coOwnership: true,
   chargesMonthlyEuros: null,
   propertyTaxYearlyEuros: null,
   coproLots: null,

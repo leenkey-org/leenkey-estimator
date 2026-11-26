@@ -6,12 +6,14 @@ import {
   DOCUMENT_ORDER,
   DOCUMENT_STAGE,
   DOCUMENT_STAGES,
+  coOwnershipOf,
   DOCUMENT_VALIDITY_MONTHS,
   documentToRefresh,
+  energyAuditAsked,
   EXEMPTIBLE_DOCUMENTS,
   inCoOwnership,
   NOTARY_FILE_STAGES,
-  OPTIONAL_DOCUMENTS,
+  offeredDocuments,
   requiredDocuments,
   type DocumentCategory,
   type DocumentStage,
@@ -20,7 +22,8 @@ import {
 } from "@/lib/config/documents";
 
 // The checklist of the sale file (L3-04, SPEC-V2 15), pure and unit-tested:
-// from the property (its type, whether it is in a co-ownership), its
+// from the property (its type, whether it is in a co-ownership, whether its
+// energy audit is asked for: DECISIONS.md 2026-11-26), its
 // documents and its « Non concerné », the lines by category (« Documents du
 // bien », « Documents de copropriété », « Documents pour le notaire »), each
 // with the stage it is needed for, the progress of each category and of each
@@ -51,14 +54,42 @@ export type FiledDocument = {
 export type Exemption = { type: DocumentType; reason: string };
 
 /** The property of a checklist: a bare type reads « in a co-ownership when a flat ». */
-export type ChecklistProperty = { type: PropertyType | null; coOwnership: boolean };
+export type ChecklistProperty = {
+  type: PropertyType | null;
+  coOwnership: boolean;
+  /** The energy audit is asked for (energyAuditAsked); offered otherwise. */
+  energyAudit?: boolean;
+};
 
-/** The property of a checklist, from its type and the lots of its sheet (inCoOwnership). */
+/**
+ * The property of a checklist, from its sheet: whether it is in a
+ * co-ownership, as its seller says it (`coOwnership`, DECISIONS.md
+ * 2026-11-26; from its lots for a reader that does not give it), and
+ * whether its energy audit is asked for (its DPE; never without it).
+ */
 export function checklistProperty(property: {
   type: PropertyType | null;
   coproLots: number | null;
+  coOwnership?: boolean;
+  dpe?: string | null;
+  dpeExempt?: boolean;
+  dpeKind?: string;
 }): ChecklistProperty {
-  return { type: property.type, coOwnership: inCoOwnership(property.type, property.coproLots) };
+  const coOwnership =
+    property.coOwnership === undefined
+      ? inCoOwnership(property.type, property.coproLots)
+      : coOwnershipOf(property.type, property.coOwnership);
+  return {
+    type: property.type,
+    coOwnership,
+    energyAudit: energyAuditAsked({
+      type: property.type,
+      coOwnership,
+      dpe: property.dpe ?? null,
+      dpeExempt: property.dpeExempt,
+      dpeKind: property.dpeKind,
+    }),
+  };
 }
 
 export type ChecklistLine = {
@@ -123,12 +154,13 @@ export function buildChecklist(
 ): Checklist {
   const required =
     property !== null && typeof property === "object"
-      ? requiredDocuments(property.type, property.coOwnership)
+      ? requiredDocuments(property.type, property.coOwnership, property.energyAudit)
       : requiredDocuments(property);
+  const propertyType = property !== null && typeof property === "object" ? property.type : property;
   const reasonOf = new Map(exemptions.map((exemption) => [exemption.type, exemption.reason]));
   // What is asked for, then what is always offered, then what the seller
   // filed besides, each in the order of the checklist.
-  const offered = OPTIONAL_DOCUMENTS.filter((type) => !required.includes(type));
+  const offered = offeredDocuments(propertyType).filter((document) => !required.includes(document));
   const ddt = documents.filter((document) => document.type === DDT_TYPE);
   const filedTypes = new Set(documents.map((document) => document.type));
   const extra = DOCUMENT_ORDER.filter(

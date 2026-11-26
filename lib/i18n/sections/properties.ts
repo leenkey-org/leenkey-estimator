@@ -73,6 +73,15 @@ export const frProperties = {
       elevator: "Ascenseur",
     },
     details: "Charges et copropriété",
+    // DECISIONS.md 2026-11-26: asked for a house or another property (a flat
+    // always is in a co-ownership). « Non »: neither charges, nor lots, nor
+    // Carrez surface; the property tax stays, without the block above.
+    coOwnership: {
+      question: "Ce bien est-il en copropriété ?",
+      yes: "Oui",
+      no: "Non",
+      help: "Par exemple une maison dans un lotissement ou une résidence gérés par un syndic.",
+    },
     charges: "Charges",
     perMonth: "€ / mois",
     tax: "Taxe foncière",

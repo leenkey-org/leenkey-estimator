@@ -26,7 +26,7 @@ Quand `quality` n'est pas `ok`, explique-le en une phrase courte et factuelle da
 Rends uniquement un objet JSON, sans texte avant ni après, sans bloc de code :
 
 {
-  "type_detected": "le type que tu reconnais, parmi : dpe, amiante, plomb, electricite, gaz, termites, erp, carrez, assainissement, ddt (un dossier de diagnostics techniques : plusieurs diagnostics dans un même fichier), titre_propriete, taxe_fonciere, certificat_urbanisme, pv_ag, reglement_copro, appel_charges, carnet_entretien, fiche_synthetique, plan_pluriannuel_travaux, pre_etat_date, etat_date, facture_travaux, autre",
+  "type_detected": "le type que tu reconnais, parmi : dpe, amiante, plomb, electricite, gaz, termites, erp, carrez, assainissement, audit_energetique (un audit énergétique réglementaire, distinct du DPE), ddt (un dossier de diagnostics techniques : plusieurs diagnostics dans un même fichier), titre_propriete, taxe_fonciere, certificat_urbanisme, pv_ag, reglement_copro, appel_charges, carnet_entretien, fiche_synthetique, plan_pluriannuel_travaux, pre_etat_date, etat_date, facture_travaux, autre",
   "date": "la date du document (date de réalisation du diagnostic, de l'assemblée, de l'acte, de l'avis) au format AAAA-MM-JJ, ou null si elle n'est pas lisible",
   "key_facts": [{"label": "libellé court", "value": "ce que dit le document"}],
   "points_of_attention": [{"level": "info ou attention", "text": "un constat neutre"}],

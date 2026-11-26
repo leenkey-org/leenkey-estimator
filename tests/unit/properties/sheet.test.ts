@@ -31,6 +31,7 @@ const characteristics: SellerProperty["characteristics"] = {
   ges: "D",
   heating: "Individuel gaz",
   features: ["balcony", "elevator", "cellar"],
+  coOwnership: true,
   chargesMonthlyEuros: 180,
   propertyTaxYearlyEuros: 1150,
   coproLots: 40,

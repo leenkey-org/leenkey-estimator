@@ -62,17 +62,23 @@ describe("buildChecklist", () => {
   });
 
   it("the property of a checklist: a house is in a co-ownership when its sheet gives lots", () => {
-    expect(checklistProperty({ type: "maison", coproLots: null })).toEqual(house);
-    expect(checklistProperty({ type: "maison", coproLots: 0 })).toEqual(house);
-    expect(checklistProperty({ type: "maison", coproLots: 12 })).toEqual(houseInCoOwnership);
+    const none = { energyAudit: false };
+    expect(checklistProperty({ type: "maison", coproLots: null })).toEqual({ ...house, ...none });
+    expect(checklistProperty({ type: "maison", coproLots: 0 })).toEqual({ ...house, ...none });
+    expect(checklistProperty({ type: "maison", coproLots: 12 })).toEqual({
+      ...houseInCoOwnership,
+      ...none,
+    });
     expect(checklistProperty({ type: "appartement", coproLots: null })).toEqual({
       type: "appartement",
       coOwnership: true,
+      ...none,
     });
     expect(checklistProperty({ type: "terrain", coproLots: 3 }).coOwnership).toBe(false);
     expect(checklistProperty({ type: null, coproLots: null })).toEqual({
       type: null,
       coOwnership: false,
+      ...none,
     });
     // A house with charges and no lots keeps its 11 documents.
     expect(
@@ -80,19 +86,131 @@ describe("buildChecklist", () => {
     ).toBe(11);
   });
 
+  // DECISIONS.md 2026-11-26: « Ce bien est-il en copropriété ? » at step 2.
+  it("the property of a checklist: what its seller says wins over its lots", () => {
+    // « Oui » without a number of lots: the documents of the co-ownership are asked for.
+    const yes = checklistProperty({ type: "maison", coproLots: null, coOwnership: true });
+    expect(yes.coOwnership).toBe(true);
+    expect(buildChecklist(yes, [], []).total).toBe(19);
+    // « Non »: none of them, whatever its sheet still holds.
+    const no = checklistProperty({ type: "maison", coproLots: 12, coOwnership: false });
+    expect(no.coOwnership).toBe(false);
+    const alone = buildChecklist(no, [], []);
+    expect(alone.total).toBe(11);
+    expect(alone.groups.map((item) => item.category)).toEqual(["property", "notary"]);
+    for (const type of [
+      "carrez",
+      "reglement_copro",
+      "pv_ag",
+      "fiche_synthetique",
+      "carnet_entretien",
+      "plan_pluriannuel_travaux",
+      "appel_charges",
+      "pre_etat_date",
+      "etat_date",
+    ] as const) {
+      expect(line(alone, type), type).toBeUndefined();
+    }
+    // A flat always, land never, whatever is said.
+    expect(
+      checklistProperty({ type: "appartement", coproLots: null, coOwnership: false }).coOwnership,
+    ).toBe(true);
+    expect(
+      checklistProperty({ type: "terrain", coproLots: null, coOwnership: true }).coOwnership,
+    ).toBe(false);
+    // Another property (a building, business premises) as a house.
+    expect(
+      buildChecklist(
+        checklistProperty({ type: "autre", coproLots: null, coOwnership: false }),
+        [],
+        [],
+      ).total,
+    ).toBe(11);
+  });
+
+  // DECISIONS.md 2026-11-26: the energy audit (when it is asked for: to be validated by Cédric).
+  it("the energy audit: asked for a house outside a co-ownership in class E, F or G, offered otherwise", () => {
+    const of = (property: Parameters<typeof checklistProperty>[0]) =>
+      buildChecklist(checklistProperty({ coOwnership: false, ...property }), [], []);
+    for (const dpe of ["E", "F", "G"]) {
+      const asked = of({ type: "maison", coproLots: null, dpe });
+      expect(line(asked, "audit_energetique"), dpe).toMatchObject({
+        required: true,
+        exemptible: true,
+        stage: "listing",
+        state: "missing",
+      });
+      // One document more in the notary file, to file from the listing.
+      expect(asked.total, dpe).toBe(12);
+      expect(stage(asked, "listing")?.missing, dpe).toContain("audit_energetique");
+    }
+    for (const dpe of ["A", "B", "C", "D", null]) {
+      const offered = of({ type: "maison", coproLots: null, dpe });
+      expect(line(offered, "audit_energetique"), String(dpe)).toMatchObject({
+        required: false,
+        exemptible: false,
+        state: "missing",
+      });
+      expect(offered.total, String(dpe)).toBe(11);
+      expect(stage(offered, "listing")?.missing).not.toContain("audit_energetique");
+    }
+    // A building in single ownership as a house; never in a co-ownership, a
+    // flat, a property not subject to the DPE or business premises.
+    expect(
+      line(of({ type: "autre", coproLots: null, dpe: "G" }), "audit_energetique")?.required,
+    ).toBe(true);
+    for (const property of [
+      { type: "maison", coproLots: null, dpe: "G", coOwnership: true },
+      { type: "appartement", coproLots: null, dpe: "G" },
+      { type: "maison", coproLots: null, dpe: "G", dpeExempt: true },
+      { type: "autre", coproLots: null, dpe: "G", dpeKind: "tertiaire" },
+    ] as const) {
+      expect(line(of(property), "audit_energetique"), JSON.stringify(property)).toMatchObject({
+        required: false,
+      });
+    }
+    // Land: neither asked for nor offered.
+    expect(
+      line(of({ type: "terrain", coproLots: null, dpe: "G" }), "audit_energetique"),
+    ).toBeUndefined();
+    expect(line(buildChecklist("terrain", [], []), "audit_energetique")).toBeUndefined();
+    // A reader that gives no DPE (the lots alone): never asked for.
+    expect(checklistProperty({ type: "maison", coproLots: null }).energyAudit).toBe(false);
+
+    // Filed, or « Non concerné » with its reason: the line counts; the notary file can be complete.
+    const g = checklistProperty({ type: "maison", coproLots: null, coOwnership: false, dpe: "G" });
+    expect(
+      line(buildChecklist(g, [filed("audit_energetique")], []), "audit_energetique")?.state,
+    ).toBe("filed");
+    const exempted = buildChecklist(g, [], [exempt("audit_energetique", "Bien non concerné")]);
+    expect(line(exempted, "audit_energetique")).toMatchObject({
+      state: "exempt",
+      reason: "Bien non concerné",
+    });
+    expect(exempted.done).toBe(1);
+    // « Non concerné » means nothing on a line that is only offered.
+    const d = checklistProperty({ type: "maison", coproLots: null, coOwnership: false, dpe: "D" });
+    expect(
+      line(buildChecklist(d, [], [exempt("audit_energetique")]), "audit_energetique")?.state,
+    ).toBe("missing");
+  });
+
   it("groups the lines in three categories, in the order of the list, each missing at first", () => {
     const flat = buildChecklist("appartement", [], []);
     expect(flat.groups.map((item) => item.category)).toEqual(["property", "coownership", "notary"]);
     // The property (the Carrez measurement among it), the co-ownership, the
-    // « état daté » and the line always offered.
-    expect(flat.groups.map((item) => item.lines.length)).toEqual([11, 7, 2]);
-    expect(allLines(flat).map((item) => item.type)).toEqual([
-      ...requiredDocuments("appartement"),
-      "autre",
-    ]);
+    // « état daté » and the line always offered; the energy audit is offered
+    // among the documents of the property, after those asked for.
+    expect(flat.groups.map((item) => item.lines.length)).toEqual([12, 7, 2]);
+    expect(group(flat, "property")?.lines.at(-1)?.type).toBe("audit_energetique");
+    expect(
+      allLines(flat)
+        .map((item) => item.type)
+        .filter((type) => type !== "audit_energetique"),
+    ).toEqual([...requiredDocuments("appartement"), "autre"]);
     for (const item of allLines(flat)) {
       expect(item).toMatchObject({
-        required: item.type !== "autre",
+        required: item.type !== "autre" && item.type !== "audit_energetique",
         state: "missing",
         documents: [],
         reason: null,

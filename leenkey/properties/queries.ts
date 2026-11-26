@@ -67,7 +67,7 @@ export type SellerProperty = {
 };
 
 const COLUMNS =
-  "id, type, address_line, postal_code, city, orientation, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, build_year, is_new_build, dpe_class, ges_class, heating, has_balcony, has_terrace, has_garden, has_parking, has_cellar, has_elevator, charges_monthly_cents, property_tax_yearly_cents, copro_lots, dpe_exempt, dpe_exemption_reason, dpe_date, energy_cost_min_cents, energy_cost_max_cents, energy_price_year, dpe_number, dpe_kind, energy_kwh_m2_year, ges_kg_m2_year, created_at, estimation_value_cents, estimation_low_cents, estimation_high_cents, estimation:estimations(created_at), listing:listings(id, reference, slug, title, description, price_cents, status, rejection_reason, suspension_reason, published_at, sold_at, sold_price_cents), photos(storage_path, is_cover)";
+  "id, type, address_line, postal_code, city, orientation, surface_m2, carrez_m2, rooms, bedrooms, floor, floors_total, build_year, is_new_build, dpe_class, ges_class, heating, has_balcony, has_terrace, has_garden, has_parking, has_cellar, has_elevator, charges_monthly_cents, property_tax_yearly_cents, copro_lots, is_coownership, dpe_exempt, dpe_exemption_reason, dpe_date, energy_cost_min_cents, energy_cost_max_cents, energy_price_year, dpe_number, dpe_kind, energy_kwh_m2_year, ges_kg_m2_year, created_at, estimation_value_cents, estimation_low_cents, estimation_high_cents, estimation:estimations(created_at), listing:listings(id, reference, slug, title, description, price_cents, status, rejection_reason, suspension_reason, published_at, sold_at, sold_price_cents), photos(storage_path, is_cover)";
 
 type Row = NonNullable<Awaited<ReturnType<typeof readOne>>["data"]>;
 
@@ -119,6 +119,7 @@ function toSellerProperty(row: Row): SellerProperty {
       chargesMonthlyEuros: euros(row.charges_monthly_cents),
       propertyTaxYearlyEuros: euros(row.property_tax_yearly_cents),
       coproLots: row.copro_lots,
+      coOwnership: row.is_coownership,
       dpeExempt: row.dpe_exempt,
       dpeExemptionReason: row.dpe_exemption_reason,
       dpeDate: row.dpe_date,

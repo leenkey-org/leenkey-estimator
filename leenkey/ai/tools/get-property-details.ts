@@ -49,6 +49,7 @@ export const getPropertyDetailsTool: AiTool<PropertyInput, unknown> = {
         chargesMonthlyEuros: c.chargesMonthlyEuros,
         propertyTaxYearlyEuros: c.propertyTaxYearlyEuros,
         coproLots: c.coproLots,
+        inCoOwnership: c.coOwnership,
       },
       listing: listing
         ? {

@@ -110,7 +110,9 @@ async function declareIfComplete(supabase: Client, propertyId: string, userId: s
   const [property, documents, exemptions] = await Promise.all([
     supabase
       .from("properties")
-      .select("type, copro_lots, dpe_exempt, dpe_exemption_reason")
+      .select(
+        "type, copro_lots, is_coownership, dpe_class, dpe_kind, dpe_exempt, dpe_exemption_reason",
+      )
       .eq("id", propertyId)
       .maybeSingle(),
     supabase
@@ -125,6 +127,10 @@ async function declareIfComplete(supabase: Client, propertyId: string, userId: s
     checklistProperty({
       type: (property.data?.type ?? null) as PropertyType | null,
       coproLots: property.data?.copro_lots ?? null,
+      coOwnership: property.data?.is_coownership ?? false,
+      dpe: property.data?.dpe_class ?? null,
+      dpeExempt: property.data?.dpe_exempt ?? false,
+      dpeKind: property.data?.dpe_kind,
     }),
     (documents.data ?? []).map((row) => ({
       id: row.id,
@@ -241,13 +247,14 @@ async function coverableDiagnostics(
 ): Promise<DocumentType[] | null> {
   const { data, error } = await supabase
     .from("properties")
-    .select("type, copro_lots")
+    .select("type, copro_lots, is_coownership")
     .eq("id", propertyId)
     .maybeSingle();
   if (error || !data) return null;
   const property = checklistProperty({
     type: (data.type ?? null) as PropertyType | null,
     coproLots: data.copro_lots ?? null,
+    coOwnership: data.is_coownership,
   });
   return ddtDiagnostics(property.type, property.coOwnership);
 }

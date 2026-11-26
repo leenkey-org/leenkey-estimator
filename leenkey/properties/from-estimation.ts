@@ -130,6 +130,9 @@ export function answersFromEstimation(input: unknown): EstimationAnswers {
     ges: letter(text.parse(energie.ges)),
     heating: heatingOf(text.parse(energie.chauffage), text.parse(energie.chauffage_mode)),
     features,
+    // The V1 asks for the charges of a co-ownership only: given, the property is in one.
+    coOwnership:
+      v1Type === "appartement" || number.parse(situation.charges_copro_mensuelles) !== null,
     chargesMonthlyEuros: number.parse(situation.charges_copro_mensuelles),
     propertyTaxYearlyEuros: tax,
     coproLots: null,
@@ -157,7 +160,7 @@ export function answersFromEstimation(input: unknown): EstimationAnswers {
   }
   return {
     address: addressOf(text.parse(bien.adresse)),
-    characteristics: { ...EMPTY, type },
+    characteristics: { ...EMPTY, type, coOwnership: type === "appartement" },
   };
 }
 
@@ -192,6 +195,7 @@ const EMPTY: Omit<Characteristics, "propertyId"> = {
   ges: null,
   heating: null,
   features: [],
+  coOwnership: false,
   chargesMonthlyEuros: null,
   propertyTaxYearlyEuros: null,
   coproLots: null,

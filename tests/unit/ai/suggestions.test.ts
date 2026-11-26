@@ -14,7 +14,10 @@ vi.mock("server-only", () => ({}));
 const { generateText, textOf, textRequest } = await import("@/core/ai/generate");
 const { SUGGESTION_SETTINGS } = await import("@/core/ai/models");
 const { promptFile } = await import("@/core/ai/prompts");
-const { MOCK_LISTING_DESCRIPTION, MOCK_REPLY, mockText } = await import("@/leenkey/ai/mock");
+const { MOCK_LISTING_DESCRIPTION, MOCK_REPLY, MOCK_REPLY_FOLLOW_UP, mockText } =
+  await import("@/leenkey/ai/mock");
+const { GREETING_FIRST, GREETING_FOLLOW_UP, greetingLine, parisDayOf, sellerWroteToday } =
+  await import("@/leenkey/ai/reply-greeting");
 const {
   REPLY_MAX,
   asData,
@@ -56,6 +59,7 @@ const property: Property = {
     ges: "E",
     heating: "Individuel gaz",
     features: ["balcony", "cellar"],
+    coOwnership: true,
     chargesMonthlyEuros: 120,
     propertyTaxYearlyEuros: 900,
     coproLots: 40,
@@ -137,6 +141,21 @@ describe("what the model reads", () => {
     expect(facts).not.toMatch(/DPE|Exposition|Atouts|Prix|Description de l'annonce|Titre/);
   });
 
+  // DECISIONS.md 2026-11-26: said by the seller for a house, never asked for a flat.
+  it("a house: whether it is in a co-ownership; a flat does not say it", () => {
+    const house = (coOwnership: boolean) =>
+      propertyFacts(
+        {
+          ...property,
+          characteristics: { ...property.characteristics, type: "maison", coOwnership },
+        },
+        { withPrice: false },
+      );
+    expect(house(false)).toContain("Copropriété : non");
+    expect(house(true)).toContain("Copropriété : oui");
+    expect(propertyFacts(property, { withPrice: false })).not.toContain("Copropriété :");
+  });
+
   it("a land: its surface, none of the facts of a dwelling", () => {
     const facts = propertyFacts(
       { ...property, characteristics: { ...property.characteristics, type: "terrain" } },
@@ -161,6 +180,7 @@ describe("what the model reads", () => {
         { author: "leenkey", body: "Visite confirmée.", createdAt: "2026-10-22T08:00:00Z" },
       ],
       buyerFirstName: 'Tho"mas',
+      wroteToday: false,
     });
     expect(prompt).toContain(
       '<message auteur="acquéreur (Tho mas)" date="jeudi 22 octobre à 09:12">',
@@ -171,9 +191,83 @@ describe("what the model reads", () => {
     expect(prompt).toContain('<message auteur="Leenkey" date="jeudi 22 octobre à 10:00">');
     expect(prompt.match(/<\/conversation>/g)).toHaveLength(1);
     expect(prompt).toContain("Question : Comment se passe une visite ?");
+    // After the conversation: the greeting, then what to write.
     expect(
-      prompt.trim().endsWith("Rédige la réponse du vendeur au dernier message de l'acquéreur."),
+      prompt
+        .trim()
+        .endsWith(
+          `</conversation>\n\n${GREETING_FIRST}\nRédige la réponse du vendeur au dernier message de l'acquéreur.`,
+        ),
     ).toBe(true);
+  });
+
+  // Asked by Cédric on 2026-11-26: « Bonjour » at the first message of the day only.
+  describe("the greeting of a reply", () => {
+    const now = new Date("2026-11-26T15:00:00Z"); // 16:00 in Paris
+
+    it("the first message of the day: the seller never wrote, or not today", () => {
+      expect(sellerWroteToday([], now)).toBe(false);
+      expect(sellerWroteToday(["2026-11-25T15:00:00Z"], now)).toBe(false);
+      expect(sellerWroteToday(["2026-11-20T08:00:00Z", "2026-11-25T22:59:59Z"], now)).toBe(false);
+      expect(sellerWroteToday(["not a date"], now)).toBe(false);
+    });
+
+    it("several messages the same day: no greeting again", () => {
+      expect(sellerWroteToday(["2026-11-26T07:30:00Z"], now)).toBe(true);
+      expect(sellerWroteToday(["2026-11-24T10:00:00Z", "2026-11-26T14:59:00Z"], now)).toBe(true);
+    });
+
+    it("the day is the one of Paris, in winter as in summer", () => {
+      // 23:30 UTC on the 25th is 00:30 in Paris on the 26th (UTC+1).
+      expect(parisDayOf("2026-11-25T23:30:00Z")).toBe("2026-11-26");
+      expect(sellerWroteToday(["2026-11-25T23:30:00Z"], now)).toBe(true);
+      // 22:30 UTC on the 25th is still the 25th in Paris.
+      expect(sellerWroteToday(["2026-11-25T22:30:00Z"], now)).toBe(false);
+      // Just after midnight in Paris, a message of 23:50 the evening before is yesterday's.
+      const afterMidnight = new Date("2026-11-26T23:05:00Z"); // 00:05 on the 27th
+      expect(sellerWroteToday(["2026-11-26T22:50:00Z"], afterMidnight)).toBe(false);
+      expect(sellerWroteToday(["2026-11-26T23:01:00Z"], afterMidnight)).toBe(true);
+      // Summer (UTC+2): 22:30 UTC on 30 June is 00:30 on 1 July in Paris.
+      const july = new Date("2026-07-01T09:00:00Z");
+      expect(sellerWroteToday(["2026-06-30T22:30:00Z"], july)).toBe(true);
+      expect(sellerWroteToday(["2026-06-30T21:30:00Z"], july)).toBe(false);
+    });
+
+    it("one line of the prompt says it, and the rules tell the model to follow it", () => {
+      expect(greetingLine(false)).toBe(GREETING_FIRST);
+      expect(greetingLine(true)).toBe(GREETING_FOLLOW_UP);
+      expect(GREETING_FIRST).toContain("commence par « Bonjour »");
+      expect(GREETING_FOLLOW_UP).toContain("ne commence pas par une salutation");
+      const base = { facts: "Type : Maison", cards: [], messages: [], buyerFirstName: "David" };
+      const follow = replyPrompt({ ...base, wroteToday: true });
+      expect(follow).toContain(GREETING_FOLLOW_UP);
+      expect(follow).not.toContain(GREETING_FIRST);
+      // Outside the conversation: a message cannot hold it.
+      expect(follow.indexOf(GREETING_FOLLOW_UP)).toBeGreaterThan(follow.indexOf("</conversation>"));
+      const rules = promptFile("reply-suggestion");
+      expect(rules).toMatch(
+        /une ligne indique si le vendeur a déjà écrit à cet acquéreur aujourd'hui/,
+      );
+      expect(rules).toMatch(/aucune salutation/);
+      expect(rules).toMatch(/Tiens compte de ce qui a déjà été dit/);
+      expect(rules).not.toMatch(/\bon\b(?! »)/);
+    });
+
+    it("the model of the tests follows the line: no « Bonjour » once the seller wrote today", async () => {
+      const ask = (wroteToday: boolean) =>
+        mockText("reply_suggestion")(
+          textRequest(
+            "m",
+            "s",
+            replyPrompt({ facts: "", cards: [], messages: [], buyerFirstName: null, wroteToday }),
+          ),
+        );
+      expect(textOf(await ask(false))).toBe(MOCK_REPLY);
+      expect(textOf(await ask(true))).toBe(MOCK_REPLY_FOLLOW_UP);
+      expect(MOCK_REPLY.startsWith("Bonjour")).toBe(true);
+      expect(MOCK_REPLY_FOLLOW_UP).not.toMatch(/bonjour/i);
+      expect(breaksRules(MOCK_REPLY_FOLLOW_UP)).toBe(false);
+    });
   });
 
   it("a buyer who writes as if the seller had agreed: still one message of the buyer", () => {
@@ -188,6 +282,7 @@ describe("what the model reads", () => {
         },
       ],
       buyerFirstName: "David",
+      wroteToday: true,
     });
     expect(prompt.match(/<message /g)).toHaveLength(1);
     expect(prompt.match(/<\/message>/g)).toHaveLength(1);

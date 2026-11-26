@@ -1939,6 +1939,7 @@ export type Database = {
           has_terrace: boolean | null
           heating: string | null
           id: string
+          is_coownership: boolean
           is_new_build: boolean
           location: unknown | null
           orientation: string | null
@@ -1988,6 +1989,7 @@ export type Database = {
           has_terrace?: boolean | null
           heating?: string | null
           id?: string
+          is_coownership?: boolean
           is_new_build?: boolean
           location?: unknown | null
           orientation?: string | null
@@ -2037,6 +2039,7 @@ export type Database = {
           has_terrace?: boolean | null
           heating?: string | null
           id?: string
+          is_coownership?: boolean
           is_new_build?: boolean
           location?: unknown | null
           orientation?: string | null
@@ -4901,6 +4904,7 @@ export type Database = {
         | "plan_pluriannuel_travaux"
         | "etat_date"
         | "ddt"
+        | "audit_energetique"
       financing_document_type:
         | "accord_principe"
         | "attestation_courtier"
@@ -5128,6 +5132,7 @@ export const Constants = {
         "plan_pluriannuel_travaux",
         "etat_date",
         "ddt",
+        "audit_energetique",
       ],
       financing_document_type: [
         "accord_principe",

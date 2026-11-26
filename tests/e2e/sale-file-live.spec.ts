@@ -362,6 +362,14 @@ test("dossier de vente : dépôt, non concerné, demande d'accès, partage, ouve
     await expect(
       seller.getByRole("heading", { name: "Documents de copropriété", level: 3 }),
     ).toHaveCount(0);
+    // The energy audit (DECISIONS.md 2026-11-26): offered, not asked for, to
+    // a house whose DPE is in class D (the count above stays 11).
+    await expect(
+      seller
+        .getByRole("region", { name: "Documents du bien" })
+        .getByText("Audit énergétique", { exact: true })
+        .first(),
+    ).toBeVisible();
     const notary = seller.getByRole("region", { name: "Documents pour le notaire" });
     await expect(notary.getByText("État daté fourni par le syndic")).toHaveCount(0);
     await expect(notary.getByText("Documents complémentaires")).toBeVisible();

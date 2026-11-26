@@ -124,6 +124,7 @@ const complete: Characteristics = {
   ges: "D",
   heating: "Collectif gaz",
   features: ["balcony", "elevator"],
+  coOwnership: true,
   chargesMonthlyEuros: 210,
   propertyTaxYearlyEuros: 1150,
   coproLots: 48,
