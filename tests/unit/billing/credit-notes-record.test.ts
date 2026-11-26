@@ -12,12 +12,24 @@ const state = vi.hoisted(() => ({
   rpc: [] as { fn: string; args: Record<string, unknown> }[],
   deleted: [] as string[],
   profile: null as null | { id: string; roles: string[] },
+  withdrawnAt: null as string | null,
+  memos: [] as (string | undefined)[],
+  emailed: [] as string[],
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 vi.mock("@/core/billing/stripe", () => ({
-  ensureCreditNotes: () => state.ensure?.(),
+  ensureCreditNotes: (input: { memo?: string }) => {
+    state.memos.push(input.memo);
+    return state.ensure?.();
+  },
+}));
+vi.mock("@/leenkey/billing/refund-emails", () => ({
+  emailCreditNotes: async (_supabase: unknown, subscriptionId: string) => {
+    state.emailed.push(subscriptionId);
+    return { sent: 1, failed: 0 };
+  },
 }));
 vi.mock("@/core/auth/session", () => ({ getProfile: async () => state.profile }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: async () => supabase }));
@@ -33,7 +45,12 @@ const supabase = {
       maybeSingle: async () => ({
         data:
           table === "subscriptions"
-            ? { id: "s1", stripe_checkout_session_id: "cs_1", stripe_payment_intent_id: "pi_1" }
+            ? {
+                id: "s1",
+                stripe_checkout_session_id: "cs_1",
+                stripe_payment_intent_id: "pi_1",
+                withdrawal_requested_at: state.withdrawnAt,
+              }
             : null,
         error: null,
       }),
@@ -78,6 +95,9 @@ beforeEach(() => {
   state.rpc = [];
   state.deleted = [];
   state.profile = { id: "a1", roles: ["admin"] };
+  state.withdrawnAt = null;
+  state.memos = [];
+  state.emailed = [];
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "info").mockImplementation(() => {});
 });
@@ -96,6 +116,23 @@ describe("recordCreditNotes", () => {
       args: { p_payment_intent_id: "pi_1", p_notes: [{ id: "cn_1", amount_cents: 99000 }] },
     });
     expect(state.deleted).toEqual(["cn_void"]);
+    // Then the confirmation of the refund to the seller, for that plan.
+    expect(state.emailed).toEqual(["s1"]);
+  });
+
+  // Cédric, 2026-11-26: the wording of the credit note, and the VAT notice.
+  it("the memo says why: a withdrawal, or a plain refund, with the VAT exemption", async () => {
+    const { recordCreditNotes, creditNoteMemo } = await import("@/leenkey/billing/credit-notes");
+    await recordCreditNotes(supabase as never, "pi_1");
+    state.withdrawnAt = "2026-11-20T10:00:00Z";
+    await recordCreditNotes(supabase as never, "pi_1");
+    expect(state.memos).toEqual([
+      "Remboursement. TVA non applicable, article 293 B du CGI.",
+      "Remboursement suite à l'exercice du droit de rétractation. TVA non applicable, article 293 B du CGI.",
+    ]);
+    // The same facts, the same memo: the idempotent creation never changes.
+    expect(creditNoteMemo(true)).toBe(creditNoteMemo(true));
+    expect(creditNoteMemo(true)).not.toBe(creditNoteMemo(false));
   });
 
   it("a Stripe error: failed, never thrown", async () => {
@@ -105,6 +142,7 @@ describe("recordCreditNotes", () => {
     const { recordCreditNotes } = await import("@/leenkey/billing/credit-notes");
     expect(await recordCreditNotes(supabase as never, "pi_1")).toEqual({ status: "failed" });
     expect(state.rpc).toEqual([]);
+    expect(state.emailed).toEqual([]);
   });
 
   it("a database error: failed, never thrown", async () => {

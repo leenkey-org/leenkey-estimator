@@ -139,16 +139,35 @@ export const frBilling = {
     network: "Pas de réponse du serveur : rien n'a été débité. Réessayez.",
   },
   cancelled: "Le paiement a été annulé : rien n'a été débité.",
-  // L1-40: « Renoncer au contrat » during the 14 days (SPEC 11).
-  // The credit notes of the refunds of a plan (DECISIONS.md 2026-11-25).
-  creditNotes: {
-    title: "Vos avoirs",
-    text: "Chaque remboursement de votre formule donne lieu à un avoir sur sa facture.",
-    item: (number: string, amount: string, date: string) => `Avoir ${number} · ${amount} · ${date}`,
-    pdf: "Télécharger le PDF",
-    pdfLabel: (number: string) => `Télécharger l'avoir ${number} (PDF, nouvel onglet)`,
+  // « Mes factures et paiements » (Cédric, 2026-11-26): every payment of
+  // the seller, its invoice and the credit notes of its refunds.
+  payments: {
+    title: "Mes factures et paiements",
+    text: "Chaque paiement donne lieu à une facture, chaque remboursement à un avoir.",
+    empty: "Vous n'avez encore réglé aucune formule.",
+    error: "Vos factures ne sont pas disponibles pour le moment. Réessayez dans quelques instants.",
+    /** After a download that could not be served (?document=indisponible). */
+    documentUnavailable:
+      "Ce document n'est pas encore disponible. Réessayez dans quelques minutes ; s'il manque toujours, écrivez-nous.",
+    payment: (plan: string, property: string) => `Formule ${plan} · ${property}`,
+    paidOn: (date: string) => `Payé le ${date}`,
+    unknownProperty: "Bien supprimé",
+    status: {
+      paid: "Payé",
+      partly_refunded: "Remboursé en partie",
+      refunded: "Remboursé",
+    },
+    refunded: (amount: string) => `dont ${amount} remboursés`,
+    invoice: "Télécharger la facture",
+    invoiceLabel: (plan: string, date: string) =>
+      `Télécharger la facture de la formule ${plan} du ${date} (PDF, nouvel onglet)`,
+    creditNote: (number: string, amount: string, date: string) =>
+      `Avoir ${number} · ${amount} · ${date}`,
+    creditNotePdf: "Télécharger l'avoir",
+    creditNotePdfLabel: (number: string) => `Télécharger l'avoir ${number} (PDF, nouvel onglet)`,
     noPdf: "PDF non disponible pour le moment",
   },
+  // L1-40: « Renoncer au contrat » during the 14 days (SPEC 11).
   withdrawal: {
     title: "Droit de rétractation",
     text: (date: string) =>

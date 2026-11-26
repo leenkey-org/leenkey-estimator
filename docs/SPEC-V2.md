@@ -619,6 +619,7 @@ create table credit_notes (              -- avoirs Stripe des remboursements (DE
   amount_cents int not null check (amount_cents >= 0),
   pdf_url text,                           -- PDF de Stripe (https), null dans le mock des tests
   issued_at timestamptz not null,
+  refund_emailed_at timestamptz,          -- email « Confirmation de votre remboursement » pris en charge (DECISIONS.md 2026-11-26)
   created_at timestamptz not null default now(),
   updated_at timestamptz
 );
@@ -1108,7 +1109,7 @@ Matrice (L = lecture, E = écriture) :
 | `offer_events`, `listing_revisions` | — | L ses biens | L les siennes (`offer_events`) | L |
 | `plan_entitlements` | L | L | L | L/E |
 | `upgrade_prompts` | — | L/E ses biens | — | L |
-| `credit_notes` | — | L celles de ses formules | — | L toutes ; écriture par personne depuis un client : `credit_notes_record` (service role : webhook, ou action admin « Créer l'avoir », tracée dans `audit_log`) ; `admin_refunds()` pour `/admin/remboursements` |
+| `credit_notes` | — | L celles de ses formules | — | L toutes ; écriture par personne depuis un client : `credit_notes_record` (service role : webhook, ou action admin « Créer l'avoir », tracée dans `audit_log`) ; `refund_emailed_at` écrit par `credit_note_email_claim` / `credit_note_email_release` (service role) ; `admin_refunds()` pour `/admin/remboursements` |
 | `advisor_interventions` | — | L ses biens, sans `team_note` ni `done_by` (lecture par colonne) ; création par `advisor_intervention_request` | — | L tous par `admin_advisor_interventions` ; statut par `admin_advisor_intervention_set` et `admin_advisor_initial_meeting`, écrits dans `audit_log` |
 | `identity_documents` | — | — (statut seul, par `buyer_identity_for_seller`, pour une invitation encore valable ou une visite non annulée) | L les siennes, sans `team_note` ni `decided_by` (lecture par colonne) ; dépôt et retrait par `identity_document_add` et `identity_document_remove` | L toutes par `admin_identity_documents` ; décision par `identity_document_check` et `identity_document_refuse` (tracées) |
 | `visit_slots` | — | L/E ses biens | L si invitation valide | L |
@@ -1602,6 +1603,8 @@ Créés par Younes dans Stripe (test puis live), identifiants reportés dans `pl
 Événements écoutés : `checkout.session.completed`, `charge.refunded` (formule marquée remboursée, les droits payants s'arrêtent, `case` note automatique ; pas de bascule automatique du modèle d'étapes : signalé à l'admin).
 
 Remboursements : faits par Cédric depuis le dashboard Stripe (hors application en V2).
+
+Documents (`DECISIONS.md` 2026-11-26) : la page de paiement demande l'adresse de facturation ; la facture Stripe de la commande porte « Paiement : Facture acquittée » et « TVA non applicable, article 293 B du CGI. », et part en pièce jointe de l'email récapitulatif. Chaque remboursement donne un avoir Stripe (note « Remboursement suite à l'exercice du droit de rétractation. TVA non applicable, article 293 B du CGI. » après une rétractation, « Remboursement. … » sinon) et un email « Confirmation de votre remboursement » au vendeur, avoir joint, une fois par avoir. Sans PDF, l'email part avec un lien. `/vendeur/formule` : « Mes factures et paiements » (tous les paiements du compte, statut, facture, avoirs), PDF servis par `/vendeur/formule/document` au propriétaire de la formule et à l'équipe. Logo et identité de la société sur ces documents : tableau de bord Stripe (`docs/STRIPE-DOCUMENTS.md`).
 
 Mise en œuvre (L1-26, `DECISIONS.md` 2026-11-03) : identifiants des prix lus dans `STRIPE_PRICE_*` (pas dans `plans.stripe_price_id`), montant vérifié contre la table `plans` à chaque commande ; écritures du webhook dans deux fonctions SQL idempotentes (`stripe_checkout_complete`, `stripe_charge_refunded`) ; la conversation conseiller au paiement arrive avec L1-34, l'email récapitulatif, la rétractation et l'échéance avec L1-40 ; au remboursement, la vente suit la formule en vigueur (déclencheurs de L1-23). Mise en œuvre de L1-40 (`DECISIONS.md` 2026-11-08) : bouton « Renoncer au contrat » au-dessus des formules pendant les 14 jours (dernier jour calculé comme le premier contact, `withdrawalEnds`), boîte de confirmation (formule, bien, date de la commande, adresse de l'accusé de réception), fonction `subscription_withdraw` (propriétaire seulement, une seule fois, refus au-delà de 20 jours en base), note et réouverture du dossier, notification et email à l'équipe ; email récapitulatif complet au paiement ; job `subscriptions-daily` (section 19). Le renouvellement en ligne est reporté (`BACKLOG-V3.md`) : le rappel invite à le demander par email.
 
@@ -2177,7 +2180,8 @@ Gabarit commun (`docs/DESIGN.md` 14) : fond `#F4F4F1`, carte blanche 560 px rayo
 | Documents partagés | `document.shared` | Liste, lien |
 | Demande d'accès aux documents | `document.access_requested` | Acquéreur, statut financement, lien |
 | Document à vérifier (L3-05) | `document.needs_attention` | Nom du document, ce qui ne va pas (illisible, incomplet, mauvais type), lien |
-| Formule activée | `plan.activated` | Récapitulatif de la commande (L1-40) : formule, prix, bien, date, durée et échéance, début des prestations, prestations vendues, versions des CGU et CGV acceptées avec leurs liens, rétractation et formulaire type, médiateur ; sujet « Confirmation de votre souscription Leenkey · [formule] · [référence] » |
+| Formule activée | `plan.activated` | Récapitulatif de la commande (L1-40) : formule, prix, bien, date, durée et échéance, début des prestations, prestations vendues, versions des CGU et CGV acceptées avec leurs liens, rétractation et formulaire type, médiateur ; sujet « Confirmation de votre souscription Leenkey · [formule] · [référence] » ; facture Stripe en pièce jointe, ou lien vers « Mes factures et paiements » (2026-11-26) |
+| Confirmation d'un remboursement | avoir enregistré après `charge.refunded` (2026-11-26) | Montant remboursé, formule, bien, rétractation le cas échéant, ce que le vendeur conserve ; avoir Stripe en pièce jointe, ou lien ; un email par avoir |
 | Accusé de réception d'une rétractation | « Renoncer au contrat » (L1-40) | Date et heure de la demande, formule, remboursement sous 14 jours |
 | Admin : rétractation à rembourser | `plan.withdrawn` (L1-40) | Formule, bien, montant, date ; plusieurs en moins de 20 minutes : un seul email |
 | Formule qui se termine | `plan.ending`, 30 jours avant l'échéance (L1-40) | Date de fin, retour en Autonomie, renouvellement à demander par email |

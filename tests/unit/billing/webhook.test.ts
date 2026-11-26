@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => ({
   orders: [] as Record<string, unknown>[],
   creditNotes: [] as { paymentIntent: string; mockRefundedCents?: number }[],
   creditNoteStatus: "recorded" as "recorded" | "failed",
+  invoices: [] as string[],
+  attached: [] as unknown[],
 }));
 
 vi.mock("server-only", () => ({}));
@@ -29,9 +31,16 @@ vi.mock("@/leenkey/billing/credit-notes", () => ({
     return { status: mocks.creditNoteStatus };
   },
 }));
+vi.mock("@/leenkey/billing/documents", () => ({
+  orderInvoiceAttachment: async (sessionId: string) => {
+    mocks.invoices.push(sessionId);
+    return { filename: "facture-leenkey-LK-0001.pdf", content: "JVBERi0=" };
+  },
+}));
 vi.mock("@/leenkey/billing/emails", () => ({
-  emailPlanActivated: async () => {
+  emailPlanActivated: async (_order: unknown, invoice: unknown) => {
     mocks.emails.push("seller");
+    mocks.attached.push(invoice);
     return "logged";
   },
   emailPlanPurchased: async (order: Record<string, unknown>) => {
@@ -100,6 +109,8 @@ beforeEach(() => {
   mocks.orders = [];
   mocks.creditNotes = [];
   mocks.creditNoteStatus = "recorded";
+  mocks.invoices = [];
+  mocks.attached = [];
   mocks.rpcResult = {
     data: { status: "processed", plan_name: "Accompagné", reference: "LK-0009" },
     error: null,
@@ -138,6 +149,11 @@ describe("handleStripeEvent", () => {
       },
     ]);
     expect(mocks.emails.sort()).toEqual(["seller", "team"]);
+    // The invoice of that session goes with the email of the seller (Cédric, 2026-11-26).
+    expect(mocks.invoices).toEqual(["cs_test_1"]);
+    expect(mocks.attached).toEqual([
+      { filename: "facture-leenkey-LK-0001.pdf", content: "JVBERi0=" },
+    ]);
   });
 
   it("sends no email for an event already recorded", async () => {
@@ -187,6 +203,8 @@ describe("handleStripeEvent", () => {
     };
     expect(await handle(completed())).toEqual({ status: 200, outcome: "processed" });
     expect(mocks.emails).toEqual(["team"]);
+    // No email to the seller: no invoice asked of Stripe.
+    expect(mocks.invoices).toEqual([]);
     expect(mocks.orders[0]).toMatchObject({
       held: true,
       check: ["passage payé sans la formule inférieure en vigueur"],

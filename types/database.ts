@@ -547,6 +547,7 @@ export type Database = {
           issued_at: string
           number: string
           pdf_url: string | null
+          refund_emailed_at: string | null
           stripe_credit_note_id: string
           subscription_id: string
           updated_at: string | null
@@ -558,6 +559,7 @@ export type Database = {
           issued_at: string
           number: string
           pdf_url?: string | null
+          refund_emailed_at?: string | null
           stripe_credit_note_id: string
           subscription_id: string
           updated_at?: string | null
@@ -569,6 +571,7 @@ export type Database = {
           issued_at?: string
           number?: string
           pdf_url?: string | null
+          refund_emailed_at?: string | null
           stripe_credit_note_id?: string
           subscription_id?: string
           updated_at?: string | null
@@ -3626,6 +3629,14 @@ export type Database = {
           p_summary: string
         }
         Returns: string
+      }
+      credit_note_email_claim: {
+        Args: { p_credit_note_id: string }
+        Returns: boolean
+      }
+      credit_note_email_release: {
+        Args: { p_credit_note_id: string }
+        Returns: undefined
       }
       credit_notes_record: {
         Args: { p_actor?: string; p_payment_intent_id: string; p_notes: Json }

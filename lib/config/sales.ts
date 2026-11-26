@@ -48,3 +48,14 @@ export function paidPlansOrderable(
  * CGI). Any VAT written on an invoice would be due (article 283-3).
  */
 export const VAT_EXEMPTION_NOTICE = "TVA non applicable, article 293 B du CGI.";
+
+/**
+ * Printed in the header of the Stripe invoice of an order (Cédric,
+ * 2026-11-26: « Facture acquittée » once paid). Set when the order is
+ * created, and true all the same: Stripe draws the invoice of a Checkout
+ * Session only after the payment (« post-purchase invoice »), an unpaid
+ * order has no invoice. No date in it: the day of the payment is not known
+ * when the session is created (it can be paid an hour later, past
+ * midnight); the invoice carries its own date.
+ */
+export const INVOICE_PAID_FIELD = { name: "Paiement", value: "Facture acquittée" } as const;

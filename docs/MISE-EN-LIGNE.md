@@ -20,7 +20,7 @@ Sans les deux premiers, la bascule reste possible : le site ouvre avec la formul
 - [ ] **Stripe** (compte Leenkey, Nebula invité), mode réel :
   - trois prix en paiement unique, en euros, TTC : Accompagné 990 €, Sérénité 1 500 €, passage d'Accompagné à Sérénité 510 € ;
   - **pas de taux de taxe** : Leenkey est en franchise en base de TVA (`DECISIONS.md` 2026-11-25) ; `STRIPE_TAX_RATE` reste absente, et la facture Stripe porte « TVA non applicable, article 293 B du CGI. » (mis par le code) ;
-  - le numéro de TVA de la société (FR53 107 616 211) et son adresse dans les réglages des factures ; reçus et factures envoyés par email activés ;
+  - le numéro de TVA de la société (FR53 107 616 211) et son adresse dans les réglages des factures ; reçus et factures envoyés par email activés ; logo, identité et modèle des factures et des avoirs : `docs/STRIPE-DOCUMENTS.md` (2026-11-26 : le site joint lui-même la facture et l'avoir à ses emails) ;
   - un point de terminaison de webhook `https://leenkey.fr/api/webhooks/stripe`, événements `checkout.session.completed` et `charge.refunded` ; son secret va dans `STRIPE_WEBHOOK_SECRET`.
 - [ ] **Anthropic** (compte Leenkey) : une clé de production, plafond de dépense mensuel.
 - [ ] **Resend** (compte Leenkey) : domaine `leenkey.fr` vérifié (déjà le cas pour la V1 ; DNS chez IONOS), une clé pour le site et une clé dédiée au SMTP de Supabase Auth.

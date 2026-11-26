@@ -249,6 +249,7 @@ describe("emails of a plan", () => {
     cgvVersion: "17 octobre 2026",
     withdrawalUntil: "16 novembre 2026",
     mediator: null,
+    invoicesUrl: "https://leenkey.fr/vendeur/formule?bien=p1#factures",
     planUrl: "https://leenkey.fr/vendeur/formule",
     siteUrl: "https://leenkey.fr",
   };

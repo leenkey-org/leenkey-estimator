@@ -42,7 +42,12 @@ export type CheckoutInput = {
   idempotencyKey: string;
   /** Printed at the bottom of the Stripe invoice (a legal notice), when no tax rate applies. */
   invoiceFooter?: string;
+  /** Printed in the header of the Stripe invoice (« Paiement : Facture acquittée »). */
+  invoiceCustomFields?: readonly InvoiceCustomField[];
 };
+
+/** A line of the header of a Stripe invoice: 40 characters for the name, 140 for the value, 4 lines at most. */
+export type InvoiceCustomField = { name: string; value: string };
 
 export type CheckoutSession = { id: string; url: string };
 
@@ -126,15 +131,26 @@ export function checkoutLineItem(
 
 /**
  * The invoice of an order: its footer (a legal notice, e.g. a VAT
- * exemption) only when no tax rate applies, never both on one invoice.
+ * exemption) only when no tax rate applies, never both on one invoice; and
+ * the lines of its header (`custom_fields`). Checkout draws this invoice
+ * after the payment only (« post-purchase invoice »): what is written here
+ * is never shown on an unpaid invoice.
  */
 export function invoiceCreation(
   footer: string | undefined,
   taxRateId: string | undefined,
-): { enabled: true; invoice_data?: { footer: string } } {
-  return footer && !taxRateId?.trim()
-    ? { enabled: true, invoice_data: { footer } }
-    : { enabled: true };
+  customFields: readonly InvoiceCustomField[] = [],
+): {
+  enabled: true;
+  invoice_data?: { footer?: string; custom_fields?: InvoiceCustomField[] };
+} {
+  const data = {
+    ...(footer && !taxRateId?.trim() ? { footer } : {}),
+    ...(customFields.length > 0
+      ? { custom_fields: customFields.map(({ name, value }) => ({ name, value })) }
+      : {}),
+  };
+  return Object.keys(data).length > 0 ? { enabled: true, invoice_data: data } : { enabled: true };
 }
 
 export async function createCheckoutSession(input: CheckoutInput): Promise<CheckoutSession> {
@@ -160,6 +176,9 @@ export async function createCheckoutSession(input: CheckoutInput): Promise<Check
       // « Paiement sécurisé par carte via Stripe » (SPEC 8.8): the card only.
       allowed_payment_method_types: ["card"],
       customer_email: input.customerEmail,
+      // The billing address is asked on the payment page: Stripe prints it
+      // on the invoice of the order (Cédric, 2026-11-26).
+      billing_address_collection: "required",
       client_reference_id: input.clientReferenceId,
       metadata: input.metadata,
       payment_intent_data: { metadata: input.metadata },
@@ -167,7 +186,11 @@ export async function createCheckoutSession(input: CheckoutInput): Promise<Check
       cancel_url: input.cancelUrl,
       locale: "fr",
       expires_at: Math.floor(Date.now() / 1000) + SESSION_LIFETIME_SECONDS,
-      invoice_creation: invoiceCreation(input.invoiceFooter, process.env.STRIPE_TAX_RATE),
+      invoice_creation: invoiceCreation(
+        input.invoiceFooter,
+        process.env.STRIPE_TAX_RATE,
+        input.invoiceCustomFields,
+      ),
       allow_promotion_codes: true,
     },
     { idempotencyKey: input.idempotencyKey },
@@ -282,12 +305,13 @@ function mockCreditNote(paymentIntentId: string, amountCents: number): CreditNot
  * The credit notes of the refunds of a payment made by Checkout: those
  * missing are created on the invoice of the session, each linked to its
  * refund already made (`refunds`), so that Stripe never refunds a second
- * time (never `refund_amount` nor `out_of_band_amount`), and emailed to the
- * customer by Stripe (`email_type`). Idempotent: the refunds a credit note
+ * time (never `refund_amount` nor `out_of_band_amount`); Stripe emails
+ * nothing (`email_type: none`), the caller does. Idempotent: the refunds a credit note
  * of the invoice links are skipped, the total credited never exceeds the
  * total refunded (planCreditNotes), and each creation carries the key of
- * its refund: `memo` must stay the same from one call to the next (a
- * constant of the caller). Only the refunds that succeeded: a pending one
+ * its refund: `memo` must stay the same from one call to the next for a
+ * refund (a constant of the caller, chosen from facts that no longer
+ * change). Only the refunds that succeeded: a pending one
  * waits (`pending`), to ask again later. `mockRefundedCents`: what the mock
  * credits (STRIPE_MOCK=1), the amount refunded the caller was told.
  */
@@ -334,8 +358,11 @@ export async function ensureCreditNotes(input: {
         invoice,
         amount: plan.amountCents,
         refunds: [{ refund: plan.refundId, amount_refunded: plan.amountCents }],
-        reason: "order_change",
-        email_type: "credit_note",
+        // No `reason`: its values are a closed list of Stripe, printed as
+        // « Modification de commande »; the memo says why instead. No
+        // email of Stripe: Leenkey sends the credit note with its own
+        // confirmation of the refund (leenkey/billing/refund-emails.ts).
+        email_type: "none",
         ...(input.memo ? { memo: input.memo } : {}),
       },
       { idempotencyKey: creditNoteKey(plan.refundId) },
@@ -349,6 +376,82 @@ export async function ensureCreditNotes(input: {
     created: created.length,
     pending,
   };
+}
+
+/** The invoice of an order paid by Checkout, as Stripe holds it now. */
+export type InvoiceInfo = {
+  id: string;
+  /** « LK-0001 », null while Stripe has not finalized it. */
+  number: string | null;
+  /** The PDF Stripe draws: a fresh address at each reading, null while not finalized. */
+  pdfUrl: string | null;
+};
+
+/** The mocked invoice of a session (STRIPE_MOCK=1). */
+function mockInvoice(checkoutSessionId: string): InvoiceInfo {
+  const ref = checkoutSessionId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 60);
+  return { id: `in_mock_${ref}`, number: "MOCK-F-0001", pdfUrl: null };
+}
+
+/**
+ * The invoice of a Checkout Session (`invoice_creation`), read from Stripe:
+ * null when the session has none (yet: Stripe creates it once the payment
+ * is made, or never: ordered without invoice_creation).
+ */
+export async function checkoutInvoice(checkoutSessionId: string): Promise<InvoiceInfo | null> {
+  if (stripeMocked()) return mockInvoice(checkoutSessionId);
+  const session = await stripe().checkout.sessions.retrieve(checkoutSessionId, {
+    expand: ["invoice"],
+  });
+  const invoice = session.invoice;
+  if (!invoice) return null;
+  if (typeof invoice === "string") return { id: invoice, number: null, pdfUrl: null };
+  return { id: invoice.id, number: invoice.number, pdfUrl: invoice.invoice_pdf ?? null };
+}
+
+/** A credit note read again from Stripe: the address of its PDF is fresh. */
+export async function creditNotePdfUrl(creditNoteId: string): Promise<string | null> {
+  if (stripeMocked()) return null;
+  const note = await stripe().creditNotes.retrieve(creditNoteId);
+  return note.pdf || null;
+}
+
+/** What the mock gives for the PDF of an invoice or of a credit note: always these bytes. */
+export const MOCK_PDF = Buffer.from(
+  "%PDF-1.4\n% Leenkey STRIPE_MOCK: not a real document\n%%EOF\n",
+  "latin1",
+);
+
+/** A PDF of Stripe is a page or two: far under this (and under what an email carries). */
+export const PDF_MAX_BYTES = 5 * 1024 * 1024;
+const PDF_TIMEOUT_MS = 4_000;
+
+/**
+ * The bytes of a PDF Stripe draws (`invoice_pdf`, the `pdf` of a credit
+ * note): null when there is no address, when it is not https, when it does
+ * not answer in time, is too large or is not a PDF. Never throws: the
+ * caller falls back on a link. STRIPE_MOCK=1: MOCK_PDF, no call leaves.
+ */
+export async function downloadPdf(
+  url: string | null,
+  fetcher: typeof fetch = fetch,
+): Promise<Buffer | null> {
+  if (stripeMocked()) return MOCK_PDF;
+  if (!url || !url.startsWith("https://")) return null;
+  try {
+    const response = await fetcher(url, {
+      redirect: "follow",
+      signal: AbortSignal.timeout(PDF_TIMEOUT_MS),
+    });
+    if (!response.ok) return null;
+    const declared = Number(response.headers.get("content-length") ?? 0);
+    if (declared > PDF_MAX_BYTES) return null;
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (bytes.length === 0 || bytes.length > PDF_MAX_BYTES) return null;
+    return bytes.subarray(0, 5).toString("latin1") === "%PDF-" ? bytes : null;
+  } catch {
+    return null;
+  }
 }
 
 /** The page of a payment in the Stripe dashboard (`/test` outside production). */

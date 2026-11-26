@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { iconButtonVariants } from "@/components/shared/icon-button";
 import { InlineAlert } from "@/components/shared/inline-alert";
 import { getUser, requireProfile } from "@/core/auth/session";
-import { CreditNotes } from "@/leenkey/billing/components/credit-notes";
+import { Payments } from "@/leenkey/billing/components/payments";
 import { PaymentConfirmation } from "@/leenkey/billing/components/payment-confirmation";
 import { planFeatures } from "@/core/billing/plans";
 import { PlanComparison } from "@/leenkey/billing/components/plan-comparison";
@@ -54,8 +54,10 @@ function Body({ children }: { children: React.ReactNode }) {
 // webhook wrote; ?paiement=annule). A plan is chosen per property: the one of
 // ?bien=, else the one of « Ma vente »; under them, the comparison table of
 // 11 bis (L1-33). L1-40: « Renoncer au contrat » during the 14 days, above the
-// plans (« visible, directe et accessible »), then the date of the request;
-// once refunded, the credit notes (« Vos avoirs », DECISIONS.md 2026-11-25).
+// plans (« visible, directe et accessible »), then the date of the request.
+// Under the plans, « Mes factures et paiements » (DECISIONS.md 2026-11-26):
+// every payment of the seller, its invoice and the credit notes of its
+// refunds (?document=indisponible: a download that could not be served).
 export default async function PlanPage({ searchParams }: Props) {
   const profile = await requireProfile();
   const query = await searchParams;
@@ -229,7 +231,6 @@ export default async function PlanPage({ searchParams }: Props) {
             requestedAt={withdrawal.withdrawalRequestedAt}
           />
         ) : null}
-        <CreditNotes notes={data.creditNotes} />
         {sold ? <InlineAlert tone="info">{t.sold}</InlineAlert> : null}
         {!sold && !paidPlansOrderable() ? (
           <InlineAlert
@@ -270,6 +271,10 @@ export default async function PlanPage({ searchParams }: Props) {
               ? `${SALES_TERMS.mediator.name}, ${SALES_TERMS.mediator.url}`
               : null
           }
+        />
+        <Payments
+          payments={data.payments}
+          documentUnavailable={first(query.document) === "indisponible"}
         />
         {features ? <PlanComparison plans={data.plans} features={features} /> : null}
       </Body>

@@ -12,6 +12,16 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-26 · Factures, avoirs et emails des formules · PR #150
+- Ajouté : la facture Stripe en pièce jointe de l'email de confirmation de souscription (`plan.activated`) ; à défaut de PDF (facture pas encore prête, Stripe injoignable), un lien vers « Mes factures et paiements » : l'email part toujours.
+- Ajouté : email « Confirmation de votre remboursement » au vendeur (`emails/plan-refunded.tsx`), un par avoir, avec l'avoir en pièce jointe (ou le lien), le montant, la formule et ce que le vendeur conserve ; envoyé après l'enregistrement de l'avoir, par le webhook `charge.refunded` comme par « Créer l'avoir » du back office.
+- Ajouté : sur `/vendeur/formule`, « Mes factures et paiements » (à la place de « Vos avoirs ») : chaque paiement du compte, son statut (« Payé », « Remboursé en partie », « Remboursé »), « Télécharger la facture » et les avoirs, le plus récent en haut ; états vide et d'erreur. Les PDF passent par `/vendeur/formule/document` (session, adresse fraîche demandée à Stripe).
+- Modifié : commande Stripe : adresse de facturation obligatoire (`billing_address_collection`), ligne « Paiement : Facture acquittée » dans l'en-tête de la facture (`custom_fields`).
+- Modifié : avoirs Stripe : plus de `reason` (« Modification de commande ») ; note « Remboursement suite à l'exercice du droit de rétractation. TVA non applicable, article 293 B du CGI. » (ou « Remboursement. … » sans rétractation) ; Stripe n'envoie plus l'avoir (`email_type: none`), l'email Leenkey le porte. Clé d'idempotence et lien au remboursement inchangés.
+- Ajouté : `docs/STRIPE-DOCUMENTS.md`, les réglages du tableau de bord Stripe à faire par Cédric (image de marque, informations publiques, modèle de facture, emails aux clients).
+- Migration : `20261126150000_billing_documents.sql` (`credit_notes.refund_emailed_at`, `credit_note_email_claim`, `credit_note_email_release`, service role seulement ; politiques et droits de `credit_notes` inchangés).
+- Tests : `supabase/tests/rls_billing_documents.sql` (21), `tests/unit/billing/documents.test.ts`, `refund-emails.test.ts`, `payments.test.ts`, mises à jour de `tax`, `checkout`, `webhook`, `credit-notes-stripe`, `credit-notes-record` ; `tests/e2e/billing-page.spec.ts` et `billing.spec.ts` (section, facture du mock, 404 pour un autre compte).
+
 ### 2026-11-26 · Cockpit : navigation en colonne (acquéreur et vendeur) · PR #149
 - Ajouté : à partir de 1 024 px, une colonne à gauche des pages de l'espace connecté (`SpaceSidebar`, `app/(app)/layout.tsx`) : carte du compte (initiale, nom, email) et navigation de l'espace courant, page courante sur une pastille teintée. Acquéreur : Vue d'ensemble, Mes favoris, Mes alertes, Messages, Mon projet d'achat, Documents partagés, puis Chercher, Vendre, Mon compte. Vendeur : Ma vente, Dossier, Messages, Ma formule, puis Acheter, Mon compte. Pas de colonne sur la messagerie, les formulaires en étapes, l'assistant ni le back office ; rien ne change sous 1 024 px.
 - Modifié : accueil de l'acquéreur `/acquereur` : titre et phrase sur fond clair (plus de bandeau bleu), la dernière recherche sur un panneau teinté, puis des cartes bordées « Titre · n » (dossier, visites, offres, favoris, conversations, alertes, documents partagés, services).

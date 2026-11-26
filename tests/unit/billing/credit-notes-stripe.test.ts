@@ -2,8 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // The credit notes of the refunds against the Stripe SDK, simulated
 // (core/billing/stripe.ts, DECISIONS.md 2026-11-25): what is sent to create
-// one (linked to its refund, never a new refund, its idempotency key, the
-// email), what is skipped (pending refunds, refunds already linked), the
+// one (linked to its refund, never a new refund, its idempotency key, no
+// reason of Stripe and no email of Stripe: DECISIONS.md 2026-11-26), what is
+// skipped (pending refunds, refunds already linked), the
 // cap when a credit note was made by hand, the order without an invoice,
 // the credit notes voided since.
 
@@ -88,7 +89,7 @@ async function ensure() {
 }
 
 describe("ensureCreditNotes", () => {
-  it("links the refund already made, with its key and the email, never a new refund", async () => {
+  it("links the refund already made, with its key and its memo, never a new refund", async () => {
     sdk.refunds = [{ id: "re_1", amount: 99000, status: "succeeded" }];
     const result = await ensure();
     expect(sdk.created).toEqual([
@@ -97,8 +98,7 @@ describe("ensureCreditNotes", () => {
           invoice: "in_1",
           amount: 99000,
           refunds: [{ refund: "re_1", amount_refunded: 99000 }],
-          reason: "order_change",
-          email_type: "credit_note",
+          email_type: "none",
           memo: "Avoir de test",
         },
         options: { idempotencyKey: "credit-note-re_1" },
@@ -106,6 +106,8 @@ describe("ensureCreditNotes", () => {
     ]);
     expect(sdk.created[0]?.params).not.toHaveProperty("refund_amount");
     expect(sdk.created[0]?.params).not.toHaveProperty("out_of_band_amount");
+    // « Modification de commande » is no longer printed: the memo says why.
+    expect(sdk.created[0]?.params).not.toHaveProperty("reason");
     expect(result).toMatchObject({
       status: "ok",
       created: 1,

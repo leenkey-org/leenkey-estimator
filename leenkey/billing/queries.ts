@@ -5,6 +5,7 @@ import { sellerProperties } from "@/leenkey/properties/queries";
 import { propertyName } from "@/leenkey/properties/sheet";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
+import { sellerPayments, type SellerPayment } from "./payments";
 
 // Reads of /vendeur/formule (L1-26, SPEC-V2 8.8), with the seller's session:
 // the RLS gives them their properties and their subscriptions; the plan in
@@ -39,15 +40,58 @@ export type PlanPage = {
     /** The plan this one replaced (a passage), still renounceable with it. */
     replaced: { plan: PlanCode; activatedAt: string; amountPaidCents: number } | null;
   } | null;
-  /** The credit notes of the refunds of the plans of this property (DECISIONS.md 2026-11-25). */
-  creditNotes: {
-    id: string;
-    number: string;
-    amountCents: number;
-    pdfUrl: string | null;
-    issuedAt: string;
-  }[];
+  /**
+   * « Mes factures et paiements » (DECISIONS.md 2026-11-26): every payment
+   * of the seller, for all their properties, with its invoice and the
+   * credit notes of its refunds; null when they could not be read (the
+   * plans are shown all the same).
+   */
+  payments: SellerPayment[] | null;
 };
+
+type Client = Awaited<ReturnType<typeof createClient>>;
+
+/** The payments of a seller, read with their session; null when the read failed. */
+async function paymentsOf(
+  supabase: Client,
+  profileId: string,
+  planNames: Partial<Record<PlanCode, string>>,
+  propertyNames: Record<string, string>,
+): Promise<SellerPayment[] | null> {
+  // Their own only, even for an account that is also admin (the RLS gives the team every row).
+  const subscriptions = await supabase
+    .from("subscriptions")
+    .select(
+      "id, property_id, plan, amount_paid_cents, activated_at, refunded_at, stripe_checkout_session_id",
+    )
+    .eq("owner_id", profileId)
+    .gt("amount_paid_cents", 0)
+    .order("activated_at", { ascending: false })
+    .limit(200);
+  if (subscriptions.error) {
+    console.error("[billing] payments read failed", {
+      user_id: profileId,
+      code: subscriptions.error.code,
+    });
+    return null;
+  }
+  if (subscriptions.data.length === 0) return [];
+  const creditNotes = await supabase
+    .from("credit_notes")
+    .select("id, subscription_id, number, amount_cents, pdf_url, issued_at")
+    .in(
+      "subscription_id",
+      subscriptions.data.map((row) => row.id),
+    );
+  if (creditNotes.error) {
+    console.error("[billing] payments read failed", {
+      user_id: profileId,
+      code: creditNotes.error.code,
+    });
+    return null;
+  }
+  return sellerPayments(subscriptions.data, creditNotes.data, planNames, propertyNames);
+}
 
 /** The plans of a property of the seller: the one asked (?bien=), else the one of « Ma vente ». */
 export async function planPage(
@@ -60,7 +104,7 @@ export async function planPage(
   if (!property) return { ok: true, data: null };
   try {
     const supabase = await createClient();
-    const [progress, subscription, seller, creditNotes] = await Promise.all([
+    const [progress, subscription, seller, payments] = await Promise.all([
       supabase.rpc("property_current_plan", { p: property.id }),
       supabase
         .from("subscriptions")
@@ -75,18 +119,15 @@ export async function planPage(
         .limit(1)
         .maybeSingle(),
       supabase.from("profiles").select("first_name, last_name").eq("id", profileId).maybeSingle(),
-      // The RLS gives the owner the credit notes of their plans only.
-      supabase
-        .from("credit_notes")
-        .select(
-          "id, number, amount_cents, pdf_url, issued_at, subscription:subscriptions!inner(property_id)",
-        )
-        .eq("subscription.property_id", property.id)
-        .order("issued_at", { ascending: true }),
+      paymentsOf(
+        supabase,
+        profileId,
+        Object.fromEntries(plans.map((plan) => [plan.code, plan.name])),
+        Object.fromEntries(properties.data.map((item) => [item.id, propertyName(item)])),
+      ),
     ]);
     if (progress.error) throw new Error(`property_current_plan: ${progress.error.code}`);
     if (subscription.error) throw new Error(`subscriptions: ${subscription.error.code}`);
-    if (creditNotes.error) throw new Error(`credit_notes: ${creditNotes.error.code}`);
     const current = progress.data ?? "autonomie";
     const active = subscription.data;
     // A passage: the plan replaced, not renounced nor refunded, paid.
@@ -143,13 +184,7 @@ export async function planPage(
                   : null,
               }
             : null,
-        creditNotes: creditNotes.data.map((note) => ({
-          id: note.id,
-          number: note.number,
-          amountCents: note.amount_cents,
-          pdfUrl: note.pdf_url,
-          issuedAt: note.issued_at,
-        })),
+        payments,
       },
     };
   } catch (error) {

@@ -179,6 +179,31 @@ test("payer Accompagné : retour de Stripe, confirmation par le webhook, une seu
   // L1-40: « Renoncer au contrat » offered during the 14 days (used at the end).
   await expect(page.getByRole("button", { name: "Renoncer au contrat" })).toBeVisible();
 
+  // « Mes factures et paiements » (2026-11-26): the payment and its invoice,
+  // a PDF served to its owner (the mocked one here).
+  const payments = page.getByRole("region", { name: "Mes factures et paiements" });
+  const paid = payments.getByRole("listitem").filter({ hasText: "Formule Accompagné" });
+  await expect(paid).toContainText(/Payé le .+ · 990\s€/);
+  await expect(paid.getByText("Payé", { exact: true })).toBeVisible();
+  const invoice = paid.getByRole("link", {
+    name: /^Télécharger la facture de la formule Accompagné/,
+  });
+  const invoiceHref = (await invoice.getAttribute("href")) ?? "";
+  expect(invoiceHref).toMatch(/^\/vendeur\/formule\/document\?facture=[0-9a-f-]{36}$/);
+  const pdf = await page.request.get(invoiceHref);
+  expect(pdf.status()).toBe(200);
+  expect(pdf.headers()["content-type"]).toBe("application/pdf");
+  expect((await pdf.body()).subarray(0, 5).toString("latin1")).toBe("%PDF-");
+  // Nobody else's: a 404 for an id that is not theirs, never a document.
+  expect(
+    (
+      await page.request.get(
+        "/vendeur/formule/document?facture=5eed4000-0000-4000-8000-000000000001",
+      )
+    ).status(),
+  ).toBe(404);
+  expect((await page.request.get("/vendeur/formule/document")).status()).toBe(404);
+
   // The seller's bell says it.
   await page.goto(`/vendeur?bien=${LK0009}`);
   await page
@@ -437,12 +462,19 @@ test("rétractation à rembourser, remboursement dans Stripe, puis avoir pour l'
   await expect(done).toContainText("Avoir MOCK-0001");
   await expect(done.getByText("Avoir à créer")).toHaveCount(0);
 
-  // The seller sees the credit note on the page of the plans.
+  // The seller sees the payment refunded and its credit note on the page of the plans.
   const context = await browser.newContext({ baseURL });
   const seller = await context.newPage();
   await signIn(seller, "seller_b", planPage(LK0009));
-  const notes = seller.getByRole("region", { name: "Vos avoirs" });
-  await expect(notes).toContainText(/Avoir MOCK-0001 · 510\s€ · /);
+  const payments = seller.getByRole("region", { name: "Mes factures et paiements" });
+  const refunded = payments
+    .getByRole("listitem")
+    .filter({ hasText: "Formule Sérénité" })
+    .filter({ hasText: /Avoir MOCK-0001 · 510\s€ · / });
+  await expect(refunded.first()).toContainText("Remboursé");
+  await expect(
+    refunded.first().getByRole("link", { name: /Télécharger la facture/ }),
+  ).toBeVisible();
   await expectNoSeriousViolation(seller);
   await context.close();
 });

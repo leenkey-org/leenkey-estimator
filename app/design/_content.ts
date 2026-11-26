@@ -1010,6 +1010,7 @@ export const emails = {
     accountsCreated: "Nouveau compte (équipe)",
     planActivated: "Formule activée, récapitulatif de la commande (vendeur)",
     withdrawalReceived: "Accusé de réception d'une rétractation (vendeur)",
+    planRefunded: "Confirmation d'un remboursement, avec son avoir (vendeur)",
     withdrawalsToProcess: "Rétractations à rembourser (équipe)",
     planEnding: "Formule qui se termine dans 30 jours (vendeur)",
     offersAccepted: "Offre acceptée sur une vente avec conseiller (équipe)",

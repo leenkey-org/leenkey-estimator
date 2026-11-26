@@ -63,6 +63,15 @@ export const withdrawalResultSchema = z.object({
   replaced_activated_at: z.string().optional(),
 });
 
+/**
+ * The download of a document of « Mes factures et paiements »: the invoice
+ * of a payment (`facture`, its subscription) or a credit note (`avoir`, its
+ * row), one of the two.
+ */
+export const documentQuerySchema = z
+  .object({ facture: z.string().uuid().optional(), avoir: z.string().uuid().optional() })
+  .refine((query) => Boolean(query.facture) !== Boolean(query.avoir));
+
 /** The upgrade prompts (L2-09, SPEC-V2 11 bis), in the order a page chooses them. */
 export const UPGRADE_TRIGGERS = [
   "offer_accepted",

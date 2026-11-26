@@ -133,6 +133,9 @@ describe("startCheckout", () => {
     const session = mocks.sessions[0];
     expect(session).toMatchObject({
       priceId: "price_a",
+      // The invoice Stripe draws once paid (Cédric, 2026-11-26).
+      invoiceFooter: "TVA non applicable, article 293 B du CGI.",
+      invoiceCustomFields: [{ name: "Paiement", value: "Facture acquittée" }],
       customerEmail: "bruno@exemple.test",
       clientReferenceId: input.propertyId,
       successUrl: `https://leenkey-v2.vercel.app/vendeur/formule?bien=${input.propertyId}&paiement=ok&session_id={CHECKOUT_SESSION_ID}`,

@@ -45,7 +45,7 @@ export const frAdminRefunds = {
     missing: "Avoir à créer",
     create: "Créer l'avoir",
     creating: "Création…",
-    created: "Avoir créé et envoyé au vendeur par Stripe.",
+    created: "Avoir créé et envoyé au vendeur.",
     nothing:
       "Aucun avoir de plus à créer : le remboursement est peut-être encore en cours chez Stripe. Réessayez dans quelques minutes.",
     errors: {
