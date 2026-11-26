@@ -39,7 +39,18 @@ export function CreditNoteRetry({ subscriptionId }: { subscriptionId: string }) 
         setMessage({ tone: "error", text: t.errors[result.error] });
         return;
       }
-      setMessage({ tone: "ok", text: result.data.created > 0 ? t.created : t.nothing });
+      const { created, emails } = result.data;
+      setMessage({
+        tone: emails.failed > 0 ? "error" : "ok",
+        text:
+          created === 0
+            ? t.nothing
+            : emails.failed > 0
+              ? t.createdNotEmailed
+              : emails.sent > 0
+                ? t.createdEmailed
+                : t.created,
+      });
       router.refresh();
     });
   };

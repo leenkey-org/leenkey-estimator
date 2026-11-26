@@ -14,6 +14,7 @@ import { pillClassName, StatusBadge } from "@/components/shared/status-badge";
 import { requireAdmin } from "@/core/auth/session";
 import { dashboardPaymentUrl } from "@/core/billing/stripe";
 import { CreditNoteRetry } from "@/leenkey/admin/components/credit-note-retry";
+import { RefundEmailResend } from "@/leenkey/admin/components/refund-email-resend";
 import { adminMetadata } from "@/leenkey/admin/metadata";
 import { adminRefunds, refundCounts, type AdminRefundRow } from "@/leenkey/admin/refunds/queries";
 import {
@@ -28,6 +29,7 @@ import {
   waitsForRefund,
   withdrawalPending,
 } from "@/leenkey/admin/refunds/status";
+import { pendingRefundEmails } from "@/leenkey/billing/refund-emails";
 import { legalDate } from "@/leenkey/billing/withdrawal";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { formatAmount } from "@/lib/format";
@@ -103,7 +105,8 @@ function StripeLink({ row, now }: { row: AdminRefundRow; now: Date }) {
   );
 }
 
-function CreditNoteCell({ row }: { row: AdminRefundRow }) {
+/** `emailPending`: a credit note of this plan whose email to the seller did not leave. */
+function CreditNoteCell({ row, emailPending }: { row: AdminRefundRow; emailPending: boolean }) {
   const state = creditNoteState(row);
   const notes = row.creditNotes.map((note) =>
     note.pdfUrl ? (
@@ -123,11 +126,14 @@ function CreditNoteCell({ row }: { row: AdminRefundRow }) {
       </span>
     ),
   );
-  if (state !== "missing" && notes.length === 0) return null;
+  if (state !== "missing" && notes.length === 0 && !emailPending) return null;
   return (
     <div className="flex flex-col items-start gap-1 text-lk-secondary">
       {notes}
       {state === "missing" ? <CreditNoteRetry subscriptionId={row.subscriptionId} /> : null}
+      {state !== "missing" && emailPending ? (
+        <RefundEmailResend subscriptionId={row.subscriptionId} />
+      ) : null}
     </div>
   );
 }
@@ -235,6 +241,12 @@ export default async function AdminRefundsPage() {
   await requireAdmin();
   const list = await adminRefunds();
   const now = new Date();
+  // The credit notes whose email to the seller did not leave: « Renvoyer
+  // l'email » (a read that fails shows none, the page stays usable).
+  const pending = list.ok
+    ? await pendingRefundEmails(list.data.map((row) => row.subscriptionId))
+    : null;
+  const unsent = new Set((pending ?? []).map((email) => email.subscriptionId));
 
   let content: ReactNode;
   if (!list.ok) {
@@ -282,7 +294,7 @@ export default async function AdminRefundsPage() {
               <p className="text-lk-caption">
                 <RequestDates row={row} now={now} />
               </p>
-              <CreditNoteCell row={row} />
+              <CreditNoteCell row={row} emailPending={unsent.has(row.subscriptionId)} />
               <StripeLink row={row} now={now} />
             </li>
           ))}
@@ -322,7 +334,7 @@ export default async function AdminRefundsPage() {
                   {/* The credit note under the status: seven columns do not fit beside the sidebar. */}
                   <div className="flex flex-col items-start gap-1.5">
                     <StatusPill row={row} now={now} />
-                    <CreditNoteCell row={row} />
+                    <CreditNoteCell row={row} emailPending={unsent.has(row.subscriptionId)} />
                   </div>
                 </DataTableCell>
               </DataTableRow>
