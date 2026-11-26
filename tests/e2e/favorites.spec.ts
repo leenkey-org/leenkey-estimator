@@ -7,14 +7,18 @@ import { expect, test, type Page } from "@playwright/test";
 // listings, one per project, so that the two projects can run at the same
 // time and the order of the search results does not matter. The last test
 // removes the offline favourite of buyer_c: npm run db:seed puts it back.
-// Named lists (DECISIONS.md 2026-11-26): seller_a again, with a listing and
-// list names of its own; the test removes what it made, before and after.
+// Named lists (DECISIONS.md 2026-11-26): seller_a again, on the listing of
+// its project (LK-0009, LK-0011: no spec takes them offline) and with list
+// names of its project; the test removes what it made, before and after.
+// The tests of this file run one after the other in each project (not
+// fullyParallel): two of them use the same favourite of seller_a.
 
 const seeded = process.env.E2E_SEED === "1";
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
 /** The heart of a listing: over the photo on a phone, « Enregistrer » beside the title from 1024 px (L1-60). */
 const HEART = /^(Ajouter aux favoris|Enregistrer)$/;
 
+test.describe.configure({ mode: "default" });
 test.skip(!seeded || !SEED_PASSWORD, "comptes de seed requis (E2E_SEED=1 et SEED_PASSWORD)");
 
 /** Published seed listings of seller_b (supabase/seed/05_demo_data.sql). */
@@ -22,7 +26,6 @@ const LISTINGS = {
   mobile: "/annonce/appartement-3-pieces-viry-chatillon-lk0009",
   desktop: "/annonce/appartement-3-pieces-chilly-mazarin-lk0011",
   failure: "/annonce/appartement-2-pieces-athis-mons-lk0012",
-  lists: "/annonce/maison-7-pieces-ballainvilliers-lk0013",
 } as const;
 
 /** Signs a seed account in and lands on `path` (terms gate as in navigation.spec.ts). */
@@ -175,10 +178,10 @@ test("listes de favoris : créer, ranger, filtrer, renommer, supprimer", async (
   page,
   isMobile,
 }) => {
-  test.skip(!isMobile, "un seul passage suffit");
-  const href = LISTINGS.lists;
-  const NAME = "Liste E2E";
-  const RENAMED = "Liste E2E renommée";
+  const href = isMobile ? LISTINGS.mobile : LISTINGS.desktop;
+  // Names of the project: the two projects work on the lists of seller_a at the same time.
+  const NAME = isMobile ? "Liste E2E mobile" : "Liste E2E desktop";
+  const RENAMED = `${NAME} renommée`;
   const pills = page.getByRole("navigation", { name: "Listes de favoris" });
   const pill = (name: string) => pills.getByRole("link", { name: new RegExp(`^${name} · \\d+$`) });
   const status = (text: string) => page.getByRole("status").filter({ hasText: text });
@@ -213,8 +216,17 @@ test("listes de favoris : créer, ranger, filtrer, renommer, supprimer", async (
 
   // A name is required; the list then shows among the filters, empty.
   await page.getByRole("button", { name: "Nouvelle liste" }).click();
+  // The dialog opens on its field; a refusal brings the focus back to it.
+  await expect(dialog.getByLabel("Nom de la liste")).toBeFocused();
   await dialog.getByRole("button", { name: "Créer la liste" }).click();
   await expect(dialog.getByText("Donnez un nom à la liste.")).toBeVisible();
+  await expect(dialog.getByLabel("Nom de la liste")).toBeFocused();
+  // Not the name of a filter of the page.
+  await dialog.getByLabel("Nom de la liste").fill(" sans  LISTE ");
+  await dialog.getByRole("button", { name: "Créer la liste" }).click();
+  await expect(
+    dialog.getByText("« Tous » et « Sans liste » sont déjà les noms de deux filtres."),
+  ).toBeVisible();
   await dialog.getByLabel("Nom de la liste").fill(NAME);
   await dialog.getByRole("button", { name: "Créer la liste" }).click();
   await expect(status(`La liste « ${NAME} » est créée.`)).toBeVisible();

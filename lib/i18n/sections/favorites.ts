@@ -55,6 +55,9 @@ export const frFavorites = {
       required: "Donnez un nom à la liste.",
       tooLong: (max: number) => `Le nom ne peut pas dépasser ${max}\u00A0caractères.`,
       duplicate: "Vous avez déjà une liste de ce nom.",
+      // « Tous » and « Sans liste » name the two filters of the page.
+      reserved:
+        "« Tous » et « Sans liste » sont déjà les noms de deux filtres. Choisissez un autre nom.",
       limit: (max: number) =>
         `Vous avez déjà ${max}\u00A0listes. Supprimez-en une pour en créer une nouvelle.`,
       missing: "Cette liste n'existe plus. Actualisez la page.",

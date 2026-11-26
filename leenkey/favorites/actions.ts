@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import { getProfile } from "@/core/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { chunk } from "@/lib/utils";
+import type { ZodError } from "zod";
 import {
+  RESERVED_LIST_NAME_ISSUE,
   favoriteListCreateSchema,
   favoriteListDeleteSchema,
   favoriteListRenameSchema,
@@ -101,11 +103,13 @@ export async function clearOfflineFavorites(): Promise<
 // ---------------------------------------------------------------------------
 
 /**
+ * reserved: the name of a filter of the page (« Tous », « Sans liste »);
  * duplicate: the account already has a list of that name; limit: 20 lists;
  * missing: the list or the favourite is gone (deleted from another tab).
  */
 export type FavoriteListError =
   | "invalid"
+  | "reserved"
   | "auth"
   | "duplicate"
   | "limit"
@@ -113,6 +117,13 @@ export type FavoriteListError =
   | "unavailable";
 
 export type FavoriteListResult<T> = { ok: true; data: T } | { ok: false; error: FavoriteListError };
+
+/** Why a name was refused before any query. */
+function nameIssue(error: ZodError): FavoriteListError {
+  return error.issues.some((issue) => issue.message === RESERVED_LIST_NAME_ISSUE)
+    ? "reserved"
+    : "invalid";
+}
 
 /** What Postgres refused, as the error the interface explains. */
 function listError(code: string | undefined): FavoriteListError {
@@ -129,7 +140,7 @@ export async function createFavoriteList(
   input: unknown,
 ): Promise<FavoriteListResult<{ id: string; name: string }>> {
   const parsed = favoriteListCreateSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: "invalid" };
+  if (!parsed.success) return { ok: false, error: nameIssue(parsed.error) };
   const profile = await getProfile();
   if (!profile) return { ok: false, error: "auth" };
   const supabase = await createClient();
@@ -153,7 +164,7 @@ export async function renameFavoriteList(
   input: unknown,
 ): Promise<FavoriteListResult<{ id: string; name: string }>> {
   const parsed = favoriteListRenameSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: "invalid" };
+  if (!parsed.success) return { ok: false, error: nameIssue(parsed.error) };
   const profile = await getProfile();
   if (!profile) return { ok: false, error: "auth" };
   const { listId, name } = parsed.data;
@@ -229,6 +240,13 @@ export async function moveFavoriteToList(
   if (error) {
     // 42501: not a list of the account (deleted from another tab, forged).
     const reason = error.code === "42501" ? "missing" : listError(error.code);
+    if (error.code === "42501") {
+      console.warn("[favorites] favourite not filed: not a list of the account", {
+        user_id: profile.id,
+        entity_id: listingId,
+        list_id: listId,
+      });
+    }
     if (reason === "unavailable") {
       console.error("[favorites] favourite not filed", {
         user_id: profile.id,

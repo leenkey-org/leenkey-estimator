@@ -27,6 +27,7 @@ import { ROUTES } from "@/leenkey/navigation/config";
 import { toPropertyCard } from "@/leenkey/search/cards";
 import { frFavorites } from "@/lib/i18n/sections/favorites";
 import { cn } from "@/lib/utils";
+import { FAVORITE_LISTS_MAX } from "@/lib/validations/favorites";
 import { SpacePage } from "../../_components/space-page";
 
 // The texts this module shows (lib/i18n/sections, P-06).
@@ -104,7 +105,11 @@ export default async function FavouritesPage({
               }))}
             />
           ) : null}
-          <NewFavoriteList scope={scope} className="shrink-0 self-start" />
+          <NewFavoriteList
+            scope={scope}
+            full={lists.length >= FAVORITE_LISTS_MAX}
+            className="shrink-0"
+          />
         </div>
       ) : null}
       {filter.kind === "list" ? (

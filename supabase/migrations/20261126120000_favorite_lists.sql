@@ -31,11 +31,16 @@ create trigger favorite_lists_set_updated_at before update on public.favorite_li
 
 -- 20 lists per account. Security invoker: the count is the owner's own rows
 -- (favorite_lists_insert_own only lets an account insert for itself). The
--- lock makes two inserts of the same account wait for each other.
+-- lock makes two inserts of the same account wait for each other. It is
+-- taken on the caller, not on the owner written in the row: this trigger runs
+-- before the policy refuses a row for someone else, and such a row must not
+-- hold the lock of that account. Without a session (service role, seed), on
+-- the owner of the row.
 create function public.favorite_lists_limit() returns trigger
 language plpgsql security invoker set search_path = '' as $$
 begin
-  perform pg_advisory_xact_lock(hashtextextended('favorite_lists_limit:' || new.owner_id::text, 0));
+  perform pg_advisory_xact_lock(hashtextextended(
+    'favorite_lists_limit:' || coalesce(auth.uid(), new.owner_id)::text, 0));
   if (select count(*) from public.favorite_lists where owner_id = new.owner_id) >= 20 then
     raise exception 'favorite_lists_per_account' using errcode = '54000';
   end if;

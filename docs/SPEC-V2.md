@@ -1095,8 +1095,8 @@ Matrice (L = lecture, E = écriture) :
 | `estimations` | création via la fonction `estimation_record()` (`security definer`, appelée par `/api/estimate`) ; aucune lecture | L les siennes ; rattachement via `estimation_claim(token)` | L les siennes | L tous |
 | `listings` | L si `published` | L/E ses annonces sauf si `suspended` (lecture seule) ; `status` uniquement via fonctions : `draft`↔`pending`, `published`↔`paused`, `→sold` ; jamais vers ou depuis `suspended` | L si `published` | L/E tous ; seul rôle autorisé à `→suspended` et `suspended→published/paused` |
 | `photos` | via route `/img` | L/E ses biens | via route `/img` | L tous |
-| `favorites` | — | — | L/E les siens ; `list_id` : seule colonne modifiable, vers une de ses listes ou aucune | L |
-| `favorite_lists` | — | L/E les siennes (tout compte connecté ; création par un compte actif, 20 au plus ; seul `name` se modifie) | L/E les siennes (idem) | L |
+| `favorites` | — | L/E les siens (tout compte connecté enregistre des favoris ; `list_id` : seule colonne modifiable, vers une de ses listes ou aucune) | L/E les siens (idem) | L |
+| `favorite_lists` | — | L/E les siennes (tout compte connecté ; création par un compte actif, 20 au plus ; seul `name` se modifie ; un compte suspendu renomme, supprime et range encore) | L/E les siennes (idem) | L |
 | `plans` | L | L | L | L/E |
 | `subscriptions` | — | L les siennes | — | L tous |
 | `legal_acceptances` | — | L les siennes (écriture par fonction à l'inscription et à la commande) | L les siennes | L tous |

@@ -14,6 +14,8 @@ import {
   favoriteListRenameSchema,
   favoriteMoveSchema,
   favoriteSchema,
+  isReservedListName,
+  RESERVED_LIST_NAME_ISSUE,
 } from "@/lib/validations/favorites";
 
 // L1-18: input of the setFavorite action, ids split for the `.in()` filters.
@@ -40,6 +42,27 @@ describe("named lists of favourites: inputs", () => {
       );
       expect(favoriteListRenameSchema.safeParse({ listId, name }).success).toBe(false);
     }
+  });
+
+  it("refuses the names of the two filters of the page, whatever their case and spaces", () => {
+    for (const name of ["Tous", " tous ", "TOUS", "Sans liste", "sans   LISTE", "\tSans liste\n"]) {
+      expect(isReservedListName(name), JSON.stringify(name)).toBe(true);
+      const created = favoriteListCreateSchema.safeParse({ name });
+      expect(created.success, JSON.stringify(name)).toBe(false);
+      expect(created.error?.issues.map((issue) => issue.message)).toEqual([
+        RESERVED_LIST_NAME_ISSUE,
+      ]);
+      expect(favoriteListRenameSchema.safeParse({ listId, name }).success).toBe(false);
+    }
+    for (const name of ["Tous les biens", "Toussus-le-Noble", "Sans liste d'attente", "Tout"]) {
+      expect(isReservedListName(name), name).toBe(false);
+      expect(favoriteListCreateSchema.parse({ name }).name).toBe(name);
+    }
+    // An empty or too long name is not told as a reserved one.
+    const empty = favoriteListCreateSchema.safeParse({ name: " " });
+    expect(empty.error?.issues.some((issue) => issue.message === RESERVED_LIST_NAME_ISSUE)).toBe(
+      false,
+    );
   });
 
   it("asks the id of the list to rename or delete", () => {

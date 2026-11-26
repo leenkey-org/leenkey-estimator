@@ -1,6 +1,7 @@
 "use client";
 
-import { useOptimistic, useRef, useState, useTransition } from "react";
+import { useId, useOptimistic, useRef, useState, useTransition } from "react";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/shared/button";
@@ -9,7 +10,11 @@ import { Input } from "@/components/shared/input";
 import { Select } from "@/components/shared/select";
 import { frFavorites } from "@/lib/i18n/sections/favorites";
 import { cn } from "@/lib/utils";
-import { FAVORITE_LIST_NAME_MAX, FAVORITE_LISTS_MAX } from "@/lib/validations/favorites";
+import {
+  FAVORITE_LIST_NAME_MAX,
+  FAVORITE_LISTS_MAX,
+  isReservedListName,
+} from "@/lib/validations/favorites";
 import {
   createFavoriteList,
   deleteFavoriteList,
@@ -39,6 +44,8 @@ function nameError(error: FavoriteListError, name: string): NameError {
         field: name.trim() === "" ? t.errors.required : t.errors.tooLong(FAVORITE_LIST_NAME_MAX),
         dialog: null,
       };
+    case "reserved":
+      return { field: t.errors.reserved, dialog: null };
     case "duplicate":
       return { field: t.errors.duplicate, dialog: null };
     case "limit":
@@ -69,7 +76,7 @@ function ListNameDialog({
   description: string;
   confirmLabel: string;
   initialName: string;
-  /** Null: the action did not answer (network, a page older than the deployment). */
+  /** Creates the list of this name, or gives this name to the list. */
   save: (
     name: string,
   ) => Promise<
@@ -82,10 +89,24 @@ function ListNameDialog({
   const [name, setName] = useState(initialName);
   const [error, setError] = useState<NameError>({ field: null, dialog: null });
   const [working, setWorking] = useState(false);
+  const field = useRef<HTMLInputElement>(null);
+
+  /** Said under the field, and read: the focus goes back to it (DESIGN.md 15). */
+  const fail = (next: NameError) => {
+    flushSync(() => {
+      setWorking(false);
+      setError(next);
+    });
+    if (next.field) field.current?.focus();
+  };
 
   const confirm = async () => {
     if (name.trim() === "") {
-      setError({ field: t.errors.required, dialog: null });
+      fail({ field: t.errors.required, dialog: null });
+      return;
+    }
+    if (isReservedListName(name)) {
+      fail({ field: t.errors.reserved, dialog: null });
       return;
     }
     setWorking(true);
@@ -96,15 +117,16 @@ function ListNameDialog({
     } catch (caught) {
       console.error("[favorites] list not saved", caught);
     }
-    setWorking(false);
+    // Null: the action did not answer (network, a page older than the deployment).
     if (!result) {
-      setError({ field: null, dialog: t.errors.unavailable });
+      fail({ field: null, dialog: t.errors.unavailable });
       return;
     }
     if (!result.ok) {
-      setError(nameError(result.error, name));
+      fail(nameError(result.error, name));
       return;
     }
+    setWorking(false);
     onSaved(result.data);
   };
 
@@ -122,10 +144,15 @@ function ListNameDialog({
       onCloseAutoFocus={onCloseAutoFocus}
     >
       <Input
+        ref={field}
+        // The dialog opens on its only field (Radix keeps a focus already inside).
+        autoFocus
         label={t.nameLabel}
         help={t.nameHelp(FAVORITE_LIST_NAME_MAX)}
         value={name}
         maxLength={FAVORITE_LIST_NAME_MAX}
+        // Read-only, not disabled, while it is saved: the focus stays in the field.
+        readOnly={working}
         autoComplete="off"
         enterKeyHint="done"
         error={error.field ?? undefined}
@@ -138,20 +165,34 @@ function ListNameDialog({
   );
 }
 
-/** « Nouvelle liste »: the list appears among the filters, the page stays. */
-export function NewFavoriteList({ scope, className }: { scope: string; className?: string }) {
+/**
+ * « Nouvelle liste »: the list appears among the filters, the page stays.
+ * With 20 lists the button is off, and the reason is written beside it.
+ */
+export function NewFavoriteList({
+  scope,
+  full,
+  className,
+}: {
+  scope: string;
+  /** The account has its 20 lists. */
+  full: boolean;
+  className?: string;
+}) {
+  const limitId = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   // A new dialog at each opening: an empty field, no error of the time before.
   const [opened, setOpened] = useState(0);
   const [open, setOpen] = useState(false);
 
   return (
-    <>
+    <div className={cn("flex flex-col items-start gap-1.5 md:items-end", className)}>
       <Button
         ref={trigger}
         variant="secondary"
         size="sm"
-        className={className}
+        disabled={full}
+        aria-describedby={full ? limitId : undefined}
         onClick={() => {
           clearFavoriteListsStatus();
           setOpened((count) => count + 1);
@@ -161,6 +202,11 @@ export function NewFavoriteList({ scope, className }: { scope: string; className
         <Plus aria-hidden="true" className="size-4" />
         {t.create}
       </Button>
+      {full ? (
+        <p id={limitId} className="text-lk-caption text-lk-ink-3 md:max-w-70 md:text-right">
+          {t.errors.limit(FAVORITE_LISTS_MAX)}
+        </p>
+      ) : null}
       <ListNameDialog
         key={opened}
         open={open}
@@ -179,7 +225,7 @@ export function NewFavoriteList({ scope, className }: { scope: string; className
           trigger.current?.focus();
         }}
       />
-    </>
+    </div>
   );
 }
 
@@ -358,6 +404,8 @@ export function FavoriteListSelect({
                     ? t.moveMissing
                     : t.moveError,
                 scope,
+                false,
+                "danger",
               );
             }
           });

@@ -13,10 +13,10 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 -->
 
 ### 2026-11-26 · Listes de favoris nommées · PR #148
-- Ajouté : sur `/acquereur/favoris`, des listes nommées par le compte (« Lyon », « À visiter ») : « Nouvelle liste », filtres « Tous », une pastille par liste avec son nombre de biens et « Sans liste » (adresse `?liste=`), menu « Ranger dans une liste » sous chaque bien, « Renommer » et « Supprimer la liste » (les biens restent dans les favoris). Un favori est dans une seule liste au plus ; 20 listes par compte ; le cœur ne change pas (`DECISIONS.md` 2026-11-26).
+- Ajouté : sur `/acquereur/favoris`, des listes nommées par le compte (« Lyon », « À visiter ») : « Nouvelle liste », filtres « Tous », une pastille par liste avec son nombre de biens et « Sans liste » (adresse `?liste=`), menu « Ranger dans une liste » sous chaque bien, « Renommer » et « Supprimer la liste » (les biens restent dans les favoris). Un favori est dans une seule liste au plus ; 20 listes par compte (« Nouvelle liste » désactivé à 20, avec la raison) ; « Tous » et « Sans liste » ne sont pas des noms de liste ; le cœur ne change pas (`DECISIONS.md` 2026-11-26, détails à valider par Younes).
 - Ajouté : table `favorite_lists` (RLS : le compte lit et écrit ses listes, l'admin les lit) et colonne `favorites.list_id` ; sur `favorites`, la politique `favorites_update_own_list` et le droit `update (list_id)` s'ajoutent, le reste est inchangé. Les listes figurent dans l'export du compte (`account_export`) et sont effacées avec lui (`account_anonymize`).
 - Modifié : `FilterPills` distingue deux pastilles de même libellé (clé par adresse), une liste pouvant porter le nom d'un filtre.
-- Tests : `supabase/tests/rls_favorite_lists.sql` (42), `rls_account_deletion.sql` (une liste effacée avec le compte), `tests/unit/listings/favorites.test.ts`, `tests/e2e/favorites.spec.ts` (créer, ranger, filtrer, renommer, supprimer).
+- Tests : `supabase/tests/rls_favorite_lists.sql` (49), `rls_account_deletion.sql` (une liste effacée avec le compte), `tests/unit/listings/favorites.test.ts`, `tests/e2e/favorites.spec.ts` (créer, ranger, filtrer, renommer, supprimer).
 - Migration : 20261126120000_favorite_lists.sql
 
 ### 2026-11-26 · Repasse design, lot 1 : une seule carte d'annonce · PR #147

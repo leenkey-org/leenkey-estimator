@@ -6,7 +6,7 @@
 -- file passes on an empty and on a seeded database.
 begin;
 \ir _helpers.psql
-select plan(42);
+select plan(49);
 \ir _plan.psql
 
 -- A published listing of seller_a, to save.
@@ -60,12 +60,26 @@ select id as list_d from favorite_lists where owner_id = tests.uid('buyer_d') an
 \ir _as.psql
 select lives_ok($$insert into favorite_lists (owner_id, name) values (tests.uid('seller_b'), 'À visiter')$$,
                 'seller_b: a seller creates a list');
+insert into favorite_lists (owner_id, name) values (tests.uid('seller_b'), 'Massy');
+select id as list_b from favorite_lists where owner_id = tests.uid('seller_b') and name = 'À visiter' \gset
+insert into favorites (buyer_id, listing_id) values (tests.uid('seller_b'), :'listing');
+-- A suspended account creates nothing new, and still tidies what it has
+-- (as it still removes a favourite, favorites_delete_own).
 reset role;
 update profiles set suspended_at = now(), suspension_reason = 'Test' where id = tests.uid('seller_b');
 \set who seller_b
 \ir _as.psql
 select throws_ok($$insert into favorite_lists (owner_id, name) values (tests.uid('seller_b'), 'Bordeaux')$$,
                  '42501', null, 'seller_b, suspended: no new list');
+update favorite_lists set name = 'Visites' where id = :'list_b';
+select is((select name from favorite_lists where id = :'list_b'), 'Visites',
+          'seller_b, suspended: still renames a list');
+update favorites set list_id = :'list_b' where buyer_id = tests.uid('seller_b') and listing_id = :'listing';
+select is((select list_id from favorites where buyer_id = tests.uid('seller_b') and listing_id = :'listing'),
+          :'list_b'::uuid, 'seller_b, suspended: still files a favourite');
+delete from favorite_lists where owner_id = tests.uid('seller_b') and name = 'Massy';
+select is((select count(*)::int from favorite_lists where owner_id = tests.uid('seller_b')), 1,
+          'seller_b, suspended: still deletes a list');
 reset role;
 update profiles set suspended_at = null, suspension_reason = null where id = tests.uid('seller_b');
 
@@ -161,6 +175,11 @@ select is(jsonb_array_length(account_export()->'favorite_lists'), 0,
 -- ===========================================================================
 \set who buyer_d
 \ir _as.psql
+select throws_ok($$insert into favorite_lists (owner_id, name)
+                   select tests.uid('buyer_d'), 'Liste ' || n from generate_series(2, 21) n$$,
+                 '54000', 'favorite_lists_per_account',
+                 'buyer_d: not 20 more lists at once, the 21st is refused with the others');
+select is((select count(*)::int from favorite_lists), 1, 'buyer_d: none of them is kept');
 select lives_ok($$insert into favorite_lists (owner_id, name)
                   select tests.uid('buyer_d'), 'Liste ' || n from generate_series(2, 20) n$$,
                 'buyer_d: up to 20 lists');
@@ -179,6 +198,10 @@ select lives_ok(format($$update favorite_lists set name = 'Lyon 3e' where id = %
 select is((select name from favorite_lists where id = :'list_c'), 'Lyon 3e', 'buyer_c: the new name');
 select ok((select updated_at is not null from favorite_lists where id = :'list_c'),
           'the change is dated');
+select throws_ok(format($$update favorite_lists set name = '   ' where id = %L$$, :'list_c'),
+                 '23514', null, 'buyer_c: not renamed to a blank name');
+select throws_ok(format($$update favorite_lists set name = %L where id = %L$$, repeat('a', 41), :'list_c'),
+                 '23514', null, 'buyer_c: not renamed to 41 characters');
 select throws_ok(format($$update favorite_lists set name = 'BORDEAUX' where id = %L$$, :'list_c'),
                  '23505', null, 'buyer_c: not the name of another of their lists');
 delete from favorite_lists where id = :'list_c';
