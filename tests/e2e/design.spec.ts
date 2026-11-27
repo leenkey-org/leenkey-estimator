@@ -106,7 +106,7 @@ test.describe("catalogue /design", () => {
     await page.getByRole("link", { name: "Aperçu des emails" }).click();
     await expect(page).toHaveURL("/design/emails");
     await expect(page.getByRole("heading", { level: 1, name: "Emails" })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(21);
+    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(22);
     // L3-06: the daily digest of the alerts, the similar listings after a sale.
     await expect(
       page.getByText("Sujet : 8\u00A0nouveaux biens correspondent à vos alertes"),
@@ -122,6 +122,10 @@ test.describe("catalogue /design", () => {
     ).toBeVisible();
     await expect(
       page.getByText("Sujet : Accusé de réception de votre rétractation · formule Accompagné"),
+    ).toBeVisible();
+    // 2026-11-26: the confirmation of a refund, with its credit note.
+    await expect(
+      page.getByText("Sujet : Confirmation de votre remboursement · formule").first(),
     ).toBeVisible();
     // 2026-11-08: the new accounts, for the team.
     await expect(page.getByText("Sujet : Nouveau compte sur Leenkey")).toBeVisible();

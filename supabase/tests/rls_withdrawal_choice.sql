@@ -135,7 +135,12 @@ values (:'p1', 'Appartement 2 pièces', 'Proche de la gare.', 20000000);
 select row(status, title)::text as listing_before from listings where property_id = :'p1' \gset
 select count(*)::int as documents_before from documents \gset
 select count(*)::int as conversations_before from conversations \gset
-select count(*)::int as tasks_before from sale_task_status where property_id = :'p1' \gset
+-- The tasks done, by their code: going back to the free plan carries each one
+-- over to the task of the same code of that plan (a row more on a seeded base),
+-- and loses none.
+select coalesce(string_agg(distinct k.code, ',' order by k.code), '') as tasks_before
+  from sale_task_status t join sale_step_tasks k on k.id = t.task_id
+ where t.property_id = :'p1' \gset
 
 select is((select subject from cases where property_id = :'p2' and source = 'plan_purchase'),
           'Formule Sérénité souscrite · Ville2',
@@ -240,8 +245,10 @@ select is((select count(*)::int from audit_log a join cases c on c.id = a.entity
 select is((select row(status, title)::text from listings where property_id = :'p1'), :'listing_before',
           'p1: the listing is not touched');
 select is((select row((select count(*) from documents), (select count(*) from conversations),
-                      (select count(*) from sale_task_status where property_id = :'p1'))::text),
-          format('(%s,%s,%s)', :'documents_before', :'conversations_before', :'tasks_before'),
+                      (select coalesce(string_agg(distinct k.code, ',' order by k.code), '')
+                         from sale_task_status t join sale_step_tasks k on k.id = t.task_id
+                        where t.property_id = :'p1'))::text),
+          row(:'documents_before'::bigint, :'conversations_before'::bigint, :'tasks_before'::text)::text,
           'p1: the documents, the conversations and the steps of the sale are not touched');
 -- Stripe sends the refund again: the same event, then another one for the same payment.
 set local role service_role;
