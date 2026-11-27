@@ -49,12 +49,17 @@ create trigger properties_coownership before insert or update of type, is_coowne
 grant insert (is_coownership) on public.properties to authenticated;
 grant update (is_coownership) on public.properties to authenticated;
 
+-- Without properties_set_updated_at: a change of updated_at would read as « the
+-- seller changed the listing » (listing_changed_since) and silence the pending
+-- compliance requests of the listings in production.
+alter table public.properties disable trigger properties_set_updated_at;
 update public.properties
    set is_coownership = true
  where type = 'appartement'
     or (type is distinct from 'terrain'
         and (coalesce(copro_lots, 0) > 0 or charges_monthly_cents is not null
              or carrez_m2 is not null));
+alter table public.properties enable trigger properties_set_updated_at;
 
 -- 2. ---------------------------------------------------------------------------
 alter type public.document_type add value if not exists 'audit_energetique';

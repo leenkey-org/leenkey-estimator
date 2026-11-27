@@ -40,7 +40,9 @@ async function missingDocuments(propertyId: string): Promise<number | null> {
   const [property, documents, exemptions] = await Promise.all([
     supabase
       .from("properties")
-      .select("type, copro_lots, dpe_exempt, dpe_exemption_reason")
+      .select(
+        "type, copro_lots, is_coownership, dpe_class, dpe_kind, dpe_exempt, dpe_exemption_reason",
+      )
       .eq("id", propertyId)
       .maybeSingle(),
     supabase
@@ -52,7 +54,14 @@ async function missingDocuments(propertyId: string): Promise<number | null> {
   ]);
   if (property.error || !property.data || documents.error || exemptions.error) return null;
   const checklist = buildChecklist(
-    checklistProperty({ type: property.data.type, coproLots: property.data.copro_lots }),
+    checklistProperty({
+      type: property.data.type,
+      coproLots: property.data.copro_lots,
+      coOwnership: property.data.is_coownership,
+      dpe: property.data.dpe_class,
+      dpeExempt: property.data.dpe_exempt,
+      dpeKind: property.data.dpe_kind,
+    }),
     documents.data.map((row) => ({
       id: row.id,
       type: row.type,

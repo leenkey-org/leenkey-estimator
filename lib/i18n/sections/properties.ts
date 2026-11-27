@@ -80,7 +80,7 @@ export const frProperties = {
       question: "Ce bien est-il en copropriété ?",
       yes: "Oui",
       no: "Non",
-      help: "Par exemple une maison dans un lotissement ou une résidence gérés par un syndic.",
+      help: "Par exemple une maison en copropriété horizontale, avec un règlement de copropriété et un syndic. Un lotissement géré par une association syndicale (ASL) n'est pas une copropriété.",
     },
     charges: "Charges",
     perMonth: "€ / mois",

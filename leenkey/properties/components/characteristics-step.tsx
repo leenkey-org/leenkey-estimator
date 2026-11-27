@@ -201,7 +201,7 @@ export function CharacteristicsStep({
   const hidden = (type && NOT_FOR_TYPE[type]) || { fields: [], features: [] };
   const land = type === "terrain";
   // A flat always, land never, a house or another property as its seller says.
-  const inCoOwnership = type ? coOwnershipOf(type, coOwnership) : coOwnership;
+  const inCoOwnership = type ? coOwnershipOf(type, coOwnership) : true;
   const shows = (field: CharacteristicsField) =>
     !hidden.fields.includes(field) && (inCoOwnership || !CO_OWNERSHIP_FIELDS.includes(field));
   const shownFeatures = PROPERTY_FEATURES.filter((feature) => !hidden.features.includes(feature));

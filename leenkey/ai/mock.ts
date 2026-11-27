@@ -568,7 +568,9 @@ export function mockText(
     message(
       [
         text(
-          kind === "reply_suggestion" && askedOf(request).includes(GREETING_FOLLOW_UP)
+          kind === "reply_suggestion" &&
+            // After the conversation only: a message that quotes the line does not count.
+            (askedOf(request).split("</conversation>").pop() ?? "").includes(GREETING_FOLLOW_UP)
             ? MOCK_REPLY_FOLLOW_UP
             : answer,
         ),
