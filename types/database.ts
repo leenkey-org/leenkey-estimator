@@ -547,6 +547,8 @@ export type Database = {
           issued_at: string
           number: string
           pdf_url: string | null
+          refund_email_claimed_at: string | null
+          refund_emailed_at: string | null
           stripe_credit_note_id: string
           subscription_id: string
           updated_at: string | null
@@ -558,6 +560,8 @@ export type Database = {
           issued_at: string
           number: string
           pdf_url?: string | null
+          refund_email_claimed_at?: string | null
+          refund_emailed_at?: string | null
           stripe_credit_note_id: string
           subscription_id: string
           updated_at?: string | null
@@ -569,6 +573,8 @@ export type Database = {
           issued_at?: string
           number?: string
           pdf_url?: string | null
+          refund_email_claimed_at?: string | null
+          refund_emailed_at?: string | null
           stripe_credit_note_id?: string
           subscription_id?: string
           updated_at?: string | null
@@ -2321,6 +2327,7 @@ export type Database = {
           stripe_payment_intent_id: string | null
           stripe_promotion_code: string | null
           withdrawal_requested_at: string | null
+          withdrawal_reverts_to: string | null
         }
         Insert: {
           activated_at?: string
@@ -2340,6 +2347,7 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           stripe_promotion_code?: string | null
           withdrawal_requested_at?: string | null
+          withdrawal_reverts_to?: string | null
         }
         Update: {
           activated_at?: string
@@ -2359,6 +2367,7 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           stripe_promotion_code?: string | null
           withdrawal_requested_at?: string | null
+          withdrawal_reverts_to?: string | null
         }
         Relationships: [
           {
@@ -2376,6 +2385,12 @@ export type Database = {
           {
             foreignKeyName: "subscriptions_replaced_by_fkey"
             columns: ["replaced_by"]
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_withdrawal_reverts_to_fkey"
+            columns: ["withdrawal_reverts_to"]
             referencedRelation: "subscriptions"
             referencedColumns: ["id"]
           },
@@ -3208,6 +3223,11 @@ export type Database = {
           replacing_plan: Database["public"]["Enums"]["plan_code"]
           amount_paid_cents: number
           credit_notes: Json
+          withdrawal_scope: string
+          back_to_plan: Database["public"]["Enums"]["plan_code"]
+          withdrawal_due_cents: number
+          withdrawal_refunded_cents: number
+          withdrawal_payments: number
         }[]
       }
       admin_report_counts: {
@@ -3543,6 +3563,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      billing_document_opened: {
+        Args: { p_kind: string; p_id: string }
+        Returns: undefined
+      }
       buyer_can_be_invited: {
         Args: { p_buyer: string; p_property: string }
         Returns: boolean
@@ -3626,6 +3650,22 @@ export type Database = {
           p_summary: string
         }
         Returns: string
+      }
+      credit_note_email_claim: {
+        Args: { p_credit_note_id: string }
+        Returns: boolean
+      }
+      credit_note_email_release: {
+        Args: { p_credit_note_id: string }
+        Returns: undefined
+      }
+      credit_note_email_sent: {
+        Args: { p_credit_note_id: string }
+        Returns: undefined
+      }
+      credit_notes_emailed_elsewhere: {
+        Args: { p_stripe_credit_note_ids: string[] }
+        Returns: number
       }
       credit_notes_record: {
         Args: { p_actor?: string; p_payment_intent_id: string; p_notes: Json }
@@ -4309,6 +4349,14 @@ export type Database = {
         Args: { p_photo_ids: string[]; p_property_id: string }
         Returns: undefined
       }
+      plan_case_subject: {
+        Args: { p_withdrawal: boolean; p_place: string; p_plan_name: string }
+        Returns: string
+      }
+      plan_case_subject_follows: {
+        Args: { p_subject: string }
+        Returns: boolean
+      }
       price_in_words_fr: {
         Args: { p_cents: number }
         Returns: string
@@ -4480,6 +4528,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      refund_email_resent: {
+        Args: { p_subscription_id: string; p_sent: number; p_failed: number }
+        Returns: undefined
+      }
       report_target: {
         Args: { p_reporter: string; p_buyer: string; p_seller: string }
         Returns: string
@@ -4648,7 +4700,9 @@ export type Database = {
         Returns: Json
       }
       subscription_withdraw: {
-        Args: { p_with_replaced?: boolean; p_subscription_id: string }
+        Args:
+          | { p_subscription_id: string; p_scope?: string }
+          | { p_with_replaced: boolean; p_subscription_id: string }
         Returns: Json
       }
       subscriptions_daily: {
@@ -4775,6 +4829,26 @@ export type Database = {
       visits_remind: {
         Args: { p_now?: string }
         Returns: number
+      }
+      withdrawal_last_day: {
+        Args: { p_ordered_at: string }
+        Returns: string
+      }
+      withdrawal_old_shape_adopt: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      withdrawal_open: {
+        Args: { p_ordered_at: string; p_now?: string }
+        Returns: boolean
+      }
+      withdrawal_refunds: {
+        Args: { p_property: string }
+        Returns: {
+          refunded_cents: number
+          due_cents: number
+          requested_at: string
+        }[]
       }
       words_below_1000_fr: {
         Args: { p_final: boolean; p_n: number }

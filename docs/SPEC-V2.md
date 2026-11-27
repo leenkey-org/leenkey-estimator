@@ -583,14 +583,15 @@ create table subscriptions (             -- formule active d'un bien
   stripe_promotion_code text,                     -- réservé : codes promo Stripe
   activated_at timestamptz not null default now(),
   ends_at timestamptz,                            -- activated_at + 12 mois (trigger) ; à l'échéance, retour en Autonomie ; = activated_at : paiement gardé sans activer la formule, à vérifier par l'équipe (L1-26)
-  replaced_by uuid references subscriptions(id),  -- upgrade : nouvel abonnement, les 12 mois repartent
+  replaced_by uuid references subscriptions(id),  -- upgrade : nouvel abonnement, les 12 mois repartent ; remis à null quand le vendeur renonce au passage seul (2026-11-26)
   refunded_at timestamptz,
   -- Vente conforme (L1-40, décision du 2026-10-15)
   plan_snapshot jsonb,                            -- fiche formule acceptée à la commande (nom, prix TTC, prestations, version des CGV)
   early_start_requested_at timestamptz,           -- case « démarrage immédiat » cochée ; sinon prestations humaines à partir du 15e jour
-  withdrawal_requested_at timestamptz             -- bouton « Renoncer au contrat » (14 jours) ; remboursement par Cédric dans Stripe sous 14 jours
+  withdrawal_requested_at timestamptz,            -- bouton « Renoncer au contrat » (14 jours) ; la formule ne donne plus aucun droit dès cette date (2026-11-26) ; remboursement par Cédric dans Stripe sous 14 jours
+  withdrawal_reverts_to uuid references subscriptions(id)  -- rétractation d'un passage seul (2026-11-26) : l'abonnement remplacé, de nouveau en vigueur dès la demande ; null = tout est renoncé
 );
--- Formule en cours d'un bien : property_current_plan(property_id) = abonnement ni remplacé, ni remboursé, ni échu, sinon 'autonomie'.
+-- Formule en cours d'un bien : property_current_plan(property_id) = abonnement ni remplacé, ni remboursé, ni renoncé (withdrawal_requested_at), ni échu, sinon 'autonomie'.
 
 create table legal_acceptances (          -- acceptations datées et versionnées (L1-09 à l'inscription, L1-40 à la commande)
   id uuid primary key default gen_random_uuid(),
@@ -617,8 +618,10 @@ create table credit_notes (              -- avoirs Stripe des remboursements (DE
   stripe_credit_note_id text not null unique,
   number text not null,
   amount_cents int not null check (amount_cents >= 0),
-  pdf_url text,                           -- PDF de Stripe (https), null dans le mock des tests
+  pdf_url text,                           -- PDF de Stripe (https) ; dans le mock des tests, une adresse jamais appelée
   issued_at timestamptz not null,
+  refund_emailed_at timestamptz,          -- email « Confirmation de votre remboursement » remis au service d'envoi : définitif (DECISIONS.md 2026-11-26)
+  refund_email_claimed_at timestamptz,    -- un envoi l'a pris, pour 10 minutes ; repris ensuite s'il n'a pas abouti
   created_at timestamptz not null default now(),
   updated_at timestamptz
 );
@@ -1108,7 +1111,7 @@ Matrice (L = lecture, E = écriture) :
 | `offer_events`, `listing_revisions` | — | L ses biens | L les siennes (`offer_events`) | L |
 | `plan_entitlements` | L | L | L | L/E |
 | `upgrade_prompts` | — | L/E ses biens | — | L |
-| `credit_notes` | — | L celles de ses formules | — | L toutes ; écriture par personne depuis un client : `credit_notes_record` (service role : webhook, ou action admin « Créer l'avoir », tracée dans `audit_log`) ; `admin_refunds()` pour `/admin/remboursements` |
+| `credit_notes` | — | L celles de ses formules | — | L toutes ; écriture par personne depuis un client : `credit_notes_record` (service role : webhook, ou action admin « Créer l'avoir », tracée dans `audit_log`) ; l'email du remboursement (`refund_email_claimed_at`, `refund_emailed_at`) écrit par `credit_note_email_claim`, `_sent`, `_release` et `credit_notes_emailed_elsewhere` (service role) ; renvoi par l'équipe et ouverture par l'équipe du document d'un vendeur tracés dans `audit_log` (`refund_email_resent`, `billing_document_opened`) ; `admin_refunds()` pour `/admin/remboursements` |
 | `advisor_interventions` | — | L ses biens, sans `team_note` ni `done_by` (lecture par colonne) ; création par `advisor_intervention_request` | — | L tous par `admin_advisor_interventions` ; statut par `admin_advisor_intervention_set` et `admin_advisor_initial_meeting`, écrits dans `audit_log` |
 | `identity_documents` | — | — (statut seul, par `buyer_identity_for_seller`, pour une invitation encore valable ou une visite non annulée) | L les siennes, sans `team_note` ni `decided_by` (lecture par colonne) ; dépôt et retrait par `identity_document_add` et `identity_document_remove` | L toutes par `admin_identity_documents` ; décision par `identity_document_check` et `identity_document_refuse` (tracées) |
 | `visit_slots` | — | L/E ses biens | L si invitation valide | L |
@@ -1596,12 +1599,14 @@ Créés par Younes dans Stripe (test puis live), identifiants reportés dans `pl
    - notifications vendeur (`plan.activated`) et admin (`case.created`) ;
    - **e-mail récapitulatif** (support durable) : formule, prix, bien, date, durée, début des prestations, fiche formule, CGV et CGU acceptées, informations et formulaire de rétractation (PDF joints ou liens durables).
 4. Le retour sur `success_url` n'active rien : l'écran de confirmation lit l'état en base et affiche « Paiement en cours de confirmation » tant que le webhook n'est pas passé (rafraîchissement toutes les 2 s, 30 s max).
-5. **Rétractation** : pendant 14 jours après la souscription, bouton visible « Renoncer au contrat » sur `/vendeur/formule` (et lien dans l'e-mail récapitulatif). Il enregistre `withdrawal_requested_at`, envoie un accusé de réception par e-mail, notifie l'admin et ajoute une note au dossier. Remboursement intégral par Cédric depuis Stripe sous 14 jours (valeur provisoire, Q31).
+5. **Rétractation** : pendant 14 jours après la souscription, bouton visible « Renoncer au contrat » sur `/vendeur/formule` (et lien dans l'e-mail récapitulatif). Il enregistre `withdrawal_requested_at`, envoie un accusé de réception par e-mail, notifie l'admin et ajoute une note au dossier. Remboursement intégral par Cédric depuis Stripe sous 14 jours (valeur provisoire, Q31). **Depuis le 2026-11-26** (`DECISIONS.md`) : les prestations payantes s'arrêtent dès la demande, sans attendre le remboursement (le bien est en Autonomie pour tous les droits ; aucune étape de la vente n'est bloquée) ; après un passage d'Accompagné à Sérénité, le vendeur choisit de renoncer au passage seul (retour à Accompagné, 510 € remboursés, durée initiale et historique d'Accompagné conservés) ou aux deux commandes (retour à Autonomie, 1 500 €), tant que les deux délais courent ; délai d'Accompagné passé, seul le passage se renonce. Fonction `subscription_withdraw(abonnement, portée 'full' | 'upgrade')`, qui vérifie elle-même le dernier jour du délai (`withdrawal_last_day`, même calcul que `withdrawalEnds` ; la tolérance de 20 jours de L1-40 n'existe plus). Le dossier de la formule (`cases`, `plan_purchase`) suit : titre à jour à chaque changement de formule, « Rétractation · formule … » dès une rétractation de tout, clôture automatique avec une note une fois le remboursement intégral enregistré ; ni l'annonce, ni les documents, ni les échanges, ni l'avancement de la vente ne sont touchés.
 6. **Échéance** : à `ends_at`, le bien repasse en Autonomie (`property_current_plan`) ; le cron quotidien met à jour `sale_progress.plan` et prévient le vendeur 30 jours avant.
 
-Événements écoutés : `checkout.session.completed`, `charge.refunded` (formule marquée remboursée, les droits payants s'arrêtent, `case` note automatique ; pas de bascule automatique du modèle d'étapes : signalé à l'admin).
+Événements écoutés : `checkout.session.completed`, `charge.refunded` (formule marquée remboursée, les droits payants s'arrêtent, `case` note automatique ; pas de bascule automatique du modèle d'étapes : signalé à l'admin). Pour une rétractation (2026-11-26), les droits sont déjà arrêtés depuis la demande : `charge.refunded` enregistre le remboursement, dit ce qu'il reste à rembourser de la demande et clôture le dossier une fois tout remboursé.
 
 Remboursements : faits par Cédric depuis le dashboard Stripe (hors application en V2).
+
+Documents (`DECISIONS.md` 2026-11-26) : la page de paiement demande l'adresse de facturation ; la facture Stripe de la commande porte « Paiement : Facture acquittée » et « TVA non applicable, article 293 B du CGI. », et part en pièce jointe de l'email récapitulatif. Chaque remboursement donne un avoir Stripe (note « Remboursement suite à l'exercice du droit de rétractation. TVA non applicable, article 293 B du CGI. » après une rétractation, « Remboursement. … » sinon) et un email « Confirmation de votre remboursement » au vendeur, avoir joint, une fois par avoir (ceux que le code a créés ; un avoir fait à la main dans Stripe est envoyé par Stripe). Sans PDF, l'email part avec un lien. Un email non parti est renvoyé au passage suivant ou par « Renvoyer l'email » du back office. `/vendeur/formule` : « Mes factures et paiements » (tous les paiements du compte, statut, facture, avoirs), PDF servis par `/vendeur/formule/document` au propriétaire de la formule et à l'équipe (adresse de Stripe seulement, 30 par quart d'heure et par compte). Logo et identité de la société sur ces documents : tableau de bord Stripe (`docs/STRIPE-DOCUMENTS.md`).
 
 Mise en œuvre (L1-26, `DECISIONS.md` 2026-11-03) : identifiants des prix lus dans `STRIPE_PRICE_*` (pas dans `plans.stripe_price_id`), montant vérifié contre la table `plans` à chaque commande ; écritures du webhook dans deux fonctions SQL idempotentes (`stripe_checkout_complete`, `stripe_charge_refunded`) ; la conversation conseiller au paiement arrive avec L1-34, l'email récapitulatif, la rétractation et l'échéance avec L1-40 ; au remboursement, la vente suit la formule en vigueur (déclencheurs de L1-23). Mise en œuvre de L1-40 (`DECISIONS.md` 2026-11-08) : bouton « Renoncer au contrat » au-dessus des formules pendant les 14 jours (dernier jour calculé comme le premier contact, `withdrawalEnds`), boîte de confirmation (formule, bien, date de la commande, adresse de l'accusé de réception), fonction `subscription_withdraw` (propriétaire seulement, une seule fois, refus au-delà de 20 jours en base), note et réouverture du dossier, notification et email à l'équipe ; email récapitulatif complet au paiement ; job `subscriptions-daily` (section 19). Le renouvellement en ligne est reporté (`BACKLOG-V3.md`) : le rappel invite à le demander par email.
 
@@ -1629,7 +1634,7 @@ Forfait fixe par bien · 12 mois d'accompagnement.
 
 Ne jamais mentionner de « garantie juridique » ni de « relecture des actes » (exclu par le client), ni de photos professionnelles ou de visites réalisées par Leenkey (non proposées).
 
-**Durée et fin de formule** (décision du 2026-10-15 ; valeurs provisoires en attendant la fiche contractuelle de Cédric, Q30) : une formule payante couvre un bien pendant 12 mois à compter de la souscription, renouvelables à l'échéance, jamais automatiquement : au tarif en vigueur, pour 12 nouveaux mois, proposé par le rappel 30 jours avant l'échéance, avec le choix de l'autre formule payante à son prix (2026-11-06, Q75). Sans renouvellement, le bien repasse en Autonomie : l'annonce reste en ligne, les prestations humaines s'arrêtent. Un passage d'Accompagné à Sérénité fait repartir les 12 mois. Sans demande de démarrage immédiat à la commande, le conseiller ne contacte le client qu'à partir du 15e jour (délai de rétractation, section 11).
+**Durée et fin de formule** (décision du 2026-10-15 ; valeurs provisoires en attendant la fiche contractuelle de Cédric, Q30) : une formule payante couvre un bien pendant 12 mois à compter de la souscription, renouvelables à l'échéance, jamais automatiquement : au tarif en vigueur, pour 12 nouveaux mois, proposé par le rappel 30 jours avant l'échéance, avec le choix de l'autre formule payante à son prix (2026-11-06, Q75). Sans renouvellement, le bien repasse en Autonomie : l'annonce reste en ligne, les prestations humaines s'arrêtent. Un passage d'Accompagné à Sérénité fait repartir les 12 mois ; le vendeur qui renonce au passage seul retrouve la durée initiale de sa formule Accompagné (2026-11-26). Sans demande de démarrage immédiat à la commande, le conseiller ne contacte le client qu'à partir du 15e jour (délai de rétractation, section 11).
 
 ### Tableau comparatif (page formules)
 
@@ -2177,9 +2182,10 @@ Gabarit commun (`docs/DESIGN.md` 14) : fond `#F4F4F1`, carte blanche 560 px rayo
 | Documents partagés | `document.shared` | Liste, lien |
 | Demande d'accès aux documents | `document.access_requested` | Acquéreur, statut financement, lien |
 | Document à vérifier (L3-05) | `document.needs_attention` | Nom du document, ce qui ne va pas (illisible, incomplet, mauvais type), lien |
-| Formule activée | `plan.activated` | Récapitulatif de la commande (L1-40) : formule, prix, bien, date, durée et échéance, début des prestations, prestations vendues, versions des CGU et CGV acceptées avec leurs liens, rétractation et formulaire type, médiateur ; sujet « Confirmation de votre souscription Leenkey · [formule] · [référence] » |
-| Accusé de réception d'une rétractation | « Renoncer au contrat » (L1-40) | Date et heure de la demande, formule, remboursement sous 14 jours |
-| Admin : rétractation à rembourser | `plan.withdrawn` (L1-40) | Formule, bien, montant, date ; plusieurs en moins de 20 minutes : un seul email |
+| Formule activée | `plan.activated` | Récapitulatif de la commande (L1-40) : formule, prix, bien, date, durée et échéance, début des prestations, prestations vendues, versions des CGU et CGV acceptées avec leurs liens, rétractation et formulaire type, médiateur ; sujet « Confirmation de votre souscription Leenkey · [formule] · [référence] » ; facture Stripe en pièce jointe, ou lien vers « Mes factures et paiements » (2026-11-26) |
+| Confirmation d'un remboursement | avoir enregistré après `charge.refunded` (2026-11-26) | Montant remboursé, formule, bien, rétractation le cas échéant, ce que le vendeur conserve ; avoir Stripe en pièce jointe, ou lien ; un email par avoir |
+| Accusé de réception d'une rétractation | « Renoncer au contrat » (L1-40) | Date et heure de la demande, formule, ce qui s'arrête dès la demande et ce qui reste (formule conservée après un passage renoncé seul, annonce, documents, messages, avancement), remboursement sous 14 jours |
+| Admin : rétractation à rembourser | `plan.withdrawn` (L1-40) | Formule, bien, montant à rembourser, date, formule à laquelle le vendeur revient ; plusieurs en moins de 20 minutes : un seul email |
 | Formule qui se termine | `plan.ending`, 30 jours avant l'échéance (L1-40) | Date de fin, retour en Autonomie, renouvellement à demander par email |
 | Message du conseiller | `advisor.message` | Aperçu, lien |
 | Admin : demande d'intervention du conseiller | `advisor.message_from_client` d'une demande (2026-11-23) | « Demande d'intervention de … (LK-0001) », le motif et le message, lien vers `/admin/messages/interventions` ; groupé avec les messages de la conversation |

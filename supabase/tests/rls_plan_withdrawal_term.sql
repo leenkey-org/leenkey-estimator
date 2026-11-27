@@ -97,7 +97,7 @@ select throws_ok(format('select subscription_withdraw(%L)', :'s1'), '42501', nul
                  'buyer_c: never withdraws a plan');
 \set who buyer_d
 \ir _as.psql
-select throws_ok(format('select subscription_withdraw(%L, true)', :'s5b'), '42501', null,
+select throws_ok(format('select subscription_withdraw(%L, %L)', :'s5b', 'full'), '42501', null,
                  'buyer_d: never withdraws a plan');
 \set who admin
 \ir _as.psql
@@ -113,7 +113,7 @@ select throws_ok(format('select subscription_withdraw(%L)', :'s2'), '22023', nul
                  'seller_a: refused long after the period');
 select throws_ok(format('select subscription_withdraw(%L)', :'s6'), '55000', null,
                  'seller_a: a refunded plan is not in force');
-select is(subscription_withdraw(:'s5b', true)->>'replaced_plan_name', 'Accompagné',
+select is(subscription_withdraw(:'s5b', 'full')->>'replaced_plan_name', 'Accompagné',
           'seller_a: after a passage, the plan replaced, still in its period, goes with it');
 select throws_ok(format('update subscriptions set withdrawal_requested_at = now() where id = %L', :'s2'),
                  '42501', null, 'seller_a: never writes a subscription straight');

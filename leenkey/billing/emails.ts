@@ -1,9 +1,10 @@
 import "server-only";
 import { render } from "@react-email/components";
-import { sendEmail, type EmailDelivery } from "@/core/notifications/email";
+import { sendEmail, type EmailAttachment, type EmailDelivery } from "@/core/notifications/email";
 import { EMAIL_PLAIN_TEXT } from "@/emails/components/email-layout";
 import { PlanActivatedEmail, planActivatedSubject } from "@/emails/plan-activated";
 import { PlanPurchasedEmail, planPurchasedSubject } from "@/emails/plan-purchased";
+import { PlanRefundedEmail, planRefundedSubject } from "@/emails/plan-refunded";
 import { WithdrawalReceivedEmail, withdrawalReceivedSubject } from "@/emails/withdrawal-received";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { teamAddresses } from "@/leenkey/notifications/send-emails";
@@ -12,6 +13,7 @@ import { formatAmount, formatDate } from "@/lib/format";
 import { SALES_TERMS } from "@/lib/config/sales";
 import { frLegal } from "@/lib/i18n/sections/legal";
 import { absoluteUrl, siteUrl } from "@/lib/site";
+import { paymentsUrl } from "./documents";
 import { firstContactFrom } from "./orders";
 import { legalDate, legalDateTime, withdrawalLastDay } from "./withdrawal";
 
@@ -54,7 +56,15 @@ async function rendered(element: React.ReactElement) {
   return Promise.all([render(element), render(element, EMAIL_PLAIN_TEXT)]);
 }
 
-export async function emailPlanActivated(order: PaidOrder): Promise<EmailDelivery> {
+/**
+ * `invoice`: the PDF of the invoice of the order (documents.ts), attached;
+ * null when it could not be fetched: the email then says where to download
+ * it. An order with nothing to pay (a code of 100 %) promises no invoice.
+ */
+export async function emailPlanActivated(
+  order: PaidOrder,
+  invoice: EmailAttachment | null = null,
+): Promise<EmailDelivery> {
   if (!order.sellerEmail) return "failed";
   try {
     const contact = firstContactFrom(order.activatedAt, order.earlyStart);
@@ -79,6 +89,8 @@ export async function emailPlanActivated(order: PaidOrder): Promise<EmailDeliver
         mediator: SALES_TERMS.mediator
           ? `${SALES_TERMS.mediator.name}, ${SALES_TERMS.mediator.url}`
           : null,
+        invoice: order.amountCents <= 0 ? "none" : invoice ? "attached" : "link",
+        invoicesUrl: paymentsUrl(order.propertyId),
         planUrl: absoluteUrl(`/vendeur/formule?bien=${order.propertyId}`),
         siteUrl: siteUrl(),
       }),
@@ -89,6 +101,7 @@ export async function emailPlanActivated(order: PaidOrder): Promise<EmailDeliver
       html,
       text,
       replyTo: fr.legal.contactEmail,
+      ...(invoice && order.amountCents > 0 ? { attachments: [invoice] } : {}),
     });
   } catch (error) {
     console.error("[billing] plan activated email failed", {
@@ -148,6 +161,10 @@ export type WithdrawalRequest = {
   earlyStart: boolean;
   /** The plan a passage replaced, renounced with it. */
   replaced: { planName: string; activatedAt: string } | null;
+  /** The plan kept when a passage alone is renounced (DECISIONS.md 2026-11-26); null: nothing paid is kept. */
+  keptPlanName: string | null;
+  /** The paid services that stop with the request, as the plans name them. */
+  stops: string[];
 };
 
 /**
@@ -172,6 +189,8 @@ export async function emailWithdrawalReceived(request: WithdrawalRequest): Promi
               orderedOn: legalDate(request.replaced.activatedAt),
             }
           : null,
+        keptPlanName: request.keptPlanName,
+        stops: request.stops,
         planUrl: absoluteUrl(`/vendeur/formule?bien=${request.propertyId}`),
         siteUrl: siteUrl(),
       }),
@@ -186,6 +205,73 @@ export async function emailWithdrawalReceived(request: WithdrawalRequest): Promi
   } catch (error) {
     console.error("[billing] withdrawal email failed", {
       entity_id: request.propertyId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return "failed";
+  }
+}
+
+export type RefundNotice = {
+  sellerEmail: string | null;
+  sellerFirstName: string | null;
+  planName: string;
+  /** « LK-0001 », or the town of a property without a listing yet; may be empty. */
+  property: string;
+  propertyId: string;
+  /** The amount of this refund: the one of its credit note. */
+  amountCents: number;
+  /** When Stripe issued the credit note (the refund itself may be of the day before). */
+  issuedAt: string;
+  /** When the seller renounced, null for a refund without a withdrawal. */
+  withdrawnAt: string | null;
+  creditNote: { stripeId: string; number: string };
+};
+
+/**
+ * The confirmation of a refund (Cédric, 2026-11-26), to the seller, with
+ * its credit note: `creditNote` is its PDF (documents.ts), null when it
+ * could not be fetched: the email then says where to download it. The key
+ * names the email for Resend, which sends once what is asked twice within a
+ * day and refuses a key asked again with another body: the key says
+ * whether the PDF is attached, so that a second try that falls on the other
+ * case (the PDF came, or no longer comes) is another email and leaves.
+ */
+export function refundEmailKey(stripeCreditNoteId: string, attached: boolean): string {
+  return `plan-refunded-${stripeCreditNoteId}-${attached ? "pdf" : "link"}`.slice(0, 256);
+}
+
+export async function emailPlanRefunded(
+  refund: RefundNotice,
+  creditNote: EmailAttachment | null,
+): Promise<EmailDelivery> {
+  if (!refund.sellerEmail) return "failed";
+  try {
+    const [html, text] = await rendered(
+      PlanRefundedEmail({
+        firstName: refund.sellerFirstName,
+        planName: refund.planName,
+        property: refund.property,
+        amount: formatAmount(refund.amountCents),
+        issuedOn: legalDate(refund.issuedAt),
+        withdrawnOn: refund.withdrawnAt ? legalDate(refund.withdrawnAt) : null,
+        creditNoteNumber: refund.creditNote.number,
+        creditNoteAttached: creditNote !== null,
+        documentsUrl: paymentsUrl(refund.propertyId),
+        siteUrl: siteUrl(),
+      }),
+    );
+    return await sendEmail({
+      to: refund.sellerEmail,
+      subject: planRefundedSubject(refund.planName, refund.property),
+      html,
+      text,
+      replyTo: fr.legal.contactEmail,
+      idempotencyKey: refundEmailKey(refund.creditNote.stripeId, creditNote !== null),
+      ...(creditNote ? { attachments: [creditNote] } : {}),
+    });
+  } catch (error) {
+    console.error("[billing] refund email failed", {
+      entity_id: refund.propertyId,
       error: error instanceof Error ? error.message : String(error),
     });
     return "failed";

@@ -179,6 +179,31 @@ test("payer Accompagné : retour de Stripe, confirmation par le webhook, une seu
   // L1-40: « Renoncer au contrat » offered during the 14 days (used at the end).
   await expect(page.getByRole("button", { name: "Renoncer au contrat" })).toBeVisible();
 
+  // « Mes factures et paiements » (2026-11-26): the payment and its invoice,
+  // a PDF served to its owner (the mocked one here).
+  const payments = page.getByRole("region", { name: "Mes factures et paiements" });
+  const paid = payments.getByRole("listitem").filter({ hasText: "Formule Accompagné" });
+  await expect(paid).toContainText(/Payé le .+ · 990\s€/);
+  await expect(paid.getByText("Payé", { exact: true })).toBeVisible();
+  const invoice = paid.getByRole("link", {
+    name: /^Télécharger la facture de la formule Accompagné/,
+  });
+  const invoiceHref = (await invoice.getAttribute("href")) ?? "";
+  expect(invoiceHref).toMatch(/^\/vendeur\/formule\/document\?facture=[0-9a-f-]{36}$/);
+  const pdf = await page.request.get(invoiceHref);
+  expect(pdf.status()).toBe(200);
+  expect(pdf.headers()["content-type"]).toBe("application/pdf");
+  expect((await pdf.body()).subarray(0, 5).toString("latin1")).toBe("%PDF-");
+  // Nobody else's: a 404 for an id that is not theirs, never a document.
+  expect(
+    (
+      await page.request.get(
+        "/vendeur/formule/document?facture=5eed4000-0000-4000-8000-000000000001",
+      )
+    ).status(),
+  ).toBe(404);
+  expect((await page.request.get("/vendeur/formule/document")).status()).toBe(404);
+
   // The seller's bell says it.
   await page.goto(`/vendeur?bien=${LK0009}`);
   await page
@@ -344,15 +369,35 @@ test("retour après annulation, et un événement d'un autre produit est ignoré
   expect(await ignored.json()).toMatchObject({ outcome: "ignored" });
 });
 
-test("renoncer au contrat pendant les 14 jours : accusé, puis plus de commande (L1-40)", async ({
+// DECISIONS.md 2026-11-26: LK-0009 is Sérénité after Accompagné, both ordered
+// today: the seller chooses the passage alone (510 €, back to Accompagné) or
+// both orders (1 500 €, back to Autonomie); the dialog says what stops now,
+// what stays and what is refunded.
+test("renoncer au contrat pendant les 14 jours : le choix, l'accusé, puis plus de commande (L1-40)", async ({
   page,
 }) => {
   await signIn(page, "seller_b", planPage(LK0009));
   const withdrawal = page.getByRole("region", { name: "Droit de rétractation" });
-  await expect(withdrawal).toContainText(/jusqu'au \d{1,2} \S+ \d{4} inclus/);
+  await expect(
+    withdrawal.getByRole("radio", { name: /^Revenir à la formule Accompagné/ }),
+  ).toBeChecked();
+  await expect(withdrawal).toContainText(
+    /Nous vous remboursons 510\s€\. Possible jusqu'au \d{1,2} \S+ \d{4} inclus/,
+  );
+  await withdrawal
+    .getByRole("radio", { name: /^Renoncer aux deux formules et revenir à Autonomie/ })
+    .check();
+  await expect(withdrawal).toContainText(
+    /Nous vous remboursons 1\s500\s€\. Possible jusqu'au \d{1,2} \S+ \d{4} inclus/,
+  );
   await withdrawal.getByRole("button", { name: "Renoncer au contrat" }).click();
   const dialog = page.getByRole("dialog", { name: "Renoncer à votre formule ?" });
   await expect(dialog).toContainText(/Formule \S+ pour .+, souscrite le /);
+  await expect(dialog).toContainText("Ce qui s'arrête dès maintenant");
+  await expect(dialog).toContainText("Conseiller dédié");
+  await expect(dialog).toContainText("Ce qui reste");
+  await expect(dialog).toContainText(/Votre annonce, vos documents, vos messages/);
+  await expect(dialog).toContainText(/Nous vous remboursons 1\s500\s€ au plus tard 14 jours/);
   await expect(dialog).toContainText(/Au nom de \S+/);
   await expect(dialog).toContainText(/Un accusé de réception part à \S+@\S+/);
   await dialog.getByRole("button", { name: "Confirmer la rétractation" }).click();
@@ -364,6 +409,14 @@ test("renoncer au contrat pendant les 14 jours : accusé, puis plus de commande 
   await expect(page.getByText(/^Rétractation enregistrée le /)).toBeVisible();
   await expect(page.getByRole("button", { name: "Renoncer au contrat" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /^(Choisir|Passer à) / })).toHaveCount(0);
+  // The paid services stopped with the request, before any refund: Autonomie.
+  await expect(
+    page
+      .getByRole("list", { name: "Choisir ma formule" })
+      .getByRole("listitem")
+      .filter({ hasText: "Autonomie" })
+      .first(),
+  ).toContainText("Formule actuelle");
   await expectNoSeriousViolation(page);
 });
 
@@ -391,16 +444,19 @@ test("rétractation à rembourser, remboursement dans Stripe, puis avoir pour l'
   await expect(page).toHaveURL(/\/admin\/remboursements$/);
   await expect(page.getByRole("heading", { level: 1, name: "Remboursements" })).toBeVisible();
 
-  // The passage to Sérénité (510 €) of LK-0009: to refund, 14 days after the request.
+  // The passage to Sérénité (510 €) of LK-0009: to refund, 14 days after the
+  // request; one of the two payments of a withdrawal of 1 500 €.
   const table = page.getByRole("table", { name: "Remboursements" });
   const row = table
     .getByRole("row")
     .filter({ hasText: "LK-0009" })
-    .filter({ hasText: "510" })
-    .filter({ hasText: "À rembourser" });
+    .filter({ hasText: /Dû : 510\s€/ })
+    .filter({ hasText: "Rétractation – Remboursement en attente" });
   await expect(row).toHaveCount(1);
   await expect(row).toContainText(day.format(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)));
   await expect(row.getByText(/^Avoir /)).toHaveCount(0);
+  await expect(row).toContainText(/Rétractation de 1\s500\s€ en 2\spaiements : reste 1\s500\s€/);
+  await expect(row).toContainText("Le vendeur revient à Autonomie");
   const stripe = row.getByRole("link", { name: /^Rembourser dans Stripe/ });
   const href = (await stripe.getAttribute("href")) ?? "";
   expect(href).toMatch(/^https:\/\/dashboard\.stripe\.com\/test\/payments\/pi_/);
@@ -436,13 +492,42 @@ test("rétractation à rembourser, remboursement dans Stripe, puis avoir pour l'
   await expect(done).toContainText(`Remboursé le ${day.format(new Date())}`);
   await expect(done).toContainText("Avoir MOCK-0001");
   await expect(done.getByText("Avoir à créer")).toHaveCount(0);
+  // The other payment of the request (Accompagné, 990 €) still waits.
+  const waiting = table
+    .getByRole("row")
+    .filter({ hasText: "LK-0009" })
+    .filter({ hasText: "Rétractation – Remboursement en attente" });
+  await expect(waiting).toHaveCount(1);
+  await expect(waiting).toContainText(/Dû : 990\s€/);
+  await expect(waiting).toContainText(/en 2\spaiements : reste 990\s€/);
 
-  // The seller sees the credit note on the page of the plans.
+  // The seller sees the payment refunded and its credit note on the page of the plans.
   const context = await browser.newContext({ baseURL });
   const seller = await context.newPage();
   await signIn(seller, "seller_b", planPage(LK0009));
-  const notes = seller.getByRole("region", { name: "Vos avoirs" });
-  await expect(notes).toContainText(/Avoir MOCK-0001 · 510\s€ · /);
+  const payments = seller.getByRole("region", { name: "Mes factures et paiements" });
+  const refunded = payments
+    .getByRole("listitem")
+    .filter({ hasText: "Formule Sérénité" })
+    .filter({ hasText: /Avoir MOCK-0001 · 510\s€ · / });
+  await expect(refunded.first()).toContainText("Remboursé");
+  await expect(
+    refunded.first().getByRole("link", { name: /Télécharger la facture/ }),
+  ).toBeVisible();
+  // The credit note itself: a PDF for its owner (the mocked one here)…
+  const creditNote = refunded.first().getByRole("link", { name: /^Télécharger l'avoir MOCK-0001/ });
+  const noteHref = (await creditNote.getAttribute("href")) ?? "";
+  expect(noteHref).toMatch(/^\/vendeur\/formule\/document\?avoir=[0-9a-f-]{36}$/);
+  const notePdf = await seller.request.get(noteHref);
+  expect(notePdf.status()).toBe(200);
+  expect(notePdf.headers()["content-type"]).toBe("application/pdf");
+  expect((await notePdf.body()).subarray(0, 5).toString("latin1")).toBe("%PDF-");
+  // … and a 404 for another seller, who does not even learn that it exists.
+  const otherContext = await browser.newContext({ baseURL });
+  const other = await otherContext.newPage();
+  await signIn(other, "seller_a", "/vendeur");
+  expect((await other.request.get(noteHref)).status()).toBe(404);
+  await otherContext.close();
   await expectNoSeriousViolation(seller);
   await context.close();
 });

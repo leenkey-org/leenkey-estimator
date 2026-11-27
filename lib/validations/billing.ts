@@ -44,10 +44,19 @@ export type CheckoutMetadata = z.infer<typeof checkoutMetadataSchema>;
 /** The session of a return from Stripe (`?session_id=`), read to know whether it is active. */
 export const sessionIdSchema = z.string().regex(/^cs_[A-Za-z0-9_]{1,200}$/);
 
-/** « Renoncer au contrat » (L1-40): the subscription the seller renounces. */
-export const withdrawSchema = z.object({ subscriptionId: z.string().uuid() });
+/**
+ * What is renounced (DECISIONS.md 2026-11-26): « full », everything paid for
+ * the plan in force; « upgrade », a passage alone, back to the plan it replaced.
+ */
+export const withdrawalScope = z.enum(["full", "upgrade"]);
 
-/** The answer of subscription_withdraw (supabase/migrations/20261108180000_plan_withdrawal_term.sql). */
+/** « Renoncer au contrat » (L1-40): the subscription the seller renounces, and what of it. */
+export const withdrawSchema = z.object({
+  subscriptionId: z.string().uuid(),
+  scope: withdrawalScope,
+});
+
+/** The answer of subscription_withdraw (supabase/migrations/20261126160000_withdrawal_choice.sql). */
 export const withdrawalResultSchema = z.object({
   status: z.enum(["recorded", "already"]),
   requested_at: z.string(),
@@ -61,7 +70,22 @@ export const withdrawalResultSchema = z.object({
   replaced_plan_name: z.string().nullable().optional(),
   replaced_amount_paid_cents: z.number().int().optional(),
   replaced_activated_at: z.string().optional(),
+  // What was chosen; a request already recorded says its choice only.
+  scope: withdrawalScope.optional(),
+  refund_due_cents: z.number().int().optional(),
+  // The plan in force from the request on (the free plan after « full »).
+  back_to_plan: planCode.optional(),
+  back_to_plan_name: z.string().nullable().optional(),
 });
+
+/**
+ * The download of a document of « Mes factures et paiements »: the invoice
+ * of a payment (`facture`, its subscription) or a credit note (`avoir`, its
+ * row), one of the two.
+ */
+export const documentQuerySchema = z
+  .object({ facture: z.string().uuid().optional(), avoir: z.string().uuid().optional() })
+  .refine((query) => Boolean(query.facture) !== Boolean(query.avoir));
 
 /** The upgrade prompts (L2-09, SPEC-V2 11 bis), in the order a page chooses them. */
 export const UPGRADE_TRIGGERS = [

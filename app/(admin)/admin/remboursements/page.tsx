@@ -14,15 +14,22 @@ import { pillClassName, StatusBadge } from "@/components/shared/status-badge";
 import { requireAdmin } from "@/core/auth/session";
 import { dashboardPaymentUrl } from "@/core/billing/stripe";
 import { CreditNoteRetry } from "@/leenkey/admin/components/credit-note-retry";
+import { RefundEmailResend } from "@/leenkey/admin/components/refund-email-resend";
 import { adminMetadata } from "@/leenkey/admin/metadata";
 import { adminRefunds, refundCounts, type AdminRefundRow } from "@/leenkey/admin/refunds/queries";
 import {
   creditNoteState,
+  leftOfPayment,
+  leftOfWithdrawal,
   refundDeadline,
+  refundLate,
+  refundedOfPayment,
   refundStatus,
   type RefundStatus,
   waitsForRefund,
+  withdrawalPending,
 } from "@/leenkey/admin/refunds/status";
+import { pendingRefundEmails } from "@/leenkey/billing/refund-emails";
 import { legalDate } from "@/leenkey/billing/withdrawal";
 import { ROUTES } from "@/leenkey/navigation/spaces";
 import { formatAmount } from "@/lib/format";
@@ -50,10 +57,24 @@ const TONE: Record<RefundStatus, string> = {
 
 const badge = cn(pillClassName, "px-2.5 py-1.25 text-lk-micro font-semibold");
 
-/** The status in words (« Remboursé le 25 novembre 2026 »): the colour never alone. */
+/**
+ * The status in words (« Remboursé le 25 novembre 2026 »): the colour never
+ * alone. A withdrawal with money left says « Rétractation – Remboursement en
+ * attente » (Cédric, 2026-11-26), and « En retard » beside it past the 14 days.
+ */
 function StatusPill({ row, now }: { row: AdminRefundRow; now: Date }) {
   const status = refundStatus(row, now);
   const date = row.refundedAt ?? row.lastRefundAt;
+  if (withdrawalPending(row, now)) {
+    return (
+      <span className="flex flex-wrap items-center gap-1.5 self-start">
+        <span className={cn(badge, TONE.to_refund)}>{t.status.withdrawalPending}</span>
+        {refundLate(row, now) ? (
+          <span className={cn(badge, TONE.late)}>{t.status.late}</span>
+        ) : null}
+      </span>
+    );
+  }
   const label =
     status === "refunded" && date ? t.status.refundedOn(legalDate(date)) : t.status[status];
   return <span className={cn(badge, TONE[status], "self-start")}>{label}</span>;
@@ -84,7 +105,8 @@ function StripeLink({ row, now }: { row: AdminRefundRow; now: Date }) {
   );
 }
 
-function CreditNoteCell({ row }: { row: AdminRefundRow }) {
+/** `emailPending`: a credit note of this plan whose email to the seller did not leave. */
+function CreditNoteCell({ row, emailPending }: { row: AdminRefundRow; emailPending: boolean }) {
   const state = creditNoteState(row);
   const notes = row.creditNotes.map((note) =>
     note.pdfUrl ? (
@@ -104,11 +126,14 @@ function CreditNoteCell({ row }: { row: AdminRefundRow }) {
       </span>
     ),
   );
-  if (state !== "missing" && notes.length === 0) return null;
+  if (state !== "missing" && notes.length === 0 && !emailPending) return null;
   return (
     <div className="flex flex-col items-start gap-1 text-lk-secondary">
       {notes}
       {state === "missing" ? <CreditNoteRetry subscriptionId={row.subscriptionId} /> : null}
+      {state !== "missing" && emailPending ? (
+        <RefundEmailResend subscriptionId={row.subscriptionId} />
+      ) : null}
     </div>
   );
 }
@@ -125,7 +150,7 @@ function RequestDates({
   short?: boolean;
 }) {
   if (!row.requestedAt) return <span className="text-lk-ink-3">{t.noRequest}</span>;
-  const late = refundStatus(row, now) === "late";
+  const late = refundLate(row, now);
   return (
     <span className="flex flex-col">
       <span className="text-lk-ink-2">
@@ -145,14 +170,59 @@ function RequestDates({
   );
 }
 
-/** What is to refund: the amount paid, and what Stripe already refunded of it. */
+/**
+ * What is to refund: the amount paid, and what Stripe already refunded of it.
+ * For a withdrawal (2026-11-26): what is due, refunded and left for this
+ * payment; for a request of two payments, what is left of the whole; and the
+ * plan the seller is back on.
+ */
 function Amount({ row }: { row: AdminRefundRow }) {
+  if (!row.requestedAt) {
+    return (
+      <span className="flex flex-col">
+        <span className="font-semibold text-lk-ink tabular">
+          {formatAmount(row.amountPaidCents)}
+        </span>
+        {row.refundedCents > 0 && row.refundedCents < row.amountPaidCents ? (
+          <span className="text-lk-caption text-lk-ink-3 tabular">
+            {t.refundedAmount(formatAmount(row.refundedCents))}
+          </span>
+        ) : null}
+      </span>
+    );
+  }
+  const left = leftOfPayment(row);
+  const requestLeft = leftOfWithdrawal(row);
   return (
     <span className="flex flex-col">
-      <span className="font-semibold text-lk-ink tabular">{formatAmount(row.amountPaidCents)}</span>
-      {row.refundedCents > 0 && row.refundedCents < row.amountPaidCents ? (
-        <span className="text-lk-caption text-lk-ink-3 tabular">
-          {t.refundedAmount(formatAmount(row.refundedCents))}
+      <span className="font-semibold text-lk-ink tabular">
+        {t.due(formatAmount(row.amountPaidCents))}
+      </span>
+      <span className="text-lk-caption text-lk-ink-2 tabular">
+        {t.refunded(formatAmount(refundedOfPayment(row)))}
+      </span>
+      <span
+        className={cn(
+          "text-lk-caption tabular",
+          left > 0 ? "font-semibold text-lk-ink" : "text-lk-ink-2",
+        )}
+      >
+        {t.left(formatAmount(left))}
+      </span>
+      {row.withdrawalDueCents !== null &&
+      requestLeft !== null &&
+      (row.withdrawalPayments ?? 1) > 1 ? (
+        <span className="max-w-56 text-lk-caption text-lk-ink-3 tabular">
+          {t.requestTotal(
+            formatAmount(row.withdrawalDueCents),
+            formatAmount(requestLeft),
+            row.withdrawalPayments ?? 2,
+          )}
+        </span>
+      ) : null}
+      {row.backToPlan ? (
+        <span className="max-w-56 text-lk-caption text-lk-ink-3">
+          {t.backTo(fr.plan[row.backToPlan])}
         </span>
       ) : null}
     </span>
@@ -171,6 +241,12 @@ export default async function AdminRefundsPage() {
   await requireAdmin();
   const list = await adminRefunds();
   const now = new Date();
+  // The credit notes whose email to the seller did not leave: « Renvoyer
+  // l'email » (a read that fails shows none, the page stays usable).
+  const pending = list.ok
+    ? await pendingRefundEmails(list.data.map((row) => row.subscriptionId))
+    : null;
+  const unsent = new Set((pending ?? []).map((email) => email.subscriptionId));
 
   let content: ReactNode;
   if (!list.ok) {
@@ -218,7 +294,7 @@ export default async function AdminRefundsPage() {
               <p className="text-lk-caption">
                 <RequestDates row={row} now={now} />
               </p>
-              <CreditNoteCell row={row} />
+              <CreditNoteCell row={row} emailPending={unsent.has(row.subscriptionId)} />
               <StripeLink row={row} now={now} />
             </li>
           ))}
@@ -258,7 +334,7 @@ export default async function AdminRefundsPage() {
                   {/* The credit note under the status: seven columns do not fit beside the sidebar. */}
                   <div className="flex flex-col items-start gap-1.5">
                     <StatusPill row={row} now={now} />
-                    <CreditNoteCell row={row} />
+                    <CreditNoteCell row={row} emailPending={unsent.has(row.subscriptionId)} />
                   </div>
                 </DataTableCell>
               </DataTableRow>

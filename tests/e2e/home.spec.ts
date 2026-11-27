@@ -17,6 +17,11 @@ async function seriousViolations(page: Page) {
   await page.evaluate(() => document.fonts.ready);
   // Nothing waits below the screen (DESIGN.md 9): axe reads the whole page.
   await page.emulateMedia({ reducedMotion: "reduce" });
+  // A reveal already under way ends first: read half faded, its text fails
+  // the contrast check one run in a few.
+  await page.evaluate(() =>
+    Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => null))),
+  );
   const results = await new AxeBuilder({ page }).analyze();
   return results.violations
     .filter((violation) => violation.impact === "serious" || violation.impact === "critical")

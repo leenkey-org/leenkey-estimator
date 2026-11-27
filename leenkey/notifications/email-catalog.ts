@@ -614,9 +614,13 @@ async function withdrawalsToProcess(email: PlannedEmail): Promise<RenderedEmail 
   if (email.items.length === 0) return null;
   const items = email.items.map((item) => {
     const requested = text(item.data.requested_at);
-    // A passage renounced with the plan it replaced: both are refunded.
+    // What is due for the request (2026-11-26); before it, a passage renounced
+    // with the plan it replaced: both are refunded.
+    const due = Number(item.data.refund_due_cents);
     const amount =
-      Number(item.data.amount_paid_cents) + (Number(item.data.replaced_amount_paid_cents) || 0);
+      Number.isFinite(due) && due > 0
+        ? due
+        : Number(item.data.amount_paid_cents) + (Number(item.data.replaced_amount_paid_cents) || 0);
     const replaced = text(item.data.replaced_plan_name);
     const plan = text(item.data.plan_name) ?? "";
     return {
@@ -625,6 +629,7 @@ async function withdrawalsToProcess(email: PlannedEmail): Promise<RenderedEmail 
       amount: formatAmount(Number.isFinite(amount) ? amount : 0),
       requestedAt: requested ? legalDateTime(requested) : "",
       earlyStart: item.data.early_start === true,
+      backTo: text(item.data.back_to_plan_name),
     };
   });
   return rendered(

@@ -21,7 +21,9 @@ export const MEDIATOR: Mediator = {
 
 export const SALES_TERMS = {
   /** Published version (date) of the CGV accepted at checkout (/cgv, lib/i18n/legal-policies.ts). */
-  cgvVersion: "2026-11-25",
+  // 2026-11-26: article 10, the withdrawal after a passage and the services
+  // stopped at the request (DECISIONS.md 2026-11-26).
+  cgvVersion: "2026-11-26",
   /** The CGV for the launch are published (DECISIONS.md 2026-11-09, Q34). */
   cgvFinal: true,
   /** The consumer mediator Leenkey joined (Q32). */
@@ -48,3 +50,14 @@ export function paidPlansOrderable(
  * CGI). Any VAT written on an invoice would be due (article 283-3).
  */
 export const VAT_EXEMPTION_NOTICE = "TVA non applicable, article 293 B du CGI.";
+
+/**
+ * Printed in the header of the Stripe invoice of an order (Cédric,
+ * 2026-11-26: « Facture acquittée » once paid). Set when the order is
+ * created, and true all the same: Stripe draws the invoice of a Checkout
+ * Session only after the payment (« post-purchase invoice »), an unpaid
+ * order has no invoice. No date in it: the day of the payment is not known
+ * when the session is created (it can be paid an hour later, past
+ * midnight); the invoice carries its own date.
+ */
+export const INVOICE_PAID_FIELD = { name: "Paiement", value: "Facture acquittée" } as const;

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { EmailDelivery } from "@/core/notifications/email";
 import { getProfile } from "@/core/auth/session";
 import { recordCreditNotes } from "@/leenkey/billing/credit-notes";
+import { emailCreditNotes, type RefundEmails } from "@/leenkey/billing/refund-emails";
 import { openWithdrawal } from "@/leenkey/billing/withdrawal-open";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -251,7 +252,8 @@ export async function editListingAction(input: unknown): Promise<ListingEditResu
 }
 
 export type CreditNoteRetryResult =
-  | { ok: true; data: { created: number } }
+  /** `emails`: the confirmations of refund this call sent to the seller, and those that did not leave. */
+  | { ok: true; data: { created: number; emails: RefundEmails } }
   | { ok: false; error: "forbidden" | "invalid" | "not_found" | "no_invoice" | "unavailable" };
 
 /**
@@ -288,8 +290,62 @@ export async function retryCreditNote(input: unknown): Promise<CreditNoteRetryRe
     { actorId: profile.id },
   );
   revalidatePath("/admin/remboursements");
-  if (outcome.status === "recorded") return { ok: true, data: { created: outcome.created } };
+  if (outcome.status === "recorded") {
+    return { ok: true, data: { created: outcome.created, emails: outcome.emails } };
+  }
   if (outcome.status === "no_invoice") return { ok: false, error: "no_invoice" };
   if (outcome.status === "unknown") return { ok: false, error: "not_found" };
   return { ok: false, error: "unavailable" };
+}
+
+export type RefundEmailResendResult =
+  /** What left now, and what still could not; both 0 when nothing was to send. */
+  | { ok: true; data: RefundEmails }
+  | { ok: false; error: "forbidden" | "invalid" | "not_found" | "unavailable" };
+
+/**
+ * « Renvoyer l'email » on /admin/remboursements (DECISIONS.md 2026-11-26):
+ * the confirmations of refund of a plan that did not leave (the mail
+ * service refused, or their sender died) are sent again to the seller, each
+ * with its credit note; those already sent never leave twice
+ * (credit_note_email_claim). The subscription is read with the admin's
+ * session; the emails need the service role (the address of the seller, the
+ * marks of credit_notes), as the credit note asked again above. Who asked
+ * and what left is written in audit_log (refund_email_resent).
+ */
+export async function resendRefundEmail(input: unknown): Promise<RefundEmailResendResult> {
+  const profile = await getProfile();
+  if (!profile?.roles.includes("admin")) return { ok: false, error: "forbidden" };
+  const parsed = creditNoteRetrySchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const supabase = await createClient();
+  const { data: subscription, error } = await supabase
+    .from("subscriptions")
+    .select("id")
+    .eq("id", parsed.data.subscriptionId)
+    .maybeSingle();
+  if (error) {
+    console.error("[admin] refund email resend read failed", {
+      user_id: profile.id,
+      entity_id: parsed.data.subscriptionId,
+      code: error.code,
+    });
+    return { ok: false, error: "unavailable" };
+  }
+  if (!subscription) return { ok: false, error: "not_found" };
+  const emails = await emailCreditNotes(createAdminClient(), subscription.id);
+  const audit = await supabase.rpc("refund_email_resent", {
+    p_subscription_id: subscription.id,
+    p_sent: emails.sent,
+    p_failed: emails.failed,
+  });
+  if (audit.error) {
+    console.error("[admin] refund email resend not written in the audit log", {
+      user_id: profile.id,
+      entity_id: subscription.id,
+      code: audit.error.code,
+    });
+  }
+  revalidatePath("/admin/remboursements");
+  return { ok: true, data: emails };
 }

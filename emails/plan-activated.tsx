@@ -10,8 +10,10 @@ const fr = { emails: frEmails, legal: frLegal } as const;
 // of the order on a durable medium (L1-40, decision of 2026-10-15, model of
 // docs/juridique): the plan, its price, the property, the date, the duration,
 // when the services start, what the plan includes as it was sold, the CGU and
-// CGV accepted, the withdrawal and its model form. Sent by
-// leenkey/billing/emails.ts once the webhook recorded the payment.
+// CGV accepted, the withdrawal and its model form; the invoice of the order
+// attached, or a link to it when its PDF could not be fetched (Cédric,
+// 2026-11-26). Sent by leenkey/billing/emails.ts once the webhook recorded
+// the payment.
 
 const t = fr.emails.planActivated;
 
@@ -42,6 +44,14 @@ export type PlanActivatedEmailProps = {
   /** Last day of the withdrawal, « 23 novembre 2026 ». */
   withdrawalUntil: string;
   mediator: string | null;
+  /**
+   * The invoice of the order: attached to the email, or reached by
+   * `invoicesUrl`; « none » for an order with nothing to pay (a code of
+   * 100 %): no invoice is promised.
+   */
+  invoice?: "attached" | "link" | "none";
+  /** « Mes factures et paiements » of the seller. */
+  invoicesUrl: string;
   planUrl: string;
   siteUrl: string;
 };
@@ -64,6 +74,8 @@ export function PlanActivatedEmail({
   cgvVersion,
   withdrawalUntil,
   mediator,
+  invoice = "link",
+  invoicesUrl,
   planUrl,
   siteUrl,
 }: PlanActivatedEmailProps) {
@@ -127,7 +139,17 @@ export function PlanActivatedEmail({
       </Text>
 
       <Text style={small}>{mediator ? t.mediator(mediator) : t.mediatorPending}</Text>
-      <Text style={small}>{t.receipt}</Text>
+      {invoice === "none" ? null : invoice === "attached" ? (
+        <Text style={small}>{t.invoiceAttached}</Text>
+      ) : (
+        <Text style={small}>
+          {t.invoiceLink}{" "}
+          <Link href={invoicesUrl} style={emailLink}>
+            {t.invoiceLinkLabel}
+          </Link>
+          .
+        </Text>
+      )}
     </EmailLayout>
   );
 }

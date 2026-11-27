@@ -144,8 +144,39 @@ export const frEmails = {
     contactNow: "Votre conseiller Leenkey vous contacte sous 1\u00A0jour ouvré.",
     contactLater: (date: string) =>
       `Votre conseiller Leenkey vous contacte à partir du ${date}, après le délai de rétractation de 14\u00A0jours.`,
-    receipt: "Le reçu et la facture de votre paiement vous sont envoyés par email.",
+    // The invoice of the order (Cédric, 2026-11-26): attached, or to download.
+    invoiceAttached:
+      "Votre facture acquittée est jointe à cet email. Vous la retrouvez à tout moment dans votre espace, rubrique « Mes factures et paiements ».",
+    invoiceLink:
+      "Votre facture acquittée est à télécharger dans votre espace, rubrique « Mes factures et paiements » :",
+    invoiceLinkLabel: "télécharger ma facture",
     action: "Voir ma formule",
+  },
+  // The confirmation of a refund, to the seller, with its credit note
+  // (Cédric, 2026-11-26): once per credit note.
+  planRefunded: {
+    // `property` may be empty (a property without a reference nor a town).
+    subject: (plan: string, property: string) =>
+      property
+        ? `Confirmation de votre remboursement · formule ${plan} · ${property}`
+        : `Confirmation de votre remboursement · formule ${plan}`,
+    title: "Votre remboursement est effectué",
+    text: (amount: string, plan: string, property: string) =>
+      `Nous vous avons remboursé ${amount} pour votre formule ${plan}${property ? ` (bien ${property})` : ""}, par le moyen de paiement utilisé lors de la commande, sans frais.`,
+    withdrawal: (date: string) =>
+      `Ce remboursement fait suite à l'exercice de votre droit de rétractation, le ${date}.`,
+    bank: "Le délai pour le voir apparaître sur votre relevé dépend de votre banque.",
+    keepsTitle: "Ce que vous conservez",
+    keeps:
+      "Votre annonce, vos documents, vos messages et l'avancement de votre vente restent en place : rien n'est supprimé. La formule en vigueur pour votre bien est indiquée dans votre espace.",
+    // The date is the one of the credit note (Stripe), not of the refund itself.
+    creditNoteAttached: (number: string, date: string) =>
+      `Votre avoir ${number}, émis le ${date}, est joint à cet email. Vous le retrouvez à tout moment dans votre espace, rubrique « Mes factures et paiements ».`,
+    creditNoteLink: (number: string, date: string) =>
+      `Votre avoir ${number}, émis le ${date}, est à télécharger dans votre espace, rubrique « Mes factures et paiements » :`,
+    creditNoteLinkLabel: "télécharger mon avoir",
+    contact: (email: string) => `Pour toute question : ${email}.`,
+    action: "Voir mes factures et paiements",
   },
   // L1-40: the acknowledgment of a withdrawal, to the seller.
   withdrawalReceived: {
@@ -155,6 +186,13 @@ export const frEmails = {
       `Nous avons reçu le ${at} votre demande de rétractation pour la formule ${plan} (bien ${property}), souscrite le ${ordered}.`,
     replaced: (plan: string, ordered: string) =>
       `Elle comprend la formule ${plan}, souscrite le ${ordered} puis remplacée, encore dans son délai.`,
+    // What stops at once and what stays (DECISIONS.md 2026-11-26).
+    kept: (plan: string) =>
+      `Vous revenez à la formule ${plan} : elle continue jusqu'à son échéance initiale, avec votre conseiller et l'historique de votre accompagnement.`,
+    stops: (services: string) => `Ce qui s'arrête dès votre demande : ${services}.`,
+    stopsAll: "Les prestations payantes de votre formule s'arrêtent dès votre demande.",
+    keeps:
+      "Ce qui reste : votre annonce, vos documents, vos messages et l'avancement de votre vente sont conservés. Votre vente continue.",
     refund: (amount: string) =>
       `Nous vous remboursons ${amount} au plus tard 14 jours après votre demande, par le moyen de paiement utilisé lors de la commande, sans frais.`,
     early:
@@ -170,9 +208,10 @@ export const frEmails = {
         : `Rétractation à rembourser · formule ${plan} · ${property}`,
     title: (count: number) =>
       count > 1 ? `${count}\u00A0rétractations à rembourser` : "Une rétractation à rembourser",
-    text: "À rembourser depuis Stripe sous 14 jours : le remboursement met fin à la formule. Une note est dans le dossier du bien.",
+    text: "Les prestations payantes concernées sont arrêtées dès la demande. À rembourser depuis Stripe sous 14 jours ; le suivi est dans « Remboursements », une note dans le dossier du bien.",
     item: (plan: string, property: string, amount: string, at: string) =>
-      `Formule ${plan} · ${property} · ${amount} payés · demande du ${at}`,
+      `Formule ${plan} · ${property} · ${amount} à rembourser · demande du ${at}`,
+    backTo: (plan: string) => `retour à ${plan}`,
     early: "démarrage immédiat demandé : remboursement intégral tout de même",
     action: "Voir les remboursements",
   },

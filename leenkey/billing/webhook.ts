@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { checkoutMetadataSchema } from "@/lib/validations/billing";
 import { recordCreditNotes } from "./credit-notes";
+import { orderInvoiceAttachment } from "./documents";
 import { emailPlanActivated, emailPlanPurchased, type PaidOrder } from "./emails";
 
 // What a Stripe event changes for Leenkey (SPEC-V2 section 11), its signature
@@ -167,7 +168,13 @@ async function checkoutCompleted(
     check: result.check,
   };
   const [toSeller, toTeam] = await Promise.all([
-    held ? Promise.resolve("none" as const) : emailPlanActivated(paid),
+    held
+      ? Promise.resolve("none" as const)
+      : // The invoice of the order attached (Cédric, 2026-11-26); a link without its PDF.
+        // Within its own time budget (documents.ts); nothing to attach to an order of 0 €.
+        (amount > 0 ? orderInvoiceAttachment(session.id) : Promise.resolve(null)).then((invoice) =>
+          emailPlanActivated(paid, invoice),
+        ),
     emailPlanPurchased(paid, supabase),
   ]);
   log(held ? "payment recorded, plan held" : "payment recorded", {

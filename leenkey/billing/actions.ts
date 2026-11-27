@@ -2,10 +2,15 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { allPlans } from "@/core/billing/plans";
+import { allPlans, planFeatures } from "@/core/billing/plans";
 import { createCheckoutSession, retrievePrice, stripeConfigured } from "@/core/billing/stripe";
 import { getProfile, getUser } from "@/core/auth/session";
-import { paidPlansOrderable, SALES_TERMS, VAT_EXEMPTION_NOTICE } from "@/lib/config/sales";
+import {
+  INVOICE_PAID_FIELD,
+  paidPlansOrderable,
+  SALES_TERMS,
+  VAT_EXEMPTION_NOTICE,
+} from "@/lib/config/sales";
 import { appEnv } from "@/lib/env";
 import { LEGAL_VERSIONS } from "@/lib/legal/versions";
 import { absoluteUrl } from "@/lib/site";
@@ -20,7 +25,8 @@ import { emailWithdrawalReceived } from "./emails";
 import type { Database } from "@/types/database";
 import { checkoutMetadata, planChoice } from "./orders";
 import { priceIdFor, priceMatches } from "./prices";
-import { canWithdraw } from "./withdrawal";
+import { canWithdraw, withdrawalOptions } from "./withdrawal";
+import { stoppedServices } from "./withdrawal-view";
 
 type PlanCode = Database["public"]["Enums"]["plan_code"];
 
@@ -149,6 +155,7 @@ export async function startCheckout(input: unknown): Promise<StartCheckoutResult
       successUrl: absoluteUrl(`${back}&paiement=ok&session_id={CHECKOUT_SESSION_ID}`),
       cancelUrl: absoluteUrl(`${back}&paiement=annule`),
       invoiceFooter: VAT_EXEMPTION_NOTICE,
+      invoiceCustomFields: [INVOICE_PAID_FIELD],
       // One key per order: Stripe sends back the same session if this very
       // request is retried, never for a second click (another acceptance time).
       idempotencyKey: randomUUID(),
@@ -217,6 +224,7 @@ export type WithdrawError =
   | "not_found"
   | "over"
   | "not_in_force"
+  | "not_offered"
   | "unavailable";
 
 export type WithdrawResult =
@@ -227,8 +235,12 @@ export type WithdrawResult =
  * « Renoncer au contrat »: within the 14 days (the last day checked here, the
  * base refusing only far past it), recorded by subscription_withdraw with the
  * seller's session, then the acknowledgment by email at once; the team hears
- * of it through the notifications. A second request keeps the first and sends
- * nothing. A suspended account may still renounce: a right of the consumer.
+ * of it through the notifications. After a passage the seller chooses the
+ * passage alone (« upgrade », back to the plan it replaced) or everything
+ * (« full »), among what withdrawalOptions offers that day (DECISIONS.md
+ * 2026-11-26). The paid services concerned stop with the request. A second
+ * request keeps the first and sends nothing. A suspended account may still
+ * renounce: a right of the consumer.
  */
 export async function withdrawPlan(input: unknown): Promise<WithdrawResult> {
   const [user, profile] = await Promise.all([getUser(), getProfile()]);
@@ -238,7 +250,7 @@ export async function withdrawPlan(input: unknown): Promise<WithdrawResult> {
   const supabase = await createClient();
   const { data: subscription, error: readError } = await supabase
     .from("subscriptions")
-    .select("id, activated_at, withdrawal_requested_at")
+    .select("id, plan, activated_at, amount_paid_cents, withdrawal_requested_at")
     .eq("id", parsed.data.subscriptionId)
     .maybeSingle();
   if (readError) {
@@ -253,14 +265,17 @@ export async function withdrawPlan(input: unknown): Promise<WithdrawResult> {
   if (!subscription.withdrawal_requested_at && !canWithdraw(subscription.activated_at)) {
     return { ok: false, error: "over" };
   }
-  // After a passage, the plan replaced goes with it while in its own period.
+  // After a passage: the plan replaced, renounced with it or gone back to.
   const replaced = await supabase
     .from("subscriptions")
-    .select("activated_at")
+    .select("plan, activated_at, amount_paid_cents")
     .eq("replaced_by", subscription.id)
     .is("withdrawal_requested_at", null)
     .is("refunded_at", null)
     .gt("amount_paid_cents", 0)
+    // The one subscription_withdraw picks.
+    .order("activated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
   if (replaced.error) {
     console.error("[billing] withdrawal read failed", {
@@ -270,12 +285,33 @@ export async function withdrawPlan(input: unknown): Promise<WithdrawResult> {
     });
     return { ok: false, error: "unavailable" };
   }
+  // Only a choice offered today (a request already recorded is answered as it stands).
+  if (!subscription.withdrawal_requested_at) {
+    const offered = withdrawalOptions(
+      {
+        plan: subscription.plan,
+        activatedAt: subscription.activated_at,
+        amountPaidCents: subscription.amount_paid_cents,
+      },
+      replaced.data
+        ? {
+            plan: replaced.data.plan,
+            activatedAt: replaced.data.activated_at,
+            amountPaidCents: replaced.data.amount_paid_cents,
+          }
+        : null,
+    );
+    if (!offered.some((option) => option.scope === parsed.data.scope)) {
+      return { ok: false, error: "not_offered" };
+    }
+  }
   const { data, error } = await supabase.rpc("subscription_withdraw", {
     p_subscription_id: subscription.id,
-    p_with_replaced: replaced.data ? canWithdraw(replaced.data.activated_at) : false,
+    p_scope: parsed.data.scope,
   });
   if (error) {
     if (error.code === "22023") return { ok: false, error: "over" };
+    if (error.code === "0A000") return { ok: false, error: "not_offered" };
     if (error.code === "55000") return { ok: false, error: "not_in_force" };
     if (error.code === "42501") return { ok: false, error: "not_found" };
     console.error("[billing] withdrawal not recorded", {
@@ -296,13 +332,20 @@ export async function withdrawPlan(input: unknown): Promise<WithdrawResult> {
   const recorded = result.data;
   let acknowledged = true;
   if (recorded.status === "recorded") {
+    const scope = recorded.scope ?? "full";
+    // The plan kept by a passage renounced alone; nothing paid otherwise.
+    const kept = scope === "upgrade" ? (recorded.back_to_plan ?? null) : null;
     const delivery = await emailWithdrawalReceived({
       sellerEmail: user.email ?? null,
       sellerFirstName: profile.firstName ?? null,
       planName: recorded.plan_name ?? "",
       property: recorded.reference ?? "",
       propertyId: recorded.property_id,
-      amountCents: recorded.amount_paid_cents + (recorded.replaced_amount_paid_cents ?? 0),
+      amountCents:
+        recorded.refund_due_cents ??
+        recorded.amount_paid_cents + (recorded.replaced_amount_paid_cents ?? 0),
+      keptPlanName: kept ? (recorded.back_to_plan_name ?? null) : null,
+      stops: stoppedServices(await planFeatures(), subscription.plan, kept),
       activatedAt: recorded.activated_at,
       requestedAt: recorded.requested_at,
       earlyStart: recorded.early_start,

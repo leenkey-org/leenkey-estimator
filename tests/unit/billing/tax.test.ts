@@ -45,4 +45,19 @@ describe("invoiceCreation", () => {
     expect(invoiceCreation(notice, "txr_123")).toEqual({ enabled: true });
     expect(invoiceCreation(undefined, undefined)).toEqual({ enabled: true });
   });
+
+  // « Facture acquittée » (Cédric, 2026-11-26): a line of the header of the
+  // invoice, with or without a tax rate.
+  it("prints the lines of the header, next to the notice or alone", () => {
+    const paid = [{ name: "Paiement", value: "Facture acquittée" }];
+    expect(invoiceCreation(notice, undefined, paid)).toEqual({
+      enabled: true,
+      invoice_data: { footer: notice, custom_fields: paid },
+    });
+    expect(invoiceCreation(notice, "txr_123", paid)).toEqual({
+      enabled: true,
+      invoice_data: { custom_fields: paid },
+    });
+    expect(invoiceCreation(undefined, undefined, [])).toEqual({ enabled: true });
+  });
 });

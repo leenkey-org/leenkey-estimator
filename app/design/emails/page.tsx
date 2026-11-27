@@ -23,6 +23,7 @@ import { NewMessagesEmail, newMessagesSubject } from "@/emails/new-messages";
 import { PlanActivatedEmail, planActivatedSubject } from "@/emails/plan-activated";
 import { OffersAcceptedEmail, offersAcceptedSubject } from "@/emails/offers-accepted";
 import { PlanEndingEmail, planEndingSubject } from "@/emails/plan-ending";
+import { PlanRefundedEmail, planRefundedSubject } from "@/emails/plan-refunded";
 import { WithdrawalReceivedEmail, withdrawalReceivedSubject } from "@/emails/withdrawal-received";
 import {
   WithdrawalsToProcessEmail,
@@ -212,7 +213,25 @@ function previews(): Preview[] {
         cgvVersion: "17 octobre 2026",
         withdrawalUntil: "16 novembre 2026",
         mediator: null,
+        invoice: "attached",
+        invoicesUrl: `${site}/vendeur/formule#factures`,
         planUrl: `${site}/vendeur/formule`,
+        siteUrl: site,
+      }),
+    },
+    {
+      name: t.names.planRefunded,
+      subject: planRefundedSubject("Accompagné", s.reference),
+      element: PlanRefundedEmail({
+        firstName: "Bruno",
+        planName: "Accompagné",
+        property: s.reference,
+        amount: formatPrice(99000),
+        issuedOn: "9 novembre 2026",
+        withdrawnOn: "5 novembre 2026",
+        creditNoteNumber: "LK-0001-CN-01",
+        creditNoteAttached: true,
+        documentsUrl: `${site}/vendeur/formule#factures`,
         siteUrl: site,
       }),
     },
@@ -228,6 +247,12 @@ function previews(): Preview[] {
         amount: formatPrice(99000),
         earlyStart: false,
         replaced: null,
+        keptPlanName: null,
+        stops: [
+          "Conseiller dédié",
+          "Regard personnalisé sur le prix et la stratégie",
+          "Relecture et optimisation de l'annonce",
+        ],
         planUrl: `${site}/vendeur/formule`,
         siteUrl: site,
       }),

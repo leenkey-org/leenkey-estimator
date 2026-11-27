@@ -69,6 +69,16 @@ test("la page formule : trois formules, la formule actuelle, le récapitulatif e
   await expect(plans.getByRole("listitem").first()).toContainText("Formule actuelle");
   await expect(plans.getByText("Le plus complet")).toBeVisible();
   await expect(page.getByText(/Paiement sécurisé par carte via Stripe/)).toBeVisible();
+  // « Mes factures et paiements » (2026-11-26): every payment of the seller,
+  // whatever the property shown. The seed payment of LK-0001 was not made by
+  // Checkout: listed, without an invoice to download.
+  const payments = page.getByRole("region", { name: "Mes factures et paiements" });
+  const paid = payments.getByRole("listitem").filter({ hasText: "Formule Accompagné" });
+  await expect(paid).toHaveCount(1);
+  await expect(paid).toContainText(/Payé le \d{1,2}(er)? \S+ \d{4} · 990\s€/);
+  await expect(paid.getByText("Payé", { exact: true })).toBeVisible();
+  await expect(paid.getByRole("link", { name: /Télécharger la facture/ })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Vos avoirs" })).toHaveCount(0);
   await expectNoSeriousViolation(page);
 
   await plans.getByRole("button", { name: "Choisir Accompagné" }).click();
