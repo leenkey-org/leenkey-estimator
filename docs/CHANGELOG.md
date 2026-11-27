@@ -12,6 +12,15 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Migration : 20261012_profiles.sql
 -->
 
+### 2026-11-26 · Copropriété, audit énergétique, « Bonjour » des réponses suggérées · PR #151
+- Modifié : étape 2 de la création d'un bien et « Modifier les caractéristiques » : pour une maison ou un autre bien, la question « Ce bien est-il en copropriété ? » (Oui / Non, « Non » par défaut). « Non » : les charges, les lots et la surface Carrez ne sont ni demandés ni conservés, la taxe foncière reste (sans le bloc « Charges et copropriété ») ; le dossier de vente ne demande aucune pièce de copropriété. Un appartement ne change pas. Les biens existants qui portent des lots, des charges ou une surface Carrez sont repris « Oui ».
+- Ajouté : « Audit énergétique » dans les documents du dossier de vente (« Documents du bien », dès la mise en vente) : demandé pour une maison ou un autre bien hors copropriété dont le DPE est classé E, F ou G, « Facultatif » sinon, jamais pour un terrain ; « Non concerné » possible ; ne bloque jamais la publication (règle proposée, à valider par Cédric : `DECISIONS.md`).
+- Modifié : « Suggérer une réponse » ne commence par « Bonjour » qu'au premier message du vendeur à cet acquéreur dans la journée (calendrier de Paris, calculé en code et dit au modèle), puis poursuit la discussion sans salutation.
+- Modifié : l'assistant vendeur lit si la maison est en copropriété (`get_property_details`, fiche du bien des suggestions).
+- À reprendre après la fusion des PR de facturation : `leenkey/billing/upgrade-queries.ts` lit encore la copropriété d'après les lots et sans le DPE (une ligne) ; son décompte des pièces manquantes peut différer de l'onglet « Documents » pour une maison « Oui » sans nombre de lots ou classée E, F ou G.
+- Tests : `creation.test.ts`, `checklist.test.ts`, `documents-config.test.ts`, `suggestions.test.ts`, `suggestion-access.test.ts` ; `rls_coownership_energy_audit.sql` ; `property-creation.spec.ts` et `sale-file-live.spec.ts` complétées.
+- Migration : 20261126170000_coownership_energy_audit.sql (colonne `properties.is_coownership`, déclencheur `properties_coownership`, valeur `audit_energetique` de `document_type`)
+
 ### 2026-11-26 · Factures, avoirs et emails des formules · PR #150
 - Ajouté : la facture Stripe en pièce jointe de l'email de confirmation de souscription (`plan.activated`) ; à défaut de PDF (facture pas encore prête, Stripe injoignable), un lien vers « Mes factures et paiements » : l'email part toujours.
 - Ajouté : email « Confirmation de votre remboursement » au vendeur (`emails/plan-refunded.tsx`), un par avoir, avec l'avoir en pièce jointe (ou le lien), le montant, la formule et ce que le vendeur conserve ; envoyé après l'enregistrement de l'avoir, par le webhook `charge.refunded` comme par « Créer l'avoir » du back office.
@@ -33,7 +42,6 @@ Format : une entrée par PR fusionnée dans `v2`, la plus récente en haut. Les 
 - Sécurité : `subscription_withdraw(uuid, text)` (mêmes droits : `authenticated`, propriétaire vérifié dans la fonction), qui refuse désormais dès le lendemain du dernier jour du délai (`withdrawal_last_day`, même calcul que le site) ; l'ancienne signature `(uuid, boolean)` reste un relais pendant une version, à supprimer à la migration suivante ; `admin_refunds()` recréée avec cinq colonnes de plus (équipe seulement) ; `withdrawal_refunds(bien)` pour le propriétaire du bien et l'équipe ; aucune politique RLS modifiée.
 - Migration : 20261126160000_withdrawal_choice.sql
 - Tests : `rls_withdrawal_choice.sql` (135), `rls_plan_withdrawal_term.sql` et `rls_has_entitlement.sql` adaptés à la nouvelle règle ; tests unitaires des options, des montants et des statuts.
-
 ### 2026-11-26 · Cockpit : navigation en colonne (acquéreur et vendeur) · PR #149
 - Ajouté : à partir de 1 024 px, une colonne à gauche des pages de l'espace connecté (`SpaceSidebar`, `app/(app)/layout.tsx`) : carte du compte (initiale, nom, email) et navigation de l'espace courant, page courante sur une pastille teintée. Acquéreur : Vue d'ensemble, Mes favoris, Mes alertes, Messages, Mon projet d'achat, Documents partagés, puis Chercher, Vendre, Mon compte. Vendeur : Ma vente, Dossier, Messages, Ma formule, puis Acheter, Mon compte. Pas de colonne sur la messagerie, les formulaires en étapes, l'assistant ni le back office ; rien ne change sous 1 024 px.
 - Modifié : accueil de l'acquéreur `/acquereur` : titre et phrase sur fond clair (plus de bandeau bleu), la dernière recherche sur un panneau teinté, puis des cartes bordées « Titre · n » (dossier, visites, offres, favoris, conversations, alertes, documents partagés, services).

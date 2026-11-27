@@ -57,6 +57,7 @@ describe("answers of the estimator", () => {
       ges: null,
       heating: "Collectif gaz",
       features: ["balcony", "parking", "cellar", "elevator"],
+      coOwnership: true,
       chargesMonthlyEuros: 180.5,
       propertyTaxYearlyEuros: null,
       coproLots: null,

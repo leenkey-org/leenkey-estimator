@@ -1,16 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
   CO_OWNERSHIP_DOCUMENTS,
+  coOwnershipOf,
   DIAGNOSTIC_TYPES,
   DOCUMENT_CATEGORIES,
   DOCUMENT_CATEGORY,
   DOCUMENT_ORDER,
   DOCUMENT_STAGE,
   DOCUMENT_STAGES,
+  ENERGY_AUDIT_CLASSES,
+  ENERGY_AUDIT_TYPE,
+  energyAuditAsked,
   EXEMPTIBLE_DOCUMENTS,
   guessDocumentType,
   inCoOwnership,
   NOTARY_FILE_STAGES,
+  offeredDocuments,
   OPTIONAL_DOCUMENTS,
   PROPERTY_DOCUMENTS,
   requiredDocuments,
@@ -55,6 +60,8 @@ describe("the documents of the sale file", () => {
       "erp",
       "assainissement",
       "carrez",
+      // DECISIONS.md 2026-11-26: after the diagnostics, not one a DDT covers.
+      "audit_energetique",
       "certificat_urbanisme",
       "taxe_fonciere",
       "facture_travaux",
@@ -79,6 +86,7 @@ describe("the documents of the sale file", () => {
     expect(at("listing")).toEqual([
       "titre_propriete",
       ...DOCUMENT_ORDER.filter((type) => DIAGNOSTIC_TYPES.includes(type)),
+      "audit_energetique",
       "certificat_urbanisme",
     ]);
     // The tax, the works and the co-ownership before the agreement.
@@ -182,9 +190,51 @@ describe("the documents of the sale file", () => {
     expect(requiredDocuments("terrain", true)).toEqual(requiredDocuments("terrain"));
   });
 
+  // DECISIONS.md 2026-11-26 (when it is asked for: to be validated by Cédric).
+  it("the energy audit: asked for a building in single ownership in class E, F or G, never for land", () => {
+    expect(ENERGY_AUDIT_TYPE).toBe("audit_energetique");
+    expect(ENERGY_AUDIT_CLASSES).toEqual(["E", "F", "G"]);
+    const house = { type: "maison", coOwnership: false, dpe: "F" } as const;
+    expect(energyAuditAsked(house)).toBe(true);
+    expect(energyAuditAsked({ ...house, type: "autre" })).toBe(true);
+    expect(energyAuditAsked({ ...house, dpe: "D" })).toBe(false);
+    expect(energyAuditAsked({ ...house, dpe: null })).toBe(false);
+    expect(energyAuditAsked({ ...house, coOwnership: true })).toBe(false);
+    expect(energyAuditAsked({ ...house, type: "appartement", coOwnership: true })).toBe(false);
+    expect(energyAuditAsked({ ...house, type: "terrain" })).toBe(false);
+    expect(energyAuditAsked({ ...house, type: null })).toBe(false);
+    expect(energyAuditAsked({ ...house, dpeExempt: true })).toBe(false);
+    expect(energyAuditAsked({ ...house, type: "autre", dpeKind: "tertiaire" })).toBe(false);
+
+    expect(requiredDocuments("maison", false, true)).toHaveLength(12);
+    expect(requiredDocuments("maison", false, true)).toContain("audit_energetique");
+    expect(requiredDocuments("maison", false)).not.toContain("audit_energetique");
+    expect(requiredDocuments("terrain", false, true)).toEqual(requiredDocuments("terrain"));
+    // Offered to a building, before what the notary asks besides; never to land.
+    expect(offeredDocuments("maison")).toEqual(["audit_energetique", "autre"]);
+    expect(offeredDocuments("appartement")).toEqual(["audit_energetique", "autre"]);
+    expect(offeredDocuments(null)).toEqual(["audit_energetique", "autre"]);
+    expect(offeredDocuments("terrain")).toEqual(["autre"]);
+    // Not a diagnostic a DDT covers (the constraint documents_covers), filed alone.
+    expect(DIAGNOSTIC_TYPES).not.toContain("audit_energetique");
+    expect(EXEMPTIBLE_DOCUMENTS).toContain("audit_energetique");
+    expect(guessDocumentType("Audit_energetique_2026.pdf")).toBe("audit_energetique");
+    expect(guessDocumentType("audit-énergétique maison.pdf")).toBe("audit_energetique");
+    expect(guessDocumentType("DPE_2025.pdf")).toBe("dpe");
+  });
+
+  it("what the seller says of the co-ownership: a flat always, land never", () => {
+    expect(coOwnershipOf("maison", true)).toBe(true);
+    expect(coOwnershipOf("maison", false)).toBe(false);
+    expect(coOwnershipOf("autre", true)).toBe(true);
+    expect(coOwnershipOf("appartement", false)).toBe(true);
+    expect(coOwnershipOf("terrain", true)).toBe(false);
+    expect(coOwnershipOf(null, true)).toBe(true);
+  });
+
   it("every exemptible type is asked for at least one property", () => {
     expect(new Set(EXEMPTIBLE_DOCUMENTS).size).toBe(EXEMPTIBLE_DOCUMENTS.length);
-    const asked = new Set(PROPERTY_TYPES.flatMap((type) => requiredDocuments(type, true)));
+    const asked = new Set(PROPERTY_TYPES.flatMap((type) => requiredDocuments(type, true, true)));
     for (const type of EXEMPTIBLE_DOCUMENTS) expect(asked, type).toContain(type);
     // Always asked for, whatever the property.
     for (const type of ["dpe", "erp", "titre_propriete", "taxe_fonciere"] as const) {

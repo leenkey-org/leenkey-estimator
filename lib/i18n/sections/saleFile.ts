@@ -14,6 +14,8 @@ export const frSaleFile = {
     erp: "État des risques (ERP)",
     carrez: "Mesurage loi Carrez",
     assainissement: "Diagnostic assainissement",
+    // DECISIONS.md 2026-11-26 (asked by Cédric).
+    audit_energetique: "Audit énergétique",
     titre_propriete: "Titre de propriété",
     taxe_fonciere: "Taxe foncière",
     certificat_urbanisme: "Certificat d'urbanisme ou bornage",
@@ -79,6 +81,9 @@ export const frSaleFile = {
     // A word on a line, after the stage it is needed for.
     lineHelp: {
       carrez: "Pour un lot de copropriété.",
+      // When the law asks for it, as a help: the diagnostician confirms.
+      audit_energetique:
+        "Pour une maison ou un immeuble hors copropriété dont le DPE est classé E, F ou G.",
       plan_pluriannuel_travaux: "S'il existe.",
       appel_charges: "Vos appels de charges des 2 dernières années, par exemple.",
       autre: "Ce que votre notaire vous demande en plus (hors pièces d'identité).",

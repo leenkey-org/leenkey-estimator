@@ -93,7 +93,10 @@ const lineHelp = (type: DocumentType): string | null => lineHelps[type] ?? null;
 // (DECISIONS.md 2026-11-23, level A): first « Déposer mon DDT (un seul
 // fichier) », the one file of the diagnostician with the diagnostics it
 // holds, then the diagnostic lines, each still filed alone if need be; a
-// line the DDT covers reads « Fourni dans votre DDT ».
+// line the DDT covers reads « Fourni dans votre DDT ». The energy audit
+// (DECISIONS.md 2026-11-26) is a line after the diagnostics: asked for a
+// house or a building outside a co-ownership whose DPE is in class E, F or
+// G, « Facultatif » otherwise.
 export default async function PropertyDocumentsPage({ params, searchParams }: Props) {
   const [{ id }, { etape }] = await Promise.all([params, searchParams]);
   const property = await propertyForSheet(id);
@@ -114,7 +117,7 @@ export default async function PropertyDocumentsPage({ params, searchParams }: Pr
   const { checklist, documents, contacts, requests } = result.data;
   const now = new Date();
   // The types of the checklist first, then every other one.
-  const required = requiredDocuments(checked.type, checked.coOwnership);
+  const required = requiredDocuments(checked.type, checked.coOwnership, checked.energyAudit);
   const types: DocumentType[] = [
     ...required,
     ...DOCUMENT_ORDER.filter((type) => !required.includes(type)),

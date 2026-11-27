@@ -18,7 +18,10 @@ import { formatDay } from "@/lib/format";
 import { CONTACT_EMAIL } from "@/lib/i18n/sections/contact-email";
 import { frProperties } from "@/lib/i18n/sections/properties";
 import { frSearch } from "@/lib/i18n/sections/search";
+import { coOwnershipOf } from "@/lib/config/documents";
 import {
+  asksCoOwnership,
+  CO_OWNERSHIP_FIELDS,
   DPE_KINDS,
   DPE_NUMBER,
   dpeOutdated,
@@ -68,7 +71,11 @@ const edits = fr.properties.edit;
 // takes the classes, the date and the figures from the register of ADEME;
 // they stay typed when the register has none or does not answer. What is
 // asked follows the rule of its kind (dpe_rules): business premises have no
-// cost range.
+// cost range. A house or another property is asked « Ce bien est-il en
+// copropriété ? » (DECISIONS.md 2026-11-26, « Non » at first): outside a
+// co-ownership, neither charges, nor lots, nor Carrez surface, and the
+// property tax goes with the details above, without the block « Charges et
+// copropriété ».
 
 type NumberField = Exclude<
   CharacteristicsField,
@@ -179,6 +186,11 @@ export function CharacteristicsStep({
   const [looking, startLooking] = useTransition();
   const [priceYear, setPriceYear] = useState(initial.energyPriceYear);
   const [features, setFeatures] = useState<PropertyFeature[]>(initial.features);
+  // What the seller answers for a house or another property, « Non » at
+  // first: a flat is in a co-ownership without having said so.
+  const [coOwnership, setCoOwnership] = useState(
+    asksCoOwnership(initial.type) && initial.coOwnership,
+  );
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<CharacteristicsField, string>>>({});
   const [error, setError] = useState<string | null>(null);
   const [saving, startSaving] = useTransition();
@@ -188,7 +200,10 @@ export function CharacteristicsStep({
 
   const hidden = (type && NOT_FOR_TYPE[type]) || { fields: [], features: [] };
   const land = type === "terrain";
-  const shows = (field: CharacteristicsField) => !hidden.fields.includes(field);
+  // A flat always, land never, a house or another property as its seller says.
+  const inCoOwnership = type ? coOwnershipOf(type, coOwnership) : true;
+  const shows = (field: CharacteristicsField) =>
+    !hidden.fields.includes(field) && (inCoOwnership || !CO_OWNERSHIP_FIELDS.includes(field));
   const shownFeatures = PROPERTY_FEATURES.filter((feature) => !hidden.features.includes(feature));
   const today = parisToday();
   const years = priceYears(today);
@@ -313,6 +328,7 @@ export function CharacteristicsStep({
       ges,
       heating,
       features,
+      coOwnership: inCoOwnership,
       chargesMonthlyEuros: typed.chargesMonthlyEuros ?? null,
       propertyTaxYearlyEuros: typed.propertyTaxYearlyEuros ?? null,
       coproLots: typed.coproLots ?? null,
@@ -720,6 +736,30 @@ export function CharacteristicsStep({
         </fieldset>
       ) : null}
 
+      {asksCoOwnership(type) ? (
+        <div className="flex flex-col gap-1.5">
+          <SegmentedPicker
+            label={t.coOwnership.question}
+            value={coOwnership ? "yes" : "no"}
+            onValueChange={(value) => {
+              setCoOwnership(value === "yes");
+              // A field no longer shown keeps no error.
+              setFieldErrors((current) => ({
+                ...current,
+                carrezM2: undefined,
+                chargesMonthlyEuros: undefined,
+                coproLots: undefined,
+              }));
+            }}
+            options={[
+              { value: "yes", label: t.coOwnership.yes },
+              { value: "no", label: t.coOwnership.no },
+            ]}
+          />
+          <p className="text-lk-caption text-pretty text-lk-ink-3">{t.coOwnership.help}</p>
+        </div>
+      ) : null}
+
       {land ? null : (
         <div className="grid grid-cols-2 gap-x-3 gap-y-4">
           {shows("carrezM2") ? unitInput("carrezM2", t.carrez, "m²") : null}
@@ -746,10 +786,12 @@ export function CharacteristicsStep({
               ))}
             </Select>
           ) : null}
+          {/* Outside a co-ownership: the tax here, no block « Charges et copropriété ». */}
+          {inCoOwnership ? null : unitInput("propertyTaxYearlyEuros", t.tax, t.perYear)}
         </div>
       )}
 
-      {land ? null : (
+      {land || !inCoOwnership ? null : (
         <fieldset className="flex flex-col gap-4">
           <legend className="mb-1 text-lk-h3 font-semibold text-lk-ink">{t.details}</legend>
           <div className="grid grid-cols-2 gap-x-3 gap-y-4">

@@ -32,6 +32,7 @@ export function characteristicsColumns(value: Omit<Characteristics, "propertyId"
     charges_monthly_cents: cents(value.chargesMonthlyEuros),
     property_tax_yearly_cents: cents(value.propertyTaxYearlyEuros),
     copro_lots: value.coproLots,
+    is_coownership: value.coOwnership,
     dpe_exempt: value.dpeExempt,
     dpe_exemption_reason: value.dpeExemptionReason,
     dpe_date: value.dpeDate,

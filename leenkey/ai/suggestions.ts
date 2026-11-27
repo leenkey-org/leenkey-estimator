@@ -12,9 +12,11 @@ import type { SellerProperty } from "@/leenkey/properties/queries";
 import { frProperties } from "@/lib/i18n/sections/properties";
 import { frPropertyType } from "@/lib/i18n/sections/propertyType";
 import { LISTING_DESCRIPTION_MAX, textLength } from "@/lib/validations/listing";
+import { asksCoOwnership } from "@/lib/validations/property";
 import { createClient } from "@/lib/supabase/server";
 import { consumeQuota } from "./assistant";
 import { mockText } from "./mock";
+import { greetingLine, sellerWroteToday } from "./reply-greeting";
 import { sellerHasPaidPlan, sellerPropertyById } from "./seller-data";
 import type { SuggestionError, SuggestionResult } from "./types";
 
@@ -105,6 +107,8 @@ export function propertyFacts(property: SellerProperty, { withPrice }: { withPri
     labels.features,
     c.features.length === 0 ? null : c.features.map((f) => labels.featureLabels[f]).join(", "),
   );
+  // Said by the seller for a house or another property (DECISIONS.md 2026-11-26).
+  if (asksCoOwnership(c.type)) lines.push(`Copropriété : ${c.coOwnership ? "oui" : "non"}`);
   add(
     labels.charges,
     c.chargesMonthlyEuros === null ? null : `${euros(c.chargesMonthlyEuros)} par mois`,
@@ -143,18 +147,24 @@ export type ReplyMessage = {
  * What the model writes a reply from: the property, the FAQ, the
  * conversation. Each message in its tag, its author and date in attributes
  * the text cannot hold: a message that claims to be the seller's stays the
- * buyer's (core/ai/prompts/reply-suggestion.md).
+ * buyer's (core/ai/prompts/reply-suggestion.md). After the conversation, one
+ * line says whether the seller already wrote to this buyer today, computed
+ * in code (reply-greeting.ts): « Bonjour » only at the first message of the
+ * day (asked by Cédric on 2026-11-26).
  */
 export function replyPrompt({
   facts,
   cards,
   messages,
   buyerFirstName,
+  wroteToday,
 }: {
   facts: string;
   cards: readonly { question: string; answer: string }[];
   messages: readonly ReplyMessage[];
   buyerFirstName: string | null;
+  /** The seller already wrote to this buyer today, in Paris (sellerWroteToday). */
+  wroteToday: boolean;
 }): string {
   const buyer = buyerFirstName ? `acquéreur (${asAttribute(buyerFirstName, 60)})` : "acquéreur";
   const author = { seller: "vendeur", buyer, leenkey: "Leenkey" } as const;
@@ -182,6 +192,7 @@ export function replyPrompt({
   parts.push(
     "</conversation>",
     "",
+    greetingLine(wroteToday),
     "Rédige la réponse du vendeur au dernier message de l'acquéreur.",
   );
   return parts.join("\n");
@@ -333,7 +344,9 @@ async function write({
 /**
  * A reply to the buyer of a conversation (SPEC 8.6), for its seller only:
  * the last 10 messages, the property as its listing shows it, the cards of
- * the FAQ closest to the last message of the buyer.
+ * the FAQ closest to the last message of the buyer, and whether the seller
+ * already wrote to this buyer today (their last message, read apart: it may
+ * be older than the last 10).
  */
 export async function suggestReply(
   profile: SessionProfile,
@@ -354,7 +367,7 @@ export async function suggestReply(
   const counted = await count(supabase, profile);
   if (!counted.ok) return counted;
 
-  const [rows, property] = await Promise.all([
+  const [rows, lastOwn, property] = await Promise.all([
     supabase
       .from("messages")
       .select("sender_id, body, kind, created_at")
@@ -362,14 +375,24 @@ export async function suggestReply(
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
       .limit(REPLY_MESSAGES),
+    // The last message the seller wrote themselves, whatever came since.
+    supabase
+      .from("messages")
+      .select("created_at")
+      .eq("conversation_id", conversationId)
+      .eq("sender_id", profile.id)
+      .eq("kind", "text")
+      .order("created_at", { ascending: false })
+      .limit(1),
     sellerPropertyById(profile.id, conversation.propertyId),
   ]);
-  if (rows.error || !property.ok) {
-    if (rows.error) {
+  if (rows.error || lastOwn.error || !property.ok) {
+    const failed = rows.error ?? lastOwn.error;
+    if (failed) {
       console.error("[ai] messages read failed", {
         user_id: profile.id,
         entity_id: conversationId,
-        code: rows.error.code,
+        code: failed.code,
       });
     }
     return { ok: false, error: "unavailable" };
@@ -403,6 +426,7 @@ export async function suggestReply(
       cards: cards.ok ? cards.data : [],
       messages,
       buyerFirstName: conversation.counterpartFirstName,
+      wroteToday: sellerWroteToday(lastOwn.data.map((row) => row.created_at)),
     }),
     max: REPLY_MAX,
   });

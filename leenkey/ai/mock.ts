@@ -3,6 +3,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import type { ModelCall } from "@/core/ai/client";
 import type { TextCall } from "@/core/ai/generate";
+import { GREETING_FOLLOW_UP } from "./reply-greeting";
 
 // The model of the end-to-end tests (AI_MOCK=1, core/ai/client.ts): the same
 // answer to the same conversation, no call to the API. It plays the
@@ -516,6 +517,13 @@ export const mockVisitorModel: ModelCall = async (request, { onText }) => {
 export const MOCK_REPLY =
   "Bonjour, merci pour votre message. Je vérifie ce point et je reviens vers vous rapidement avec une réponse précise.";
 
+/**
+ * The same reply once the seller already wrote to the buyer today: no
+ * greeting (the line of the prompt, reply-greeting.ts).
+ */
+export const MOCK_REPLY_FOLLOW_UP =
+  "Merci pour votre message. Je vérifie ce point et je reviens vers vous rapidement avec une réponse précise.";
+
 /** The description drafted by the model of the tests (price step, L1-29). */
 export const MOCK_LISTING_DESCRIPTION =
   "Proposition de description de l'assistant de test. Le bien se compose d'un séjour, d'une cuisine " +
@@ -527,7 +535,18 @@ export function mockAnswer(value: string): Anthropic.Message {
   return message([text(value)], "end_turn");
 }
 
-/** The suggestions of the tests: the same text for the same kind, no call to the API. */
+/** What the model of the tests is asked: the text of its request. */
+function askedOf(request: Parameters<TextCall>[0]): string {
+  return request.messages
+    .map((item) => (typeof item.content === "string" ? item.content : ""))
+    .join("\n");
+}
+
+/**
+ * The suggestions of the tests: the same text for the same kind, no call to
+ * the API. A reply follows the line of its prompt: no greeting once the
+ * seller already wrote today.
+ */
 export function mockText(
   kind:
     | "reply_suggestion"
@@ -545,5 +564,17 @@ export function mockText(
     listing_summary: MOCK_LISTING_SUMMARY,
     daily_brief: MOCK_DAILY_BRIEF,
   }[kind];
-  return async () => message([text(answer)], "end_turn");
+  return async (request) =>
+    message(
+      [
+        text(
+          kind === "reply_suggestion" &&
+            // After the conversation only: a message that quotes the line does not count.
+            (askedOf(request).split("</conversation>").pop() ?? "").includes(GREETING_FOLLOW_UP)
+            ? MOCK_REPLY_FOLLOW_UP
+            : answer,
+        ),
+      ],
+      "end_turn",
+    );
 }

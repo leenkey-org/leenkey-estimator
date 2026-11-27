@@ -158,6 +158,22 @@ test("créer un bien en mobile : adresse, caractéristiques, reprise depuis Ma v
   await page.getByLabel("Type de bien").selectOption("maison");
   await expect(page.getByLabel("Étage", { exact: true })).toHaveCount(0);
   await page.getByLabel("Niveaux").fill("2");
+  // « Ce bien est-il en copropriété ? », « Non » at first (DECISIONS.md
+  // 2026-11-26): neither charges nor lots, the property tax stays.
+  const coOwnership = page.getByRole("radiogroup", { name: "Ce bien est-il en copropriété ?" });
+  await expect(coOwnership.getByRole("radio", { name: "Non" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await expect(page.getByLabel("Charges", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("Lots de copropriété")).toHaveCount(0);
+  await expect(page.getByLabel("Surface Carrez")).toHaveCount(0);
+  await expect(page.getByLabel("Taxe foncière")).toBeVisible();
+  // « Oui » (a house in a managed estate): they come back, what was typed too.
+  await coOwnership.getByRole("radio", { name: "Oui" }).click();
+  await expect(page.getByLabel("Charges", { exact: true })).toHaveValue("180");
+  await expect(page.getByLabel("Lots de copropriété")).toBeVisible();
+  await coOwnership.getByRole("radio", { name: "Non" }).click();
 
   // « Enregistrer »: back to « Ma vente », then the page of the draft (L1-14),
   // from which its creation resumes.
@@ -173,6 +189,14 @@ test("créer un bien en mobile : adresse, caractéristiques, reprise depuis Ma v
   await page.goto(`/vendeur/biens/${id}/caracteristiques`);
   await expect(page.getByLabel("Type de bien")).toHaveValue("maison");
   await expect(page.getByLabel("Niveaux")).toHaveValue("2");
+  // Saved outside a co-ownership: the charges typed for the flat are gone.
+  await expect(coOwnership.getByRole("radio", { name: "Non" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await coOwnership.getByRole("radio", { name: "Oui" }).click();
+  await expect(page.getByLabel("Charges", { exact: true })).toHaveValue("");
+  await coOwnership.getByRole("radio", { name: "Non" }).click();
   // Another property may be business premises: their DPE has no cost range (L1-66).
   await page.getByLabel("Type de bien").selectOption("autre");
   const costs = page.getByRole("group", { name: "Dépenses annuelles d'énergie" });

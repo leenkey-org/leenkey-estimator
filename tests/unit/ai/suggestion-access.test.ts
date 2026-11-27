@@ -12,6 +12,7 @@ type Step =
   | "conversation"
   | "quota"
   | "messages"
+  | "own"
   | "property"
   | "knowledge"
   | "open"
@@ -26,6 +27,10 @@ const mocks = vi.hoisted(() => ({
   property: null as Record<string, unknown> | null,
   quota: { ok: true } as { ok: true } | { ok: false; error: "quota"; limit: number },
   rows: [] as { sender_id: string; body: string; kind: string; created_at: string }[],
+  /** The last message the seller wrote themselves in the conversation. */
+  own: [] as { created_at: string }[],
+  /** What the model was asked. */
+  asked: "",
   answerLogged: "ok" as "ok" | "failed",
   modelText: "Bonjour, je vérifie ce point et je reviens vers vous.",
 }));
@@ -81,8 +86,9 @@ vi.mock("@/core/ai/client", () => ({
   },
 }));
 vi.mock("@/leenkey/ai/mock", () => ({
-  mockText: () => async () => {
+  mockText: () => async (request: { messages: { content: unknown }[] }) => {
     mocks.steps.push("model");
+    mocks.asked = String(request.messages[0]?.content ?? "");
     return {
       id: "msg",
       type: "message",
@@ -98,13 +104,18 @@ vi.mock("@/leenkey/ai/mock", () => ({
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
     from() {
+      // The messages of the conversation, or the last one of the seller alone.
+      let own = false;
       const chain = {
         select: () => chain,
-        eq: () => chain,
+        eq: (column: string) => {
+          if (column === "sender_id") own = true;
+          return chain;
+        },
         order: () => chain,
         limit: async () => {
-          mocks.steps.push("messages");
-          return { data: [...mocks.rows], error: null };
+          mocks.steps.push(own ? "own" : "messages");
+          return { data: own ? [...mocks.own] : [...mocks.rows], error: null };
         },
       };
       return chain;
@@ -113,6 +124,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 const { suggestReply, draftListingDescription } = await import("@/leenkey/ai/suggestions");
+const { GREETING_FIRST, GREETING_FOLLOW_UP } = await import("@/leenkey/ai/reply-greeting");
 const { suggestReplyAction, draftDescriptionAction } = await import("@/leenkey/ai/actions");
 const { draftListingDescriptionTool } =
   await import("@/leenkey/ai/tools/draft-listing-description");
@@ -147,6 +159,7 @@ const property = {
     ges: "B",
     heating: "Pompe à chaleur",
     features: ["garden"],
+    coOwnership: false,
     chargesMonthlyEuros: null,
     propertyTaxYearlyEuros: null,
     coproLots: null,
@@ -195,6 +208,8 @@ beforeEach(() => {
       created_at: "2026-10-31T14:47:00Z",
     },
   ];
+  mocks.own = [];
+  mocks.asked = "";
   mocks.answerLogged = "ok";
   mocks.modelText = "Bonjour, je vérifie ce point et je reviens vers vous.";
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -210,12 +225,29 @@ describe("a reply suggested", () => {
       "conversation",
       "quota",
       "messages",
+      "own",
       "property",
       "knowledge",
       "open",
       "log",
       "model",
     ]);
+    // The seller never wrote: the first message of the day.
+    expect(mocks.asked).toContain(GREETING_FIRST);
+    expect(mocks.asked).not.toContain(GREETING_FOLLOW_UP);
+  });
+
+  // Asked by Cédric on 2026-11-26: « Bonjour » at the first message of the day only.
+  it("says whether the seller already wrote to this buyer today, from their own last message", async () => {
+    mocks.own = [{ created_at: new Date().toISOString() }];
+    await suggestReply(seller, CONVERSATION);
+    expect(mocks.asked).toContain(GREETING_FOLLOW_UP);
+    expect(mocks.asked).not.toContain(GREETING_FIRST);
+    // Two days ago: a first message again.
+    mocks.own = [{ created_at: new Date(Date.now() - 2 * 86_400_000).toISOString() }];
+    await suggestReply(seller, CONVERSATION);
+    expect(mocks.asked).toContain(GREETING_FIRST);
+    expect(mocks.asked).not.toContain(GREETING_FOLLOW_UP);
   });
 
   it("never for the buyer, a conversation of someone else or the adviser's: nothing counted", async () => {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { coOwnershipOf } from "@/lib/config/documents";
 import { DPE_CLASSES, PROPERTY_TYPES } from "./search";
 
 // Creation of a property in steps (L1-11, SPEC-V2 section 8.3). Step 1: the
@@ -116,6 +117,9 @@ const characteristicsFields = z.object({
   ges: z.enum(DPE_CLASSES).nullable(),
   heating: z.enum(HEATING_OPTIONS).nullable(),
   features: z.array(z.enum(PROPERTY_FEATURES)).max(PROPERTY_FEATURES.length),
+  // « Ce bien est-il en copropriété ? » (DECISIONS.md 2026-11-26): asked for
+  // a house or another property; a flat always is, land never (forType).
+  coOwnership: z.boolean(),
   chargesMonthlyEuros: money(100_000),
   propertyTaxYearlyEuros: money(1_000_000),
   coproLots: whole(0, 10_000),
@@ -146,7 +150,7 @@ export type Characteristics = z.infer<typeof characteristicsFields>;
 /** A field of step 2 that holds one value (the features are a list). */
 export type CharacteristicsField = Exclude<
   keyof Characteristics,
-  "propertyId" | "isNewBuild" | "features" | "dpeExempt" | "dpeKind"
+  "propertyId" | "isNewBuild" | "features" | "coOwnership" | "dpeExempt" | "dpeKind"
 >;
 
 type NotForType = {
@@ -157,10 +161,28 @@ type NotForType = {
 const HOUSE: NotForType = { fields: ["floor"], features: ["elevator"] };
 
 /**
+ * What only a property in a co-ownership has (DECISIONS.md 2026-11-26): its
+ * charges, its lots and its Carrez surface. Outside one (a house or another
+ * property whose seller answers « Non »), hidden in the form and saved
+ * empty; the property tax stays.
+ */
+export const CO_OWNERSHIP_FIELDS: readonly CharacteristicsField[] = [
+  "carrezM2",
+  "chargesMonthlyEuros",
+  "coproLots",
+];
+
+/** The types whose seller is asked « Ce bien est-il en copropriété ? ». */
+export function asksCoOwnership(type: PropertyType | null): boolean {
+  return type === "maison" || type === "autre";
+}
+
+/**
  * Fields and features that a type does not have, as the listing page shows
  * it (leenkey/listings): hidden in the form, saved empty. A house (and any
  * other property) has levels, and in a co-ownership lots, charges and a
- * Carrez surface, but no floor nor lift; land, its surface and its tax.
+ * Carrez surface (CO_OWNERSHIP_FIELDS), but no floor nor lift; land, its
+ * surface and its tax.
  */
 export const NOT_FOR_TYPE: Partial<Record<PropertyType, NotForType>> = {
   maison: HOUSE,
@@ -193,7 +215,8 @@ export const NOT_FOR_TYPE: Partial<Record<PropertyType, NotForType>> = {
 
 /**
  * The values that apply to the type, the others empty; land has 0 rooms and
- * no DPE. An exempt property keeps no DPE, a property with a DPE no motive
+ * no DPE. A flat is always in a co-ownership, land never; a property outside
+ * one keeps neither charges, nor lots, nor a Carrez surface. An exempt property keeps no DPE, a property with a DPE no motive
  * of exemption (L1-65). Only another property may be business premises,
  * whose DPE has no cost range (L1-66).
  */
@@ -206,6 +229,12 @@ export function forType(value: Characteristics): Characteristics {
       }
     : { ...value };
   for (const field of hidden?.fields ?? []) result[field] = null;
+  // Before a type is chosen, as said: nothing typed is dropped.
+  result.coOwnership = value.type
+    ? coOwnershipOf(value.type, value.coOwnership)
+    : value.coOwnership;
+  if (value.type && !result.coOwnership)
+    for (const field of CO_OWNERSHIP_FIELDS) result[field] = null;
   if (value.type === "terrain") {
     result.rooms = 0;
     result.dpeExempt = false;

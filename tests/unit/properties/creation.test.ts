@@ -14,6 +14,8 @@ import {
 import {
   addressChoiceSchema,
   addressQuerySchema,
+  asksCoOwnership,
+  CO_OWNERSHIP_FIELDS,
   characteristicsIntentSchema,
   characteristicsSchema,
   dpeIssue,
@@ -46,6 +48,7 @@ const empty: Characteristics = {
   ges: null,
   heating: null,
   features: [],
+  coOwnership: false,
   chargesMonthlyEuros: null,
   propertyTaxYearlyEuros: null,
   coproLots: null,
@@ -95,6 +98,7 @@ describe("characteristicsSchema", () => {
       dpe: "C" as const,
       heating: "Individuel gaz" as const,
       features: ["balcony" as const, "elevator" as const],
+      coOwnership: true,
       chargesMonthlyEuros: 180,
     };
     expect(characteristicsSchema.parse(complete)).toEqual(complete);
@@ -203,15 +207,57 @@ describe("fields of a type", () => {
     gesKgM2Year: null,
   };
 
-  it("keeps the levels, lots, charges and Carrez surface of a house, not its floor nor lift", () => {
+  it("keeps the levels, lots, charges and Carrez surface of a house in a co-ownership, not its floor nor lift", () => {
     for (const type of ["maison", "autre"] as const) {
-      expect(forType({ ...filled, type }), type).toEqual({
+      expect(forType({ ...filled, type, coOwnership: true }), type).toEqual({
         ...filled,
         type,
+        coOwnership: true,
         floor: null,
         features: ["garden", "parking"],
       });
     }
+  });
+
+  // DECISIONS.md 2026-11-26: « Ce bien est-il en copropriété ? », « Non ».
+  it("keeps neither charges, nor lots, nor Carrez surface outside a co-ownership; the tax stays", () => {
+    for (const type of ["maison", "autre"] as const) {
+      expect(forType({ ...filled, type, coOwnership: false }), type).toEqual({
+        ...filled,
+        type,
+        coOwnership: false,
+        floor: null,
+        features: ["garden", "parking"],
+        carrezM2: null,
+        chargesMonthlyEuros: null,
+        coproLots: null,
+        propertyTaxYearlyEuros: 1500,
+      });
+    }
+    expect(CO_OWNERSHIP_FIELDS).toEqual(["carrezM2", "chargesMonthlyEuros", "coproLots"]);
+  });
+
+  it("a flat is always in a co-ownership, land never, whatever is sent", () => {
+    expect(forType({ ...filled, type: "appartement", coOwnership: false })).toMatchObject({
+      coOwnership: true,
+      carrezM2: 110,
+      chargesMonthlyEuros: 40,
+      coproLots: 12,
+    });
+    expect(forType({ ...filled, type: "terrain", coOwnership: true }).coOwnership).toBe(false);
+    expect(
+      [null, "appartement", "maison", "terrain", "autre"].map((type) =>
+        asksCoOwnership(type as Characteristics["type"]),
+      ),
+    ).toEqual([false, false, true, false, true]);
+  });
+
+  it("the schema asks for the answer, and a Carrez surface above the living one never stops a house outside a co-ownership", () => {
+    const { coOwnership: _answer, ...without } = { ...empty, type: "maison" as const };
+    expect(characteristicsSchema.safeParse(without).success).toBe(false);
+    const house = { ...empty, type: "maison" as const, surfaceM2: 90, carrezM2: 120, rooms: 4 };
+    expect(characteristicsSchema.parse(house)).toEqual({ ...house, carrezM2: null });
+    expect(characteristicsSchema.safeParse({ ...house, coOwnership: true }).success).toBe(false);
   });
 
   it("keeps the surface and the tax of land, with 0 rooms", () => {
@@ -225,7 +271,12 @@ describe("fields of a type", () => {
   });
 
   it("changes nothing for a flat or an unknown type", () => {
-    expect(forType({ ...filled, type: "appartement" })).toEqual({ ...filled, type: "appartement" });
+    expect(forType({ ...filled, type: "appartement" })).toEqual({
+      ...filled,
+      type: "appartement",
+      coOwnership: true,
+    });
+    // Before a type is chosen, nothing typed is dropped.
     expect(forType(filled)).toEqual(filled);
   });
 
@@ -263,6 +314,7 @@ describe("DPE (L1-65, L1-66)", () => {
   const dpe: Characteristics = {
     ...empty,
     type: "appartement",
+    coOwnership: true,
     surfaceM2: 68,
     rooms: 3,
     dpe: "D",
